@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "app": "nooi.ai",
+    "schema": 1,
+    "created": "2026-10-03",
+    "note": "Initial database. The server reads/writes data/db.json; install.sh copies this file there only if no database exists yet."
+  },
+  "users": {},
+  "settings": {
+    "features": {},
+    "models": {},
+    "prices": {},
+    "providers": {},
+    "payments": {},
+    "roles": {},
+    "team": [],
+    "modelLogos": {},
+    "modelCat": {},
+    "maintenance": {}
+  },
+  "admdata": {
+    "crm": {
+      "deals": [],
+      "tasks": [],
+      "stage": {},
+      "notes": {}
+    },
+    "erp": {
+      "costRate": 45,
+      "expenses": []
+    }
+  },
+  "coupons": {},
+  "tickets": [],
+  "emails": [],
+  "audit": []
+}
