@@ -35,6 +35,7 @@ echo "▶ flat bots: unique idle / working / done motion (must be 8/8 each)"; py
 echo "▶ logo: the dot rides the line and lands on the i (load · hover · page change · tap)"; python3 tests/brand_dot.py | grep -cE "on tip \(gap 0\)|at the i" | xargs -I{} echo "dot checkpoints passed: {}"
 echo "▶ equal fields · aligned switches · equal panels · nothing off-screen — every page & admin tab, 360/390/820/1440 px (all must be 0)"; python3 tests/equal_layout.py | python3 -c "import sys,json;d=json.load(sys.stdin);print(d['totals'])"
 echo "▶ uniform fields, toggles, cards & options · every page + admin tab · phone/tablet/desktop (all must be 0)"; python3 tests/uniform.py | python3 -c "import sys,json;print(json.load(sys.stdin)['totals'])"
+echo "▶ real web fonts × every script (Thai, Tamil, CJK, Ethiopic, Arabic-script…): overlap & clipped text"; if curl -fsS -m 5 -o /dev/null https://fonts.googleapis.com/css2?family=Geist; then python3 tests/script_fonts.py | python3 -c "import sys,json;print(json.load(sys.stdin)['totals'])"; else echo "skipped (Google Fonts unreachable)"; fi
 echo "▶ RTL & languages";                python3 tests/langviews.py | tail -3
 echo "▶ untranslated text (review list)"; python3 tests/i18n.py | head -1
 echo "▶ audio lab (noise removal dB, pitch ratios)"; python3 tests/audio.py | head -40 | grep -E "noiseAfter|voiceToNoise_after|pitchHz" | head -8

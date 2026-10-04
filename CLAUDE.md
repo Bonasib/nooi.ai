@@ -153,6 +153,11 @@ Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v
 - Provider/payment cards keep their Save button at the bottom so buttons line up across a row.
 - `tests/uniform.py` must report all zeros (field widths, field heights, toggle alignment, card heights, option balance, cramped field columns, overflow) on every page and admin tab at 390 / 820 / 1440 px.
 
+## v42 fonts for every UI language
+- `loadUIFont()` downloads the language's font, but CSS only used it for ar/ja/zh/ko/hi/am: Thai and Tamil (and Vazirmatn for fa/ckb) were downloaded and never applied, so text fell back to the device font (different metrics → overlaps). The v42 block builds `html[lang=…] body, .serif` rules from `UI_FONTS`, with line-height 1.7 for tall scripts (`NOOI_TALL_SCRIPTS`). Add a language's font to `UI_FONTS` only — the rule follows.
+- Plan prices (`.plan2 .pp`) and template tags (`.tmeta span`) wrap instead of being cut.
+- `tests/script_fonts.py` loads the real Google Fonts and fills every page with real-script text at a typical translation length (`EXPANSION`), then reports overlapping/clipped text and system-font fallback. The other layout tests block the network, so they never see the real fonts. Remaining findings at stress length are intended truncation (2-line card titles, select values) or the pannable storyboard/3D views.
+
 ## Slash commands (in .claude/commands)
 `/test` full check · `/audit-i18n` translations & RTL · `/deploy root@IP` update the VPS · `/connect-provider Kling` wire & verify a real provider.
 

@@ -6385,6 +6385,26 @@ function balanceGroups(root){const R=root||document;
 motionIcons=(o=>function(root){o(root);requestAnimationFrame(()=>balanceGroups())})(motionIcons);
 let balT=0;window.addEventListener("resize",()=>{clearTimeout(balT);balT=setTimeout(()=>balanceGroups(),120)});
 
+/* ================= v42: UI FONT FOR EVERY LANGUAGE ================= */
+/* loadUIFont() downloads a font per language, but only ar/ja/zh/ko/hi/am had a CSS rule that used it,
+   so Thai and Tamil (and Persian/Kurdish's Vazirmatn) were downloaded and never applied: text fell back to
+   whatever the device had, with different metrics, which made labels overlap or get cut. Build the rules
+   from UI_FONTS so every downloaded font is applied, headings included (Instrument Serif is Latin only),
+   and give scripts with tall marks more line height. */
+const NOOI_TALL_SCRIPTS={th:1,ta:1,hi:1,am:1};
+function nooiUiFontCSS(){
+  const fam=v=>'"'+String(v).split(":")[0].replace(/\+/g," ")+'"';
+  return Object.keys(UI_FONTS).map(l=>{const sel='html[lang="'+l+'"]';
+    return sel+" body,"+sel+" .serif{font-family:"+fam(UI_FONTS[l])+",var(--sans);font-style:normal}"+
+      (NOOI_TALL_SCRIPTS[l]?sel+" body{line-height:1.7}":"")}).join("\n")}
+(function(){let st=document.getElementById("uifontcss");if(!st){st=document.createElement("style");st.id="uifontcss";document.head.appendChild(st)}st.textContent=nooiUiFontCSS()})();
+
+/* Long translations: the plan price ("49 SAR / month") and template tags were forced onto one line
+   and cut with an ellipsis; let them wrap instead (CLAUDE.md: no clipped text). */
+(function(){const st=document.createElement("style");st.id="v42wrap";st.textContent=
+  ".plan2 .pp{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}"+
+  ".tmeta span{white-space:normal;overflow-wrap:anywhere;max-width:100%}";document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
