@@ -1,0 +1,30 @@
+{
+  "name": "nooi-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "nooi.ai Studio server: provider bridge, jobs, website analysis, social scheduling, auth",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "check": "for f in server.js lib/*.js providers/*.js social/*.js; do node --check $f || exit 1; done",
+    "test": "bash tests/run_all.sh",
+    "test:ui": "python3 tests/fuzz.py",
+    "test:layout": "python3 tests/allviews.py",
+    "test:i18n": "python3 tests/i18n.py && python3 tests/langviews.py"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "firebase-admin": "^12.3.0",
+    "multer": "^1.4.5-lts.1",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.14"
+  }
+}

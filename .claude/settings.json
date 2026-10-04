@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run check)", "Bash(npm run test:*)", "Bash(npm test)", "Bash(npm install:*)",
+      "Bash(node --check:*)", "Bash(python3 tests/*)", "Bash(bash tests/run_all.sh)",
+      "Bash(git status)", "Bash(git diff:*)", "Bash(git add:*)", "Bash(git commit:*)", "Bash(git log:*)"
+    ],
+    "deny": [
+      "Read(./.env)", "Read(./.env.*)", "Read(./data/**)", "Read(./media/**)",
+      "Bash(cat .env*)", "Bash(rm -rf /*)"
+    ]
+  }
+}

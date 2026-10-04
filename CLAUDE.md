@@ -1,0 +1,187 @@
+# nooi.ai — project guide for Claude Code
+
+AI video & design platform (Arabic-first, bilingual EN/AR, 14 UI languages). Owner-facing notes in Arabic are welcome; keep code/comments in English.
+Owner wants every English text followed by an Arabic translation in replies.
+
+## Layout
+```
+public/index.html      the whole studio UI — one self-contained file (vanilla JS, no build step)
+server.js              Express API (ESM, Node ≥18). Serves public/ and /media, all /v1/* routes, /mcp
+lib/                   store (JSON db in data/db.json), auth (Firebase + API tokens), jobs (queue/poll/refund),
+                       billing (credits ledger, Moyasar/Tap/Stripe/PayPal/Airwallex, coupons), settings (encrypted keys),
+                       admin (RBAC, clients, emails, tickets, audit), email (Resend/SendGrid), mcp, scheduler, site, media, tokens, moderation
+providers/             index.js (generic REST adapters: WAN, TTS, lipsync, music…), extra.js (Seedance, Kling, Qwen/DashScope),
+                       anthropic.js (text AI; Claude or Anthropic-compatible Qwen; model per tier), generic.js
+social/                OAuth + publishing (Meta, TikTok, YouTube, X, LinkedIn, Snapchat)
+integrations/          Blender add-on, Unity editor window, MCP client configs
+deploy/                install.sh (Hostinger/Ubuntu one-command), update.sh (auto-rollback), backup.sh, restore.sh
+docs/                  PAYMENTS_ROADMAP.md, policies/*.en.md|ar.md
+tests/                 Playwright checks (click every control, layout overflow on 4 devices, tracking accuracy, playhead smoothness)
+```
+
+## Frontend architecture (public/index.html)
+- Global state `S` (persisted: localStorage `dotai-studio-v2` + server sync). `persist()` saves; `renderAll()` / `renderView()` re-render.
+- Views: `VIEWS[name] = () => html`. Navigation: `NAVS` groups → `go(view)`.
+- Events are delegated on `document`: `data-act="…"` (actions), `data-set="path" data-val` (set state), `data-toggle`, `data-bind` (inputs), `data-go`.
+- `L(en, ar)` for every UI string (other languages are AI-translated & cached). Always pass both.
+- `tilify(html)` turns chip rows into icon tiles. Icons: `ICONS` / `OI` (inline SVG paths). No emoji icons in UI chrome.
+- The file grew in layers: later sections (`/* ===== vN: … ===== */`) wrap earlier functions (`fn=(o=>function(){…o()…})(fn)`) and patch view HTML with `.replace(...)`.
+  When refactoring, preserve behaviour; a good first big task is splitting it into ES modules with a small build (Vite) — keep a single-file build output.
+- Feature flags: admin `features` (per view), `modelOn()`, and `GPU_FEATURES=false` (SAM 3D / 3D body / render streaming are OFF on purpose — no GPU yet).
+- API mode: `API.mode === "server"` when served by this server; otherwise it runs a local demo engine (procedural renders, demo data).
+
+## Server essentials
+- Start: `npm install && npm start` (PORT 8080). Health: `GET /v1/health`.
+- Every generation goes through `lib/jobs.js createJob` → moderation → feature/model switches → price (`lib/billing.js priceOf`) → charge → provider submit → poll → refund on failure.
+- Provider & payment keys: `.env` or Admin dashboard (encrypted with `SECRET_KEY`, AES-256-GCM). Never log or return secrets.
+- Owner = `ADMIN_EMAILS`. Roles/permissions in `lib/admin.js`.
+
+## Feature map (where things live in the UI)
+| Group | Tools (in order) |
+|---|---|
+| Home | universal prompt (task + AI model, first/end frame + seconds, voice), projects, ⌘K search |
+| Create | Video · UGC & product ads (presenter/product/image/motion, product photos, brand logo, fonts) · Images · Characters (builder, cloned voice) · Live Sketch (+ floor plans → 3D, three.js) · Coloring book |
+| Story | Chapter Story · Storyboard (cast & assets scan) |
+| Edit | Video editor (clips, text + fonts, audio + voice recording, motion tracking, logo watermark, undo, shortcuts) · Visual effects · Voice & audio (audio lab: noise removal + voice changer, my cloned voices) · Subtitles & dubbing · Enhance |
+| Publish | Website & content plan · Hook lab · Schedule & publish |
+| Library | My library · Templates |
+| Settings | Account (plans, brand kit, usage, smart routing) · Connections · Integrations/MCP · Legal & payments · Help & support |
+| Admin | overview · clients (country filters, bulk email/discounts/invoices, CSV) · support · emails · features · AI providers & prices · payments · admins & permissions · audit |
+
+Languages: UI 26 (RTL: ar, fa, ckb, ur) · subtitles/dubbing/voice incl. de, nl (+Flemish), fr-BE, pt, it, th, sw, sr (Cyrl/Latn), hr/bs/me, ms, ta, fa (+Dari), ku (Kurmanji), ckb (Sorani).
+Audio lab (in-browser DSP, no upload): spectral noise gating + hum (50/60 Hz) & rumble filters; voice changer = WSOLA pitch shift (duration kept) + filters, 10 styles; AI speech-to-speech (`voiceconvert` job → TTS provider) to library or cloned voices. Measured: noise −17 dB, pitch ratios within 2%.
+Voice: dictation (Web Speech API) on prompt fields; voice cloning with mandatory consent (`voiceclone` job → TTS provider).
+Theme: dark / light (animated SVG sun↔moon). GPU features OFF (`GPU_FEATURES=false`).
+
+## Plans & entitlements (one source: PLANS/LIMITS in index.html ⇄ lib/plans.js)
+| | Free | Basic 49 SAR ($13) | Pro 99 SAR ($27) | Studio 199 SAR ($53) |
+|---|---|---|---|---|
+| Credits / month | 100 | 1,500 | 4,000 | 10,000 |
+| Parallel · max length · fps | 1 · 5s · 30 | 2 · 10s · 60 | 4 · 15s · 120 | 8 · 15s · 120 |
+| Video models | standard | + Hunyuan | all (Kling, Seedance, WAN 3.0…) | all |
+| Characters · chapters · voice clones | 2 · 3 · 0 | 10 · 8 · 1 | ∞ · 20 · 3 | ∞ · 20 · 10 |
+| Watermark · API/MCP | yes · no | no · no | no · no | no · yes |
+Yearly = −20% (credits refilled every 30 days by `refillPlans`). Server enforces in `createJob` → `checkEntitlement` (402 = upgrade, 429 = wait for a running job). Change prices in both files together.
+120 fps: generation option (`meta.fps`, +2/+4 cr), "120 fps" action on results, editor export fps (60 recorded directly, 120 via `finish:interp` job).
+
+## UX conventions (v27)
+- `toast(msg, {type:"ok"|"warn"|"info", action, onAction, ms})` — deletions show an **Undo** action (snapshot restore).
+- Drag & drop anywhere routes files by page/type (`routeFiles`). `?` opens the shortcuts sheet, Esc closes sheets.
+- Credits ledger: `S.ledger` (demo) / `GET /v1/billing` ledger (server) → **Credits & transactions** page with CSV export.
+- Motion: `.vin` page entrance, `.tabin` tab fade, count-up stats; everything is disabled under `prefers-reduced-motion`.
+- Selects: native `<select>` is auto-replaced by a styled sheet (`enhanceSelects`, add `data-native` to opt out). Keep using real `<select>` + change events.
+- Logo: `.brand` gets the animated wordmark (`LOGO`: eyes blink/follow pointer, green dot pulses). Icons draw in (`pathLength=1`) when active.
+- Tiles: glyph box grows with content; `tests/tiles.py` must report 0 broken tiles.
+- Bots (v31): glossy SVG mascots (`BOT_LOOK`, `SHAPES`, `botSVG(id,state)`), states idle · waiting (eyes closed) · working (visor with bars/wave + orbit halo) · done (happy + sparkles) · failed (sweat drop).
+- Prompt box: structured example per task (`EXAMPLE`, `parsePrompt` feeds the bots), task chips (`UNI_TASKS`), video/image model cards only (`MODEL_META` monograms; official logos only via Admin upload with the provider's permission), seconds per model + fps.
+- Layout rules: inline two-column grids collapse on ≤900px; fill-screen layouts grow on ≤1024px; text fields are `dir=auto` with the mic pinned to a physical side. `tests/overlap.py` must report 0.
+- Animated icons: every SVG is matched to its name (`ICON_NAME`, canonical markup) and gets `data-mo` from `MOTION` (spin/up/down/pop/wiggle/flip/slide/look/bob). They play on hover/tap and morph to a soft duotone fill when active. Add new icon names to `MOTION`.
+- Live bots: `botStrip(ids)` under prompts; `busyBots()` maps running jobs → bots (`JOB_BOTS`), updated every 0.7 s; model chips spin while that model renders.
+- Icons: inline SVG, `ic(name)` stroke 1.7; add new names to `ICONS` (the icon audit in tests flags missing ones).
+
+## Film crew (8 bots) — view `crew`
+Order & contracts: Rawi writer → Wajh character designer → Sima director → Ayn cinematographer → Sada sound → Wasl editor → Mizan producer → Daqiq proofreader/QA.
+Each stage: `crewPrompt` (role + brief + everything handed over) → `aiJSON` (sample in preview / `/v1/llm/json` with tier on server, 150 s timeout, abortable) → `normalize` (types, clamps, enum snapping incl. labels) → `vSchema` (SCHEMA[id]) + `crossCheck` (ids, coverage, speakers, plan limits, budget) → up to 3 attempts with a repair prompt listing the failed checks → `fallback` generator if still failing (stage marked "fallback"). After Mizan: `hardAudit` (missing outputs, moderation, language, cross checks, budget) → Daqiq audits with those findings → can `send_back_to` one stage (1 loop) → final re-audit → approved / review. Everything is logged (`run.log`) and persisted; a reload marks a running crew as stopped.
+Deliverables: storyboard, Chapter Story, render all shots (plan-aware models), voices + music jobs, Markdown + JSON package. Prompt mascot follows the task (`TASK_BOT`). Test: `tests/crew.py` injects model mistakes and must end "approved".
+
+## Prompt studio (home) — v31
+Tasks rail (content video, product ad, image & design, create voice, music, story, storyboard, character, whole film, coloring, hooks) → model rail ONLY for video/image (VRAIL/IRAIL incl. MiniMax Hailuo; monogram badges — official logos are uploaded by the admin in Admin → Models, stored in settings.modelLogos and served in /v1/config) → seconds & Hz (video) or count & aspect (image) → structured brief placeholder ("Idea:/Scene:/Voice:/Sound:/Style:" in any language) parsed by `parseBrief` so bots get clean fields.
+Bots v2: `botSVG` draws glassy blobs; states idle (eyes closed) → working cycles plan (visor bars) → tool (visor ∞ + ribbons) → action (eyes) → done (happy + effects) / failed (worried). Shared defs in `#botdefs`.
+Layout guard: `tests/overlap.py` must report 0 pages with overlapping text (clip-aware, ignores closed <details>).
+
+## v32–v33 additions
+- Agents (English names everywhere): Quill (beret), Nova (star), Max (mustache), Lumi (monocle), Echo (headphones), Remy (beanie), Duke (top hat + bow tie), Iris (glasses + bun). Accessories live in `ACC`; face accessories hide while the visor is on.
+- Flagship video models (FLAG): Kling 4.0 / 3.0, Seedance 2.5 / 2.0, MiniMax H3, WAN 3.0. Features shown are each family's known strengths — CONFIRM specs and set each API model id in Admin → Models (server refuses jobs with 503 until set). Plans: Basic = WAN 3.0 + Seedance 2.0 · Pro = + Seedance 2.5, Kling 3.0, MiniMax H3 · Studio = all incl. Kling 4.0. Plan colours: Ocean / Neon / Gold.
+- Admin: CRM (pipeline, deals, follow-ups) and ERP (P&L, VAT 15 %, expenses, vendors, invoice register, credits liability) → `/v1/admin/data/crm|erp`.
+- Footer "Admin login" (signed-out users sign in, then land on the dashboard).
+- Draw & create (sketch view modes): draw a scene → N AI options (image/video, style, follow %), or upload + describe → N edited options (`meta.mode` sketch2img / instruct-edit, input slot `dmIn`).
+- 3D World (`world` view): instant procedural three.js world (7 biomes, time, size), orbit/flythrough, snapshot, record 8 s to the editor, GLB export, Blender steps; cloud engines via WORLD provider (`world` job, 40 cr). Rendering needs three.js from the CDN — verify on a real device.
+
+## v32–v33 additions
+- Agents (English names everywhere): Quill (writer, beret) · Nova (character designer, star body) · Max (director, mustache) · Lumi (cinematographer, monocle) · Echo (sound, headphones) · Remy (editor, beanie) · Duke (producer, top hat & bow tie) · Iris (QA, glasses & bun).
+- Flagship video models: Kling 4.0/3.0, Seedance 2.5/2.0, MiniMax H3, WAN 3.0 (`FLAG`). Features shown are family strengths; the admin must set each **API model id** and mark specs verified in Admin → Models (`settings.modelCat`). Server routes `kling40…` via `flagship()` and refuses (503) without an id. Plans: Basic → WAN 3.0 + Seedance 2.0; Pro → + Seedance 2.5, Kling 3.0, MiniMax H3; Studio → + Kling 4.0. Plan themes: Ocean / Neon / Gold.
+- Admin CRM (pipeline, deals, follow-ups) & ERP (P&L, VAT 15%, AI cost estimate, expenses, invoices register, credit liability): `/v1/admin/data/crm|erp`.
+- Footer "Admin login" (app & landing). Draw & create (`draw`): sketch → AI scenes (sketch sent as iRef) or upload → instruction edit (eRef, kind "edit"). 3D worlds (`world`): procedural voxel-space renderer in the browser, `.glb` export for Blender, optional AI world provider (kind "world", 40 cr, WORLD_API_URL).
+
+## v34
+- Model logos: `LOGO_SRC` holds small WebP crops of logo files the owner supplied (Kling, Seedance, MiniMax, Wan). They come from screenshots — replace them with each provider's official brand-kit files (Admin → Models → logo upload, stored in settings.modelLogos) and follow each provider's brand guidelines before launch. `logoFor(id)` prefers the admin upload.
+- Text visibility: `tests/hidden_text.py` must report 0 (no ellipsis/line-clamp/clipped text on any page at 390/820/1440 px, en & ar). The storyboard canvas is excluded (pannable by design).
+
+## v35 (integration directive)
+- Durations: Basic 10 s · Pro 20 s · Studio 30 s (free 5 s). Longer than a model's max → `meta.parts`; the server makes N connected parts (`chainAfter` → last frame of the previous part) and completes the parent with `segments`.
+- ElevenLabs (`providers/elevenlabs.js`): TTS, `/v1/tts/stream` low-latency preview, voice cloning. Pro: Flash/Turbo/Multilingual; Studio: + Eleven v3 & ElevenLabs cloning. Model ids/default voice are admin-overridable — verify with ElevenLabs docs.
+- Image models: Nano Banana / Pro (Google Gemini image API, `GOOGLE_API_KEY`), Image 2.0/2.5 (provider set by admin — **ask the owner which provider**), Qwen Image 2.0 (DashScope, model id in admin), Midjourney (disabled: no official public API known; only an authorised provider). Specs & tech panel shows qualitative specs; the admin confirms.
+- Errors: `lib/errors.js` classifies auth / rate / provider / network / quota / input; `withRetry` retries rate/provider/network 3× with backoff; failed jobs carry `errorType` + a user message; credits are refunded.
+- Health: `lib/health.js` probes each provider (authenticated cheap call), maintenance flag, `GET /v1/status` feeds live Online/Degraded/Maintenance/Not connected tags; auto re-test every 15 min.
+- Export: WebM in the browser; MP4 via `POST /v1/media/transcode` (ffmpeg on the server). Voice: MP3/WAV.
+- Tests now run at 375/768/1024/1280/1440 px; `tests/security_scan.py` fails on any secret in the browser bundle.
+
+## Device breakpoints (directive)
+Phone < 768 px (bottom nav, single column, bottom-sheet model picker, sticky preview) · Tablet 768–1079 px (icon rail) · Desktop ≥ 1280 px (full sidebar; 1080–1279 keeps the rail up to 1180). CSS uses max-width:767px / min-width:768px. `tests/breakpoints.py` checks the exact boundaries.
+Note: the ElevenLabs / image models / 10-20-30 s / status / errors directive is implemented in v35 (frontend) + providers/elevenlabs.js, providers/images2.js, lib/health.js, lib/errors.js — extend those, don't re-add.
+
+## v35 directive status (ElevenLabs · image models · 10/20/30 s · status · errors · devices)
+Implemented and covered by tests: `voice_images_status.py`, `security_scan.py`, `breakpoints.py`, `providers_mock.mjs` (18 checks, mocked network).
+Still to do with real keys (cannot be done offline): run Admin → AI providers → "Test all", generate one ElevenLabs line (MP3 + WAV) and one image per new model, confirm each model id/spec and mark it verified.
+Midjourney has no official public API — keep it disabled; do not wire unofficial Discord proxies (terms-of-service risk). "Image 2.0 / 2.5" and "Nano Banana" providers/model ids are set by the admin.
+In the demo preview provider status reads "Demo" (nothing is connected); the live server shows real Online / Degraded / Maintenance / Not connected.
+
+## v36 flat bots (current look)
+`botSVG` (v36 block) draws flat solid shapes with white eyes: Quill orange cloud · Nova brown clover · Max blue triangle · Lumi black lens circle · Echo green capsule · Remy grey drop · Duke yellow hexagon · Iris purple rounded square.
+Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v36 CSS); `tests/flat_bots.py` must report 8/8 unique for each state. Older bot drawings (v31a glossy, v32a accessories) are no longer used by `botSVG`.
+
+## v37 GPT Image 2.0 · Nano Banana (Pro) · ElevenLabs
+- Icons: crops of files the owner supplied (OpenAI mark, banana, ElevenLabs "II") in `LOGO_SRC` — replace with official brand-kit files and follow each brand's guidelines.
+- GPT Image 2.0 = `img20` → `gptImage()` (providers/images2.js, OpenAI Images API). It REQUIRES `settings.modelCat.img20.apiModel`; without it the job stops with a setup message (nothing is sent under that name). Plans: Pro & Studio. "Image 2.5" is hidden from the rail (no provider named).
+- Nano Banana (`nano`, all plans) / Nano Banana Pro (`nanopro`, Pro & Studio) → Gemini API (`nanoBanana`). ElevenLabs: Pro = Flash v2.5 · Turbo v2.5 · Multilingual v2; Studio = + Eleven v3 + professional cloning.
+- Feature texts are from public descriptions known to mid-2026 (no web search was available when written) — verify against current docs. The "v37b" block adds a "Specs: verified / to verify" row to each specs panel (driven by `settings.modelCat[id].verified`). This block is the single source; a later duplicate was removed.
+
+## v38 Brand
+- Logo mark rebuilt as a centre-line vector from the owner's logo file (97% pixel match); `nooiMark()` + `.nbrand` in the header (mark only — the owner asked to remove the "nooi.ai" text wordmark; the name stays as aria-label); one controller `playMark()` runs on load, every page change, hover and tap: the line draws bottom-left → top-right while the dot rides its tip, then the dot hops onto the "i" and keeps beating (CSS). `public/brand/nooi-logo-animated.svg` does the same with SMIL (no script). One JS controller `playMark(svg)` (Web Animations API) restarts line + dot together every time: first appearance, every new header after navigation, mouse hover and touch tap. `tests/logo_motion.py` checks the dot is hidden while the line draws and pops at the end in all five cases. Files in `public/brand/` (SVG, animated SVG, PNG 4096→180, favicon.ico).
+- Colours from the logo: `--brand-a #6EC046`, `--lime/--brand-m #9CD245`, `--brand-b #CFE13E` (the dot, reference colour), `--brand-grad`. An earlier duplicate mark implementation was removed.
+
+## v39 Equal layout rules (all devices)
+- Every text-like input (incl. password, url, search, date, time) shares one style and full width; a form's Save button sits on its own line.
+- `div.trow` toggle rows: name `1fr`, switch pinned to the last column so switches line up; `label.trow` (CRM follow-ups) keeps checkbox · text · date.
+- Tab bars (`.tabs`) wrap instead of hiding tabs off-screen; side-by-side panels in `.admgrid/.two/.pubgrid/.edgrid` share one height.
+- `tests/equal_layout.py` walks every view **and every admin tab** at 360/390/820/1440 px and must report 0 for fields, toggles, cards and overflow.
+
+## v39–v41 uniform layout (fields · toggles · cards · options)
+- `.trow` keeps its original flex layout everywhere; the CRM follow-up list uses `.tlist .trow` (an earlier global `.trow` grid broke payment and provider rows).
+- `.grid2` and `.fields` use `repeat(auto-fit,minmax(min(200px,100%),1fr))`, so side-by-side fields stack on their own when space runs out; inline `grid-template-columns` on `.grid2` is overridden for the same reason.
+- `balanceGroups()` (v41) equalises option tiles: same-size options, and any short last row is centred. Segmented controls get equal-width buttons (`.seg.eq`) or wrap (`.seg.eqwrap`).
+- Provider/payment cards keep their Save button at the bottom so buttons line up across a row.
+- `tests/uniform.py` must report all zeros (field widths, field heights, toggle alignment, card heights, option balance, cramped field columns, overflow) on every page and admin tab at 390 / 820 / 1440 px.
+
+## Slash commands (in .claude/commands)
+`/test` full check · `/audit-i18n` translations & RTL · `/deploy root@IP` update the VPS · `/connect-provider Kling` wire & verify a real provider.
+
+## Status
+Done & tested in browser: studio UI (video/image/characters/story/storyboard/editor/subtitles/dubbing UI/hooks/content plan/scheduling/coloring book/live sketch/floor plans → 3D (three.js)/motion tracking/fonts/UGC ads/admin dashboard/support/policies/dark-light), server logic unit-tested (billing, coupons, RBAC, encryption, MCP protocol, routing).
+
+NOT yet verified against real services (no internet in the original build environment) — verify each in sandbox with the provider's current docs:
+1. WAN 3.0 request/response mapping (`providers/index.js → wanBody`).
+2. Seedance, Kling, DashScope adapters (`providers/extra.js`) — endpoints, model ids, Seedance text flags.
+3. Payments: Moyasar/Tap/Stripe/PayPal/Airwallex create + verify + webhooks (idempotency already in place).
+4. Firebase sign-in (required before inviting clients — without it the server runs as one local user).
+5. Email (Resend/SendGrid) + SPF/DKIM for contact@nooi.ai.
+6. Social OAuth apps & publishing.
+7. Google Fonts loading and the real 3D floor-plan render on devices.
+
+## Suggested order of work
+1. Deploy: `bash deploy/install.sh <domain> <email>` on the VPS (Ubuntu 24.04). Check `journalctl -u nooi -f`.
+2. Firebase auth → test sign-in end to end.
+3. Text AI key (Claude or Qwen) → test story/storyboard/translation.
+4. First video provider (WAN 3.0 or Kling) → real render end to end, then the rest.
+5. Payments in sandbox → go live after the payment company approves.
+6. Email, social publishing, backups off-site (rclone).
+7. Refactor frontend into modules; add automated tests to CI (tests/*.py with Playwright).
+
+## Rules
+- Never commit `.env`, `data/`, `media/`. Keep secrets out of logs and chat.
+- Keep Arabic/RTL correct: timelines & toolbars that represent time stay `dir="ltr"`; everything else follows the UI language.
+- Mobile first: test at 360/390 px, iPad 768/1180, desktop 1440 (`tests/allviews.py`). No horizontal page overflow.
+- After UI changes run `npm test` (= `bash tests/run_all.sh`): syntax, click every control (`[]` errors), layout on 4 devices, RTL in ar/fa/ckb, untranslated text, tracking accuracy.
+- Never declare a top-level `function` with an existing name — a later declaration silently replaces the earlier one (this broke the audio lab once). `npm test` fails on duplicates. Prefix new helpers (e.g. `crewNormalize`, `alDrawWave`).
+- Never compute `L()` at load time (the language may change) — build strings inside functions.
+- Setup for tests: `pip install -r tests/requirements.txt && python3 -m playwright install chromium`.

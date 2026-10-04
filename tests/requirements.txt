@@ -1,0 +1,2 @@
+playwright>=1.44
+# then: python3 -m playwright install chromium
