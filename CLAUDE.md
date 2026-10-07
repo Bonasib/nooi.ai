@@ -164,6 +164,9 @@ Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v
 - Routing (`adapterFor`): a studio model with `modelCat[id].kieModel` runs on Kie (Admin → Models → "Run on Kie AI"); the generic video/image/music provider falls back to the Kie default model when not connected. Health probe: `/api/v1/chat/credit` (shows credits left).
 - Model ids come from kie.ai's docs (not reachable from the build sandbox) via a maintained open-source client — confirm on kie.ai and run one job per model before launch. Test: `node tests/kie_mock.mjs`.
 
+## v44 Real model logos
+- `LOGO_SRC` now holds vector marks from Lobe Icons (MIT, `@lobehub/icons-static-svg`) instead of screenshot crops; `MODEL_LOGO` maps every model in FLAG/VRAIL/IRAIL plus ElevenLabs voices (Seedance → ByteDance mark, WAN → Alibaba, nooi models → nooi logo, Nano Banana → the Nano Banana icon). Single-colour marks are filled #111 for the white logo tile. Admin uploads still override (`logoFor`). The marks are the providers' trademarks — follow each brand's guidelines.
+
 ## Slash commands (in .claude/commands)
 `/test` full check · `/audit-i18n` translations & RTL · `/deploy root@IP` update the VPS · `/connect-provider Kling` wire & verify a real provider.
 
