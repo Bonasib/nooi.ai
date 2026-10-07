@@ -158,6 +158,12 @@ Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v
 - Plan prices (`.plan2 .pp`) and template tags (`.tmeta span`) wrap instead of being cut.
 - `tests/script_fonts.py` loads the real Google Fonts and fills every page with real-script text at a typical translation length (`EXPANSION`), then reports overlapping/clipped text and system-font fallback. The other layout tests block the network, so they never see the real fonts. Remaining findings at stress length are intended truncation (2-line card titles, select values) or the pannable storyboard/3D views.
 
+## v43 Kie AI (one key, many platforms)
+- `providers/kie.js`: market models `POST /api/v1/jobs/createTask {model,input}` → poll `/api/v1/jobs/recordInfo` (state, resultJson.resultUrls); Veo `veo3|veo3_fast|veo3_lite` → `/api/v1/veo/generate` + `/veo/record-info` (successFlag); `suno:V5` → market `ai-music-api/generate` (result = data[].audio_url). Kie answers HTTP 200 with its own `code` (401 key, 402 credits, 422 input, 429/433 rate) — mapped to the usual error types so jobs retry/refund correctly.
+- Input fields differ per family (`kieInput`): Kling duration "5"/"10" + image_urls · Seedance/MiniMax H3 first_frame_url · Hailuo/Wan 2.7 image_url · Nano Banana image_input · others image_urls; image-to-video ids get no aspect_ratio. Admin can add/override fields per model id with the "Extra inputs" JSON.
+- Routing (`adapterFor`): a studio model with `modelCat[id].kieModel` runs on Kie (Admin → Models → "Run on Kie AI"); the generic video/image/music provider falls back to the Kie default model when not connected. Health probe: `/api/v1/chat/credit` (shows credits left).
+- Model ids come from kie.ai's docs (not reachable from the build sandbox) via a maintained open-source client — confirm on kie.ai and run one job per model before launch. Test: `node tests/kie_mock.mjs`.
+
 ## Slash commands (in .claude/commands)
 `/test` full check · `/audit-i18n` translations & RTL · `/deploy root@IP` update the VPS · `/connect-provider Kling` wire & verify a real provider.
 

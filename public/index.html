@@ -6237,7 +6237,7 @@ uniPanel=(o=>function(){let h=o();const U=S.uni;if(!h.includes('data-fam="image"
 document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="uni-m"][data-fam="image"]');if(!a)return;if(!imgOK(a.dataset.m)){e.stopImmediatePropagation();upsell(L("“"+IMG_MODELS[a.dataset.m].name+"” is part of a higher plan.","«"+IMG_MODELS[a.dataset.m].name+"» ضمن باقة أعلى."),IMG_TIER[a.dataset.m][0])}},true);
 addJob=(o=>function(j){if(j&&j.kind==="image"&&j.model&&!imgOK(j.model)){upsell(L("“"+IMG_MODELS[j.model].name+"” is part of a higher plan.","«"+IMG_MODELS[j.model].name+"» ضمن باقة أعلى."),IMG_TIER[j.model][0]);return null}return o(j)})(addJob);
 /* ---- live status: Online · Degraded · Maintenance · Not connected ---- */
-const MODEL_PROV=id=>/^kling/.test(id)?"kling":/^seedance/.test(id)?"seedance":/^hailuo/.test(id)?"minimax":/^wan|hunyuan|ltx/.test(id)?"wan":/^qwen/.test(id)?"qwen":/^nano/.test(id)?"google":id==="mj"?"midjourney":/^el_/.test(id)||id==="elevenlabs"?"elevenlabs":"image";
+const MODEL_PROV=id=>(((API.cfg||{}).modelCat||{})[id]||{}).kie||((S.modelCat||{})[id]||{}).kieModel?"kie":/^kling/.test(id)?"kling":/^seedance/.test(id)?"seedance":/^hailuo/.test(id)?"minimax":/^wan|hunyuan|ltx/.test(id)?"wan":/^qwen/.test(id)?"qwen":/^nano/.test(id)?"google":id==="mj"?"midjourney":/^el_/.test(id)||id==="elevenlabs"?"elevenlabs":"image";
 let PSTATUS={};const DEMO_STATUS={midjourney:"unconfigured",image:"online"};
 async function loadStatus(){if(API.mode==="server"){try{const r=await API.req("/v1/status");PSTATUS=r.providers||{};document.querySelectorAll("[data-sprov]").forEach(el=>{const s=PSTATUS[el.dataset.sprov]||"online";el.className="stag s-"+s;el.lastChild.textContent=stLabel_V35(s)})}catch(e){}}}
 setTimeout(loadStatus,1500);setInterval(loadStatus,300000);
@@ -6404,6 +6404,32 @@ function nooiUiFontCSS(){
 (function(){const st=document.createElement("style");st.id="v42wrap";st.textContent=
   ".plan2 .pp{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}"+
   ".tmeta span{white-space:normal;overflow-wrap:anywhere;max-width:100%}";document.head.appendChild(st)})();
+
+/* ================= v43: KIE AI — one key, many model platforms ================= */
+/* Server: providers/kie.js. Admin → AI providers → "Kie AI": key + default video/image/music model (used when no
+   direct provider is connected). Admin → Models → "Run on Kie AI": a Kie model id per studio model routes that
+   model's jobs to Kie. Model ids are the ones listed on each model's page at kie.ai (suggestions below). */
+AI_PROVIDERS.unshift(["kie","Kie AI (many platforms)","Kie AI (منصات متعددة)","video · image · music — Kling, Seedance, Wan, Hailuo, Veo, Grok, Nano Banana, GPT Image, Seedream, Flux, Suno…",
+  [["apiKey","API key"],["videoModel","Default video model (e.g. kling-3.0/video)"],["imageModel","Default image model (e.g. nano-banana-pro)"],["musicModel","Default music model (e.g. suno:V5)"],["inputs","Extra inputs per model (JSON, optional)"],["baseUrl","Base URL"]],"https://api.kie.ai"]);
+HEALTH_KEYS.unshift(["kie","Kie AI"]);
+const KIE_SUGGEST=[["veo3","Veo 3.1 Quality"],["veo3_fast","Veo 3.1 Fast"],["veo3_lite","Veo 3 Lite"],["kling-3.0/video","Kling 3.0"],["kling-3.0-omni/text-to-video","Kling 3.0 Omni"],["kling-2.6/text-to-video","Kling 2.6"],["kling-2.6/image-to-video","Kling 2.6 image → video"],
+  ["bytedance/seedance-2-5","Seedance 2.5"],["bytedance/seedance-2","Seedance 2.0"],["bytedance/seedance-2-fast","Seedance 2.0 Fast"],["wan/3-0-video","Wan 3.0"],["wan/2-7-text-to-video","Wan 2.7"],["wan/2-7-image-to-video","Wan 2.7 image → video"],
+  ["minimax-h3/text-to-video","MiniMax H3"],["minimax-h3/image-to-video","MiniMax H3 image → video"],["hailuo/2-3-image-to-video-pro","Hailuo 2.3 Pro"],["grok-imagine/text-to-video","Grok Imagine video"],["pixverse-v6/text-to-video","PixVerse V6"],
+  ["nano-banana-pro","Nano Banana Pro"],["nano-banana-2","Nano Banana 2"],["google/nano-banana-edit","Nano Banana edit"],["gpt-image-2-text-to-image","GPT Image 2"],["gpt-image-2-image-to-image","GPT Image 2 edit"],["seedream/5-pro-text-to-image","Seedream 5.0 Pro"],
+  ["seedream/4.5-text-to-image","Seedream 4.5"],["flux-2/pro-text-to-image","Flux 2 Pro"],["flux-2/pro-image-to-image","Flux 2 Pro edit"],["google/imagen4-ultra","Imagen 4 Ultra"],["ideogram/v3-text-to-image","Ideogram v3"],["qwen3/text-to-image","Qwen Image 3.0"],["grok-imagine/text-to-image","Grok Imagine image"],
+  ["suno:V5","Suno V5 (music)"],["suno:V4_5","Suno V4.5 (music)"]];
+function nooiKieList(){return'<datalist id="kielist">'+KIE_SUGGEST.map(x=>'<option value="'+esc(x[0])+'">'+esc(x[1])+"</option>").join("")+"</datalist>"}
+function nooiKieModels(){const seen={},rows=[];
+  const add=(id,name,group)=>{if(!id||id==="auto"||seen[id])return;seen[id]=1;rows.push([id,name,group])};
+  (typeof FLAG!=="undefined"?FLAG:[]).forEach(f=>add(f.id,f.name,"video"));(typeof VRAIL!=="undefined"?VRAIL:[]).forEach(r=>add(r[0],r[1],"video"));(typeof IRAIL!=="undefined"?IRAIL:[]).forEach(r=>add(r[0],r[1],"image"));
+  return rows}
+function nooiKieAdmin(){const rows=nooiKieModels();
+  return'<div class="panel pad" style="margin-top:12px"><h3 style="margin-top:0">'+L("Run on Kie AI","التشغيل عبر Kie AI")+'</h3><p class="small mute">'+
+  L("Put a Kie AI model id next to any model to run it through your Kie AI key (Admin → AI providers → Kie AI). Leave it empty to keep the direct provider. Copy the exact id from the model's page on kie.ai.",
+    "ضع معرّف نموذج Kie AI بجانب أي نموذج لتشغيله عبر مفتاح Kie AI (الإدارة ← مزودو الذكاء الاصطناعي ← Kie AI). اتركه فارغاً لإبقاء المزوّد المباشر. انسخ المعرّف الدقيق من صفحة النموذج على kie.ai.")+"</p>"+nooiKieList()+
+  '<div class="fields">'+rows.map(r=>{const c=(S.modelCat||{})[r[0]]||{};return'<div><label class="lbl">'+esc(r[1])+' <span class="small dim">· '+(r[2]==="video"?L("video","فيديو"):L("image","صورة"))+"</span></label>"+
+    '<input type="text" dir="ltr" list="kielist" data-fm="'+esc(r[0])+'" data-k="kieModel" value="'+esc(c.kieModel||"")+'" placeholder="'+(r[2]==="video"?"kling-3.0/video":"nano-banana-pro")+'" autocomplete="off"></div>'}).join("")+"</div></div>"}
+(function(){const _v=VIEWS.admin;VIEWS.admin=()=>{const h=_v();return S.admTab==="models"?h.replace(/<\/div>\s*$/,nooiKieAdmin()+"</div>"):h}})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

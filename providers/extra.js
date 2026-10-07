@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { cfg, configured, S as settingsS } from "../lib/settings.js";
 import { elevenlabs } from "./elevenlabs.js";
 import { nanoBanana, midjourney, gptImage } from "./images2.js";
+import { kie, kieDefault } from "./kie.js";
 // Flagship models → provider + API model id set by the admin (Admin → Models)
 const FLAGSHIP = { kling40: "kling", kling30: "kling", seedance25: "seedance", seedance20: "seedance", hailuoh3: "minimax" };
 const makers = () => ({ kling, seedance, minimax });
@@ -46,8 +47,17 @@ export const minimax = (mo) => { const c = cfg("minimax"); const base = (c.baseU
     async poll(id) { const d = await j(await fetch(base + "/query/video_generation?task_id=" + encodeURIComponent(id), { headers: h }), "MiniMax"); const s = String(d.status || "").toLowerCase();
       if (s === "success" && d.file_id) { const f = await j(await fetch(base + "/files/retrieve?file_id=" + encodeURIComponent(d.file_id), { headers: h }), "MiniMax"); return { status: "done", url: f.file && f.file.download_url }; }
       return s === "fail" || s === "failed" ? { status: "failed", error: (d.base_resp && d.base_resp.status_msg) || "MiniMax failed" } : { status: s === "queueing" ? "queued" : "rendering" }; } }; };
-// Pick the adapter for a job: video models can be routed to Seedance / Kling / Qwen / MiniMax
+// Pick the adapter for a job: video models can be routed to Seedance / Kling / Qwen / MiniMax, or to Kie AI
 export function adapterFor(cap, body, PROVIDERS) {
+  // Any studio model with a Kie model id set in Admin → Models runs on Kie AI
+  const km = body.model && (settingsS().modelCat || {})[body.model]?.kieModel;
+  if (km) return { key: "kie@" + km, a: kie(km) };
+  const r = directAdapter(cap, body, PROVIDERS);
+  // The generic capability provider isn't connected → use the admin's default Kie model for this capability
+  if (r && r.key === cap && !(r.a && r.a.configured)) { const d = kieDefault(cap, body.kind); if (d) return { key: "kie@" + d, a: kie(d) }; }
+  return r;
+}
+function directAdapter(cap, body, PROVIDERS) {
   if (body.kind === "voice" && body.meta?.engine === "elevenlabs") return { key: "elevenlabs", a: elevenlabs() };
   if (cap === "image" && (body.model === "nano" || body.model === "nanopro")) return { key: "nano@" + body.model, a: nanoBanana(body.model) };
   if (cap === "image" && body.model === "mj") return { key: "midjourney", a: midjourney() };
@@ -61,4 +71,4 @@ export function adapterFor(cap, body, PROVIDERS) {
   if (cap === "image" && body.model === "qwen") return { key: "qwen-image", a: dashscope("image") };
   return { key: cap, a: PROVIDERS[cap] };
 }
-export function adapterByKey(key, PROVIDERS) { if (String(key).startsWith("gpt@")) return gptImage(key.slice(4)); if (key === "elevenlabs") return elevenlabs(); if (key === "midjourney") return midjourney(); if (String(key).startsWith("nano@")) return nanoBanana(key.slice(5)); if (String(key).includes("@")) { const [prov, mo] = key.split("@"); return makers()[prov](mo); } return key === "minimax" ? minimax() : key === "seedance" ? seedance() : key === "kling" ? kling() : key === "qwen-video" ? dashscope("video") : key === "qwen-image" ? dashscope("image") : PROVIDERS[key]; }
+export function adapterByKey(key, PROVIDERS) { if (String(key).startsWith("kie@")) return kie(key.slice(4)); if (String(key).startsWith("gpt@")) return gptImage(key.slice(4)); if (key === "elevenlabs") return elevenlabs(); if (key === "midjourney") return midjourney(); if (String(key).startsWith("nano@")) return nanoBanana(key.slice(5)); if (String(key).includes("@")) { const [prov, mo] = key.split("@"); return makers()[prov](mo); } return key === "minimax" ? minimax() : key === "seedance" ? seedance() : key === "kling" ? kling() : key === "qwen-video" ? dashscope("video") : key === "qwen-image" ? dashscope("image") : PROVIDERS[key]; }

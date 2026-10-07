@@ -9,6 +9,7 @@ import { createJob, publicJob } from "./lib/jobs.js";
 import { analyzeSite } from "./lib/site.js";
 import { MEDIA_DIR, publicUrl } from "./lib/media.js";
 import { PROVIDERS } from "./providers/index.js";
+import { kieDefault } from "./providers/kie.js";
 import { llmConfigured, llmJson, llm, llmInfo } from "./providers/anthropic.js";
 import { OAUTH, pkcePair } from "./social/oauth.js";
 import { runPost } from "./lib/scheduler.js";
@@ -20,7 +21,7 @@ import { spawn } from "child_process";
 import { saveBuffer } from "./lib/media.js";
 import { LIMITS, planOf } from "./lib/plans.js";
 import { refillPlans } from "./lib/billing.js";
-import { S as platform, featureOn } from "./lib/settings.js";
+import { S as platform, featureOn, configured } from "./lib/settings.js";
 import { createToken, listTokens, revokeToken, userFromToken } from "./lib/tokens.js";
 import { handleMcp } from "./lib/mcp.js";
 import { verify } from "./lib/auth.js";
@@ -37,8 +38,8 @@ app.get("/v1/health", (_, res) => res.json({ ok: true }));
 app.get("/v1/config", (_, res) => res.json({
   firebase: firebaseWebConfig(),
   llm: llmConfigured() ? { provider: llmInfo().provider, model: llmInfo().model } : null,
-  billing: enabledPayments().length > 0, payments: enabledPayments(), modelLogos: platform().modelLogos || {}, worldEngine: !!(process.env.WORLD_API_URL || (platform().providers || {}).world), modelCat: Object.fromEntries(Object.entries(platform().modelCat || {}).map(([k, v]) => [k, { cr: v.cr, verified: !!v.verified }])), features: platform().features, models: platform().models, prices: platform().prices, support: "contact@nooi.ai",
-  providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured])), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!process.env.REALTIME_API_URL, billing: enabledPayments().length > 0 }
+  billing: enabledPayments().length > 0, payments: enabledPayments(), modelLogos: platform().modelLogos || {}, worldEngine: !!(process.env.WORLD_API_URL || (platform().providers || {}).world), modelCat: Object.fromEntries(Object.entries(platform().modelCat || {}).map(([k, v]) => [k, { cr: v.cr, verified: !!v.verified, kie: !!v.kieModel }])), features: platform().features, models: platform().models, prices: platform().prices, support: "contact@nooi.ai",
+  providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || !!kieDefault(k)])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!process.env.REALTIME_API_URL, billing: enabledPayments().length > 0 }
 }));
 
 // Uploads (start frames, references, exports, music…)
