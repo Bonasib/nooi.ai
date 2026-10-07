@@ -7,7 +7,7 @@ const KEY = "kie_test_key_123";
 const st = await import(ROOT + "/lib/settings.js");
 delete st.S().providers.kie;  // start clean even if an earlier run stopped half-way
 st.saveCfg("providers", "kie", { apiKey: KEY, inputs: JSON.stringify({ "kling-3.0/video": { mode: "pro" } }) });
-const { kie, kieInput } = await import(ROOT + "/providers/kie.js");
+const { kie, kieInput, kieBase } = await import(ROOT + "/providers/kie.js");
 const { adapterFor, adapterByKey } = await import(ROOT + "/providers/extra.js");
 const { PROVIDERS } = await import(ROOT + "/providers/index.js");
 const { classify } = await import(ROOT + "/lib/errors.js");
@@ -39,6 +39,7 @@ ok((await K.poll("m:t1")).status === "failed", "poll: success without any URL is
 
 // ── per-family input fields ──
 const vid = (dur, img) => ({ kind: "video", prompt: "p", dur, aspect: "9:16", inputs: img ? { startImage: "https://i" } : {}, meta: {} });
+ok(["", "https://kie.ai", "kie.ai/", "https://www.kie.ai/api/v1", "https://docs.kie.ai", "https://api.kie.ai/api/v1/"].every((u) => kieBase(u) === "https://api.kie.ai") && kieBase("http://localhost:8098/") === "http://localhost:8098", "Base URL: the kie.ai website, docs or a pasted /api/v1 all become https://api.kie.ai");
 let i = kieInput("bytedance/seedance-2", vid(20, true)); ok(i.duration === 15 && i.first_frame_url === "https://i", "Seedance: duration clamped to 15, first_frame_url");
 i = kieInput("minimax-h3/image-to-video", vid(5, true)); ok(i.first_frame_url === "https://i" && i.duration === 6 && i.aspect_ratio === undefined, "MiniMax H3 I2V: first_frame_url, 6 s, no aspect_ratio");
 i = kieInput("hailuo/2-3-image-to-video-pro", vid(10, true)); ok(i.image_url === "https://i" && i.duration === "10", "Hailuo: image_url and duration as text");

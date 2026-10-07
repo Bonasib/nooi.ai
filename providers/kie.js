@@ -95,14 +95,25 @@ export function kieResult(d) {
   return urls[0] || rj.resultObject?.url || rj.url || rj.resultImageUrl || null;
 }
 
+// The API lives on api.kie.ai. A Base URL pointing at the kie.ai website (or with /api/v1 pasted on the end)
+// would answer every call with the site's 404 page, so it is corrected here. Exported for tests.
+export function kieBase(u) {
+  let b = String(u || "").trim().replace(/\/+$/, ""); if (!b) return "https://api.kie.ai";
+  if (!/^https?:\/\//i.test(b)) b = "https://" + b;
+  b = b.replace(/\/api(\/v\d+)?(\/.*)?$/i, "");
+  try { const h = new URL(b).hostname.toLowerCase(); if (/(^|\.)kie\.ai$/.test(h) && h !== "api.kie.ai") return "https://api.kie.ai"; } catch { return "https://api.kie.ai"; }
+  return b;
+}
 export const kie = (model) => {
-  const c = cfg("kie"), base = (c.baseUrl || "https://api.kie.ai").replace(/\/$/, "");
+  const c = cfg("kie"), base = kieBase(c.baseUrl);
   const h = { Authorization: "Bearer " + c.apiKey, "Content-Type": "application/json" };
   const call = async (path, init) => {
     const r = await fetch(base + path, { ...init, headers: h });
     const t = await r.text(); let d; try { d = JSON.parse(t); } catch { d = { raw: t }; }
     // Kie answers HTTP 200 with its own code in the body (401 bad key, 402 no credits, 422 bad input, 429 rate limit…)
     const code = !r.ok ? r.status : (d.code && d.code !== 200 ? d.code : 0);
+    // an HTML page instead of JSON: the Base URL is a website, not the Kie API
+    if (/^\s*</.test(t)) throw Object.assign(new Error(`Kie AI ${code || r.status}: ${base} answered with a web page, not the API. Clear Admin → AI providers → Kie AI → Base URL (or set it to https://api.kie.ai)`), { status: code || r.status, noFallback: true });
     // 433 = Kie's own rate limit → treat like 429 so jobs retry with backoff
     if (code) throw Object.assign(new Error(`Kie AI ${code === 433 ? 429 : code}: ${d.msg || d.message || t.slice(0, 200)}`), { status: code });
     return d.data || {};
