@@ -167,6 +167,9 @@ Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v
 ## v44 Real model logos
 - `LOGO_SRC` now holds vector marks from Lobe Icons (MIT, `@lobehub/icons-static-svg`) instead of screenshot crops; `MODEL_LOGO` maps every model in FLAG/VRAIL/IRAIL plus ElevenLabs voices (Seedance → ByteDance mark, WAN → Alibaba, nooi models → nooi logo, Nano Banana → the Nano Banana icon). Single-colour marks are filled #111 for the white logo tile. Admin uploads still override (`logoFor`). The marks are the providers' trademarks — follow each brand's guidelines.
 
+## v45 Prompt box layout
+- CSS-only block `#v45prompt`, scoped to `.panel.uni`: task chips wrap on desktop (≥1080 px) and swipe with a fade below; prompt surface with a brand focus ring; equal 212 px model cards that snap (170 px on phones) with a fade where the rail continues (mirrored in RTL); Seconds / Frame rate / Aspect in one tray with full-width segmented controls; "First & end frame" as a pill; crew row spread evenly; larger Create button. Section labels avoid letter-spacing/uppercase so Arabic-script labels stay joined.
+
 ## Slash commands (in .claude/commands)
 `/test` full check · `/audit-i18n` translations & RTL · `/deploy root@IP` update the VPS · `/connect-provider Kling` wire & verify a real provider.
 
