@@ -64,13 +64,24 @@ try {
   const fb = jobs[made.findIndex((m) => /falls back/.test(m[0]))] || {}; ok(fb.status === "done" && seen.some((s) => s.body?.model === "nano-banana-2" && /FAILME/.test(s.body.input.prompt)), "fallback: the failed Nano Banana job finished on Seedream instead of refunding");
   const dt = await api("/v1/jobs/" + made[0][1]); ok("via" in dt.d, "owners and admins see which provider ran a job (via: " + dt.d.via + ")");
   const kl = seen.find((s) => s.body && s.body.model === "kling-2.6/image-to-video"); ok(kl && kl.body.input.image_urls && kl.body.input.image_urls[0] === ref, "Kling gets the start frame as image_urls");
+  // the browser never learns which provider runs the models
+  const leak = (t) => /kie/i.test(String(t).replace(/cookie/gi, ""));
+  const pages = await Promise.all(["/v1/config", "/v1/showcase", "/v1/explore", "/v1/jobs/" + made[0][1], "/v1/admin/settings"].map((p) => fetch(`http://localhost:${NPORT}${p}`).then((r) => r.text())));
+  ok(pages.every((t) => !leak(t)), "no provider name in /v1/config, showcase, explore, jobs or admin settings (" + pages.map((t, i) => leak(t) ? i : "").join("") + ")");
+  const fsm = await import("fs"), pub = ROOT + "/public";
+  const files = ["index.html", "email-templates.js", "local-ai-worker.js", ...fsm.readdirSync(pub + "/i18n").map((f) => "i18n/" + f)];
+  const bad = files.filter((f) => leak(fsm.readFileSync(pub + "/" + f, "utf8").replace(/[A-Za-z0-9+/=]{200,}/g, "").replace(/\bkies\b/g, "")));
+  ok(!bad.length, "no provider name in any file the browser downloads (" + bad.join(", ") + ")");
   // showcase: the admin button makes nooi's marketing media with Kie AI and posts each one to Explore with its prompt
   const sc0 = await api("/v1/showcase"); ok(sc0.status === 200 && sc0.d.items.length >= 20 && ["motion", "anime", "vfx", "pixel"].every((c) => sc0.d.items.some((x) => x.cat === c && x.kind === "video")) && sc0.d.items.some((x) => x.kind === "image"), "showcase: motion, anime, VFX, pixel-art videos and pictures, each with a prompt");
-  const pick = ["desert-rider", "pixel-knight", "abaya-portrait"];
-  const sg = await api("/v1/admin/showcase", { json: { ids: pick, force: true } }); ok(sg.status === 200 && pick.every((id) => sg.d.items.find((x) => x.id === id).status === "rendering"), "showcase: three items started (" + (sg.d.error || sg.status) + ")");
+  const pick = ["desert-rider", "pixel-knight", "abaya-portrait", "av-faisal"];
+  const sg = await api("/v1/admin/showcase", { json: { ids: pick, force: true } }); ok(sg.status === 200 && pick.every((id) => sg.d.items.find((x) => x.id === id).status === "rendering"), "showcase: three items and one avatar started (" + (sg.d.error || sg.status) + ")");
   let sc = null; const t1 = Date.now(); while (Date.now() - t1 < 40000) { sc = (await api("/v1/showcase")).d; if ((await api("/v1/admin/showcase")).d.items.filter((x) => pick.includes(x.id)).every((x) => x.status === "done")) break; await new Promise((r) => setTimeout(r, 1500)); }
-  ok(pick.every((id) => /^\/media\//.test(sc.items.find((x) => x.id === id).url || "")), "showcase: finished media saved to /media and served by /v1/showcase");
-  const xp = (await api("/v1/explore")).d.items || []; ok(pick.every((id) => xp.some((x) => x.author === "nooi" && x.featured && x.prompt === sc.items.find((s) => s.id === id).prompt[0])), "showcase: each one posted to Explore as featured, with its prompt");
+  ok(pick.filter((id) => !id.startsWith("av-")).every((id) => /^\/media\//.test((sc.items.find((x) => x.id === id) || {}).url || "")) && !sc.items.some((x) => x.cat === "avatar"), "showcase: finished media saved to /media and served by /v1/showcase (avatars listed separately)");
+  const avs = (await api("/v1/avatars")).d.items || []; ok(avs.length === 1 && avs[0].id === "av-faisal" && /^\/media\//.test(avs[0].url), "avatars: a made avatar is listed with its picture for the Avatar tool");
+  const sv = seen.filter((x) => x.body && x.body.model === "nano-banana-pro" && /fictional person/.test(x.body.input?.prompt || "")); ok(sv.length >= 1, "avatars: made as a photoreal portrait of a fictional person");
+  const xp = (await api("/v1/explore")).d.items || []; ok(!xp.some((x) => /fictional person/.test(x.prompt || "")), "avatars are not posted to Explore");
+  ok(pick.filter((id) => !id.startsWith("av-")).every((id) => xp.some((x) => x.author === "nooi" && x.featured && x.prompt === sc.items.find((s) => s.id === id).prompt[0])), "showcase: each one posted to Explore as featured, with its prompt");
   const again = await api("/v1/admin/showcase", { json: { ids: pick } }); ok(pick.every((id) => again.d.items.find((x) => x.id === id).status === "done"), "showcase: finished items are not made twice unless asked");
   const del = await fetch(`http://localhost:${NPORT}/v1/admin/showcase`, { method: "DELETE", headers: { "content-type": "application/json" }, body: JSON.stringify({ ids: pick }) }).then((r) => r.json());
   ok(pick.every((id) => del.items.find((x) => x.id === id).status === "none") && !((await api("/v1/explore")).d.items || []).some((x) => x.author === "nooi"), "showcase: admin can remove items (test data cleaned up)");

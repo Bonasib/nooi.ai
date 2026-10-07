@@ -14,7 +14,7 @@ MOCK = """()=>{laiCall=async(msg,onp)=>{if(onp)onp({status:'running'});const t=m
  if(t==='asr')return{text:'hello world',chunks:[{start:0,end:.5,text:'hello'},{start:.5,end:1,text:'world'}]};
  if(t==='bg'){return new Promise(r=>{const c=document.createElement('canvas');c.width=c.height=32;c.toBlob(b=>r({blob:b}),'image/png')})}
  throw new Error('unmocked '+t)};S.localAI=true}"""
-SKIP = {"sc-gen", "sc-one", "sc-retry", "hf-send", "xp-dl", "ed-export", "ed-publish", "s3d-turntable", "kie-try", "edx-aishot", "logout", "signout", "adm-send", "adm-test"}
+SKIP = {"sc-gen", "sc-av", "sc-one", "sc-retry", "hf-send", "xp-dl", "ed-export", "ed-publish", "s3d-turntable", "eng-try", "edx-aishot", "logout", "signout", "adm-send", "adm-test"}
 
 CLICK_JS = """async ([sel, cap, skip]) => { let n = 0;
   for (let i = 0; i < cap; i++) {
@@ -85,8 +85,8 @@ async def main():
                 out["clicks"] += await click_all(pg, "#main", errs, f"{w}:explore", 30)
                 # admin AI providers
                 await E("()=>{go('admin');S.admTab='models';renderView()}"); await pg.wait_for_timeout(1200)
-                out["clicks"] += await click_all(pg, ".kiequick", errs, f"{w}:kie", 10)
-                out["checks"][f"{w}:kie"] = await E("()=>!!document.querySelector('.kiequick')")
+                out["clicks"] += await click_all(pg, ".engquick", errs, f"{w}:engine", 10)
+                out["checks"][f"{w}:engine"] = await E("()=>!!document.querySelector('.engquick')")
                 out["errors"] += [f"{w}: " + e for e in errs]
                 await ctx.close()
             await b.close()

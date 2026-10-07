@@ -30,16 +30,16 @@ async def main():
         # mobile model bottom sheet
         await pg.click('[data-act="m-sheet"]');await pg.wait_for_timeout(200)
         r["sheetRows"]=await pg.evaluate("document.querySelectorAll('#modalRoot .mrow').length")
-        await pg.click('#modalRoot .mrow[data-m="qwen2"]');await pg.wait_for_timeout(200)
+        await pg.click('#modalRoot .mrow[data-m="seedream5"]');await pg.wait_for_timeout(200)
         r["pickedFromSheet"]=await pg.evaluate("[S.uni.imodel,!!document.querySelector('#modalRoot .msheet')]")
         # durations
         await pg.evaluate("()=>{S.uni.task='content';renderAll()}");await pg.wait_for_timeout(200)
         r["secondChips"]=await pg.evaluate("[...document.querySelectorAll('[data-act=\"uni-dur\"]')].map(b=>b.textContent+(b.classList.contains('lockd')?'🔒':''))")
-        await pg.evaluate("()=>{S.myPlan='studio';S.view='video';S.draft.model='kling40';S.draft.dur=30;S.draft.prompt='falcon';renderAll();makeVideo()}");await pg.wait_for_timeout(300)
+        await pg.evaluate("()=>{S.myPlan='studio';S.view='video';S.draft.model='kling30';S.draft.dur=30;S.draft.prompt='falcon';renderAll();makeVideo()}");await pg.wait_for_timeout(300)
         r["longVideo"]=await pg.evaluate("(()=>{const j=S.jobs.filter(x=>x.kind==='video').pop();return {dur:j.dur,parts:j.meta.parts,partSec:j.meta.partSec}})()")
         r["sliderMax"]=await pg.evaluate("(document.querySelector('[data-bind=\"draft.dur\"]')||{}).max")
         # credits sheet
-        await pg.evaluate("()=>{S.credits=3;S.draft.model='kling40';S.draft.dur=10;makeVideo()}");await pg.wait_for_timeout(200)
+        await pg.evaluate("()=>{S.credits=3;S.draft.model='kling30';S.draft.dur=10;makeVideo()}");await pg.wait_for_timeout(200)
         r["creditsSheet"]=await pg.evaluate("(document.querySelector('#modalRoot h2')||{}).textContent")
         await pg.evaluate("()=>{$('#modalRoot').innerHTML='';S.credits=5000}")
         # admin connection tests (demo)

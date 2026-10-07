@@ -16,7 +16,7 @@ async def main():
         r["accessories"]=await pg.evaluate("[...document.querySelectorAll('.crewline svg.fbot')].map(s=>s.getAttribute('class').match(/fb-[a-z]+/)[0])")
         await pg.evaluate("window.scrollTo(0,0)");await pg.screenshot(path="/tmp/agents.png")
         # flagship models
-        await pg.evaluate("()=>{S.view='home';S.homeAdv=true;S.uni.task='content';S.uni.model='kling40';S.uni.prompt='';renderAll()}");await pg.wait_for_timeout(300)
+        await pg.evaluate("()=>{S.view='home';S.homeAdv=true;S.uni.task='content';S.uni.model='veo31';S.uni.prompt='';renderAll()}");await pg.wait_for_timeout(300)
         r["rail"]=await pg.evaluate("[...document.querySelectorAll('.uni .mcard b')].slice(0,8).map(b=>b.textContent)")
         r["newBadges"]=await pg.evaluate("document.querySelectorAll('.uni .mnew').length")
         r["features"]=await pg.evaluate("[...document.querySelectorAll('.uni .mfeat .fchip')].map(x=>x.textContent)")
@@ -26,7 +26,7 @@ async def main():
         r["planThemes"]=await pg.evaluate("[...document.querySelectorAll('.plans3 .plan2')].map(c=>c.className.match(/pt-\\w+/)[0]+': '+[...c.querySelectorAll('.pchip')].map(x=>x.textContent).join(' | '))")
         await pg.evaluate("(()=>{const e=document.querySelector('.plans3');window.scrollTo(0,e.getBoundingClientRect().top+window.scrollY-70)})()");await pg.wait_for_timeout(300);await pg.screenshot(path="/tmp/plans2.png")
         # entitlement on the free plan for a flagship
-        await pg.evaluate("()=>{S.view='home';S.homeAdv=true;S.uni.task='content';renderAll()}");await pg.click('.uni .mcard[data-m="kling40"]');await pg.wait_for_timeout(200)
+        await pg.evaluate("()=>{S.view='home';S.homeAdv=true;S.uni.task='content';renderAll()}");await pg.click('.uni .mcard[data-m="veo31"]');await pg.wait_for_timeout(200)
         r["freeKling40"]=await pg.evaluate("!!document.querySelector('#modalRoot .upbox')")
         await pg.evaluate("()=>{$('#modalRoot').innerHTML='';S.myPlan='studio'}")
         # CRM & ERP

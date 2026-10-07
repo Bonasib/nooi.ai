@@ -24,7 +24,7 @@ import { testAll } from "./lib/health.js";
 import { spawn } from "child_process";
 import { saveBuffer } from "./lib/media.js";
 import { LIMITS, planOf } from "./lib/plans.js";
-import { refillPlans } from "./lib/billing.js";
+import { refillPlans, priceTable, ENGINE_COST, engineCost, basePrice, CREDIT_FLOOR_USD, priceFactor } from "./lib/billing.js";
 import { S as platform, featureOn, configured } from "./lib/settings.js";
 import { createToken, listTokens, revokeToken, userFromToken } from "./lib/tokens.js";
 import { handleMcp } from "./lib/mcp.js";
@@ -32,6 +32,8 @@ import { verify, canSendSignInLinks, signInLink, customTokenForEmail } from "./l
 import { newCode, checkCode } from "./lib/otp.js";
 import { isStaff } from "./lib/admin.js";
 import { registerShowcase } from "./lib/showcase.js";
+import { registerGifts } from "./lib/gifts.js";
+import { registerInvoices } from "./lib/invoices.js";
 import { registerExplore } from "./lib/explore.js";
 import { sendEmail, emailConfigured } from "./lib/email.js";
 import { renderEmail } from "./public/email-templates.js";
@@ -40,6 +42,18 @@ import { uiLang, uiDict, uiTranslate, rateOk } from "./lib/uit.js";
 const app = express();
 app.use(cors({ origin: process.env.PUBLIC_BASE_URL || true }));
 app.use(express.json({ limit: "12mb" }));
+// The browser never sees which AI provider runs the models: every JSON answer says "engine" instead
+// (keys kie/kieModel/kieRoutes → engine/engineModel/engineRoutes, "kie@model" → "engine@model"), and the admin
+// may address the provider as "engine" (/v1/admin/providers/engine, modelCat[id].engineModel).
+const ENG_KEY = /(^|_)kie(?=[A-Z_]|$)/;
+const engStr = (s) => s.replace(/Kie AI/g, "AI engine").replace(/KIE AI/g, "AI ENGINE").replace(/(https?:\/\/)?(api\.|docs\.)?kie\.ai/gi, "the engine").replace(/\bkie@/g, "engine@").replace(/^kie$/, "engine").replace(/\bKie\b/g, "Engine");
+const engOut = (v, d = 0) => d > 14 ? v : typeof v === "string" ? (/kie/i.test(v) ? engStr(v) : v) : Array.isArray(v) ? v.map((x) => engOut(x, d + 1))
+  : v && typeof v === "object" && !(v instanceof Date) ? Object.fromEntries(Object.entries(v).map(([k, x]) => [ENG_KEY.test(k) ? k.replace(ENG_KEY, "$1engine") : k, engOut(x, d + 1)])) : v;
+app.use((req, res, next) => {
+  req.url = req.url.replace(/^\/v1\/admin\/providers\/engine(?=\/|$|\?)/, "/v1/admin/providers/kie");
+  const mc = req.body && req.body.modelCat; if (mc && typeof mc === "object") for (const v of Object.values(mc)) if (v && typeof v === "object" && "engineModel" in v) { v.kieModel = v.engineModel; delete v.engineModel; }
+  const j = res.json.bind(res); res.json = (d) => j(engOut(d)); next();
+});
 app.set("trust proxy", 1);   // behind Nginx on the VPS
 app.use("/media", express.static(MEDIA_DIR, { maxAge: "7d" }));
 app.use(express.static(path.resolve("public")));
@@ -59,7 +73,7 @@ app.get("/v1/health", (_, res) => res.json({ ok: true }));
 app.get("/v1/config", (_, res) => res.json({
   firebase: firebaseWebConfig(), localAI: { tfUrl: fs.existsSync(TF_DIR + "/transformers.min.js") ? "/vendor/transformers/transformers.min.js" : null, ortBase: fs.existsSync(ORT_DIR) ? "/vendor/ort/" : null, modelsHost: process.env.MODELS_DIR ? "/models/" : null, models: platform().localModels || {} }, emailCode: canSendSignInLinks() && emailConfigured(), kieRoutes: kieRoutes(),
   llm: llmConfigured() ? { provider: llmInfo().provider, model: llmInfo().model } : null,
-  billing: enabledPayments().length > 0, payments: enabledPayments(), modelLogos: platform().modelLogos || {}, worldEngine: !!(process.env.WORLD_API_URL || (platform().providers || {}).world), modelCat: Object.fromEntries(Object.entries(platform().modelCat || {}).map(([k, v]) => [k, { cr: v.cr, verified: !!v.verified, kie: !!v.kieModel }])), features: platform().features, models: platform().models, prices: platform().prices, support: "contact@nooi.ai",
+  billing: enabledPayments().length > 0, payments: enabledPayments(), modelLogos: platform().modelLogos || {}, worldEngine: !!(process.env.WORLD_API_URL || (platform().providers || {}).world), modelCat: Object.fromEntries(Object.entries(platform().modelCat || {}).map(([k, v]) => [k, { cr: v.cr, verified: !!v.verified, kie: !!v.kieModel }])), features: platform().features, models: platform().models, prices: priceTable(), support: "contact@nooi.ai",
   providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || !!kieDefault(k) || !!kieAuto(k, { kind: k === "tts" ? "voice" : k })])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!process.env.REALTIME_API_URL, billing: enabledPayments().length > 0 }
 }));
 
@@ -96,7 +110,7 @@ app.get("/v1/llm/test", requireUser, wrap(async (req, res) => {
 }));
 
 // ---- Billing
-app.get("/v1/billing", requireUser, (req, res) => { const u = user(req.user.uid); const staff = isStaff(req.user); const plan = staff ? "studio" : planOf(u); res.json({ credits: balance(req.user.uid), plan, staff, limits: LIMITS[plan], planUntil: u.planUntil || null, ledger: (u.ledger || []).slice(0, 50) }); });
+app.get("/v1/billing", requireUser, (req, res) => { const u = user(req.user.uid); const staff = isStaff(req.user); const plan = staff ? "studio" : planOf(u); res.json({ cid: u.cid, credits: balance(req.user.uid), plan, staff, limits: LIMITS[plan], planUntil: u.planUntil || null, ledger: (u.ledger || []).slice(0, 50) }); });
 
 // Branded sign-in email: the server makes the Firebase sign-in link and sends it with the nooi.ai design.
 // Public (people aren't signed in yet) → rate-limited per IP and per address. 501 = not set up → the browser
@@ -136,14 +150,14 @@ app.post("/v1/auth/email-link", wrap(async (req, res) => {
 app.post("/v1/billing/checkout", requireUser, wrap(async (req, res) => {
   if (!featureOn("payments")) throw Object.assign(new Error("Payments are paused"), { code: 403 });
   const name = providerName(req.body.provider); const P = provider(req.body.provider); if (!P) throw Object.assign(new Error("Payments are not connected yet"), { code: 501 });
-  const c = startCheckout(req.user.uid, req.body.annual && CATALOG[req.body.item + "_y"] ? req.body.item + "_y" : req.body.item, name === "paypal" ? "USD" : req.body.currency, req.body.coupon);
+  const c = startCheckout(req.user.uid, req.body.annual && CATALOG[req.body.item + "_y"] ? req.body.item + "_y" : req.body.item, name === "paypal" ? "USD" : req.body.currency, req.body.coupon, { gift: req.body.gift, email: req.user.email });
   const r = await P.create({ ...c, email: req.user.email });
   const pay = user(req.user.uid).payments[c.ref]; pay.providerId = r.id; pay.provider = name; save(); res.json(r.url ? { url: r.url } : { airwallex: r.airwallex });
 }));
 app.get("/v1/billing/return", wrap(async (req, res) => {
   const ref = String(req.query.ref || ""); const owner = findPayment(ref); if (!owner) return res.redirect("/#account");
   const p = user(owner).payments[ref]; try { await finishCheckout(owner, ref, req.query.id || p.providerId); } catch (e) { console.warn("payment", e.message); }
-  res.redirect("/?paid=" + (user(owner).payments[ref].status === "paid" ? "1" : "0") + "#account");
+  const pd = user(owner).payments[ref]; res.redirect("/?paid=" + (pd.status === "paid" ? "1" : "0") + (pd.giftCode ? "&gift=" + encodeURIComponent(pd.giftCode) : "") + (pd.invoice ? "&inv=" + encodeURIComponent(pd.invoice) : "") + (pd.giftCode ? "#wallet" : "#account"));
 }));
 app.post("/v1/billing/webhook/:provider", wrap(async (req, res) => {
   // Never trust the webhook body: we re-fetch the payment from the provider before crediting.
@@ -154,7 +168,18 @@ app.post("/v1/billing/webhook/:provider", wrap(async (req, res) => {
 app.get("/v1/billing/catalog", (_, res) => res.json(CATALOG));
 
 registerAdmin(app, requireUser);
-registerExplore(app); registerShowcase(app);
+// admin: engine cost per model → credits charged → margin; costs and margin are editable (prices recompute)
+const PR_NAMES = { seedance: "Seedance 2 Fast", wan27: "WAN 2.7", kling: "Kling", kling26: "Kling 2.6", hailuo: "MiniMax", hailuoh3: "MiniMax H3", pixverse6: "PixVerse 6", grok: "Grok Imagine", wan30: "WAN 3.0", seedance20: "Seedance 2.0", kling30: "Kling 3.0", seedance25: "Seedance 2.5", veo31f: "Veo 3.1 Fast", veo31: "Veo 3.1",
+  nano: "Nano Banana", dotimg: "nooi Image", nanopro: "Nano Banana Pro", img20: "GPT Image 2", img25: "Seedream 4.5", seedream5: "Seedream 5", qwen: "Qwen Image", flux2: "FLUX.2", mj: "Midjourney", imagen4: "Imagen 4", ideogram3: "Ideogram 3", grokimg: "Grok Image", voice: "Voice", music: "Music", sfx: "Sound effect", bg: "Background removal", finish: "Upscale", lipsync: "Lip-sync avatar" };
+const pricingRows = () => Object.entries(ENGINE_COST).flatMap(([g, m]) => Object.keys(m).map((id) => { const cost = engineCost(g, id), credits = basePrice(g, id), rev = credits * CREDIT_FLOOR_USD;
+  return { id, group: g, name: PR_NAMES[id] || id, cost: +cost.toFixed(4), credits, override: platform().prices?.[id] != null, margin: cost ? Math.round((rev / cost - 1) * 100) : 0 }; }));
+app.get("/v1/admin/pricing", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); res.json({ rows: pricingRows(), factor: priceFactor(), floor: CREDIT_FLOOR_USD }); });
+app.put("/v1/admin/pricing", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" });
+  const st = platform(), b = req.body || {}; st.costs = st.costs || {};
+  for (const [id, v] of Object.entries(b.costs || {})) { const n = +v; if (Object.values(ENGINE_COST).some((m) => id in m) && n >= 0 && n < 50) st.costs[id] = n; }
+  if (b.factor != null) { const f = +b.factor; if (f >= 1 && f <= 10) st.priceFactor = f; }
+  save(); res.json({ rows: pricingRows(), factor: priceFactor(), floor: CREDIT_FLOOR_USD }); });
+registerExplore(app); registerShowcase(app); registerGifts(app); registerInvoices(app);
 // Low-latency voice preview (ElevenLabs stream, key never leaves the server)
 app.post("/v1/tts/stream", requireUser, async (req, res) => { try { const { planOf } = await import("./lib/plans.js"); const plan = planOf(user(req.user.uid)); if (!["pro", "studio"].includes(plan)) return res.status(402).json({ error: "ElevenLabs voices start from the Pro plan" }); await streamTTS(res, req.body || {}); } catch (e) { if (!res.headersSent) res.status(502).json({ error: e.message }); } });
 // Export: convert a browser WebM recording to MP4 (H.264/AAC) with ffmpeg
