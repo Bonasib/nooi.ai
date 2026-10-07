@@ -14,7 +14,7 @@ MOCK = """()=>{laiCall=async(msg,onp)=>{if(onp)onp({status:'running'});const t=m
  if(t==='asr')return{text:'hello world',chunks:[{start:0,end:.5,text:'hello'},{start:.5,end:1,text:'world'}]};
  if(t==='bg'){return new Promise(r=>{const c=document.createElement('canvas');c.width=c.height=32;c.toBlob(b=>r({blob:b}),'image/png')})}
  throw new Error('unmocked '+t)};S.localAI=true}"""
-SKIP = {"ed-export", "ed-publish", "s3d-turntable", "kie-try", "edx-aishot", "logout", "signout", "adm-send", "adm-test"}
+SKIP = {"hf-send", "xp-dl", "ed-export", "ed-publish", "s3d-turntable", "kie-try", "edx-aishot", "logout", "signout", "adm-send", "adm-test"}
 
 CLICK_JS = """async ([sel, cap, skip]) => { let n = 0;
   for (let i = 0; i < cap; i++) {
@@ -75,6 +75,14 @@ async def main():
                 # motion capture
                 await E("()=>go('mocap')"); await pg.wait_for_timeout(300)
                 out["clicks"] += await click_all(pg, "#main", errs, f"{w}:mocap", 40)
+                # home create box (every tab) and Explore
+                for t in ["agent", "video", "image", "audio", "avatar"]:
+                    await E(f"()=>{{go('home');S.hf.tab='{t}';renderView()}}"); await pg.wait_for_timeout(120)
+                    out["clicks"] += await click_all(pg, ".hfbox", errs, f"{w}:home:{t}", 14)
+                    await E("()=>{const m=document.getElementById('modalRoot');if(m)m.innerHTML=''}")
+                await E("()=>go('discover')"); await pg.wait_for_timeout(500)
+                out["checks"][f"{w}:explore"] = await E("()=>document.querySelectorAll('.xpcard').length")
+                out["clicks"] += await click_all(pg, "#main", errs, f"{w}:explore", 30)
                 # admin AI providers
                 await E("()=>{go('admin');S.admTab='models';renderView()}"); await pg.wait_for_timeout(1200)
                 out["clicks"] += await click_all(pg, ".kiequick", errs, f"{w}:kie", 10)

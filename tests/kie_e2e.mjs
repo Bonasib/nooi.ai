@@ -1,7 +1,8 @@
 // End to end with Kie AI: a mock Kie server + the real nooi server (key from KIE_API_KEY / KIE_BASE_URL).
 // Jobs go through POST /v1/jobs → routing → Kie request → polling → result mirrored to /media.
-// Covers image (Nano Banana, Nano Banana Pro, GPT Image, Flux edit with a reference, Midjourney),
-// video (Kling image→video, Seedance 2.0 flagship, WAN 3.0) and music (Suno). Run: node tests/kie_e2e.mjs
+// Covers image (Nano Banana, Nano Banana Pro, GPT Image, Flux edit, Midjourney), video (Kling image→video,
+// Seedance 2.0 flagship, WAN 3.0), music (Suno), voice & sound effects (ElevenLabs), background removal (Recraft),
+// upscale (Topaz) and lip-sync (Kling avatar). Run: node tests/kie_e2e.mjs
 import http from "http"; import { spawn } from "child_process"; import path from "path"; import url from "url";
 const ROOT = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), "..");
 const KPORT = 8098, NPORT = 8096, KEY = "kie_e2e_key";
@@ -16,8 +17,8 @@ const kieSrv = http.createServer((req, res) => {
     if (["/api/v1/jobs/createTask", "/api/v1/veo/generate", "/api/v1/mj/generate"].includes(u.pathname)) { const id = "t" + ++n; tasks[id] = { path: u.pathname, body, polls: 0 }; seen.push({ path: u.pathname, body }); return send({ taskId: id }); }
     const id = u.searchParams.get("taskId"), t = tasks[id]; if (!t) return send(null);
     const done = ++t.polls >= 2;
-    if (u.pathname === "/api/v1/jobs/recordInfo") { const music = t.body.model === "ai-music-api/generate", img = !music && !/video/.test(t.body.model) && !/seedance|kling|wan\//.test(t.body.model);
-      return send(done ? { state: "success", resultJson: JSON.stringify(music ? { data: [{ audio_url: `http://localhost:${KPORT}/out.mp3` }] } : { resultUrls: [`http://localhost:${KPORT}/out.${img ? "png" : "mp4"}`] }) } : { state: "generating", progress: 40 }); }
+    if (u.pathname === "/api/v1/jobs/recordInfo") { const music = t.body.model === "ai-music-api/generate", audio = music || /^elevenlabs/.test(t.body.model), img = !audio && !/video/.test(t.body.model) && !/seedance|kling|wan\//.test(t.body.model);
+      return send(done ? { state: "success", resultJson: JSON.stringify(music ? { data: [{ audio_url: `http://localhost:${KPORT}/out.mp3` }] } : { resultUrls: [`http://localhost:${KPORT}/out.${audio ? "mp3" : img ? "png" : "mp4"}`] }) } : { state: "generating", progress: 40 }); }
     if (u.pathname === "/api/v1/veo/record-info") return send(done ? { successFlag: 1, response: { resultUrls: [`http://localhost:${KPORT}/out.mp4`] } } : { successFlag: 0 });
     if (u.pathname === "/api/v1/mj/record-info") return send(done ? { successFlag: 1, resultInfoJson: { resultUrls: [{ resultUrl: `http://localhost:${KPORT}/out.png` }] } } : { successFlag: 0 });
     res.statusCode = 404; res.end("{}");
@@ -29,7 +30,7 @@ const api = async (p, o = {}) => { const r = await fetch(`http://localhost:${NPO
 try {
   for (let i = 0; i < 80; i++) { try { await api("/v1/config"); break; } catch { await new Promise((r) => setTimeout(r, 250)); } }
   const cfg = (await api("/v1/config")).d;
-  ok(cfg.providers && cfg.providers.video && cfg.providers.image && cfg.providers.music, "config: with only the Kie key saved, video, image and music show as connected");
+  ok(cfg.providers && ["video", "image", "music", "tts", "matting", "enhance", "lipsync"].every((k) => cfg.providers[k]), "config: with only the Kie key saved, video, image, music, voice, background removal, upscale and lip-sync show as connected");
   const ref = `http://localhost:${KPORT}/out.png`;
   const JOBS = [
     ["image · Nano Banana", { kind: "image", model: "nano", prompt: "a red apple", aspect: "1:1" }, "nano-banana-2"],
@@ -41,6 +42,12 @@ try {
     ["video · Seedance 2.0 (flagship)", { kind: "video", model: "seedance20", prompt: "a boat", dur: 5, aspect: "9:16" }, "bytedance/seedance-2"],
     ["video · WAN 3.0", { kind: "video", model: "wan30", prompt: "a city", dur: 5, aspect: "16:9" }, "wan/3-0-video"],
     ["music · Suno", { kind: "music", prompt: "calm piano", dur: 30 }, "ai-music-api/generate"],
+    ["voice · ElevenLabs", { kind: "voice", prompt: "Welcome to nooi", meta: { gender: "female" } }, "elevenlabs/text-to-speech-multilingual-v2"],
+    ["sound effect · ElevenLabs", { kind: "sfx", prompt: "a door creaks" }, "elevenlabs/sound-effect-v2"],
+    ["background removal · Recraft", { kind: "bg", prompt: "cut out", inputs: { bgFg: ref } }, "recraft/remove-background"],
+    ["upscale · Topaz", { kind: "finish", prompt: "upscale", meta: { tool: "upscale", opt: { scale: "2x" } }, inputs: { fin: ref } }, "topaz/image-upscale"],
+    ["lip-sync · Kling avatar", { kind: "lipsync", prompt: "", inputs: { lsV: ref, lsA: `http://localhost:${KPORT}/out.mp3` } }, "kling/ai-avatar-standard"],
+    ["lip-sync from a typed script (voice first)", { kind: "lipsync", prompt: "Welcome to our store", inputs: { lsV: ref } }, "kling/ai-avatar-standard"],
   ];
   const made = [];
   for (const [name, body, want] of JOBS) { const r = await api("/v1/jobs", { json: body }); ok(r.status === 200 && r.d.id, name + ": accepted (" + (r.d.error || r.status) + ")"); made.push([name, r.d.id, want]); }
@@ -50,6 +57,8 @@ try {
     ok(!!sent, name + ": Kie received model " + want);
     ok(j.status === "done" && /^\/media\//.test(j.url || ""), name + ": finished and saved to /media (" + j.status + (j.error ? " · " + j.error : "") + ")"); });
   const mj = seen.find((s) => s.path === "/api/v1/mj/generate"); ok(mj && mj.body.taskType === "mj_txt2img" && mj.body.aspectRatio === "16:9", "Midjourney request shape");
+  const av = seen.filter((s) => s.body && s.body.model === "kling/ai-avatar-standard").find((s) => s.body.input.prompt === ""), tts = seen.filter((s) => s.body && s.body.model === "elevenlabs/text-to-speech-multilingual-v2" && s.body.input.text === "Welcome to our store");
+  ok(tts.length === 1 && av && /out\.mp3$/.test(av.body.input.audio_url), "lip-sync from a script: ElevenLabs voice first, then the avatar uses that audio");
   const kl = seen.find((s) => s.body && s.body.model === "kling-2.6/image-to-video"); ok(kl && kl.body.input.image_urls && kl.body.input.image_urls[0] === ref, "Kling gets the start frame as image_urls");
 } catch (e) { ok(false, "crashed: " + e.message); }
 finally { srv.kill(); kieSrv.close(); }

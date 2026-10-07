@@ -10,7 +10,10 @@ import { createJob, publicJob } from "./lib/jobs.js";
 import { analyzeSite } from "./lib/site.js";
 import { MEDIA_DIR, publicUrl } from "./lib/media.js";
 import { PROVIDERS } from "./providers/index.js";
-import { kieDefault, kieAuto } from "./providers/kie.js";
+import { kieDefault, kieAuto, KIE_BUILTIN } from "./providers/kie.js";
+import { adapterFor } from "./providers/extra.js";
+// which studio models currently run on Kie AI, and on which Kie model (shown on the model tiles)
+function kieRoutes() { const o = {}; if (!configured("kie")) return o; for (const [cap, map] of Object.entries(KIE_BUILTIN)) for (const id of Object.keys(map)) { try { const r = adapterFor(cap, { kind: cap, model: id }, PROVIDERS); if (r && String(r.key).startsWith("kie@")) o[id] = r.key.slice(4); } catch {} } return o; }
 import { llmConfigured, llmJson, llm, llmInfo } from "./providers/anthropic.js";
 import { OAUTH, pkcePair } from "./social/oauth.js";
 import { runPost } from "./lib/scheduler.js";
@@ -28,6 +31,7 @@ import { handleMcp } from "./lib/mcp.js";
 import { verify, canSendSignInLinks, signInLink, customTokenForEmail } from "./lib/auth.js";
 import { newCode, checkCode } from "./lib/otp.js";
 import { isStaff } from "./lib/admin.js";
+import { registerExplore } from "./lib/explore.js";
 import { sendEmail, emailConfigured } from "./lib/email.js";
 import { renderEmail } from "./public/email-templates.js";
 import { uiLang, uiDict, uiTranslate, rateOk } from "./lib/uit.js";
@@ -52,10 +56,10 @@ const wrap = (fn) => (req, res) => fn(req, res).catch((e) => res.status(e.code &
 
 app.get("/v1/health", (_, res) => res.json({ ok: true }));
 app.get("/v1/config", (_, res) => res.json({
-  firebase: firebaseWebConfig(), localAI: { tfUrl: fs.existsSync(TF_DIR + "/transformers.min.js") ? "/vendor/transformers/transformers.min.js" : null, ortBase: fs.existsSync(ORT_DIR) ? "/vendor/ort/" : null, modelsHost: process.env.MODELS_DIR ? "/models/" : null, models: platform().localModels || {} }, emailCode: canSendSignInLinks() && emailConfigured(),
+  firebase: firebaseWebConfig(), localAI: { tfUrl: fs.existsSync(TF_DIR + "/transformers.min.js") ? "/vendor/transformers/transformers.min.js" : null, ortBase: fs.existsSync(ORT_DIR) ? "/vendor/ort/" : null, modelsHost: process.env.MODELS_DIR ? "/models/" : null, models: platform().localModels || {} }, emailCode: canSendSignInLinks() && emailConfigured(), kieRoutes: kieRoutes(),
   llm: llmConfigured() ? { provider: llmInfo().provider, model: llmInfo().model } : null,
   billing: enabledPayments().length > 0, payments: enabledPayments(), modelLogos: platform().modelLogos || {}, worldEngine: !!(process.env.WORLD_API_URL || (platform().providers || {}).world), modelCat: Object.fromEntries(Object.entries(platform().modelCat || {}).map(([k, v]) => [k, { cr: v.cr, verified: !!v.verified, kie: !!v.kieModel }])), features: platform().features, models: platform().models, prices: platform().prices, support: "contact@nooi.ai",
-  providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || !!kieDefault(k) || !!kieAuto(k, {})])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!process.env.REALTIME_API_URL, billing: enabledPayments().length > 0 }
+  providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || !!kieDefault(k) || !!kieAuto(k, { kind: k === "tts" ? "voice" : k })])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!process.env.REALTIME_API_URL, billing: enabledPayments().length > 0 }
 }));
 
 // Uploads (start frames, references, exports, music…)
@@ -149,6 +153,7 @@ app.post("/v1/billing/webhook/:provider", wrap(async (req, res) => {
 app.get("/v1/billing/catalog", (_, res) => res.json(CATALOG));
 
 registerAdmin(app, requireUser);
+registerExplore(app);
 // Low-latency voice preview (ElevenLabs stream, key never leaves the server)
 app.post("/v1/tts/stream", requireUser, async (req, res) => { try { const { planOf } = await import("./lib/plans.js"); const plan = planOf(user(req.user.uid)); if (!["pro", "studio"].includes(plan)) return res.status(402).json({ error: "ElevenLabs voices start from the Pro plan" }); await streamTTS(res, req.body || {}); } catch (e) { if (!res.headersSent) res.status(502).json({ error: e.message }); } });
 // Export: convert a browser WebM recording to MP4 (H.264/AAC) with ffmpeg

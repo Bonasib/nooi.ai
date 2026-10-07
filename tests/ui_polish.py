@@ -14,7 +14,7 @@ async def main():
             c=await pg.evaluate(f"()=>{{S.user={{name:'G',method:'google'}};S.lang='ar';S.myPlan='studio';S.view='{v}';renderAll();return new Promise(res=>requestAnimationFrame(()=>requestAnimationFrame(()=>{{const all=[...document.querySelectorAll('#main svg,#bottomnav svg')].filter(s=>!s.classList.contains('bot')&&!s.closest('.nlogo,.thtoggle'));res([all.length,all.filter(s=>s.dataset.mo).length])}})))}}")
             cov.append(f"{v}:{c[1]}/{c[0]}")
         r["iconsWithMotion"]=cov
-        await pg.evaluate("()=>{S.view='home';renderAll()}");await pg.wait_for_timeout(200)
+        await pg.evaluate("()=>{S.view='home';S.homeAdv=true;renderAll()}");await pg.wait_for_timeout(200)
         await pg.dispatch_event('#bottomnav [data-go="tools"], #bottomnav button:nth-child(2)','pointerdown')
         r["tapPlays"]=await pg.evaluate("[...document.querySelectorAll('#bottomnav svg.ic-play')].length>0")
         r["activeDuotone"]=await pg.evaluate("(()=>{const p=document.querySelector('#bottomnav [aria-current=\"page\"] svg[data-mo] path');return p?getComputedStyle(p).fillOpacity:'none'})()")
@@ -25,7 +25,7 @@ async def main():
         # names
         r["ugcTitle"]=await pg.evaluate("()=>{go('ugcads');return document.querySelector('#main h1').textContent}")
         # bots under the prompt come alive with work
-        await pg.evaluate("()=>{S.view='home';S.uni={task:'video',model:'auto',prompt:'صقر فوق الصحراء'};renderAll()}");await pg.wait_for_timeout(300)
+        await pg.evaluate("()=>{S.view='home';S.homeAdv=true;S.uni={task:'video',model:'auto',prompt:'صقر فوق الصحراء'};renderAll()}");await pg.wait_for_timeout(300)
         r["underPrompt"]=await pg.evaluate("({models:document.querySelectorAll('.uni .underprompt .mchip').length,bots:document.querySelectorAll('.uni .botstrip .sbot').length,modelsRightAfterTextarea:!!document.querySelector('.uni textarea + .underprompt, .uni .micwrap + .underprompt')})")
         await pg.evaluate("()=>{const j=addJob({kind:'video',prompt:'x',model:'kling',dur:5,cost:20,secs:60});j.status='rendering'}");await pg.wait_for_timeout(900)
         r["liveBots"]=await pg.evaluate("[...document.querySelectorAll('.uni .sbot.on')].map(s=>s.dataset.bot)")

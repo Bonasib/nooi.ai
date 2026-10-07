@@ -9,7 +9,7 @@ async def main():
         await pg.route("**/*", lambda r: r.abort() if not r.request.url.startswith("file:") else r.continue_())
         await pg.goto(PAGE);await pg.wait_for_timeout(500)
         r={}
-        await pg.evaluate("()=>{S.user={name:'G',method:'google'};S.lang='ar';S.theme='light';applyTheme();S.myPlan='studio';S.view='home';S.uni.task='content';S.uni.prompt='';renderAll()}");await pg.wait_for_timeout(400)
+        await pg.evaluate("()=>{S.user={name:'G',method:'google'};S.lang='ar';S.theme='light';applyTheme();S.myPlan='studio';S.view='home';S.homeAdv=true;S.uni.task='content';S.uni.prompt='';renderAll()}");await pg.wait_for_timeout(400)
         r["tasks"]=await pg.evaluate("document.querySelectorAll('.uni .task').length")
         r["videoModels"]=await pg.evaluate("[...document.querySelectorAll('.uni .mcard b')].map(b=>b.textContent)")
         r["placeholderLines"]=await pg.evaluate("document.querySelector('#uniq').placeholder.split('\\n')")

@@ -234,6 +234,14 @@ Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v
 - `tests/kie_e2e.mjs`: mock Kie server + real nooi server (`KIE_API_KEY`/`KIE_BASE_URL`), 9 jobs through `/v1/jobs` to `/media`.
 - Logos: full-colour Lobe Icons marks (MIT, trademarks of their owners) in `LOGO_SRC`; `applyLogos()` after every render puts the logo in each model tile (`[data-set$=".model"]` …); `logoFor` (now `let`) guesses by model name for new ids. "Image 2.5" is shown as Seedream 4.5 (what it runs on).
 
+## v54 Kie AI for every tool · Higgsfield/Dreamina-style create & Explore · 3D bots
+- Kie inputs follow each model's schema (docs.kie.ai, cross-checked with the MIT `@apicity/kie` registry): required fields (Kling 3.0 mode/multi_shots/multi_prompt/kling_elements, Flux resolution, Seedream quality, Seedance web_search…), field names (GPT Image/Flux edits `input_urls`, Qwen `image_size`, WAN 2.7 `ratio`), aspect ratios snapped to each model's list (`snapAR`), the user's resolution (`pickRes`). Uploads are sent as `PUBLIC_BASE_URL` + `/media/…`.
+- Kie also runs: voiceover (ElevenLabs multilingual v2), sound effects (ElevenLabs SFX v2), background removal (Recraft), upscale (Topaz image/video), lip-sync (Kling avatar from a face image; Volcengine for a face video; a typed script is voiced first). On-device AI is only the fallback when a server provider is connected.
+- New Kie-backed models: video Veo 3.1 / Veo 3.1 Fast / Grok Imagine / PixVerse V6 / Kling 2.6 / WAN 2.7; image Seedream 5.0 Pro / Imagen 4 Ultra / Ideogram V3 / Grok Imagine / Flux 2 Pro (prices in lib/billing.js, tiers in lib/plans.js). `/v1/config.kieRoutes` = studio model → Kie model (tile tooltips, status badges).
+- Home (signed in) = "What do you want to create?" + `hfBox()` (tabs Agent/Video/Image/Audio/Avatar, reference slot, model sheet with logos, ratio+resolution sheet, duration, count, credits, send) → existing tools (`makeVideo`, `makeImages`, voice/music/sfx jobs, lipsync, `uniRun` for Agent). Feature cards (TOP/NEW/POPULAR), What's new, Showroom; the old prompt studio is under "Advanced studio" (`S.homeAdv`). The same box sits on the landing page (send → sign in, prompt kept).
+- Explore (`discover` view, `lib/explore.js`): public feed of shared generations (GET /v1/explore, POST share from My library, like, staff feature, owner/staff delete, moderation, 30/day). Masonry cards, videos play in view, Recreate fills the box. Examples (animated previews) until real items exist.
+- 3D bots: `botSVG` wrapper adds key light + rim light clipped to each body, glossy eyes, soft ground shadow, pointer-follow tilt (classes unchanged).
+
 ## Slash commands (in .claude/commands)
 `/test` full check · `/audit-i18n` translations & RTL · `/deploy root@IP` update the VPS · `/connect-provider Kling` wire & verify a real provider.
 

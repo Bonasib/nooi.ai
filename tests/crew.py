@@ -52,7 +52,7 @@ async def main():
         # universal prompt mascot changes with the work
         m=[]
         for t in ["story","video","image","voice","character","hook","film"]:
-            m.append(await pg.evaluate(f"()=>{{S.view='home';S.uni={{task:'{t}',model:'auto',prompt:'x'}};renderAll();const b=document.querySelector('.uni .unibot svg, .uni .crewstack');return '{t}→'+(document.querySelector('.uni .crewstack')?'crew':((document.querySelector('.uni .unitag')||{{}}).textContent||'').split(' ')[0])}}"))
+            m.append(await pg.evaluate(f"()=>{{S.view='home';S.homeAdv=true;S.uni={{task:'{t}',model:'auto',prompt:'x'}};renderAll();const b=document.querySelector('.uni .unibot svg, .uni .crewstack');return '{t}→'+(document.querySelector('.uni .crewstack')?'crew':((document.querySelector('.uni .unitag')||{{}}).textContent||'').split(' ')[0])}}"))
         r["promptMascot"]=m
         # cancel mid-run
         await pg.evaluate("()=>{getSample=async()=>({json:()=>new Promise(res=>setTimeout(()=>res({}),5000))});S.view='crew';renderAll();runCrew()}");await pg.wait_for_timeout(400)

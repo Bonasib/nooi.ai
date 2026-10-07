@@ -20,7 +20,7 @@ async def main():
         r["elJob"]=await pg.evaluate("(()=>{const j=S.jobs.filter(x=>x.kind==='voice').pop();return {engine:j.meta.engine,model:j.meta.elModel,format:j.meta.format,cost:j.cost}})()")
         await pg.evaluate("document.querySelector('.vengine').scrollIntoView({block:'start'});window.scrollBy(0,-70)");await pg.wait_for_timeout(300);await pg.screenshot(path="/tmp/el.png")
         # image models + specs + status
-        await pg.evaluate("()=>{S.voiceEng.engine='nooi';S.view='home';S.uni.task='image';S.uni.imodel='nano';renderAll()}");await pg.wait_for_timeout(300)
+        await pg.evaluate("()=>{S.voiceEng.engine='nooi';S.view='home';S.homeAdv=true;S.uni.task='image';S.uni.imodel='nano';renderAll()}");await pg.wait_for_timeout(300)
         r["imageRail"]=await pg.evaluate("[...document.querySelectorAll('.uni .mcard b')].map(b=>b.textContent)")
         r["specs"]=await pg.evaluate("(()=>{const d=document.querySelector('.uni details.specs');if(!d)return null;d.open=true;return [...d.querySelectorAll('.usage b')].map(x=>x.textContent).slice(0,3)})()")
         r["statusTags"]=await pg.evaluate("[...document.querySelectorAll('.uni .mcard .stag')].map(t=>t.textContent).slice(0,8)")

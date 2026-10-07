@@ -44,7 +44,24 @@ i = kieInput("minimax-h3/image-to-video", vid(5, true)); ok(i.first_frame_url ==
 i = kieInput("hailuo/2-3-image-to-video-pro", vid(10, true)); ok(i.image_url === "https://i" && i.duration === "10", "Hailuo: image_url and duration as text");
 i = kieInput("wan/3-0-video", vid(8, false)); ok(i.duration === 8 && i.aspect_ratio === "9:16" && !i.image_urls, "Wan 3.0 text → video: numeric duration, aspect ratio");
 i = kieInput("nano-banana-pro", { kind: "image", prompt: "logo", aspect: "1:1", inputs: { iRef: "https://ref" }, meta: {} }); ok(i.image_input[0] === "https://ref" && i.aspect_ratio === "1:1", "Nano Banana: reference image goes in image_input");
-i = kieInput("gpt-image-2-image-to-image", { kind: "image", prompt: "x", inputs: { iRef: "https://ref" }, meta: {} }); ok(i.image_urls[0] === "https://ref", "other image models: reference in image_urls");
+i = kieInput("gpt-image-2-image-to-image", { kind: "image", prompt: "x", aspect: "4:5", inputs: { iRef: "https://ref" }, meta: {} }); ok(i.input_urls[0] === "https://ref" && i.resolution && i.aspect_ratio === "4:5", "GPT Image 2 edit: reference in input_urls, resolution set");
+i = kieInput("kling-3.0/video", vid(20, false)); ok(i.mode === "std" && i.multi_shots === false && Array.isArray(i.multi_prompt) && Array.isArray(i.kling_elements) && i.duration === "15" && i.aspect_ratio === "9:16" && i.sound === false, "Kling 3.0: every required field (mode, multi_shots, multi_prompt, kling_elements, duration ≤ 15)");
+i = kieInput("kling-2.6/text-to-video", vid(7, false)); ok(i.sound === false && i.duration === "5" && i.aspect_ratio === "9:16", "Kling 2.6: sound, duration 5|10, aspect required");
+i = kieInput("flux-2/pro-text-to-image", { kind: "image", prompt: "x", aspect: "21:9", inputs: {}, meta: {} }); ok(i.resolution === "2K" && i.aspect_ratio === "16:9", "Flux 2: resolution required, 21:9 snapped to the closest allowed ratio");
+i = kieInput("seedream/4.5-text-to-image", { kind: "image", prompt: "x", aspect: "1:1", inputs: {}, meta: {} }); ok(i.quality === "high", "Seedream: quality required");
+i = kieInput("qwen3/text-to-image", { kind: "image", prompt: "x", aspect: "9:16", inputs: {}, meta: {} }); ok(i.image_size === "9:16" && !i.aspect_ratio, "Qwen 3: image_size, not aspect_ratio");
+i = kieInput("bytedance/seedance-2", vid(5, false)); ok(i.web_search === false && i.aspect_ratio === "9:16" && i.resolution === "720p", "Seedance: web_search required");
+i = kieInput("bytedance/seedance-2", { ...vid(5, false), meta: { res: "1080P" } }); ok(i.resolution === "1080p", "the chosen resolution reaches Kie in the model's own spelling (1080P → 1080p)");
+i = kieInput("kling-3.0/video", { ...vid(5, false), meta: { res: "4K" } }); ok(i.mode === "4K", "Kling 3.0: 4K picks mode 4K");
+i = kieInput("nano-banana-pro", { kind: "image", prompt: "x", aspect: "1:1", inputs: {}, meta: { res: "4K" } }); ok(i.resolution === "4K", "Nano Banana Pro: 4K");
+i = kieInput("wan/2-7-text-to-video", vid(5, false)); ok(i.ratio === "9:16" && !i.aspect_ratio, "WAN 2.7: ratio, not aspect_ratio");
+i = kieInput("wan/2-7-image-to-video", vid(5, true)); ok(i.first_frame_url === "https://i" && !i.image_url, "WAN 2.7 I2V: first_frame_url");
+i = kieInput("elevenlabs/text-to-speech-multilingual-v2", { kind: "voice", prompt: "hello", inputs: {}, meta: { gender: "male" } }); ok(i.text === "hello" && i.voice === "George", "ElevenLabs TTS: text and a voice");
+i = kieInput("recraft/remove-background", { kind: "bg", inputs: { bgFg: "https://img" }, meta: {} }); ok(i.image === "https://img", "Recraft: background removal takes image");
+i = kieInput("topaz/image-upscale", { kind: "finish", inputs: { fin: "https://img" }, meta: { tool: "upscale", opt: { scale: "4x" } } }); ok(i.image_url === "https://img" && i.upscale_factor === "4", "Topaz: image upscale 4×");
+i = kieInput("kling/ai-avatar-standard", { kind: "lipsync", prompt: "", inputs: { lsV: "https://face.png", lsA: "https://v.mp3" }, meta: {} }); ok(i.image_url && i.audio_url && i.prompt === "", "Kling avatar: image, audio, prompt");
+process.env.PUBLIC_BASE_URL = "https://nooi.ai"; i = kieInput("nano-banana-pro", { kind: "image", prompt: "x", inputs: { iRef: "/media/a.png" }, meta: {} }); ok(i.image_input[0] === "https://nooi.ai/media/a.png", "uploads (/media/…) are sent as public URLs");
+delete process.env.PUBLIC_BASE_URL; try { kieInput("nano-banana-pro", { kind: "image", prompt: "x", inputs: { iRef: "/media/a.png" }, meta: {} }); ok(false, "relative without base"); } catch (e) { ok(e.code === 503 && /PUBLIC_BASE_URL/.test(e.message), "no public base URL → clear setup message, nothing sent");}
 
 // ── Veo 3.1 (dedicated endpoint) ──
 const V = kie("veo3_fast");
@@ -77,8 +94,10 @@ rt = adapterFor("video", { kind: "video", model: "kling" }, PROVIDERS); ok(rt.ke
 rt = adapterFor("video", { kind: "video", model: "kling", inputs: { startImage: "https://x/f.png" } }, PROVIDERS); ok(rt.key === "kie@kling-2.6/image-to-video", "routing: a start frame picks the image-to-video variant");
 rt = adapterFor("video", { kind: "video", model: "seedance20" }, PROVIDERS); ok(rt.key === "kie@bytedance/seedance-2", "routing: a flagship model without its own API id runs on Kie instead of stopping");
 for (const [m, k] of [["nano", "nano-banana-2"], ["nanopro", "nano-banana-pro"], ["img20", "gpt-image-2-text-to-image"], ["qwen2", "qwen3/text-to-image"], ["flux", "flux-2/pro-text-to-image"], ["mj", "mj:7"]]) { rt = adapterFor("image", { kind: "image", model: m }, PROVIDERS); ok(rt.key === "kie@" + k, "routing: image model " + m + " → Kie " + k); }
-rt = adapterFor("image", { kind: "image", model: "nano", inputs: { iRef: "https://x/r.png" } }, PROVIDERS); ok(rt.key === "kie@google/nano-banana-edit", "routing: a reference image picks the edit variant");
-rt = adapterFor("tts", { kind: "voice" }, PROVIDERS); ok(!String(rt.key).startsWith("kie@"), "routing: voice is not sent to Kie");
+rt = adapterFor("image", { kind: "image", model: "nano", inputs: { iRef: "https://x/r.png" } }, PROVIDERS); ok(rt.key === "kie@nano-banana-2", "routing: Nano Banana takes the reference itself");
+rt = adapterFor("image", { kind: "image", model: "img20", inputs: { iRef: "https://x/r.png" } }, PROVIDERS); ok(rt.key === "kie@gpt-image-2-image-to-image", "routing: a reference image picks the edit variant");
+for (const [cap, body, k] of [["tts", { kind: "voice" }, "elevenlabs/text-to-speech-multilingual-v2"], ["music", { kind: "sfx" }, "elevenlabs/sound-effect-v2"], ["matting", { kind: "bg", inputs: { bgFg: "https://x/a.png" } }, "recraft/remove-background"], ["enhance", { kind: "finish", meta: { tool: "upscale" }, inputs: { fin: "https://x/a.png" } }, "topaz/image-upscale"], ["enhance", { kind: "finish", meta: { tool: "upscale" }, inputs: { fin: "https://x/a.mp4" } }, "topaz/video-upscale"], ["lipsync", { kind: "lipsync", inputs: { lsV: "https://x/f.png" } }, "kling/ai-avatar-standard"], ["lipsync", { kind: "lipsync", inputs: { lsV: "https://x/f.mp4" } }, "volcengine/video-to-video-lip-sync"]]) { rt = adapterFor(cap, body, PROVIDERS); ok(rt.key === "kie@" + k, "routing: " + body.kind + " → Kie " + k); }
+rt = adapterFor("tts", { kind: "voiceclone" }, PROVIDERS); ok(!String(rt.key).startsWith("kie@"), "routing: voice cloning is not sent to Kie");
 rt = adapterFor("video", { kind: "video", model: "auto" }, PROVIDERS); ok(rt.key === "kie@bytedance/seedance-2-fast", "routing: no default video model → built-in Kie video model");
 st.saveCfg("providers", "kie", { videoModel: "wan/3-0-video", musicModel: "suno:V5" });
 rt = adapterFor("video", { kind: "video", model: "auto" }, PROVIDERS); ok(rt.key === "kie@wan/3-0-video", "routing: direct video provider not connected → admin's default Kie video model");
