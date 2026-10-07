@@ -220,6 +220,15 @@ Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v
 - Shortcuts: Q/W trim start/end to playhead, F freeze frame (2 s still). Undo covers all new layers (`edxSnap`).
 - New strings use `L(en,ar)`; other languages come from the shared runtime translation.
 
+## v52 Slow motion · SAM-style 3D & body on device · Kie AI quick start · white light mode
+- Slow motion (Clip tab): 1× / 0.5× / 0.25× / 0.125× / 0.1×; speed ramps (`clip.ramp` in/out/bullet, `clip.slowTo`) remap output→source time with a smooth curve (`edxRampR`, wrapped `edAt`); `clip.speed` holds the ramp's average speed so `clipDur` stays right. Smooth frames (`clip.smooth` blend/flow) read up to 121 frames once (`EDX.sm`), then blend or motion-compensate (8×8 block flow on a 96-px grey image) in `edxSmooth`, fed to `drawFit` as a canvas "video". Start/end frame: frame step (, .), set start/end (I/O), "New AI shot from these start & end frames" loads `vStart`/`vEnd` and opens Video.
+- 3D Studio is back on (`GPU_FEATURES=true`). Without a SAM 3D server (`API.cfg.providers.sam3d`) everything runs on the device: SlimSAM (`Xenova/slimsam-77-uniform`) point selection (`sam-embed`/`sam-decode` in the worker), Depth Anything (`depthraw`) for shape, ViTPose (`onnx-community/vitpose-base-simple`, `pose`) for the body → closed textured mesh (`edx3dMesh`) + skeleton → GLB (kept in IndexedDB `x_<id>`). Server-only actions (new camera angle, 3D tracking, 3D reference, place3d) stay hidden until the server is connected. Fallback when AI is off: flood-fill mask + distance relief ("basic").
+- Motion capture runs on the device when no mocap server: ViTPose per frame (10 fps, ≤20 s) → smoothing → 3D by bone-length foreshortening → BVH (`bvh_<id>`), keypoints JSON (`kp_<id>`), mannequin video; skeleton overlay on the performance video.
+- three.js: CDN first, then `/vendor/three/` served from npm `three@0.128.0`.
+- Admin → AI providers → "Kie AI quick start": paste key → saved encrypted + tested (`/v1/admin/providers/kie`, `/test`), "Switch on all supported models" maps every studio model to a Kie id (`kiePlan`) via `modelCat.kieModel`, then "Test an image" / "Test a 5 s video".
+- Light mode background is pure white (`--bg:#ffffff`).
+- `tests/pro_tools.py` (in `npm test`): every editor tab, 3D studio, mocap and the Kie card on desktop and phone, every control clicked with on-device AI mocked — errors must be [].
+
 ## Slash commands (in .claude/commands)
 `/test` full check · `/audit-i18n` translations & RTL · `/deploy root@IP` update the VPS · `/connect-provider Kling` wire & verify a real provider.
 

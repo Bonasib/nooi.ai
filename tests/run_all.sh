@@ -45,3 +45,4 @@ echo "▶ untranslated text (review list)"; python3 tests/i18n.py | head -1
 echo "▶ audio lab (noise removal dB, pitch ratios)"; python3 tests/audio.py | head -40 | grep -E "noiseAfter|voiceToNoise_after|pitchHz" | head -8
 echo "▶ film crew (offline chain + AI with injected errors, send-back, deliverables)"; python3 tests/crew.py | python3 -c "import sys,json;t=sys.stdin.read();d=json.loads(t[:t.rfind('}')+1]);print('offline',d['offline']['status'],'| ai',d['ai']['status'],d['ai']['score'],'loops',d['ai']['loops'],'| cancel',d['cancel'])"
 echo "▶ motion tracking accuracy";       python3 tests/trk.py | grep meanErr
+echo "▶ pro tools: every editor tab, 3D studio, motion capture, Kie AI card — every control (errors must be [])"; python3 tests/pro_tools.py | python3 -c "import sys,json;d=json.load(sys.stdin);print('clicks',d['clicks'],'|',d['checks'],'| errors',d['errors']);sys.exit(1 if d['errors'] else 0)"

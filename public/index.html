@@ -20,10 +20,10 @@
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
   color-scheme:dark;
 }
-@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#f3f4f0;--panel:#fff;--panel2:#f6f7f3;--panel3:#eceee8;--line:#e2e5dd;--line2:#d3d7cd;--text:#141713;--mute:#5d645b;--dim:#8a9187;--lime-ink:#3E7B22;color-scheme:light}}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#ffffff;--panel:#fff;--panel2:#f7f8f6;--panel3:#eff1ec;--line:#e3e6df;--line2:#d3d7cd;--text:#141713;--mute:#5d645b;--dim:#8a9187;--lime-ink:#3E7B22;color-scheme:light}}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#060706;--panel:#0d0f0d;--panel2:#131613;--panel3:#1a1e1a;--line:#1e221e;--line2:#2b302b;--text:#eef0ea;--mute:#9aa198;--dim:#646b63;--lime-ink:#CFE13E}}
 :root[data-theme="dark"]{--bg:#060706;--panel:#0d0f0d;--panel2:#131613;--panel3:#1a1e1a;--line:#1e221e;--line2:#2b302b;--text:#eef0ea;--mute:#9aa198;--dim:#646b63;--lime-ink:#CFE13E;color-scheme:dark}
-:root[data-theme="light"]{--bg:#f3f4f0;--panel:#fff;--panel2:#f6f7f3;--panel3:#eceee8;--line:#e2e5dd;--line2:#d3d7cd;--text:#141713;--mute:#5d645b;--dim:#8a9187;--lime-ink:#3E7B22;color-scheme:light}
+:root[data-theme="light"]{--bg:#ffffff;--panel:#fff;--panel2:#f7f8f6;--panel3:#eff1ec;--line:#e3e6df;--line2:#d3d7cd;--text:#141713;--mute:#5d645b;--dim:#8a9187;--lime-ink:#3E7B22;color-scheme:light}
 *{box-sizing:border-box}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
@@ -3883,7 +3883,7 @@ document.addEventListener("click",async e=>{const a=e.target.closest('[data-act=
 
 /* ================= v8: SAM 3D (OBJECTS · BODY · SCENE) ================= */
 ICONS.cube=OI.anim3d;ICONS.body3d=OI.average;
-NAVS[1][1].push(["studio3d","cube","3D Studio · SAM 3D","استوديو 3D · SAM 3D",1]);
+NAVS[1][1].push(["studio3d","cube","3D Studio","استوديو 3D",1]);
 ALLNAV.length=0;NAVS.flatMap(g=>g[1]).forEach(x=>ALLNAV.push(x));
 TOOLDESC.studio3d=["Turn any object, person or whole scene in a photo or video frame into 3D.","حوّل أي عنصر أو شخص أو مشهد كامل في صورة أو إطار فيديو إلى 3D."];
 const S3D_MODES=[["objects","Objects","العناصر","SAM 3D Objects"],["body","Human body","جسم الإنسان","SAM 3D Body"],["scene","Whole scene","المشهد كاملاً","SAM 3D · layout"]];
@@ -3912,7 +3912,11 @@ function s3dDraw(){const cv=$("#s3dsel");if(!cv||!s3dPrep())return;const m=s3dSo
 function maskBlob(){return new Promise(res=>{if(!S3.mask){res(null);return}const{w,h,mask}=S3;const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d"),id=x.createImageData(w,h);for(let i=0;i<mask.length;i++){const v=mask[i]?255:0;id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=v;id.data[i*4+3]=255}x.putImageData(id,0,0);c.toBlob(b=>res(b),"image/png")})}
 /* ---------- real 3D viewer (three.js) + in-browser preview ---------- */
 const V3={r:null,scene:null,cam:null,ctl:null,obj:null,label:""};
-async function ensureThree(){if(window.THREE&&THREE.OrbitControls&&THREE.GLTFExporter&&THREE.GLTFLoader)return true;try{if(!window.THREE)await loadScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js");const b="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/";if(!THREE.OrbitControls)await loadScript(b+"controls/OrbitControls.js");if(!THREE.GLTFExporter)await loadScript(b+"exporters/GLTFExporter.js");if(!THREE.GLTFLoader)await loadScript(b+"loaders/GLTFLoader.js");return true}catch(e){return false}}
+async function ensureThree(){if(window.THREE&&THREE.OrbitControls&&THREE.GLTFExporter&&THREE.GLTFLoader)return true;
+  /* the CDN first, then the copy our server ships (npm three@0.128.0) */
+  for(const[core,ex]of[["https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js","https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/"],["/vendor/three/build/three.min.js","/vendor/three/examples/js/"]]){
+    try{if(!window.THREE)await loadScript(core);if(!THREE.OrbitControls)await loadScript(ex+"controls/OrbitControls.js");if(!THREE.GLTFExporter)await loadScript(ex+"exporters/GLTFExporter.js");if(!THREE.GLTFLoader)await loadScript(ex+"loaders/GLTFLoader.js");return true}catch(e){}}
+  return false}
 async function mount3D(){const box=$("#s3dview");if(!box)return;if(!await ensureThree()){box.innerHTML='<div class="empty">'+L("The 3D viewer couldn't load.","تعذّر تحميل عارض 3D.")+"</div>";return}
   if(!V3.r){V3.r=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});V3.r.setPixelRatio(Math.min(2,devicePixelRatio||1));V3.r.outputEncoding=THREE.sRGBEncoding;V3.scene=new THREE.Scene();V3.cam=new THREE.PerspectiveCamera(35,1,.01,100);V3.cam.position.set(0,.2,3.2);
     V3.scene.add(new THREE.HemisphereLight(0xffffff,0x333344,.9));const dl=new THREE.DirectionalLight(0xffffff,.9);dl.position.set(2,3,4);V3.scene.add(dl);const g=new THREE.GridHelper(4,20,0x3a4a2a,0x222822);g.position.y=-1;V3.scene.add(g);
@@ -5115,7 +5119,7 @@ const mqDark=window.matchMedia?matchMedia("(prefers-color-scheme: dark)"):{match
 const isDarkNow=()=>S.theme==="dark"||(S.theme!=="light"&&mqDark.matches);
 let thN=0;
 function themeBtn(extra){const id="thm"+(++thN),d=isDarkNow();return'<button class="thtoggle'+(extra?" "+extra:"")+'" data-act="theme-toggle" role="switch" aria-checked="'+d+'" aria-label="'+esc(d?L("Switch to light mode","التبديل إلى الوضع الفاتح"):L("Switch to dark mode","التبديل إلى الوضع الداكن"))+'" title="'+esc(d?L("Light mode","الوضع الفاتح"):L("Dark mode","الوضع الداكن"))+'"><svg viewBox="0 0 24 24" aria-hidden="true"><mask id="'+id+'"><rect x="0" y="0" width="24" height="24" fill="#fff"/><circle class="thcut" cx="12" cy="12" r="9" fill="#000"/></mask><circle class="thcore" cx="12" cy="12" r="9" fill="currentColor" mask="url(#'+id+')"/><g class="thrays" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"><path d="M12 1.6v2.1M12 20.3v2.1M1.6 12h2.1M20.3 12h2.1M4.65 4.65l1.5 1.5M17.85 17.85l1.5 1.5M4.65 19.35l1.5-1.5M17.85 6.15l1.5-1.5"/></g></svg></button>'}
-function syncThemeBtns(){const d=isDarkNow();document.querySelectorAll(".thtoggle").forEach(b=>{b.setAttribute("aria-checked",d);b.setAttribute("aria-label",d?L("Switch to light mode","التبديل إلى الوضع الفاتح"):L("Switch to dark mode","التبديل إلى الوضع الداكن"));b.title=d?L("Light mode","الوضع الفاتح"):L("Dark mode","الوضع الداكن")});const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=d?"#060706":"#f3f4f0"}
+function syncThemeBtns(){const d=isDarkNow();document.querySelectorAll(".thtoggle").forEach(b=>{b.setAttribute("aria-checked",d);b.setAttribute("aria-label",d?L("Switch to light mode","التبديل إلى الوضع الفاتح"):L("Switch to dark mode","التبديل إلى الوضع الداكن"));b.title=d?L("Light mode","الوضع الفاتح"):L("Dark mode","الوضع الداكن")});const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=d?"#060706":"#ffffff"}
 function setTheme(next,btn){const reduce=matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;const apply=()=>{S.theme=next;applyTheme();syncThemeBtns();document.querySelectorAll('[data-set="theme"]').forEach(x=>x.setAttribute("aria-pressed",x.dataset.val===next))};
   if(!reduce&&document.startViewTransition&&btn){const r=btn.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,rad=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));const root=document.documentElement;root.style.setProperty("--vtx",x+"px");root.style.setProperty("--vty",y+"px");root.style.setProperty("--vtr",rad+"px");root.classList.add("thvt");
     const t=document.startViewTransition(apply);t.finished.finally(()=>root.classList.remove("thvt"))}
@@ -5131,7 +5135,7 @@ vAuth=(o=>function(){const h=o();if(AU.legal||!AU.showAuth)return h;return h.inc
 
 
 /* ================= v21: GPU FEATURES OFF (SAM 3D · 3D body · render streaming) — re-enable by setting GPU_FEATURES=true ================= */
-const GPU_FEATURES=false;
+const GPU_FEATURES=true;
 if(!GPU_FEATURES){
   // navigation, feature list, universal prompt task
   NAVS.forEach(g=>{g[1]=g[1].filter(x=>x[0]!=="studio3d")});ALLNAV.length=0;NAVS.flatMap(g=>g[1]).forEach(x=>ALLNAV.push(x));
@@ -6787,7 +6791,7 @@ function laiStart(base,task,model,getInput,finish,fallback){
   (async()=>{try{const input=await getInput();const tr=input&&input.audio?[input.audio.buffer]:[];
       const r=await laiCall({op:"run",task,model,input},p=>{if(p.status==="progress"&&p.progress!=null)j.progress=Math.max(j.progress,Math.min(.9,p.progress/100*.9));if(p.status==="running")j.progress=Math.max(j.progress,.92);j.note=laiNote(p);liveUpdate()},tr);
       if(finish)await finish(j,r);
-      if(r.blob){EXPORTS[j.id]=URL.createObjectURL(r.blob);if(API.mode==="server"){try{j.resultUrl=(await API.upload(r.blob,"nooi-"+task+"-"+j.id+(r.blob.type.includes("png")?".png":".wav"))).url}catch(e){}}}
+      if(r.blob){EXPORTS[j.id]=URL.createObjectURL(r.blob);IDB.put("x_"+j.id,r.blob);if(API.mode==="server"){try{j.resultUrl=(await API.upload(r.blob,"nooi-"+task+"-"+j.id+(r.blob.type.includes("png")?".png":".wav"))).url}catch(e){}}}
       j.status="complete";j.progress=1;delete j.note;persist();statusChanged();toast(L("Done on your device — no credits used.","اكتمل على جهازك — دون خصم رصيد."))}
     catch(e){const i=S.jobs.indexOf(j);if(fallback&&API.mode==="server"){if(i>=0)S.jobs.splice(i,1);toast(L("Couldn't run on this device — sending to the server.","تعذّر التشغيل على هذا الجهاز — نرسله إلى الخادم."));fallback()}else{j.status="failed";j.error=String(e.message||e);toast(L("On-device AI failed: ","فشل الذكاء على الجهاز: ")+j.error)}persist();statusChanged()}})();
   return j}
@@ -6925,7 +6929,7 @@ function edxPost(ctx,ow,oh,c,tl,q){const v=c.vfx||{},cv=ctx.canvas;ctx.save();ct
   ctx.restore()}
 drawFit=(o=>function(ctx,m,ow,oh,lt,filter){
   if(S.view!=="edit")return o(ctx,m,ow,oh,lt,filter);const c=edxClipOf(m,lt);if(!c)return o(ctx,m,ow,oh,lt,filter);
-  const d=clipDur(c),tl=clamp((lt-c.in)/(c.speed||1),0,d),cl=S.ed.clips,i=cl.indexOf(c),prev=cl[i-1],next=cl[i+1],W=.35;
+  const d=clipDur(c),tl=clamp(c.ramp&&c.ramp!=="none"&&c.slowTo&&typeof edxRampInv==="function"?edxRampInv(c,(lt-c.in)/Math.max(1e-6,c.out-c.in))*d:(lt-c.in)/(c.speed||1),0,d),cl=S.ed.clips,i=cl.indexOf(c),prev=cl[i-1],next=cl[i+1],W=.35;
   let{s,x,y,r}=edxMo(c,tl);r=r*Math.PI/180;const v=c.vfx||{},q={};let blur=0;
   if(v.shake){x+=(Math.sin(tl*13.1)+Math.sin(tl*7.3))*.006;y+=(Math.cos(tl*11.7)+Math.sin(tl*5.9))*.006;r+=Math.sin(tl*9.1)*.006}
   if(v.pulse){s*=1+.07*Math.pow(Math.max(0,Math.sin(tl*Math.PI*2)),8)}
@@ -6935,7 +6939,7 @@ drawFit=(o=>function(ctx,m,ow,oh,lt,filter){
   const cf=edxClipFilter(c),f=[filter&&filter!=="none"?filter:"",cf,blur>.3?"blur("+blur.toFixed(1)+"px)":""].filter(Boolean).join(" ")||"none";
   const moved=s!==1||x||y||r||(c.mo&&(c.mo.fh||c.mo.fv));
   ctx.save();if(moved){if(s<1||x||y||r){ctx.fillStyle="#000";ctx.fillRect(0,0,ow,oh)}ctx.translate(ow/2+x*ow,oh/2+y*oh);ctx.rotate(r);ctx.scale(s*(c.mo&&c.mo.fh?-1:1),s*(c.mo&&c.mo.fv?-1:1));ctx.translate(-ow/2,-oh/2)}
-  o(ctx,m,ow,oh,lt,f);ctx.restore();
+  o(ctx,(typeof edxSmooth==="function"&&edxSmooth(c,m,lt))||m,ow,oh,lt,f);ctx.restore();
   if(c.trans==="wipe"&&out&&next){const nm=clipMedia(next);if(nm){ctx.save();ctx.beginPath();const w=ow*out*out*(3-2*out);if(S.lang&&RTL_LANGS_EDX.includes(S.lang))ctx.rect(ow-w,0,w,oh);else ctx.rect(0,0,w,oh);ctx.clip();o(ctx,nm,ow,oh,next.in,filter);ctx.restore()}}
   if(Object.keys(v).some(k=>v[k])||q.flash||q.glitch||(c.cg&&c.cg.look&&c.cg.look!=="none"))edxPost(ctx,ow,oh,c,tl,q)})(drawFit);
 /* ---------- erase · blur · pixelate regions (static or following a tracked object) ---------- */
@@ -7294,6 +7298,243 @@ document.addEventListener("keydown",e=>{if(S.view!=="edit"||!S.user||e.metaKey||
   .edgrid>.panel .tabs button[aria-pressed="true"]{border-color:var(--lime);background:color-mix(in srgb,var(--lime) 14%,transparent);color:var(--text)}}
 .blk.ly[aria-current="true"],.blk.rg[aria-current="true"],.blk.cc[aria-current="true"],.blk.sx[aria-current="true"]{outline:2px solid var(--lime);outline-offset:-1px}
 `;document.head.appendChild(st)})();
+/* ================= v52: SLOW MOTION · SPEED RAMPS · SMOOTH FRAMES · START/END FRAMES · SAM-STYLE 3D & BODY ON DEVICE · KIE AI QUICK START ================= */
+/* ---------- speed ramps: output time → source time follows a smooth curve; clip.speed holds the average speed ---------- */
+const EDX_SLOW=[[1,"Normal","عادي","1×"],[.5,"Slow","بطيء","0.5×"],[.25,"Slow-mo","تصوير بطيء","0.25×"],[.125,"Super slow","بطيء جداً","0.125×"],[.1,"Ultra slow","فائق البطء","0.1×"]];
+const EDX_RAMPS=[["none","Steady","ثابت"],["in","Ease into slow","تباطؤ تدريجي"],["out","Ease out of slow","تسارع تدريجي"],["bullet","Bullet time","زمن الرصاصة"]];
+const sstep=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
+function edxRampW(r,x){return r==="in"?sstep(.15,.45,x):r==="out"?1-sstep(.55,.85,x):r==="bullet"?sstep(.15,.35,x)*(1-sstep(.65,.85,x)):1}
+const edxRate=(c,x)=>{const s=c.slowTo||c.speed||1;return c.ramp&&c.ramp!=="none"?1+(s-1)*edxRampW(c.ramp,x):s};
+const EDX_RT={};
+function edxRampTable(c){const k=c.ramp+"|"+(c.slowTo||1);if(EDX_RT[k])return EDX_RT[k];const N=200,R=new Float32Array(N+1);let acc=0;for(let i=1;i<=N;i++){acc+=(edxRate(c,(i-.5)/N))/N;R[i]=acc}const A=acc;for(let i=0;i<=N;i++)R[i]/=A;return EDX_RT[k]={R,A}}
+function edxRampR(c,x){const{R}=edxRampTable(c),N=R.length-1,f=clamp(x,0,1)*N,i=Math.min(N-1,Math.floor(f));return R[i]+(R[i+1]-R[i])*(f-i)}
+function edxSetSlow(c,s,ramp){c.slowTo=s;c.ramp=ramp||c.ramp||"none";c.speed=c.ramp==="none"?s:+edxRampTable(c).A.toFixed(5)}
+edAt=(o=>function(t){const r=o(t);const c=S.ed.clips[r.i];if(c&&c.ramp&&c.ramp!=="none"&&c.slowTo){const d=clipDur(c);r.lt=c.in+(c.out-c.in)*edxRampR(c,clamp((t-r.start)/d,0,1))}return r})(edAt);
+syncClipMedia=(o=>function(i,lt,playing){o(i,lt,playing);const c=S.ed.clips[i];if(!c||!c.ramp||c.ramp==="none"||!c.slowTo)return;const m=M["c_"+c.id];if(!m||m.type!=="video")return;
+  const st=edStarts(),x=clamp((ED.t-st[i])/clipDur(c),0,1);try{m.el.playbackRate=clamp(edxRate(c,x),.0625,16)}catch(e){}})(syncClipMedia);
+/* ---------- smooth slow motion: frames are read once, then in-between frames are blended or motion-compensated ---------- */
+EDX.sm={};
+const edxSmKey=c=>{const m=M["c_"+c.id];return[c.id,c.in.toFixed(3),c.out.toFixed(3),m&&(m.url||m.el&&m.el.src)].join("|")};
+function edxSmFree(id){const s=EDX.sm[id];if(s&&s.frames)s.frames.forEach(b=>{try{b.close&&b.close()}catch(e){}});delete EDX.sm[id]}
+async function edxSmBuild(c){const m=clipMedia(c);if(!m||m.type!=="video"||!srcReady(m))return;const key=edxSmKey(c);const cur=EDX.sm[c.id];if(cur&&cur.key===key&&(cur.ready||cur.busy))return;edxSmFree(c.id);
+  const S0={key,busy:true,ready:false,prog:0,frames:[],flow:[]};EDX.sm[c.id]=S0;const span=Math.max(.05,c.out-c.in),fps=Math.max(6,Math.min(30,Math.floor(120/span))),n=Math.max(2,Math.min(121,Math.round(span*fps)+1));S0.fps=fps;
+  const v=cloneVideo(m);v.el.preload="auto";await new Promise(r=>{if(v.el.readyState>=2)r();else{v.el.addEventListener("loadeddata",r,{once:true});setTimeout(r,4000)}});
+  const sw=v.el.videoWidth||srcW(m),sh=v.el.videoHeight||srcH(m),k=Math.min(1,720/Math.max(sw,sh)),bw=Math.max(2,Math.round(sw*k)),bh=Math.max(2,Math.round(sh*k));S0.w=bw;S0.h=bh;
+  const gw=96,gh=Math.max(8,Math.round(96*bh/bw)),gcv=document.createElement("canvas");gcv.width=gw;gcv.height=gh;const gx=gcv.getContext("2d",{willReadFrequently:true});let prevG=null;
+  const seek=t=>new Promise(r=>{let done=false;const f=()=>{if(!done){done=true;v.el.removeEventListener("seeked",f);r()}};v.el.addEventListener("seeked",f);try{v.el.currentTime=t}catch(e){f()}setTimeout(f,1500)});
+  try{for(let i=0;i<n;i++){if(EDX.sm[c.id]!==S0)return;await seek(Math.min(c.out,c.in+i/fps));const bmp=await createImageBitmap(v.el,{resizeWidth:bw,resizeHeight:bh,resizeQuality:"medium"});S0.frames.push(bmp);
+      gx.drawImage(bmp,0,0,gw,gh);const d=gx.getImageData(0,0,gw,gh).data,g=new Float32Array(gw*gh);for(let p=0;p<g.length;p++)g[p]=d[p*4]*.3+d[p*4+1]*.59+d[p*4+2]*.11;
+      if(prevG)S0.flow.push(edxFlow(prevG,g,gw,gh));prevG=g;S0.prog=(i+1)/n;const pb=$("#smbar");if(pb)pb.style.width=Math.round(S0.prog*100)+"%"}
+    S0.gw=gw;S0.gh=gh;S0.ready=true;toast(L("Smooth slow motion ready — ","الحركة البطيئة الناعمة جاهزة — ")+S0.frames.length+L(" frames."," إطاراً."))}
+  catch(e){toast(L("Couldn't read this clip's frames: ","تعذّرت قراءة إطارات المقطع: ")+String(e.message||e));edxSmFree(c.id)}
+  finally{S0.busy=false;try{v.el.remove()}catch(e){}if(S.view==="edit"&&S.ed.tab==="clip")renderView()}}
+/* block motion vectors (8×8 blocks on a 96-px-wide grey image, ±6 px search) */
+function edxFlow(a,b,w,h){const B=8,nx=Math.ceil(w/B),ny=Math.ceil(h/B),out=new Int8Array(nx*ny*2),R=6;
+  for(let by=0;by<ny;by++)for(let bx=0;bx<nx;bx++){const x0=bx*B,y0=by*B;let best=1e18,vx=0,vy=0;
+    for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){let s=0;for(let y=0;y<B;y++){const ya=y0+y,yb=ya+dy;if(ya>=h||yb<0||yb>=h){s+=255*B;continue}for(let x=0;x<B;x++){const xa=x0+x,xb=xa+dx;if(xa>=w||xb<0||xb>=w){s+=255;continue}s+=Math.abs(a[ya*w+xa]-b[yb*w+xb])}if(s>=best)break}
+      s+=(Math.abs(dx)+Math.abs(dy))*2;if(s<best){best=s;vx=dx;vy=dy}}
+    out[(by*nx+bx)*2]=vx;out[(by*nx+bx)*2+1]=vy}return out}
+function edxSmooth(c,m,lt){if(!c||!c.smooth||c.smooth==="off"||!m||m.type!=="video")return null;const s=EDX.sm[c.id];if(!s||!s.ready||s.key!==edxSmKey(c))return null;
+  const fi=clamp((lt-c.in)*s.fps,0,s.frames.length-1),i0=Math.min(s.frames.length-1,Math.floor(fi)),f=fi-i0,A=s.frames[i0],B=s.frames[Math.min(s.frames.length-1,i0+1)];
+  const cv=edxCv("smooth",s.w,s.h),x=cv.getContext("2d");x.globalAlpha=1;x.drawImage(A,0,0);
+  if(f>.02&&B!==A){x.globalAlpha=f;x.drawImage(B,0,0);x.globalAlpha=1;
+    if(c.smooth==="flow"&&s.flow[i0]){const fl=s.flow[i0],nx=Math.ceil(s.gw/8),ny=Math.ceil(s.gh/8),kx=s.w/s.gw,ky=s.h/s.gh,bw=Math.ceil(8*kx),bh=Math.ceil(8*ky);
+      for(let by=0;by<ny;by++)for(let bx=0;bx<nx;bx++){const vx=fl[(by*nx+bx)*2]*kx,vy=fl[(by*nx+bx)*2+1]*ky;if(!vx&&!vy)continue;const sx=Math.round(bx*8*kx),sy=Math.round(by*8*ky),dx=Math.round(sx+vx*f),dy=Math.round(sy+vy*f);
+        x.globalAlpha=1;x.drawImage(A,sx,sy,bw,bh,dx,dy,bw,bh);x.globalAlpha=f;x.drawImage(B,clamp(Math.round(sx+vx),0,s.w-bw),clamp(Math.round(sy+vy),0,s.h-bh),bw,bh,dx,dy,bw,bh)}x.globalAlpha=1}}
+  cv.readyState=4;cv.videoWidth=s.w;cv.videoHeight=s.h;return{type:"video",el:cv,url:m.url,name:m.name}}
+/* ---------- frames: grab a still at any source time (freeze, start/end frames) ---------- */
+async function edxGrab(c,lt,max){const m=clipMedia(c);if(!m||!srcReady(m))throw new Error(L("This clip isn't ready yet.","هذا المقطع غير جاهز بعد."));const sw=srcW(m)||1280,sh=srcH(m)||720,k=Math.min(1,(max||1920)/Math.max(sw,sh));const cv=document.createElement("canvas");cv.width=Math.round(sw*k);cv.height=Math.round(sh*k);
+  let el=m;if(m.type==="video"){const v=cloneVideo(m);await new Promise(r=>{if(v.el.readyState>=2)r();else{v.el.addEventListener("loadeddata",r,{once:true});setTimeout(r,3000)}});await new Promise(r=>{let done=false;const f=()=>{if(!done){done=true;r()}};v.el.addEventListener("seeked",f,{once:true});try{v.el.currentTime=lt}catch(e){f()}setTimeout(f,1500)});el=v;cv.getContext("2d").drawImage(v.el,0,0,cv.width,cv.height);try{v.el.remove()}catch(e){}}
+  else drawSrcAt(cv.getContext("2d"),m,0,0,cv.width,cv.height,lt);return await new Promise(r=>cv.toBlob(r,"image/jpeg",.92))}
+const edxTC=(s,fps)=>{fps=fps||30;const f=Math.round(s*fps);return pad2(Math.floor(f/fps/60))+":"+pad2(Math.floor(f/fps)%60)+":"+pad2(f%fps)};
+async function edxAiShot(){const c=edxSel();if(!c){toast(L("Select a clip first.","اختر مقطعاً أولاً."));return}
+  try{uiPill("🎬 "+L("Taking the start and end frames…","التقاط إطاري البداية والنهاية…"));const a=await edxGrab(c,c.in,1536),b=await edxGrab(c,Math.max(c.in,c.out-.04),1536);if(!a||!b)throw new Error("frame");
+    loadSlot("vStart",new File([a],"start-frame.jpg",{type:"image/jpeg"}));loadSlot("vEnd",new File([b],"end-frame.jpg",{type:"image/jpeg"}));S.draft.startJob=null;persist();go("video");toast(L("Start and end frames are set — describe the move between them and generate.","تم ضبط إطاري البداية والنهاية — صِف الحركة بينهما ثم ولّد."))}
+  catch(e){toast(String(e.message||e))}finally{uiPill("")}}
+/* the Clip tab: slow motion, ramps, smoothing, frames */
+VIEWS.edit=(o=>()=>{let h=o();const E=S.ed,c=edxSel();if(E.tab!=="clip"||!c)return h;const m=clipMedia(c),isV=m&&m.type!=="image",sm=EDX.sm[c.id],fps=(sm&&sm.fps)||30;
+  if(isV&&c.smooth&&c.smooth!=="off"&&(!sm||(!sm.busy&&(!sm.ready||sm.key!==edxSmKey(c)))))setTimeout(()=>edxSmBuild(c),0);
+  const cur=c.slowTo||c.speed||1;
+  const blk='<span class="lbl">'+L("Slow motion","الحركة البطيئة")+'</span><div class="tiles">'+EDX_SLOW.map(x=>'<button class="tile" data-act="edx-slow" data-v="'+x[0]+'" aria-pressed="'+(Math.abs(cur-x[0])<1e-3)+'"><span class="gl"><b class="mono" style="font-size:12px">'+x[3]+'</b></span><span class="lb">'+esc(L(x[1],x[2]))+"</span></button>").join("")+"</div>"+
+    (isV?'<span class="lbl">'+L("Speed ramp","منحنى السرعة")+"</span>"+edxSeg("edx-ramp",EDX_RAMPS,c.ramp||"none")+
+      '<span class="lbl">'+L("Smooth frames","نعومة الإطارات")+"</span>"+edxSeg("edx-smooth",[["off","Off","إيقاف"],["blend","Frame blending","مزج الإطارات"],["flow","Optical flow","التدفق البصري"]],c.smooth||"off")+
+      (c.smooth&&c.smooth!=="off"?'<div class="bar" style="height:6px;margin-top:8px"><i id="smbar" style="width:'+Math.round(((sm&&sm.prog)||0)*100)+'%"></i></div><p class="small dim" style="margin:4px 0 0">'+(sm&&sm.ready?L("Ready · ","جاهز · ")+sm.frames.length+L(" frames read — in-between frames are created as it plays."," إطاراً — تُنشأ الإطارات الوسيطة أثناء التشغيل."):L("Reading the clip's frames…","قراءة إطارات المقطع…"))+"</p>":""):"")+
+    '<span class="lbl">'+L("Start & end frame","إطار البداية والنهاية")+'</span><div class="small mono" dir="ltr" style="margin-bottom:6px">'+L("Start","البداية")+" "+edxTC(c.in,fps)+" · "+L("End","النهاية")+" "+edxTC(c.out,fps)+'</div><div class="row"><button class="btn sm" data-act="edx-step" data-v="-1" aria-label="'+L("Back 1 frame","إطار للخلف")+'" title=",">'+ic("prev")+L("1 frame","إطار")+'</button><button class="btn sm" data-act="edx-step" data-v="1" aria-label="'+L("Forward 1 frame","إطار للأمام")+'" title=".">'+L("1 frame","إطار")+ic("next")+'</button><button class="btn sm" data-act="edx-trim" data-v="in" title="I">'+ic("trimL")+L("Set start frame","اضبط إطار البداية")+'</button><button class="btn sm" data-act="edx-trim" data-v="out" title="O">'+ic("trimR")+L("Set end frame","اضبط إطار النهاية")+"</button></div>"+
+    '<button class="btn sm" style="margin-top:8px" data-act="edx-aishot">'+ic("wand")+L("New AI shot from these start & end frames","لقطة ذكاء جديدة من إطاري البداية والنهاية")+"</button>";
+  const anchor='<span class="lbl">'+L("Precision edit","تحرير دقيق")+"</span>";return h.includes(anchor)?h.replace(anchor,blk+anchor):h})(VIEWS.edit);
+document.addEventListener("click",e=>{if(S.view!=="edit")return;const a=e.target.closest&&e.target.closest("[data-act]");if(!a)return;const act=a.dataset.act;if(!["edx-slow","edx-ramp","edx-smooth","edx-step","edx-aishot"].includes(act))return;e.stopImmediatePropagation();const c=edxSel(),v=a.dataset.v;
+  if(act==="edx-step"){ED.playing=false;ED.t=clamp(ED.t+(+v)/((c&&EDX.sm[c.id]&&EDX.sm[c.id].fps)||30),0,edTotal());return}
+  if(act==="edx-aishot"){edxAiShot();return}if(!c)return;
+  if(act==="edx-slow"){edxSetSlow(c,+v,c.ramp);if(+v===1){c.ramp="none";c.speed=1}}
+  else if(act==="edx-ramp"){if(!c.slowTo||c.slowTo>=1)c.slowTo=.25;edxSetSlow(c,c.slowTo,v)}
+  else if(act==="edx-smooth"){c.smooth=v;if(v==="off")edxSmFree(c.id)}
+  persist();renderView();if(act!=="edx-smooth"&&!ED.playing){ED.t=edStarts()[S.ed.clips.indexOf(c)];ED.playing=true;ED.last=0}},true);
+/* the plain speed chips keep the ramp model in sync */
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest('[data-set="edclip.speed"]');if(!b)return;const c=edxSel();if(c){c.ramp="none";c.slowTo=+b.dataset.val}},true);
+document.addEventListener("keydown",e=>{if(S.view!=="edit"||!S.user||e.metaKey||e.ctrlKey||e.altKey||$("#modalRoot").innerHTML)return;const tg=e.target;if(tg&&/INPUT|TEXTAREA|SELECT/.test(tg.tagName)&&tg.type!=="range")return;const k=e.key.toLowerCase();
+  if(k==="i"){e.preventDefault();edxTrim("in")}else if(k==="o"){e.preventDefault();edxTrim("out")}else if(k===","||k==="."){e.preventDefault();ED.playing=false;ED.t=clamp(ED.t+(k==="."?1:-1)/30,0,edTotal())}});
+function edxRampInv(c,y){const{R}=edxRampTable(c),N=R.length-1;let lo=0,hi=N;y=clamp(y,0,1);while(hi-lo>1){const mid=(lo+hi)>>1;if(R[mid]<y)lo=mid;else hi=mid}const f=R[hi]>R[lo]?(y-R[lo])/(R[hi]-R[lo]):0;return(lo+f)/N}
+/* ---------- SAM-style 3D on the device: Segment Anything (SlimSAM) + Depth Anything + ViTPose → textured GLB ---------- */
+Object.assign(LAI_MODELS,{sam:"Xenova/slimsam-77-uniform",pose:"onnx-community/vitpose-base-simple"});
+const s3dServer=()=>!!(API.cfg&&API.cfg.providers&&API.cfg.providers.sam3d);
+const s3dLocal=()=>!s3dServer();
+const COCO=["nose","eye_l","eye_r","ear_l","ear_r","shoulder_l","shoulder_r","elbow_l","elbow_r","wrist_l","wrist_r","hip_l","hip_r","knee_l","knee_r","ankle_l","ankle_r"];
+const COCO_BONES=[[5,7],[7,9],[6,8],[8,10],[5,6],[11,12],[5,11],[6,12],[11,13],[13,15],[12,14],[14,16],[0,1],[0,2],[1,3],[2,4]];
+const SAMX={key:null,ready:false,busy:false,seq:0,mask:null};
+async function s3dBlob(){const m=s3dSource();if(!m)return null;let b=m.file||null;if(!b&&m.url)b=await(await fetch(m.url)).blob();return b?await fitImage(b,1024):null}
+/* AI selection: each tap decodes a SAM mask; the flood-fill mask stays as the instant fallback */
+async function samRefine(){const U=S.s3d;if(!laiOn()||U.mode==="scene"||!U.points.length){SAMX.mask=null;return}const m=s3dSource();if(!m)return;const seq=++SAMX.seq;
+  try{const key=(m.name||"")+"|"+(m.url||"");if(SAMX.key!==key){SAMX.ready=false;const blob=await s3dBlob();if(!blob)return;uiPill("✨ "+L("Preparing AI selection…","تجهيز التحديد بالذكاء…"));await laiCall({op:"run",task:"sam-embed",model:laiModels().sam,input:{blob,key}},p=>uiPill("✨ "+laiNote(p)+(p.status==="progress"&&p.progress!=null?" "+Math.round(p.progress)+"%":"")));SAMX.key=key;SAMX.ready=true;uiPill("")}
+    const r=await laiCall({op:"run",task:"sam-decode",model:laiModels().sam,input:{points:U.points.map(p=>({x:p.x,y:p.y,pos:!!p.pos}))}});if(seq!==SAMX.seq)return;SAMX.mask=r;
+    /* show it on the 160-px selection grid */
+    const{w,h}=S3;if(!w)return;const g=new Uint8Array(w*h);let x0=w,y0=h,x1=-1,y1=-1,n=0;for(let y=0;y<h;y++)for(let x=0;x<w;x++){const v=r.mask[Math.min(r.h-1,Math.floor((y+.5)/h*r.h))*r.w+Math.min(r.w-1,Math.floor((x+.5)/w*r.w))];if(v){g[y*w+x]=1;n++;if(x<x0)x0=x;if(y<y0)y0=y;if(x>x1)x1=x;if(y>y1)y1=y}}
+    if(n){S3.mask=g;S3.bbox={x:x0,y:y0,w:x1-x0+1,h:y1-y0+1,n}}s3dDraw();const st=$("#s3dmstat");if(st&&n)st.textContent="✨ "+L("AI selection","تحديد بالذكاء")+" · "+Math.round(n/(w*h)*100)+"%"}
+  catch(e){SAMX.mask=null;uiPill("")}}
+s3dMask=(o=>function(){o();if(s3dLocal()&&laiOn()&&S.s3d.points.length&&S.s3d.mode!=="scene")samRefine();else SAMX.mask=null})(s3dMask);
+/* closed, textured mesh: depth gives the shape, distance-to-edge rounds the sides, the back closes it */
+function edx3dMesh(img,maskOf,depth,mode,kp){const scene=mode==="scene",W0=img.width,H0=img.height;
+  let bx0=0,by0=0,bx1=1,by1=1;if(!scene){bx0=1;by0=1;bx1=0;by1=0;const N=140;for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(maskOf((x+.5)/N,(y+.5)/N)){const u=(x+.5)/N,v=(y+.5)/N;if(u<bx0)bx0=u;if(v<by0)by0=v;if(u>bx1)bx1=u;if(v>by1)by1=v}if(bx1<=bx0)return null;const pu=1.5/N;bx0=Math.max(0,bx0-pu);by0=Math.max(0,by0-pu);bx1=Math.min(1,bx1+pu);by1=Math.min(1,by1+pu)}
+  const rw=(bx1-bx0)*W0,rh=(by1-by0)*H0,G=scene?150:130,gw=Math.max(8,Math.round(rw>=rh?G:G*rw/rh)),gh=Math.max(8,Math.round(rh>rw?G:G*rh/rw));
+  const inside=new Uint8Array(gw*gh),dep=new Float32Array(gw*gh);let dmin=1e9,dmax=-1e9;
+  for(let y=0;y<gh;y++)for(let x=0;x<gw;x++){const u=bx0+(x/(gw-1))*(bx1-bx0),v=by0+(y/(gh-1))*(by1-by0),i=y*gw+x;inside[i]=scene?1:maskOf(u,v)?1:0;const d=depth?depth.data[Math.min(depth.h-1,Math.floor(v*depth.h))*depth.w+Math.min(depth.w-1,Math.floor(u*depth.w))]/255:.5;dep[i]=d;if(inside[i]){if(d<dmin)dmin=d;if(d>dmax)dmax=d}}
+  const dr=Math.max(1e-3,dmax-dmin);const dist=new Float32Array(gw*gh);for(let i=0;i<dist.length;i++)dist[i]=inside[i]?1e6:0;
+  for(let y=0;y<gh;y++)for(let x=0;x<gw;x++){const i=y*gw+x;if(!dist[i])continue;let v=dist[i];if(x>0)v=Math.min(v,dist[i-1]+1);if(y>0)v=Math.min(v,dist[i-gw]+1);if(x>0&&y>0)v=Math.min(v,dist[i-gw-1]+1.4);if(x<gw-1&&y>0)v=Math.min(v,dist[i-gw+1]+1.4);if(x===0||y===0)v=Math.min(v,1);dist[i]=v}
+  for(let y=gh-1;y>=0;y--)for(let x=gw-1;x>=0;x--){const i=y*gw+x;if(!dist[i])continue;let v=dist[i];if(x<gw-1)v=Math.min(v,dist[i+1]+1);if(y<gh-1)v=Math.min(v,dist[i+gw]+1);if(x<gw-1&&y<gh-1)v=Math.min(v,dist[i+gw+1]+1.4);if(x>0&&y<gh-1)v=Math.min(v,dist[i+gw-1]+1.4);if(x===gw-1||y===gh-1)v=Math.min(v,1);dist[i]=v}
+  let md=1;for(let i=0;i<dist.length;i++)if(inside[i]&&dist[i]>md)md=dist[i];
+  const sz=2/Math.max(gw,gh),ds=Math.min(gw,gh)*sz*(mode==="body"?.32:.45),pos=[],uv=[],idx=[],vid=new Int32Array(gw*gh).fill(-1);
+  const zAt=i=>{const zn=(dep[i]-dmin)/dr;if(scene)return zn*1.1;const r=Math.sqrt(Math.min(1,dist[i]/md));return ds*r*(.35+.65*zn)};
+  for(let y=0;y<gh;y++)for(let x=0;x<gw;x++){const i=y*gw+x;if(!inside[i])continue;vid[i]=pos.length/3;pos.push((x-gw/2)*sz,(gh/2-y)*sz,zAt(i));uv.push(bx0+(x/(gw-1))*(bx1-bx0),1-(by0+(y/(gh-1))*(by1-by0)))}
+  for(let y=0;y<gh-1;y++)for(let x=0;x<gw-1;x++){const a=vid[y*gw+x],b=vid[y*gw+x+1],c=vid[(y+1)*gw+x],d=vid[(y+1)*gw+x+1];if(a<0||b<0||c<0||d<0)continue;idx.push(a,c,b,b,c,d)}
+  if(!scene){const nf=pos.length/3;for(let y=0;y<gh;y++)for(let x=0;x<gw;x++){const i=y*gw+x;if(vid[i]<0)continue;const r=Math.sqrt(Math.min(1,dist[i]/md));pos.push((x-gw/2)*sz,(gh/2-y)*sz,-ds*.55*r);uv.push(uv[vid[i]*2],uv[vid[i]*2+1])}const nt=idx.length;for(let k=0;k<nt;k+=3)idx.push(idx[k]+nf,idx[k+2]+nf,idx[k+1]+nf)}
+  const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));g.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();
+  const tex=new THREE.CanvasTexture(img);tex.encoding=THREE.sRGBEncoding;tex.flipY=true;const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:tex,roughness:.82,metalness:0,side:scene?THREE.DoubleSide:THREE.FrontSide}));mesh.name="nooi_3d_"+mode;
+  const grp=new THREE.Group();grp.name="nooi_3d";grp.add(mesh);
+  if(kp&&kp.length===17){const sk=new THREE.Group();sk.name="skeleton";const P=kp.map(p=>{const gx=clamp(Math.round((p.x-bx0)/(bx1-bx0)*(gw-1)),0,gw-1),gy=clamp(Math.round((p.y-by0)/(by1-by0)*(gh-1)),0,gh-1),i=gy*gw+gx;return new THREE.Vector3((gx-gw/2)*sz,(gh/2-gy)*sz,inside[i]?zAt(i)*.35:0)});
+    const jm=new THREE.MeshStandardMaterial({color:0x9cd245,emissive:0x2a4a00,roughness:.4}),r=.018;
+    P.forEach((p,i)=>{if(kp[i].s<.2)return;const s=new THREE.Mesh(new THREE.SphereGeometry(r*1.5,12,8),jm);s.position.copy(p);s.name="joint_"+COCO[i];sk.add(s)});
+    COCO_BONES.forEach(([a,b])=>{if(kp[a].s<.2||kp[b].s<.2)return;const A=P[a],B=P[b],len=A.distanceTo(B);if(len<1e-4)return;const c=new THREE.Mesh(new THREE.CylinderGeometry(r,r,len,10),jm);c.position.copy(A).add(B).multiplyScalar(.5);c.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),B.clone().sub(A).normalize());c.name="bone_"+COCO[a]+"_"+COCO[b];sk.add(c)});
+    grp.add(sk)}
+  return grp}
+function s3dGlb(obj){return new Promise((res,rej)=>{try{new THREE.GLTFExporter().parse(obj,r=>res(new Blob([r],{type:"model/gltf-binary"})),{binary:true})}catch(e){rej(e)}})}
+async function s3dRunLocal(){const U=S.s3d,m=s3dSource();if(!m){toast(L("Upload a photo first.","ارفع صورة أولاً."));return}if(U.mode!=="scene"&&!U.points.some(p=>p.pos)){toast(L("Tap the object or person first.","اضغط على العنصر أو الشخص أولاً."));return}
+  if(!await ensureThree()){toast(L("The 3D viewer couldn't load.","تعذّر تحميل عارض 3D."));return}s3dPrep();
+  const md=S3D_MODES.find(x=>x[0]===U.mode)||S3D_MODES[0];const j={id:uid(),kind:"3d",status:"rendering",progress:.03,created:Date.now(),title:(m.name||U.srcName||L("3D asset","مجسّم")).replace(/\.[a-z0-9]+$/i,"").slice(0,40)+" · "+L(md[1],md[2]),prompt:md[3],seed:1,pal:S.story.palette,art:"scene",dur:5,aspect:"1:1",cost:0,local:true,meta:{mode:U.mode,points:U.points.slice(),local:true}};
+  S.jobs.push(j);U.sel=j.id;persist();renderView();const step=(p,n)=>{j.progress=p;j.note=n;liveUpdate()};let basic=false;
+  try{const blob=await s3dBlob();const bmp=await createImageBitmap(blob);const img=document.createElement("canvas");img.width=bmp.width;img.height=bmp.height;img.getContext("2d").drawImage(bmp,0,0);
+    let maskOf=null,depth=null,kp=null;
+    if(U.mode!=="scene"){if(laiOn()){try{step(.15,L("Selecting with AI…","التحديد بالذكاء…"));if(!SAMX.mask){await samRefine()}}catch(e){}}
+      const sm=SAMX.mask;if(sm&&sm.mask){maskOf=(u,v)=>sm.mask[Math.min(sm.h-1,Math.floor(v*sm.h))*sm.w+Math.min(sm.w-1,Math.floor(u*sm.w))]===1}
+      else if(S3.mask){const{w,h,mask}=S3;maskOf=(u,v)=>mask[Math.min(h-1,Math.floor(v*h))*w+Math.min(w-1,Math.floor(u*w))]===1;basic=!laiOn()||basic}else throw new Error(L("Nothing is selected.","لم يُحدد شيء."))}
+    if(laiOn()&&U.depth!==false){try{step(.35,L("Reading depth…","قراءة العمق…"));depth=await laiCall({op:"run",task:"depthraw",model:laiModels().depth,input:{blob}},p=>{j.note=laiNote(p);liveUpdate()})}catch(e){basic=true}}else basic=basic||U.depth!==false;
+    if(U.mode==="body"&&laiOn()){try{step(.6,L("Finding the body pose…","تحديد وضعية الجسم…"));let box=null;if(maskOf){let x0=1,y0=1,x1=0,y1=0;const N=100;for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(maskOf((x+.5)/N,(y+.5)/N)){x0=Math.min(x0,x/N);y0=Math.min(y0,y/N);x1=Math.max(x1,(x+1)/N);y1=Math.max(y1,(y+1)/N)}if(x1>x0)box={x0:Math.max(0,x0-.03),y0:Math.max(0,y0-.03),x1:Math.min(1,x1+.03),y1:Math.min(1,y1+.03)}}
+        kp=(await laiCall({op:"run",task:"pose",model:laiModels().pose,input:{blob,box}},p=>{j.note=laiNote(p);liveUpdate()})).kp}catch(e){kp=null}}
+    step(.8,L("Building the 3D mesh…","بناء المجسّم…"));
+    let obj=edx3dMesh(img,maskOf||(()=>true),depth,U.mode,kp);if(obj&&U.texture===false)obj.traverse(n=>{if(n.isMesh&&n.name.startsWith("nooi_3d_")){n.material.map=null;n.material.color.set(0xbfc4b8);n.material.needsUpdate=true}});if(!obj){throw new Error(L("Nothing is selected.","لم يُحدد شيء."))}
+    if(U.mode==="body"&&!kp&&!depth){obj=buildBody3D()}
+    if(V3.r)setObj(obj,"local:"+j.id);{const t=document.createElement("canvas");t.width=192;t.height=Math.round(192*img.height/img.width);t.getContext("2d").drawImage(img,0,0,t.width,t.height);j.thumb=t.toDataURL("image/jpeg",.72)}
+    const glb=await s3dGlb(obj);EXPORTS[j.id]=URL.createObjectURL(glb)+"#nooi.glb";IDB.put("x_"+j.id,glb);
+    if(API.mode==="server"){try{j.resultUrl=(await API.upload(glb,"nooi-3d-"+j.id+".glb")).url}catch(e){}}
+    if(kp)j.meta.kp=kp.map(p=>({x:+p.x.toFixed(4),y:+p.y.toFixed(4),s:+p.s.toFixed(3)}));j.meta.basic=basic;j.status="complete";j.progress=1;delete j.note;persist();statusChanged();renderView();
+    toast(basic?L("3D ready (basic shape — on-device AI wasn't available).","المجسّم جاهز (شكل أساسي — الذكاء على الجهاز غير متاح)."):L("3D ready — made on your device, no credits used.","المجسّم جاهز — صُنع على جهازك دون خصم رصيد."))}
+  catch(e){j.status="failed";j.error=String(e.message||e);delete j.note;persist();statusChanged();renderView();toast(j.error)}}
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="s3d-run"]');if(!a||!s3dLocal())return;e.stopImmediatePropagation();e.preventDefault();s3dRunLocal()},true);
+/* labels: say what runs where */
+const _v52s3d=VIEWS.studio3d;if(_v52s3d)VIEWS.studio3d=()=>{let h=_v52s3d();if(!s3dLocal())return h;
+  h=h.replace('<span class="badge b-server">SAM 3D</span>','<span class="badge b-complete">'+L("SAM · on device","SAM · على جهازك")+"</span>");
+  h=h.replace(/(data-act="s3d-run"[^>]*>)([\s\S]*?)<span class="cost">\d+ cr<\/span>/,(m0,a)=>a+ic("cube")+L("Generate 3D on this device","ولّد 3D على جهازك")+'<span class="cost">'+L("free","مجاناً")+"</span>");
+  return h.replace(/Pick what to lift into 3D[^<]*|اختر ما تريد تحويله إلى 3D[^<]*/,m0=>L("Pick what to lift into 3D — an object, a person or the whole scene. Tap it: Segment Anything selects it, Depth Anything reads its shape and ViTPose finds the body pose — all on your device. Download a textured .glb for Blender, Unity or your videos.","اختر ما تريد تحويله إلى 3D — عنصراً أو شخصاً أو المشهد كاملاً. اضغط عليه: يحدده Segment Anything، ويقرأ Depth Anything شكله، ويحدد ViTPose وضعية الجسم — كل ذلك على جهازك. نزّل ملف ‎.glb بالألوان لـ Blender أو Unity أو فيديوهاتك."))};
+/* on the device only GLB is produced: hide the server's formats and quality steps */
+VIEWS.studio3d&&(VIEWS.studio3d=(o=>()=>{if(s3dLocal()&&S.s3d.fmt!=="glb")S.s3d.fmt="glb";let h=o();if(!s3dLocal())return h;
+  h=h.replace(/<button[^>]*data-set="s3d\.fmt" data-val="(fbx|usdz|ply|obj)"[^>]*>[\s\S]*?<\/button>/g,"");
+  h=h.replace(/<span class="lbl">(Speed|السرعة)<\/span><div class="(?:tiles|chips)"[^>]*>[\s\S]*?<\/div>/,"");
+  h=h.replace(/<button[^>]*data-toggle="s3d\.(hands|face)"[^>]*>[\s\S]*?<\/button>/g,"");return h})(VIEWS.studio3d));
+setObj=(o=>function(obj,label){o(obj,label);const l=$("#s3dlabel");const id=String(label||"").replace(/^(url|local):/,""),j=S.jobs.find(x=>x.id===id);if(l&&j&&j.local)l.textContent=j.meta&&j.meta.basic?L("Basic 3D shape — made on your device","شكل 3D أساسي — صُنع على جهازك"):L("Made on your device · Segment Anything + Depth Anything"+(j.meta&&j.meta.kp?" + ViTPose":""),"صُنع على جهازك · Segment Anything + Depth Anything"+(j.meta&&j.meta.kp?" + ViTPose":""))})(setObj);
+/* server-only 3D actions stay hidden until a 3D render server is connected */
+const S3_SERVER_ONLY=[/<span class="lbl">[^<]*(New camera angle for this shot|زاوية كاميرا جديدة لهذه اللقطة)[^<]*<\/span><div class="tiles">[\s\S]*?<\/div>/g,/<button[^>]*data-act="(ed3d-track|ed3d-angle)"[^>]*>[\s\S]*?<\/button>/g,/<span class="lbl">[^<]*(3D reference|مرجع 3D)[^<]*<\/span><div class="tiles">[\s\S]*?<\/div>/g];
+["edit","video"].forEach(k=>{const f=VIEWS[k];VIEWS[k]=()=>{const h=f();return s3dServer()?h:S3_SERVER_ONLY.reduce((a,re)=>a.replace(re,""),h)}});
+addJob=(o=>function(j){if(j&&["track3d","view3d","place3d"].includes(j.kind)&&!s3dServer()){toast(L("This 3D effect needs the 3D render server (Admin → AI providers → SAM 3D).","هذا التأثير يحتاج خادم 3D (الإدارة ← مزودو الذكاء ← SAM 3D)."));return null}return o(j)})(addJob);
+/* local results survive a reload */
+setTimeout(async()=>{for(const j of S.jobs){if(j.local&&j.status==="complete"&&!EXPORTS[j.id]&&!j.resultUrl){const b=await IDB.get("x_"+j.id);if(b)EXPORTS[j.id]=URL.createObjectURL(b)+(j.kind==="3d"?"#nooi.glb":"")}}},400);
+
+/* ---------- motion capture on the device: ViTPose per frame → skeleton, BVH, keypoints JSON, mannequin video ---------- */
+const MCX={busy:false,prog:0};
+const mcServer=()=>!!(API.cfg&&API.cfg.providers&&API.cfg.providers.mocap);
+async function mcFrames(m,fps,max){const v=cloneVideo(m);await new Promise(r=>{if(v.el.readyState>=2)r();else{v.el.addEventListener("loadeddata",r,{once:true});setTimeout(r,4000)}});if(!isFinite(v.el.duration)){await new Promise(r=>{const f=()=>{if(isFinite(v.el.duration)){v.el.removeEventListener("durationchange",f);r()}};v.el.addEventListener("durationchange",f);try{v.el.currentTime=1e7}catch(e){}setTimeout(r,3000)});try{v.el.currentTime=0}catch(e){}}
+  const dur=Math.min(max,isFinite(v.el.duration)?v.el.duration:0);if(!dur)throw new Error(L("The video can't be read.","تعذّرت قراءة الفيديو."));
+  const sw=v.el.videoWidth,sh=v.el.videoHeight,k=Math.min(1,640/Math.max(sw,sh)),cv=document.createElement("canvas");cv.width=Math.round(sw*k);cv.height=Math.round(sh*k);const x=cv.getContext("2d");
+  return{dur,aspect:sw/sh,async *[Symbol.asyncIterator](){for(let t=0;t<=dur+1e-6;t+=1/fps){await new Promise(r=>{let done=false;const f=()=>{if(!done){done=true;r()}};v.el.addEventListener("seeked",f,{once:true});try{v.el.currentTime=Math.min(t,dur-.01)}catch(e){f()}setTimeout(f,1500)});x.drawImage(v.el,0,0,cv.width,cv.height);yield{t,blob:await new Promise(r=>cv.toBlob(r,"image/jpeg",.85))}}try{v.el.remove()}catch(e){}}}}
+function mcSmooth(frames,amt){const a=1-clamp(amt,0,100)/100*.85;const out=[];let prev=null;frames.forEach(f=>{const kp=f.kp.map((p,i)=>prev?{x:prev[i].x+(p.x-prev[i].x)*a,y:prev[i].y+(p.y-prev[i].y)*a,s:p.s}:p);out.push({t:f.t,kp});prev=kp});return out}
+/* 3D from 2D: keep each bone's length, recover depth from foreshortening (z toward the camera) */
+function mc3D(frames,aspect){const B=[[11,12],[5,6],[5,7],[7,9],[6,8],[8,10],[11,13],[13,15],[12,14],[14,16]],len={};frames.forEach(f=>B.forEach(([a,b])=>{const d=Math.hypot((f.kp[a].x-f.kp[b].x)*aspect,f.kp[a].y-f.kp[b].y);len[a+"-"+b]=Math.max(len[a+"-"+b]||0,d)}));
+  return frames.map(f=>{const P=f.kp.map(p=>({x:(p.x-.5)*aspect,y:.5-p.y,z:0}));B.forEach(([a,b])=>{const d=Math.hypot(P[a].x-P[b].x,P[a].y-P[b].y),L0=len[a+"-"+b]||d;P[b].z=P[a].z+Math.sqrt(Math.max(0,L0*L0-d*d))*.6});return{t:f.t,P}})}
+function mcBVH(f3,fps){const J=[["Hips",null,[11,12]],["Spine","Hips",[5,6]],["Head","Spine",[0]],["LeftArm","Spine",[5]],["LeftForeArm","LeftArm",[7]],["LeftHand","LeftForeArm",[9]],["RightArm","Spine",[6]],["RightForeArm","RightArm",[8]],["RightHand","RightForeArm",[10]],["LeftUpLeg","Hips",[11]],["LeftLeg","LeftUpLeg",[13]],["LeftFoot","LeftLeg",[15]],["RightUpLeg","Hips",[12]],["RightLeg","RightUpLeg",[14]],["RightFoot","RightLeg",[16]]];
+  const S0=100,at=(P,ids)=>{let x=0,y=0,z=0;ids.forEach(i=>{x+=P[i].x;y+=P[i].y;z+=P[i].z});return[x/ids.length*S0,y/ids.length*S0,z/ids.length*S0]};const rest=f3[0].P;
+  const off=name=>{const j=J.find(x=>x[0]===name),p=j[1]?J.find(x=>x[0]===j[1]):null,a=at(rest,j[2]),b=p?at(rest,p[2]):[0,0,0];return p?[a[0]-b[0],a[1]-b[1],a[2]-b[2]]:[0,0,0]};
+  let txt="HIERARCHY\n";const write=(name,dep)=>{const pad="  ".repeat(dep),o=off(name).map(v=>v.toFixed(3)).join(" "),kids=J.filter(x=>x[1]===name);txt+=pad+(dep?"JOINT ":"ROOT ")+name+"\n"+pad+"{\n"+pad+"  OFFSET "+o+"\n"+pad+"  CHANNELS "+(dep?"3 Xposition Yposition Zposition":"3 Xposition Yposition Zposition")+"\n";if(kids.length)kids.forEach(k=>write(k[0],dep+1));else txt+=pad+"  End Site\n"+pad+"  {\n"+pad+"    OFFSET 0 5 0\n"+pad+"  }\n";txt+=pad+"}\n"};write("Hips",0);
+  txt+="MOTION\nFrames: "+f3.length+"\nFrame Time: "+(1/fps).toFixed(6)+"\n";const order=[];const walk=n=>{order.push(n);J.filter(x=>x[1]===n).forEach(k=>walk(k[0]))};walk("Hips");
+  f3.forEach(f=>{txt+=order.map(n=>{const j=J.find(x=>x[0]===n),p=j[1]?J.find(x=>x[0]===j[1]):null,a=at(f.P,j[2]),b=p?at(f.P,p[2]):[0,0,0];return(p?[a[0]-b[0],a[1]-b[1],a[2]-b[2]]:a).map(v=>v.toFixed(3)).join(" ")}).join(" ")+"\n"});return txt}
+async function mcMannequin(f3,aspect,c){const W=720,H=Math.round(720/Math.max(.4,Math.min(2.4,aspect))),cv=document.createElement("canvas");cv.width=W;cv.height=H;const x=cv.getContext("2d");if(!cv.captureStream||!window.MediaRecorder)return null;
+  const mime=["video/mp4;codecs=avc1","video/webm;codecs=vp9","video/webm","video/mp4"].find(t=>MediaRecorder.isTypeSupported(t));if(!mime)return null;const col=c?PALS[(c.lookSeed||1)%PALS.length]:PALS[0];
+  const rec=new MediaRecorder(cv.captureStream(30),{mimeType:mime,videoBitsPerSecond:5e6}),ch=[];rec.ondataavailable=e=>{if(e.data.size)ch.push(e.data)};const done=new Promise(r=>rec.onstop=r);const dur=f3[f3.length-1].t+.2;
+  const pt=(p)=>[W/2+p.x/aspect*W*.9*aspect/Math.max(1,aspect),H*.5-p.y*H*.9];
+  rec.start(250);const t0=performance.now();await new Promise(res=>{const draw=()=>{const t=(performance.now()-t0)/1000;if(t>dur){res();return}let i=0;while(i<f3.length-1&&f3[i+1].t<=t)i++;const A=f3[i],B=f3[Math.min(f3.length-1,i+1)],k=B.t>A.t?clamp((t-A.t)/(B.t-A.t),0,1):0;const P=A.P.map((p,j)=>({x:p.x+(B.P[j].x-p.x)*k,y:p.y+(B.P[j].y-p.y)*k}));
+      const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,col[0]||"#1a1e1a");g.addColorStop(1,"#0b0d0b");x.fillStyle=g;x.fillRect(0,0,W,H);x.fillStyle="rgba(255,255,255,.06)";x.fillRect(0,H*.88,W,H*.12);x.lineCap="round";
+      COCO_BONES.slice(0,12).forEach(([a,b])=>{const[ax,ay]=pt(P[a]),[bx,by]=pt(P[b]);x.strokeStyle=col[2]||"#CFE13E";x.lineWidth=W*.035;x.beginPath();x.moveTo(ax,ay);x.lineTo(bx,by);x.stroke()});
+      const[hx,hy]=pt(P[0]);x.fillStyle=col[3]||"#f4d3b0";x.beginPath();x.arc(hx,hy,W*.045,0,7);x.fill();requestAnimationFrame(draw)};draw()});rec.stop();await done;return new Blob(ch,{type:mime.split(";")[0]})}
+async function mcRunLocal(){const T=S.tools.mocap,m=M.mc;if(!m||m.type!=="video"){toast(L("Upload a performance video first.","ارفع فيديو الأداء أولاً."));return}if(MCX.busy)return;MCX.busy=true;
+  const c=charById(T.char),j={id:uid(),kind:"mocap",status:"rendering",progress:.02,created:Date.now(),title:L("Motion → ","الحركة ← ")+(c?c.name:L("skeleton","هيكل")),prompt:L("Motion capture on device","التقاط حركة على الجهاز"),seed:1,pal:S.story.palette,art:"scene",dur:5,aspect:"16:9",cost:0,local:true,meta:Object.assign({},T,{local:true})};S.jobs.push(j);persist();renderAll();
+  try{const fps=10,src=await mcFrames(m,fps,20),frames=[];let box=null;const n=Math.floor(src.dur*fps)+1;
+    for await(const f of src){const r=await laiCall({op:"run",task:"pose",model:laiModels().pose,input:{blob:f.blob,box}},p=>{j.note=laiNote(p);liveUpdate()});frames.push({t:f.t,kp:r.kp});
+      const ok=r.kp.filter(p=>p.s>.3);if(ok.length>5){let x0=1,y0=1,x1=0,y1=0;ok.forEach(p=>{x0=Math.min(x0,p.x);y0=Math.min(y0,p.y);x1=Math.max(x1,p.x);y1=Math.max(y1,p.y)});const px=(x1-x0)*.3+.04,py=(y1-y0)*.2+.04;box={x0:Math.max(0,x0-px),y0:Math.max(0,y0-py),x1:Math.min(1,x1+px),y1:Math.min(1,y1+py)}}else box=null;
+      j.progress=Math.min(.85,frames.length/n*.85);j.note=L("Reading the pose… ","قراءة الوضعية… ")+frames.length+"/"+n;liveUpdate()}
+    const sm=mcSmooth(frames,T.smooth),f3=mc3D(sm,src.aspect);j.meta.frames=sm.map(f=>({t:+f.t.toFixed(2),kp:f.kp.map(p=>[+p.x.toFixed(4),+p.y.toFixed(4),+p.s.toFixed(2)])}));j.meta.aspect=src.aspect;j.dur=Math.round(src.dur);
+    const bvh=new Blob([mcBVH(f3,fps)],{type:"text/plain"}),json=new Blob([JSON.stringify({fps,joints:COCO,frames:j.meta.frames})],{type:"application/json"});IDB.put("bvh_"+j.id,bvh);IDB.put("kp_"+j.id,json);
+    j.progress=.9;j.note=L("Animating…","التحريك…");liveUpdate();const vid=await mcMannequin(f3,src.aspect,c);if(vid){EXPORTS[j.id]=URL.createObjectURL(vid);IDB.put("x_"+j.id,vid);if(API.mode==="server"){try{j.resultUrl=(await API.upload(vid,"mocap-"+j.id+(vid.type.includes("mp4")?".mp4":".webm"))).url}catch(e){}}}
+    j.status="complete";j.progress=1;delete j.note;S.mcSel=j.id;persist();statusChanged();renderAll();toast(L("Motion captured on your device — download BVH or keypoints.","التُقطت الحركة على جهازك — نزّل BVH أو النقاط."));
+    if(T.out==="bvh")saveFile("nooi-mocap.bvh",bvh)}
+  catch(e){j.status="failed";j.error=String(e.message||e);delete j.note;persist();statusChanged();renderAll();toast(L("On-device AI failed: ","فشل الذكاء على الجهاز: ")+j.error)}finally{MCX.busy=false}}
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest("[data-act]");if(!a)return;const act=a.dataset.act;
+  if(act==="run-mocap"&&!mcServer()&&laiOn()){e.stopImmediatePropagation();e.preventDefault();mcRunLocal();return}
+  if(act==="mc-bvh"||act==="mc-json"){e.stopImmediatePropagation();const b=await IDB.get((act==="mc-bvh"?"bvh_":"kp_")+a.dataset.id);if(b)saveFile(act==="mc-bvh"?"nooi-mocap.bvh":"nooi-mocap-keypoints.json",b);else toast(L("That file isn't on this device any more.","هذا الملف لم يعد على هذا الجهاز."))}
+  if(act==="mc-sel"){S.mcSel=a.dataset.id;persist();renderView()}},true);
+VIEWS.mocap=(o=>()=>{let h=o();if(mcServer()||!laiOn())return h;const done=S.jobs.filter(j=>j.kind==="mocap"&&j.local&&j.status==="complete").slice(-6).reverse();
+  h=h.replace(/(data-act="run-mocap"[^>]*>)([\s\S]*?)<span class="cost">20 cr<\/span>/,(m0,a)=>a+ic("mocap")+L("Capture on this device","التقط على جهازك")+'<span class="cost">'+L("free","مجاناً")+"</span>");
+  h=h.replace(/<div class="note[^"]*"[^>]*>(?:(?!<\/div>)[\s\S])*?SAM 3D Body(?:(?!<\/div>)[\s\S])*?<\/div><\/div>/,note(L("Runs on your device with ViTPose: 17 body points per frame, smoothed, lifted to 3D, saved as BVH (Blender, Maya, Unity) and keypoints JSON, plus a mannequin video.","يعمل على جهازك بـ ViTPose: 17 نقطة للجسم في كل إطار، منعّمة ومحوّلة إلى 3D، تُحفظ كملف BVH (Blender وMaya وUnity) وملف نقاط JSON، مع فيديو لمجسّم متحرك."),true));
+  h=h.replace(/<button[^>]*data-set="tools\.mocap\.out" data-val="fbx"[^>]*>[\s\S]*?<\/button>/,"").replace(/<button[^>]*data-toggle="tools\.mocap\.(face|hands)"[^>]*>[\s\S]*?<\/button>/g,"").replace(String(srvTag),String(liveTag));if(S.tools.mocap.out==="fbx")S.tools.mocap.out="bvh";
+  h=h.replace(L("The motion trace here is computed live in your browser. Full body, face and hand skeleton capture runs on the render server.","مسار الحركة هنا يُحسب مباشرة في متصفحك. الالتقاط الكامل لهيكل الجسم والوجه واليدين يعمل على خادم التوليد."),L("The motion trace and the body capture both run in your browser.","مسار الحركة والتقاط الجسم كلاهما يعملان في متصفحك."));
+  if(done.length)h=h.replace('<div class="row" style="margin-top:10px">'+liveTag,'<span class="lbl">'+L("Captured motion","الحركات الملتقطة")+'</span><div class="edxlist">'+done.map(j=>'<div class="edxrow" style="cursor:default"><button class="btn sm ghost" data-act="mc-sel" data-id="'+j.id+'" aria-pressed="'+(S.mcSel===j.id)+'">'+ic("mocap")+esc(j.title||"")+'</button><span class="row" style="gap:6px"><button class="btn sm" data-act="mc-bvh" data-id="'+j.id+'">BVH</button><button class="btn sm" data-act="mc-json" data-id="'+j.id+'">JSON</button></span></div>').join("")+'</div><div class="row" style="margin-top:10px">'+liveTag);
+  return h})(VIEWS.mocap);
+/* overlay the captured skeleton on the performance video */
+mocapTick=(o=>function(){o();const j=S.mcSel&&S.jobs.find(x=>x.id===S.mcSel);const cv=$("#wk"),m=M.mc;if(!j||!j.meta||!j.meta.frames||!cv||!srcReady(m)||m.type!=="video")return;const fr=j.meta.frames,t=m.el.currentTime;let i=0;while(i<fr.length-1&&fr[i+1].t<=t)i++;const kp=fr[i].kp,ctx=cv.getContext("2d"),W=cv.width,H=cv.height;
+  ctx.save();ctx.lineCap="round";ctx.lineWidth=Math.max(3,W/160);ctx.strokeStyle="#CFE13E";COCO_BONES.forEach(([a,b])=>{if(kp[a][2]<.25||kp[b][2]<.25)return;ctx.beginPath();ctx.moveTo(kp[a][0]*W,kp[a][1]*H);ctx.lineTo(kp[b][0]*W,kp[b][1]*H);ctx.stroke()});ctx.fillStyle="#fff";kp.forEach(p=>{if(p[2]<.25)return;ctx.beginPath();ctx.arc(p[0]*W,p[1]*H,Math.max(3,W/180),0,7);ctx.fill()});ctx.restore()})(mocapTick);
+/* ---------- Kie AI quick start: paste the key, test it, switch on every model Kie AI can run, then try one ---------- */
+const KIE_VIDEO_RULES=[[/kling.?4|kling40/,"kling-3.0/video"],[/kling.?3|kling30/,"kling-3.0/video"],[/kling/,"kling-2.6/text-to-video"],[/seedance.?2\.?5|seedance25/,"bytedance/seedance-2-5"],[/seedance/,"bytedance/seedance-2"],[/hailuo|minimax|h3/,"minimax-h3/text-to-video"],[/wan.?3|wan30/,"wan/3-0-video"],[/wan|qwenwan/,"wan/2-7-text-to-video"],[/veo.*(fast|lite)/,"veo3_fast"],[/veo/,"veo3"],[/grok/,"grok-imagine/text-to-video"],[/pixverse/,"pixverse-v6/text-to-video"]];
+const KIE_IMAGE_RULES=[[/nano.?banana.*pro|nbpro/,"nano-banana-pro"],[/nano.?banana/,"nano-banana-2"],[/gpt.?image/,"gpt-image-2-text-to-image"],[/seedream/,"seedream/5-pro-text-to-image"],[/flux/,"flux-2/pro-text-to-image"],[/qwen|img20/,"qwen3/text-to-image"],[/imagen/,"google/imagen4-ultra"],[/ideogram/,"ideogram/v3-text-to-image"],[/grok/,"grok-imagine/text-to-image"],[/dotimg/,"nano-banana-2"],[/sdxl/,"seedream/4.5-text-to-image"]];
+function kiePlan(){const out=[];const pick=(rules,id,name)=>{const s=(id+" "+(name||"")).toLowerCase();const r=rules.find(x=>x[0].test(s));return r?r[1]:null};
+  Object.keys(MODELS).filter(k=>k!=="auto").forEach(k=>{const km=pick(KIE_VIDEO_RULES,k,MODELS[k].name);if(km)out.push([k,MODELS[k].name||k,km,"video"])});
+  (typeof FLAG!=="undefined"?FLAG:[]).forEach(f=>{if(!out.some(x=>x[0]===f.id)){const km=pick(KIE_VIDEO_RULES,f.id,f.name);if(km)out.push([f.id,f.name,km,"video"])}});
+  Object.keys(IMG_MODELS).filter(k=>k!=="auto").forEach(k=>{const km=pick(KIE_IMAGE_RULES,k,IMG_MODELS[k].name);if(km)out.push([k,IMG_MODELS[k].name||k,km,"image"])});return out}
+const KQ={state:"",msg:"",busy:false};
+function kieQuick(){const pv=((A()||{}).providers||{}).kie||{},on=pv.configured,plan=kiePlan(),cat=S.modelCat||{},live=plan.filter(x=>(cat[x[0]]||{}).kieModel);
+  return'<div class="panel pad kiequick" style="margin-bottom:14px"><div class="spread"><h3 style="margin:0;display:flex;align-items:center;gap:8px">'+ic("key","width:18px;height:18px")+L("Kie AI quick start","تشغيل Kie AI السريع")+"</h3>"+(on?badge("complete",L("Key saved","المفتاح محفوظ")):badge("queued",L("Not connected","غير متصل")))+"</div>"+
+  '<p class="small mute">'+L("One Kie AI key runs Kling, Seedance, Wan, MiniMax, Veo, Nano Banana, GPT Image, Seedream, Flux, Suno and more. The key is stored encrypted on the server and never sent to browsers.","مفتاح Kie AI واحد يشغّل Kling وSeedance وWan وMiniMax وVeo وNano Banana وGPT Image وSeedream وFlux وSuno وغيرها. يُحفظ المفتاح مشفراً على الخادم ولا يُرسل للمتصفحات أبداً.")+"</p>"+
+  '<label class="lbl" for="kiekey">'+L("Kie AI API key","مفتاح Kie AI")+'</label><div class="row" style="flex-wrap:nowrap"><input id="kiekey" type="password" dir="ltr" autocomplete="off" spellcheck="false" placeholder="'+(on&&pv.apiKeyMask?esc(pv.apiKeyMask):"kie_…")+'" style="flex:1;min-width:0"><button class="btn sm primary" data-act="kie-save" '+(KQ.busy?"disabled":"")+">"+ic("check")+L("Save & test","احفظ واختبر")+"</button></div>"+
+  (KQ.msg?'<p class="small" style="margin:8px 0 0;color:'+(KQ.state==="ok"?"var(--lime-ink)":"#e5484d")+'">'+esc(KQ.msg)+"</p>":"")+
+  '<span class="lbl">'+L("Models Kie AI can run","النماذج المتاحة عبر Kie AI")+" · "+live.length+"/"+plan.length+'</span><div class="kielist">'+plan.map(x=>'<span class="chip" style="cursor:default" aria-pressed="'+!!(cat[x[0]]||{}).kieModel+'">'+esc(x[1])+' <small class="dim mono" dir="ltr">'+esc((cat[x[0]]||{}).kieModel||x[2])+"</small></span>").join("")+"</div>"+
+  '<div class="row" style="margin-top:12px"><button class="btn sm" data-act="kie-enable" '+(on&&!KQ.busy?"":"disabled")+">"+ic("spark")+L("Switch on all supported models","فعّل كل النماذج المدعومة")+'</button><button class="btn sm" data-act="kie-try" data-v="image" '+(on&&live.some(x=>x[3]==="image")?"":"disabled")+">"+ic("image")+L("Test an image","جرّب صورة")+'</button><button class="btn sm" data-act="kie-try" data-v="video" '+(on&&live.some(x=>x[3]==="video")?"":"disabled")+">"+ic("video")+L("Test a 5 s video","جرّب فيديو 5 ث")+"</button></div></div>"}
+VIEWS.admin=(o=>()=>{let h=o();if(S.admTab!=="models"||API.mode!=="server")return h;const k=h.indexOf('data-v="audit"');const e=k>0?h.indexOf("</div>",k):-1;return e>0?h.slice(0,e+6)+kieQuick()+h.slice(e+6):h})(VIEWS.admin);
+async function kieRefresh(){try{const st=await API.req("/v1/admin/settings");if(ADM.data){ADM.data.providers=st.providers||ADM.data.providers;ADM.data.models=st.models||ADM.data.models}Object.assign(S.modelCat,st.modelCat||{});const c=await API.req("/v1/config").catch(()=>null);if(c)API.cfg=c}catch(e){}}
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest("[data-act]");if(!a||!/^kie-/.test(a.dataset.act))return;e.stopImmediatePropagation();if(API.mode!=="server"){toast(L("Connect the nooi server first.","اربط خادم nooi أولاً."));return}const act=a.dataset.act;
+  if(act==="kie-save"){const key=($("#kiekey")||{}).value||"";KQ.busy=true;renderView();
+    try{if(key.trim()){const pv=((A()||{}).providers||{}).kie||{};const vals={apiKey:key.trim()};if(!pv.videoModelMask)vals.videoModel="kling-3.0/video";if(!pv.imageModelMask)vals.imageModel="nano-banana-pro";if(!pv.musicModelMask)vals.musicModel="suno:V5";await API.req("/v1/admin/providers/kie",{method:"PUT",json:vals})}
+      const r=await API.req("/v1/admin/providers/kie/test",{method:"POST",json:{}});KQ.state=r.state==="online"||r.state==="degraded"?"ok":"err";KQ.msg=KQ.state==="ok"?L("Connected — Kie AI answered.","تم الاتصال — استجاب Kie AI.")+(r.note?" "+r.note:""):L("Kie AI: ","Kie AI: ")+(r.note||r.state||"error")}
+    catch(err){KQ.state="err";KQ.msg=String(err.message||err)}finally{KQ.busy=false;await kieRefresh();renderView()}}
+  if(act==="kie-enable"){KQ.busy=true;renderView();try{const plan=kiePlan(),modelCat={},models={};plan.forEach(x=>{modelCat[x[0]]={kieModel:x[2]};models[x[0]]=true});await API.req("/v1/admin/settings",{method:"PUT",json:{modelCat,models}});await kieRefresh();KQ.state="ok";KQ.msg=L("Switched on ","تم تفعيل ")+plan.length+L(" models through Kie AI."," نموذجاً عبر Kie AI.")}catch(err){KQ.state="err";KQ.msg=String(err.message||err)}finally{KQ.busy=false;renderView()}}
+  if(act==="kie-try"){const cat=S.modelCat||{},plan=kiePlan().filter(x=>x[3]===a.dataset.v&&(cat[x[0]]||{}).kieModel);const m=plan[0];if(!m)return;
+    if(a.dataset.v==="image"){S.img.model=m[0];S.img.count=1;S.img.prompt=L("A ripe orange on a white marble table, soft studio light","برتقالة ناضجة على طاولة رخام بيضاء بإضاءة استوديو ناعمة");go("image");makeImages(S.img.prompt)}
+    else{S.draft.model=m[0];S.draft.dur=5;S.draft.variations=1;S.draft.prompt=L("A paper boat drifting on a calm lake at sunrise, slow dolly-in","قارب ورقي يطفو على بحيرة هادئة عند الشروق، تقريب بطيء");go("video");makeVideo()}
+    toast(L("Test sent to ","أُرسل الاختبار إلى ")+m[1]+" · Kie AI")}},true);
+(function(){const st=document.createElement("style");st.id="v52";st.textContent=`.kielist{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.kielist .chip{font-size:12px}.kielist .chip[aria-pressed="true"]{border-color:var(--lime);background:color-mix(in srgb,var(--lime) 14%,transparent)}`;document.head.appendChild(st)})();
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
