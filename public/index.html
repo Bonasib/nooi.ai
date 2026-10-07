@@ -2726,8 +2726,8 @@ document.addEventListener("click",async e=>{
   const a=t.closest("[data-act]");if(!a)return;const act=a.dataset.act,A=a.dataset;
   switch(act){
   case"auth-oauth":signIn(A.m);break;
-  case"auth-email":{const v=($("#au-email").value||"").trim();if(!/^\S+@\S+\.\S+$/.test(v)){AU.err=L("Enter a valid email address.","أدخل بريداً إلكترونياً صحيحاً.");renderView();break}AU={step:"email",contact:v,cc:AU.cc,code:String(Math.floor(100000+Math.random()*9e5)),err:""};renderView();setTimeout(()=>{const f=$('[data-otp="0"]');f&&f.focus()},50);break}
-  case"auth-phone":{const cc=$("#au-cc").value,dg=($("#au-phone").value||"").replace(/\D/g,"").replace(/^0+/,"");if(dg.length<7||dg.length>12){AU.cc=cc;AU.err=L("Enter a valid phone number.","أدخل رقم جوال صحيحاً.");renderView();break}AU={step:"phone",contact:cc+" "+dg,cc,code:String(Math.floor(100000+Math.random()*9e5)),err:""};renderView();setTimeout(()=>{const f=$('[data-otp="0"]');f&&f.focus()},50);break}
+  case"auth-email":{const v=($("#au-email").value||"").trim();if(!/^\S+@\S+\.\S+$/.test(v)){AU.err=L("Enter a valid email address.","أدخل بريداً إلكترونياً صحيحاً.");renderView();break}AU={step:"email",contact:v,cc:AU.cc,code:String(Math.floor(100000+Math.random()*9e5)),err:"",showAuth:true};renderView();setTimeout(()=>{const f=$('[data-otp="0"]');f&&f.focus()},50);break}
+  case"auth-phone":{const cc=$("#au-cc").value,dg=($("#au-phone").value||"").replace(/\D/g,"").replace(/^0+/,"");if(dg.length<7||dg.length>12){AU.cc=cc;AU.err=L("Enter a valid phone number.","أدخل رقم جوال صحيحاً.");renderView();break}AU={step:"phone",contact:cc+" "+dg,cc,code:String(Math.floor(100000+Math.random()*9e5)),err:"",showAuth:true};renderView();setTimeout(()=>{const f=$('[data-otp="0"]');f&&f.focus()},50);break}
   case"auth-resend":AU.code=String(Math.floor(100000+Math.random()*9e5));AU.err="";renderView();toast(L("New code sent","تم إرسال رمز جديد"));break;
   case"auth-verify":{const c=tickAuth();if(c===AU.code)signIn(AU.step,AU.contact);else{AU.err=L("That code doesn't match. Check it and try again.","الرمز غير مطابق. تحقق منه وحاول مجدداً.");renderView()}break}
   case"auth-back":AU.step="start";AU.err="";renderView();break;
@@ -2913,7 +2913,7 @@ async function initFirebase(cfg){
     if(auth.isSignInWithEmailLink(location.href)){const q=new URLSearchParams(location.search);let cu=null;try{cu=q.get("continueUrl")&&new URL(q.get("continueUrl")).searchParams}catch(e){}
       let em=localStorage.getItem("dotai-email")||q.get("e")||(cu&&cu.get("e"))||prompt(L("Confirm your email","أكّد بريدك الإلكتروني"))||"";
       try{if(em){await auth.signInWithEmailLink(em.trim(),location.href);localStorage.removeItem("dotai-email")}}
-      catch(err){const c=String(err&&err.code||"");AU={step:"start",err:/invalid-action-code|expired/.test(c)?L("This sign-in link has expired or was already used. Send a new one.","انتهت صلاحية رابط الدخول أو استُخدم من قبل. أرسل رابطاً جديداً."):/invalid-email|mismatch/.test(c)?L("This link was sent to a different email address.","هذا الرابط أُرسل إلى بريد إلكتروني آخر."):String(err.message||err)};S.authOpen=true}
+      catch(err){const c=String(err&&err.code||"");AU={step:"start",err:/invalid-action-code|expired/.test(c)?L("This sign-in link has expired or was already used. Send a new one.","انتهت صلاحية رابط الدخول أو استُخدم من قبل. أرسل رابطاً جديداً."):/invalid-email|mismatch/.test(c)?L("This link was sent to a different email address.","هذا الرابط أُرسل إلى بريد إلكتروني آخر."):String(err.message||err),showAuth:true}}
       history.replaceState(null,"",location.pathname)}
     auth.onAuthStateChanged(u=>{if(u){const pid=(u.providerData[0]||{}).providerId||"";S.user={name:u.displayName||(u.email?u.email.split("@")[0]:u.phoneNumber)||L("Creator","مبدع"),method:pid.includes("google")?"google":pid.includes("apple")?"apple":u.phoneNumber?"phone":"email",contact:u.email||u.phoneNumber||"",uid:u.uid}}else S.user=null;persist();renderAll()});
   }catch(e){API.fb=null}
@@ -2923,8 +2923,9 @@ document.addEventListener("click",async e=>{
   e.stopImmediatePropagation();e.preventDefault();const auth=API.fb.auth();
   try{
     if(act==="auth-oauth"){await auth.signInWithPopup(a.dataset.m==="apple"?new firebase.auth.OAuthProvider("apple.com"):new firebase.auth.GoogleAuthProvider())}
-    else if(act==="auth-email"){const v=($("#au-email").value||"").trim();if(!/^\S+@\S+\.\S+$/.test(v)){AU.err=L("Enter a valid email address.","أدخل بريداً إلكترونياً صحيحاً.");renderView();return}let viaServer=false;if(API.mode==="server"){try{await API.req("/v1/auth/email-link",{json:{email:v,lang:S.lang==="ar"?"ar":"en"}});viaServer=true}catch(e2){if(!/not set up/i.test(String(e2.message||e2)))throw e2}}
-      if(!viaServer)await auth.sendSignInLinkToEmail(v,{url:location.origin+location.pathname+"?e="+encodeURIComponent(v),handleCodeInApp:true});localStorage.setItem("dotai-email",v);AU={step:"emailLink",contact:v,cc:AU.cc,err:""};renderView()}
+    else if(act==="auth-email"){const v=($("#au-email").value||"").trim();if(!/^\S+@\S+\.\S+$/.test(v)){AU.err=L("Enter a valid email address.","أدخل بريداً إلكترونياً صحيحاً.");renderView();return}if(API.cfg&&API.cfg.emailCode){await API.req("/v1/auth/email-code",{json:{email:v,lang:S.lang==="ar"?"ar":"en"}});AU={step:"emailCode",contact:v,cc:AU.cc,err:"",showAuth:true};renderAll();setTimeout(()=>{const c=$("#au-code");if(c)c.focus()},60);return}
+      let viaServer=false;if(API.mode==="server"){try{await API.req("/v1/auth/email-link",{json:{email:v,lang:S.lang==="ar"?"ar":"en"}});viaServer=true}catch(e2){if(!/not set up/i.test(String(e2.message||e2)))throw e2}}
+      if(!viaServer)await auth.sendSignInLinkToEmail(v,{url:location.origin+location.pathname+"?e="+encodeURIComponent(v),handleCodeInApp:true});localStorage.setItem("dotai-email",v);AU={step:"emailLink",contact:v,cc:AU.cc,err:"",showAuth:true};renderAll()}
     else if(act==="auth-phone"){const cc=$("#au-cc").value,dg=($("#au-phone").value||"").replace(/\D/g,"").replace(/^0+/,"");if(dg.length<7){AU.err=L("Enter a valid phone number.","أدخل رقم جوال صحيحاً.");renderView();return}
       let box=$("#recap");if(!box){box=document.createElement("div");box.id="recap";document.body.appendChild(box)}if(!window._rv)window._rv=new firebase.auth.RecaptchaVerifier("recap",{size:"invisible"});
       window._conf=await auth.signInWithPhoneNumber(cc+dg,window._rv);AU={step:"phone",contact:cc+" "+dg,cc,err:"",real:true};renderView();setTimeout(()=>{const f=$('[data-otp="0"]');f&&f.focus()},50)}
@@ -6710,6 +6711,138 @@ renderView=(o=>function(){o();if(S.view==="admin"&&document.getElementById("empv
 .empanel{display:flex;flex-direction:column;gap:8px}
 .empanel iframe{flex:1;width:100%;min-height:600px;border:1px solid var(--line2);border-radius:16px;background:#eef0ea}
 @media (max-width:1079px){.emgrid{grid-template-columns:1fr}.empanel iframe{min-height:560px}}
+`;document.head.appendChild(st)})();
+
+/* ================= v49: EMAIL CODE SIGN-IN · NO PHONE SIGN-IN · CREDITS BUTTON ================= */
+/* sign-in screen: phone sign-in removed; with email codes enabled on the server, "Send code" leads to a code box */
+const otpErr=err=>{const m=String(err&&err.message||err);return/wrong/i.test(m)?L("Wrong code. Try again.","الرمز غير صحيح. حاول مرة أخرى."):/expired/i.test(m)?L("This code has expired. Send a new one.","انتهت صلاحية الرمز. أرسل رمزاً جديداً."):/attempts/i.test(m)?L("Too many attempts. Send a new code.","محاولات كثيرة. أرسل رمزاً جديداً."):m};
+vAuth=(o=>function(){
+  if(AU.showAuth&&AU.step==="emailCode"){const keep=AU.step;AU.step="emailLink";const base=o();AU.step=keep;
+    const a=base.indexOf("<h1>"),b=base.lastIndexOf('data-act="auth-back"'),c=b<0?-1:base.indexOf("</button>",b);if(a<0||c<0)return base;
+    return base.slice(0,a)+"<h1>"+L("Enter your code","أدخل الرمز")+'</h1><p class="lede">'+L("We sent a 6-digit code to ","أرسلنا رمزاً من 6 أرقام إلى ")+'<b dir="ltr">'+esc(AU.contact)+"</b>. "+L("It expires in 10 minutes.","صالح لمدة 10 دقائق.")+"</p>"+
+      '<input id="au-code" class="otpin" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" dir="ltr" placeholder="••••••" aria-label="'+L("6-digit code","الرمز المكوّن من 6 أرقام")+'">'+
+      (AU.err?'<div class="status err">'+esc(AU.err)+"</div>":"")+
+      '<button class="btn primary big" style="margin-top:12px" data-act="otp-verify">'+ic("check")+L("Verify and sign in","تأكيد وتسجيل الدخول")+"</button>"+
+      '<div class="row otprow"><button class="btn ghost sm" data-act="otp-resend">'+ic("refresh")+L("Resend code","أعد إرسال الرمز")+'</button><button class="btn ghost sm" data-act="auth-back">'+L("Use another method","استخدم طريقة أخرى")+"</button></div>"+base.slice(c+9)}
+  let h=o();
+  h=h.replace(/<div class="or">[^<]*<\/div><div class="phone">[\s\S]*?data-act="auth-phone"[\s\S]*?<\/button>/,"");
+  if(API.cfg&&API.cfg.emailCode)h=h.replace(L("Send sign-in link","أرسل رابط الدخول")+"</button>",L("Send code","أرسل الرمز")+"</button>");
+  return h})(vAuth);
+async function otpVerify(){const c=(($("#au-code")||{}).value||"").replace(/\D/g,"");if(c.length!==6){AU.err=L("Enter the 6-digit code.","أدخل الرمز المكوّن من 6 أرقام.");renderAll();return}
+  if(otpVerify.busy)return;otpVerify.busy=1;const btn=document.querySelector('[data-act="otp-verify"]');if(btn)btn.disabled=true;
+  try{if(!API.fb)throw new Error(L("Sign-in is not available right now.","تسجيل الدخول غير متاح حالياً."));const r=await API.req("/v1/auth/email-verify",{json:{email:AU.contact,code:c}});await API.fb.auth().signInWithCustomToken(r.token);AU={step:"start",contact:"",cc:AU.cc||"+966",code:"",err:""};S.view="home";persist()}
+  catch(err){AU.err=otpErr(err);renderAll();setTimeout(()=>{const i=$("#au-code");if(i){i.value="";i.focus()}},40)}finally{otpVerify.busy=0}}
+document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest('[data-act="otp-verify"],[data-act="otp-resend"]');if(!b)return;e.stopImmediatePropagation();e.preventDefault();
+  if(b.dataset.act==="otp-verify")return otpVerify();
+  try{await API.req("/v1/auth/email-code",{json:{email:AU.contact,lang:S.lang==="ar"?"ar":"en"}});AU.err="";toast(L("A new code is on its way.","أُرسل رمز جديد."))}catch(err){AU.err=otpErr(err)}renderAll()},true);
+document.addEventListener("input",e=>{const t=e.target;if(t&&t.id==="au-code"){const v=t.value.replace(/\D/g,"").slice(0,6);if(t.value!==v)t.value=v;if(v.length===6)otpVerify()}});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target&&e.target.id==="au-code"){e.preventDefault();otpVerify()}});
+/* --- credits: a button the same size as the language button, live count, opens Credits & transactions --- */
+const crCompact=n=>{n=Math.max(0,Math.round(+n||0));return n>=1e6?(n/1e6).toFixed(n>=1e7?0:1).replace(/\.0$/,"")+"M":n>=1e5?Math.round(n/1e3)+"k":n.toLocaleString("en")};
+function crBtn(){const n=S.credits||0;return'<button class="btn ghost sm crbtn2" data-go="wallet" aria-label="'+esc(L("Credits left: ","الرصيد المتبقي: ")+n.toLocaleString("en"))+'" title="'+esc(L("Credits left: ","الرصيد المتبقي: ")+n.toLocaleString("en"))+'">'+ic("coin")+'<em class="crn">'+crCompact(n)+"</em></button>"}
+topMobile=(o=>function(){return o().replace(/<button class="crbtn"[\s\S]*?<\/span><\/button>/,crBtn())})(topMobile);
+let crShown=null;
+renderShell=(o=>function(){o();if(!S.user||!document.querySelector)return;
+  const top=document.querySelector("#side .brand");if(top&&!top.querySelector(".crbtn2")){const t=document.createElement("div");t.className="crslot";t.innerHTML=crBtn();const th=top.querySelector(".thtoggle");th?th.parentNode.insertBefore(t,th):top.appendChild(t)}
+  const n=S.credits||0;document.querySelectorAll(".crbtn2").forEach(b=>{if(crShown!==null&&n!==crShown){b.classList.remove("bump");void b.offsetWidth;b.classList.add("bump");const el=b.querySelector(".crn"),from=crShown,t0=performance.now();const step=t=>{const k=Math.min(1,(t-t0)/600);if(el)el.textContent=crCompact(from+(n-from)*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(step)};requestAnimationFrame(step)}});crShown=n})(renderShell);
+(function(){const st=document.createElement("style");st.id="v49";st.textContent=`
+.otpin{width:100%;margin-top:16px;text-align:center;font:600 30px/1.2 var(--mono);letter-spacing:.42em;padding:14px 10px 14px calc(10px + .42em);border-radius:16px}
+.otprow{margin-top:10px;justify-content:space-between;flex-wrap:wrap}
+.crbtn2{gap:6px;font-family:var(--mono);font-variant-numeric:tabular-nums;direction:ltr}
+.crbtn2 svg{width:17px;height:17px;stroke:#c99400;fill:color-mix(in srgb,#f5c518 30%,transparent);transition:transform .5s cubic-bezier(.3,1.6,.5,1)}
+.crbtn2 .crn{font-style:normal;font-weight:700;font-size:13px;display:inline!important}
+.crbtn2:hover svg,.crbtn2:focus-visible svg{transform:rotateY(180deg)}
+.topm .crbtn2,.crbtn2{display:inline-flex!important;flex-direction:row!important;align-items:center;width:auto!important;min-width:0;padding:0 10px!important;white-space:nowrap}
+.crbtn2.bump{animation:crBump .6s ease-out}
+.crbtn2.bump svg{animation:crSpin .6s ease-out}
+@keyframes crBump{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--lime) 60%,transparent)}100%{box-shadow:0 0 0 10px transparent}}
+@keyframes crSpin{from{transform:rotateY(0)}to{transform:rotateY(360deg)}}
+#side .brand .crslot{margin-inline-start:auto;display:inline-flex}
+#side .brand .crslot .crbtn2{height:32px;min-height:32px}
+#side .brand .crslot+*{margin-inline-start:6px}
+@media (min-width:768px) and (max-width:1279px){#side .brand .crslot .crn{display:none!important}#side .brand .crslot{margin:0}#side .brand .crslot .crbtn2{width:40px!important;height:36px!important;min-height:36px;padding:0!important;justify-content:center}}
+@media (prefers-reduced-motion:reduce){.crbtn2.bump,.crbtn2.bump svg,.crbtn2 svg{animation:none;transition:none}}
+`;document.head.appendChild(st)})();
+
+/* ================= v50: ON-DEVICE AI (WebGPU) ================= */
+/* Supported tools run in the visitor's browser (public/local-ai-worker.js, Transformers.js + ONNX Runtime WebGPU,
+   CPU/WASM fallback): speech-to-text (Whisper), text-to-speech (MMS), background removal, upscaling, depth.
+   No API, no credits. Video/image/music generation still needs a provider (too big for a browser). */
+const LAI={w:null,seq:0,wait:new Map(),info:null};
+const LAI_MODELS={asr:"onnx-community/whisper-base",bg:"Xenova/modnet",up2:"Xenova/swin2SR-classical-sr-x2-64",up4:"Xenova/swin2SR-realworld-sr-x4-64-bsrgan-psnr",depth:"onnx-community/depth-anything-v2-small",
+  tts:{ar:"Xenova/mms-tts-ara",en:"Xenova/mms-tts-eng",fr:"Xenova/mms-tts-fra",es:"Xenova/mms-tts-spa",de:"Xenova/mms-tts-deu",pt:"Xenova/mms-tts-por",ru:"Xenova/mms-tts-rus",tr:"Xenova/mms-tts-tur",hi:"Xenova/mms-tts-hin",ko:"Xenova/mms-tts-kor",fa:"Xenova/mms-tts-fas",ur:"Xenova/mms-tts-urd"}};
+const laiModels=()=>{const o=(API.cfg&&API.cfg.localAI&&API.cfg.localAI.models)||{};return Object.assign({},LAI_MODELS,o,{tts:Object.assign({},LAI_MODELS.tts,o.tts||{})})};
+function laiCfg(){const c=(API.cfg&&API.cfg.localAI)||{};const abs=u=>u?new URL(u,location.href).href:null;return{tfUrl:abs(c.tfUrl),ortBase:abs(c.ortBase),modelsHost:abs(c.modelsHost)}}
+const laiOn=()=>S.localAI!==false&&typeof Worker!=="undefined"&&/^https?:$/.test(location.protocol);
+function laiWorker(){if(!LAI.w){LAI.w=new Worker("local-ai-worker.js",{type:"module"});
+  LAI.w.onmessage=({data:m})=>{const h=LAI.wait.get(m.id);if(!h)return;if(m.type==="progress"){if(h.onp)h.onp(m.p)}else{LAI.wait.delete(m.id);m.type==="result"?h.res(m.result):h.rej(new Error(m.error))}};
+  LAI.w.onerror=e=>{LAI.wait.forEach(h=>h.rej(new Error(e.message||"On-device AI could not start")));LAI.wait.clear();LAI.w=null}}return LAI.w}
+function laiCall(msg,onp,transfer){return new Promise((res,rej)=>{const id=++LAI.seq;LAI.wait.set(id,{res,rej,onp});const cfg=laiCfg();laiWorker().postMessage(Object.assign({id,cfg},msg,{opts:{cfg}}),transfer||[])})}
+async function laiProbe(){if(LAI.info)return LAI.info;try{LAI.info=await laiCall({op:"probe"})}catch(e){LAI.info={device:"none",error:String(e.message||e)}}if(S.view==="account")renderView();return LAI.info}
+const laiNote=p=>p.status==="fallback"?L("Your graphics card can't run this model — using the processor instead.","بطاقة الرسوميات لا تشغّل هذا النموذج — نستخدم المعالج بدلاً منها."):p.status==="running"?L("Working on your device…","يعمل على جهازك…"):L("Downloading the AI model — only the first time…","تنزيل نموذج الذكاء — في المرة الأولى فقط…");
+/* run a tool on the device as a library job; if it fails on the server build, hand the job to the server instead */
+function laiStart(base,task,model,getInput,finish,fallback){
+  const j=Object.assign({id:uid(),status:"rendering",progress:0.02,created:Date.now(),seed:Math.floor(Math.random()*1e9),pal:PALS[Math.floor(Math.random()*PALS.length)],dur:5,aspect:"1:1",art:"scene"},base,{cost:0,local:true});
+  S.jobs.push(j);persist();
+  (async()=>{try{const input=await getInput();const tr=input&&input.audio?[input.audio.buffer]:[];
+      const r=await laiCall({op:"run",task,model,input},p=>{if(p.status==="progress"&&p.progress!=null)j.progress=Math.max(j.progress,Math.min(.9,p.progress/100*.9));if(p.status==="running")j.progress=Math.max(j.progress,.92);j.note=laiNote(p);liveUpdate()},tr);
+      if(finish)await finish(j,r);
+      if(r.blob){EXPORTS[j.id]=URL.createObjectURL(r.blob);if(API.mode==="server"){try{j.resultUrl=(await API.upload(r.blob,"nooi-"+task+"-"+j.id+(r.blob.type.includes("png")?".png":".wav"))).url}catch(e){}}}
+      j.status="complete";j.progress=1;delete j.note;persist();statusChanged();toast(L("Done on your device — no credits used.","اكتمل على جهازك — دون خصم رصيد."))}
+    catch(e){const i=S.jobs.indexOf(j);if(fallback&&API.mode==="server"){if(i>=0)S.jobs.splice(i,1);toast(L("Couldn't run on this device — sending to the server.","تعذّر التشغيل على هذا الجهاز — نرسله إلى الخادم."));fallback()}else{j.status="failed";j.error=String(e.message||e);toast(L("On-device AI failed: ","فشل الذكاء على الجهاز: ")+j.error)}persist();statusChanged()}})();
+  return j}
+/* helpers */
+async function blobOfJob(job){const u=mediaUrl(job);if(!u)throw new Error("No media");return await(await fetch(u)).blob()}
+async function fitImage(blob,max){const bmp=await createImageBitmap(blob);const k=Math.min(1,max/Math.max(bmp.width,bmp.height));if(k===1&&/png|jpe?g|webp/.test(blob.type))return blob;const c=document.createElement("canvas");c.width=Math.round(bmp.width*k);c.height=Math.round(bmp.height*k);c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);return await new Promise(r=>c.toBlob(r,"image/png"))}
+async function audio16k(blob){const ab=await blob.arrayBuffer();const AC=window.AudioContext||window.webkitAudioContext;const ac=new AC();let buf;try{buf=await ac.decodeAudioData(ab)}finally{ac.close&&ac.close()}
+  const off=new OfflineAudioContext(1,Math.max(1,Math.ceil(buf.duration*16000)),16000);const s=off.createBufferSource();s.buffer=buf;s.connect(off.destination);s.start();const r=await off.startRendering();return r.getChannelData(0).slice()}
+const laiTtsLang=d=>{d=String(d||"");const m=/^([a-z]{2})[A-Z]{2}$/.exec(d);return m?m[1]:/^(en|fr|es|de|pt|ru|tr|hi|ko|fa|ur)$/.test(d)?d:"ar"};
+/* route supported jobs to the device */
+addJob=(o=>function(j){
+  if(!j||!laiOn()||j.local)return o(j);
+  const MD=laiModels(),fb=()=>o(Object.assign({},j,{local:false}));
+  if(j.kind==="bg"&&M.bgFg&&M.bgFg.type==="image"&&M.bgFg.file){const f=M.bgFg.file;
+    return laiStart({kind:"bg",title:L("Cut-out · ","قص الخلفية · ")+(M.bgFg.name||""),prompt:j.prompt,mediaType:"image",art:"portrait",aspect:"1:1"},"bg",MD.bg,async()=>({blob:await fitImage(f,2048)}),null,fb)}
+  if(j.kind==="finish"&&j.meta&&j.meta.tool==="upscale"){const T=S.tools.finish,src=S.jobs.find(x=>x.id===T.src),isImg=src?(src.mediaType==="image"||["image","look","sheet"].includes(src.kind)):(M.fin&&M.fin.type==="image");
+    if(isImg){const x4=String((j.meta.opt||{}).scale||"2x").startsWith("4");
+      return laiStart({kind:"finish",title:(x4?"4×":"2×")+" · "+(src?(src.title||src.prompt||""):(M.fin.name||"")),prompt:j.prompt,mediaType:"image",art:"scene",aspect:src?src.aspect:"1:1",meta:j.meta},"upscale",x4?MD.up4:MD.up2,async()=>({blob:await fitImage(src?await blobOfJob(src):M.fin.file,x4?768:1280)}),null,fb)}}
+  if(j.kind==="voice"&&j.prompt){const lg=laiTtsLang(j.meta&&j.meta.dialect),model=MD.tts[lg];
+    if(model)return laiStart({kind:"voice",title:j.title||j.prompt.slice(0,60),prompt:j.prompt,mediaType:"audio",art:"wave",meta:j.meta},"tts",model,async()=>({text:j.prompt}),(job,r)=>{job.dur=Math.max(1,Math.round(r.seconds||0))},fb)}
+  return o(j)})(addJob);
+/* library: show on-device images as pictures */
+thumb=(o=>function(ref,opt){let h=o(ref,opt);const it=objFor(ref),url=it&&mediaUrl(it);if(it&&it.mediaType==="image"&&url&&it.status==="complete")h=h.replace(/<video class="frame"[^>]*><\/video>/,'<img class="frame" style="object-fit:contain;background:repeating-conic-gradient(#0000 0 25%,#8882 0 50%) 0 0/16px 16px" src="'+esc(url)+'" alt="">');if(it&&it.note&&it.status==="rendering")h=h.replace('<div class="veil"><div>','<div class="veil"><div><small class="lainote">'+esc(it.note)+"</small>");return h})(thumb);
+/* subtitles: transcribe speech on the device (Whisper) */
+document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest('[data-act="subs-transcribe"]');if(!b||!laiOn())return;e.stopImmediatePropagation();e.preventDefault();
+  const U=S.subs,m=subsMedia();if(!m){toast(L("Add a video or audio first.","أضف فيديو أو صوتاً أولاً."));return}if(LAI.busyAsr)return;LAI.busyAsr=1;
+  const src=U.src&&U.src.k==="job"?S.jobs.find(j=>j.id===U.src.job):null;
+  try{uiPill("🎙️ "+L("Reading the audio…","قراءة الصوت…"));const blob=m.file||(src?await blobOfJob(src):await(await fetch(m.url||(m.el&&m.el.src))).blob());const audio=await audio16k(blob);
+    const lang=U.srcLang&&U.srcLang!=="auto"?U.srcLang:null;
+    const r=await laiCall({op:"run",task:"asr",model:laiModels().asr,input:{audio,language:lang}},p=>uiPill("🎙️ "+(p.status==="progress"&&p.progress!=null?laiNote(p)+" "+Math.round(p.progress)+"%":laiNote(p))),[audio.buffer]);
+    const dur=audio.length/16000,sl=lang||"ar";const segs=(r.chunks||[]).filter(c=>String(c.text||"").trim()).map((c,i,a)=>({start:c.start||0,end:c.end!=null?c.end:(a[i+1]?a[i+1].start:dur),text:String(c.text).trim(),lang:sl}));
+    if(!segs.length&&r.text)segs.push({start:0,end:dur,text:r.text.trim(),lang:sl});importSegments(segs);toast(L("Transcribed on your device — no credits used.","تم التفريغ على جهازك — دون خصم رصيد."))}
+  catch(err){toast(L("On-device transcription failed: ","فشل التفريغ على الجهاز: ")+String(err.message||err))}finally{LAI.busyAsr=0;uiPill("")}},true);
+/* account: on-device AI status & switch */
+function laiCard(){const i=LAI.info;if(!i&&laiOn())setTimeout(laiProbe,0);
+  const dev=!i?L("Checking your device…","جارٍ فحص جهازك…"):i.device==="webgpu"?"WebGPU · "+(i.gpu||L("graphics card","بطاقة الرسوميات"))+(i.fp16?" · fp16":""):i.device==="wasm"?L("Processor (WebGPU not available in this browser)","المعالج (WebGPU غير متاح في هذا المتصفح)"):L("Not available","غير متاح");
+  const tools=[["mic","Subtitles · speech to text (Whisper)","الترجمة · تحويل الكلام إلى نص (Whisper)"],["voice","Voice · text to speech in 12 languages","الصوت · تحويل النص إلى كلام بـ12 لغة"],["bg","Background removal for images","إزالة الخلفية للصور"],["finish","Image upscale 2× / 4×","رفع دقة الصور 2× / 4×"]];
+  return'<div class="panel set laicard"><div class="spread"><h2 style="margin:0">'+ic("spark")+" "+L("On-device AI","الذكاء على جهازك")+"</h2>"+(i&&i.device==="webgpu"?badge("complete","WebGPU"):i&&i.device==="wasm"?badge("queued","CPU"):"")+'</div><p class="small mute" style="margin:6px 0 10px">'+L("These tools run in your browser — free, private, no upload and no credits. The model downloads once and is reused.","هذه الأدوات تعمل داخل متصفحك — مجاناً وبخصوصية، دون رفع ملفات ودون رصيد. يُنزَّل النموذج مرة واحدة ثم يُعاد استخدامه.")+'</p><div class="small"><b>'+L("Your device: ","جهازك: ")+'</b><span dir="auto">'+esc(dev)+'</span></div><ul class="laitools">'+tools.map(t=>"<li>"+ic(t[0])+"<span>"+L(t[1],t[2])+"</span></li>").join("")+'</ul><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:10px"><label class="laisw"><input type="checkbox" data-act="lai-toggle" '+(S.localAI!==false?"checked":"")+'><span>'+L("Run these tools on this device","شغّل هذه الأدوات على هذا الجهاز")+'</span></label><button class="btn sm ghost" data-act="lai-clear">'+ic("trash")+L("Remove downloaded models","احذف النماذج المنزّلة")+"</button></div></div>"}
+VIEWS.account=(o=>()=>{const h=o();const k=h.indexOf('<div class="spread sec"><h2 style="margin:0">'+L("Plans","الباقات"));return k<0?h:h.slice(0,k)+laiCard()+h.slice(k)})(VIEWS.account);
+document.addEventListener("change",e=>{const t=e.target;if(t&&t.dataset&&t.dataset.act==="lai-toggle"){S.localAI=t.checked;persist();toast(t.checked?L("On-device AI is on.","تم تشغيل الذكاء على الجهاز."):L("On-device AI is off — tools use the server.","تم إيقاف الذكاء على الجهاز — الأدوات تستخدم الخادم."))}});
+document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest('[data-act="lai-clear"]');if(!b)return;e.stopImmediatePropagation();try{const ks=await caches.keys();await Promise.all(ks.filter(k=>/transformers/i.test(k)).map(k=>caches.delete(k)));toast(L("Downloaded models removed.","تم حذف النماذج المنزّلة."))}catch(err){toast(String(err.message||err))}},true);
+/* tool pages: say when a tool runs on the device */
+const laiChip=()=>laiOn()?'<span class="laichip">'+ic("spark")+L("Runs on your device · free","يعمل على جهازك · مجاناً")+"</span>":"";
+["subs","voice"].forEach(v=>{const f=VIEWS[v];if(f)VIEWS[v]=()=>{const h=f();return h.replace(/<p class="lede">/,laiChip()+'<p class="lede">')}});
+(function(){const st=document.createElement("style");st.id="v50";st.textContent=`
+.laichip{display:inline-flex;align-items:center;gap:6px;margin:6px 0 2px;padding:4px 11px;border-radius:999px;font-size:12px;font-weight:600;color:var(--lime-ink);background:color-mix(in srgb,var(--lime) 18%,transparent)}
+.laichip svg{width:14px;height:14px}
+.laicard h2{display:flex;align-items:center;gap:8px}.laicard h2 svg{width:20px;height:20px;stroke:var(--lime-ink)}
+.laitools{list-style:none;margin:10px 0 14px;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.laitools li{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line2);border-radius:12px;font-size:13px}
+.laitools svg{width:16px;height:16px;flex:none;stroke:var(--lime-ink)}
+.lainote{display:block;font-size:11px;opacity:.85;margin-bottom:4px}
+.laicard{margin-top:14px}
+.laicard .laisw{display:inline-flex;align-items:center;gap:10px;font-size:14px;cursor:pointer}
+.laicard .laisw input{width:20px;height:20px;accent-color:var(--lime-ink);flex:none}
 `;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */

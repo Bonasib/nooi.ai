@@ -350,3 +350,28 @@
 350|Ce lien de connexion a expiré ou a déjà été utilisé. Envoyez-en un nouveau.
 351|Ce lien a été envoyé à une autre adresse e-mail.
 352|Nom affiché
+353|Envoyer le code
+354|Saisissez votre code
+355|Nous avons envoyé un code à 6 chiffres à 
+356|Il expire dans 10 minutes.
+357|Vérifier et se connecter
+358|Renvoyer le code
+359|Utiliser une autre méthode
+360|Code incorrect. Réessayez.
+361|Ce code a expiré. Demandez-en un nouveau.
+362|Trop de tentatives. Demandez un nouveau code.
+363|Saisissez le code à 6 chiffres.
+364|Un nouveau code arrive.
+365|Vérifiez votre boîte mail
+366|Nous avons envoyé un lien de connexion à 
+367|IA sur l'appareil
+368|Ces outils tournent dans votre navigateur — gratuits, privés, sans envoi ni crédits. Le modèle se télécharge une fois puis est réutilisé.
+369|Votre appareil : 
+370|Sous-titres · parole en texte (Whisper)
+371|Voix · texte en parole en 12 langues
+372|Suppression d'arrière-plan pour images
+373|Agrandissement d'image 2× / 4×
+374|Exécuter ces outils sur cet appareil
+375|Supprimer les modèles téléchargés
+376|Tourne sur votre appareil · gratuit
+377|Fait sur votre appareil — aucun crédit utilisé.

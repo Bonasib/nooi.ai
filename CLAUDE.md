@@ -194,6 +194,21 @@ Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v
 - Email posters: `public/email-templates.js` (`renderEmail(kind, data)`, kinds signin · marketing · discount · feature · holiday · plain; ar/en; holidays eid · ramadan · national · founding · newyear · generic) — imported by the server (`/v1/admin/email` with `template` + `fields`, segment `me` = test to yourself) and by the admin Emails tab for a live preview. Previews: `docs/email-posters/`.
 - Small fixes: copy buttons use a copy icon; Visual-effects tabs show the open tab clearly (`.seg.fxtabs`); menu "UGC ads".
 
+## v49 Email code sign-in · no phone · credits button
+- Root cause of "Send code → back to the home page": the sign-in screen shows only while `AU.showAuth` is true, and the email handlers replaced `AU` without it. Every `AU={…}` inside the sign-in flow must keep `showAuth:true`.
+- 6-digit email codes (`lib/otp.js`: HMAC-hashed, 10 min, 5 tries, one-time): `POST /v1/auth/email-code` emails the code (signin poster with `code`), `POST /v1/auth/email-verify` returns a Firebase custom token (`customTokenForEmail`: finds/creates the user as verified; an existing unverified account gets a new random password and revoked sessions first) → `signInWithCustomToken`. Needs `FIREBASE_SERVICE_ACCOUNT` + an email provider; `/v1/config.emailCode` tells the UI. Without them the email-link flow is used. Test: `node tests/otp_mock.mjs`.
+- Phone/SMS sign-in removed from the sign-in screen.
+- Credits button `crBtn()` (`.crbtn2`): same size as the language/theme buttons in the phone top bar and desktop sidebar header (icon-only in the tablet rail), count-up + coin spin when credits change, opens Credits & transactions (`wallet`).
+
+## v50 On-device AI (WebGPU)
+- `public/local-ai-worker.js` (module Worker) runs open models in the visitor's browser with Transformers.js v4.3.1 (loaded from `/vendor/transformers/` when `@huggingface/transformers` is installed in node_modules, else from jsDelivr — not committed: GitHub push protection flags the minified bundle as a false-positive secret) on ONNX Runtime Web — WebGPU when a real GPU adapter exists (SwiftShader/fallback adapters count as CPU), WASM otherwise; a WebGPU failure retries once on WASM.
+- ORT wasm/mjs files are served by our server at `/vendor/ort/` from `node_modules/onnxruntime-web/dist` (exact version pinned in package.json — must match what transformers.min.js expects). `/v1/config.localAI = {ortBase, modelsHost, models}`.
+- Models download once from Hugging Face in the user's browser and are cached (Cache Storage "transformers-cache"). Optional mirror: set `MODELS_DIR` → served at `/models/`. Override model ids with `platform().localModels`.
+- Routed locally (cost 0, no upload of inputs): subtitles transcription (`subs-transcribe` → Whisper base → `importSegments`), voice TTS (MMS-TTS, 12 languages via `laiTtsLang`), background removal for images (MODNet), image upscale 2×/4× (Swin2SR). Depth (Depth-Anything v2) is wired in the worker but not exposed yet. Any local failure falls back to the server job.
+- Still need provider APIs: video/image/music generation, lip-sync, video background removal, voice cloning (models too large for browsers).
+- UI: Account → "On-device AI" card (device status, toggle `S.localAI`, "Remove downloaded models"); `laiChip` on subs/voice pages. i18n lines 367–377.
+- Not testable in the sandbox (Hugging Face blocked) — verify real inference on a real browser after deploy.
+
 ## Slash commands (in .claude/commands)
 `/test` full check · `/audit-i18n` translations & RTL · `/deploy root@IP` update the VPS · `/connect-provider Kling` wire & verify a real provider.
 

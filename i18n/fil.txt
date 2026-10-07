@@ -350,3 +350,28 @@
 350|Nag-expire na o nagamit na ang sign-in link na ito. Magpadala ng bago.
 351|Ipinadala ang link na ito sa ibang email address.
 352|Display name
+353|Ipadala ang code
+354|Ilagay ang iyong code
+355|Nagpadala kami ng 6-digit na code sa 
+356|Mag-e-expire ito sa loob ng 10 minuto.
+357|I-verify at mag-sign in
+358|Ipadala muli ang code
+359|Gumamit ng ibang paraan
+360|Maling code. Subukan ulit.
+361|Nag-expire na ang code na ito. Humingi ng bago.
+362|Masyadong maraming pagsubok. Humingi ng bagong code.
+363|Ilagay ang 6-digit na code.
+364|Paparating na ang bagong code.
+365|Tingnan ang iyong inbox
+366|Nagpadala kami ng sign-in link sa 
+367|AI sa device
+368|Tumatakbo ang mga tool na ito sa browser mo — libre, pribado, walang upload at walang credits. Isang beses lang dina-download ang model at ginagamit ulit.
+369|Ang device mo: 
+370|Subtitles · pananalita sa teksto (Whisper)
+371|Boses · teksto sa pananalita sa 12 wika
+372|Pag-alis ng background sa mga larawan
+373|Pag-upscale ng larawan 2× / 4×
+374|Patakbuhin ang mga tool na ito sa device na ito
+375|Alisin ang mga na-download na model
+376|Tumatakbo sa device mo · libre
+377|Tapos sa device mo — walang nagamit na credits.

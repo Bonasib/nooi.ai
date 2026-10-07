@@ -350,3 +350,28 @@
 350|Ev girêdana têketinê qediyaye an berê hatiye bikaranîn. Yeka nû bişîne.
 351|Ev girêdan ji navnîşaneke din re hatiye şandin.
 352|Navê xuyakirinê
+353|Kodê bişîne
+354|Koda xwe binivîse
+355|Me kodeke 6 jimareyî şand ji bo 
+356|Di 10 deqîqeyan de diqede.
+357|Piştrast bike û têkeve
+358|Kodê dîsa bişîne
+359|Rêbazeke din bi kar bîne
+360|Koda çewt. Dîsa biceribîne.
+361|Ev kod qediya. Yeka nû bixwaze.
+362|Gelek hewldan. Kodeke nû bixwaze.
+363|Koda 6 jimareyî binivîse.
+364|Kodeke nû hat şandin.
+365|Qutiya xwe ya e-nameyê kontrol bike
+366|Me girêdana têketinê şand ji bo 
+367|AI li ser cîhaza te
+368|Ev amûr di gerokê te de dixebitin — belaş, taybet, bê barkirin û bê kredî. Model carekê tê daxistin û dîsa tê bikaranîn.
+369|Cîhaza te: 
+370|Binnivîs · axaftin bo nivîs (Whisper)
+371|Deng · nivîs bo axaftin bi 12 zimanan
+372|Rakirina paşxaneyê ji wêneyan
+373|Mezinkirina wêneyê 2× / 4×
+374|Van amûran li ser vê cîhazê bixebitîne
+375|Modelên daxistî jê bibe
+376|Li ser cîhaza te dixebite · belaş
+377|Li ser cîhaza te qediya — tu kredî nehat bikaranîn.

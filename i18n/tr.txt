@@ -350,3 +350,28 @@
 350|Bu giriş bağlantısının süresi doldu veya zaten kullanıldı. Yenisini gönderin.
 351|Bu bağlantı başka bir e-posta adresine gönderildi.
 352|Görünen ad
+353|Kod gönder
+354|Kodunuzu girin
+355|6 haneli kodu şu adrese gönderdik: 
+356|10 dakika içinde geçerliliğini yitirir.
+357|Doğrula ve giriş yap
+358|Kodu yeniden gönder
+359|Başka bir yöntem kullan
+360|Yanlış kod. Tekrar deneyin.
+361|Bu kodun süresi doldu. Yenisini isteyin.
+362|Çok fazla deneme. Yeni bir kod isteyin.
+363|6 haneli kodu girin.
+364|Yeni kod yolda.
+365|Gelen kutunuzu kontrol edin
+366|Giriş bağlantısını şu adrese gönderdik: 
+367|Cihazda yapay zekâ
+368|Bu araçlar tarayıcınızda çalışır — ücretsiz, gizli, yükleme yok ve kredi yok. Model bir kez indirilir ve yeniden kullanılır.
+369|Cihazınız: 
+370|Altyazı · konuşmadan metne (Whisper)
+371|Ses · 12 dilde metinden konuşmaya
+372|Görsellerde arka plan kaldırma
+373|Görsel büyütme 2× / 4×
+374|Bu araçları bu cihazda çalıştır
+375|İndirilen modelleri kaldır
+376|Cihazınızda çalışır · ücretsiz
+377|Cihazınızda tamamlandı — kredi kullanılmadı.

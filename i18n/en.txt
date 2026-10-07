@@ -350,3 +350,28 @@
 350|This sign-in link has expired or was already used. Send a new one.
 351|This link was sent to a different email address.
 352|Display name
+353|Send code
+354|Enter your code
+355|We sent a 6-digit code to 
+356|It expires in 10 minutes.
+357|Verify and sign in
+358|Resend code
+359|Use another method
+360|Wrong code. Try again.
+361|This code has expired. Send a new one.
+362|Too many attempts. Send a new code.
+363|Enter the 6-digit code.
+364|A new code is on its way.
+365|Check your inbox
+366|We sent a sign-in link to 
+367|On-device AI
+368|These tools run in your browser — free, private, no upload and no credits. The model downloads once and is reused.
+369|Your device: 
+370|Subtitles · speech to text (Whisper)
+371|Voice · text to speech in 12 languages
+372|Background removal for images
+373|Image upscale 2× / 4×
+374|Run these tools on this device
+375|Remove downloaded models
+376|Runs on your device · free
+377|Done on your device — no credits used.

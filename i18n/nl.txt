@@ -350,3 +350,28 @@
 350|Deze inloglink is verlopen of al gebruikt. Vraag een nieuwe aan.
 351|Deze link is naar een ander e-mailadres gestuurd.
 352|Weergavenaam
+353|Code versturen
+354|Voer je code in
+355|We hebben een 6-cijferige code gestuurd naar 
+356|Hij verloopt over 10 minuten.
+357|Bevestigen en inloggen
+358|Code opnieuw sturen
+359|Andere methode gebruiken
+360|Verkeerde code. Probeer het opnieuw.
+361|Deze code is verlopen. Vraag een nieuwe aan.
+362|Te veel pogingen. Vraag een nieuwe code aan.
+363|Voer de 6-cijferige code in.
+364|Er komt een nieuwe code aan.
+365|Controleer je inbox
+366|We hebben een inloglink gestuurd naar 
+367|AI op het apparaat
+368|Deze tools draaien in je browser — gratis, privé, zonder upload en zonder credits. Het model wordt één keer gedownload en hergebruikt.
+369|Jouw apparaat: 
+370|Ondertitels · spraak naar tekst (Whisper)
+371|Stem · tekst naar spraak in 12 talen
+372|Achtergrond verwijderen voor afbeeldingen
+373|Afbeelding opschalen 2× / 4×
+374|Deze tools op dit apparaat uitvoeren
+375|Gedownloade modellen verwijderen
+376|Draait op je apparaat · gratis
+377|Klaar op je apparaat — geen credits gebruikt.

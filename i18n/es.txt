@@ -350,3 +350,28 @@
 350|Este enlace de acceso caducó o ya se usó. Envía uno nuevo.
 351|Este enlace se envió a otra dirección de correo.
 352|Nombre visible
+353|Enviar código
+354|Introduce tu código
+355|Enviamos un código de 6 dígitos a 
+356|Caduca en 10 minutos.
+357|Verificar e iniciar sesión
+358|Reenviar código
+359|Usar otro método
+360|Código incorrecto. Inténtalo de nuevo.
+361|Este código caducó. Pide uno nuevo.
+362|Demasiados intentos. Pide un código nuevo.
+363|Introduce el código de 6 dígitos.
+364|Te enviamos un código nuevo.
+365|Revisa tu correo
+366|Enviamos un enlace de acceso a 
+367|IA en el dispositivo
+368|Estas herramientas funcionan en tu navegador: gratis, privadas, sin subir nada y sin créditos. El modelo se descarga una vez y se reutiliza.
+369|Tu dispositivo: 
+370|Subtítulos · voz a texto (Whisper)
+371|Voz · texto a voz en 12 idiomas
+372|Quitar fondo de imágenes
+373|Ampliar imagen 2× / 4×
+374|Ejecutar estas herramientas en este dispositivo
+375|Eliminar modelos descargados
+376|Funciona en tu dispositivo · gratis
+377|Hecho en tu dispositivo: sin gastar créditos.

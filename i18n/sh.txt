@@ -350,3 +350,28 @@
 350|Ova poveznica za prijavu je istekla ili je već iskorištena. Pošaljite novu.
 351|Ova poveznica poslana je na drugu adresu e-pošte.
 352|Prikazano ime
+353|Pošalji kod
+354|Unesite kod
+355|Poslali smo 6-znamenkasti kod na 
+356|Istječe za 10 minuta.
+357|Potvrdi i prijavi se
+358|Pošalji kod ponovno
+359|Koristi drugi način
+360|Pogrešan kod. Pokušajte ponovno.
+361|Ovaj kod je istekao. Zatražite novi.
+362|Previše pokušaja. Zatražite novi kod.
+363|Unesite 6-znamenkasti kod.
+364|Novi kod je na putu.
+365|Provjerite pretinac
+366|Poslali smo poveznicu za prijavu na 
+367|AI na uređaju
+368|Ovi alati rade u tvom pregledniku — besplatno, privatno, bez slanja i bez kredita. Model se preuzima jednom i ponovo koristi.
+369|Tvoj uređaj: 
+370|Titlovi · govor u tekst (Whisper)
+371|Glas · tekst u govor na 12 jezika
+372|Uklanjanje pozadine sa slika
+373|Povećanje slike 2× / 4×
+374|Pokreni ove alate na ovom uređaju
+375|Ukloni preuzete modele
+376|Radi na tvom uređaju · besplatno
+377|Gotovo na tvom uređaju — bez potrošenih kredita.

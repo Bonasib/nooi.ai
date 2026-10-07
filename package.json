@@ -25,6 +25,7 @@
     "firebase-admin": "^12.3.0",
     "multer": "^1.4.5-lts.1",
     "node-cron": "^3.0.3",
-    "nodemailer": "^6.9.14"
+    "nodemailer": "^6.9.14",
+    "onnxruntime-web": "1.31.0-dev.20260914-8d85527a0"
   }
 }

@@ -350,3 +350,28 @@
 350|Dieser Anmeldelink ist abgelaufen oder wurde schon benutzt. Fordere einen neuen an.
 351|Dieser Link wurde an eine andere E-Mail-Adresse gesendet.
 352|Anzeigename
+353|Code senden
+354|Code eingeben
+355|Wir haben einen 6-stelligen Code gesendet an 
+356|Er läuft in 10 Minuten ab.
+357|Bestätigen und anmelden
+358|Code erneut senden
+359|Andere Methode verwenden
+360|Falscher Code. Versuch es noch einmal.
+361|Dieser Code ist abgelaufen. Fordere einen neuen an.
+362|Zu viele Versuche. Fordere einen neuen Code an.
+363|Gib den 6-stelligen Code ein.
+364|Ein neuer Code ist unterwegs.
+365|Prüfe dein Postfach
+366|Wir haben einen Anmeldelink gesendet an 
+367|KI auf dem Gerät
+368|Diese Tools laufen in deinem Browser — kostenlos, privat, ohne Upload und ohne Credits. Das Modell wird einmal geladen und wiederverwendet.
+369|Dein Gerät: 
+370|Untertitel · Sprache zu Text (Whisper)
+371|Stimme · Text zu Sprache in 12 Sprachen
+372|Hintergrund entfernen für Bilder
+373|Bild hochskalieren 2× / 4×
+374|Diese Tools auf diesem Gerät ausführen
+375|Heruntergeladene Modelle entfernen
+376|Läuft auf deinem Gerät · kostenlos
+377|Auf deinem Gerät erledigt — keine Credits verbraucht.

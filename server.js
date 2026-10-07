@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import multer from "multer";
 import path from "path";
+import fs from "fs";
 import { requireUser, firebaseWebConfig } from "./lib/auth.js";
 import { user, save, uid } from "./lib/store.js";
 import { createJob, publicJob } from "./lib/jobs.js";
@@ -24,7 +25,8 @@ import { refillPlans } from "./lib/billing.js";
 import { S as platform, featureOn, configured } from "./lib/settings.js";
 import { createToken, listTokens, revokeToken, userFromToken } from "./lib/tokens.js";
 import { handleMcp } from "./lib/mcp.js";
-import { verify, canSendSignInLinks, signInLink } from "./lib/auth.js";
+import { verify, canSendSignInLinks, signInLink, customTokenForEmail } from "./lib/auth.js";
+import { newCode, checkCode } from "./lib/otp.js";
 import { isStaff } from "./lib/admin.js";
 import { sendEmail, emailConfigured } from "./lib/email.js";
 import { renderEmail } from "./public/email-templates.js";
@@ -36,11 +38,19 @@ app.use(express.json({ limit: "12mb" }));
 app.set("trust proxy", 1);   // behind Nginx on the VPS
 app.use("/media", express.static(MEDIA_DIR, { maxAge: "7d" }));
 app.use(express.static(path.resolve("public")));
+// On-device AI: ONNX Runtime's WebAssembly/WebGPU files come from our own server (npm onnxruntime-web), and an
+// optional local model mirror (MODELS_DIR, same layout as Hugging Face: <org>/<model>/resolve/main/…).
+const ORT_DIR = path.resolve("node_modules/onnxruntime-web/dist");
+const vendorHeaders = (res, f) => { if (f.endsWith(".mjs")) res.setHeader("Content-Type", "text/javascript"); if (f.endsWith(".wasm")) res.setHeader("Content-Type", "application/wasm"); };
+const TF_DIR = path.resolve("node_modules/@huggingface/transformers/dist");
+if (fs.existsSync(TF_DIR)) app.use("/vendor/transformers", express.static(TF_DIR, { maxAge: "30d", immutable: true, setHeaders: vendorHeaders }));
+app.use("/vendor/ort", express.static(ORT_DIR, { maxAge: "30d", immutable: true, setHeaders: vendorHeaders }));
+if (process.env.MODELS_DIR) app.use("/models", express.static(path.resolve(process.env.MODELS_DIR), { maxAge: "30d" }));
 const wrap = (fn) => (req, res) => fn(req, res).catch((e) => res.status(e.code && e.code >= 400 && e.code < 600 ? e.code : 500).json({ error: e.message }));
 
 app.get("/v1/health", (_, res) => res.json({ ok: true }));
 app.get("/v1/config", (_, res) => res.json({
-  firebase: firebaseWebConfig(),
+  firebase: firebaseWebConfig(), localAI: { tfUrl: fs.existsSync(TF_DIR + "/transformers.min.js") ? "/vendor/transformers/transformers.min.js" : null, ortBase: fs.existsSync(ORT_DIR) ? "/vendor/ort/" : null, modelsHost: process.env.MODELS_DIR ? "/models/" : null, models: platform().localModels || {} }, emailCode: canSendSignInLinks() && emailConfigured(),
   llm: llmConfigured() ? { provider: llmInfo().provider, model: llmInfo().model } : null,
   billing: enabledPayments().length > 0, payments: enabledPayments(), modelLogos: platform().modelLogos || {}, worldEngine: !!(process.env.WORLD_API_URL || (platform().providers || {}).world), modelCat: Object.fromEntries(Object.entries(platform().modelCat || {}).map(([k, v]) => [k, { cr: v.cr, verified: !!v.verified, kie: !!v.kieModel }])), features: platform().features, models: platform().models, prices: platform().prices, support: "contact@nooi.ai",
   providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || !!kieDefault(k)])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!process.env.REALTIME_API_URL, billing: enabledPayments().length > 0 }
@@ -86,6 +96,25 @@ app.get("/v1/billing", requireUser, (req, res) => { const u = user(req.user.uid)
 // falls back to Firebase's own email.
 const linkHits = new Map();
 const tooMany = (key, max) => { const now = Date.now(), h = linkHits.get(key) || []; const recent = h.filter((t) => now - t < 3600e3); recent.push(now); linkHits.set(key, recent); if (linkHits.size > 5000) linkHits.clear(); return recent.length > max; };
+// 6-digit email code (needs FIREBASE_SERVICE_ACCOUNT + an email provider). The code is typed on the same page,
+// so sign-in never depends on which browser opens the email.
+const emailOf = (req) => { const e = String(req.body?.email || "").trim().toLowerCase(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e) || e.length > 200) throw Object.assign(new Error("Enter a valid email address"), { code: 400 }); return e; };
+app.post("/v1/auth/email-code", wrap(async (req, res) => {
+  const email = emailOf(req), lang = req.body?.lang === "ar" ? "ar" : "en";
+  if (!canSendSignInLinks() || !emailConfigured()) throw Object.assign(new Error("Email codes are not set up"), { code: 501 });
+  if (tooMany("ip:" + req.ip, 10) || tooMany("em:" + email, 5)) throw Object.assign(new Error("Too many requests — try again later"), { code: 429 });
+  const base = (process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
+  const m = renderEmail("signin", { lang, code: newCode(email), base });
+  await sendEmail({ to: email, subject: m.subject, text: m.text, html: m.html });
+  res.json({ sent: true });
+}));
+app.post("/v1/auth/email-verify", wrap(async (req, res) => {
+  const email = emailOf(req);
+  if (tooMany("vip:" + req.ip, 40)) throw Object.assign(new Error("Too many requests — try again later"), { code: 429 });
+  const r = checkCode(email, String(req.body?.code || "").replace(/\D/g, ""));
+  if (r !== "ok") throw Object.assign(new Error({ wrong: "Wrong code", expired: "Code expired", locked: "Too many attempts" }[r]), { code: 400, reason: r });
+  res.json({ token: await customTokenForEmail(email) });
+}));
 app.post("/v1/auth/email-link", wrap(async (req, res) => {
   const email = String(req.body?.email || "").trim().toLowerCase(), lang = req.body?.lang === "ar" ? "ar" : "en";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || email.length > 200) throw Object.assign(new Error("Enter a valid email address"), { code: 400 });

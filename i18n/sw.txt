@@ -350,3 +350,28 @@
 350|Kiungo hiki cha kuingia kimeisha muda au kimeshatumika. Tuma kipya.
 351|Kiungo hiki kilitumwa kwa anwani nyingine ya barua pepe.
 352|Jina la kuonyesha
+353|Tuma msimbo
+354|Weka msimbo wako
+355|Tumetuma msimbo wa tarakimu 6 kwa 
+356|Unaisha baada ya dakika 10.
+357|Thibitisha na uingie
+358|Tuma msimbo tena
+359|Tumia njia nyingine
+360|Msimbo si sahihi. Jaribu tena.
+361|Msimbo huu umeisha muda. Omba mpya.
+362|Majaribio mengi mno. Omba msimbo mpya.
+363|Weka msimbo wa tarakimu 6.
+364|Msimbo mpya unakuja.
+365|Angalia kikasha chako
+366|Tumetuma kiungo cha kuingia kwa 
+367|AI kwenye kifaa
+368|Zana hizi zinaendeshwa kwenye kivinjari chako — bure, faragha, bila kupakia na bila mikopo. Modeli inapakuliwa mara moja na kutumika tena.
+369|Kifaa chako: 
+370|Manukuu · sauti kwenda maandishi (Whisper)
+371|Sauti · maandishi kwenda sauti katika lugha 12
+372|Kuondoa mandharinyuma ya picha
+373|Kukuza picha 2× / 4×
+374|Endesha zana hizi kwenye kifaa hiki
+375|Ondoa modeli zilizopakuliwa
+376|Inaendeshwa kwenye kifaa chako · bure
+377|Imekamilika kwenye kifaa chako — hakuna mikopo iliyotumika.

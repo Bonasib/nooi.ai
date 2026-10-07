@@ -350,3 +350,28 @@
 350|Pautan log masuk ini telah tamat tempoh atau sudah digunakan. Hantar yang baharu.
 351|Pautan ini dihantar ke alamat e-mel lain.
 352|Nama paparan
+353|Hantar kod
+354|Masukkan kod anda
+355|Kami telah menghantar kod 6 digit ke 
+356|Ia tamat tempoh dalam 10 minit.
+357|Sahkan dan log masuk
+358|Hantar semula kod
+359|Guna kaedah lain
+360|Kod salah. Cuba lagi.
+361|Kod ini telah tamat tempoh. Minta yang baharu.
+362|Terlalu banyak cubaan. Minta kod baharu.
+363|Masukkan kod 6 digit.
+364|Kod baharu sedang dihantar.
+365|Semak peti masuk anda
+366|Kami telah menghantar pautan log masuk ke 
+367|AI pada peranti
+368|Alat ini berjalan dalam pelayar anda — percuma, peribadi, tanpa muat naik dan tanpa kredit. Model dimuat turun sekali dan diguna semula.
+369|Peranti anda: 
+370|Sari kata · suara ke teks (Whisper)
+371|Suara · teks ke suara dalam 12 bahasa
+372|Buang latar belakang imej
+373|Besarkan imej 2× / 4×
+374|Jalankan alat ini pada peranti ini
+375|Buang model yang dimuat turun
+376|Berjalan pada peranti anda · percuma
+377|Siap pada peranti anda — tiada kredit digunakan.

@@ -8,7 +8,7 @@ const br = (s) => esc(s).replace(/\r?\n/g, "<br>");
 
 const T = {
   en: {
-    signin: { subject: "Your nooi.ai sign-in link", kicker: "SIGN IN", title: "Your sign-in link is here", body: "Tap the button to sign in to nooi.ai. The link works once and expires in 1 hour.", cta: "Sign in to nooi.ai", alt: "Or paste this link into your browser:", safe: "Didn't ask for this? You can ignore this email — nobody can sign in without the link." },
+    signin: { subject: "Your nooi.ai sign-in link", kicker: "SIGN IN", title: "Your sign-in link is here", body: "Tap the button to sign in to nooi.ai. The link works once and expires in 1 hour.", cta: "Sign in to nooi.ai", alt: "Or paste this link into your browser:", safe: "Didn't ask for this? You can ignore this email — nobody can sign in without the link.", codeSubject: "{code} is your nooi.ai code", codeTitle: "Your sign-in code", codeBody: "Enter this code on nooi.ai to sign in. It expires in 10 minutes and works once.", codeSafe: "Didn't ask for this? Ignore this email — never share the code with anyone." },
     marketing: { subject: "Make your next film with nooi.ai", kicker: "NOOI.AI", title: "Every prompt is a film", body: "Write a shot, get a clip — then subtitle it, dub it and publish it everywhere. Your AI film crew is ready.", cta: "Start creating", chips: ["Video", "Images", "Voice & dubbing"] },
     discount: { subject: "{percent}% off — this week only", kicker: "LIMITED OFFER", title: "{percent}% off your plan", body: "Upgrade now and keep the discount on your first payment.", cta: "Claim the offer", codeLabel: "Your code", until: "Valid until {date}", off: "OFF" },
     feature: { subject: "New in nooi.ai: {title}", kicker: "NEW FEATURE", title: "Something new to try", body: "We just shipped a new tool in nooi.ai. Open the studio to try it.", cta: "Try it now" },
@@ -17,7 +17,7 @@ const T = {
     hello: "Hi {name},", foot: "You're receiving this because you have a nooi.ai account.", unsub: "Unsubscribe", contact: "Contact us",
   },
   ar: {
-    signin: { subject: "رابط الدخول إلى nooi.ai", kicker: "تسجيل الدخول", title: "رابط الدخول جاهز", body: "اضغط الزر لتسجيل الدخول إلى nooi.ai. الرابط يعمل مرة واحدة وتنتهي صلاحيته خلال ساعة.", cta: "ادخل إلى nooi.ai", alt: "أو انسخ هذا الرابط في المتصفح:", safe: "لم تطلب ذلك؟ تجاهل الرسالة — لا يمكن لأحد الدخول بدون الرابط." },
+    signin: { subject: "رابط الدخول إلى nooi.ai", kicker: "تسجيل الدخول", title: "رابط الدخول جاهز", body: "اضغط الزر لتسجيل الدخول إلى nooi.ai. الرابط يعمل مرة واحدة وتنتهي صلاحيته خلال ساعة.", cta: "ادخل إلى nooi.ai", alt: "أو انسخ هذا الرابط في المتصفح:", safe: "لم تطلب ذلك؟ تجاهل الرسالة — لا يمكن لأحد الدخول بدون الرابط.", codeSubject: "{code} رمز الدخول إلى nooi.ai", codeTitle: "رمز الدخول", codeBody: "أدخل هذا الرمز في nooi.ai لتسجيل الدخول. صالح لمدة 10 دقائق ولمرة واحدة.", codeSafe: "لم تطلب ذلك؟ تجاهل الرسالة — ولا تشارك الرمز مع أي أحد." },
     marketing: { subject: "اصنع فيلمك القادم مع nooi.ai", kicker: "NOOI.AI", title: "كل وصف يصبح فيلماً", body: "اكتب لقطة واحصل على مقطع — ثم أضف الترجمة والدبلجة وانشره في كل مكان. طاقمك الذكي جاهز.", cta: "ابدأ الإنشاء", chips: ["فيديو", "صور", "صوت ودبلجة"] },
     discount: { subject: "خصم {percent}% — هذا الأسبوع فقط", kicker: "عرض محدود", title: "خصم {percent}% على باقتك", body: "رقِّ باقتك الآن واحتفظ بالخصم على أول دفعة.", cta: "احصل على العرض", codeLabel: "رمز الخصم", until: "صالح حتى {date}", off: "خصم" },
     feature: { subject: "جديد في nooi.ai: {title}", kicker: "ميزة جديدة", title: "شيء جديد لتجربه", body: "أطلقنا أداة جديدة في nooi.ai. افتح الاستوديو وجرّبها.", cta: "جرّبها الآن" },
@@ -45,10 +45,11 @@ export function renderEmail(kind, data = {}) {
   const d = { ...data, name: data.name || (rtl ? "صديقنا" : "there"), percent: data.percent || 20, date: data.date || "", title: data.title || "" };
   const base = safeUrl(data.base) ? data.base.replace(/\/$/, "") : "https://nooi.ai";
   const hol = HOLIDAYS[data.holiday] || HOLIDAYS.generic;
-  const title = data.title || (kind === "holiday" ? hol[lang][0] : fill(k.title, d));
-  const body = data.body || (kind === "holiday" ? hol[lang][1] : fill(k.body, d));
-  const cta = data.cta || k.cta, url = safeUrl(data.url) || safeUrl(data.link) || base;
-  const subject = data.subject || fill(k.subject, { ...d, title }) || title;
+  const otp = kind === "signin" && /^\d{6}$/.test(String(data.code || ""));
+  const title = data.title || (kind === "holiday" ? hol[lang][0] : otp ? k.codeTitle : fill(k.title, d));
+  const body = data.body || (kind === "holiday" ? hol[lang][1] : otp ? k.codeBody : fill(k.body, d));
+  const cta = otp ? "" : data.cta || k.cta, url = safeUrl(data.url) || safeUrl(data.link) || base;
+  const subject = data.subject || (otp ? fill(k.codeSubject, { code: data.code }) : fill(k.subject, { ...d, title })) || title;
   const dir = rtl ? "rtl" : "ltr", align = rtl ? "right" : "left";
   const font = rtl ? "'IBM Plex Sans Arabic',Tahoma,Arial,sans-serif" : "'Geist','Segoe UI',Helvetica,Arial,sans-serif";
   const [c1, c2] = kind === "holiday" ? hol.colors : kind === "discount" ? ["#2b0f3a", "#6d2a8f"] : kind === "feature" ? ["#08262a", "#0f5c5a"] : ["#0b1407", "#26470f"];
@@ -67,7 +68,8 @@ export function renderEmail(kind, data = {}) {
 
   // body per poster
   let extra = "";
-  if (kind === "signin") extra = btn(cta, url) + `<p style="margin:18px 0 6px;font:13px/1.6 ${font};color:#6b7280">${esc(k.alt)}</p><p style="margin:0;font:12px/1.5 monospace;color:#3E7B22;word-break:break-all;direction:ltr;text-align:left">${esc(url)}</p><p style="margin:22px 0 0;padding:12px 14px;border-radius:12px;background:#f3f4f0;font:13px/1.6 ${font};color:#4b5563">🔒 ${esc(k.safe)}</p>`;
+  if (otp) extra = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px 0 0"><tr><td style="background:#f3f4f0;border:1px solid #dfe3d8;border-radius:16px;padding:16px 26px;font:800 38px/1 monospace;letter-spacing:.32em;color:#141713;direction:ltr">${esc(data.code)}</td></tr></table><p style="margin:22px 0 0;padding:12px 14px;border-radius:12px;background:#f3f4f0;font:13px/1.6 ${font};color:#4b5563">🔒 ${esc(k.codeSafe)}</p>`;
+  else if (kind === "signin") extra = btn(cta, url) + `<p style="margin:18px 0 6px;font:13px/1.6 ${font};color:#6b7280">${esc(k.alt)}</p><p style="margin:0;font:12px/1.5 monospace;color:#3E7B22;word-break:break-all;direction:ltr;text-align:left">${esc(url)}</p><p style="margin:22px 0 0;padding:12px 14px;border-radius:12px;background:#f3f4f0;font:13px/1.6 ${font};color:#4b5563">🔒 ${esc(k.safe)}</p>`;
   else if (kind === "discount") extra = (data.code ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0 0"><tr><td style="border:2px dashed #9CD245;border-radius:14px;padding:14px 22px;text-align:center"><div style="font:600 12px ${font};color:#6b7280">${esc(k.codeLabel)}</div><div style="font:800 26px/1.3 monospace;color:#141713;letter-spacing:.12em;direction:ltr">${esc(data.code)}</div></td></tr></table>` : "") + (d.date ? `<p style="margin:12px 0 0;font:13px ${font};color:#6b7280">${esc(fill(k.until, d))}</p>` : "") + btn(cta, url);
   else if (kind === "marketing") extra = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:20px 0 0"><tr>${(k.chips || []).map((c) => `<td style="padding:${rtl ? "0 0 0 8px" : "0 8px 0 0"}"><span style="display:inline-block;padding:8px 14px;border-radius:999px;background:#eef6e2;color:#2c5a12;font:600 13px ${font}">${esc(c)}</span></td>`).join("")}</tr></table>` + btn(cta, url);
   else if (kind === "holiday") extra = (data.code ? `<p style="margin:20px 0 0;font:600 14px ${font};color:#141713">🎁 ${esc(k.gift)}: <span style="font-family:monospace;padding:4px 10px;border-radius:8px;background:#f3f4f0;direction:ltr;display:inline-block">${esc(data.code)}</span></p>` : "") + btn(cta, url);
@@ -84,6 +86,6 @@ ${hero}
 </table>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px"><tr><td style="padding:18px 12px;text-align:center;font:12px/1.7 ${font};color:#8a8f86" dir="${dir}">nooi.ai · ${esc(t.foot)}<br><a href="mailto:contact@nooi.ai" style="color:#3E7B22">${esc(t.contact)}</a>${unsub ? ` · <a href="${esc(unsub)}" style="color:#8a8f86">${esc(t.unsub)}</a>` : ""}</td></tr></table>
 </td></tr></table></body></html>`;
-  const text = [kind === "signin" ? "" : fill(t.hello, d), title, body, data.code ? `${kind === "discount" ? k.codeLabel : "Code"}: ${data.code}` : "", cta ? `${cta}: ${url}` : "", unsub ? `${t.unsub}: ${unsub}` : ""].filter(Boolean).join("\n\n");
+  const text = [kind === "signin" ? "" : fill(t.hello, d), title, body, otp ? data.code : data.code ? `${kind === "discount" ? k.codeLabel : "Code"}: ${data.code}` : "", cta ? `${cta}: ${url}` : "", unsub ? `${t.unsub}: ${unsub}` : ""].filter(Boolean).join("\n\n");
   return { subject, html, text };
 }

@@ -350,3 +350,28 @@
 350|Este link de acesso expirou ou já foi usado. Envie um novo.
 351|Este link foi enviado para outro endereço de e-mail.
 352|Nome de exibição
+353|Enviar código
+354|Introduza o seu código
+355|Enviámos um código de 6 dígitos para 
+356|Expira em 10 minutos.
+357|Verificar e entrar
+358|Reenviar código
+359|Usar outro método
+360|Código errado. Tente novamente.
+361|Este código expirou. Peça um novo.
+362|Demasiadas tentativas. Peça um novo código.
+363|Introduza o código de 6 dígitos.
+364|Um novo código está a caminho.
+365|Verifique o seu e-mail
+366|Enviámos um link de acesso para 
+367|IA no dispositivo
+368|Estas ferramentas rodam no seu navegador — grátis, privadas, sem upload e sem créditos. O modelo é baixado uma vez e reutilizado.
+369|Seu dispositivo: 
+370|Legendas · fala para texto (Whisper)
+371|Voz · texto para fala em 12 idiomas
+372|Remoção de fundo para imagens
+373|Ampliar imagem 2× / 4×
+374|Executar estas ferramentas neste dispositivo
+375|Remover modelos baixados
+376|Roda no seu dispositivo · grátis
+377|Feito no seu dispositivo — nenhum crédito usado.

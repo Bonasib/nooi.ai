@@ -32,6 +32,7 @@ echo "▶ provider protocol with a mocked network (auth · rate limit · outage 
 echo "▶ Kie AI adapter with a mocked network (market · Veo · Suno · errors · routing · health)"; node tests/kie_mock.mjs | tail -1
 echo "▶ shipped translations (i18n/*.txt → public/i18n/*.json up to date, no lost numbers)"; node i18n/build.mjs --check | grep -v "^✓" || echo "all languages OK"
 echo "▶ shared interface translations with a mocked text AI (whitelist · cache · one call · rate limit)"; node tests/uit_mock.mjs | tail -1
+echo "▶ email sign-in codes (6 digits · one-time · 5 tries · 10 min)"; node tests/otp_mock.mjs | tail -1
 echo "▶ security: no secrets in the browser bundle"; python3 tests/security_scan.py
 echo "▶ directive breakpoints 767/768/1079/1080/1279/1280 (phone <768 · tablet 768–1079 · desktop ≥1280)"; python3 tests/breakpoints.py | python3 -c "import sys,json;d=json.load(sys.stdin);bad={w:list(v['problems']) for w,v in d.items() if v['problems']};print('layouts',{w:('phone' if v['layout']['bottomNav'] else 'rail' if v['layout']['sidebar']<120 else 'full') for w,v in d.items()},'| problems',bad or 'none')"
 echo "▶ flat bots: unique idle / working / done motion (must be 8/8 each)"; python3 tests/flat_bots.py | python3 -c "import sys,json;t=sys.stdin.read();d=json.loads(t[:t.rfind('}')+1]);print('idle',d['uniqueIdle'],'| working',d['uniqueWorking'],'| done',d['uniqueDone'])"

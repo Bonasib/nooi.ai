@@ -350,3 +350,28 @@
 350|Xiriirkan galitaanka wuu dhacay ama hore ayaa loo isticmaalay. Dir mid cusub.
 351|Xiriirkan waxaa loo diray cinwaan iimayl kale.
 352|Magaca la muujiyo
+353|Dir koodka
+354|Geli koodkaaga
+355|Waxaan kood 6 lambar ah u dirnay 
+356|Wuxuu dhacayaa 10 daqiiqo gudahood.
+357|Xaqiiji oo gal
+358|Dib u dir koodka
+359|Isticmaal hab kale
+360|Kood khaldan. Isku day mar kale.
+361|Koodkan wuu dhacay. Codso mid cusub.
+362|Isku day badan. Codso kood cusub.
+363|Geli koodka 6 lambar ah.
+364|Kood cusub ayaa soo socda.
+365|Fiiri sanduuqaaga iimaylka
+366|Waxaan xiriirka galitaanka u dirnay 
+367|AI qalabkaaga
+368|Qalabkan waxay ka shaqeeyaan browser-kaaga — bilaash, gaar ah, wax la soo geliyo ma jiro, credit-na ma qaataan. Moodalka hal mar ayaa la soo dejiyaa oo dib ayaa loo isticmaalaa.
+369|Qalabkaaga: 
+370|Qoraal-hoosaad · hadal u beddel qoraal (Whisper)
+371|Cod · qoraal u beddel hadal 12 luqadood
+372|Ka saarista gadaasha sawirrada
+373|Weynaynta sawirka 2× / 4×
+374|Qalabkan ku shaqee qalabkan
+375|Tirtir moodallada la soo dejiyay
+376|Wuxuu ka shaqeeyaa qalabkaaga · bilaash
+377|Waxaa lagu dhammeeyay qalabkaaga — credit lama isticmaalin.
