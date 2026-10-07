@@ -64,6 +64,16 @@ try {
   const fb = jobs[made.findIndex((m) => /falls back/.test(m[0]))] || {}; ok(fb.status === "done" && seen.some((s) => s.body?.model === "nano-banana-2" && /FAILME/.test(s.body.input.prompt)), "fallback: the failed Nano Banana job finished on Seedream instead of refunding");
   const dt = await api("/v1/jobs/" + made[0][1]); ok("via" in dt.d, "owners and admins see which provider ran a job (via: " + dt.d.via + ")");
   const kl = seen.find((s) => s.body && s.body.model === "kling-2.6/image-to-video"); ok(kl && kl.body.input.image_urls && kl.body.input.image_urls[0] === ref, "Kling gets the start frame as image_urls");
+  // showcase: the admin button makes nooi's marketing media with Kie AI and posts each one to Explore with its prompt
+  const sc0 = await api("/v1/showcase"); ok(sc0.status === 200 && sc0.d.items.length >= 20 && ["motion", "anime", "vfx", "pixel"].every((c) => sc0.d.items.some((x) => x.cat === c && x.kind === "video")) && sc0.d.items.some((x) => x.kind === "image"), "showcase: motion, anime, VFX, pixel-art videos and pictures, each with a prompt");
+  const pick = ["desert-rider", "pixel-knight", "abaya-portrait"];
+  const sg = await api("/v1/admin/showcase", { json: { ids: pick, force: true } }); ok(sg.status === 200 && pick.every((id) => sg.d.items.find((x) => x.id === id).status === "rendering"), "showcase: three items started (" + (sg.d.error || sg.status) + ")");
+  let sc = null; const t1 = Date.now(); while (Date.now() - t1 < 40000) { sc = (await api("/v1/showcase")).d; if ((await api("/v1/admin/showcase")).d.items.filter((x) => pick.includes(x.id)).every((x) => x.status === "done")) break; await new Promise((r) => setTimeout(r, 1500)); }
+  ok(pick.every((id) => /^\/media\//.test(sc.items.find((x) => x.id === id).url || "")), "showcase: finished media saved to /media and served by /v1/showcase");
+  const xp = (await api("/v1/explore")).d.items || []; ok(pick.every((id) => xp.some((x) => x.author === "nooi" && x.featured && x.prompt === sc.items.find((s) => s.id === id).prompt[0])), "showcase: each one posted to Explore as featured, with its prompt");
+  const again = await api("/v1/admin/showcase", { json: { ids: pick } }); ok(pick.every((id) => again.d.items.find((x) => x.id === id).status === "done"), "showcase: finished items are not made twice unless asked");
+  const del = await fetch(`http://localhost:${NPORT}/v1/admin/showcase`, { method: "DELETE", headers: { "content-type": "application/json" }, body: JSON.stringify({ ids: pick }) }).then((r) => r.json());
+  ok(pick.every((id) => del.items.find((x) => x.id === id).status === "none") && !((await api("/v1/explore")).d.items || []).some((x) => x.author === "nooi"), "showcase: admin can remove items (test data cleaned up)");
 } catch (e) { ok(false, "crashed: " + e.message); }
 finally { srv.kill(); kieSrv.close(); }
 console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);

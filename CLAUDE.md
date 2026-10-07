@@ -251,6 +251,19 @@ Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v
 - Kie Base URL: `kieBase()` turns the kie.ai website/docs address or a pasted `/api/v1` into `https://api.kie.ai` (a live server had `https://kie.ai` saved → every call got the site's Next.js 404 page). An HTML reply now throws a short "answered with a web page" error marked `noFallback` (kept through `classify`), and `errorDetail` strips HTML.
 - Tests: `tests/home_results.py` (model row, results under the box, Approve targets; phone + desktop); `kie_e2e.mjs` adds a forced Nano Banana failure that must finish on Seedream and checks `via`.
 
+## v57 nooi stars for credits & loading · transparent logo · rail & box fixes
+- `STAR_D` (three four-point stars, quadratic curves) filled with `url(#nooiStar)` — a logo-gradient (#6EC046 → #9CD245 → #D2E33C) defined once in a hidden SVG. `ICONS.coin` is now these stars, so every credits symbol (top bar, rail, costs, model tiles, wallet) shows them; `.crbtn2 svg` no longer paints a gold coin.
+- `STARS("load")`: twinkling stars replace the spinner in the home results cards (`hfrCard` wrapper). With no provider progress the "0%" is hidden and the bar runs indeterminate. Error detail is stripped of HTML (also for jobs saved before the server fix).
+- Home hero logo uses the transparent vector mark (`logoFor("auto")`) with a soft drop-shadow, no tile. The box's "+" chip is gone (the Reference slot does that). Rail (768–1279 px): credits show stars + number, controls centred.
+- `setObj` guard: a 3D model that finishes loading after the 3D view closed is skipped (was "reading 'add' of null").
+
+## v56 Showcase: nooi's own marketing videos & pictures made with Kie AI
+- `lib/showcase.js` → `SHOWCASE`: 21 curated prompts (English + Arabic): motion (desert flyover, neon drift, coffee pour, volcanic shore, perfume UGC ad), anime (rooftop run, sakura samurai, rainy window, fox chef), VFX (shattering tower, fire portal, liquid chrome, time freeze), pixel-art animation (knight, night city, island) and 5 pictures. Each has a studio model id (routed to Kie), aspect, category, and `slot` 0–5 for the six demo tiles.
+- Admin → AI providers → "Showcase for marketing" (`scAdmin`, appended to `kieQuick`): "Make the showcase with Kie AI" → `POST /v1/admin/showcase {ids?, force?}` creates staff jobs (no nooi credits; uses the Kie balance). A 4 s watcher turns finished jobs into records (`col("showcase")`) and posts each to Explore as featured, author "nooi", with its prompt (`showcase` field). `DELETE /v1/admin/showcase {ids}` removes records + posts. Per-row remake (`sc-one`), "Retry failed", live status.
+- Public `GET /v1/showcase` → client `scLoad()`: items with `slot` and a URL fill `SHOWREAL` and replace `SHOWCASE[slot]` (prompt + model), and the `thumb()` wrapper swaps the demo canvas for the real `<video class="sv">`/`<img>` everywhere the demo tiles appear (home cards, What's new, landing community, Explore examples). `video.sv` plays only on screen (IntersectionObserver).
+- Explore examples (`xpExamples`) come from the showcase list (real media when made, demo canvas otherwise) so every prompt can be Recreated before users share anything. Explore categories gained Motion, VFX and Pixel art (server `EXPLORE_CATS` + client `XP_CATS`).
+- Tests: `kie_e2e.mjs` makes three showcase items through the mock Kie, checks /media, the Explore posts with prompts, no double making, and DELETE cleanup. `pro_tools.py` skips `sc-*` buttons.
+
 ## Slash commands (in .claude/commands)
 `/test` full check · `/audit-i18n` translations & RTL · `/deploy root@IP` update the VPS · `/connect-provider Kling` wire & verify a real provider.
 

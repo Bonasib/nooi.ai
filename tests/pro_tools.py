@@ -14,7 +14,7 @@ MOCK = """()=>{laiCall=async(msg,onp)=>{if(onp)onp({status:'running'});const t=m
  if(t==='asr')return{text:'hello world',chunks:[{start:0,end:.5,text:'hello'},{start:.5,end:1,text:'world'}]};
  if(t==='bg'){return new Promise(r=>{const c=document.createElement('canvas');c.width=c.height=32;c.toBlob(b=>r({blob:b}),'image/png')})}
  throw new Error('unmocked '+t)};S.localAI=true}"""
-SKIP = {"hf-send", "xp-dl", "ed-export", "ed-publish", "s3d-turntable", "kie-try", "edx-aishot", "logout", "signout", "adm-send", "adm-test"}
+SKIP = {"sc-gen", "sc-one", "sc-retry", "hf-send", "xp-dl", "ed-export", "ed-publish", "s3d-turntable", "kie-try", "edx-aishot", "logout", "signout", "adm-send", "adm-test"}
 
 CLICK_JS = """async ([sel, cap, skip]) => { let n = 0;
   for (let i = 0; i < cap; i++) {

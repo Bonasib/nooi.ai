@@ -7928,6 +7928,88 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
 @media (max-width:700px){.ipage .iopts{grid-template-columns:1fr}.ipage .iprompt{grid-template-columns:minmax(0,1fr) 84px}.ipage .iref{min-height:96px}.ipage .iprompt>textarea{min-height:96px}}
 @media (max-width:767px){.ipage .igen{bottom:calc(64px + env(safe-area-inset-bottom))}}
 `;document.head.appendChild(st)})();
+/* ================= v56: real showcase media (made with Kie AI) replaces the demo previews; prompts feed Explore ================= */
+const SC={items:null,admin:null,busy:false,msg:""},SHOWREAL={};
+XP_CATS.splice(1,0,["motion","Motion","حركة"]);XP_CATS.splice(3,0,["vfx","VFX","مؤثرات بصرية"],["pixel","Pixel art","فن البكسل"]);
+{const a=XP_CATS.findIndex(c=>c[0]==="anime"),b=XP_CATS.findIndex(c=>c[0]==="vfx");if(a>b){const x=XP_CATS.splice(a,1)[0];XP_CATS.splice(b,0,x)}}
+function scApply(){SC.items.forEach(s=>{if(s.slot==null||!s.url)return;SHOWREAL[s.slot]={url:s.url,kind:s.kind};const old=SHOWCASE[s.slot];if(old)SHOWCASE[s.slot]=["@nooi",MODELS[s.model]?s.model:old[1],old[2],[s.prompt[0],s.prompt[1]]]})}
+async function scLoad(){if(API.mode!=="server")return;try{const r=await API.req("/v1/showcase");SC.items=r.items||[];scApply();if(["home","discover"].includes(S.view)||typeof landingPreview!=="undefined"&&landingPreview||!S.user)renderView()}catch(e){}}
+setTimeout(function w(){if(API.mode==="server")scLoad();else if(!w.n||w.n<20){w.n=(w.n||0)+1;setTimeout(w,500)}},600);
+/* the demo tiles (s:0…5) show the real video/picture once it exists */
+thumb=(o=>function(ref,opt){const h=o(ref,opt),m=/^s:(\d+)$/.exec(ref||""),r=m&&SHOWREAL[m[1]];if(!r)return h;
+  const media=r.kind==="image"?'<img class="frame" style="object-fit:cover" src="'+esc(r.url)+'" alt="" loading="lazy">':'<video class="frame sv" style="object-fit:cover" src="'+esc(r.url)+'#t=0.1" muted loop playsinline preload="metadata"></video>';
+  return h.replace(/<canvas class="frame" data-ref="[^"]*"><\/canvas>/,media)})(thumb);
+/* Explore before anyone shares: every showcase prompt (with its real media when made) */
+xpExamples=(o=>function(){if(!SC.items||!SC.items.length)return o();return SC.items.map((s,i)=>({id:"sc_"+s.id,ex:s.url?null:(s.slot!=null?s.slot:i%6),url:s.url,kind:s.kind,prompt:L(s.prompt[0],s.prompt[1]),title:L(s.title[0],s.title[1]),model:s.model,aspect:s.aspect,author:"nooi",cat:s.cat,likes:0,featured:true}))})(xpExamples);
+/* play showcase videos only while on screen */
+const SV_IO=typeof IntersectionObserver!=="undefined"?new IntersectionObserver(es=>es.forEach(e=>{const v=e.target;if(e.isIntersecting){const p=v.play();if(p&&p.catch)p.catch(()=>{})}else v.pause()}),{threshold:.25}):null;
+function svObserve(){if(!SV_IO)return;document.querySelectorAll("video.sv:not([data-io])").forEach(v=>{v.dataset.io="1";SV_IO.observe(v)})}
+renderView=(o=>function(){const r=o.apply(this,arguments);try{svObserve()}catch(e){}return r})(renderView);
+/* admin: make the showcase with Kie AI */
+const SC_KIND={motion:["Motion","حركة"],anime:["Anime","أنمي"],vfx:["VFX","مؤثرات"],pixel:["Pixel art","بكسل"],design:["Picture","صورة"],marketing:["Picture","صورة"],ecommerce:["Picture","صورة"],ugc:["UGC ad","إعلان UGC"]};
+function scAdmin(){const list=SC.admin||[],done=list.filter(x=>x.status==="done").length,run=list.filter(x=>x.status==="rendering").length,bad=list.filter(x=>x.status==="failed");
+  const vids=list.filter(x=>x.kind==="video").length,imgs=list.length-vids;
+  return'<div class="panel pad scadm" style="margin-bottom:14px"><div class="spread"><h3 style="margin:0;display:flex;align-items:center;gap:8px">'+ic("spark","width:18px;height:18px")+L("Showcase for marketing","معرض التسويق")+"</h3>"+(list.length?badge(done===list.length?"complete":run?"rendering":"queued",done+" / "+list.length):"")+"</div>"+
+    '<p class="small mute">'+L("Makes nooi's own ads with Kie AI — "+vids+" videos (motion, anime, VFX, pixel-art animation) and "+imgs+" pictures. Each one replaces a demo preview on the home page, landing page and Explore, and is posted to Explore with its prompt so visitors can Recreate it. Uses your Kie AI balance (staff jobs cost no nooi credits).","يصنع إعلانات nooi بنفسه عبر Kie AI — "+vids+" فيديو (حركة، أنمي، مؤثرات بصرية، رسوم بكسل) و"+imgs+" صور. كل عمل يحل محل معاينة تجريبية في الصفحة الرئيسية وصفحة الهبوط والاستكشاف، ويُنشر في الاستكشاف مع وصفه ليعيد الزوار إنشاءه. يستخدم رصيد Kie AI (مهام الإدارة لا تخصم رصيد nooi).")+"</p>"+
+    (list.length?'<div class="sclist">'+list.map(x=>{const k=SC_KIND[x.cat]||["",""];return'<div class="scrow"><span class="lg">'+(logoFor(x.model)?'<img src="'+logoFor(x.model)+'" alt="">':ic("spark"))+'</span><span class="nm"><b>'+esc(x.title?L(x.title[0],x.title[1]):x.id)+"</b><small>"+L(k[0],k[1])+" · "+esc(x.model)+"</small>"+(x.error?'<small class="scerr" dir="ltr">'+esc(String(x.error).slice(0,160))+"</small>":"")+"</span>"+badge(x.status==="done"?"complete":x.status==="rendering"?"rendering":x.status==="failed"?"failed":"queued",x.status==="done"?L("Ready","جاهز"):x.status==="rendering"?L("Making…","جارٍ الإنشاء…"):x.status==="failed"?L("Failed","فشل"):L("Not made","لم يُنشأ"))+(x.url?'<a class="btn sm ghost" href="'+esc(x.url)+'" target="_blank" rel="noopener" aria-label="'+L("Open","افتح")+'">'+ic(x.kind==="image"?"image":"video")+"</a>":"")+'<button class="btn sm ghost" data-act="sc-one" data-v="'+esc(x.id)+'" aria-label="'+L("Make again","أنشئه من جديد")+'" '+(x.status==="rendering"||SC.busy?"disabled":"")+">"+ic("refresh")+"</button></div>"}).join("")+"</div>":"")+
+    (SC.msg?'<p class="small" style="margin:8px 0 0">'+esc(SC.msg)+"</p>":"")+
+    '<div class="row" style="margin-top:12px"><button class="btn sm primary" data-act="sc-gen" '+(SC.busy?"disabled":"")+">"+ic("spark")+(done?L("Make the missing ones","أنشئ الناقص"):L("Make the showcase with Kie AI","أنشئ المعرض عبر Kie AI"))+"</button>"+(bad.length?'<button class="btn sm" data-act="sc-retry" '+(SC.busy?"disabled":"")+">"+ic("refresh")+L("Retry failed","أعد الفاشل")+" ("+bad.length+")</button>":"")+'<button class="btn sm ghost" data-act="sc-refresh">'+ic("refresh")+L("Refresh","تحديث")+"</button></div></div>"}
+kieQuick=(o=>function(){if(!SC.admin&&!SC.loadingAdm){SC.loadingAdm=true;API.req("/v1/admin/showcase").then(r=>{SC.admin=r.items||[];renderView()}).catch(()=>{}).finally(()=>{SC.loadingAdm=false})}return o()+scAdmin()})(kieQuick);
+setInterval(()=>{if(S.view!=="admin"||S.admTab!=="models"||!SC.admin||!SC.admin.some(x=>x.status==="rendering"))return;API.req("/v1/admin/showcase").then(r=>{const was=SC.admin.filter(x=>x.status==="done").length;SC.admin=r.items||[];if(SC.admin.filter(x=>x.status==="done").length!==was)scLoad();if(!SC.admin.some(x=>x.status==="rendering"))SC.msg="";if(!$("#modalRoot").innerHTML)renderView()}).catch(()=>{})},8000);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest("[data-act]");if(!a||!/^sc-/.test(a.dataset.act))return;e.stopImmediatePropagation();if(API.mode!=="server")return;const act=a.dataset.act;
+  if(act==="sc-refresh"){try{SC.admin=(await API.req("/v1/admin/showcase")).items||[];await scLoad()}catch(err){}renderView();return}
+  const body=act==="sc-one"?{ids:[a.dataset.v],force:true}:act==="sc-retry"?{ids:(SC.admin||[]).filter(x=>x.status==="failed").map(x=>x.id)}:{};
+  SC.busy=true;SC.msg="";renderView();
+  try{const r=await API.req("/v1/admin/showcase",{method:"POST",json:body});SC.admin=r.items||[];const n=SC.admin.filter(x=>x.status==="rendering").length;SC.msg=n?L(n+" in progress — videos take a few minutes. You can leave this page.",n+" قيد الإنشاء — الفيديو يحتاج بضع دقائق. يمكنك مغادرة الصفحة."):L("Nothing new to make.","لا يوجد جديد لإنشائه.")}
+  catch(err){SC.msg=String(err.message||err)}finally{SC.busy=false;renderView()}},true);
+(()=>{const st=document.createElement("style");st.textContent=`
+.sclist{display:flex;flex-direction:column;gap:6px;margin-top:6px;max-height:420px;overflow:auto;padding-inline-end:4px}
+.scrow{display:flex;align-items:center;gap:10px;padding:6px 8px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
+.scrow .lg{width:28px;height:28px;border-radius:50%;background:var(--panel);display:grid;place-items:center;flex:none;overflow:hidden}.scrow .lg img{width:20px;height:20px;object-fit:contain}
+.scrow .nm{flex:1;min-width:0;display:flex;flex-direction:column}.scrow .nm b{font-size:13px}.scrow .nm small{color:var(--mute);font-size:11.5px}
+.scrow .scerr{color:var(--red)!important;word-break:break-word}.scrow a.btn{color:inherit}
+`;document.head.appendChild(st)})();
+/* ================= v57: nooi stars (logo colours) for credits & loading · transparent logo · tidy rail & box ================= */
+/* three four-point stars, filled with the logo gradient (#nooiStar is defined once in the page) */
+const STAR_P=(x,y,r)=>{const k=r*.16;return"M"+x+" "+(y-r)+"Q"+(x+k)+" "+(y-k)+" "+(x+r)+" "+y+"Q"+(x+k)+" "+(y+k)+" "+x+" "+(y+r)+"Q"+(x-k)+" "+(y+k)+" "+(x-r)+" "+y+"Q"+(x-k)+" "+(y-k)+" "+x+" "+(y-r)+"Z"};
+const STAR_D=[STAR_P(14.6,14.4,9.1),STAR_P(6.2,7.6,4.3),STAR_P(12.4,3.3,2.4)];
+(()=>{const d=document.createElementNS("http://www.w3.org/2000/svg","svg");d.setAttribute("width","0");d.setAttribute("height","0");d.setAttribute("aria-hidden","true");d.style.position="absolute";
+  d.innerHTML='<defs><linearGradient id="nooiStar" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#6EC046"/><stop offset=".55" stop-color="#9CD245"/><stop offset="1" stop-color="#D2E33C"/></linearGradient></defs>';document.body.appendChild(d)})();
+ICONS.coin=STAR_D.map((p,i)=>'<path class="ns'+(i+1)+'" d="'+p+'" fill="url(#nooiStar)" stroke="none"/>').join("");
+const STARS=cls=>'<svg class="nstars '+(cls||"")+'" viewBox="0 0 24 24" aria-hidden="true">'+STAR_D.map((p,i)=>'<path class="ns'+(i+1)+'" d="'+p+'" fill="url(#nooiStar)"/>').join("")+"</svg>";
+/* results under the box: twinkling stars instead of the spinner; no frozen "0%" while the provider gives no progress */
+hfrCard=(o=>function(j){let h=o(j).replace('<span class="hfspin" aria-hidden="true"></span>',STARS("load"));if(!(j.progress>0))h=h.replace(/(<b data-pct="[^"]*">)0%(<\/b>)/,"$1$2");
+  if(j.detail)h=h.replace(/(<small dir="ltr">)([\s\S]*?)(<\/small>)/,(m,a,b,c)=>a+esc(String(j.detail).replace(/<[^>]*>/g," ").replace(/&lt;[\s\S]*?&gt;/g," ").replace(/\s+/g," ").slice(0,220))+c);return h})(hfrCard);
+/* the old detail (before the server cleaned it) could be a whole HTML page: keep toasts short */
+setInterval(()=>{(S.jobs||[]).forEach(j=>{if(j.detail&&/[<>]/.test(j.detail))j.detail=String(j.detail).replace(/<[^>]*>/g," ").replace(/\s+/g," ").slice(0,220)})},1000);
+/* logo without a tile: the transparent vector mark */
+VIEWS.home=(o=>()=>o().replace('<img class="hfmark" src="brand/nooi-logo-192.png"','<img class="hfmark" src="'+logoFor("auto")+'"'))(VIEWS.home);
+/* the box already has a Reference slot (video, image, avatar) — drop the duplicate "+" chip everywhere */
+hfBox=(o=>function(){return o().replace(/<button class="hfchip" data-act="hf-attach"[^>]*>[\s\S]*?<\/button>/,"")})(hfBox);
+(()=>{const st=document.createElement("style");st.textContent=`
+.nstars{width:56px;height:56px;overflow:visible}
+.nstars path{transform-box:fill-box;transform-origin:center}
+.nstars.load .ns1{animation:nsTw 1.8s ease-in-out infinite}
+.nstars.load .ns2{animation:nsTw 1.8s ease-in-out .3s infinite}
+.nstars.load .ns3{animation:nsTw 1.8s ease-in-out .6s infinite}
+@keyframes nsTw{0%,100%{transform:scale(.72) rotate(0deg);opacity:.55}50%{transform:scale(1.08) rotate(45deg);opacity:1}}
+@media (prefers-reduced-motion:reduce){.nstars.load path{animation:none}}
+@media (max-width:600px){.hfrgrid.hfrgrid{grid-template-columns:1fr!important}}
+svg[data-i="coin"] path{transform-box:fill-box;transform-origin:center}
+.crbtn2 svg{stroke:none!important;fill:none!important}
+.hfrbar>i[style*="width:0%"],.hfrbar>i[style*="width: 0%"]{width:34%!important;animation:hfInd 1.4s ease-in-out infinite}
+@keyframes hfInd{0%{transform:translateX(-110%)}100%{transform:translateX(310%)}}
+[dir=rtl] .hfrbar>i{animation-direction:reverse}
+.hfmark{background:none!important;box-shadow:none!important;border-radius:0!important;filter:drop-shadow(0 6px 18px color-mix(in srgb,var(--lime) 30%,transparent))}
+@media (min-width:768px) and (max-width:1279px){
+ #side .crslot{display:flex;justify-content:center;width:100%}
+ #side .crslot .crbtn2{flex-direction:column!important;width:64px!important;height:auto!important;min-height:48px;padding:6px 4px!important;gap:2px;justify-content:center}
+ #side .crslot .crbtn2 .crn{display:block!important;font-size:11px}
+ #side .brand .thtoggle{margin-inline:auto}
+ #side .brand{align-items:center}
+}`;document.head.appendChild(st)})();
+/* v57: a 3D model that finishes loading after the 3D view was closed has no scene to go into — skip it */
+setObj=(o=>function(){if(typeof V3==="undefined"||!V3.scene)return;return o.apply(this,arguments)})(setObj);
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
