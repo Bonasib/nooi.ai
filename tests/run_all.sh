@@ -30,6 +30,7 @@ echo "▶ hidden or cut-off text · 375/768/1024/1280/1440 px (must be 0)"; pyth
 echo "▶ ElevenLabs, image models, status, credits sheet, long videos"; python3 tests/voice_images_status.py | python3 -c "import sys,json;t=sys.stdin.read();d=json.loads(t[:t.rfind('}')+1]);print('EL basic blocked',d['basicElevenLabs'],'| image models',len(d['imageRail']),'| 30s parts',d['longVideo']['parts'],'| credits sheet',bool(d['creditsSheet']),'| health rows',len(d['health']))"
 echo "▶ provider protocol with a mocked network (auth · rate limit · outage · retries · health · streaming · durations)"; node tests/providers_mock.mjs | tail -1
 echo "▶ Kie AI adapter with a mocked network (market · Veo · Suno · errors · routing · health)"; node tests/kie_mock.mjs | tail -1
+echo "▶ home create box: model logo row, results under the box, approve → editor / Images"; python3 tests/home_results.py | python3 -c "import sys,json;d=json.load(sys.stdin);print('fails',d['fails']);sys.exit(1 if d['fails'] else 0)"
 echo "▶ Kie AI end to end (mock Kie server + real nooi server: image, edit, Midjourney, video, image→video, music)"; node tests/kie_e2e.mjs | tail -1
 echo "▶ shipped translations (i18n/*.txt → public/i18n/*.json up to date, no lost numbers)"; node i18n/build.mjs --check | grep -v "^✓" || echo "all languages OK"
 echo "▶ shared interface translations with a mocked text AI (whitelist · cache · one call · rate limit)"; node tests/uit_mock.mjs | tail -1

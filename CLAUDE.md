@@ -242,6 +242,14 @@ Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v
 - Explore (`discover` view, `lib/explore.js`): public feed of shared generations (GET /v1/explore, POST share from My library, like, staff feature, owner/staff delete, moderation, 30/day). Masonry cards, videos play in view, Recreate fills the box. Examples (animated previews) until real items exist.
 - 3D bots: `botSVG` wrapper adds key light + rim light clipped to each body, glossy eyes, soft ground shadow, pointer-follow tilt (classes unchanged).
 
+## v55 Results under the home box · model logo row · tidier Images page · Kie fallback & admin error detail
+- Home box (`hfBox` wrapper): Video/Image tabs show a row of model logo buttons (`hfMRow`, `HF_TOP`): nooi Auto first, the popular models, then "All N" (the full sheet). The Agent chip reads "nooi Auto". `MODELS.auto` / `IMG_MODELS.auto` names now start "nooi Auto · …".
+- `hfSend` wrapper: for video, image, audio, avatar (and agent prompts that detect as content/product ad/image) it swallows navigation and collects the new job ids (`HF_GRAB` via an `addJob` wrapper) into `S.hf.out`. `hfResults()` renders them under the box (progress, error, media). Approve (`hfr-ok`): video → editor timeline, image → Images page with it selected, audio/avatar → Voice. Also `hfr-again` (same settings), `hfr-x`, `hfr-clear`. Multi-step agents (film crew, story…) still open their own page.
+- Images page (`VIEWS.image` wrapper, DOM regrouping in a `<template>`, no behaviour change): prompt + reference side by side, tools row, then Aspect, Images per prompt, Style, Model and Font as full-width groups (`.ipage`). Only the first 8 model tiles show until "All models" (`S.imgAllModels`); the chosen one always shows. Generate is sticky. The site-wide `balanceGroups` (`.tcenter`) still sizes the tiles.
+- Server: `fail()` first calls `fallback()` — a Kie job (prov `kie@…`, image/video, not a part of a long video) that fails for any reason except auth/quota/time-out is resubmitted on the next Kie model (`KIE_FALLBACK`, up to 3 models in total), so one model's outage or input rule doesn't refund the user. Every final failure is logged with `console.warn` (see `journalctl -u nooi`).
+- `publicJob(j, staff)`: owners/admins also get `via` (the provider that ran it) and `detail` (the provider's raw error, plus any fallback attempts). The client keeps them and the failure toast shows "Admin detail: …" — the way to see why Kie rejected a job.
+- Tests: `tests/home_results.py` (model row, results under the box, Approve targets; phone + desktop); `kie_e2e.mjs` adds a forced Nano Banana failure that must finish on Seedream and checks `via`.
+
 ## Slash commands (in .claude/commands)
 `/test` full check · `/audit-i18n` translations & RTL · `/deploy root@IP` update the VPS · `/connect-provider Kling` wire & verify a real provider.
 

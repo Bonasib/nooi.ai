@@ -2898,7 +2898,7 @@ enqueueChapter=function(c){
 };
 setInterval(async()=>{
   if(API.mode!=="server")return;const list=S.jobs.concat(S.story.chapters).filter(o=>o.remote&&!["complete","failed"].includes(o.status));
-  for(const o of list){try{const r=await API.req("/v1/jobs/"+o.remote);const ch=r.status!==o.status;o.status=r.status==="done"?"complete":r.status;o.progress=r.progress||o.progress;if(r.url)o.resultUrl=r.url;if(r.error)o.error=r.error;if(r.segments&&o.kind==="transcribe"&&!o.imported){o.imported=true;importSegments(r.segments)}if(ch){persist();statusChanged()}else liveUpdate()}catch(e){}}
+  for(const o of list){try{const r=await API.req("/v1/jobs/"+o.remote);const ch=r.status!==o.status;o.status=r.status==="done"?"complete":r.status;o.progress=r.progress||o.progress;if(r.url)o.resultUrl=r.url;if(r.error)o.error=r.error;if(r.detail)o.detail=r.detail;if(r.via)o.via=r.via;if(r.segments&&o.kind==="transcribe"&&!o.imported){o.imported=true;importSegments(r.segments)}if(ch){persist();statusChanged()}else liveUpdate()}catch(e){}}
 },3000);
 const _stl=stLabel;stLabel=st=>({failed:L("Failed","فشل"),scheduled:L("Scheduled","مجدول"),published:L("Published","منشور")})[st]||_stl(st);
 const _thumb=thumb;
@@ -6266,7 +6266,7 @@ document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.c
   if(a.dataset.act==="h-maint"){const k=a.dataset.k,on=statusOf(k)!=="maintenance";if(API.mode==="server"){try{await API.req("/v1/admin/providers/"+k+"/maintenance",{method:"PUT",json:{on}});PSTATUS[k]=on?"maintenance":"online"}catch(err){}}else{DEMO_STATUS[k]=on?"maintenance":"online"}renderView()}});
 /* ---- clear messages when something goes wrong ---- */
 const ERR_MSG={auth:L("The AI provider rejected our key — support has been notified. Your credits were refunded.","رفض مزوّد الذكاء مفتاحنا — تم إبلاغ الدعم وأُعيد رصيدك."),rate:L("High demand right now — we retried automatically. Please try again in a minute.","ضغط عالٍ حالياً — أعدنا المحاولة تلقائياً. حاول بعد دقيقة."),provider:L("The AI provider is temporarily unavailable. Your credits were refunded.","مزوّد الذكاء غير متاح مؤقتاً، وأُعيد رصيدك."),network:L("We couldn't reach the AI provider. Your credits were refunded.","تعذّر الوصول لمزوّد الذكاء، وأُعيد رصيدك."),quota:L("The provider account is out of quota — support has been notified.","نفد رصيد حساب المزوّد — تم إبلاغ الدعم."),input:L("The provider couldn't process this request. Try rephrasing or another model.","لم يتمكن المزوّد من معالجة الطلب. أعد الصياغة أو جرّب نموذجاً آخر.")};
-const notified=new Set();setInterval(()=>{S.jobs.forEach(j=>{if(j.status==="failed"&&!notified.has(j.id)&&Date.now()-(j.created||0)<3600e3){notified.add(j.id);toast((j.errorType&&ERR_MSG[j.errorType])||j.error||ERR_MSG.provider,{type:"warn",ms:6000})}})},1500);
+const notified=new Set();setInterval(()=>{S.jobs.forEach(j=>{if(j.status==="failed"&&!notified.has(j.id)&&Date.now()-(j.created||0)<3600e3){notified.add(j.id);toast(((j.errorType&&ERR_MSG[j.errorType])||j.error||ERR_MSG.provider)+(j.detail?"\n"+L("Admin detail: ","تفاصيل للمشرف: ")+j.detail:""),{type:"warn",ms:j.detail?15000:6000})}})},1500);
 API.req=(orig=>async function(p,o){try{return await orig.call(API,p,o)}catch(e){const st=e.status||+(String(e.message).match(/\b(401|403|429|500|502|503|504)\b/)||[])[1]||0;if(st===429)e.message=ERR_MSG.rate;else if(st>=500)e.message=ERR_MSG.provider;throw e}})(API.req);
 /* ---- not enough credits → clear choice instead of a failed job ---- */
 function creditsSheet(need){$("#modalRoot").innerHTML='<div class="modal sheetwrap" data-act="close-sheet"><div class="sheet" role="dialog" aria-modal="true" data-act="noop" style="max-width:480px"><div class="spread"><h2 style="margin:0">'+ic("coin","width:18px;vertical-align:-3px")+" "+L("Not enough credits","الرصيد لا يكفي")+'</h2><button class="btn sm ghost" data-act="close-sheet" aria-label="'+esc(L("Close","إغلاق"))+'">'+ic("x")+'</button></div><div class="usage" style="margin:12px 0">'+(need?'<div><span>'+L("This needs","هذه العملية تحتاج")+'</span><span></span><b class="mono">'+need+' cr</b></div>':"")+'<div><span>'+L("Your balance","رصيدك")+'</span><span></span><b class="mono">'+S.credits+' cr</b></div></div><div class="row"><button class="btn primary" data-act="see-plans">'+L("Top up or upgrade","اشحن أو رقِّ")+'</button><button class="btn ghost" data-act="close-sheet">'+L("Change settings","غيّر الإعدادات")+"</button></div></div></div>"}
@@ -7799,6 +7799,135 @@ svg.b3d .eyes rect{filter:drop-shadow(0 1.5px 0 rgba(0,0,0,.25))}
 `;document.head.appendChild(st)})();
 /* v54: run icon motion right after home/explore render (no frame delay) */
 renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="home"||S.view==="discover")try{motionIcons()}catch(e){}return r})(renderView);
+/* ================= v55: results under the home box · model icons in the box · tidy Images page ================= */
+/* model row: nooi Auto + the popular models as logo buttons; "All" opens the full list */
+const HF_TOP={video:["auto","kling40","seedance20","veo31","hailuo","wan30","grok","pixverse6"],image:["auto","nanopro","nano","img20","seedream5","mj","flux2","imagen4"]};
+const hfMName=(t,id)=>id==="auto"?"nooi Auto":((hfModels(t).find(x=>x[0]===id)||[])[1]||id);
+function hfMRow(t){const H=S.hf,cur=t==="video"?H.vModel:H.iModel,all=hfModels(t),ids=all.map(r=>r[0]);const top=HF_TOP[t].filter(id=>ids.includes(id));if(!top.includes(cur)&&ids.includes(cur))top.push(cur);
+  return'<div class="hfmrow" role="radiogroup" aria-label="'+L("Model","النموذج")+'">'+top.map(id=>{const u=logoFor(id),on=cur===id,nm=hfMName(t,id);
+    return'<button class="hfmi'+(on?" on":"")+'" data-act="hf-pick" data-v="'+id+'" role="radio" aria-checked="'+on+'" title="'+esc(id==="auto"?L("nooi Auto — picks the best model for your prompt","nooi تلقائي — يختار أفضل نموذج لوصفك"):nm)+'" aria-label="'+esc(nm)+'"><span class="lg">'+(u?'<img src="'+u+'" alt="">':ic("spark"))+"</span>"+(on?"<b>"+esc(nm)+"</b>":"")+"</button>"}).join("")+
+    '<button class="hfmi more" data-act="hf-model" aria-label="'+L("All models","كل النماذج")+'">'+ic("grid")+"<b>"+L("All","الكل")+" "+(all.length-1)+"</b></button></div>"}
+hfBox=(o=>function(){let h=o();const t=S.hf.tab;
+  if(t==="video"||t==="image")h=h.replace(/<button class="hfchip" data-act="hf-model"[\s\S]*?<\/button>/,"").replace('<div class="hfbar">',hfMRow(t)+'<div class="hfbar">');
+  else if(t==="agent")h=h.replace(/(<button class="hfchip" data-act="hf-model"[^>]*>)[\s\S]*?<\/button>/,'$1<img src="'+logoFor("auto")+'" alt=""><span>nooi Auto</span></button>');
+  return h})(hfBox);
+hfModelSheet=(o=>function(){o();const b=document.querySelector('.hfmodel[data-v="auto"]');if(b){const n=b.querySelector(".nm b");if(n)n.textContent="nooi Auto";const s=b.querySelector(".nm small");if(s)s.textContent=L("Picks the best model for your prompt","يختار أفضل نموذج لوصفك")}})(hfModelSheet);
+
+/* results stay under the box; Approve sends them on to the editor / Images page */
+let HF_GRAB=null;
+addJob=(o=>function(j){const r=o.apply(this,arguments);if(r&&HF_GRAB)HF_GRAB.push(r.id);return r})(addJob);
+hfSend=(o=>async function(){const H=S.hf,q=$("#hfq"),p=((q&&q.value)||H.prompt||"").trim();
+  const t=H.tab==="agent"&&p?detectTask2(p):H.tab;
+  if(!["video","image","audio","avatar","content","productad"].includes(t))return o();   // multi-step agents (film crew, story…) open their own page
+  const goW=go;HF_GRAB=[];go=function(){};
+  try{await o()}finally{go=goW}
+  const got=HF_GRAB;HF_GRAB=null;
+  if(got.length){H.out=got.concat((H.out||[]).filter(id=>!got.includes(id))).slice(0,12);H.prompt="";S.view="home";persist();renderAll();
+    requestAnimationFrame(()=>{const r=$(".hfres");if(r)r.scrollIntoView({behavior:"smooth",block:"start"})})}
+  else if(S.view!=="home"){S.view="home";renderAll()}})(hfSend);
+const HF_KIND={video:["Video","فيديو"],image:["Image","صورة"],voice:["Voice","صوت"],music:["Music","موسيقى"],sfx:["Sound effect","مؤثر صوتي"],lipsync:["Avatar","أفاتار"]};
+function hfrCard(j){const ref="j:"+j.id,url=mediaUrl(j),done=j.status==="complete",fail=j.status==="failed",img=["image","look","sheet"].includes(j.kind),aud=["voice","music","sfx"].includes(j.kind),pc=Math.round((j.progress||0)*100);
+  const media=done&&url?(img?'<img src="'+esc(url)+'" alt="">':aud?'<div class="hfrph">'+ic("voice")+'<audio controls preload="none" src="'+esc(url)+'"></audio></div>':'<video src="'+esc(url)+'#t=0.1" controls playsinline muted loop preload="metadata"></video>')
+    :fail?'<div class="hfrph bad">'+ic("warn")+"<p>"+esc(j.error||ERR_MSG.provider)+"</p>"+(j.detail?'<small dir="ltr">'+esc(j.detail)+"</small>":"")+"</div>"
+    :done?thumb(ref,{})
+    :'<div class="hfrph"><span class="hfspin" aria-hidden="true"></span><b data-pct="'+ref+'">'+pc+"%</b><small>"+(j.status==="queued"?L("Waiting to start","بانتظار البدء"):L("Creating…","جارٍ الإنشاء…"))+'</small><i class="hfrbar"><i data-prog="'+ref+'" style="width:'+pc+'%"></i></i></div>';
+  const k=HF_KIND[j.kind]||[j.kind,j.kind],mn=j.kind==="video"?(MODELS[j.model]||{}).name:img?(IMG_MODELS[j.model]||{}).name:"";
+  return'<article class="hfrc'+(fail?" bad":"")+'" style="--ar:'+(img||j.kind==="video"?String(j.aspect||"16:9").replace(":","/"):"16/9")+'"><div class="hfrm">'+media+'</div><div class="hfrb"><p dir="auto">'+esc((j.prompt||j.title||"").slice(0,140))+"</p><small>"+L(k[0],k[1])+(mn?" · "+esc(mn):"")+'</small><div class="hfra">'+
+    (done?'<button class="btn sm primary" data-act="hfr-ok" data-id="'+j.id+'">'+ic("check")+L("Approve","اعتماد")+"</button>"+(url?'<a class="btn sm ghost" href="'+esc(url)+'" download aria-label="'+L("Download","تنزيل")+'">'+ic("download")+"</a>":""):"")+
+    (done||fail?'<button class="btn sm ghost" data-act="hfr-again" data-id="'+j.id+'" aria-label="'+L("Make it again","أنشئه مرة أخرى")+'">'+ic("refresh")+"</button>":"")+
+    '<button class="btn sm ghost" data-act="hfr-x" data-id="'+j.id+'" aria-label="'+L("Remove","إزالة")+'">'+ic("x")+"</button></div></div></article>"}
+function hfResults(){const H=S.hf,list=(H.out||[]).map(id=>S.jobs.find(j=>j.id===id)).filter(j=>j&&!j.approved);H.out=list.map(j=>j.id);if(!list.length)return"";
+  const busy=list.filter(j=>!["complete","failed"].includes(j.status)).length;
+  return'<section class="hfres" aria-live="polite"><div class="spread"><h2>'+L("Your results","نتائجك")+(busy?' <small class="mute">· '+busy+" "+L("in progress","قيد الإنشاء")+"</small>":"")+'</h2><button class="btn sm ghost" data-act="hfr-clear">'+L("Clear","مسح")+'</button></div><p class="small mute" style="margin:2px 0 10px">'+L("Approve a result to open it in the editor or the Images page.","اعتمد نتيجة لفتحها في المحرر أو صفحة الصور.")+'</p><div class="hfrgrid">'+list.map(hfrCard).join("")+"</div></section>"}
+VIEWS.home=(o=>()=>{const h=o();const r=hfResults();return r?h.replace('<button class="hfpill"',r+'<button class="hfpill"'):h})(VIEWS.home);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest("[data-act]");if(!a||!/^hfr-/.test(a.dataset.act))return;e.stopImmediatePropagation();const H=S.hf,id=a.dataset.id,j=id&&S.jobs.find(x=>x.id===id);
+  if(a.dataset.act==="hfr-clear"){H.out=[];persist();renderView();return}
+  if(!j){H.out=(H.out||[]).filter(x=>x!==id);renderView();return}
+  if(a.dataset.act==="hfr-x"){H.out=H.out.filter(x=>x!==id);persist();renderView();return}
+  if(a.dataset.act==="hfr-again"){HF_GRAB=[];addJob({kind:j.kind,prompt:j.prompt,title:j.title,model:j.model,dur:j.dur,aspect:j.aspect,cost:j.cost,secs:j.secs,art:j.art,meta:j.meta,batch:uid()});const g=HF_GRAB;HF_GRAB=null;if(g.length)H.out=g.concat(H.out).slice(0,12);persist();renderView();return}
+  if(a.dataset.act==="hfr-ok"){j.approved=true;H.out=H.out.filter(x=>x!==id);persist();
+    if(j.kind==="video"){const c={id:uid(),src:{k:"job",job:j.id},in:0,out:Math.max(1,j.dur||5),speed:1,trans:"cut",vol:100};S.ed.clips.push(c);S.ed.sel=c.id;S.ed.tab="clip";go("edit");toast(L("Approved — added to the editor timeline","تم الاعتماد — أُضيف إلى الخط الزمني في المحرر"),{type:"ok"})}
+    else if(["image","look","sheet"].includes(j.kind)){S.lastBatch=j.batch;S.img.sel=j.id;go("image");toast(L("Approved — animate, upscale or edit it here","تم الاعتماد — حرّكها أو حسّن دقتها أو عدّلها هنا"),{type:"ok"})}
+    else if(["voice","music","sfx","lipsync"].includes(j.kind)){go("voice");toast(L("Approved — saved to your library","تم الاعتماد — حُفظ في مكتبتك"),{type:"ok"})}
+    else go("library")}},true);
+
+/* Images page: one compose card (prompt + reference side by side, then grouped settings), compact choices, results next to it */
+VIEWS.image=(o=>()=>{const h=o();try{const T=document.createElement("template");T.innerHTML=h;const v=T.content.querySelector(".view"),pn=v&&v.querySelector(".two>.panel");if(!pn||!pn.querySelector("#iprompt"))return h;
+  v.classList.add("ipage");const kids=[...pn.children],groups=[];let g=null;
+  const gen=kids.find(k=>k.querySelector&&k.querySelector('[data-act="gen-images"]'));
+  for(const k of kids){if(k===gen)continue;if(k.classList.contains("lbl")){g={lbl:k,els:[]};groups.push(g)}else if(g)g.els.push(k);else groups.push(g={lbl:null,els:[k]})}
+  const has=(x,s)=>x.els.some(e=>e.matches&&(e.matches(s)||e.querySelector(s)));
+  const pick=s=>{const i=groups.findIndex(x=>has(x,s));return i<0?null:groups.splice(i,1)[0]};
+  const P=pick("#iprompt"),R=pick('[data-slot="iRef"]'),St=pick('[data-set="img.style"]'),F=pick('[data-act="f-open"]'),A=pick('[data-set="img.aspect"]'),C=pick('[data-set="img.count"]'),Mo=pick('[data-set="img.model"]');
+  const sec=(x,cls)=>{const s=document.createElement("section");s.className="igrp"+(cls?" "+cls:"");if(x){if(x.lbl)s.appendChild(x.lbl);x.els.forEach(e=>s.appendChild(e))}return s};
+  pn.innerHTML="";pn.classList.add("icard");
+  const top=document.createElement("div");top.className="icomp";
+  if(P){const ta=P.els.find(e=>e.id==="iprompt"),rest=P.els.filter(e=>e!==ta);const box=document.createElement("div");box.className="iprompt";if(P.lbl)box.appendChild(P.lbl);box.appendChild(ta);
+    if(R){const d=R.els.find(e=>e.classList&&e.classList.contains("drop"));if(d){d.classList.add("iref");d.setAttribute("title",R.lbl?R.lbl.textContent:"");box.appendChild(d)}}
+    top.appendChild(box);const tools=document.createElement("div");tools.className="itools";rest.forEach(e=>tools.appendChild(e));top.appendChild(tools)}
+  pn.appendChild(top);
+  const grid=document.createElement("div");grid.className="iopts";
+  if(A)grid.appendChild(sec(A,"iasp wide"));if(C)grid.appendChild(sec(C,"icnt wide"));if(St)grid.appendChild(sec(St,"isty wide"));
+  if(Mo){const s=sec(Mo,"imod wide");const tl=s.querySelector(".tiles");if(tl){tl.classList.add("imodels");if(S.imgAllModels)tl.classList.add("all");const n=tl.children.length;if(n>8){const b=document.createElement("button");b.className="btn sm ghost imore";b.dataset.act="img-allmodels";b.setAttribute("aria-expanded",!!S.imgAllModels);b.textContent=S.imgAllModels?L("Fewer models","نماذج أقل"):L("All models","كل النماذج")+" ("+n+")";s.appendChild(b)}}grid.appendChild(s)}
+  if(F)grid.appendChild(sec(F,"ifont wide"));groups.forEach(x=>grid.appendChild(sec(x,"wide")));
+  pn.appendChild(grid);if(gen){gen.classList.add("igen");gen.removeAttribute("style");pn.appendChild(gen)}
+  return T.innerHTML}catch(e){return h}})(VIEWS.image);
+[MODELS,IMG_MODELS].forEach(T=>{const d=Object.getOwnPropertyDescriptor(T,"auto");if(d&&d.get)Object.defineProperty(T,"auto",{enumerable:true,configurable:true,get(){const v=d.get();v.name=String(v.name).replace(/^(Smart|ذكي)\s*·\s*/,"nooi Auto · ");return v}})});
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="img-allmodels"]');if(!a)return;S.imgAllModels=!S.imgAllModels;persist();renderView()});
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="gen-images"]');if(!a||innerWidth>1100)return;setTimeout(()=>{const r=document.querySelector(".ipage .preview-col");if(r)r.scrollIntoView({behavior:"smooth",block:"start"})},250)});
+(()=>{const st=document.createElement("style");st.textContent=`
+.hfmrow{display:flex;flex-wrap:wrap;gap:6px;padding:8px 2px 2px;border-top:1px solid var(--line);margin-top:8px}
+.hfmi{display:inline-flex;align-items:center;gap:6px;height:36px;min-width:36px;padding:0 4px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:12.5px;cursor:pointer;transition:border-color .15s,background .15s}
+.hfmi .lg{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--panel);overflow:hidden;flex:none}
+.hfmi .lg img{width:20px;height:20px;object-fit:contain}
+.hfmi b{font-weight:600;padding-inline-end:8px;white-space:nowrap}
+.hfmi.on{border-color:var(--lime);background:color-mix(in srgb,var(--lime) 16%,var(--panel))}
+.hfmi.more{padding:0 10px 0 8px;color:var(--mute)}.hfmi.more b{padding:0;font-weight:500}.hfmi.more svg{width:16px;height:16px}
+.hfmi:hover{border-color:var(--line2)}
+.hfres{width:100%;max-width:980px;margin:18px auto 6px;text-align:start}
+.hfres h2{margin:0;font-size:20px}.hfres h2 small{font-size:13px;font-weight:400}
+.hfrgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}.hfrgrid:has(>.hfrc:nth-child(-n+3):last-child){grid-template-columns:repeat(auto-fit,minmax(220px,300px));justify-content:center}.hfra a.btn{color:inherit}.hfra .btn.ghost{padding-inline:9px}.hfra [data-act=hfr-x]{margin-inline-start:auto}
+.hfrc{border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden;display:flex;flex-direction:column}
+.hfrc.bad{border-color:color-mix(in srgb,var(--red) 45%,var(--line))}
+.hfrm{position:relative;aspect-ratio:var(--ar,16/9);max-height:420px;background:var(--panel2);display:grid;place-items:center;overflow:hidden}
+.hfrm>img,.hfrm>video,.hfrm>.frame,.hfrm>.thumb{width:100%;height:100%;object-fit:cover;display:block}
+.hfrph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px;text-align:center;width:100%;height:100%;min-height:120px}
+.hfrph p{margin:0;font-size:13px}.hfrph small{font-size:11.5px;color:var(--mute);word-break:break-word}
+.hfrph.bad{color:var(--text)}.hfrph.bad>svg{width:22px;height:22px;color:var(--red)}
+.hfrph audio{width:100%}
+.hfspin{width:26px;height:26px;border-radius:50%;border:3px solid var(--line2);border-top-color:var(--lime);animation:hfspin 1s linear infinite}
+@keyframes hfspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.hfspin{animation:none}}
+.hfrbar{display:block;width:70%;height:4px;border-radius:4px;background:var(--line);overflow:hidden}.hfrbar>i{display:block;height:100%;background:var(--lime);transition:width .3s}
+.hfrb{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px}
+.hfrb p{margin:0;font-size:13px;line-height:1.4}.hfrb small{color:var(--mute);font-size:12px}
+.hfra{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+@media (max-width:600px){.hfrgrid{grid-template-columns:1fr}}
+.ipage .icard{display:flex;flex-direction:column;gap:14px}
+.ipage .iprompt{display:grid;grid-template-columns:minmax(0,1fr) 112px;grid-template-rows:auto 1fr;gap:6px 10px}
+.ipage .iprompt>.lbl{grid-column:1/-1;margin:0}
+.ipage .iprompt>textarea{min-height:112px;margin:0}
+.ipage .iref{margin:0;min-height:112px;padding:8px;font-size:12px;text-align:center}
+.ipage .itools{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:8px}
+.ipage .itools>.row{margin-top:0!important;flex:1 1 260px}
+.ipage .itools>.botstrip{order:2}
+.ipage .iopts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px}
+.ipage .iopts .wide{grid-column:1/-1}
+.ipage .igrp>.lbl{margin:0 0 6px;display:block}
+.ipage .iopts .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px;margin:0;justify-content:stretch}
+.ipage .iasp .tiles,.ipage .icnt .tiles{grid-template-columns:repeat(auto-fill,minmax(78px,1fr))}
+.ipage .iopts .tile{min-height:0!important;width:auto;padding:8px 6px!important;gap:4px!important;font-size:12px}
+.ipage .iopts .tile .gl{transform:scale(.82)}
+.ipage .imodels{grid-template-columns:repeat(auto-fill,minmax(132px,1fr))!important}
+.ipage .imodels .tile{flex-direction:row;justify-content:flex-start;text-align:start;padding:8px 10px;min-height:48px}
+.ipage .imodels .tile .gl.lg{width:28px!important;height:28px!important;flex:none;transform:none}
+.ipage .imodels:not(.all) .tile:nth-child(n+9):not([aria-pressed="true"]){display:none}
+.ipage .imore{margin-top:8px}
+.ipage .igen{position:sticky;bottom:8px;z-index:3}
+.ipage .igen .btn{width:100%;justify-content:center}
+@media (max-width:700px){.ipage .iopts{grid-template-columns:1fr}.ipage .iprompt{grid-template-columns:minmax(0,1fr) 84px}.ipage .iref{min-height:96px}.ipage .iprompt>textarea{min-height:96px}}
+@media (max-width:767px){.ipage .igen{bottom:calc(64px + env(safe-area-inset-bottom))}}
+`;document.head.appendChild(st)})();
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

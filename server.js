@@ -67,8 +67,8 @@ const upload = multer({ storage: multer.diskStorage({ destination: MEDIA_DIR, fi
 app.post("/v1/uploads", requireUser, upload.single("file"), (req, res) => res.json({ url: publicUrl(req.file.filename) }));
 
 // Generation jobs → provider adapters
-app.post("/v1/jobs", requireUser, wrap(async (req, res) => res.json(publicJob(await createJob(req.user, req.body)))));
-app.get("/v1/jobs/:id", requireUser, (req, res) => { const j = user(req.user.uid).jobs[req.params.id]; j ? res.json(publicJob(j)) : res.status(404).json({ error: "Not found" }); });
+app.post("/v1/jobs", requireUser, wrap(async (req, res) => res.json(publicJob(await createJob(req.user, req.body), isStaff(req.user)))));
+app.get("/v1/jobs/:id", requireUser, (req, res) => { const j = user(req.user.uid).jobs[req.params.id]; j ? res.json(publicJob(j, isStaff(req.user))) : res.status(404).json({ error: "Not found" }); });
 
 // AI text
 app.post("/v1/analyze-site", requireUser, wrap(async (req, res) => { if (!llmConfigured()) throw Object.assign(new Error("Add LLM_API_KEY (Claude or Qwen) to enable analysis"), { code: 501 }); res.json(await analyzeSite(req.body)); }));

@@ -17,6 +17,7 @@ const kieSrv = http.createServer((req, res) => {
     if (["/api/v1/jobs/createTask", "/api/v1/veo/generate", "/api/v1/mj/generate"].includes(u.pathname)) { const id = "t" + ++n; tasks[id] = { path: u.pathname, body, polls: 0 }; seen.push({ path: u.pathname, body }); return send({ taskId: id }); }
     const id = u.searchParams.get("taskId"), t = tasks[id]; if (!t) return send(null);
     const done = ++t.polls >= 2;
+    if (done && t.body?.model === "nano-banana-2" && /FAILME/.test(t.body?.input?.prompt || "")) return send({ state: "fail", failCode: "500", failMsg: "Internal model error" });
     if (u.pathname === "/api/v1/jobs/recordInfo") { const music = t.body.model === "ai-music-api/generate", audio = music || /^elevenlabs/.test(t.body.model), img = !audio && !/video/.test(t.body.model) && !/seedance|kling|wan\//.test(t.body.model);
       return send(done ? { state: "success", resultJson: JSON.stringify(music ? { data: [{ audio_url: `http://localhost:${KPORT}/out.mp3` }] } : { resultUrls: [`http://localhost:${KPORT}/out.${audio ? "mp3" : img ? "png" : "mp4"}`] }) } : { state: "generating", progress: 40 }); }
     if (u.pathname === "/api/v1/veo/record-info") return send(done ? { successFlag: 1, response: { resultUrls: [`http://localhost:${KPORT}/out.mp4`] } } : { successFlag: 0 });
@@ -47,6 +48,7 @@ try {
     ["background removal · Recraft", { kind: "bg", prompt: "cut out", inputs: { bgFg: ref } }, "recraft/remove-background"],
     ["upscale · Topaz", { kind: "finish", prompt: "upscale", meta: { tool: "upscale", opt: { scale: "2x" } }, inputs: { fin: ref } }, "topaz/image-upscale"],
     ["lip-sync · Kling avatar", { kind: "lipsync", prompt: "", inputs: { lsV: ref, lsA: `http://localhost:${KPORT}/out.mp3` } }, "kling/ai-avatar-standard"],
+    ["image · Nano Banana fails → falls back to the next Kie model", { kind: "image", model: "nano", prompt: "FAILME a pear", aspect: "1:1" }, "seedream/4.5-text-to-image"],
     ["lip-sync from a typed script (voice first)", { kind: "lipsync", prompt: "Welcome to our store", inputs: { lsV: ref } }, "kling/ai-avatar-standard"],
   ];
   const made = [];
@@ -59,6 +61,8 @@ try {
   const mj = seen.find((s) => s.path === "/api/v1/mj/generate"); ok(mj && mj.body.taskType === "mj_txt2img" && mj.body.aspectRatio === "16:9", "Midjourney request shape");
   const av = seen.filter((s) => s.body && s.body.model === "kling/ai-avatar-standard").find((s) => s.body.input.prompt === ""), tts = seen.filter((s) => s.body && s.body.model === "elevenlabs/text-to-speech-multilingual-v2" && s.body.input.text === "Welcome to our store");
   ok(tts.length === 1 && av && /out\.mp3$/.test(av.body.input.audio_url), "lip-sync from a script: ElevenLabs voice first, then the avatar uses that audio");
+  const fb = jobs[made.findIndex((m) => /falls back/.test(m[0]))] || {}; ok(fb.status === "done" && seen.some((s) => s.body?.model === "nano-banana-2" && /FAILME/.test(s.body.input.prompt)), "fallback: the failed Nano Banana job finished on Seedream instead of refunding");
+  const dt = await api("/v1/jobs/" + made[0][1]); ok("via" in dt.d, "owners and admins see which provider ran a job (via: " + dt.d.via + ")");
   const kl = seen.find((s) => s.body && s.body.model === "kling-2.6/image-to-video"); ok(kl && kl.body.input.image_urls && kl.body.input.image_urls[0] === ref, "Kling gets the start frame as image_urls");
 } catch (e) { ok(false, "crashed: " + e.message); }
 finally { srv.kill(); kieSrv.close(); }
