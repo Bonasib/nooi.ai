@@ -90,7 +90,7 @@ Bots v2: `botSVG` draws glassy blobs; states idle (eyes closed) → working cycl
 Layout guard: `tests/overlap.py` must report 0 pages with overlapping text (clip-aware, ignores closed <details>).
 
 ## v32–v33 additions
-- Agents (English names everywhere): Quill (beret), Nova (star), Max (mustache), Lumi (monocle), Echo (headphones), Remy (beanie), Duke (top hat + bow tie), Iris (glasses + bun). Accessories live in `ACC`; face accessories hide while the visor is on.
+- Agents (names localised since v47): Quill (beret), Nova (star), Max (mustache), Lumi (monocle), Echo (headphones), Remy (beanie), Duke (top hat + bow tie), Iris (glasses + bun). Accessories live in `ACC`; face accessories hide while the visor is on.
 - Flagship video models (FLAG): Kling 4.0 / 3.0, Seedance 2.5 / 2.0, MiniMax H3, WAN 3.0. Features shown are each family's known strengths — CONFIRM specs and set each API model id in Admin → Models (server refuses jobs with 503 until set). Plans: Basic = WAN 3.0 + Seedance 2.0 · Pro = + Seedance 2.5, Kling 3.0, MiniMax H3 · Studio = all incl. Kling 4.0. Plan colours: Ocean / Neon / Gold.
 - Admin: CRM (pipeline, deals, follow-ups) and ERP (P&L, VAT 15 %, expenses, vendors, invoice register, credits liability) → `/v1/admin/data/crm|erp`.
 - Footer "Admin login" (signed-out users sign in, then land on the dashboard).
@@ -98,7 +98,7 @@ Layout guard: `tests/overlap.py` must report 0 pages with overlapping text (clip
 - 3D World (`world` view): instant procedural three.js world (7 biomes, time, size), orbit/flythrough, snapshot, record 8 s to the editor, GLB export, Blender steps; cloud engines via WORLD provider (`world` job, 40 cr). Rendering needs three.js from the CDN — verify on a real device.
 
 ## v32–v33 additions
-- Agents (English names everywhere): Quill (writer, beret) · Nova (character designer, star body) · Max (director, mustache) · Lumi (cinematographer, monocle) · Echo (sound, headphones) · Remy (editor, beanie) · Duke (producer, top hat & bow tie) · Iris (QA, glasses & bun).
+- Agents (names localised since v47): Quill (writer, beret) · Nova (character designer, star body) · Max (director, mustache) · Lumi (cinematographer, monocle) · Echo (sound, headphones) · Remy (editor, beanie) · Duke (producer, top hat & bow tie) · Iris (QA, glasses & bun).
 - Flagship video models: Kling 4.0/3.0, Seedance 2.5/2.0, MiniMax H3, WAN 3.0 (`FLAG`). Features shown are family strengths; the admin must set each **API model id** and mark specs verified in Admin → Models (`settings.modelCat`). Server routes `kling40…` via `flagship()` and refuses (503) without an id. Plans: Basic → WAN 3.0 + Seedance 2.0; Pro → + Seedance 2.5, Kling 3.0, MiniMax H3; Studio → + Kling 4.0. Plan themes: Ocean / Neon / Gold.
 - Admin CRM (pipeline, deals, follow-ups) & ERP (P&L, VAT 15%, AI cost estimate, expenses, invoices register, credit liability): `/v1/admin/data/crm|erp`.
 - Footer "Admin login" (app & landing). Draw & create (`draw`): sketch → AI scenes (sketch sent as iRef) or upload → instruction edit (eRef, kind "edit"). 3D worlds (`world`): procedural voxel-space renderer in the browser, `.glb` export for Blender, optional AI world provider (kind "world", 40 cr, WORLD_API_URL).
@@ -174,6 +174,18 @@ Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v
 - Duke no longer flips: idle `fbDukeBob`, working `fbDukeNod`, done `fbDukeHop` (replaced fbCoinIdle/fbFlip/fbCheer's 180° spin). All crew bots render at full opacity.
 - `botStrip` is wrapped: each `.sbot` gets `--bc` (first colour of `BOT(id).c`; very dark colours → #8b8f99 accent), a hover/focus/tap card `.stip` (name · role · job from `CREW_INFO`, EN/AR) and `aria-label`; hidden cards are `display:none` so they never overflow. `crewTipSide` anchors the card to the nearer edge (RTL-aware). Hover/tap plays the bot's own `st-done` reaction + a pulse in its colour (`crewReact`).
 - In the prompt box: 52 px bots on a halo, 8-column grid (4×2 on phones).
+
+## v47 Type safety · coins · languages
+- Crew names & roles are localised (replaces the v32 "English names everywhere"): Arabic in `AGENT_AR`, other languages in `CREW_T` (names transliterated for non-Latin scripts, roles translated). The `L` wrapper also composes "Name · Role", "Name · Role. description" and "Name will handle this · Role" (`HANDLE_T`).
+- Costs: any "N cr" text becomes `<span class="crc">N + coin icon</span>` (`nooiCoins`, MutationObserver) — don't write "cr" labels in new UI; the observer converts them anyway.
+- Sign-in has no guest option (button stripped from `vAuth` and hidden by CSS). Logo: 52 px (46 phone top bar, 54 sidebar, 58 desktop landing).
+- Typography rules (all languages): no letter-spacing on Arabic-script text; headings in Arabic/Persian/Kurdish/Thai/Tamil/Hindi/Amharic get line-height 1.38; minimum label sizes (badges 11.5, tags 10.5, thumbnail tags 11, crew notes 11–11.5 px); `--mono` includes IBM Plex Sans Arabic/Vazirmatn so mono labels with Arabic use a real font; grid text columns use `minmax(0,1fr)`.
+- Landing: "Your AI film crew" section (`nooiLandingCrew`, `#lp-crew`, nav link). Interface language count comes from `UI_LANGS.length` (26).
+- First visit: Arabic browsers/time zones open in Arabic; other detected languages (browser language, else time zone → `TZ_LANG`) get a banner asking in their own language (`LSG_T`) to switch or keep English (`nooiLangBanner`, answered once: `S.langAsked`).
+- Shipped translations: `i18n/en.txt` + `i18n/<lang>.txt` (numbered lines) → `node i18n/build.mjs` → `public/i18n/<lang>.json` (marketing page, sign-in, navigation, home / prompt studio, composer status — 348 strings × 24 languages). The UI loads them instantly (`nooiSeed`); `build.mjs --check` runs in the test suite. When you add or change a landing/sign-in/nav string, add it to every `i18n/*.txt` and rebuild.
+- Everything else is translated by the server's shared cache (`lib/uit.js`, `GET/POST /v1/ui-t/:lang`): translated once per language by the platform's text AI for all visitors, no user credits, only strings that literally exist in `public/index.html`, max 210 per call, 60 calls / 10 min per IP; cache in `data/ui-t.json`. Dialect variants (fr-ca, ar-sa…) still use `/v1/llm/json` per user. Without a text-AI key those strings stay English (the shipped files still cover the landing page). Test: `node tests/uit_mock.mjs`.
+- Structured prompts: `parseBrief` maps labels shown in the visitor's language (from `UI_T`) back to the English keys (`BRIEF_LABELS`), so "Idée :" / "シーン：" lines parse like "Idea:" / "Scene:".
+- Layout fixes: story workspace columns scroll on desktop (long chapter lists no longer run under the timeline); timeline chips "01 00:08"; logo also in the 1080–1279 px rail; landing crew cards top-aligned.
 
 ## Slash commands (in .claude/commands)
 `/test` full check · `/audit-i18n` translations & RTL · `/deploy root@IP` update the VPS · `/connect-provider Kling` wire & verify a real provider.

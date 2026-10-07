@@ -1,0 +1,348 @@
+001|Badili hadi hali ya giza
+002|Hali ya giza
+003|Achilia ili kuongeza
+004|Picha, video, sauti na fonti huenda kwenye zana sahihi kiotomatiki.
+005|Onyesho la awali
+006|Mbwa mwitu peke yake anavuka ziwa lililoganda mwezi unapochomoza, pumzi yake inaonekana.
+007|Mtoto anaachilia puto jekundu juu ya uwanja wa soko wakati wa saa ya dhahabu.
+008|Karakana ya kutengeneza roboti kubwa huko Osaka, mwangaza wa neoni kwenye madimbwi, kamera inasogea polepole.
+009|Mashua ndogo ya tanga inaelea katikati ya mawimbi yanayong'aa usiku wa manane.
+010|Mkimbiaji peke yake anavuka matuta ya mchanga alfajiri, picha ya kufuatilia polepole.
+011|Mzamiaji anashuka kando ya ukuta wa matumbawe, miale ya jua inapenya buluu.
+012|Halisi
+013|Mwanamke kijana anashika chupa ya kutunza ngozi mbele ya kamera ya simu yake bafuni penye mwanga, anazungumza kwa furaha, mpangilio wa selfie wa kawaida, mwanga laini wa mchana.
+014|Picha ya karibu ya mikono ikifungua sanduku la zawadi jeusi juu ya meza ya mbao; mtu anashangaa na kutoa vipokea sauti visivyo na waya, mwonekano wa kamera ya simu.
+015|Kipanga anaruka kutoka mkononi uliovaa glavu juu ya jangwa jua linapochomoza, mwendo wa polepole.
+016|Mlinzi mzee anawasha taa kubwa dhoruba inapokaribia, chembe za filamu ya 35mm.
+017|Mvua katika kichochoro cha neoni, mwangaza unatikisika kwenye madimbwi, kamera inasogea polepole.
+018|Mashua ya tanga inaelea katikati ya mawimbi yanayong'aa usiku wa manane.
+019|Maonyesho
+020|Hadithi ya Sura
+021|Zana
+022|Lugha
+023|Bei
+024|Lugha
+025|Ingia
+026|Anza kuunda
+027|Hadithi ya Sura 1.0 — sasa katika beta ya umma
+028|Ongoza
+029|mawazo yako.
+030|nooi.ai hugeuza hadithi kuwa filamu. Andika picha moja, pata klipu — kisha iwekee manukuu, iigize kwa lugha 35 na uichapishe kila mahali.
+031|Sura nyingi. Wahusika wasiobadilika. Mfululizo.
+032|MTUNZI · MUBASHARA
+033|Anza bila malipo
+034|Tazama maonyesho
+035|KUTOKA KWENYE MAONYESHO
+036|Imetengenezwa kwa nooi.ai.
+037|Kila maelekezo yanaonyeshwa.
+038|Maonyesho ya awali yanachezwa hapa hadi kazi zako za kwanza — kisha video zako za AI zinachukua nafasi yake.
+039|KIPENGELE KIKUU
+040|Hadithi ya Sura.
+041|Hatimaye, muundo mrefu.
+042|Andika hadithi mara moja. Kila sura huanza kutoka fremu ya mwisho ya sura iliyotangulia. Mhusika anabaki na uso wake. Ulimwengu unabaki na hali yake ya hewa.
+043|Hadi sura 20
+044|Kufunga mhusika
+045|Ubao wa hadithi na animatiki
+046|AI inaandika sura inayofuata
+047|SURA
+048|SANDUKU LA ZANA
+049|Kila kitu kuanzia wazo hadi kuchapisha.
+050|Video
+051|Maandishi au picha kuwa video, kwa udhibiti wa kamera na fremu muhimu.
+052|Picha
+053|Picha kadhaa kwa kila maelekezo, chagua bora zaidi.
+054|Wahusika
+055|Wahusika wenye umri, sauti na mionekano kadhaa.
+056|Filamu za sura nyingi zinazoendelea kutoka fremu ya mwisho.
+057|Ubao wa hadithi
+058|Fremu, mazungumzo, sauti na mipito kwenye turubai moja.
+059|Kihariri video
+060|Kata, athari, maandishi na kuhariri fremu kwa maelekezo.
+061|Athari za kuona
+062|Keying, urekebishaji wa rangi na kunasa mwendo.
+063|Manukuu na uigizaji sauti
+064|Nakili, tafsiri na igiza sauti kwa lugha 30, mstari kwa mstari.
+065|Sauti na audio
+066|Sauti kwa lahaja na umri, kulinganisha midomo, muziki na athari za sauti.
+067|Boresha
+068|Kuongeza hadi 4K, 120 fps, kurefusha, kupanga upya fremu, manukuu, uigizaji sauti.
+069|Maabara ya kivutio
+070|Mianzo inayosimamisha usogezaji na kuwaweka watazamaji hadi mwisho.
+071|Panga na uchapishe
+072|Panga na uchapishe kwenye kila jukwaa.
+073|MANUKUU NA UIGIZAJI SAUTI
+074|Ongea na dunia nzima.
+075|Lugha 35 pamoja na lahaja za kikanda. Hariri kila mstari fremu kwa fremu, kisha igiza kwa sauti asili na midomo inayolingana.
+076|lugha za manukuu na uigizaji sauti
+077|lahaja za kikanda
+078|ukubwa wa majukwaa, tayari kuhamishwa
+079|lugha za kiolesura
+080|BEI
+081|Anza bila malipo.
+082|Lipia unachotengeneza.
+083|Bure
+084|mwezi
+085|480p · klipu za sekunde 5
+086|Wahusika 2
+087|Anza
+088|Mtayarishaji
+089|1080p · klipu za sekunde 10
+090|Manukuu kwa lugha 35
+091|Studio
+092|4K · Hadithi ya Sura · ubao wa hadithi
+093|Uigizaji sauti, kupanga, API
+094|Majibu ya wazi.
+095|Ninachotengeneza ni mali ya nani?
+096|Ni mali yako. Video zako ni zako, hata kwa matumizi ya kibiashara.
+097|Ni lugha gani zinazotumika?
+098|Manukuu na uigizaji sauti kwa lugha 35 pamoja na lahaja za kikanda — Kisaudi, Kimisri, Kikuwaiti, Kitunisia, Kiingereza cha Uingereza, cha Australia, cha Uskoti na nyingine nyingi. Kiolesura chenyewe kinapatikana kwa lugha 26.
+099|Hadithi ya Sura inabakije thabiti?
+100|Kila sura huanza kutoka fremu ya mwisho ya iliyotangulia, na utambulisho wa mhusika wako umefungwa katika kila picha.
+101|Inaweza kuchapisha kwa niaba yangu?
+102|Ndiyo — unganisha akaunti zako, panga, na machapisho yatatoka kwa wakati uliochagua.
+103|Hadithi yako iko umbali wa maelekezo moja tu.
+104|Tengeneza filamu.
+105|Anza bila malipo · mikopo 100
+106|ONGOZA MAWAZO YAKO
+107|Masharti ya Huduma
+108|Sera ya Faragha
+109|Sera ya Malipo na Marejesho
+110|Sera ya Matumizi Yanayokubalika
+111|Hakimiliki na uondoaji
+112|Sera ya Vidakuzi
+113|Wasiliana nasi
+114|Jina rasmi la kampuni
+115|Nambari ya usajili
+116|Nambari ya VAT
+117|Anwani iliyosajiliwa
+118|Jiji
+119|Nchi
+120|simu
+121|Kuingia kwa msimamizi
+122|Pandisha daraja ukiwa tayari.
+123|Kila mwezi
+124|Kila mwaka · −20%
+125|Msingi
+126|Kwa watayarishaji wanaoanza
+127|Hutozwa kila mwezi
+128|mikopo / mwezi
+129|s
+130|Kawaida
+131|Zote · pamoja na Kling 4.0
+132|Sauti 1
+133|Uzalishaji sambamba
+134|Urefu wa juu wa video
+135|Ubora
+136|Kasi ya fremu
+137|Miundo ya video
+138|Kunakili sauti
+139|Maarufu zaidi
+140|Pro
+141|Kwa watayarishaji na chapa makini
+142|sauti
+143|Kwa studio, mashirika na timu
+144|API na MCP (Claude, ChatGPT, Qwen)
+145|Mpango wa bure:
+146|mikopo ya kujaribu kila zana · 480p · sek 5 · alama ya maji
+147|Linganisha vipengele vyote
+148|Mikopo ya kila mwezi
+149|≈ picha / mwezi
+150|≈ video za sekunde 5 / mwezi
+151|Bila kikomo
+152|Hadithi ya Sura (sura)
+153|Manukuu
+154|Maabara ya sauti · mchoro wa moja kwa moja · kitabu cha kupaka rangi
+155|Bila alama ya maji ya nooi.ai
+156|Akaunti za mitandao ya kijamii za kupanga
+157|Kifurushi cha chapa na nembo
+158|Leseni ya kibiashara
+159|Binafsi
+160|Usaidizi
+161|Kituo cha msaada
+162|Barua pepe
+163|Kipaumbele
+164|Kipaumbele + kuanzishwa
+165|Miundo ya picha
+166|Miundo yote ya picha
+167|Sauti za ElevenLabs
+168|Zote · pamoja na Eleven v3
+169|Bahari
+170|Miundo bora ya video
+171|Neoni
+172|Dhahabu
+173|Sauti za AI · ElevenLabs
+174|+ kunakili sauti kitaalamu
+175|lugha za manukuu, uigizaji sauti na sauti
+176|TIMU YAKO YA FILAMU YA AI
+177|Wataalamu wanane.
+178|Filamu moja.
+179|Kila mradi unashughulikiwa na timu ya mawakala wa AI — kuanzia mstari wa kwanza wa hati hadi ukaguzi wa mwisho wa ubora.
+180|Hugeuza wazo lako kuwa hati: matukio, mazungumzo na usimulizi.
+181|Hubuni wahusika thabiti: nyuso, mavazi na sauti.
+182|Hupanga kila picha: fremu, kasi na mwendo wa kamera.
+183|Huweka mwonekano wa kila tukio: mwanga, rangi na lenzi.
+184|Huongeza sauti, muziki na athari za sauti kwa mpangilio mmoja.
+185|Huunganisha picha kwa mipito na muda.
+186|Huweka kila mradi ndani ya bajeti na mipaka ya mpango wako.
+187|Hukagua kila kitu kabla ya kuwasilisha na kurudisha kinachohitaji kurekebishwa.
+188|Timu ya AI
+189|Ingia kwenye nooi.ai
+190|Unda filamu, wahusika na hadithi kwa lugha yako mwenyewe.
+191|Endelea na Google
+192|Endelea na Apple (iCloud)
+193|au kwa barua pepe
+194|Tuma msimbo
+195|au kwa simu yako
+196|Msimbo wa nchi
+197|Nambari ya simu
+198|Tuma msimbo wa SMS
+199|Ongoza mawazo yako.
+200|Kila maelekezo ni filamu.
+201|Kwa kuendelea, unakubali Masharti na Sera ya Faragha.
+202|Nyumbani
+203|Unda
+204|UGC na matangazo ya bidhaa
+205|Chora na uunde
+206|Mchoro wa moja kwa moja
+207|Ulimwengu wa 3D
+208|Kitabu cha kupaka rangi
+209|Hadithi
+210|Timu ya filamu
+211|Hariri
+212|Chapisha
+213|Mpango wa maudhui
+214|Maktaba
+215|Maktaba yangu
+216|Violezo
+217|Mipangilio
+218|Akaunti na mpango
+219|Mikopo na miamala
+220|Miunganisho na API
+221|Miunganiko · MCP
+222|Kisheria na malipo
+223|Msaada na usaidizi
+224|Usimamizi
+225|Dashibodi ya msimamizi
+226|Mikopo
+227|Mpango wa Studio
+228|Simu
+229|Tafuta…
+230|Timu nzima itaitengeneza
+231|Kutoka angani
+232|IMEKAMILIKA
+233|Imekamilika
+234|Kuondoa kelele
+235|Kamera inakaribia
+236|Inasimba maelekezo
+237|Inasimba video
+238|Imeshindwa
+239|Inapakia WAN 3.0
+240|Haijatengenezwa
+241|Imechapishwa
+242|Kwenye foleni
+243|TAYARI
+244|INATENGENEZA ·
+245|Seva ya kutengeneza
+246|Inatengeneza
+247|Inafanya kazi kwenye kivinjari chako
+248|Imepangwa
+249|Ufuatiliaji
+250|MPYA
+251|Akaunti
+252|Tafuta
+253|Karibu tena,
+254|Endeleza hadithi yako, anza na kiolezo, au eleza picha mpya.
+255|Mikopo iliyobaki
+256|Kazi zilizotengenezwa
+257|Sura zilizotengenezwa
+258|Eleza picha — “kipanga kinaruka juu ya jangwa jua linapochomoza”
+259|Maelekezo
+260|Tengeneza
+261|Hadithi yako
+262|sura
+263|fremu za ubao wa hadithi
+264|Endelea na sura inayofuata
+265|Anza na kiolezo
+266|Violezo vyote
+267|Tathmini ya kutunza ngozi · selfie
+268|UGC
+269|Kushika mkononi
+270|Mwitikio wa kufungua kifurushi
+271|Kilele cha trela ya mapigano
+272|Trela
+273|Kisinema
+274|Kukuza ghafla
+275|Mwanzo wa anime
+276|Filamu fupi / hadithi
+277|Anime
+278|Kreni juu
+279|Changanua tovuti yako na upate mpango wa maudhui ulio tayari.
+280|Za hivi karibuni
+281|Bado hakuna kitu. Eleza picha hapo juu ili kutengeneza klipu yako ya kwanza.
+282|Hadithi mpya
+283|Uhariri mpya
+284|Muundo wa AI
+285|Mahiri
+286|bora kwa maelekezo yako
+287|Sekunde
+288|Kasi ya fremu (Hz)
+289|Uwiano
+290|picha rahisi
+291|Unataka kutengeneza nini?
+292|Kazi
+293|Chaguo mahiri
+294|Video ya maudhui
+295|Tangazo la bidhaa
+296|Picha na muundo
+297|Unda sauti
+298|Muziki
+299|Mhusika
+300|Filamu nzima (timu)
+301|Ukurasa wa kupaka rangi
+302|Vivutio
+303|Wazo
+304|Kipanga kinaelea juu ya matuta ya mchanga wa dhahabu jua linapozama
+305|Tukio
+306|picha pana ya polepole, kisha karibu na macho yake
+307|Sauti
+308|“Uhuru huanzia angani” — msimulizi wa kiume mwenye sauti nzito
+309|Mlio
+310|upepo mwanana + muziki tulivu wa udi
+311|Mtindo
+312|kisinema, rangi za joto
+313|Tumia muundo huu
+314|Mstari mmoja kwa kila sehemu — boti husoma kila sehemu.
+315|Muundo wa video
+316|Fremu ya kwanza na ya mwisho
+317|Fremu ya kwanza
+318|Pakia
+319|Fremu ya mwisho
+320|Sekunde kutoka fremu ya kwanza hadi ya mwisho
+321|Fremu zote mbili ni za hiari — tumia moja kuanza au kumaliza kwa picha kamili.
+322|Mpango wako: hadi
+323|s · Pro 20 s · Studio 30 s
+324|Timu yako ya AI
+325|Mtandaoni
+326|Imepungua
+327|Matengenezo
+328|Haijaunganishwa
+329|Nje ya mtandao
+330|Onyesho
+331|Miundo yote
+332|Masharti
+333|Faragha
+334|Ongea badala ya kuandika
+335|Hadhira
+336|Maelezo
+337|Ala za muziki
+338|Urefu
+339|Mwonekano
+340|Hisia
+341|Ofa
+342|Picha
+343|Bidhaa
+344|Mhusika mkuu
+345|Maandishi
+346|Toni
+347|Mada
+348|Nani

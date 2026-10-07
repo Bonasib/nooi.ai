@@ -1,0 +1,348 @@
+001|Tukar ke mod gelap
+002|Mod gelap
+003|Lepaskan untuk menambah
+004|Imej, video, audio dan fon terus masuk ke alat yang betul secara automatik.
+005|Pratonton
+006|Seekor serigala bersendirian menyeberangi tasik beku ketika bulan terbit, nafasnya kelihatan.
+007|Seorang kanak-kanak melepaskan belon merah di atas dataran pasar pada waktu keemasan.
+008|Bengkel membaiki mech di Osaka, pantulan neon dalam lopak air, dolly perlahan.
+009|Sebuah perahu layar kecil hanyut menerusi ombak bercahaya pada tengah malam.
+010|Seorang pelari bersendirian merentasi bukit pasir ketika subuh, syot jejakan perlahan.
+011|Penyelam turun di sisi dinding karang, sinar matahari membelah biru laut.
+012|Realistik
+013|Seorang wanita muda memegang botol penjagaan kulit di depan kamera telefon di bilik mandi yang terang, bercakap dengan teruja, bingkai swafoto semula jadi, cahaya siang yang lembut.
+014|Syot dekat tangan membuka kotak hadiah hitam matte di atas meja kayu; orang itu terkejut lalu mengeluarkan fon telinga tanpa wayar, rupa kamera telefon.
+015|Seekor helang berlepas dari tangan bersarung di atas gurun ketika matahari terbit, gerak perlahan.
+016|Seorang penjaga tua menyalakan lampu besar ketika ribut menghampiri, butiran filem 35mm.
+017|Hujan di lorong neon, pantulan beralun dalam lopak air, dolly perlahan.
+018|Sebuah perahu layar hanyut menerusi ombak bercahaya pada tengah malam.
+019|Pameran
+020|Cerita Berbab
+021|Alat
+022|Bahasa
+023|Harga
+024|Bahasa
+025|Log masuk
+026|Mula mencipta
+027|Cerita Berbab 1.0 — kini dalam beta awam
+028|Arahkan
+029|imaginasi anda.
+030|nooi.ai menukar cerita menjadi filem. Tulis satu syot, dapatkan klip — kemudian beri sari kata, alih suara dalam 35 bahasa dan terbitkan di mana-mana.
+031|Pelbagai bab. Watak dikunci. Berterusan.
+032|KOMPOSER · LANGSUNG
+033|Mula secara percuma
+034|Lihat pameran
+035|DARIPADA PAMERAN
+036|Dibuat di nooi.ai.
+037|Setiap prompt dipaparkan.
+038|Pratonton dimainkan di sini sehingga render pertama anda — selepas itu video AI anda sendiri mengambil tempatnya.
+039|CIRI UTAMA
+040|Cerita Berbab.
+041|Akhirnya, format panjang.
+042|Tulis cerita sekali sahaja. Setiap bab bermula dari bingkai terakhir bab sebelumnya. Watak mengekalkan wajahnya. Dunia mengekalkan cuacanya.
+043|Sehingga 20 bab
+044|Kunci watak
+045|Papan cerita & animatik
+046|AI menulis bab seterusnya
+047|BAB
+048|KOTAK ALAT
+049|Segalanya dari idea hingga siaran.
+050|Video
+051|Teks atau imej ke video dengan kawalan kamera dan bingkai utama.
+052|Imej
+053|Beberapa imej bagi setiap prompt, pilih yang terbaik.
+054|Watak
+055|Watak dengan umur, suara dan beberapa rupa.
+056|Filem berbab yang bersambung dari bingkai terakhir.
+057|Papan cerita
+058|Bingkai, dialog, bunyi dan peralihan pada satu kanvas.
+059|Penyunting video
+060|Potong, kesan, teks dan sunting bingkai dengan prompt.
+061|Kesan visual
+062|Keying, gred warna dan tangkapan gerakan.
+063|Sari kata & alih suara
+064|Transkripsi, terjemah dan alih suara ke 30 bahasa, baris demi baris.
+065|Suara & audio
+066|Suara mengikut dialek dan umur, penyegerakan bibir, muzik dan kesan bunyi.
+067|Tingkatkan
+068|Naik taraf ke 4K, 120 fps, panjangkan, bingkai semula, kapsyen, alih suara.
+069|Makmal cangkuk
+070|Pembukaan yang menghentikan tatalan dan mengekalkan penonton hingga akhir.
+071|Jadual & terbit
+072|Jadualkan dan terbitkan ke setiap platform.
+073|SARI KATA & ALIH SUARA
+074|Berbicara kepada seluruh dunia.
+075|35 bahasa dengan dialek serantau. Sunting setiap baris bingkai demi bingkai, kemudian alih suara dengan suara asal dan bibir yang selari.
+076|bahasa untuk sari kata & alih suara
+077|dialek serantau
+078|saiz platform, sedia dieksport
+079|bahasa antara muka
+080|HARGA
+081|Mula secara percuma.
+082|Bayar untuk apa yang anda render.
+083|Percuma
+084|bln
+085|480p · klip 5s
+086|2 watak
+087|Mulakan
+088|Pencipta
+089|1080p · klip 10s
+090|Sari kata dalam 35 bahasa
+091|Studio
+092|4K · Cerita Berbab · papan cerita
+093|Alih suara, penjadualan, API
+094|Jawapan yang jelas.
+095|Siapa pemilik apa yang saya hasilkan?
+096|Anda. Video anda milik anda, termasuk untuk kegunaan komersial.
+097|Bahasa apa yang disokong?
+098|Sari kata dan alih suara dalam 35 bahasa dengan dialek serantau — Saudi, Mesir, Kuwait, Tunisia, British, Australia, Scotland dan banyak lagi. Antara muka itu sendiri tersedia dalam 26 bahasa.
+099|Bagaimana Cerita Berbab kekal konsisten?
+100|Setiap bab bermula dari bingkai terakhir bab sebelumnya, dan identiti watak anda dikunci dalam setiap syot.
+101|Bolehkah ia menerbitkan untuk saya?
+102|Ya — sambungkan akaun anda, jadualkan, dan siaran keluar pada masa yang dipilih.
+103|Cerita anda hanya satu prompt lagi.
+104|Hasilkan filem itu.
+105|Mula secara percuma · 100 kredit
+106|ARAHKAN IMAGINASI ANDA
+107|Terma Perkhidmatan
+108|Dasar Privasi
+109|Dasar Pembayaran & Bayaran Balik
+110|Dasar Penggunaan Wajar
+111|Hak cipta & penurunan
+112|Dasar Kuki
+113|Hubungi
+114|Nama sah syarikat
+115|Nombor pendaftaran
+116|Nombor VAT
+117|Alamat berdaftar
+118|Bandar
+119|Negara
+120|telefon
+121|Log masuk pentadbir
+122|Naik taraf apabila anda bersedia.
+123|Bulanan
+124|Tahunan · −20%
+125|Asas
+126|Untuk pencipta yang baru bermula
+127|Dibilkan setiap bulan
+128|kredit / bulan
+129|s
+130|Standard
+131|Semua · termasuk Kling 4.0
+132|1 suara
+133|Penjanaan selari
+134|Panjang video maksimum
+135|Resolusi
+136|Kadar bingkai
+137|Model video
+138|Pengklonan suara
+139|Paling popular
+140|Pro
+141|Untuk pencipta & jenama yang serius
+142|suara
+143|Untuk studio, agensi & pasukan
+144|API & MCP (Claude, ChatGPT, Qwen)
+145|Pelan percuma:
+146|kredit untuk mencuba setiap alat · 480p · 5s · tera air
+147|Bandingkan semua ciri
+148|Kredit bulanan
+149|≈ imej / bulan
+150|≈ video 5 saat / bulan
+151|Tanpa had
+152|Cerita Berbab (bab)
+153|Sari kata
+154|Makmal audio · lakaran langsung · buku mewarna
+155|Tiada tera air nooi.ai
+156|Akaun sosial untuk penjadualan
+157|Kit jenama & logo
+158|Lesen komersial
+159|Peribadi
+160|Sokongan
+161|Pusat bantuan
+162|E-mel
+163|Keutamaan
+164|Keutamaan + bimbingan permulaan
+165|Model imej
+166|Semua model imej
+167|Suara ElevenLabs
+168|Semua · termasuk Eleven v3
+169|Lautan
+170|Model video utama
+171|Neon
+172|Emas
+173|Suara AI · ElevenLabs
+174|+ pengklonan suara profesional
+175|bahasa untuk sari kata, alih suara & suara
+176|KRU FILEM AI ANDA
+177|Lapan pakar.
+178|Satu filem.
+179|Setiap projek dikendalikan oleh kru ejen AI — dari baris pertama skrip hingga semakan kualiti terakhir.
+180|Menukar idea anda menjadi skrip: babak, dialog dan naratif.
+181|Mereka watak yang konsisten: wajah, pakaian dan suara.
+182|Merancang setiap syot: pembingkaian, rentak dan gerakan kamera.
+183|Menetapkan rupa setiap babak: cahaya, warna dan kanta.
+184|Menambah suara, muzik dan kesan bunyi secara selari.
+185|Menyambung syot dengan peralihan dan pemasaan.
+186|Mengekalkan setiap projek dalam bajet dan had pelan anda.
+187|Menyemak segalanya sebelum penghantaran dan memulangkan apa yang perlu dibaiki.
+188|Kru AI
+189|Log masuk ke nooi.ai
+190|Cipta filem, watak dan cerita dalam bahasa anda sendiri.
+191|Teruskan dengan Google
+192|Teruskan dengan Apple (iCloud)
+193|atau dengan e-mel
+194|Hantar kod
+195|atau dengan telefon anda
+196|Kod negara
+197|Nombor telefon
+198|Hantar kod SMS
+199|Arahkan imaginasi anda.
+200|Setiap prompt ialah filem.
+201|Dengan meneruskan, anda bersetuju dengan Terma dan Dasar Privasi.
+202|Utama
+203|Cipta
+204|UGC & iklan produk
+205|Lukis & cipta
+206|Lakaran langsung
+207|Dunia 3D
+208|Buku mewarna
+209|Cerita
+210|Kru filem
+211|Sunting
+212|Terbit
+213|Pelan kandungan
+214|Pustaka
+215|Pustaka saya
+216|Templat
+217|Tetapan
+218|Akaun & pelan
+219|Kredit & transaksi
+220|Sambungan & API
+221|Integrasi · MCP
+222|Undang-undang & pembayaran
+223|Bantuan & sokongan
+224|Pentadbiran
+225|Papan pemuka pentadbir
+226|Kredit
+227|Pelan Studio
+228|Telefon
+229|Cari…
+230|Seluruh kru akan menghasilkannya
+231|Udara
+232|SELESAI
+233|Selesai
+234|Menyahhingar
+235|Dolly masuk
+236|Mengekod prompt
+237|Mengekod video
+238|Gagal
+239|Memuatkan WAN 3.0
+240|Belum dirender
+241|Diterbitkan
+242|Dalam baris gilir
+243|SEDIA
+244|MERENDER ·
+245|Pelayan render
+246|Sedang merender
+247|Berjalan dalam pelayar anda
+248|Dijadualkan
+249|Jejakan
+250|BAHARU
+251|Akaun
+252|Cari
+253|Selamat kembali,
+254|Sambung cerita anda, mula daripada templat, atau terangkan syot baharu.
+255|Baki kredit
+256|Render
+257|Bab yang dirender
+258|Terangkan satu syot — “seekor helang berlepas di atas gurun ketika matahari terbit”
+259|Prompt
+260|Jana
+261|Cerita anda
+262|bab
+263|bingkai papan cerita
+264|Sambung bab seterusnya
+265|Mula daripada templat
+266|Semua templat
+267|Ulasan penjagaan kulit · swafoto
+268|UGC
+269|Pegang tangan
+270|Reaksi buka kotak
+271|Detik treler aksi
+272|Treler
+273|Sinematik
+274|Zum mengejut
+275|Pembukaan anime
+276|Filem pendek / cerita
+277|Anime
+278|Kren naik
+279|Analisis laman web anda dan dapatkan pelan kandungan yang sedia.
+280|Terkini
+281|Belum ada apa-apa. Terangkan syot di atas untuk menghasilkan klip pertama anda.
+282|Cerita baharu
+283|Suntingan baharu
+284|Model AI
+285|Pintar
+286|terbaik untuk prompt anda
+287|Saat
+288|Kadar bingkai (Hz)
+289|Nisbah
+290|syot ringkas
+291|Apa yang anda mahu hasilkan?
+292|Tugasan
+293|Pilihan pintar
+294|Video kandungan
+295|Iklan produk
+296|Imej & reka bentuk
+297|Cipta suara
+298|Muzik
+299|Watak
+300|Filem penuh (kru)
+301|Halaman mewarna
+302|Cangkuk
+303|Idea
+304|Seekor helang terbang di atas bukit pasir keemasan ketika matahari terbenam
+305|Babak
+306|syot lebar perlahan, kemudian syot dekat pada matanya
+307|Suara
+308|“Kebebasan bermula di langit” — pencerita lelaki bersuara garau
+309|Bunyi
+310|angin lembut + muzik gambus yang tenang
+311|Gaya
+312|sinematik, warna hangat
+313|Guna struktur ini
+314|Satu baris bagi setiap bahagian — bot membaca setiap bahagian.
+315|Model video
+316|Bingkai pertama & akhir
+317|Bingkai pertama
+318|Muat naik
+319|Bingkai akhir
+320|Saat dari bingkai pertama ke akhir
+321|Kedua-dua bingkai adalah pilihan — guna satu untuk bermula atau berakhir pada gambar yang tepat.
+322|Pelan anda: sehingga
+323|s · Pro 20 s · Studio 30 s
+324|Kru AI anda
+325|Dalam talian
+326|Terjejas
+327|Penyelenggaraan
+328|Tidak bersambung
+329|Luar talian
+330|Demo
+331|Semua model
+332|Terma
+333|Privasi
+334|Bercakap dan bukannya menaip
+335|Khalayak
+336|Butiran
+337|Alat muzik
+338|Panjang
+339|Rupa
+340|Suasana
+341|Tawaran
+342|Gambar
+343|Produk
+344|Subjek
+345|Teks
+346|Nada
+347|Topik
+348|Siapa

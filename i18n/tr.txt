@@ -1,0 +1,348 @@
+001|Karanlık moda geç
+002|Karanlık mod
+003|Eklemek için bırakın
+004|Görseller, videolar, ses ve yazı tipleri otomatik olarak doğru araca gider.
+005|Önizleme
+006|Yalnız bir kurt ay doğarken donmuş bir gölü geçiyor, nefesi görünüyor.
+007|Bir çocuk altın saatte pazar meydanının üzerinde kırmızı bir balon bırakıyor.
+008|Osaka'da bir mech tamirhanesi, su birikintilerinde neon yansımaları, yavaş kaydırma.
+009|Küçük bir yelkenli gece yarısı biyolüminesan dalgalar arasında süzülüyor.
+010|Yalnız bir koşucu şafakta kum tepelerini geçiyor, yavaş takip çekimi.
+011|Bir dalgıç mercan duvarı boyunca iniyor, güneş ışınları maviyi yarıyor.
+012|Gerçekçi
+013|Genç bir kadın aydınlık bir banyoda cilt bakım şişesini telefon kamerasına tutuyor, heyecanla konuşuyor, doğal selfie kadrajı, yumuşak gün ışığı.
+014|Yakın plan: eller ahşap bir masada mat siyah bir hediye kutusunu açıyor, kişi şaşırıp kablosuz kulaklıkları çıkarıyor, telefon kamerası görünümü.
+015|Bir şahin gün doğarken çölün üzerinde eldivenli bir elden havalanıyor, ağır çekim.
+016|Yaşlı bir bekçi fırtına yaklaşırken büyük feneri yakıyor, 35 mm gren.
+017|Neon bir ara sokakta yağmur, su birikintilerinde dalgalanan yansımalar, yavaş kaydırma.
+018|Bir yelkenli gece yarısı parıldayan dalgalar arasında süzülüyor.
+019|Vitrin
+020|Bölümlü Hikâye
+021|Araçlar
+022|Diller
+023|Fiyatlar
+024|Dil
+025|Giriş yap
+026|Oluşturmaya başla
+027|Bölümlü Hikâye 1.0 — şimdi herkese açık betada
+028|Hayal gücünü
+029|yönet.
+030|nooi.ai bir hikâyeyi filme dönüştürür. Bir çekim yazın, bir klip alın — sonra altyazı ekleyin, 35 dile seslendirin ve her yerde yayınlayın.
+031|Çok bölümlü. Karakter kilitli. Kesintisiz.
+032|BESTECİ · CANLI
+033|Ücretsiz başla
+034|Vitrini gör
+035|VİTRİNDEN
+036|nooi.ai ile yapıldı.
+037|Her prompt görünür.
+038|İlk çıktılarınıza kadar burada önizlemeler oynar — sonra kendi yapay zekâ videolarınız onların yerini alır.
+039|ÖNE ÇIKAN ÖZELLİK
+040|Bölümlü Hikâye.
+041|Sonunda uzun format.
+042|Hikâyeyi bir kez yazın. Her bölüm bir öncekinin son karesinden başlar. Karakter yüzünü korur. Dünya havasını korur.
+043|20 bölüme kadar
+044|Karakter kilidi
+045|Storyboard ve animatik
+046|Yapay zekâ sonraki bölümü yazar
+047|BÖL
+048|ARAÇ KUTUSU
+049|Fikirden paylaşıma her şey.
+050|Video
+051|Kamera kontrolü ve anahtar karelerle metinden veya görselden videoya.
+052|Görseller
+053|Prompt başına birkaç görsel, en iyisini seçin.
+054|Karakterler
+055|Yaşı, sesi ve birden fazla görünümü olan karakterler.
+056|Son kareden devam eden çok bölümlü filmler.
+057|Storyboard
+058|Kareler, diyalog, ses ve geçişler tek tuvalde.
+059|Video düzenleyici
+060|Kırpma, efektler, metin ve prompt ile kare düzenleme.
+061|Görsel efektler
+062|Keying, renk düzenleme ve hareket yakalama.
+063|Altyazı ve seslendirme
+064|30 dilde satır satır transkripsiyon, çeviri ve seslendirme.
+065|Ses ve audio
+066|Lehçeye ve yaşa göre sesler, dudak senkronu, müzik ve ses efektleri.
+067|İyileştir
+068|4K'ya yükseltme, 120 fps, uzatma, yeniden kadrajlama, altyazı, seslendirme.
+069|Kanca laboratuvarı
+070|Kaydırmayı durduran ve izleyiciyi sonuna kadar tutan açılışlar.
+071|Planla ve yayınla
+072|Her platformda planlayın ve yayınlayın.
+073|ALTYAZI VE SESLENDİRME
+074|Tüm dünyaya seslenin.
+075|Bölgesel lehçeleriyle 35 dil. Her satırı kare kare düzenleyin, sonra orijinal sesle ve senkron dudaklarla seslendirin.
+076|altyazı ve seslendirme dili
+077|bölgesel lehçe
+078|platform boyutu, dışa aktarmaya hazır
+079|arayüz dili
+080|FİYATLAR
+081|Ücretsiz başlayın.
+082|Ürettiğiniz kadar ödeyin.
+083|Ücretsiz
+084|ay
+085|480p · 5 sn klipler
+086|2 karakter
+087|Başlayın
+088|Üretici
+089|1080p · 10 sn klipler
+090|35 dilde altyazı
+091|Stüdyo
+092|4K · Bölümlü Hikâye · storyboard
+093|Seslendirme, planlama, API
+094|Net cevaplar.
+095|Ürettiklerim kime ait?
+096|Size. Videolarınız sizindir, ticari olarak da kullanabilirsiniz.
+097|Hangi diller destekleniyor?
+098|Bölgesel lehçeleriyle 35 dilde altyazı ve seslendirme — Suudi, Mısır, Kuveyt, Tunus, İngiliz, Avustralya, İskoç ve daha birçoğu. Arayüzün kendisi 26 dilde sunuluyor.
+099|Bölümlü Hikâye nasıl tutarlı kalıyor?
+100|Her bölüm bir öncekinin son karesinden başlar ve karakterinizin kimliği her çekimde kilitli kalır.
+101|Benim yerime yayınlayabilir mi?
+102|Evet — hesaplarınızı bağlayın, planlayın; gönderiler seçtiğiniz saatte yayınlanır.
+103|Hikâyeniz bir prompt uzağınızda.
+104|Filmi çekin.
+105|Ücretsiz başla · 100 kredi
+106|HAYAL GÜCÜNÜ YÖNET
+107|Hizmet Koşulları
+108|Gizlilik Politikası
+109|Ödeme ve İade Politikası
+110|Kabul Edilebilir Kullanım Politikası
+111|Telif hakkı ve kaldırma
+112|Çerez Politikası
+113|İletişim
+114|Şirket unvanı
+115|Ticaret sicil no.
+116|Vergi no.
+117|Kayıtlı adres
+118|Şehir
+119|Ülke
+120|telefon
+121|Yönetici girişi
+122|Hazır olduğunuzda yükseltin.
+123|Aylık
+124|Yıllık · −%20
+125|Temel
+126|Yeni başlayan üreticiler için
+127|Aylık faturalandırılır
+128|kredi / ay
+129|sn
+130|Standart
+131|Tümü · Kling 4.0 dahil
+132|1 ses
+133|Paralel üretimler
+134|Maksimum video süresi
+135|Çözünürlük
+136|Kare hızı
+137|Video modelleri
+138|Ses klonlama
+139|En popüler
+140|Pro
+141|Ciddi üreticiler ve markalar için
+142|ses
+143|Stüdyolar, ajanslar ve ekipler için
+144|API ve MCP (Claude, ChatGPT, Qwen)
+145|Ücretsiz plan:
+146|her aracı denemek için kredi · 480p · 5 sn · filigran
+147|Tüm özellikleri karşılaştır
+148|Aylık kredi
+149|≈ görsel / ay
+150|≈ 5 saniyelik video / ay
+151|Sınırsız
+152|Bölümlü Hikâye (bölüm)
+153|Altyazı
+154|Ses laboratuvarı · canlı eskiz · boyama kitabı
+155|nooi.ai filigranı yok
+156|Planlama için sosyal hesaplar
+157|Marka kiti ve logo
+158|Ticari lisans
+159|Kişisel
+160|Destek
+161|Yardım merkezi
+162|E-posta
+163|Öncelikli
+164|Öncelikli + başlangıç desteği
+165|Görsel modelleri
+166|Tüm görsel modelleri
+167|ElevenLabs sesleri
+168|Tümü · Eleven v3 dahil
+169|Okyanus
+170|Amiral gemisi video modelleri
+171|Neon
+172|Altın
+173|Yapay zekâ sesleri · ElevenLabs
+174|+ profesyonel ses klonlama
+175|altyazı, seslendirme ve ses dili
+176|YAPAY ZEKÂ FİLM EKİBİNİZ
+177|Sekiz uzman.
+178|Tek film.
+179|Her projeyi bir yapay zekâ ajan ekibi yürütür — senaryonun ilk satırından son kalite kontrolüne kadar.
+180|Fikrinizi senaryoya dönüştürür: sahneler, diyaloglar ve anlatım.
+181|Tutarlı karakterler tasarlar: yüzler, kıyafetler ve sesler.
+182|Her çekimi planlar: kadraj, tempo ve kamera hareketleri.
+183|Her sahnenin görünümünü belirler: ışık, renk ve lens.
+184|Sesleri, müziği ve ses efektlerini senkronize ekler.
+185|Çekimleri geçişler ve zamanlamayla birleştirir.
+186|Her projeyi bütçe ve plan sınırları içinde tutar.
+187|Teslimden önce her şeyi kontrol eder ve düzeltilmesi gerekeni geri gönderir.
+188|YZ ekibi
+189|nooi.ai'ye giriş yapın
+190|Kendi dilinizde filmler, karakterler ve hikâyeler oluşturun.
+191|Google ile devam et
+192|Apple (iCloud) ile devam et
+193|veya e-posta ile
+194|Kod gönder
+195|veya telefonunuzla
+196|Ülke kodu
+197|Telefon numarası
+198|SMS kodu gönder
+199|Hayal gücünü yönet.
+200|Her prompt bir film.
+201|Devam ederek Koşulları ve Gizlilik Politikasını kabul etmiş olursunuz.
+202|Ana sayfa
+203|Oluştur
+204|UGC ve ürün reklamları
+205|Çiz ve oluştur
+206|Canlı eskiz
+207|3D dünyalar
+208|Boyama kitabı
+209|Hikâye
+210|Film ekibi
+211|Düzenle
+212|Yayınla
+213|İçerik planı
+214|Kütüphane
+215|Kütüphanem
+216|Şablonlar
+217|Ayarlar
+218|Hesap ve plan
+219|Krediler ve işlemler
+220|Bağlantılar ve API'ler
+221|Entegrasyonlar · MCP
+222|Yasal ve ödemeler
+223|Yardım ve destek
+224|Yönetim
+225|Yönetici paneli
+226|Krediler
+227|Stüdyo planı
+228|Telefon
+229|Ara…
+230|Bunu tüm ekip yapacak
+231|Havadan
+232|TAMAMLANDI
+233|Tamamlandı
+234|Gürültü giderme
+235|İleri kaydırma
+236|Prompt kodlanıyor
+237|Video kodlanıyor
+238|Başarısız
+239|WAN 3.0 yükleniyor
+240|Oluşturulmadı
+241|Yayınlandı
+242|Sırada
+243|HAZIR
+244|OLUŞTURULUYOR ·
+245|İşleme sunucusu
+246|Oluşturuluyor
+247|Tarayıcınızda çalışır
+248|Planlandı
+249|Takip
+250|YENİ
+251|Hesap
+252|Ara
+253|Tekrar hoş geldiniz,
+254|Hikâyenize devam edin, bir şablonla başlayın ya da yeni bir çekim tarif edin.
+255|Kalan kredi
+256|Çıktılar
+257|Oluşturulan bölümler
+258|Bir çekim tarif edin — “gün doğarken çölün üzerinde havalanan bir şahin”
+259|Prompt
+260|Oluştur
+261|Hikâyeniz
+262|bölüm
+263|storyboard karesi
+264|Sonraki bölümle devam et
+265|Bir şablonla başla
+266|Tüm şablonlar
+267|Cilt bakımı incelemesi · selfie
+268|UGC
+269|Elde çekim
+270|Kutu açılışı tepkisi
+271|Aksiyon fragmanı anı
+272|Fragman
+273|Sinematik
+274|Ani zoom
+275|Anime açılışı
+276|Kısa film / hikâye
+277|Anime
+278|Vinç yukarı
+279|Web sitenizi analiz edin ve hazır bir içerik planı alın.
+280|Son kullanılanlar
+281|Henüz bir şey yok. İlk klibinizi yapmak için yukarıda bir çekim tarif edin.
+282|Yeni hikâye
+283|Yeni düzenleme
+284|YZ modeli
+285|Akıllı
+286|promptunuz için en iyisi
+287|Saniye
+288|Kare hızı (Hz)
+289|En-boy
+290|basit çekim
+291|Ne oluşturmak istiyorsunuz?
+292|Görev
+293|Akıllı seçim
+294|İçerik videosu
+295|Ürün reklamı
+296|Görsel ve tasarım
+297|Ses oluştur
+298|Müzik
+299|Karakter
+300|Tam film (ekip)
+301|Boyama sayfası
+302|Kancalar
+303|Fikir
+304|Gün batımında altın kum tepelerinin üzerinde süzülen bir şahin
+305|Sahne
+306|yavaş geniş çekim, sonra gözlerine yakın plan
+307|Ses
+308|“Özgürlük gökyüzünde başlar” — kalın sesli erkek anlatıcı
+309|Efekt sesi
+310|hafif rüzgâr + sakin ud müziği
+311|Stil
+312|sinematik, sıcak renkler
+313|Bu yapıyı kullan
+314|Her bölüm için bir satır — botlar her bölümü okur.
+315|Video modeli
+316|İlk ve son kare
+317|İlk kare
+318|Yükle
+319|Son kare
+320|İlk kareden son kareye saniye
+321|İki kare de isteğe bağlı — tam bir görüntüyle başlamak veya bitirmek için birini kullanın.
+322|Planınız: en fazla
+323|sn · Pro 20 sn · Stüdyo 30 sn
+324|YZ ekibiniz
+325|Çevrimiçi
+326|Yavaşladı
+327|Bakımda
+328|Bağlı değil
+329|Çevrimdışı
+330|Demo
+331|Tüm modeller
+332|Koşullar
+333|Gizlilik
+334|Yazmak yerine konuşun
+335|Hedef kitle
+336|Ayrıntılar
+337|Enstrümanlar
+338|Süre
+339|Görünüm
+340|Duygu
+341|Teklif
+342|Görsel
+343|Ürün
+344|Konu
+345|Metin
+346|Ton
+347|Başlık
+348|Kim

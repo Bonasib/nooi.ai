@@ -1,0 +1,348 @@
+001|Overschakelen naar donkere modus
+002|Donkere modus
+003|Loslaten om toe te voegen
+004|Afbeeldingen, video's, audio en lettertypen gaan vanzelf naar de juiste tool.
+005|Voorbeeld
+006|Een eenzame wolf steekt bij maansopkomst een bevroren meer over, zijn adem zichtbaar.
+007|Een kind laat tijdens het gouden uur een rode ballon los boven een marktplein.
+008|Een mech-reparatiewerkplaats in Osaka, neonreflecties in plassen, langzame dolly.
+009|Een klein zeilbootje drijft om middernacht door bioluminescente golven.
+010|Een eenzame loper steekt bij dageraad de duinen over, langzaam volgshot.
+011|Een duiker daalt af langs een koraalwand, zonnestralen snijden door het blauw.
+012|Realistisch
+013|Een jonge vrouw houdt een huidverzorgingsflesje voor haar telefooncamera in een lichte badkamer, praat enthousiast, natuurlijke selfie-kadrering, zacht daglicht.
+014|Close-up van handen die een matzwarte cadeaudoos openen op een houten bureau; de persoon hapt naar adem en haalt draadloze oordopjes eruit, telefooncamera-look.
+015|Een valk stijgt bij zonsopgang op van een gehandschoende hand boven de woestijn, slow motion.
+016|Een oude wachter steekt de grote lamp aan terwijl een storm nadert, 35mm-korrel.
+017|Regen in een neonsteegje, reflecties rimpelen in plassen, langzame dolly.
+018|Een zeilboot drijft om middernacht door gloeiende golven.
+019|Showcase
+020|Hoofdstukverhaal
+021|Tools
+022|Talen
+023|Prijzen
+024|Taal
+025|Inloggen
+026|Begin met maken
+027|Hoofdstukverhaal 1.0 — nu in publieke bèta
+028|Regisseer je
+029|verbeelding.
+030|nooi.ai maakt van een verhaal een film. Schrijf een shot, krijg een clip — ondertitel hem daarna, dub hem in 35 talen en publiceer hem overal.
+031|Meerdere hoofdstukken. Vaste personages. Doorlopend.
+032|COMPOSER · LIVE
+033|Gratis beginnen
+034|Bekijk de showcase
+035|UIT DE SHOWCASE
+036|Gemaakt in nooi.ai.
+037|Elke prompt is zichtbaar.
+038|Hier spelen voorbeelden tot je eerste renders — daarna nemen je eigen AI-video's hun plaats in.
+039|DE HOOFDFUNCTIE
+040|Hoofdstukverhaal.
+041|Eindelijk de lange vorm.
+042|Schrijf het verhaal één keer. Elk hoofdstuk begint bij het laatste beeld van het vorige. Het personage houdt zijn gezicht. De wereld houdt haar weer.
+043|Tot 20 hoofdstukken
+044|Vast personage
+045|Storyboard & animatic
+046|AI schrijft het volgende hoofdstuk
+047|HFST
+048|DE GEREEDSCHAPSKIST
+049|Alles van idee tot publicatie.
+050|Video
+051|Tekst of afbeelding naar video, met camerabesturing en keyframes.
+052|Afbeeldingen
+053|Meerdere afbeeldingen per prompt, kies de beste.
+054|Personages
+055|Personages met leeftijd, stem en meerdere looks.
+056|Films in hoofdstukken die verdergaan vanaf het laatste beeld.
+057|Storyboard
+058|Beelden, dialoog, geluid en overgangen op één canvas.
+059|Video-editor
+060|Knippen, effecten, tekst en beelden bewerken met een prompt.
+061|Visuele effecten
+062|Keying, kleurcorrectie en motion capture.
+063|Ondertitels & nasynchronisatie
+064|Transcribeer, vertaal en dub in 30 talen, regel voor regel.
+065|Stem & audio
+066|Stemmen per dialect en leeftijd, lipsync, muziek en geluidseffecten.
+067|Verbeteren
+068|Opschalen naar 4K, 120 fps, verlengen, herkadreren, ondertitels, nasynchronisatie.
+069|Hook-lab
+070|Openingen die het scrollen stoppen en kijkers tot het einde vasthouden.
+071|Plannen & publiceren
+072|Plan en publiceer op elk platform.
+073|ONDERTITELS & NASYNCHRONISATIE
+074|Spreek de hele wereld toe.
+075|35 talen met regionale dialecten. Bewerk elke regel beeld voor beeld en dub met de originele stem en synchrone lippen.
+076|talen voor ondertitels & nasynchronisatie
+077|regionale dialecten
+078|platformformaten, klaar voor export
+079|interfacetalen
+080|PRIJZEN
+081|Gratis beginnen.
+082|Betaal voor wat je rendert.
+083|Gratis
+084|mnd
+085|480p · clips van 5 s
+086|2 personages
+087|Aan de slag
+088|Creator
+089|1080p · clips van 10 s
+090|Ondertitels in 35 talen
+091|Studio
+092|4K · Hoofdstukverhaal · storyboard
+093|Nasynchronisatie, planning, API
+094|Duidelijke antwoorden.
+095|Van wie is wat ik genereer?
+096|Van jou. Je video's zijn van jou, ook voor commercieel gebruik.
+097|Welke talen worden ondersteund?
+098|Ondertitels en nasynchronisatie in 35 talen met regionale dialecten — Saoedisch, Egyptisch, Koeweits, Tunesisch, Brits, Australisch, Schots en nog veel meer. De interface zelf is beschikbaar in 26 talen.
+099|Hoe blijft het Hoofdstukverhaal consistent?
+100|Elk hoofdstuk begint bij het laatste beeld van het vorige en de identiteit van je personage blijft in elk shot vastgelegd.
+101|Kan het voor mij publiceren?
+102|Ja — koppel je accounts, plan in, en berichten gaan op het gekozen tijdstip live.
+103|Je verhaal is maar één prompt verwijderd.
+104|Maak de film.
+105|Gratis beginnen · 100 credits
+106|REGISSEER JE VERBEELDING
+107|Servicevoorwaarden
+108|Privacybeleid
+109|Betalings- en terugbetalingsbeleid
+110|Beleid voor acceptabel gebruik
+111|Auteursrecht & verwijdering
+112|Cookiebeleid
+113|Contact
+114|Officiële bedrijfsnaam
+115|KvK-nummer
+116|Btw-nummer
+117|Statutair adres
+118|Stad
+119|Land
+120|telefoon
+121|Beheerder-login
+122|Upgrade wanneer je er klaar voor bent.
+123|Maandelijks
+124|Jaarlijks · −20%
+125|Basic
+126|Voor beginnende makers
+127|Maandelijks gefactureerd
+128|credits / maand
+129|s
+130|Standaard
+131|Alle · incl. Kling 4.0
+132|1 stem
+133|Parallelle generaties
+134|Maximale videolengte
+135|Resolutie
+136|Beeldsnelheid
+137|Videomodellen
+138|Stem klonen
+139|Populairst
+140|Pro
+141|Voor serieuze makers & merken
+142|stemmen
+143|Voor studio's, bureaus & teams
+144|API & MCP (Claude, ChatGPT, Qwen)
+145|Gratis abonnement:
+146|credits om elke tool te proberen · 480p · 5 s · watermerk
+147|Vergelijk alle functies
+148|Maandelijkse credits
+149|≈ afbeeldingen / maand
+150|≈ video's van 5 seconden / maand
+151|Onbeperkt
+152|Hoofdstukverhaal (hoofdstukken)
+153|Ondertitels
+154|Audiolab · live schets · kleurboek
+155|Geen nooi.ai-watermerk
+156|Social-accounts voor planning
+157|Merkkit & logo
+158|Commerciële licentie
+159|Persoonlijk
+160|Ondersteuning
+161|Helpcentrum
+162|E-mail
+163|Voorrang
+164|Voorrang + onboarding
+165|Afbeeldingsmodellen
+166|Alle afbeeldingsmodellen
+167|ElevenLabs-stemmen
+168|Alle · incl. Eleven v3
+169|Oceaan
+170|Topmodellen voor video
+171|Neon
+172|Goud
+173|AI-stemmen · ElevenLabs
+174|+ professioneel stem klonen
+175|talen voor ondertitels, nasynchronisatie & stem
+176|JOUW AI-FILMCREW
+177|Acht specialisten.
+178|Eén film.
+179|Elk project wordt verzorgd door een crew van AI-agents — van de eerste regel van het script tot de laatste kwaliteitscontrole.
+180|Maakt van je idee een script: scènes, dialoog en vertelling.
+181|Ontwerpt consistente personages: gezichten, outfits en stemmen.
+182|Plant elk shot: kadrering, tempo en camerabewegingen.
+183|Bepaalt de look van elke scène: licht, kleur en lens.
+184|Voegt stemmen, muziek en geluidseffecten synchroon toe.
+185|Monteert de shots met overgangen en timing.
+186|Houdt elk project binnen het budget en de limieten van je abonnement.
+187|Controleert alles vóór de oplevering en stuurt terug wat verbeterd moet worden.
+188|AI-crew
+189|Inloggen bij nooi.ai
+190|Maak films, personages en verhalen in je eigen taal.
+191|Doorgaan met Google
+192|Doorgaan met Apple (iCloud)
+193|of met e-mail
+194|Code versturen
+195|of met je telefoon
+196|Landcode
+197|Telefoonnummer
+198|Sms-code versturen
+199|Regisseer je verbeelding.
+200|Elke prompt is een film.
+201|Door verder te gaan ga je akkoord met de Voorwaarden en het Privacybeleid.
+202|Home
+203|Maken
+204|UGC & productadvertenties
+205|Tekenen & maken
+206|Live schets
+207|3D-werelden
+208|Kleurboek
+209|Verhaal
+210|Filmcrew
+211|Bewerken
+212|Publiceren
+213|Contentplan
+214|Bibliotheek
+215|Mijn bibliotheek
+216|Sjablonen
+217|Instellingen
+218|Account & abonnement
+219|Credits & transacties
+220|Koppelingen & API's
+221|Integraties · MCP
+222|Juridisch & betalingen
+223|Hulp & ondersteuning
+224|Beheer
+225|Beheerdashboard
+226|Credits
+227|Studio-abonnement
+228|Telefoon
+229|Zoeken…
+230|De hele crew gaat ermee aan de slag
+231|Luchtopname
+232|KLAAR
+233|Klaar
+234|Ruis verwijderen
+235|Dolly in
+236|Prompt coderen
+237|Video coderen
+238|Mislukt
+239|WAN 3.0 laden
+240|Niet gerenderd
+241|Gepubliceerd
+242|In de wachtrij
+243|GEREED
+244|RENDEREN ·
+245|Renderserver
+246|Bezig met renderen
+247|Draait in je browser
+248|Ingepland
+249|Volgshot
+250|NIEUW
+251|Account
+252|Zoeken
+253|Welkom terug,
+254|Ga verder met je verhaal, begin met een sjabloon of beschrijf een nieuw shot.
+255|Resterende credits
+256|Renders
+257|Gerenderde hoofdstukken
+258|Beschrijf een shot — „een valk stijgt bij zonsopgang op boven de woestijn”
+259|Prompt
+260|Genereren
+261|Je verhaal
+262|hoofdstukken
+263|storyboardbeelden
+264|Verder met het volgende hoofdstuk
+265|Begin met een sjabloon
+266|Alle sjablonen
+267|Huidverzorgingsreview · selfie
+268|UGC
+269|Uit de hand
+270|Unboxing-reactie
+271|Actietrailermoment
+272|Trailer
+273|Filmisch
+274|Crashzoom
+275|Anime-intro
+276|Korte film / verhaal
+277|Anime
+278|Kraan omhoog
+279|Analyseer je website en krijg een kant-en-klaar contentplan.
+280|Recent
+281|Nog niets. Beschrijf hierboven een shot om je eerste clip te maken.
+282|Nieuw verhaal
+283|Nieuwe bewerking
+284|AI-model
+285|Slim
+286|het best voor je prompt
+287|Seconden
+288|Beeldsnelheid (Hz)
+289|Verhouding
+290|eenvoudig shot
+291|Wat wil je maken?
+292|Taak
+293|Slimme keuze
+294|Contentvideo
+295|Productadvertentie
+296|Afbeelding & ontwerp
+297|Stem maken
+298|Muziek
+299|Personage
+300|Hele film (crew)
+301|Kleurplaat
+302|Hooks
+303|Idee
+304|Een valk zweeft bij zonsondergang boven gouden duinen
+305|Scène
+306|langzaam totaalshot, daarna close-up van zijn ogen
+307|Stem
+308|„Vrijheid begint in de lucht” — diepe mannelijke verteller
+309|Geluid
+310|zachte wind + rustige oudmuziek
+311|Stijl
+312|filmisch, warme kleuren
+313|Gebruik deze structuur
+314|Eén regel per onderdeel — de bots lezen elk onderdeel.
+315|Videomodel
+316|Begin- & eindbeeld
+317|Beginbeeld
+318|Uploaden
+319|Eindbeeld
+320|Seconden van begin- tot eindbeeld
+321|Beide beelden zijn optioneel — gebruik er één om op een exact beeld te beginnen of te eindigen.
+322|Je abonnement: tot
+323|s · Pro 20 s · Studio 30 s
+324|Je AI-crew
+325|Online
+326|Verminderd
+327|Onderhoud
+328|Niet gekoppeld
+329|Offline
+330|Demo
+331|Alle modellen
+332|Voorwaarden
+333|Privacy
+334|Spreek in plaats van typen
+335|Doelgroep
+336|Details
+337|Instrumenten
+338|Lengte
+339|Look
+340|Sfeer
+341|Aanbod
+342|Afbeelding
+343|Product
+344|Onderwerp
+345|Tekst
+346|Toon
+347|Thema
+348|Wie

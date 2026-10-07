@@ -1,0 +1,348 @@
+001|Passer en mode sombre
+002|Mode sombre
+003|Déposez pour ajouter
+004|Images, vidéos, audio et polices vont automatiquement dans le bon outil.
+005|Aperçu
+006|Un loup solitaire traverse un lac gelé au lever de la lune, son souffle visible.
+007|Un enfant lâche un ballon rouge au-dessus d'une place de marché à l'heure dorée.
+008|Un atelier de réparation de mechas à Osaka, reflets de néons dans les flaques, travelling lent.
+009|Un petit voilier dérive sur des vagues bioluminescentes à minuit.
+010|Un coureur solitaire traverse les dunes à l'aube, lent plan de suivi.
+011|Un plongeur descend le long d'un mur de corail, des rayons de soleil fendent le bleu.
+012|Réaliste
+013|Une jeune femme tient un flacon de soin devant la caméra de son téléphone dans une salle de bain lumineuse, parle avec enthousiasme, cadrage selfie naturel, douce lumière du jour.
+014|Gros plan sur des mains qui ouvrent une boîte cadeau noir mat sur un bureau en bois, la personne s'exclame et sort des écouteurs sans fil, look caméra de téléphone.
+015|Un faucon s'envole d'une main gantée au-dessus du désert au lever du soleil, au ralenti.
+016|Un vieux gardien allume la grande lampe à l'approche d'une tempête, grain 35 mm.
+017|Pluie dans une ruelle aux néons, reflets ondulant dans les flaques, travelling lent.
+018|Un voilier dérive sur des vagues lumineuses à minuit.
+019|Vitrine
+020|Histoire en chapitres
+021|Outils
+022|Langues
+023|Tarifs
+024|Langue
+025|Se connecter
+026|Commencer à créer
+027|Histoire en chapitres 1.0 — désormais en bêta publique
+028|Réalisez
+029|votre imagination.
+030|nooi.ai transforme une histoire en film. Écrivez un plan, obtenez un clip — puis sous-titrez-le, doublez-le en 35 langues et publiez-le partout.
+031|Plusieurs chapitres. Personnages verrouillés. En continu.
+032|COMPOSITEUR · EN DIRECT
+033|Commencer gratuitement
+034|Voir la vitrine
+035|DANS LA VITRINE
+036|Créé avec nooi.ai.
+037|Chaque prompt est affiché.
+038|Des aperçus s'affichent ici jusqu'à vos premiers rendus — ensuite, vos propres vidéos IA prennent leur place.
+039|LA FONCTION PHARE
+040|Histoire en chapitres.
+041|Enfin, le format long.
+042|Écrivez l'histoire une seule fois. Chaque chapitre commence à la dernière image du précédent. Le personnage garde son visage. Le monde garde sa météo.
+043|Jusqu'à 20 chapitres
+044|Personnage verrouillé
+045|Storyboard et animatique
+046|L'IA écrit le chapitre suivant
+047|CH
+048|LA BOÎTE À OUTILS
+049|Tout, de l'idée à la publication.
+050|Vidéo
+051|Texte ou image en vidéo, avec contrôle de la caméra et images clés.
+052|Images
+053|Plusieurs images par prompt, choisissez la meilleure.
+054|Personnages
+055|Des personnages avec âge, voix et plusieurs apparences.
+056|Des films en plusieurs chapitres qui reprennent à la dernière image.
+057|Storyboard
+058|Images, dialogues, son et transitions sur un même canevas.
+059|Éditeur vidéo
+060|Découpe, effets, texte, et retouche d'images par prompt.
+061|Effets visuels
+062|Incrustation, étalonnage et capture de mouvement.
+063|Sous-titres et doublage
+064|Transcrivez, traduisez et doublez en 30 langues, ligne par ligne.
+065|Voix et audio
+066|Voix par dialecte et par âge, synchronisation labiale, musique et effets sonores.
+067|Améliorer
+068|Passage en 4K, 120 i/s, prolongation, recadrage, légendes, doublage.
+069|Labo d'accroches
+070|Des débuts qui arrêtent le défilement et retiennent jusqu'à la fin.
+071|Planifier et publier
+072|Planifiez et publiez sur toutes les plateformes.
+073|SOUS-TITRES ET DOUBLAGE
+074|Parlez au monde entier.
+075|35 langues avec leurs dialectes régionaux. Modifiez chaque ligne image par image, puis doublez avec la voix d'origine et des lèvres synchronisées.
+076|langues pour les sous-titres et le doublage
+077|dialectes régionaux
+078|formats de plateformes, prêts à exporter
+079|langues d'interface
+080|TARIFS
+081|Commencez gratuitement.
+082|Payez ce que vous générez.
+083|Gratuit
+084|mois
+085|480p · clips de 5 s
+086|2 personnages
+087|Commencer
+088|Créateur
+089|1080p · clips de 10 s
+090|Sous-titres en 35 langues
+091|Studio
+092|4K · Histoire en chapitres · storyboard
+093|Doublage, planification, API
+094|Des réponses claires.
+095|À qui appartient ce que je génère ?
+096|À vous. Vos vidéos vous appartiennent, y compris pour un usage commercial.
+097|Quelles langues sont prises en charge ?
+098|Sous-titres et doublage en 35 langues avec dialectes régionaux — saoudien, égyptien, koweïtien, tunisien, britannique, australien, écossais et bien d'autres. L'interface elle-même existe en 26 langues.
+099|Comment l'Histoire en chapitres reste-t-elle cohérente ?
+100|Chaque chapitre commence à la dernière image du précédent, et l'identité de votre personnage est verrouillée dans chaque plan.
+101|Peut-il publier pour moi ?
+102|Oui — connectez vos comptes, planifiez, et les publications partent à l'heure choisie.
+103|Votre histoire n'est qu'à un prompt.
+104|Faites le film.
+105|Commencer gratuitement · 100 crédits
+106|RÉALISEZ VOTRE IMAGINATION
+107|Conditions d'utilisation
+108|Politique de confidentialité
+109|Politique de paiement et de remboursement
+110|Politique d'utilisation acceptable
+111|Droits d'auteur et retrait
+112|Politique relative aux cookies
+113|Contact
+114|Raison sociale
+115|N° d'immatriculation (RC)
+116|N° de TVA
+117|Adresse du siège
+118|Ville
+119|Pays
+120|téléphone
+121|Connexion administrateur
+122|Passez à l'offre supérieure quand vous le souhaitez.
+123|Mensuel
+124|Annuel · −20 %
+125|Basique
+126|Pour les créateurs qui débutent
+127|Facturé mensuellement
+128|crédits / mois
+129|s
+130|Standard
+131|Tous · y compris Kling 4.0
+132|1 voix
+133|Générations en parallèle
+134|Durée vidéo maximale
+135|Résolution
+136|Fréquence d'images
+137|Modèles vidéo
+138|Clonage de voix
+139|Le plus populaire
+140|Pro
+141|Pour les créateurs et marques exigeants
+142|voix
+143|Pour les studios, agences et équipes
+144|API et MCP (Claude, ChatGPT, Qwen)
+145|Offre gratuite :
+146|crédits pour essayer tous les outils · 480p · 5 s · filigrane
+147|Comparer toutes les fonctionnalités
+148|Crédits mensuels
+149|≈ images / mois
+150|≈ vidéos de 5 secondes / mois
+151|Illimité
+152|Histoire en chapitres (chapitres)
+153|Sous-titres
+154|Labo audio · croquis en direct · livre de coloriage
+155|Sans filigrane nooi.ai
+156|Comptes sociaux pour la planification
+157|Kit de marque et logo
+158|Licence commerciale
+159|Personnel
+160|Assistance
+161|Centre d'aide
+162|E-mail
+163|Prioritaire
+164|Prioritaire + accompagnement
+165|Modèles d'image
+166|Tous les modèles d'image
+167|Voix ElevenLabs
+168|Toutes · y compris Eleven v3
+169|Océan
+170|Modèles vidéo phares
+171|Néon
+172|Or
+173|Voix IA · ElevenLabs
+174|+ clonage de voix professionnel
+175|langues pour sous-titres, doublage et voix
+176|VOTRE ÉQUIPE DE TOURNAGE IA
+177|Huit spécialistes.
+178|Un seul film.
+179|Chaque projet est pris en charge par une équipe d'agents IA — de la première ligne du scénario au contrôle qualité final.
+180|Transforme votre idée en scénario : scènes, dialogues et narration.
+181|Conçoit des personnages cohérents : visages, tenues et voix.
+182|Planifie chaque plan : cadrage, rythme et mouvements de caméra.
+183|Définit l'esthétique de chaque scène : lumière, couleur et objectif.
+184|Ajoute voix, musique et effets sonores parfaitement synchronisés.
+185|Assemble les plans avec transitions et rythme.
+186|Garde chaque projet dans le budget et les limites de votre offre.
+187|Vérifie tout avant la livraison et renvoie ce qui doit être corrigé.
+188|Équipe IA
+189|Se connecter à nooi.ai
+190|Créez des films, des personnages et des histoires dans votre langue.
+191|Continuer avec Google
+192|Continuer avec Apple (iCloud)
+193|ou par e-mail
+194|Envoyer le code
+195|ou avec votre téléphone
+196|Indicatif pays
+197|Numéro de téléphone
+198|Envoyer le code SMS
+199|Réalisez votre imagination.
+200|Chaque prompt est un film.
+201|En continuant, vous acceptez les Conditions et la Politique de confidentialité.
+202|Accueil
+203|Créer
+204|UGC et pubs produit
+205|Dessiner et créer
+206|Croquis en direct
+207|Mondes 3D
+208|Livre de coloriage
+209|Histoire
+210|Équipe de tournage
+211|Montage
+212|Publier
+213|Plan de contenu
+214|Bibliothèque
+215|Ma bibliothèque
+216|Modèles
+217|Paramètres
+218|Compte et offre
+219|Crédits et transactions
+220|Connexions et API
+221|Intégrations · MCP
+222|Mentions légales et paiements
+223|Aide et assistance
+224|Administration
+225|Tableau de bord admin
+226|Crédits
+227|Offre Studio
+228|Téléphone
+229|Rechercher…
+230|Toute l'équipe va s'en charger
+231|Vue aérienne
+232|TERMINÉ
+233|Terminé
+234|Débruitage
+235|Travelling avant
+236|Encodage du prompt
+237|Encodage de la vidéo
+238|Échec
+239|Chargement de WAN 3.0
+240|Pas encore rendu
+241|Publié
+242|En file d'attente
+243|PRÊT
+244|RENDU ·
+245|Serveur de rendu
+246|Rendu en cours
+247|Fonctionne dans votre navigateur
+248|Planifié
+249|Suivi
+250|NOUVEAU
+251|Compte
+252|Rechercher
+253|Bon retour,
+254|Reprenez votre histoire, partez d'un modèle ou décrivez un nouveau plan.
+255|Crédits restants
+256|Rendus
+257|Chapitres rendus
+258|Décrivez un plan — « un faucon s'envole au-dessus du désert au lever du soleil »
+259|Prompt
+260|Générer
+261|Votre histoire
+262|chapitres
+263|images de storyboard
+264|Continuer au chapitre suivant
+265|Partir d'un modèle
+266|Tous les modèles
+267|Avis skincare · selfie
+268|UGC
+269|Caméra à l'épaule
+270|Réaction au déballage
+271|Moment fort de bande-annonce
+272|Bande-annonce
+273|Cinématique
+274|Zoom choc
+275|Générique d'anime
+276|Court métrage / histoire
+277|Anime
+278|Grue montante
+279|Analysez votre site web et obtenez un plan de contenu prêt à l'emploi.
+280|Récents
+281|Rien pour l'instant. Décrivez un plan ci-dessus pour créer votre premier clip.
+282|Nouvelle histoire
+283|Nouveau montage
+284|Modèle IA
+285|Intelligent
+286|le meilleur pour votre prompt
+287|Secondes
+288|Fréquence d'images (Hz)
+289|Format
+290|plan simple
+291|Que voulez-vous créer ?
+292|Tâche
+293|Choix intelligent
+294|Vidéo de contenu
+295|Pub produit
+296|Image et design
+297|Créer une voix
+298|Musique
+299|Personnage
+300|Film complet (équipe)
+301|Page de coloriage
+302|Accroches
+303|Idée
+304|Un faucon plane au-dessus de dunes dorées au coucher du soleil
+305|Scène
+306|plan large lent, puis gros plan sur ses yeux
+307|Voix
+308|« La liberté commence dans le ciel » — narrateur à la voix grave
+309|Son
+310|vent doux + musique d'oud apaisante
+311|Style
+312|cinématique, couleurs chaudes
+313|Utiliser cette structure
+314|Une ligne par partie — les bots lisent chaque partie.
+315|Modèle vidéo
+316|Première et dernière image
+317|Première image
+318|Importer
+319|Dernière image
+320|Secondes entre la première et la dernière image
+321|Les deux images sont facultatives — utilisez-en une pour commencer ou finir sur une image précise.
+322|Votre offre : jusqu'à
+323|s · Pro 20 s · Studio 30 s
+324|Votre équipe IA
+325|En ligne
+326|Dégradé
+327|Maintenance
+328|Non connecté
+329|Hors ligne
+330|Démo
+331|Tous les modèles
+332|Conditions
+333|Confidentialité
+334|Parler au lieu d'écrire
+335|Public
+336|Détails
+337|Instruments
+338|Durée
+339|Apparence
+340|Ambiance
+341|Offre
+342|Image
+343|Produit
+344|Sujet
+345|Texte
+346|Ton
+347|Thème
+348|Qui

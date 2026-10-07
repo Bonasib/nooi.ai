@@ -14,7 +14,7 @@
   --lime:#9CD245;--lime-ink:#CFE13E;--forest:#2DD4A8;--gold:#F5C518;--red:#ff6b5e;--violet:#a78bfa;
   --on-lime:#0a1200;
   --sans:"Geist","IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --mono:"Geist Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --mono:"Geist Mono","IBM Plex Sans Arabic","Vazirmatn",ui-monospace,"SFMono-Regular",Menlo,monospace;
   --serif:"Instrument Serif","IBM Plex Sans Arabic",Georgia,serif;
   --r:10px;box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
@@ -2079,7 +2079,7 @@ function renderShell(){
   if(!authed)return;
   const used=Math.round(S.credits/8000*100);
   $("#side").innerHTML='<div class="brand"><i class="dot"></i><b>nooi</b><span>.ai</span></div>'+
-   NAVS.map(g=>(g[0]?'<div class="sg">'+L(g[0][0],g[0][1])+"</div>":"")+g[1].map(n=>'<button class="nav" data-go="'+n[0]+'" '+(S.view===n[0]||(n[0]==="fx"&&["bg","grade","mocap"].includes(S.view))?'aria-current="page"':"")+">"+ic(n[1])+esc(L(n[2],n[3]))+(n[4]?'<span class="new">NEW</span>':"")+"</button>").join("")).join("")+
+   NAVS.map(g=>(g[0]?'<div class="sg">'+L(g[0][0],g[0][1])+"</div>":"")+g[1].map(n=>'<button class="nav" data-go="'+n[0]+'" '+(S.view===n[0]||(n[0]==="fx"&&["bg","grade","mocap"].includes(S.view))?'aria-current="page"':"")+">"+ic(n[1])+esc(L(n[2],n[3]))+(n[4]?'<span class="new">'+L("NEW","جديد")+"</span>":"")+"</button>").join("")).join("")+
    '<div class="grow"></div><div class="credits"><div class="spread"><span class="mute">'+L("Credits","الرصيد")+'</span><span class="mono">'+S.credits.toLocaleString("en")+'<span class="dim">/8,000</span></span></div><div class="bar"><i style="width:'+used+'%"></i></div><div class="dim">'+L("Studio plan","باقة الاستوديو")+'</div></div>'+
    '<button class="me" data-go="account"><span class="av">'+esc(initials(S.user.name))+'</span><span style="min-width:0"><div style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(S.user.name)+'</div><div class="dim small">'+esc(methodName(S.user.method))+"</div></span></button>";
   $("#bottomnav").innerHTML=BOTTOM.map(([k,i])=>{const cur=k==="tools"?!Object.values(BGRP).flat().concat(["account","connect"]).includes(S.view):BGRP[k].includes(S.view);return'<button data-go="'+k+'" '+(cur?'aria-current="page"':"")+">"+ic(i)+"<span>"+(k==="tools"?L("Create","إنشاء"):k==="edit"?L("Edit","تحرير"):k==="calendar"?L("Publish","نشر"):navName(k))+"</span></button>"}).join("");
@@ -2105,7 +2105,7 @@ let AU={step:"start",contact:"",cc:"+966",code:"",err:""};
 function vAuth(){
   let f="";
   if(AU.step==="start"){
-    f='<h1>'+L("Sign in to nooi.ai","سجّل الدخول إلى nooi.ai")+'</h1><p class="lede" style="margin:0">'+L("Create films, characters and stories in Arabic and English.","اصنع أفلاماً وشخصيات وقصصاً بالعربية والإنجليزية.")+"</p>"+
+    f='<h1>'+L("Sign in to nooi.ai","سجّل الدخول إلى nooi.ai")+'</h1><p class="lede" style="margin:0">'+L("Create films, characters and stories in your own language.","اصنع أفلاماً وشخصيات وقصصاً بلغتك.")+"</p>"+
     '<div class="oauth"><button class="btn" data-act="auth-oauth" data-m="google">'+G_ICON+L("Continue with Google","المتابعة عبر Google")+'</button><button class="btn" data-act="auth-oauth" data-m="apple">'+APPLE_ICON+L("Continue with Apple (iCloud)","المتابعة عبر Apple (iCloud)")+"</button></div>"+
     '<div class="or">'+L("or with email","أو عبر البريد")+'</div><div class="row" style="flex-wrap:nowrap"><input type="email" id="au-email" placeholder="name@example.com" autocomplete="email" dir="ltr" aria-label="'+L("Email","البريد الإلكتروني")+'"><button class="btn primary" data-act="auth-email">'+L("Send code","أرسل الرمز")+"</button></div>"+
     '<div class="or">'+L("or with your phone","أو برقم الجوال")+'</div><div class="phone"><select id="au-cc" aria-label="'+L("Country code","رمز الدولة")+'">'+[["+966","🇸🇦 +966"],["+971","🇦🇪 +971"],["+965","🇰🇼 +965"],["+973","🇧🇭 +973"],["+974","🇶🇦 +974"],["+968","🇴🇲 +968"],["+20","🇪🇬 +20"],["+962","🇯🇴 +962"],["+1","🇺🇸 +1"],["+44","🇬🇧 +44"]].map(c=>'<option value="'+c[0]+'" '+(AU.cc===c[0]?"selected":"")+">"+c[1]+"</option>").join("")+'</select><input type="tel" id="au-phone" placeholder="5X XXX XXXX" autocomplete="tel-national" inputmode="tel" aria-label="'+L("Phone number","رقم الجوال")+'"></div><button class="btn primary big" style="margin-top:10px" data-act="auth-phone">'+ic("phone")+L("Send SMS code","أرسل رمز SMS")+"</button>"+
@@ -3784,7 +3784,7 @@ function vLanding(){
   const tools=["video","image","chars","story","board","edit","fx","subs","voice","finish","hooks","calendar"];
   const ticker=LP_PROMPTS.concat(LP_PROMPTS).map(p=>'<span>“'+esc(L(p[0],p[1]))+'”</span><i>·</i>').join("");
   const plans=[["Free","مجاني",0,["480p · 5s clips","480p · مقاطع 5ث"],["2 characters","شخصيتان"]],["Creator","المبدع",12,["1080p · 10s clips","1080p · مقاطع 10ث"],["Subtitles in 35 languages","ترجمة بـ35 لغة"]],["Studio","الاستوديو",39,["4K · Chapter Story · storyboard","4K · قصة الفصول · ستوري بورد"],["Dubbing, scheduling, API","الدبلجة والجدولة وAPI"]]];
-  const faq=[["Who owns what I generate?","لمن تعود ملكية ما أنتجه؟","You do. Your videos are yours to use commercially.","لك. فيديوهاتك ملكك وتستخدمها تجارياً."],["Which languages are supported?","ما اللغات المدعومة؟","Subtitles and dubbing in 35 languages with regional dialects — Saudi, Egyptian, Kuwaiti, Tunisian, British, Australian, Scottish and many more. The interface itself comes in 14 languages.","ترجمة ودبلجة بـ35 لغة مع اللهجات — سعودي ومصري وكويتي وتونسي وبريطاني وأسترالي واسكتلندي وغيرها. والواجهة نفسها بـ14 لغة."],["How does Chapter Story stay consistent?","كيف تبقى قصة الفصول متسقة؟","Each chapter starts from the last frame of the previous one, and your character's identity is locked across every shot.","كل فصل يبدأ من آخر إطار في الفصل السابق، وهوية الشخصية مثبّتة في كل لقطة."],["Can it publish for me?","هل ينشر نيابة عني؟","Yes — connect your accounts, schedule, and posts go out at the chosen time.","نعم — اربط حساباتك وجدول، وتُنشر المنشورات في الوقت المحدد."]];
+  const faq=[["Who owns what I generate?","لمن تعود ملكية ما أنتجه؟","You do. Your videos are yours to use commercially.","لك. فيديوهاتك ملكك وتستخدمها تجارياً."],["Which languages are supported?","ما اللغات المدعومة؟","Subtitles and dubbing in 35 languages with regional dialects — Saudi, Egyptian, Kuwaiti, Tunisian, British, Australian, Scottish and many more. The interface itself comes in 26 languages.","ترجمة ودبلجة بـ35 لغة مع اللهجات — سعودي ومصري وكويتي وتونسي وبريطاني وأسترالي واسكتلندي وغيرها. والواجهة نفسها بـ26 لغة."],["How does Chapter Story stay consistent?","كيف تبقى قصة الفصول متسقة؟","Each chapter starts from the last frame of the previous one, and your character's identity is locked across every shot.","كل فصل يبدأ من آخر إطار في الفصل السابق، وهوية الشخصية مثبّتة في كل لقطة."],["Can it publish for me?","هل ينشر نيابة عني؟","Yes — connect your accounts, schedule, and posts go out at the chosen time.","نعم — اربط حساباتك وجدول، وتُنشر المنشورات في الوقت المحدد."]];
   return'<div class="lp">'+
   '<header class="lpnav"><div class="brand" style="padding:0"><i class="dot"></i><b>nooi</b><span>.ai</span></div><nav class="lplinks"><button data-act="lp-go" data-t="lp-show">'+L("Showcase","المعرض")+'</button><button data-act="lp-go" data-t="lp-story">'+L("Chapter Story","قصة الفصول")+'</button><button data-act="lp-go" data-t="lp-tools">'+L("Tools","الأدوات")+'</button><button data-act="lp-go" data-t="lp-lang">'+L("Languages","اللغات")+'</button><button data-act="lp-go" data-t="lp-price">'+L("Pricing","الأسعار")+'</button></nav><div class="row" style="flex-wrap:nowrap">'+langBtn()+'<button class="btn ghost sm lphide" data-act="to-auth">'+L("Sign in","تسجيل الدخول")+'</button><button class="btn primary sm" data-act="to-auth">'+L("Start creating","ابدأ الإنشاء")+ic("arrow","width:14px")+"</button></div></header>"+
   '<section class="lphero"><span class="lpbadge"><i class="dot" style="width:7px;height:7px"></i>'+L("Chapter Story 1.0 — now in public beta","قصة الفصول 1.0 — متاحة الآن للتجربة")+'</span><h1 class="lph1">'+L("Direct your","أخرِج")+'<br><em>'+L("imagination.","خيالك.")+'</em></h1><p class="lpsub">'+L("nooi.ai turns a story into a film. Write a shot, get a clip — then subtitle it, dub it in 35 languages and publish it everywhere.","nooi.ai يحوّل القصة إلى فيلم. اكتب لقطة واحصل على مقطع — ثم ترجمه ودبلجه بـ35 لغة وانشره في كل مكان.")+' <span class="serif">'+L("Multi-chapter. Character-locked. Continuous.","متعدد الفصول. شخصية ثابتة. سرد متصل.")+'</span></p>'+
@@ -3795,7 +3795,7 @@ function vLanding(){
   '<section class="lpsec" id="lp-story"><div class="panel lpfeat"><div><div class="kicker">★ '+L("THE HEADLINE FEATURE","الميزة الرئيسية")+'</div><h2 class="lph2">'+L("Chapter Story.","قصة الفصول.")+'<br><span class="serif mute">'+L("The long form, finally.","القصص الطويلة، أخيراً.")+'</span></h2><p class="mute">'+L("Write the story once. Each chapter starts from the last frame of the one before. The character keeps their face. The world keeps its weather.","اكتب القصة مرة واحدة. كل فصل يبدأ من آخر إطار في الفصل الذي قبله. الشخصية تحتفظ بوجهها، والعالم يحتفظ بأجوائه.")+'</p><div class="lpmini">'+[["Up to 20 chapters","حتى 20 فصلاً"],["Character lock","تثبيت الشخصية"],["Storyboard & animatic","ستوري بورد وعرض متحرك"],["AI writes the next chapter","الذكاء يكتب الفصل التالي"]].map(x=>"<div>"+L(x[0],x[1])+"</div>").join("")+'</div></div><div class="lpchs">'+S.story.chapters.slice(0,5).map((c,i)=>'<div class="lpch" style="--d:'+i+'"><div class="thumb">'+'<canvas class="frame live" data-ref="c:'+c.id+'"></canvas></div><div><div class="mono small dim">'+L("CH","فصل")+" · "+pad2(i+1)+'</div><div class="small">'+esc(c.title)+'</div></div><span class="lpstate"></span></div>').join("")+"</div></div></section>"+
   '<section class="lpsec" id="lp-tools"><div class="kicker">'+L("THE TOOLKIT","الأدوات")+'</div><h2 class="lph2">'+L("Everything from idea to posting.","كل شيء من الفكرة حتى النشر.")+'</h2><div class="toolgrid lptools">'+tools.map(k=>{const n=ALLNAV.find(x=>x[0]===k);return n?'<div class="panel tool"><span class="ico">'+ic(n[1])+"</span><b>"+L(n[2],n[3])+"</b><span>"+L(TOOLDESC[k][0],TOOLDESC[k][1])+"</span></div>":""}).join("")+"</div></section>"+
   '<section class="lpsec" id="lp-lang"><div class="panel lpfeat"><div><div class="kicker">'+L("SUBTITLES & DUBBING","الترجمة والدبلجة")+'</div><h2 class="lph2">'+L("Speak to the whole world.","خاطب العالم كله.")+'</h2><p class="mute">'+L("35 languages with regional dialects. Edit every line frame by frame, then dub with the original voice and synced lips.","35 لغة مع اللهجات المحلية. عدّل كل سطر إطاراً بإطار، ثم دبلج بنفس الصوت مع مزامنة الشفاه.")+'</p><div class="lpflags">'+["🇸🇦","🇪🇬","🇰🇼","🇹🇳","🇾🇪","🇯🇴","🇦🇪","🇲🇦","🇬🇧","🇺🇸","🇦🇺","🏴󠁧󠁢󠁳󠁣󠁴󠁿","🇫🇷","🇯🇵","🇨🇳","🇮🇳","🇪🇸","🇰🇷","🇷🇺","🇵🇭","🇲🇾","🇸🇴","🇪🇹","🇹🇷"].map(f=>"<span>"+f+"</span>").join("")+'</div></div><div><div class="stage"><canvas class="frame" id="lpsub"></canvas></div><div class="lplangs" id="lplangs">'+LP_SUBS.map(s=>'<span data-c="'+s[0]+'">'+esc(lang(s[0])[3])+"</span>").join("")+"</div></div></div></section>"+
-  '<section class="lpsec"><div class="lpstats">'+[["35",L("languages for subtitles & dubbing","لغة للترجمة والدبلجة")],["40+",L("regional dialects","لهجة محلية")],["16",L("platform sizes, ready to export","مقاساً جاهزاً للمنصات")],["14",L("interface languages","لغة للواجهة")]].map(s=>'<div><div class="lpn">'+s[0]+'</div><div class="mute small">'+s[1]+"</div></div>").join("")+"</div></section>"+
+  '<section class="lpsec"><div class="lpstats">'+[["35",L("languages for subtitles & dubbing","لغة للترجمة والدبلجة")],["40+",L("regional dialects","لهجة محلية")],["16",L("platform sizes, ready to export","مقاساً جاهزاً للمنصات")],[String(UI_LANGS.length),L("interface languages","لغة للواجهة")]].map(s=>'<div><div class="lpn">'+s[0]+'</div><div class="mute small">'+s[1]+"</div></div>").join("")+"</div></section>"+
   '<section class="lpsec" id="lp-price"><div class="kicker">'+L("PRICING","الأسعار")+'</div><h2 class="lph2">'+L("Start free.","ابدأ مجاناً.")+' <span class="mute">'+L("Pay for what you render.","وادفع مقابل ما تولّده.")+'</span></h2><div class="pricing">'+plans.map((p,i)=>'<div class="panel plan'+(i===2?" rec":"")+'"><b style="font-weight:500">'+L(p[0],p[1])+'</b><div class="p mono">$'+p[2]+'<span class="small mute"> /'+L("mo","شهر")+"</span></div><ul>"+p.slice(3).map(x=>"<li>"+L(x[0],x[1])+"</li>").join("")+'</ul><button class="btn '+(i===2?"primary":"")+'" style="width:100%" data-act="to-auth">'+L("Get started","ابدأ الآن")+"</button></div>").join("")+"</div></section>"+
   '<section class="lpsec lpfaq"><h2 class="lph2">'+L("Straight answers.","إجابات مباشرة.")+"</h2>"+faq.map(f=>'<details class="acc"><summary>'+L(f[0],f[1])+'</summary><p class="mute" style="margin:8px 0 0">'+L(f[2],f[3])+"</p></details>").join("")+"</section>"+
   '<section class="lpcta"><p class="serif mute">'+L("Your story is one prompt away.","قصتك على بُعد وصف واحد.")+'</p><h2 class="lph1" style="font-size:clamp(34px,7vw,72px)">'+L("Make the film.","اصنع الفيلم.")+'</h2><button class="btn primary" data-act="to-auth">'+L("Start free · 100 credits","ابدأ مجاناً · 100 رصيد")+ic("arrow","width:14px")+"</button></section>"+
@@ -3842,13 +3842,15 @@ L=function(en,ar){const l=S&&S.lang;const key=uiKey();if(key==="ar")return ar;if
   if(key.startsWith("ar"))uiAr[core]=ar;const d=UI_T[key];if(d&&d[core]!=null)return String(en).replace(core,d[core]);
   if(core.length<500&&/[A-Za-z]/.test(core)){uiQ.add(core);clearTimeout(uiTimer);uiTimer=setTimeout(flushUI,500)}return key.startsWith("ar")?ar:en};
 function langWithDialect(code){const id=(S.subs.dialects||{})[code];const v=VARIANTS[code];if(code==="ar"&&(!id||id==="msa"))return"Arabic (Modern Standard Arabic, natural social tone)";if(v&&id&&id!==v[0][0])return lang(code)[1]+" — "+variantName(code,id)+" dialect, written the way people really speak it";return lang(code)[1]}
+const UI_FAIL={};
 flushUI=async function(){
   if(uiBusy)return;const key=uiKey();if(key==="ar"||key==="en")return;const items=[...uiQ].filter(s=>!(UI_T[key]&&UI_T[key][s]!=null));uiQ.clear();if(!items.length)return;
   const sample=API.mode==="server"?null:await getSample();if(API.mode!=="server"&&!sample){toast("Interface translation needs AI.");return}
   uiBusy=true;UI_T[key]=UI_T[key]||{};const [l,dia]=key.split("-");const base=(UI_LANGS.find(x=>x[0]===l)||[l,l])[1];const target=dia?base+" — "+variantName(l,dia)+" dialect (colloquial, as people really speak it)":base;const fromAr=l==="ar";
   let done=0;const batches=[];for(let i=0;i<items.length;i+=70)batches.push(items.slice(i,i+70));uiPill("🌐 "+target.split(" (")[0]+" · 0/"+items.length);
   const run=async b=>{const src=fromAr?b.map(k=>uiAr[k]||k):b;const q=(fromAr?"Rewrite these Modern Standard Arabic user-interface strings of an AI video studio app into ":"Translate these user-interface strings of an AI video studio app from English into ")+target+".\nRules: short, natural UI wording; keep brand and model names (nooi.ai, WAN, TikTok, Instagram, YouTube, SRT, VTT, UGC, POV, FPV, 4K, cr) unchanged; keep numbers and symbols (×, ·, →, %, +); no quotes or explanations; one output per input, same order.\nSTRINGS:\n"+JSON.stringify(src)+"\nReturn ONLY JSON: {\"t\":[\"...\"]}";
-    try{const out=API.mode==="server"?await API.req("/v1/llm/json",{json:{prompt:q}}):await sample.json(q,{modelTier:"default",cache:true});const arr=out&&out.t;if(Array.isArray(arr))b.forEach((s,i)=>{if(typeof arr[i]==="string"&&arr[i].trim())UI_T[key][s]=arr[i].replace(/"/g,"”").replace(/[<>]/g,"")})}catch(e){}
+    /* base languages use the server's shared cache (translated once for everyone, no credits); dialects stay per user */
+    try{const out=API.mode==="server"?(key===l?await API.req("/v1/ui-t/"+l,{json:{strings:b}}):await API.req("/v1/llm/json",{json:{prompt:q}})):await sample.json(q,{modelTier:"default",cache:true});const arr=out&&out.t;if(Array.isArray(arr))b.forEach((s,i)=>{if(typeof arr[i]==="string"&&arr[i].trim())UI_T[key][s]=arr[i].replace(/"/g,"”").replace(/[<>]/g,"")})}catch(e){UI_FAIL[key]=Date.now()}
     done+=b.length;uiPill("🌐 "+target.split(" (")[0]+" · "+done+"/"+items.length)};
   for(let i=0;i<batches.length;i+=3)await Promise.all(batches.slice(i,i+3).map(run));
   try{localStorage.setItem("dotai-ui-t",JSON.stringify(UI_T))}catch(e){}
@@ -6470,6 +6472,182 @@ function crewReact(el){if(!el||el.classList.contains("react"))return;crewTipSide
 document.addEventListener("mouseover",e=>{const el=e.target.closest&&e.target.closest(".sbot");if(el&&!el.contains(e.relatedTarget))crewReact(el)});
 document.addEventListener("focusin",e=>{const el=e.target.closest&&e.target.closest(".sbot");if(el)crewReact(el)});
 document.addEventListener("click",e=>{const el=e.target.closest&&e.target.closest(".sbot");document.querySelectorAll(".sbot.tipon").forEach(x=>{if(x!==el)x.classList.remove("tipon")});if(el){el.classList.toggle("tipon");crewReact(el)}});
+
+/* ================= v47: TYPE SAFETY · COIN COSTS · BIGGER LOGO · NO GUEST · LOCALISED CREW · LANDING CREW · LANGUAGE CHOICE ================= */
+/* --- crew names & roles in the visitor's language (v32 had forced English into the Arabic column too) --- */
+const AGENT_AR={writer:["كويل","كاتب القصة"],casting:["نوفا","مصمم الشخصيات"],director:["ماكس","المخرج"],cine:["لومي","مدير التصوير"],sound:["إيكو","مهندس الصوت"],editor:["ريمي","المونتير"],producer:["ديوك","المنتج"],proof:["آيريس","المدقق ومراقب الجودة"]};
+BOTS.forEach(b=>{const a=AGENT_AR[b.id];if(a){b.name=[b.name[0],a[0]];b.role=[b.role[0],a[1]]}});
+/* fixed translations for crew names (non-Latin scripts) and roles (every UI language) — no AI needed for these */
+const CREW_EN_NAMES=["Quill","Nova","Max","Lumi","Echo","Remy","Duke","Iris"];
+const CREW_EN_ROLES=["Story Writer","Character Designer","Director","Cinematographer","Sound Engineer","Editor","Producer","Proofreader & QA"];
+const CREW_T={
+ fr:[0,"Scénariste|Créateur de personnages|Réalisateur|Directeur de la photographie|Ingénieur du son|Monteur|Producteur|Correcteur & contrôle qualité"],
+ es:[0,"Guionista|Diseñador de personajes|Director|Director de fotografía|Ingeniero de sonido|Montador|Productor|Corrector y control de calidad"],
+ de:[0,"Drehbuchautor|Charakterdesigner|Regisseur|Kameramann|Toningenieur|Cutter|Produzent|Lektorat & Qualitätsprüfung"],
+ it:[0,"Sceneggiatore|Character designer|Regista|Direttore della fotografia|Tecnico del suono|Montatore|Produttore|Revisore e controllo qualità"],
+ pt:[0,"Roteirista|Designer de personagens|Diretor|Diretor de fotografia|Engenheiro de som|Editor|Produtor|Revisor e controle de qualidade"],
+ nl:[0,"Scenarioschrijver|Personageontwerper|Regisseur|Cameraman|Geluidstechnicus|Monteur|Producent|Corrector & kwaliteitscontrole"],
+ tr:[0,"Senarist|Karakter tasarımcısı|Yönetmen|Görüntü yönetmeni|Ses mühendisi|Kurgucu|Yapımcı|Düzeltmen ve kalite kontrol"],
+ fil:[0,"Manunulat ng kuwento|Taga-disenyo ng karakter|Direktor|Sinematograpo|Sound engineer|Editor|Prodyuser|Proofreader at QA"],
+ ms:[0,"Penulis cerita|Pereka watak|Pengarah|Sinematografer|Jurutera bunyi|Penyunting|Penerbit|Penyemak & kawalan kualiti"],
+ so:[0,"Qoraaga sheekada|Naqshadeeyaha jilayaasha|Agaasime|Sawir-qaade sare|Injineerka codka|Tafatire|Soo-saare|Saxaxe & xakamaynta tayada"],
+ sw:[0,"Mwandishi wa hadithi|Mbunifu wa wahusika|Mwongozaji|Mpiga picha mkuu|Mhandisi wa sauti|Mhariri|Mtayarishaji|Msahihishaji na udhibiti wa ubora"],
+ ku:[0,"Nivîskarê çîrokê|Sêwiranerê karakteran|Derhêner|Derhênerê wêneyê|Endezyarê dengê|Montajker|Hilberîner|Rastkirin û kontrola kalîteyê"],
+ sh:[0,"Scenarista|Dizajner likova|Reditelj|Direktor fotografije|Ton-majstor|Montažer|Producent|Lektor i kontrola kvaliteta"],
+ sr:["Квил|Нова|Макс|Луми|Ехо|Реми|Дјук|Ајрис","Сценариста|Дизајнер ликова|Редитељ|Директор фотографије|Тон-мајстор|Монтажер|Продуцент|Лектор и контрола квалитета"],
+ ru:["Квилл|Нова|Макс|Луми|Эхо|Реми|Дюк|Айрис","Сценарист|Дизайнер персонажей|Режиссёр|Оператор-постановщик|Звукорежиссёр|Монтажёр|Продюсер|Корректор и контроль качества"],
+ ja:["クイル|ノヴァ|マックス|ルミ|エコー|レミー|デューク|アイリス","脚本家|キャラクターデザイナー|監督|撮影監督|サウンドエンジニア|編集者|プロデューサー|校正・品質管理"],
+ zh:["奎尔|诺娃|麦克斯|露米|艾可|雷米|杜克|艾瑞丝","编剧|角色设计师|导演|摄影指导|音频工程师|剪辑师|制片人|校对与质检"],
+ ko:["퀼|노바|맥스|루미|에코|레미|듀크|아이리스","시나리오 작가|캐릭터 디자이너|감독|촬영감독|사운드 엔지니어|편집자|프로듀서|교정 및 품질 관리"],
+ hi:["क्विल|नोवा|मैक्स|लूमी|इको|रेमी|ड्यूक|आइरिस","पटकथा लेखक|कैरेक्टर डिज़ाइनर|निर्देशक|छायाकार|साउंड इंजीनियर|संपादक|निर्माता|प्रूफ़रीडर और गुणवत्ता जाँच"],
+ th:["ควิลล์|โนวา|แม็กซ์|ลูมิ|เอคโค|เรมี|ดยุค|ไอริส","นักเขียนบท|นักออกแบบตัวละคร|ผู้กำกับ|ผู้กำกับภาพ|วิศวกรเสียง|นักตัดต่อ|โปรดิวเซอร์|ผู้ตรวจทานและควบคุมคุณภาพ"],
+ ta:["குவில்|நோவா|மேக்ஸ்|லூமி|எக்கோ|ரெமி|டியூக்|ஐரிஸ்","திரைக்கதை எழுத்தாளர்|கதாபாத்திர வடிவமைப்பாளர்|இயக்குநர்|ஒளிப்பதிவாளர்|ஒலிப் பொறியாளர்|படத்தொகுப்பாளர்|தயாரிப்பாளர்|மெய்ப்பு & தரக் கட்டுப்பாடு"],
+ fa:["کوئیل|نوا|مکس|لومی|اکو|رمی|دوک|آیریس","نویسندهٔ داستان|طراح شخصیت|کارگردان|مدیر فیلم‌برداری|مهندس صدا|تدوینگر|تهیه‌کننده|ویراستار و کنترل کیفیت"],
+ ckb:["کوێل|نۆڤا|ماکس|لومی|ئێکۆ|ڕێمی|دیوک|ئایریس","نووسەری چیرۆک|دیزاینەری کارەکتەر|دەرهێنەر|بەڕێوەبەری وێنەگرتن|ئەندازیاری دەنگ|مۆنتاژکەر|بەرهەمهێنەر|پێداچوونەوە و کۆنترۆڵی کوالیتی"],
+ am:["ኩዊል|ኖቫ|ማክስ|ሉሚ|ኤኮ|ሬሚ|ዱክ|አይሪስ","የታሪክ ጸሐፊ|የገጸ-ባህሪ ዲዛይነር|ዳይሬክተር|ሲኒማቶግራፈር|የድምፅ መሐንዲስ|አርታዒ|ፕሮዲዩሰር|አራሚ እና የጥራት ቁጥጥር"]};
+const CREW_FIXED={};
+Object.keys(CREW_T).forEach(l=>{const [names,roles]=CREW_T[l];const d=CREW_FIXED[l]={};
+  CREW_EN_NAMES.forEach((n,i)=>{d[n]=names?names.split("|")[i]:n});CREW_EN_ROLES.forEach((r,i)=>{d[r]=roles.split("|")[i]})});
+/* composed crew phrases: "Quill · Story Writer", "Quill · Story Writer. <description>", "Quill will handle this · Story Writer" */
+const HANDLE_T={fr:"{n} s'en charge",es:"{n} se encarga",de:"{n} übernimmt das",it:"Se ne occupa {n}",pt:"{n} trata disto",nl:"{n} regelt dit",tr:"Bunu {n} üstleniyor",fil:"Si {n} ang bahala rito",ms:"{n} akan uruskan",so:"{n} ayaa qabanaya",sw:"{n} atashughulikia hili",ku:"{n} wê vê bike",sh:"{n} preuzima ovo",sr:"{n} преузима ово",ru:"Этим займётся {n}",ja:"{n}が担当します",zh:"由{n}负责",ko:"{n} 담당",hi:"{n} इसे संभालेंगे",th:"{n} จะดูแลงานนี้",ta:"{n} இதைக் கவனிப்பார்",fa:"{n} این کار را انجام می‌دهد",ckb:"{n} ئەم کارە دەکات",am:"{n} ይህንን ይሠራል"};
+const reEsc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+const CREW_RX=new RegExp("^("+CREW_EN_NAMES.map(reEsc).join("|")+")( will handle this)? · ("+CREW_EN_ROLES.map(reEsc).join("|")+")(?:\\. ([\\s\\S]+))?$");
+L=(o=>function(en,ar){const l=S&&S.lang;if(l&&l!=="en"&&l!=="ar"){const d=CREW_FIXED[l];if(d){const k=String(en).trim();if(d[k]!=null)return d[k];
+  const m=CREW_RX.exec(k);if(m){const nm=d[m[1]]||m[1],rl=d[m[3]]||m[3];return(m[2]?(HANDLE_T[l]||"{n}").replace("{n}",nm):nm)+" · "+rl+(m[4]?(l==="ja"||l==="zh"?"。":l==="am"?"። ":". ")+o(m[4],m[4]):"")}}}return o(en,ar)})(L);
+
+/* --- costs: "5 cr" → 5 + coin icon, everywhere (also text added later, e.g. AI translations) --- */
+const COIN_SVG='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">'+ICONS.coin+"</svg>";
+const CR_RE=/([+\-−]?\d[\d,.]*)\s?cr\b/g;
+function nooiCoinNode(n){const t=n.nodeValue;if(!t||t.indexOf("cr")<0)return;CR_RE.lastIndex=0;if(!CR_RE.test(t))return;
+  const p=n.parentElement;if(!p||p.closest("script,style,textarea,input,select,option,title,.crc,[contenteditable]"))return;
+  CR_RE.lastIndex=0;const frag=document.createDocumentFragment();let last=0,m;
+  while((m=CR_RE.exec(t))){frag.append(t.slice(last,m.index));const s=document.createElement("span");s.className="crc";s.setAttribute("role","img");
+    s.setAttribute("aria-label",m[1]+" "+L("credits","رصيد"));s.innerHTML="<b>"+esc(m[1])+"</b>"+COIN_SVG;frag.append(s);last=m.index+m[0].length}
+  frag.append(t.slice(last));n.replaceWith(frag)}
+function nooiCoins(root){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const list=[];while(w.nextNode())list.push(w.currentNode);list.forEach(nooiCoinNode)}
+new MutationObserver(ms=>{for(const m of ms){if(m.type==="characterData")nooiCoinNode(m.target);else m.addedNodes.forEach(x=>{if(x.nodeType===3)nooiCoinNode(x);else if(x.nodeType===1)nooiCoins(x)})}}).observe(document.body,{childList:true,subtree:true,characterData:true});
+
+/* --- sign-in: no guest access --- */
+vAuth=(o=>function(){return String(o()).replace(/<button[^>]*data-act="auth-guest"[^>]*>[\s\S]*?<\/button>/g,"")})(vAuth);
+
+/* --- landing: meet the AI crew (each bot plays its own "working" motion on hover) --- */
+function nooiLandingCrew(){const ids=["writer","casting","director","cine","sound","editor","producer","proof"];
+  return'<section class="lpsec" id="lp-crew"><div class="kicker">'+L("YOUR AI FILM CREW","طاقمك الذكي")+'</div><h2 class="lph2">'+L("Eight specialists. ","ثمانية متخصصين. ")+'<span class="mute">'+L("One film.","فيلم واحد.")+'</span></h2>'+
+  '<p class="lpsub">'+L("Every project is handled by a crew of AI agents — from the first line of the script to the final quality check.","كل مشروع يتولاه طاقم من الوكلاء الأذكياء — من أول سطر في النص حتى فحص الجودة الأخير.")+'</p><div class="lpcrew">'+
+  ids.map(id=>{const b=BOT(id),inf=CREW_INFO[id];if(!b||!inf)return"";return'<div class="lpbot" data-bot="'+id+'" tabindex="0" style="--bc:'+crewAccent(b.c)+'"><div class="lpbav">'+botSVG(id,"idle",92)+"</div><b>"+esc(L(b.name[0],b.name[1]))+"</b><i>"+esc(L(inf[0],inf[1]))+"</i><p>"+esc(L(inf[2],inf[3]))+"</p></div>"}).join("")+"</div></section>"}
+vLanding=(o=>function(){let h=o();h=h.replace('<section class="lpsec" id="lp-tools">',nooiLandingCrew()+'<section class="lpsec" id="lp-tools">');
+  return h.replace('<button data-act="lp-go" data-t="lp-tools">','<button data-act="lp-go" data-t="lp-crew">'+L("AI crew","الطاقم")+'</button><button data-act="lp-go" data-t="lp-tools">')})(vLanding);
+function lpBotState(el,on){const sv=el&&el.querySelector("svg.bot");if(!sv)return;sv.classList.toggle("st-working",on);sv.classList.toggle("st-idle",!on)}
+document.addEventListener("mouseover",e=>{const el=e.target.closest&&e.target.closest(".lpbot");if(el&&!el.contains(e.relatedTarget))lpBotState(el,true)});
+document.addEventListener("mouseout",e=>{const el=e.target.closest&&e.target.closest(".lpbot");if(el&&!el.contains(e.relatedTarget))lpBotState(el,false)});
+document.addEventListener("focusin",e=>{const el=e.target.closest&&e.target.closest(".lpbot");if(el)lpBotState(el,true)});
+document.addEventListener("focusout",e=>{const el=e.target.closest&&e.target.closest(".lpbot");if(el)lpBotState(el,false)});
+
+/* --- language choice: suggest the visitor's language (browser language, else the country's time zone) --- */
+const TZ_LANG={"Asia/Riyadh":"ar","Asia/Dubai":"ar","Asia/Kuwait":"ar","Asia/Qatar":"ar","Asia/Bahrain":"ar","Asia/Muscat":"ar","Asia/Aden":"ar","Asia/Baghdad":"ar","Asia/Amman":"ar","Asia/Beirut":"ar","Asia/Damascus":"ar","Asia/Gaza":"ar","Asia/Hebron":"ar","Africa/Cairo":"ar","Africa/Khartoum":"ar","Africa/Tripoli":"ar","Africa/Tunis":"ar","Africa/Algiers":"ar","Africa/Casablanca":"ar","Africa/Nouakchott":"ar",
+  "Asia/Tehran":"fa","Asia/Kabul":"fa","Europe/Istanbul":"tr","Europe/Paris":"fr","Europe/Brussels":"fr","Europe/Berlin":"de","Europe/Vienna":"de","Europe/Zurich":"de","Europe/Madrid":"es","America/Mexico_City":"es","America/Bogota":"es","America/Argentina/Buenos_Aires":"es","Europe/Rome":"it","Europe/Amsterdam":"nl","Europe/Lisbon":"pt","America/Sao_Paulo":"pt",
+  "Europe/Moscow":"ru","Asia/Tokyo":"ja","Asia/Shanghai":"zh","Asia/Hong_Kong":"zh","Asia/Taipei":"zh","Asia/Seoul":"ko","Asia/Kolkata":"hi","Asia/Calcutta":"hi","Asia/Bangkok":"th","Asia/Kuala_Lumpur":"ms","Asia/Manila":"fil","Africa/Nairobi":"sw","Africa/Dar_es_Salaam":"sw","Africa/Addis_Ababa":"am","Africa/Mogadishu":"so","Europe/Belgrade":"sr"};
+function nooiDetectLang(){const sup=UI_LANGS.map(x=>x[0]);const langs=navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||""];
+  const first=String(langs[0]||"").toLowerCase().split("-")[0];if(first&&first!=="en"&&sup.includes(first))return first;
+  let tz="";try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||""}catch(e){}const t=TZ_LANG[tz];return t&&sup.includes(t)?t:"en"}
+/* the question is asked in the visitor's own language, with English underneath */
+const LSG_T={ar:"تصفّح nooi.ai بالعربية؟",fr:"Afficher nooi.ai en français ?",es:"¿Ver nooi.ai en español?",de:"nooi.ai auf Deutsch anzeigen?",it:"Vuoi nooi.ai in italiano?",pt:"Ver o nooi.ai em português?",nl:"nooi.ai in het Nederlands bekijken?",tr:"nooi.ai'yi Türkçe görmek ister misiniz?",ru:"Открыть nooi.ai на русском?",ja:"nooi.ai を日本語で表示しますか？",zh:"使用中文浏览 nooi.ai？",ko:"nooi.ai를 한국어로 보시겠어요?",hi:"nooi.ai को हिन्दी में देखें?",th:"ดู nooi.ai เป็นภาษาไทยไหม?",ta:"nooi.ai-ஐ தமிழில் பார்க்கவா?",fa:"nooi.ai را به فارسی ببینید؟",ckb:"nooi.ai بە کوردی ببینیت؟",ku:"nooi.ai bi Kurmancî bibînî?",sr:"Прикажи nooi.ai на српском?",sh:"Prikazati nooi.ai na hrvatskom / bosanskom?",fil:"Tingnan ang nooi.ai sa Filipino?",ms:"Lihat nooi.ai dalam Bahasa Melayu?",so:"Ma rabtaa nooi.ai oo Af-Soomaali ah?",sw:"Tazama nooi.ai kwa Kiswahili?",am:"nooi.aiን በአማርኛ ይመልከቱ?"};
+function nooiLangBanner(){const old=document.getElementById("langsug");if(old)old.remove();if(S.langAsked)return;
+  const d=nooiDetectLang();if(!d||d==="en"){S.langAsked=true;persist();return}
+  const nat=(UI_LANGS.find(x=>x[0]===d)||[d,d])[1],rtl=isRTL(d);nooiSeed(d);
+  const box=document.createElement("div");box.id="langsug";box.className="langsug";box.setAttribute("role","dialog");box.setAttribute("aria-label","Language · "+nat);
+  box.innerHTML='<div class="lsg-ic">'+ic("globe")+'</div><div class="lsg-t"><b lang="'+esc(d)+'" dir="'+(rtl?"rtl":"ltr")+'">'+esc(LSG_T[d]||nat+"?")+'</b><span lang="'+(d==="ar"&&S.lang==="ar"?"ar":"en")+'">'+esc(d==="ar"&&S.lang==="ar"?"أو تابع بالإنجليزية — يمكنك تغيير اللغة في أي وقت.":"Or keep English — you can change the language any time.")+'</span></div>'+
+    '<div class="lsg-b"><button class="btn sm ghost" data-lsg="en" lang="en">English</button><button class="btn sm primary" data-lsg="'+esc(d)+'" lang="'+esc(d)+'">'+esc(nat)+"</button></div>";
+  document.body.appendChild(box)}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-lsg]");if(!b)return;const l=b.dataset.lsg;S.langAsked=true;persist();document.getElementById("langsug")?.remove();if(S.lang!==l){setUILang(l);$("#modalRoot").innerHTML=""}});
+/* --- shipped translations (public/i18n/<lang>.json, built by i18n/build.mjs): the marketing page, sign-in and
+       navigation appear in every interface language at once — no AI key needed. The server adds its shared cache. --- */
+const SEEDED={};
+async function nooiSeed(key){const base=String(key||"").split("-")[0];if(!base||base==="ar"||base==="en"||SEEDED[key])return;SEEDED[key]=1;let got=0;UI_T[key]=UI_T[key]||{};
+  const put=(d,force)=>{if(!d||typeof d!=="object")return;for(const k in d){const v=d[k];if(typeof v==="string"&&v&&(force||UI_T[key][k]==null)&&UI_T[key][k]!==v){UI_T[key][k]=v.replace(/[<>]/g,"");got++}}};
+  try{const r=await fetch("i18n/"+base+".json");if(r.ok)put(await r.json(),key===base)}catch(e){}
+  if(API.mode==="server"&&key===base)try{const r=await fetch("/v1/ui-t/"+base);if(r.ok){const j=await r.json();put(j&&j.t,false)}}catch(e){}
+  if(got){try{localStorage.setItem("dotai-ui-t",JSON.stringify(UI_T))}catch(e){}if(uiKey()===key&&!$("#modalRoot").innerHTML)renderAll()}}
+/* structured prompts: labels shown in the visitor's language ("Idée :", "シーン：") are read back as the English keys */
+const BRIEF_LABELS=["Idea","Scene","Voice","Sound","Style","Audience","Details","Instruments","Length","Look","Mood","Offer","Picture","Product","Subject","Text","Tone","Topic","Who"];
+parseBrief=(o=>function(text){const k=uiKey();if(k==="ar"||k==="en")return o(text);const d=UI_T[k]||{},map={};BRIEF_LABELS.forEach(e=>{const t=d[e];if(t)map[String(t).trim().toLowerCase()]=e});
+  return o(String(text||"").split("\n").map(line=>{const m=line.match(/^(\s*)([^:：]{1,24}?)(\s*[:：])/);const e=m&&map[m[2].trim().toLowerCase()];return e?m[1]+e+line.slice(m[1].length+m[2].length):line}).join("\n"))})(parseBrief);
+/* seed before asking the AI; after a failed AI call, wait 5 minutes instead of retrying on every render */
+flushUI=(o=>async function(){const k=uiKey();if(k!=="ar"&&k!=="en"){await nooiSeed(k);if(UI_FAIL[k]&&Date.now()-UI_FAIL[k]<3e5){uiQ.clear();return}}return o()})(flushUI);
+/* a language picked anywhere else also answers the question */
+setUILang=(o=>function(l){S.langAsked=true;document.getElementById("langsug")?.remove();const r=o(l);nooiSeed(uiKey());return r})(setUILang);
+if(S.lang&&S.lang!=="ar"&&S.lang!=="en")setTimeout(()=>nooiSeed(uiKey()),0);
+/* first visit: Arabic or English straight away (both are built in); other languages are offered in the banner */
+if(!S.savedAt&&!S.langAsked){const d=nooiDetectLang();S.lang=d==="ar"?"ar":"en"}
+setTimeout(nooiLangBanner,1200);
+
+/* --- styles --- */
+(function(){const st=document.createElement("style");st.id="v47";st.textContent=`
+html:is([lang=ar],[lang=fa],[lang=ckb],[lang=ur]) body *{letter-spacing:0!important}
+html:is([lang=ar],[lang=fa],[lang=ckb],[lang=ur],[lang=th],[lang=ta],[lang=hi],[lang=am]) :is(h1,h2,h3,.lph1,.lph2,.serif,.n){line-height:1.38!important}
+html:is([lang=ar],[lang=fa],[lang=ckb],[lang=ur]) .lph1{padding-block:.06em}
+.tile .lb{font-size:11.5px}
+.badge{font-size:11.5px}
+.new,.stag,.newtag{font-size:10.5px}
+.mnew{font-size:10px}
+.ptheme,.kbd,.tpill{font-size:11px}
+.btn .cost,.snm{font-size:12px}
+.mcr{font-size:11px}
+.lpstate{font-size:12px}
+html:is([lang=ar],[lang=fa],[lang=ckb],[lang=ur]) :is(.tile .lb,.snm,.badge){font-size:13px}
+html:is([lang=ar],[lang=fa],[lang=ckb],[lang=ur]) :is(.new,.mnew,.stag,.newtag,.ptheme,.tpill){font-size:11.5px}
+html:is([lang=ar],[lang=fa],[lang=ckb],[lang=ur]) .small{font-size:12.5px}
+.crc{display:inline-flex;align-items:center;gap:3px;direction:ltr;unicode-bidi:isolate;white-space:nowrap;vertical-align:-.1em}
+.crc b{font-weight:inherit;font-variant-numeric:tabular-nums}
+.crc svg{width:1.1em;height:1.1em;flex:none;stroke:#c99400;stroke-width:1.9;fill:color-mix(in srgb,#f5c518 28%,transparent);stroke-linecap:round;stroke-linejoin:round}
+.nbrand .nmark{width:52px;height:52px}
+.topm .nbrand .nmark{width:46px;height:46px}
+#side .brand .nbrand .nmark{width:54px;height:54px}
+@media (min-width:768px) and (max-width:1279px){#side .brand .nbrand{display:inline-flex!important}#side .brand .nbrand .nmark{width:44px;height:44px}#side .brand{flex-direction:column;gap:8px}}
+@media (min-width:1080px){.lp .nbrand .nmark,.lpnav .nbrand .nmark{width:58px;height:58px}}
+[data-act="auth-guest"]{display:none!important}
+@media (max-width:767px){.seg button{white-space:normal;min-width:0;overflow-wrap:anywhere}}
+.plan2 .pp b{white-space:normal;overflow-wrap:anywhere}
+/* minimum readable sizes for small labels (badges, thumbnail tags, chart labels, crew notes) */
+.nav .new{font-size:10.5px;line-height:1.5}
+.thumb .t,.thumb .m{font-size:11px}
+.fc .hd{font-size:11.5px}.fc .tags span{font-size:11px}
+.botcard .small,.crewline .botcard .small{font-size:11.5px;line-height:1.35}
+@media (max-width:420px){.botcard .small,.crewline .botcard .small{font-size:11px}}
+.tmeta span{font-size:11.5px}
+.mcard .mtx span{font-size:11.5px}
+.mcard .stag{font-size:10.5px}
+.edbar .tb span{font-size:11px}
+.savedot{font-size:11.5px}
+.ugcslot .lb{font-size:11px}
+.ruler span{font-size:10.5px}
+.tl button{gap:6px;min-width:max-content}
+/* story workspace (desktop): long chapter lists scroll inside their column instead of running under the timeline */
+@media (min-width:1025px){.fillwrap .sgrid>section{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}}
+.lpch{grid-template-columns:96px minmax(0,1fr) auto}.lpch>div{min-width:0;overflow-wrap:anywhere}
+@media (max-width:767px){.lpch{grid-template-columns:80px minmax(0,1fr) auto}}
+@media (max-width:359px){.lpch{grid-template-columns:60px minmax(0,1fr) auto;gap:8px}}
+.lpcrew{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:22px}
+@media (max-width:1079px){.lpcrew{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:360px){.lpcrew{grid-template-columns:1fr}}
+.lpbot{position:relative;display:grid;justify-items:center;text-align:center;gap:4px;padding:20px 14px 18px;border:1px solid var(--line2);border-radius:20px;background:linear-gradient(180deg,color-mix(in srgb,var(--bc) 12%,var(--panel)),var(--panel) 70%);transition:transform .25s cubic-bezier(.3,1.5,.5,1),box-shadow .25s,border-color .25s;outline:none}
+.lpbot:hover,.lpbot:focus-visible{transform:translateY(-6px);border-color:color-mix(in srgb,var(--bc) 60%,var(--line2));box-shadow:0 18px 36px -20px color-mix(in srgb,var(--bc) 70%,transparent)}
+.lpbot{align-content:start}
+#lp-crew .lpsub{margin-inline:0}
+.lpbav{width:104px;height:104px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 50% 55%,color-mix(in srgb,var(--bc) 26%,transparent) 0 60%,transparent 62%);margin-bottom:6px}
+.lpbav svg.bot{width:92px;height:92px}
+.lpbot b{font-size:17px}
+.lpbot i{font-style:normal;font-size:13px;font-weight:600;color:color-mix(in srgb,var(--bc) 70%,var(--text))}
+.lpbot p{margin:4px 0 0;font-size:13.5px;line-height:1.55;color:var(--mute)}
+@media (prefers-reduced-motion:reduce){.lpbot{transition:none}.lpbot:hover,.lpbot:focus-visible{transform:none}}
+.langsug{position:fixed;z-index:60;inset-inline:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 86px);max-width:520px;margin-inline:auto;display:grid;grid-template-columns:auto 1fr;gap:10px 12px;align-items:center;padding:14px 16px;border-radius:18px;background:var(--panel);color:var(--text);border:1px solid color-mix(in srgb,var(--lime) 45%,var(--line2));box-shadow:0 22px 50px -18px rgba(0,0,0,.5);animation:stipIn .25s ease-out}
+@media (min-width:768px){.langsug{bottom:24px}}
+.langsug .lsg-ic svg{width:26px;height:26px;stroke:var(--lime-ink)}
+.langsug .lsg-t{display:grid;gap:2px;font-size:13px;color:var(--mute)}
+.langsug .lsg-t b{font-size:15px;color:var(--text)}
+.langsug .lsg-b{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end}
+.langsug .lsg-b .btn{min-width:110px}
+`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

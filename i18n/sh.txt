@@ -1,0 +1,348 @@
+001|Prebaci na tamni način
+002|Tamni način
+003|Ispustite za dodavanje
+004|Slike, videozapisi, zvuk i fontovi sami odlaze u pravi alat.
+005|Pregled
+006|Usamljeni vuk prelazi zaleđeno jezero pri izlasku mjeseca, vidi mu se dah.
+007|Dijete pušta crveni balon iznad tržnog trga u zlatni sat.
+008|Radionica za popravak mecha u Osaki, neonski odsjaji u lokvama, spora vožnja kamere.
+009|Mala jedrilica plovi kroz svjetlucave valove u ponoć.
+010|Usamljeni trkač prelazi dine u zoru, spori kadar praćenja.
+011|Ronilac se spušta uz koraljni zid, sunčeve zrake sijeku plavetnilo.
+012|Realistično
+013|Mlada žena drži bočicu za njegu kože pred kamerom mobitela u svijetloj kupaonici, oduševljeno priča, prirodan selfie kadar, meko dnevno svjetlo.
+014|Krupni plan: ruke otvaraju mat crnu poklon kutiju na drvenom stolu, osoba uzdahne i vadi bežične slušalice, izgled kamere mobitela.
+015|Sokol polijeće s ruke u rukavici iznad pustinje pri izlasku sunca, usporeno.
+016|Stari čuvar pali veliku svjetiljku dok se približava oluja, zrno 35 mm.
+017|Kiša u neonskoj uličici, odsjaji se talasaju u lokvama, spora vožnja kamere.
+018|Jedrilica plovi kroz svjetlucave valove u ponoć.
+019|Izložba
+020|Priča u poglavljima
+021|Alati
+022|Jezici
+023|Cijene
+024|Jezik
+025|Prijava
+026|Počni stvarati
+027|Priča u poglavljima 1.0 — sada u javnoj beta verziji
+028|Režiraj svoju
+029|maštu.
+030|nooi.ai pretvara priču u film. Napiši kadar, dobij klip — zatim ga titlaj, sinkroniziraj na 35 jezika i objavi posvuda.
+031|Više poglavlja. Zaključani likovi. Bez prekida.
+032|SKLADATELJ · UŽIVO
+033|Počni besplatno
+034|Pogledaj izložbu
+035|S IZLOŽBE
+036|Napravljeno u nooi.ai.
+037|Svaki prompt je prikazan.
+038|Ovdje se puštaju pregledi do tvojih prvih rendera — zatim njihovo mjesto zauzimaju tvoji AI videozapisi.
+039|GLAVNA ZNAČAJKA
+040|Priča u poglavljima.
+041|Napokon, duga forma.
+042|Napiši priču jednom. Svako poglavlje počinje od posljednjeg kadra prethodnog. Lik zadržava lice. Svijet zadržava svoje vrijeme.
+043|Do 20 poglavlja
+044|Zaključan lik
+045|Storyboard i animatik
+046|AI piše sljedeće poglavlje
+047|POG
+048|KUTIJA S ALATIMA
+049|Sve od ideje do objave.
+050|Video
+051|Tekst ili slika u video, uz kontrolu kamere i ključne kadrove.
+052|Slike
+053|Više slika po promptu, odaberi najbolju.
+054|Likovi
+055|Likovi s godinama, glasom i više izgleda.
+056|Filmovi u poglavljima koji se nastavljaju od posljednjeg kadra.
+057|Storyboard
+058|Kadrovi, dijalog, zvuk i prijelazi na jednom platnu.
+059|Video uređivač
+060|Rezanje, efekti, tekst i uređivanje kadrova promptom.
+061|Vizualni efekti
+062|Keying, korekcija boja i snimanje pokreta.
+063|Titlovi i sinkronizacija
+064|Transkripcija, prijevod i sinkronizacija na 30 jezika, red po red.
+065|Glas i zvuk
+066|Glasovi po dijalektu i dobi, sinkronizacija usana, glazba i zvučni efekti.
+067|Poboljšaj
+068|Povećanje na 4K, 120 fps, produljenje, prekadriranje, natpisi, sinkronizacija.
+069|Laboratorij udica
+070|Počeci koji zaustavljaju skrolanje i drže pažnju do kraja.
+071|Zakaži i objavi
+072|Zakaži i objavi na svakoj platformi.
+073|TITLOVI I SINKRONIZACIJA
+074|Obrati se cijelom svijetu.
+075|35 jezika s regionalnim dijalektima. Uredi svaki red kadar po kadar, pa sinkroniziraj izvornim glasom i usklađenim usnama.
+076|jezika za titlove i sinkronizaciju
+077|regionalnih dijalekata
+078|formata platformi, spremnih za izvoz
+079|jezika sučelja
+080|CIJENE
+081|Počni besplatno.
+082|Plaćaj ono što renderiraš.
+083|Besplatno
+084|mj.
+085|480p · klipovi od 5 s
+086|2 lika
+087|Započni
+088|Kreator
+089|1080p · klipovi od 10 s
+090|Titlovi na 35 jezika
+091|Studio
+092|4K · Priča u poglavljima · storyboard
+093|Sinkronizacija, zakazivanje, API
+094|Jasni odgovori.
+095|Čije je ono što generiram?
+096|Tvoje. Tvoji videozapisi su tvoji, i za komercijalnu upotrebu.
+097|Koji su jezici podržani?
+098|Titlovi i sinkronizacija na 35 jezika s regionalnim dijalektima — saudijski, egipatski, kuvajtski, tuniski, britanski, australski, škotski i mnogi drugi. Samo sučelje postoji na 26 jezika.
+099|Kako Priča u poglavljima ostaje dosljedna?
+100|Svako poglavlje počinje od posljednjeg kadra prethodnog, a identitet tvog lika zaključan je u svakom kadru.
+101|Može li objavljivati umjesto mene?
+102|Da — poveži račune, zakaži, i objave izlaze u odabrano vrijeme.
+103|Tvoja priča je jedan prompt daleko.
+104|Snimi film.
+105|Počni besplatno · 100 kredita
+106|REŽIRAJ SVOJU MAŠTU
+107|Uvjeti korištenja
+108|Pravila privatnosti
+109|Pravila plaćanja i povrata
+110|Pravila prihvatljive upotrebe
+111|Autorska prava i uklanjanje
+112|Pravila o kolačićima
+113|Kontakt
+114|Puni naziv tvrtke
+115|Matični broj
+116|PDV broj
+117|Registrirana adresa
+118|Grad
+119|Država
+120|telefon
+121|Prijava administratora
+122|Nadogradi kad budeš spreman.
+123|Mjesečno
+124|Godišnje · −20%
+125|Osnovni
+126|Za kreatore koji počinju
+127|Mjesečna naplata
+128|kredita / mj.
+129|s
+130|Standardno
+131|Svi · uključujući Kling 4.0
+132|1 glas
+133|Paralelna generiranja
+134|Maksimalna duljina videa
+135|Razlučivost
+136|Broj sličica
+137|Video modeli
+138|Kloniranje glasa
+139|Najpopularnije
+140|Pro
+141|Za ozbiljne kreatore i brendove
+142|glasova
+143|Za studije, agencije i timove
+144|API i MCP (Claude, ChatGPT, Qwen)
+145|Besplatni plan:
+146|kredita za isprobavanje svih alata · 480p · 5 s · vodeni žig
+147|Usporedi sve značajke
+148|Mjesečni krediti
+149|≈ slika / mj.
+150|≈ videa od 5 sekundi / mj.
+151|Neograničeno
+152|Priča u poglavljima (poglavlja)
+153|Titlovi
+154|Audio laboratorij · skica uživo · bojanka
+155|Bez vodenog žiga nooi.ai
+156|Društveni računi za zakazivanje
+157|Komplet brenda i logo
+158|Komercijalna licenca
+159|Osobna
+160|Podrška
+161|Centar za pomoć
+162|E-pošta
+163|Prioritetna
+164|Prioritetna + uvođenje
+165|Modeli slika
+166|Svi modeli slika
+167|ElevenLabs glasovi
+168|Svi · uključujući Eleven v3
+169|Ocean
+170|Vodeći video modeli
+171|Neon
+172|Zlato
+173|AI glasovi · ElevenLabs
+174|+ profesionalno kloniranje glasa
+175|jezika za titlove, sinkronizaciju i glas
+176|TVOJA AI FILMSKA EKIPA
+177|Osam stručnjaka.
+178|Jedan film.
+179|Svaki projekt vodi ekipa AI agenata — od prvog reda scenarija do završne kontrole kvalitete.
+180|Pretvara tvoju ideju u scenarij: scene, dijalog i naraciju.
+181|Osmišljava dosljedne likove: lica, odjeću i glasove.
+182|Planira svaki kadar: kadriranje, ritam i pokrete kamere.
+183|Određuje izgled svake scene: svjetlo, boju i objektiv.
+184|Dodaje glasove, glazbu i zvučne efekte u sinkronu.
+185|Spaja kadrove prijelazima i tajmingom.
+186|Drži svaki projekt unutar budžeta i ograničenja tvog plana.
+187|Provjerava sve prije isporuke i vraća ono što treba ispraviti.
+188|AI ekipa
+189|Prijavi se na nooi.ai
+190|Stvaraj filmove, likove i priče na svom jeziku.
+191|Nastavi s Googleom
+192|Nastavi s Appleom (iCloud)
+193|ili e-poštom
+194|Pošalji kod
+195|ili telefonom
+196|Pozivni broj zemlje
+197|Broj telefona
+198|Pošalji SMS kod
+199|Režiraj svoju maštu.
+200|Svaki prompt je film.
+201|Nastavkom prihvaćaš Uvjete i Pravila privatnosti.
+202|Početna
+203|Stvaraj
+204|UGC i oglasi za proizvode
+205|Crtaj i stvaraj
+206|Skica uživo
+207|3D svjetovi
+208|Bojanka
+209|Priča
+210|Filmska ekipa
+211|Uredi
+212|Objavi
+213|Plan sadržaja
+214|Knjižnica
+215|Moja knjižnica
+216|Predlošci
+217|Postavke
+218|Račun i plan
+219|Krediti i transakcije
+220|Veze i API
+221|Integracije · MCP
+222|Pravno i plaćanja
+223|Pomoć i podrška
+224|Administracija
+225|Administratorska ploča
+226|Krediti
+227|Studio plan
+228|Telefon
+229|Pretraži…
+230|Cijela ekipa će to napraviti
+231|Iz zraka
+232|ZAVRŠENO
+233|Završeno
+234|Uklanjanje šuma
+235|Prilaz kamerom
+236|Kodiranje prompta
+237|Kodiranje videa
+238|Neuspjelo
+239|Učitavanje WAN 3.0
+240|Nije renderirano
+241|Objavljeno
+242|Na čekanju
+243|SPREMNO
+244|RENDERIRANJE ·
+245|Poslužitelj za renderiranje
+246|Renderiranje
+247|Radi u tvom pregledniku
+248|Zakazano
+249|Praćenje
+250|NOVO
+251|Račun
+252|Pretraži
+253|Dobro došli natrag,
+254|Nastavite priču, počnite od predloška ili opišite novi kadar.
+255|Preostali krediti
+256|Renderi
+257|Renderirana poglavlja
+258|Opišite kadar — „sokol polijeće iznad pustinje pri izlasku sunca”
+259|Prompt
+260|Generiraj
+261|Vaša priča
+262|poglavlja
+263|kadrova storyboarda
+264|Nastavi sljedeće poglavlje
+265|Počni od predloška
+266|Svi predlošci
+267|Recenzija njege kože · selfie
+268|UGC
+269|Iz ruke
+270|Reakcija na raspakiranje
+271|Trenutak akcijskog trailera
+272|Trailer
+273|Filmski
+274|Nagli zum
+275|Anime uvod
+276|Kratki film / priča
+277|Anime
+278|Kran prema gore
+279|Analizirajte svoju web-stranicu i dobijte gotov plan sadržaja.
+280|Nedavno
+281|Još ništa. Opišite kadar iznad da napravite prvi klip.
+282|Nova priča
+283|Nova montaža
+284|AI model
+285|Pametno
+286|najbolje za vaš prompt
+287|Sekunde
+288|Broj sličica (Hz)
+289|Omjer
+290|jednostavan kadar
+291|Što želite napraviti?
+292|Zadatak
+293|Pametan odabir
+294|Video sadržaj
+295|Oglas za proizvod
+296|Slika i dizajn
+297|Stvori glas
+298|Glazba
+299|Lik
+300|Cijeli film (ekipa)
+301|Stranica za bojanje
+302|Udice
+303|Ideja
+304|Sokol lebdi iznad zlatnih dina u zalazak sunca
+305|Scena
+306|spori opći plan, zatim krupni plan očiju
+307|Glas
+308|„Sloboda počinje na nebu” — dubok muški pripovjedač
+309|Zvuk
+310|blag vjetar + mirna glazba uda
+311|Stil
+312|filmski, tople boje
+313|Koristi ovu strukturu
+314|Jedan red po dijelu — botovi čitaju svaki dio.
+315|Video model
+316|Početni i završni kadar
+317|Početni kadar
+318|Učitaj
+319|Završni kadar
+320|Sekunde od početnog do završnog kadra
+321|Oba kadra su neobavezna — upotrijebite jedan da počnete ili završite točnom slikom.
+322|Vaš plan: do
+323|s · Pro 20 s · Studio 30 s
+324|Vaša AI ekipa
+325|Na mreži
+326|Usporeno
+327|Održavanje
+328|Nije povezano
+329|Izvan mreže
+330|Demo
+331|Svi modeli
+332|Uvjeti
+333|Privatnost
+334|Govorite umjesto tipkanja
+335|Publika
+336|Pojedinosti
+337|Instrumenti
+338|Trajanje
+339|Izgled
+340|Raspoloženje
+341|Ponuda
+342|Slika
+343|Proizvod
+344|Subjekt
+345|Tekst
+346|Ton
+347|Tema
+348|Tko

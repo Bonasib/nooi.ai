@@ -1,0 +1,348 @@
+001|Zum dunklen Modus wechseln
+002|Dunkler Modus
+003|Zum Hinzufügen ablegen
+004|Bilder, Videos, Audio und Schriften landen automatisch im richtigen Werkzeug.
+005|Vorschau
+006|Ein einsamer Wolf überquert bei Mondaufgang einen zugefrorenen See, sein Atem ist sichtbar.
+007|Ein Kind lässt zur goldenen Stunde einen roten Ballon über einem Marktplatz los.
+008|Eine Mech-Werkstatt in Osaka, Neonspiegelungen in Pfützen, langsame Kamerafahrt.
+009|Ein kleines Segelboot treibt um Mitternacht durch biolumineszente Wellen.
+010|Ein einsamer Läufer durchquert bei Sonnenaufgang die Dünen, langsame Verfolgungsaufnahme.
+011|Ein Taucher sinkt an einer Korallenwand hinab, Sonnenstrahlen durchschneiden das Blau.
+012|Realistisch
+013|Eine junge Frau hält in einem hellen Badezimmer eine Hautpflegeflasche in die Handykamera, spricht begeistert, natürlicher Selfie-Ausschnitt, weiches Tageslicht.
+014|Nahaufnahme: Hände öffnen eine mattschwarze Geschenkbox auf einem Holztisch, die Person staunt und hebt kabellose Ohrhörer heraus, Handykamera-Look.
+015|Ein Falke startet bei Sonnenaufgang von einer behandschuhten Hand über der Wüste, Zeitlupe.
+016|Ein alter Wärter entzündet die große Lampe, während ein Sturm aufzieht, 35-mm-Körnung.
+017|Regen in einer Neon-Gasse, Spiegelungen kräuseln sich in Pfützen, langsame Kamerafahrt.
+018|Ein Segelboot treibt um Mitternacht durch leuchtende Wellen.
+019|Showcase
+020|Kapitel-Story
+021|Werkzeuge
+022|Sprachen
+023|Preise
+024|Sprache
+025|Anmelden
+026|Jetzt erstellen
+027|Kapitel-Story 1.0 — jetzt in der öffentlichen Beta
+028|Inszeniere deine
+029|Fantasie.
+030|nooi.ai macht aus einer Geschichte einen Film. Schreib eine Einstellung, erhalte einen Clip — dann untertiteln, in 35 Sprachen synchronisieren und überall veröffentlichen.
+031|Mehrere Kapitel. Feste Figuren. Durchgehend.
+032|COMPOSER · LIVE
+033|Kostenlos starten
+034|Showcase ansehen
+035|AUS DEM SHOWCASE
+036|Gemacht mit nooi.ai.
+037|Jeder Prompt ist sichtbar.
+038|Hier laufen Vorschauen bis zu deinen ersten Renderings — danach treten deine eigenen KI-Videos an ihre Stelle.
+039|DIE TOP-FUNKTION
+040|Kapitel-Story.
+041|Endlich das lange Format.
+042|Schreib die Geschichte nur einmal. Jedes Kapitel beginnt mit dem letzten Bild des vorherigen. Die Figur behält ihr Gesicht. Die Welt behält ihr Wetter.
+043|Bis zu 20 Kapitel
+044|Feste Figur
+045|Storyboard & Animatic
+046|Die KI schreibt das nächste Kapitel
+047|KAP
+048|DER WERKZEUGKASTEN
+049|Alles von der Idee bis zum Posting.
+050|Video
+051|Text oder Bild zu Video mit Kamerasteuerung und Keyframes.
+052|Bilder
+053|Mehrere Bilder pro Prompt, wähle das beste.
+054|Figuren
+055|Figuren mit Alter, Stimme und mehreren Looks.
+056|Filme in Kapiteln, die beim letzten Bild weitermachen.
+057|Storyboard
+058|Bilder, Dialoge, Ton und Übergänge auf einer Arbeitsfläche.
+059|Videoeditor
+060|Schneiden, Effekte, Text und Bilder per Prompt bearbeiten.
+061|Visuelle Effekte
+062|Keying, Farbkorrektur und Motion Capture.
+063|Untertitel & Synchronisation
+064|Transkribieren, übersetzen und in 30 Sprachen synchronisieren, Zeile für Zeile.
+065|Stimme & Audio
+066|Stimmen nach Dialekt und Alter, Lippensynchronisation, Musik und Soundeffekte.
+067|Verbessern
+068|4K-Hochskalierung, 120 fps, verlängern, neu zuschneiden, Untertitel, Synchronisation.
+069|Hook-Labor
+070|Einstiege, die das Scrollen stoppen und bis zum Ende fesseln.
+071|Planen & veröffentlichen
+072|Auf allen Plattformen planen und veröffentlichen.
+073|UNTERTITEL & SYNCHRONISATION
+074|Sprich zur ganzen Welt.
+075|35 Sprachen mit regionalen Dialekten. Bearbeite jede Zeile Bild für Bild und synchronisiere mit der Originalstimme und passenden Lippen.
+076|Sprachen für Untertitel & Synchronisation
+077|regionale Dialekte
+078|Plattformformate, bereit zum Export
+079|Oberflächensprachen
+080|PREISE
+081|Kostenlos starten.
+082|Zahl nur, was du renderst.
+083|Kostenlos
+084|Mon.
+085|480p · 5-s-Clips
+086|2 Figuren
+087|Loslegen
+088|Creator
+089|1080p · 10-s-Clips
+090|Untertitel in 35 Sprachen
+091|Studio
+092|4K · Kapitel-Story · Storyboard
+093|Synchronisation, Planung, API
+094|Klare Antworten.
+095|Wem gehört, was ich erzeuge?
+096|Dir. Deine Videos gehören dir, auch zur kommerziellen Nutzung.
+097|Welche Sprachen werden unterstützt?
+098|Untertitel und Synchronisation in 35 Sprachen mit regionalen Dialekten — saudisch, ägyptisch, kuwaitisch, tunesisch, britisch, australisch, schottisch und viele mehr. Die Oberfläche selbst gibt es in 26 Sprachen.
+099|Wie bleibt die Kapitel-Story stimmig?
+100|Jedes Kapitel beginnt mit dem letzten Bild des vorherigen, und die Identität deiner Figur bleibt in jeder Einstellung fest.
+101|Kann es für mich veröffentlichen?
+102|Ja — verbinde deine Konten, plane, und die Beiträge gehen zur gewählten Zeit raus.
+103|Deine Geschichte ist nur einen Prompt entfernt.
+104|Dreh den Film.
+105|Kostenlos starten · 100 Credits
+106|INSZENIERE DEINE FANTASIE
+107|Nutzungsbedingungen
+108|Datenschutzerklärung
+109|Zahlungs- und Erstattungsrichtlinie
+110|Richtlinie zur zulässigen Nutzung
+111|Urheberrecht & Entfernung
+112|Cookie-Richtlinie
+113|Kontakt
+114|Offizieller Firmenname
+115|Handelsregisternummer
+116|USt-IdNr.
+117|Eingetragene Anschrift
+118|Stadt
+119|Land
+120|Telefon
+121|Admin-Anmeldung
+122|Upgrade, wann immer du bereit bist.
+123|Monatlich
+124|Jährlich · −20 %
+125|Basic
+126|Für Creator am Anfang
+127|Monatliche Abrechnung
+128|Credits / Monat
+129|s
+130|Standard
+131|Alle · inkl. Kling 4.0
+132|1 Stimme
+133|Parallele Generierungen
+134|Maximale Videolänge
+135|Auflösung
+136|Bildrate
+137|Videomodelle
+138|Stimmklonen
+139|Am beliebtesten
+140|Pro
+141|Für ambitionierte Creator & Marken
+142|Stimmen
+143|Für Studios, Agenturen & Teams
+144|API & MCP (Claude, ChatGPT, Qwen)
+145|Kostenloser Tarif:
+146|Credits zum Testen aller Werkzeuge · 480p · 5 s · Wasserzeichen
+147|Alle Funktionen vergleichen
+148|Monatliche Credits
+149|≈ Bilder / Monat
+150|≈ 5-Sekunden-Videos / Monat
+151|Unbegrenzt
+152|Kapitel-Story (Kapitel)
+153|Untertitel
+154|Audio-Labor · Live-Skizze · Malbuch
+155|Kein nooi.ai-Wasserzeichen
+156|Social-Konten für die Planung
+157|Markenkit & Logo
+158|Kommerzielle Lizenz
+159|Privat
+160|Support
+161|Hilfecenter
+162|E-Mail
+163|Bevorzugt
+164|Bevorzugt + Onboarding
+165|Bildmodelle
+166|Alle Bildmodelle
+167|ElevenLabs-Stimmen
+168|Alle · inkl. Eleven v3
+169|Ozean
+170|Top-Videomodelle
+171|Neon
+172|Gold
+173|KI-Stimmen · ElevenLabs
+174|+ professionelles Stimmklonen
+175|Sprachen für Untertitel, Synchronisation & Stimme
+176|DEINE KI-FILMCREW
+177|Acht Spezialisten.
+178|Ein Film.
+179|Jedes Projekt betreut eine Crew aus KI-Agenten — von der ersten Zeile des Drehbuchs bis zur finalen Qualitätskontrolle.
+180|Macht aus deiner Idee ein Drehbuch: Szenen, Dialoge und Erzählung.
+181|Gestaltet stimmige Figuren: Gesichter, Outfits und Stimmen.
+182|Plant jede Einstellung: Bildausschnitt, Tempo und Kamerabewegungen.
+183|Bestimmt den Look jeder Szene: Licht, Farbe und Objektiv.
+184|Fügt Stimmen, Musik und Soundeffekte synchron hinzu.
+185|Schneidet die Einstellungen mit Übergängen und Timing zusammen.
+186|Hält jedes Projekt im Budget und in den Grenzen deines Tarifs.
+187|Prüft alles vor der Auslieferung und schickt zurück, was korrigiert werden muss.
+188|KI-Crew
+189|Bei nooi.ai anmelden
+190|Erstelle Filme, Figuren und Geschichten in deiner eigenen Sprache.
+191|Weiter mit Google
+192|Weiter mit Apple (iCloud)
+193|oder mit E-Mail
+194|Code senden
+195|oder mit deinem Telefon
+196|Ländervorwahl
+197|Telefonnummer
+198|SMS-Code senden
+199|Inszeniere deine Fantasie.
+200|Jeder Prompt ist ein Film.
+201|Mit dem Fortfahren stimmst du den Bedingungen und der Datenschutzerklärung zu.
+202|Start
+203|Erstellen
+204|UGC & Produktanzeigen
+205|Zeichnen & erstellen
+206|Live-Skizze
+207|3D-Welten
+208|Malbuch
+209|Story
+210|Filmcrew
+211|Bearbeiten
+212|Veröffentlichen
+213|Content-Plan
+214|Bibliothek
+215|Meine Bibliothek
+216|Vorlagen
+217|Einstellungen
+218|Konto & Tarif
+219|Credits & Transaktionen
+220|Verbindungen & APIs
+221|Integrationen · MCP
+222|Rechtliches & Zahlungen
+223|Hilfe & Support
+224|Verwaltung
+225|Admin-Dashboard
+226|Credits
+227|Studio-Tarif
+228|Telefon
+229|Suchen…
+230|Die ganze Crew übernimmt das
+231|Luftaufnahme
+232|FERTIG
+233|Fertig
+234|Entrauschen
+235|Ranfahrt
+236|Prompt wird kodiert
+237|Video wird kodiert
+238|Fehlgeschlagen
+239|WAN 3.0 wird geladen
+240|Nicht gerendert
+241|Veröffentlicht
+242|In der Warteschlange
+243|BEREIT
+244|RENDERT ·
+245|Render-Server
+246|Wird gerendert
+247|Läuft im Browser
+248|Geplant
+249|Verfolgung
+250|NEU
+251|Konto
+252|Suchen
+253|Willkommen zurück,
+254|Setz deine Geschichte fort, starte mit einer Vorlage oder beschreibe eine neue Einstellung.
+255|Verbleibende Credits
+256|Renderings
+257|Gerenderte Kapitel
+258|Beschreibe eine Einstellung — „ein Falke hebt bei Sonnenaufgang über der Wüste ab“
+259|Prompt
+260|Erzeugen
+261|Deine Geschichte
+262|Kapitel
+263|Storyboard-Bilder
+264|Mit dem nächsten Kapitel weitermachen
+265|Mit einer Vorlage starten
+266|Alle Vorlagen
+267|Hautpflege-Review · Selfie
+268|UGC
+269|Handkamera
+270|Unboxing-Reaktion
+271|Action-Trailer-Moment
+272|Trailer
+273|Filmisch
+274|Crash-Zoom
+275|Anime-Opening
+276|Kurzfilm / Geschichte
+277|Anime
+278|Kran nach oben
+279|Analysiere deine Website und erhalte einen fertigen Content-Plan.
+280|Zuletzt
+281|Noch nichts da. Beschreibe oben eine Einstellung für deinen ersten Clip.
+282|Neue Geschichte
+283|Neuer Schnitt
+284|KI-Modell
+285|Smart
+286|am besten für deinen Prompt
+287|Sekunden
+288|Bildrate (Hz)
+289|Format
+290|einfache Einstellung
+291|Was möchtest du erstellen?
+292|Aufgabe
+293|Smarte Wahl
+294|Content-Video
+295|Produktanzeige
+296|Bild & Design
+297|Stimme erstellen
+298|Musik
+299|Figur
+300|Ganzer Film (Crew)
+301|Ausmalbild
+302|Hooks
+303|Idee
+304|Ein Falke gleitet bei Sonnenuntergang über goldene Dünen
+305|Szene
+306|langsame Totale, dann Nahaufnahme seiner Augen
+307|Stimme
+308|„Freiheit beginnt am Himmel“ — tiefe männliche Erzählstimme
+309|Ton
+310|sanfter Wind + ruhige Oud-Musik
+311|Stil
+312|filmisch, warme Farben
+313|Diese Struktur verwenden
+314|Eine Zeile pro Teil — die Bots lesen jeden Teil.
+315|Videomodell
+316|Start- & Endbild
+317|Startbild
+318|Hochladen
+319|Endbild
+320|Sekunden vom Start- bis zum Endbild
+321|Beide Bilder sind optional — nutze eines, um mit einem genauen Bild zu beginnen oder zu enden.
+322|Dein Tarif: bis zu
+323|s · Pro 20 s · Studio 30 s
+324|Deine KI-Crew
+325|Online
+326|Eingeschränkt
+327|Wartung
+328|Nicht verbunden
+329|Offline
+330|Demo
+331|Alle Modelle
+332|Bedingungen
+333|Datenschutz
+334|Sprechen statt tippen
+335|Zielgruppe
+336|Details
+337|Instrumente
+338|Länge
+339|Look
+340|Stimmung
+341|Angebot
+342|Bild
+343|Produkt
+344|Motiv
+345|Text
+346|Tonfall
+347|Thema
+348|Wer

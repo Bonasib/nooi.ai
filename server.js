@@ -25,6 +25,7 @@ import { S as platform, featureOn, configured } from "./lib/settings.js";
 import { createToken, listTokens, revokeToken, userFromToken } from "./lib/tokens.js";
 import { handleMcp } from "./lib/mcp.js";
 import { verify } from "./lib/auth.js";
+import { uiLang, uiDict, uiTranslate, rateOk } from "./lib/uit.js";
 
 const app = express();
 app.use(cors({ origin: process.env.PUBLIC_BASE_URL || true }));
@@ -58,6 +59,14 @@ app.post("/v1/llm/json", requireUser, wrap(async (req, res) => {
   const cost = TEXT_PRICE[tier]; if (cost) charge(req.user.uid, cost, "AI text · " + (req.body.task || tier));
   const images = (Array.isArray(req.body.images) ? req.body.images : []).filter((d) => typeof d === "string" && d.startsWith("data:image/") && d.length < 8e6).slice(0, 2);
   res.json(await llmJson(String(req.body.prompt || "").slice(0, 30000), { maxTokens: tier === "complex" ? 8000 : 3000, tier, images, provider: req.body.provider }));
+}));
+
+// Shared interface translations (public: the marketing page is translated before sign-in; no credits used)
+app.get("/v1/ui-t/:lang", (req, res) => { const l = uiLang(req.params.lang); if (!l) return res.status(404).json({ error: "Unknown language" }); res.set("Cache-Control", "public, max-age=300"); res.json({ t: uiDict(l) }); });
+app.post("/v1/ui-t/:lang", wrap(async (req, res) => {
+  const l = uiLang(req.params.lang); if (!l) throw Object.assign(new Error("Unknown language"), { code: 404 });
+  if (!rateOk(req.ip)) throw Object.assign(new Error("Too many translation requests — try again in a few minutes"), { code: 429 });
+  res.json({ t: await uiTranslate(l, req.body && req.body.strings) });
 }));
 
 app.get("/v1/llm/test", requireUser, wrap(async (req, res) => {

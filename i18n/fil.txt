@@ -1,0 +1,348 @@
+001|Lumipat sa dark mode
+002|Dark mode
+003|Bitawan para idagdag
+004|Kusang napupunta sa tamang tool ang mga larawan, video, audio at font.
+005|Preview
+006|Isang nag-iisang lobo ang tumatawid sa nagyelong lawa sa pagsikat ng buwan, kita ang hininga nito.
+007|Isang bata ang nagpakawala ng pulang lobo sa ibabaw ng plaza ng palengke sa golden hour.
+008|Isang repair bay ng mech sa Osaka, neon na repleksyon sa mga lusak, mabagal na dolly.
+009|Isang maliit na bangkang may layag ang lumulutang sa kumikinang na alon sa hatinggabi.
+010|Isang mag-isang mananakbo ang tumatawid sa mga buhangin sa bukang-liwayway, mabagal na tracking shot.
+011|Isang diver ang bumababa sa tabi ng pader ng koral, hinihiwa ng sinag ng araw ang bughaw.
+012|Makatotohanan
+013|Isang dalaga ang nagtataas ng bote ng skincare sa camera ng kanyang phone sa maliwanag na banyo, masiglang nagsasalita, natural na selfie framing, malambot na liwanag ng araw.
+014|Close-up ng mga kamay na nagbubukas ng matte black na gift box sa mesang kahoy; napasinghap ang tao at inilabas ang wireless earbuds, itsurang kuha sa phone.
+015|Isang falcon ang lumipad mula sa kamay na may guwantes sa ibabaw ng disyerto sa pagsikat ng araw, slow motion.
+016|Isang matandang tagapag-alaga ang nagsindi ng malaking lampara habang papalapit ang bagyo, 35mm grain.
+017|Ulan sa isang neon na eskinita, umaalon ang repleksyon sa mga lusak, mabagal na dolly.
+018|Isang bangkang may layag ang lumulutang sa kumikinang na alon sa hatinggabi.
+019|Showcase
+020|Kuwentong may Kabanata
+021|Mga tool
+022|Mga wika
+023|Presyo
+024|Wika
+025|Mag-sign in
+026|Magsimulang lumikha
+027|Kuwentong may Kabanata 1.0 — nasa public beta na
+028|Idirekta ang iyong
+029|imahinasyon.
+030|Ginagawang pelikula ng nooi.ai ang isang kuwento. Sumulat ng shot, makakuha ng clip — pagkatapos lagyan ng subtitle, i-dub sa 35 wika at i-publish kahit saan.
+031|Maraming kabanata. Nakapirming karakter. Tuloy-tuloy.
+032|COMPOSER · LIVE
+033|Magsimula nang libre
+034|Tingnan ang showcase
+035|MULA SA SHOWCASE
+036|Ginawa sa nooi.ai.
+037|Ipinapakita ang bawat prompt.
+038|Dito tumatakbo ang mga preview hanggang sa iyong mga unang render — pagkatapos, ang sarili mong mga AI video na ang papalit.
+039|ANG PANGUNAHING FEATURE
+040|Kuwentong may Kabanata.
+041|Sa wakas, mahabang anyo.
+042|Isulat ang kuwento nang isang beses. Bawat kabanata ay nagsisimula sa huling frame ng nauna. Nananatili ang mukha ng karakter. Nananatili ang panahon ng mundo.
+043|Hanggang 20 kabanata
+044|Lock ng karakter
+045|Storyboard at animatic
+046|Ang AI ang sumusulat ng susunod na kabanata
+047|KAB
+048|ANG TOOLKIT
+049|Lahat mula ideya hanggang pag-post.
+050|Video
+051|Text o larawan tungo sa video na may kontrol sa camera at keyframes.
+052|Mga larawan
+053|Ilang larawan bawat prompt, piliin ang pinakamaganda.
+054|Mga karakter
+055|Mga karakter na may edad, boses at ilang itsura.
+056|Mga pelikulang may kabanata na tumutuloy mula sa huling frame.
+057|Storyboard
+058|Mga frame, diyalogo, tunog at transition sa iisang canvas.
+059|Video editor
+060|Trim, effects, text, at pag-edit ng frame gamit ang prompt.
+061|Visual effects
+062|Keying, color grading at motion capture.
+063|Subtitle at dubbing
+064|I-transcribe, isalin at i-dub sa 30 wika, linya por linya.
+065|Boses at audio
+066|Mga boses ayon sa diyalekto at edad, lip sync, musika at SFX.
+067|Pagandahin
+068|Upscale sa 4K, 120 fps, pahabain, i-reframe, captions, dubbing.
+069|Hook lab
+070|Mga simula na pumipigil sa pag-scroll at nagpapanatili sa manonood hanggang dulo.
+071|I-schedule at i-publish
+072|Mag-schedule at mag-publish sa bawat platform.
+073|SUBTITLE AT DUBBING
+074|Kausapin ang buong mundo.
+075|35 wika na may mga rehiyonal na diyalekto. I-edit ang bawat linya frame por frame, pagkatapos i-dub gamit ang orihinal na boses at sabay na labi.
+076|wika para sa subtitle at dubbing
+077|rehiyonal na diyalekto
+078|laki ng platform, handa nang i-export
+079|wika ng interface
+080|PRESYO
+081|Magsimula nang libre.
+082|Magbayad lang sa nire-render mo.
+083|Libre
+084|buwan
+085|480p · 5s na clip
+086|2 karakter
+087|Magsimula
+088|Creator
+089|1080p · 10s na clip
+090|Subtitle sa 35 wika
+091|Studio
+092|4K · Kuwentong may Kabanata · storyboard
+093|Dubbing, scheduling, API
+094|Diretsong sagot.
+095|Kanino ang mga ginagawa ko?
+096|Sa iyo. Iyo ang mga video mo, pati sa komersyal na paggamit.
+097|Anong mga wika ang suportado?
+098|Subtitle at dubbing sa 35 wika na may mga rehiyonal na diyalekto — Saudi, Egyptian, Kuwaiti, Tunisian, British, Australian, Scottish at marami pa. Ang interface mismo ay nasa 26 na wika.
+099|Paano nananatiling pare-pareho ang Kuwentong may Kabanata?
+100|Bawat kabanata ay nagsisimula sa huling frame ng nauna, at naka-lock ang pagkakakilanlan ng iyong karakter sa bawat shot.
+101|Puwede ba itong mag-post para sa akin?
+102|Oo — ikonekta ang iyong mga account, mag-schedule, at lalabas ang mga post sa napiling oras.
+103|Isang prompt na lang ang layo ng kuwento mo.
+104|Gawin ang pelikula.
+105|Magsimula nang libre · 100 credits
+106|IDIREKTA ANG IYONG IMAHINASYON
+107|Mga Tuntunin ng Serbisyo
+108|Patakaran sa Privacy
+109|Patakaran sa Bayad at Refund
+110|Patakaran sa Katanggap-tanggap na Paggamit
+111|Copyright at pagtanggal
+112|Patakaran sa Cookie
+113|Makipag-ugnayan
+114|Legal na pangalan ng kumpanya
+115|Numero ng rehistro
+116|Numero ng VAT
+117|Rehistradong address
+118|Lungsod
+119|Bansa
+120|telepono
+121|Admin login
+122|Mag-upgrade kapag handa ka na.
+123|Buwanan
+124|Taunan · −20%
+125|Basic
+126|Para sa mga nagsisimulang creator
+127|Sinisingil buwan-buwan
+128|credits / buwan
+129|s
+130|Standard
+131|Lahat · kasama ang Kling 4.0
+132|1 boses
+133|Sabay-sabay na generation
+134|Pinakamahabang video
+135|Resolution
+136|Frame rate
+137|Mga video model
+138|Voice cloning
+139|Pinakasikat
+140|Pro
+141|Para sa seryosong creator at brand
+142|boses
+143|Para sa mga studio, ahensya at team
+144|API at MCP (Claude, ChatGPT, Qwen)
+145|Libreng plan:
+146|credits para subukan ang bawat tool · 480p · 5s · watermark
+147|Ihambing ang lahat ng feature
+148|Buwanang credits
+149|≈ larawan / buwan
+150|≈ 5-segundong video / buwan
+151|Walang limitasyon
+152|Kuwentong may Kabanata (mga kabanata)
+153|Subtitle
+154|Audio lab · live sketch · coloring book
+155|Walang watermark ng nooi.ai
+156|Mga social account para sa scheduling
+157|Brand kit at logo
+158|Komersyal na lisensya
+159|Personal
+160|Suporta
+161|Help center
+162|Email
+163|Priority
+164|Priority + onboarding
+165|Mga image model
+166|Lahat ng image model
+167|Mga boses ng ElevenLabs
+168|Lahat · kasama ang Eleven v3
+169|Karagatan
+170|Mga flagship na video model
+171|Neon
+172|Ginto
+173|Mga AI na boses · ElevenLabs
+174|+ propesyonal na voice cloning
+175|wika para sa subtitle, dubbing at boses
+176|ANG IYONG AI FILM CREW
+177|Walong espesyalista.
+178|Isang pelikula.
+179|Bawat proyekto ay hinahawakan ng isang crew ng mga AI agent — mula sa unang linya ng script hanggang sa huling quality check.
+180|Ginagawang script ang iyong ideya: mga eksena, diyalogo at pagsasalaysay.
+181|Nagdidisenyo ng pare-parehong karakter: mukha, kasuotan at boses.
+182|Pinaplano ang bawat shot: framing, pacing at galaw ng camera.
+183|Itinatakda ang itsura ng bawat eksena: ilaw, kulay at lente.
+184|Nagdadagdag ng boses, musika at sound effects nang sabay-sabay.
+185|Pinagdudugtong ang mga shot gamit ang transition at timing.
+186|Pinapanatili ang bawat proyekto sa loob ng budget at limitasyon ng iyong plan.
+187|Sinusuri ang lahat bago ihatid at ibinabalik ang kailangang ayusin.
+188|AI crew
+189|Mag-sign in sa nooi.ai
+190|Gumawa ng mga pelikula, karakter at kuwento sa sarili mong wika.
+191|Magpatuloy gamit ang Google
+192|Magpatuloy gamit ang Apple (iCloud)
+193|o gamit ang email
+194|Ipadala ang code
+195|o gamit ang iyong phone
+196|Country code
+197|Numero ng telepono
+198|Ipadala ang SMS code
+199|Idirekta ang iyong imahinasyon.
+200|Bawat prompt ay isang pelikula.
+201|Sa pagpapatuloy, sumasang-ayon ka sa Mga Tuntunin at Patakaran sa Privacy.
+202|Home
+203|Lumikha
+204|UGC at product ads
+205|Gumuhit at lumikha
+206|Live sketch
+207|Mga 3D na mundo
+208|Coloring book
+209|Kuwento
+210|Film crew
+211|I-edit
+212|I-publish
+213|Content plan
+214|Library
+215|Aking library
+216|Mga template
+217|Settings
+218|Account at plan
+219|Credits at transaksyon
+220|Mga koneksyon at API
+221|Mga integration · MCP
+222|Legal at bayad
+223|Tulong at suporta
+224|Administrasyon
+225|Admin dashboard
+226|Credits
+227|Studio plan
+228|Telepono
+229|Maghanap…
+230|Ang buong crew ang gagawa nito
+231|Aerial
+232|TAPOS NA
+233|Tapos na
+234|Nag-aalis ng ingay
+235|Dolly in
+236|Ine-encode ang prompt
+237|Ine-encode ang video
+238|Nabigo
+239|Nilo-load ang WAN 3.0
+240|Hindi pa na-render
+241|Na-publish
+242|Nakapila
+243|HANDA
+244|NIRE-RENDER ·
+245|Render server
+246|Nire-render
+247|Gumagana sa iyong browser
+248|Naka-schedule
+249|Tracking
+250|BAGO
+251|Account
+252|Maghanap
+253|Maligayang pagbabalik,
+254|Ituloy ang iyong kuwento, magsimula sa template, o ilarawan ang bagong shot.
+255|Natitirang credits
+256|Mga render
+257|Mga na-render na kabanata
+258|Ilarawan ang isang shot — “isang falcon na lumilipad sa ibabaw ng disyerto sa pagsikat ng araw”
+259|Prompt
+260|Gumawa
+261|Ang iyong kuwento
+262|kabanata
+263|mga frame ng storyboard
+264|Ituloy ang susunod na kabanata
+265|Magsimula sa template
+266|Lahat ng template
+267|Review ng skincare · selfie
+268|UGC
+269|Handheld
+270|Reaksyon sa unboxing
+271|Highlight ng action trailer
+272|Trailer
+273|Cinematic
+274|Crash zoom
+275|Anime opening
+276|Maikling pelikula / kuwento
+277|Anime
+278|Crane up
+279|Suriin ang iyong website at kumuha ng handang content plan.
+280|Kamakailan
+281|Wala pa. Maglarawan ng shot sa itaas para gawin ang una mong clip.
+282|Bagong kuwento
+283|Bagong edit
+284|AI model
+285|Smart
+286|pinakamahusay para sa prompt mo
+287|Segundo
+288|Frame rate (Hz)
+289|Aspect
+290|simpleng shot
+291|Ano ang gusto mong gawin?
+292|Gawain
+293|Smart na pagpili
+294|Content video
+295|Product ad
+296|Larawan at disenyo
+297|Gumawa ng boses
+298|Musika
+299|Karakter
+300|Buong pelikula (crew)
+301|Pahinang kukulayan
+302|Mga hook
+303|Ideya
+304|Isang falcon na lumilipad sa ibabaw ng gintong buhangin sa paglubog ng araw
+305|Eksena
+306|mabagal na wide shot, pagkatapos close-up sa mga mata nito
+307|Boses
+308|“Nagsisimula ang kalayaan sa langit” — malalim na boses ng lalaking tagapagsalaysay
+309|Tunog
+310|mahinang hangin + kalmadong musika ng oud
+311|Istilo
+312|cinematic, maiinit na kulay
+313|Gamitin ang istrukturang ito
+314|Isang linya bawat bahagi — binabasa ng mga bot ang bawat bahagi.
+315|Video model
+316|Una at huling frame
+317|Unang frame
+318|Mag-upload
+319|Huling frame
+320|Segundo mula una hanggang huling frame
+321|Opsyonal ang dalawang frame — gamitin ang isa para magsimula o magtapos sa eksaktong larawan.
+322|Iyong plan: hanggang
+323|s · Pro 20 s · Studio 30 s
+324|Ang iyong AI crew
+325|Online
+326|Mabagal
+327|Maintenance
+328|Hindi nakakonekta
+329|Offline
+330|Demo
+331|Lahat ng model
+332|Mga tuntunin
+333|Privacy
+334|Magsalita sa halip na mag-type
+335|Audience
+336|Mga detalye
+337|Mga instrumento
+338|Haba
+339|Itsura
+340|Mood
+341|Alok
+342|Larawan
+343|Produkto
+344|Paksa
+345|Teksto
+346|Tono
+347|Topic
+348|Sino

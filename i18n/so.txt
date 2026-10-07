@@ -1,0 +1,348 @@
+001|U beddel qaabka mugdiga
+002|Qaabka mugdiga
+003|Sii daa si aad ugu darto
+004|Sawirrada, muuqaallada, codadka iyo far-qoraallada si toos ah ayay u aadaan qalabka saxda ah.
+005|Horudhac
+006|Yey keligiis ah ayaa ka gudbaya haro barafowday marka dayaxu soo baxayo, neefsashadiisa ayaa muuqata.
+007|Ilmo ayaa sii daaya buufin cas oo ka sarreysa fagaaraha suuqa saacadda dahabiga ah.
+008|Goob lagu dayactiro robotyada waaweyn ee Osaka, iftiinka neon-ka ee ku dhex muuqda balliyada, kamarad si tartiib ah u socota.
+009|Doon yar oo shiraac leh ayaa ku dul sabbaynaysa mowjado iftiimaya habeen badhkii.
+010|Orodyahan keligiis ah ayaa ka gudbaya buuraha ciidda waaberiga, muuqaal raacis ah oo tartiib ah.
+011|Quusiye ayaa ku degaya dhinaca darbiga shacaabka, shucaaca qorraxda ayaa jeexaya buluugga.
+012|Dhab ah
+013|Gabadh dhallinyaro ah ayaa kor u qabata dhalo daryeelka maqaarka kamaradda taleefankeeda hortiisa, musqul iftiin leh, si xamaasad leh ayay u hadlaysaa, sawir-iskiis dabiici ah, iftiin maalmeed oo jilicsan.
+014|Muuqaal dhow: gacmo ayaa ka furaya sanduuq hadiyad madow ah miis alwaax ah dushiisa; qofka ayaa la yaabaya oo soo saaraya dhegaha dhegeysiga ee aan xadhigga lahayn, muuqaal kamaradda taleefanka.
+015|Galley ayaa ka duulaya gacan gacmo-gashi leh oo ka sarreysa saxaraha marka qorraxdu soo baxayso, dhaqdhaqaaq gaabis ah.
+016|Ilaaliye duq ah ayaa shidaya laambadda weyn iyadoo duufaan soo dhowaanayso, qaab filim 35mm.
+017|Roob ka da'aya waddo yar oo neon ah, iftiinku wuxuu ku gariirayaa balliyada, kamarad si tartiib ah u socota.
+018|Doon shiraac leh ayaa ku dul sabbaynaysa mowjado iftiimaya habeen badhkii.
+019|Bandhig
+020|Sheeko Cutubyo leh
+021|Qalab
+022|Luqado
+023|Qiimaha
+024|Luqadda
+025|Gal
+026|Bilow abuurista
+027|Sheeko Cutubyo leh 1.0 — hadda waa beta dadweyne
+028|Hago
+029|male-awaalkaaga.
+030|nooi.ai waxay sheeko u beddeshaa filim. Qor muuqaal, hel kilib — kadib ku dar qoraal-hoosaad, ku dubbee 35 luqadood oo meel kasta ku daabac.
+031|Cutubyo badan. Jilayaal go'an. Joogto ah.
+032|ALLIFAHA · TOOS
+033|Bilow bilaash
+034|Daawo bandhigga
+035|BANDHIGGA KA
+036|Lagu sameeyay nooi.ai.
+037|Amar kasta waa la muujiyay.
+038|Halkan waxaa ka ciyaara horudhacyo ilaa muuqaalladaada ugu horreeya — kadib muuqaalladaada AI ayaa beddela.
+039|ASTAANTA UGU MUHIIMSAN
+040|Sheeko Cutubyo leh.
+041|Ugu dambeyntii, qaab dheer.
+042|Sheekada hal mar qor. Cutub kasta wuxuu ka bilaabmaa sawirka ugu dambeeya ee cutubkii ka horreeyay. Jilaagu wejigiisa ayuu sii haystaa. Adduunku cimiladiisa ayuu sii haystaa.
+043|Ilaa 20 cutub
+044|Qufulka jilaaga
+045|Sabuurad sheeko iyo animatik
+046|AI ayaa qora cutubka xiga
+047|CTB
+048|SANDUUQA QALABKA
+049|Wax walba laga bilaabo fikradda ilaa daabacaadda.
+050|Muuqaal
+051|Qoraal ama sawir oo muuqaal laga dhigo, leh xakamaynta kamaradda iyo sawirro muhiim ah.
+052|Sawirro
+053|Sawirro dhowr ah amar kasta, dooro midka ugu fiican.
+054|Jilayaal
+055|Jilayaal leh da', cod iyo muuqaallo kala duwan.
+056|Filimaan cutubyo leh oo ka sii socda sawirka ugu dambeeya.
+057|Sabuuradda sheekada
+058|Sawirro, wadahadal, cod iyo kala-guurro hal shiraac dushiisa.
+059|Tifaftiraha muuqaalka
+060|Jar, saamayn, qoraal iyo tifaftir sawirro adigoo isticmaalaya amar.
+061|Saamaynta muuqaalka
+062|Keying, hagaajinta midabka iyo qabashada dhaqdhaqaaqa.
+063|Qoraal-hoosaad iyo dubbing
+064|Qoraal u beddel, turjun oo ku dubbee 30 luqadood, sadar sadar.
+065|Cod iyo maqal
+066|Codad lahjad iyo da' kasta leh, isku-dhigga bushimaha, muusig iyo saamayno cod.
+067|Hagaaji
+068|Kor u qaadid 4K, 120 fps, dheerayn, dib u qaabayn, qoraallo, dubbing.
+069|Shaybaarka soo jiidashada
+070|Bilowyo joojiya rogrogidda oo daawadayaasha ilaa dhammaadka haya.
+071|Jadwal oo daabac
+072|Jadwal u samee oo ku daabac madal kasta.
+073|QORAAL-HOOSAAD IYO DUBBING
+074|La hadal adduunka oo dhan.
+075|35 luqadood oo leh lahjado gobol. Tifaftir sadar kasta sawir sawir, kadib ku dubbee codka asalka ah iyo bushimo isku dhigan.
+076|luqadood qoraal-hoosaad iyo dubbing
+077|lahjado gobol
+078|cabbirro madal, diyaar u ah dhoofinta
+079|luqadaha interface-ka
+080|QIIMAHA
+081|Bilow bilaash.
+082|Bixi waxa aad sameyso.
+083|Bilaash
+084|bil
+085|480p · kilibyo 5s
+086|2 jilaa
+087|Bilow
+088|Abuure
+089|1080p · kilibyo 10s
+090|Qoraal-hoosaad 35 luqadood
+091|Istuudiyo
+092|4K · Sheeko Cutubyo leh · sabuuradda sheekada
+093|Dubbing, jadwal, API
+094|Jawaabo cad.
+095|Yaa leh waxa aan sameeyo?
+096|Adiga. Muuqaalladaadu adigaa leh, xitaa isticmaal ganacsi.
+097|Luqadee la taageeraa?
+098|Qoraal-hoosaad iyo dubbing 35 luqadood oo leh lahjado gobol — Sacuudi, Masri, Kuweyti, Tuunisi, Ingiriis, Australiyaan, Iskootish iyo kuwo kale oo badan. Interface-ka laftiisa wuxuu ku jiraa 26 luqadood.
+099|Sidee Sheekada Cutubyada leh u ahaataa mid isku xidhan?
+100|Cutub kasta wuxuu ka bilaabmaa sawirka ugu dambeeya ee kii ka horreeyay, aqoonsiga jilaagaaguna wuu go'an yahay muuqaal kasta.
+101|Ma ii daabici kartaa?
+102|Haa — ku xidh xisaabaadkaaga, jadwal u samee, qoraalladuna waxay baxayaan waqtiga la doortay.
+103|Sheekadaadu waa hal amar oo keliya.
+104|Samee filimka.
+105|Bilow bilaash · 100 dhibcood
+106|HAGO MALE-AWAALKAAGA
+107|Shuruudaha Adeegga
+108|Siyaasadda Asturnaanta
+109|Siyaasadda Lacag-bixinta iyo Celinta
+110|Siyaasadda Isticmaalka la Oggol yahay
+111|Xuquuqda daabacaadda iyo ka saarista
+112|Siyaasadda Cookies
+113|Nala soo xiriir
+114|Magaca sharciga ee shirkadda
+115|Lambarka diiwaangelinta
+116|Lambarka VAT
+117|Cinwaanka diiwaangashan
+118|Magaalo
+119|Waddan
+120|taleefan
+121|Galitaanka maamulaha
+122|Kor u qaado markaad diyaar tahay.
+123|Bishii
+124|Sannadkii · −20%
+125|Aasaasi
+126|Abuurayaasha bilaabaya
+127|Biil bil kasta
+128|dhibcood / bil
+129|s
+130|Caadi
+131|Dhammaan · oo ay ku jirto Kling 4.0
+132|1 cod
+133|Soo saarid isla mar ah
+134|Dhererka ugu badan ee muuqaalka
+135|Tayada
+136|Heerka sawirrada
+137|Moodellada muuqaalka
+138|Koobiyeynta codka
+139|Ugu caansan
+140|Pro
+141|Abuurayaasha iyo summadaha dhabta ah
+142|codad
+143|Istuudiyaha, hay'adaha iyo kooxaha
+144|API iyo MCP (Claude, ChatGPT, Qwen)
+145|Qorshe bilaash ah:
+146|dhibcood lagu tijaabiyo qalab kasta · 480p · 5s · calaamad-biyood
+147|Isbarbardhig dhammaan astaamaha
+148|Dhibcaha bishii
+149|≈ sawirro / bil
+150|≈ muuqaallo 5 ilbiriqsi ah / bil
+151|Xad la'aan
+152|Sheeko Cutubyo leh (cutubyo)
+153|Qoraal-hoosaad
+154|Shaybaarka codka · sawir toos ah · buug midab-ku-rinjiyeyn
+155|Calaamad-biyood nooi.ai ma leh
+156|Xisaabaadka bulshada ee jadwalka
+157|Qalabka summadda iyo astaanta
+158|Ruqsad ganacsi
+159|Shakhsi
+160|Taageero
+161|Xarunta caawinta
+162|Iimayl
+163|Mudnaan
+164|Mudnaan + hagid bilow
+165|Moodellada sawirka
+166|Dhammaan moodellada sawirka
+167|Codadka ElevenLabs
+168|Dhammaan · oo ay ku jirto Eleven v3
+169|Badweyn
+170|Moodellada muuqaalka ugu sarreeya
+171|Neon
+172|Dahab
+173|Codadka AI · ElevenLabs
+174|+ koobiyeynta codka xirfadeed
+175|luqadood qoraal-hoosaad, dubbing iyo cod
+176|KOOXDAADA FILIMKA AI
+177|Siddeed khabiir.
+178|Hal filim.
+179|Mashruuc kasta waxaa maamula koox wakiillo AI ah — laga bilaabo sadarka koowaad ee qoraalka ilaa hubinta tayada ee ugu dambeysa.
+180|Fikraddaada u beddela qoraal filim: muuqaallo, wadahadal iyo sheeko.
+181|Naqshadeeya jilayaal isku mid ah: wejiyo, dhar iyo codad.
+182|Qorsheeya muuqaal kasta: qaabeynta, xawaaraha iyo dhaqdhaqaaqa kamaradda.
+183|Go'aamiya muuqaalka goob kasta: iftiin, midab iyo muraayad.
+184|Ku dara codad, muusig iyo saamayno cod si isku waqti ah.
+185|Isku xidha muuqaallada kala-guurro iyo waqtiyeyn.
+186|Mashruuc kasta ku haya miisaaniyadda iyo xadka qorshahaaga.
+187|Wax walba hubiya ka hor gaarsiinta, wuxuuna dib u celiyaa waxa u baahan hagaajin.
+188|Kooxda AI
+189|Gal nooi.ai
+190|Samee filimaan, jilayaal iyo sheekooyin luqaddaada.
+191|Ku sii wad Google
+192|Ku sii wad Apple (iCloud)
+193|ama iimayl
+194|Dir koodka
+195|ama taleefankaaga
+196|Koodka waddanka
+197|Lambarka taleefanka
+198|Dir koodka SMS
+199|Hago male-awaalkaaga.
+200|Amar kasta waa filim.
+201|Markaad sii wadato, waxaad aqbashay Shuruudaha iyo Siyaasadda Asturnaanta.
+202|Bogga hore
+203|Abuur
+204|UGC iyo xayeysiisyada alaabta
+205|Sawir oo abuur
+206|Sawir toos ah
+207|Adduunyo 3D
+208|Buug midab-ku-rinjiyeyn
+209|Sheeko
+210|Kooxda filimka
+211|Tifaftir
+212|Daabac
+213|Qorshaha nuxurka
+214|Maktabad
+215|Maktabaddayda
+216|Tusaalayaal
+217|Dejinta
+218|Xisaab iyo qorshe
+219|Dhibcaha iyo dhaqdhaqaaqa
+220|Xiriirro iyo API
+221|Isku-xirka · MCP
+222|Sharci iyo lacag-bixin
+223|Caawin iyo taageero
+224|Maamul
+225|Shaashadda maamulaha
+226|Dhibcaha
+227|Qorshaha Istuudiyaha
+228|Taleefan
+229|Raadi…
+230|Kooxda oo dhan ayaa samayn doonta
+231|Hawada
+232|DHAMMAATAY
+233|Dhammaatay
+234|Ka saarista buuqa
+235|Kamaradda oo u dhowaanaysa
+236|Amarka waa la habaynayaa
+237|Muuqaalka waa la habaynayaa
+238|Wuu fashilmay
+239|WAN 3.0 waa la soo gelinayaa
+240|Lama samayn
+241|La daabacay
+242|Safka ku jira
+243|DIYAAR
+244|WAA LA SAMAYNAYAA ·
+245|Server-ka samaynta
+246|Waa la samaynayaa
+247|Wuxuu ka shaqeeyaa browser-kaaga
+248|La jadwaleeyay
+249|Raacis
+250|CUSUB
+251|Xisaab
+252|Raadi
+253|Ku soo dhowow mar kale,
+254|Sii wad sheekadaada, ka bilow tusaale, ama qeex muuqaal cusub.
+255|Dhibcaha haray
+256|Wax la sameeyay
+257|Cutubyada la sameeyay
+258|Qeex muuqaal — “galley ka duulaysa saxaraha marka qorraxdu soo baxayso”
+259|Amar
+260|Samee
+261|Sheekadaada
+262|cutub
+263|sawirrada sabuuradda sheekada
+264|Sii wad cutubka xiga
+265|Ka bilow tusaale
+266|Dhammaan tusaalayaasha
+267|Dib-u-eegis daryeel maqaar · sawir-iskiis
+268|UGC
+269|Gacanta lagu qabto
+270|Falcelinta furitaanka sanduuqa
+271|Xilliga ugu xiisaha badan ee xayeysiis filim
+272|Xayeysiis filim
+273|Shineemo
+274|Soo dhowayn degdeg ah
+275|Furitaanka anime
+276|Filim gaaban / sheeko
+277|Anime
+278|Kamaradda kor u qaadid
+279|Falanqee websaydkaaga oo hel qorshe nuxur diyaar ah.
+280|Dhowaan
+281|Weli waxba ma jiraan. Kor ka qeex muuqaal si aad u samayso kilibkaaga ugu horreeya.
+282|Sheeko cusub
+283|Tifaftir cusub
+284|Moodalka AI
+285|Caqli badan
+286|kan ugu fiican amarkaaga
+287|Ilbiriqsi
+288|Heerka sawirrada (Hz)
+289|Saamiga
+290|muuqaal fudud
+291|Maxaad rabtaa inaad samayso?
+292|Hawl
+293|Dooro caqli leh
+294|Muuqaal nuxur
+295|Xayeysiis alaab
+296|Sawir & naqshad
+297|Samee cod
+298|Muusig
+299|Jilaa
+300|Filim dhan (koox)
+301|Bog midab-ku-rinjiyeyn
+302|Soo jiidasho
+303|Fikrad
+304|Galley ka duulaysa buuraha ciidda dahabiga ah marka qorraxdu dhacayso
+305|Goob
+306|muuqaal ballaaran oo tartiib ah, kadib indhaheeda oo dhow
+307|Cod
+308|“Xorriyaddu waxay ka bilaabataa cirka” — sheekeeye lab ah oo cod culus leh
+309|Dhawaq
+310|dabayl jilicsan + muusig cuud oo deggan
+311|Qaab
+312|shineemo, midabbo diiran
+313|Isticmaal qaabkan
+314|Hal sadar qayb kasta — botyadu qayb kasta way akhriyaan.
+315|Moodalka muuqaalka
+316|Sawirka koowaad & kan dambe
+317|Sawirka koowaad
+318|Soo geli
+319|Sawirka dambe
+320|Ilbiriqsiyada laga bilaabo sawirka koowaad ilaa kan dambe
+321|Labada sawirba waa ikhtiyaari — mid isticmaal si aad ugu bilowdo ama ugu dhammayso sawir sax ah.
+322|Qorshahaaga: ilaa
+323|s · Pro 20 s · Istuudiyo 30 s
+324|Kooxdaada AI
+325|Khadka ku jira
+326|Daciif
+327|Dayactir
+328|Lama xidhin
+329|Khadka ka maqan
+330|Tijaabo
+331|Dhammaan moodellada
+332|Shuruudaha
+333|Asturnaanta
+334|Ku hadal halkii aad qori lahayd
+335|Dhagaystayaal
+336|Faahfaahin
+337|Qalab muusig
+338|Dherer
+339|Muuqaal
+340|Dareen
+341|Dalab
+342|Sawir
+343|Alaab
+344|Mawduuc
+345|Qoraal
+346|Lahjad
+347|Cinwaan
+348|Yaa

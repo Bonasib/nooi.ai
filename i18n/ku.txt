@@ -1,0 +1,348 @@
+001|Derbasî moda tarî bibe
+002|Moda tarî
+003|Ji bo zêdekirinê berde
+004|Wêne, vîdyo, deng û font bixweber diçin amûra rast.
+005|Pêşdîtin
+006|Gurekî tenê di hilatina heyvê de gola qeşagirtî derbas dike, bêhna wî xuya dike.
+007|Zarokek di saeta zêrîn de balonek sor li ser meydana bazarê berdide.
+008|Atolyeya tamîra mechan li Osakayê, ronahiya neonê di golikan de, kişandina hêdî ya kamerayê.
+009|Keştiyeke bayî ya biçûk nîvê şevê di nav pêlên biriqok de diçe.
+010|Bezvanek bi tena serê xwe di berbangê de girên qûmê derbas dike, dîmena şopandinê ya hêdî.
+011|Dalgiçek li kêleka dîwarê mercanan dadikeve, tîrêjên rojê şîniyê diqelişînin.
+012|Rastîn
+013|Jineke ciwan di serşokeke ronî de şûşeyeke lênêrîna çerm ber kameraya telefona xwe digire, bi kelecan diaxive, çarçoveya selfiyê ya xwezayî, ronahiya rojê ya nerm.
+014|Dîmena nêzîk: dest qutiyeke diyariyê ya reşa mat li ser maseyeke darîn vedikin, kes matmayî dimîne û guhikên bêtel derdixe, şêwaza kameraya telefonê.
+015|Bazek di hilatina rojê de ji destekî bi lepik li ser çolê difire, dîmena hêdî.
+016|Nobedarekî pîr dema bahoz nêz dibe çira mezin vêdixe, tovê fîlma 35mm.
+017|Baran li kuçeyeke neonî, ronahî di golikan de dilerizin, kişandina hêdî ya kamerayê.
+018|Keştiyeke bayî nîvê şevê di nav pêlên biriqok de diçe.
+019|Pêşangeh
+020|Çîroka Beş bi Beş
+021|Amûr
+022|Ziman
+023|Biha
+024|Ziman
+025|Têkeve
+026|Dest bi afirandinê bike
+027|Çîroka Beş bi Beş 1.0 — niha di beta ya giştî de
+028|Xeyala xwe
+029|derhêner bike.
+030|nooi.ai çîrokekê dike fîlm. Dîmenekê binivîse, klîpekê werbigire — paşê binnivîsê lê zêde bike, bi 35 zimanan dublaj bike û li her derê belav bike.
+031|Gelek beş. Karakterên sabît. Bênavber.
+032|AFIRÎNER · ZINDÎ
+033|Belaş dest pê bike
+034|Pêşangehê bibîne
+035|JI PÊŞANGEHÊ
+036|Bi nooi.ai hatiye çêkirin.
+037|Her prompt tê nîşandan.
+038|Heta berhemên te yên pêşîn, pêşdîtin li vir dileyzin — paşê vîdyoyên te yên AI cihê wan digirin.
+039|TAYBETMENDIYA SEREKE
+040|Çîroka Beş bi Beş.
+041|Di dawiyê de, forma dirêj.
+042|Çîrokê carekê binivîse. Her beş ji çarçoveya dawî ya beşa berê dest pê dike. Karakter rûyê xwe diparêze. Cîhan hewaya xwe diparêze.
+043|Heta 20 beşan
+044|Kilîda karakterê
+045|Storyboard û anîmatîk
+046|AI beşa din dinivîse
+047|BŞ
+048|QUTIYA AMÛRAN
+049|Her tişt ji ramanê heta weşanê.
+050|Vîdyo
+051|Ji nivîs an wêneyê vîdyo, bi kontrola kamerayê û keyframe.
+052|Wêne
+053|Ji bo her promptê çend wêne, ya herî baş hilbijêre.
+054|Karakter
+055|Karakter bi temen, deng û çend xuyangan.
+056|Fîlmên bi gelek beşan ku ji çarçoveya dawî berdewam dikin.
+057|Storyboard
+058|Çarçove, diyalog, deng û derbasbûn li ser yek tabloyê.
+059|Edîtora vîdyoyê
+060|Birîn, efekt, nivîs û sererastkirina çarçoveyan bi promptê.
+061|Efektên dîtbarî
+062|Keying, rastkirina rengan û girtina tevgerê.
+063|Binnivîs û dublaj
+064|Bi 30 zimanan rêz bi rêz veguhestin, wergerandin û dublaj.
+065|Deng û odyo
+066|Deng li gorî zarava û temenê, hevdemkirina lêvan, muzîk û efektên dengî.
+067|Baştir bike
+068|Bilindkirin bo 4K, 120 fps, dirêjkirin, çarçoveya nû, binnivîs, dublaj.
+069|Laboratuwara destpêkê
+070|Destpêkên ku scrollê radiwestînin û temaşevanan heta dawiyê digirin.
+071|Plan bike û biweşîne
+072|Li her platformê plan bike û biweşîne.
+073|BINNIVÎS Û DUBLAJ
+074|Bi tevahiya cîhanê re biaxive.
+075|35 ziman bi zaravayên herêmî. Her rêzê çarçove bi çarçove sererast bike, paşê bi dengê orîjînal û lêvên hevdem dublaj bike.
+076|ziman ji bo binnivîs û dublajê
+077|zaravayên herêmî
+078|mezinahiyên platformê, ji bo derxistinê amade
+079|zimanên navrûyê
+080|BIHA
+081|Belaş dest pê bike.
+082|Li gorî tiştê ku tu çêdikî bide.
+083|Belaş
+084|meh
+085|480p · klîpên 5 s
+086|2 karakter
+087|Dest pê bike
+088|Afirîner
+089|1080p · klîpên 10 s
+090|Binnivîs bi 35 zimanan
+091|Studyo
+092|4K · Çîroka Beş bi Beş · storyboard
+093|Dublaj, plankirin, API
+094|Bersivên zelal.
+095|Tiştê ku ez çêdikim yê kê ye?
+096|Yê te ye. Vîdyoyên te yên te ne, ji bo karanîna bazirganî jî.
+097|Kîjan ziman têne piştgirîkirin?
+098|Binnivîs û dublaj bi 35 zimanan û zaravayên herêmî — Siûdî, Misirî, Kuweytî, Tûnisî, Brîtanî, Awistralî, Skotî û gelekên din. Navrû bi xwe bi 26 zimanan heye.
+099|Çîroka Beş bi Beş çawa yekgirtî dimîne?
+100|Her beş ji çarçoveya dawî ya beşa berê dest pê dike, û nasnameya karakterê te di her dîmenê de kilîdkirî dimîne.
+101|Ma dikare li şûna min biweşîne?
+102|Erê — hesabên xwe girê bide, plan bike, û şandî di dema hilbijartî de derdikevin.
+103|Çîroka te tenê yek prompt dûr e.
+104|Fîlmê çêke.
+105|Belaş dest pê bike · 100 kredî
+106|XEYALA XWE DERHÊNER BIKE
+107|Mercên Karûbarê
+108|Siyaseta Nepeniyê
+109|Siyaseta Dayîn û Vegerandinê
+110|Siyaseta Karanîna Pejirandî
+111|Mafê telîfê û rakirin
+112|Siyaseta Cookieyan
+113|Têkilî
+114|Navê fermî yê şirketê
+115|Hejmara qeydê
+116|Hejmara bacê (VAT)
+117|Navnîşana qeydkirî
+118|Bajar
+119|Welat
+120|telefon
+121|Têketina rêveberiyê
+122|Kengî amade bî, bilind bike.
+123|Mehane
+124|Salane · −20%
+125|Bingehîn
+126|Ji bo afirînerên ku nû dest pê dikin
+127|Mehane tê fatûrekirin
+128|kredî / meh
+129|s
+130|Standard
+131|Hemû · bi Kling 4.0 re
+132|1 deng
+133|Çêkirinên hevdem
+134|Dirêjahiya herî zêde ya vîdyoyê
+135|Çareserî
+136|Leza çarçoveyê
+137|Modelên vîdyoyê
+138|Klonkirina dengê
+139|Herî populer
+140|Pro
+141|Ji bo afirîner û marqeyên cidî
+142|deng
+143|Ji bo studyo, ajans û tîman
+144|API û MCP (Claude, ChatGPT, Qwen)
+145|Plana belaş:
+146|kredî ji bo ceribandina her amûrê · 480p · 5 s · nîşana avê
+147|Hemû taybetmendiyan bide ber hev
+148|Krediyên mehane
+149|≈ wêne / meh
+150|≈ vîdyoyên 5 saniyeyî / meh
+151|Bêsînor
+152|Çîroka Beş bi Beş (beş)
+153|Binnivîs
+154|Laboratuwara odyoyê · xêzkirina zindî · pirtûka rengkirinê
+155|Bê nîşana avê ya nooi.ai
+156|Hesabên civakî ji bo plankirinê
+157|Kîta marqeyê û logo
+158|Lîsansa bazirganî
+159|Kesane
+160|Piştgirî
+161|Navenda alîkariyê
+162|E-name
+163|Pêşîn
+164|Pêşîn + destpêkirin
+165|Modelên wêneyan
+166|Hemû modelên wêneyan
+167|Dengên ElevenLabs
+168|Hemû · bi Eleven v3 re
+169|Okyanûs
+170|Modelên vîdyoyê yên sereke
+171|Neon
+172|Zêr
+173|Dengên AI · ElevenLabs
+174|+ klonkirina dengê ya profesyonel
+175|ziman ji bo binnivîs, dublaj û deng
+176|TÎMA TE YA FÎLMÊ YA AI
+177|Heşt pispor.
+178|Yek fîlm.
+179|Her proje ji hêla tîmeke ajanên AI ve tê birêvebirin — ji rêza yekem a senaryoyê heta kontrola kalîteyê ya dawî.
+180|Ramana te dike senaryo: dîmen, diyalog û vegotin.
+181|Karakterên yekgirtî dîzayn dike: rû, cil û deng.
+182|Her dîmenî plan dike: çarçove, rîtm û tevgerên kamerayê.
+183|Xuyanga her dîmenekê diyar dike: ronahî, reng û lens.
+184|Deng, muzîk û efektên dengî bi hevdemî zêde dike.
+185|Dîmenan bi derbasbûn û demkirinê bi hev ve girê dide.
+186|Her projeyê di nav budçe û sînorên plana te de digire.
+187|Berî radestkirinê her tiştî kontrol dike û tiştê ku divê were rastkirin vedigerîne.
+188|Tîma AI
+189|Têkeve nooi.ai
+190|Bi zimanê xwe fîlm, karakter û çîrokan biafirîne.
+191|Bi Google berdewam bike
+192|Bi Apple (iCloud) berdewam bike
+193|an bi e-nameyê
+194|Kodê bişîne
+195|an bi telefona xwe
+196|Koda welat
+197|Hejmara telefonê
+198|Koda SMSê bişîne
+199|Xeyala xwe derhêner bike.
+200|Her prompt fîlmek e.
+201|Bi berdewamkirinê tu Merc û Siyaseta Nepeniyê dipejirînî.
+202|Destpêk
+203|Biafirîne
+204|UGC û reklamên berheman
+205|Xêz bike û biafirîne
+206|Xêzkirina zindî
+207|Cîhanên 3D
+208|Pirtûka rengkirinê
+209|Çîrok
+210|Tîma fîlmê
+211|Sererast bike
+212|Biweşîne
+213|Plana naverokê
+214|Pirtûkxane
+215|Pirtûkxaneya min
+216|Şablon
+217|Mîheng
+218|Hesab û plan
+219|Kredî û danûstandin
+220|Girêdan û API
+221|Entegrasyon · MCP
+222|Hiqûqî û dayîn
+223|Alîkarî û piştgirî
+224|Rêvebirî
+225|Panela rêveberiyê
+226|Kredî
+227|Plana Studyo
+228|Telefon
+229|Lêgerîn…
+230|Hemû tîm dê wê çêke
+231|Ji hewayê
+232|TEMAM
+233|Temam
+234|Paqijkirina dengê
+235|Nêzîkbûna kamerayê
+236|Prompt tê kodkirin
+237|Vîdyo tê kodkirin
+238|Bi ser neket
+239|WAN 3.0 tê barkirin
+240|Nehatiye render kirin
+241|Hate weşandin
+242|Di rêzê de
+243|AMADE
+244|RENDER DIBE ·
+245|Servera renderê
+246|Render dibe
+247|Di geroka te de dixebite
+248|Plankirî
+249|Şopandin
+250|NÛ
+251|Hesab
+252|Lêgerîn
+253|Dîsa bi xêr hatî,
+254|Çîroka xwe bidomîne, bi şablonekê dest pê bike, an dîmenekî nû rave bike.
+255|Krediyên mayî
+256|Render
+257|Beşên renderkirî
+258|Dîmenekî rave bike — “bazek di hilatina rojê de li ser çolê difire”
+259|Prompt
+260|Çêke
+261|Çîroka te
+262|beş
+263|çarçoveyên storyboardê
+264|Beşa din bidomîne
+265|Bi şablonekê dest pê bike
+266|Hemû şablon
+267|Nirxandina lênêrîna çerm · selfie
+268|UGC
+269|Bi destan
+270|Reaksiyona vekirina qutiyê
+271|Kêliya trailerê aksiyonê
+272|Trailer
+273|Sînemayî
+274|Zooma ji nişka ve
+275|Destpêka anime
+276|Fîlma kurt / çîrok
+277|Anime
+278|Vînç ber bi jor
+279|Malpera xwe analîz bike û plana naverokê ya amade werbigire.
+280|Dawî
+281|Hêj tiştek tune. Ji bo klîpa xwe ya yekem, li jor dîmenekî rave bike.
+282|Çîroka nû
+283|Sererastkirina nû
+284|Modela AI
+285|Jîr
+286|ji bo prompta te ya herî baş
+287|Saniye
+288|Leza çarçoveyê (Hz)
+289|Rêjeya wêneyê
+290|dîmena hêsan
+291|Tu dixwazî çi çêkî?
+292|Kar
+293|Hilbijartina jîr
+294|Vîdyoya naverokê
+295|Reklama berhemê
+296|Wêne û dîzayn
+297|Deng biafirîne
+298|Muzîk
+299|Karakter
+300|Fîlma tevahî (tîm)
+301|Rûpela rengkirinê
+302|Destpêk
+303|Raman
+304|Bazek li ser girên qûmê yên zêrîn di ava bûna rojê de difire
+305|Dîmen
+306|dîmena fireh a hêdî, paşê nêzîkî çavên wê
+307|Deng
+308|“Azadî ji ezmanan dest pê dike” — vebêjerekî mêr bi dengê gir
+309|Dengê derdorê
+310|bayê nerm + muzîka ûdê ya aram
+311|Şêwaz
+312|sînemayî, rengên germ
+313|Vê avahiyê bi kar bîne
+314|Ji bo her beşê rêzek — bot her beşê dixwînin.
+315|Modela vîdyoyê
+316|Çarçoveya yekem û dawî
+317|Çarçoveya yekem
+318|Bar bike
+319|Çarçoveya dawî
+320|Saniye ji çarçoveya yekem heta dawî
+321|Her du çarçove vebijarkî ne — yekê bi kar bîne da ku bi wêneyekî diyar dest pê bikî an biqedînî.
+322|Plana te: heta
+323|s · Pro 20 s · Studyo 30 s
+324|Tîma te ya AI
+325|Serhêl
+326|Hêdî
+327|Lênêrîn
+328|Girêdayî nîne
+329|Derhêl
+330|Demo
+331|Hemû model
+332|Merc
+333|Nepenî
+334|Li şûna nivîsandinê biaxive
+335|Temaşevan
+336|Hûrgulî
+337|Amûrên muzîkê
+338|Dirêjahî
+339|Xuyang
+340|Hest
+341|Pêşniyar
+342|Wêne
+343|Berhem
+344|Mijar
+345|Nivîs
+346|Awaz
+347|Babet
+348|Kî

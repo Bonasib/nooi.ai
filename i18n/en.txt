@@ -1,0 +1,348 @@
+001|Switch to dark mode
+002|Dark mode
+003|Drop to add
+004|Images, videos, audio and fonts go to the right tool automatically.
+005|Preview
+006|A lone wolf crosses a frozen lake at moonrise, breath visible.
+007|A child releases a red balloon over a market square at golden hour.
+008|A mech repair bay in Osaka, neon reflections in puddles, slow dolly.
+009|A small sailboat drifts through bioluminescent waves at midnight.
+010|Solo runner crosses dunes at dawn, slow tracking shot.
+011|Diver descends past a coral wall, sunbeams cutting the blue.
+012|Realistic
+013|A young woman holds a skincare bottle up to her phone camera in a bright bathroom, talking excitedly, natural selfie framing, soft daylight.
+014|Close-up hands open a matte black gift box on a wooden desk, the person gasps and lifts out wireless earbuds, phone-camera look.
+015|A falcon takes off from a gloved hand over the desert at sunrise, slow motion.
+016|An old keeper lights the great lamp as a storm approaches, 35mm grain.
+017|Rain on a neon alley, reflections rippling in puddles, slow dolly.
+018|A sailboat drifts through glowing waves at midnight.
+019|Showcase
+020|Chapter Story
+021|Tools
+022|Languages
+023|Pricing
+024|Language
+025|Sign in
+026|Start creating
+027|Chapter Story 1.0 — now in public beta
+028|Direct your
+029|imagination.
+030|nooi.ai turns a story into a film. Write a shot, get a clip — then subtitle it, dub it in 35 languages and publish it everywhere.
+031|Multi-chapter. Character-locked. Continuous.
+032|COMPOSER · LIVE
+033|Start free
+034|See the showcase
+035|FROM THE SHOWCASE
+036|Made in nooi.ai.
+037|Every prompt is shown.
+038|Previews play here until your first renders — then your own AI videos take their place.
+039|THE HEADLINE FEATURE
+040|Chapter Story.
+041|The long form, finally.
+042|Write the story once. Each chapter starts from the last frame of the one before. The character keeps their face. The world keeps its weather.
+043|Up to 20 chapters
+044|Character lock
+045|Storyboard & animatic
+046|AI writes the next chapter
+047|CH
+048|THE TOOLKIT
+049|Everything from idea to posting.
+050|Video
+051|Text or image to video with camera control and keyframes.
+052|Images
+053|Several images per prompt, pick the best.
+054|Characters
+055|Characters with ages, voices and several looks.
+056|Multi-chapter films that continue from the last frame.
+057|Storyboard
+058|Frames, dialogue, sound and transitions on a canvas.
+059|Video editor
+060|Trim, effects, text, and edit frames with a prompt.
+061|Visual effects
+062|Keying, color grading and motion capture.
+063|Subtitles & dubbing
+064|Transcribe, translate and dub into 30 languages, line by line.
+065|Voice & audio
+066|Voices by dialect and age, lip sync, music and SFX.
+067|Enhance
+068|Upscale 4K, 120 fps, extend, reframe, captions, dubbing.
+069|Hook lab
+070|Openers that stop the scroll and keep viewers to the end.
+071|Schedule & publish
+072|Schedule and publish to every platform.
+073|SUBTITLES & DUBBING
+074|Speak to the whole world.
+075|35 languages with regional dialects. Edit every line frame by frame, then dub with the original voice and synced lips.
+076|languages for subtitles & dubbing
+077|regional dialects
+078|platform sizes, ready to export
+079|interface languages
+080|PRICING
+081|Start free.
+082|Pay for what you render.
+083|Free
+084|mo
+085|480p · 5s clips
+086|2 characters
+087|Get started
+088|Creator
+089|1080p · 10s clips
+090|Subtitles in 35 languages
+091|Studio
+092|4K · Chapter Story · storyboard
+093|Dubbing, scheduling, API
+094|Straight answers.
+095|Who owns what I generate?
+096|You do. Your videos are yours to use commercially.
+097|Which languages are supported?
+098|Subtitles and dubbing in 35 languages with regional dialects — Saudi, Egyptian, Kuwaiti, Tunisian, British, Australian, Scottish and many more. The interface itself comes in 26 languages.
+099|How does Chapter Story stay consistent?
+100|Each chapter starts from the last frame of the previous one, and your character's identity is locked across every shot.
+101|Can it publish for me?
+102|Yes — connect your accounts, schedule, and posts go out at the chosen time.
+103|Your story is one prompt away.
+104|Make the film.
+105|Start free · 100 credits
+106|DIRECT YOUR IMAGINATION
+107|Terms of Service
+108|Privacy Policy
+109|Payments & Refund Policy
+110|Acceptable Use Policy
+111|Copyright & takedown
+112|Cookie Policy
+113|Contact
+114|Company legal name
+115|CR number
+116|VAT number
+117|Registered address
+118|City
+119|Country
+120|phone
+121|Admin login
+122|Upgrade when you're ready.
+123|Monthly
+124|Yearly · −20%
+125|Basic
+126|For creators getting started
+127|Billed monthly
+128|credits / month
+129|s
+130|Standard
+131|All · incl. Kling 4.0
+132|1 voice
+133|Parallel generations
+134|Max video length
+135|Resolution
+136|Frame rate
+137|Video models
+138|Voice cloning
+139|Most popular
+140|Pro
+141|For serious creators & brands
+142|voices
+143|For studios, agencies & teams
+144|API & MCP (Claude, ChatGPT, Qwen)
+145|Free plan:
+146|credits to try every tool · 480p · 5s · watermark
+147|Compare all features
+148|Monthly credits
+149|≈ images / month
+150|≈ 5-second videos / month
+151|Unlimited
+152|Chapter Story (chapters)
+153|Subtitles
+154|Audio lab · live sketch · coloring book
+155|No nooi.ai watermark
+156|Social accounts for scheduling
+157|Brand kit & logo
+158|Commercial license
+159|Personal
+160|Support
+161|Help center
+162|Email
+163|Priority
+164|Priority + onboarding
+165|Image models
+166|All image models
+167|ElevenLabs voices
+168|All · incl. Eleven v3
+169|Ocean
+170|Flagship video models
+171|Neon
+172|Gold
+173|AI voices · ElevenLabs
+174|+ professional voice cloning
+175|languages for subtitles, dubbing & voice
+176|YOUR AI FILM CREW
+177|Eight specialists.
+178|One film.
+179|Every project is handled by a crew of AI agents — from the first line of the script to the final quality check.
+180|Turns your idea into a script: scenes, dialogue and narration.
+181|Designs consistent characters: faces, outfits and voices.
+182|Plans every shot: framing, pacing and camera moves.
+183|Sets the look of each scene: light, colour and lens.
+184|Adds voices, music and sound effects in sync.
+185|Cuts the shots together with transitions and timing.
+186|Keeps every project within budget and your plan's limits.
+187|Checks everything before delivery and sends back what needs fixing.
+188|AI crew
+189|Sign in to nooi.ai
+190|Create films, characters and stories in your own language.
+191|Continue with Google
+192|Continue with Apple (iCloud)
+193|or with email
+194|Send code
+195|or with your phone
+196|Country code
+197|Phone number
+198|Send SMS code
+199|Direct your imagination.
+200|Every prompt is a film.
+201|By continuing you agree to the Terms and Privacy Policy.
+202|Home
+203|Create
+204|UGC & product ads
+205|Draw & create
+206|Live Sketch
+207|3D worlds
+208|Coloring book
+209|Story
+210|Film crew
+211|Edit
+212|Publish
+213|Content plan
+214|Library
+215|My library
+216|Templates
+217|Settings
+218|Account & plan
+219|Credits & transactions
+220|Connections & APIs
+221|Integrations · MCP
+222|Legal & payments
+223|Help & support
+224|Administration
+225|Admin dashboard
+226|Credits
+227|Studio plan
+228|Phone
+229|Search…
+230|The whole crew will make it
+231|Aerial
+232|COMPLETE
+233|Complete
+234|Denoising
+235|Dolly in
+236|Encoding prompt
+237|Encoding video
+238|Failed
+239|Loading WAN 3.0
+240|Not rendered
+241|Published
+242|Queued
+243|READY
+244|RENDERING ·
+245|Render server
+246|Rendering
+247|Runs in your browser
+248|Scheduled
+249|Tracking
+250|NEW
+251|Account
+252|Search
+253|Welcome back,
+254|Pick up your story, start from a template, or describe a new shot.
+255|Credits left
+256|Renders
+257|Chapters rendered
+258|Describe a shot — “a falcon takes off over the desert at sunrise”
+259|Prompt
+260|Generate
+261|Your story
+262|chapters
+263|storyboard frames
+264|Continue the next chapter
+265|Start from a template
+266|All templates
+267|Skincare review · selfie
+268|UGC
+269|Handheld
+270|Unboxing reaction
+271|Action trailer beat
+272|Trailer
+273|Cinematic
+274|Crash zoom
+275|Anime opening
+276|Short film / story
+277|Anime
+278|Crane up
+279|Analyze your website and get a ready content plan.
+280|Recent
+281|Nothing yet. Describe a shot above to make your first clip.
+282|New story
+283|New edit
+284|AI model
+285|Smart
+286|best for your prompt
+287|Seconds
+288|Frame rate (Hz)
+289|Aspect
+290|simple shot
+291|What do you want to make?
+292|Task
+293|Smart pick
+294|Content video
+295|Product ad
+296|Image & design
+297|Create voice
+298|Music
+299|Character
+300|Whole film (crew)
+301|Coloring page
+302|Hooks
+303|Idea
+304|A falcon soars over golden dunes at sunset
+305|Scene
+306|slow wide shot, then close-up on its eyes
+307|Voice
+308|“Freedom starts in the sky” — deep male narrator
+309|Sound
+310|soft wind + calm oud music
+311|Style
+312|cinematic, warm colors
+313|Use this structure
+314|One line per part — the bots read each part.
+315|Video model
+316|First & end frame
+317|First frame
+318|Upload
+319|End frame
+320|Seconds from first to end frame
+321|Both frames are optional — use one to start or end on an exact picture.
+322|Your plan: up to
+323|s · Pro 20 s · Studio 30 s
+324|Your AI crew
+325|Online
+326|Degraded
+327|Maintenance
+328|Not connected
+329|Offline
+330|Demo
+331|All models
+332|Terms
+333|Privacy
+334|Speak instead of typing
+335|Audience
+336|Details
+337|Instruments
+338|Length
+339|Look
+340|Mood
+341|Offer
+342|Picture
+343|Product
+344|Subject
+345|Text
+346|Tone
+347|Topic
+348|Who
