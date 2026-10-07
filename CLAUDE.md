@@ -170,6 +170,11 @@ Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v
 ## v45 Prompt box layout
 - CSS-only block `#v45prompt`, scoped to `.panel.uni`: task chips wrap on desktop (≥1080 px) and swipe with a fade below; prompt surface with a brand focus ring; equal 212 px model cards that snap (170 px on phones) with a fade where the rail continues (mirrored in RTL); Seconds / Frame rate / Aspect in one tray with full-width segmented controls; "First & end frame" as a pill; crew row spread evenly; larger Create button. Section labels avoid letter-spacing/uppercase so Arabic-script labels stay joined.
 
+## v46 Crew row
+- Duke no longer flips: idle `fbDukeBob`, working `fbDukeNod`, done `fbDukeHop` (replaced fbCoinIdle/fbFlip/fbCheer's 180° spin). All crew bots render at full opacity.
+- `botStrip` is wrapped: each `.sbot` gets `--bc` (first colour of `BOT(id).c`; very dark colours → #8b8f99 accent), a hover/focus/tap card `.stip` (name · role · job from `CREW_INFO`, EN/AR) and `aria-label`; hidden cards are `display:none` so they never overflow. `crewTipSide` anchors the card to the nearer edge (RTL-aware). Hover/tap plays the bot's own `st-done` reaction + a pulse in its colour (`crewReact`).
+- In the prompt box: 52 px bots on a halo, 8-column grid (4×2 on phones).
+
 ## Slash commands (in .claude/commands)
 `/test` full check · `/audit-i18n` translations & RTL · `/deploy root@IP` update the VPS · `/connect-provider Kling` wire & verify a real provider.
 
