@@ -209,6 +209,17 @@ Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v
 - UI: Account → "On-device AI" card (device status, toggle `S.localAI`, "Remove downloaded models"); `laiChip` on subs/voice pages. i18n lines 367–377.
 - Not testable in the sandbox (Hugging Face blocked) — verify real inference on a real browser after deploy.
 
+## v51 Pro editor (all in the browser, no APIs)
+- Six new editor tabs (block "v51" in index.html, helpers prefixed `edx`/`EDX`): Motion & zoom, Color & VFX, Sound FX, Auto captions, Erase & blur, Layers & keying. Text tab gains text effects + word animations; Clip tab gains pro transitions and precision edits.
+- Motion: per-clip keyframes `clip.mo={kf:[{t,s,x,y,r}],ease,focus,fh,fv}` (t = seconds inside the clip). Presets: slow zoom in/out, punch-in at playhead, snap zoom, pans, Dutch roll. Tap the preview to set the zoom focus.
+- Color & VFX: `clip.cg={exp,con,sat,temp,tint,look}` (11 looks = CSS filter + blend overlay) and `clip.vfx` toggles (shake, beat zoom, RGB split, glow, radial blur, pixelate, mirror, strobe, invert, comic, VHS, light leak). Applied in a `drawFit` wrapper that maps the media back to its clip (`edxClipOf`).
+- Transitions zoom/whip/spin/flash/glitch/wipe/blur work across the cut (out on the clip, in on the next) — also in `drawFit`.
+- Regions `S.ed.regions` (erase = push-pull fill from the surroundings, blur, pixelate, black box; rect/oval; optional tracking reuses `runTrack`) and layers `S.ed.layers` (image/video PiP, green/blue/custom chroma key with spill removal, AI cut-out via on-device bg model, shape, blend, entrance) are painted from an `overlayVignette` wrapper so they sit under texts/captions/logo. Layer files persist as `ly_<id>` slots.
+- SFX `S.ed.sfx=[{id,n,t,vol}]`: 18 sounds synthesised with OfflineAudioContext + uploads (`sx_<id>`), played through `EDX.bus`; `edExport` wrapper connects the bus to the recording.
+- Captions `S.ed.caps` — word timings from on-device Whisper (`onnx-community/whisper-base_timestamped`, `return_timestamps:"word"`), falling back to segment timings spread over words; also from the Subtitles page or typed text. Six styles (pop, karaoke, box, bounce, one word, classic).
+- Shortcuts: Q/W trim start/end to playhead, F freeze frame (2 s still). Undo covers all new layers (`edxSnap`).
+- New strings use `L(en,ar)`; other languages come from the shared runtime translation.
+
 ## Slash commands (in .claude/commands)
 `/test` full check · `/audit-i18n` translations & RTL · `/deploy root@IP` update the VPS · `/connect-provider Kling` wire & verify a real provider.
 
