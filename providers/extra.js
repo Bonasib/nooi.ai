@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { cfg, configured, S as settingsS } from "../lib/settings.js";
 import { elevenlabs } from "./elevenlabs.js";
 import { nanoBanana, midjourney, gptImage } from "./images2.js";
-import { kie, kieDefault } from "./kie.js";
+import { kie, kieDefault, kieAuto } from "./kie.js";
 // Flagship models → provider + API model id set by the admin (Admin → Models)
 const FLAGSHIP = { kling40: "kling", kling30: "kling", seedance25: "seedance", seedance20: "seedance", hailuoh3: "minimax" };
 const makers = () => ({ kling, seedance, minimax });
@@ -52,9 +52,11 @@ export function adapterFor(cap, body, PROVIDERS) {
   // Any studio model with a Kie model id set in Admin → Models runs on Kie AI
   const km = body.model && (settingsS().modelCat || {})[body.model]?.kieModel;
   if (km) return { key: "kie@" + km, a: kie(km) };
-  const r = directAdapter(cap, body, PROVIDERS);
-  // The generic capability provider isn't connected → use the admin's default Kie model for this capability
-  if (r && r.key === cap && !(r.a && r.a.configured)) { const d = kieDefault(cap, body.kind); if (d) return { key: "kie@" + d, a: kie(d) }; }
+  let r;
+  try { r = directAdapter(cap, body, PROVIDERS); }
+  catch (e) { const k = kieAuto(cap, body); if (k) return { key: "kie@" + k, a: kie(k) }; throw e; }  // flagship without its own API id
+  // The model's own provider isn't connected → Kie AI (admin default for the capability first, then the built-in map)
+  if (r && !(r.a && r.a.configured)) { const d = r.key === cap ? kieDefault(cap, body.kind) : null; const k = d || kieAuto(cap, body); if (k) return { key: "kie@" + k, a: kie(k) }; }
   return r;
 }
 function directAdapter(cap, body, PROVIDERS) {

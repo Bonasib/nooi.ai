@@ -229,6 +229,11 @@ Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v
 - Light mode background is pure white (`--bg:#ffffff`).
 - `tests/pro_tools.py` (in `npm test`): every editor tab, 3D studio, mocap and the Kie card on desktop and phone, every control clicked with on-device AI mocked — errors must be [].
 
+## v53 Kie AI runs every model · real logos on every model tile
+- `providers/kie.js` `KIE_BUILTIN` + `kieAuto(cap, body)`: when a model's own provider has no key (or a flagship has no API id), video/image/music jobs run on Kie AI as soon as the Kie key is saved. Order: Admin → Models Kie id → admin default model (generic route) → built-in map. Start frame → image-to-video variant; reference image → edit variant. Midjourney via Kie (`mj:7` → `/api/v1/mj/generate`, `/api/v1/mj/record-info`). `/v1/config.providers` counts Kie for video/image/music. Voice/lipsync etc. never go to Kie.
+- `tests/kie_e2e.mjs`: mock Kie server + real nooi server (`KIE_API_KEY`/`KIE_BASE_URL`), 9 jobs through `/v1/jobs` to `/media`.
+- Logos: full-colour Lobe Icons marks (MIT, trademarks of their owners) in `LOGO_SRC`; `applyLogos()` after every render puts the logo in each model tile (`[data-set$=".model"]` …); `logoFor` (now `let`) guesses by model name for new ids. "Image 2.5" is shown as Seedream 4.5 (what it runs on).
+
 ## Slash commands (in .claude/commands)
 `/test` full check · `/audit-i18n` translations & RTL · `/deploy root@IP` update the VPS · `/connect-provider Kling` wire & verify a real provider.
 

@@ -86,6 +86,11 @@ export const kie = (model) => {
         const d = await call("/api/v1/veo/generate", { method: "POST", body: JSON.stringify(drop({ prompt: fullPrompt(p), model: mo, aspect_ratio: VEO_RATIOS.has(p.aspect) ? p.aspect : "Auto", imageUrls: img ? [img] : undefined, ...extraInputs(c, mo) })) });
         return { remoteId: "veo:" + d.taskId };
       }
+      if (mo.startsWith("mj:")) {  // Midjourney through Kie: POST /api/v1/mj/generate, GET /api/v1/mj/record-info
+        const ref = refImg(p), ar = p.aspect && /^\d+:\d+$/.test(p.aspect) ? p.aspect : "1:1";
+        const d = await call("/api/v1/mj/generate", { method: "POST", body: JSON.stringify(drop({ taskType: ref ? "mj_img2img" : "mj_txt2img", prompt: fullPrompt(p), speed: "fast", aspectRatio: ar, version: mo.slice(3) || "7", fileUrls: ref ? [ref] : undefined, ...extraInputs(c, mo) })) });
+        return { remoteId: "mj:" + d.taskId };
+      }
       const suno = mo.startsWith("suno:");
       const apiModel = suno ? "ai-music-api/generate" : mo;
       const input = { ...kieInput(apiModel, p), ...(suno ? { model: mo.slice(5) || "V5" } : {}), ...extraInputs(c, mo) };
@@ -100,6 +105,12 @@ export const kie = (model) => {
         return f === 1 ? { status: "done", url: (d.response?.resultUrls || [])[0] || d.response?.resultUrl || null }
           : f >= 2 ? { status: "failed", error: d.errorMessage || d.failMsg || "Veo generation failed" } : { status: "rendering" };
       }
+      if (type === "mj") {
+        const d = await call("/api/v1/mj/record-info?taskId=" + encodeURIComponent(id), { method: "GET" }), f = +d.successFlag;
+        let ri = d.resultInfoJson; try { if (typeof ri === "string") ri = JSON.parse(ri); } catch { ri = {}; }
+        const u = ((ri && ri.resultUrls) || []).map((x) => (typeof x === "string" ? x : x && x.resultUrl)).filter(Boolean)[0];
+        return f === 1 ? (u ? { status: "done", url: u } : { status: "failed", error: "Midjourney finished without an image" }) : f >= 2 ? { status: "failed", error: d.errorMessage || "Midjourney generation failed" } : { status: "rendering" };
+      }
       const d = await call("/api/v1/jobs/recordInfo?taskId=" + encodeURIComponent(id), { method: "GET" });
       const s = String(d.state || "").toLowerCase();
       if (s === "success") { const url = kieResult(d); return url ? { status: "done", url } : { status: "failed", error: "Kie AI finished without an output URL" }; }
@@ -108,6 +119,28 @@ export const kie = (model) => {
     }
   };
 };
+
+// Built-in Kie model for each studio model, so every model works as soon as the Kie key is saved
+// (an id set in Admin → Models, or the admin's default model, still wins). Image-to-video / edit variants are
+// picked when the job carries a start frame or a reference image.
+export const KIE_BUILTIN = {
+  video: { kling40: "kling-3.0/video", kling30: "kling-3.0/video", kling: "kling-2.6/text-to-video", seedance25: "bytedance/seedance-2-5", seedance20: "bytedance/seedance-2",
+    seedance: "bytedance/seedance-2-fast", hailuoh3: "minimax-h3/text-to-video", hailuo: "minimax-h3/text-to-video", wan30: "wan/3-0-video", wan22: "wan/2-7-text-to-video",
+    qwenwan: "wan/2-7-text-to-video", hunyuan: "wan/2-7-text-to-video", ltx23: "veo3_fast", ltxfast: "bytedance/seedance-2-fast", veo: "veo3", veofast: "veo3_fast", grok: "grok-imagine/text-to-video", auto: "bytedance/seedance-2-fast" },
+  image: { nano: "nano-banana-2", nanopro: "nano-banana-pro", img20: "gpt-image-2-text-to-image", img25: "seedream/4.5-text-to-image", qwen: "qwen3/text-to-image", qwen2: "qwen3/text-to-image",
+    flux: "flux-2/pro-text-to-image", sdxl: "seedream/4.5-text-to-image", dotimg: "nano-banana-2", mj: "mj:7", auto: "nano-banana-2" },
+};
+const I2V = { "kling-2.6/text-to-video": "kling-2.6/image-to-video", "wan/2-7-text-to-video": "wan/2-7-image-to-video", "minimax-h3/text-to-video": "minimax-h3/image-to-video", "grok-imagine/text-to-video": "grok-imagine/image-to-video" };
+const EDIT = { "nano-banana-2": "google/nano-banana-edit", "gpt-image-2-text-to-image": "gpt-image-2-image-to-image", "flux-2/pro-text-to-image": "flux-2/pro-image-to-image", "seedream/4.5-text-to-image": "seedream/4.5-edit", "qwen3/text-to-image": "qwen3/image-edit" };
+export function kieAuto(cap, body = {}) {
+  if (!configured("kie") || !["video", "image", "music"].includes(cap)) return null;
+  const c = cfg("kie"), kind = body.kind || cap, img = IMAGE_KINDS.has(kind) || cap === "image";
+  if (cap === "music" || MUSIC_KINDS.has(kind)) return c.musicModel || "suno:V5";
+  let m = KIE_BUILTIN[img ? "image" : "video"][body.model] || (img ? c.imageModel || KIE_BUILTIN.image.auto : c.videoModel || KIE_BUILTIN.video.auto);
+  if (img) { if (refImg(body) && EDIT[m]) m = EDIT[m]; }
+  else if (startImg(body) && I2V[m]) m = I2V[m];
+  return m;
+}
 
 // Default Kie model for a capability, if the admin set one (used when no direct provider is connected).
 export function kieDefault(cap, kind) {

@@ -10,7 +10,7 @@ import { createJob, publicJob } from "./lib/jobs.js";
 import { analyzeSite } from "./lib/site.js";
 import { MEDIA_DIR, publicUrl } from "./lib/media.js";
 import { PROVIDERS } from "./providers/index.js";
-import { kieDefault } from "./providers/kie.js";
+import { kieDefault, kieAuto } from "./providers/kie.js";
 import { llmConfigured, llmJson, llm, llmInfo } from "./providers/anthropic.js";
 import { OAUTH, pkcePair } from "./social/oauth.js";
 import { runPost } from "./lib/scheduler.js";
@@ -55,7 +55,7 @@ app.get("/v1/config", (_, res) => res.json({
   firebase: firebaseWebConfig(), localAI: { tfUrl: fs.existsSync(TF_DIR + "/transformers.min.js") ? "/vendor/transformers/transformers.min.js" : null, ortBase: fs.existsSync(ORT_DIR) ? "/vendor/ort/" : null, modelsHost: process.env.MODELS_DIR ? "/models/" : null, models: platform().localModels || {} }, emailCode: canSendSignInLinks() && emailConfigured(),
   llm: llmConfigured() ? { provider: llmInfo().provider, model: llmInfo().model } : null,
   billing: enabledPayments().length > 0, payments: enabledPayments(), modelLogos: platform().modelLogos || {}, worldEngine: !!(process.env.WORLD_API_URL || (platform().providers || {}).world), modelCat: Object.fromEntries(Object.entries(platform().modelCat || {}).map(([k, v]) => [k, { cr: v.cr, verified: !!v.verified, kie: !!v.kieModel }])), features: platform().features, models: platform().models, prices: platform().prices, support: "contact@nooi.ai",
-  providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || !!kieDefault(k)])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!process.env.REALTIME_API_URL, billing: enabledPayments().length > 0 }
+  providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || !!kieDefault(k) || !!kieAuto(k, {})])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!process.env.REALTIME_API_URL, billing: enabledPayments().length > 0 }
 }));
 
 // Uploads (start frames, references, exports, music…)

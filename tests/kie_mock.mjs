@@ -73,13 +73,24 @@ try { await kie("").submit({ kind: "video", prompt: "x", inputs: {}, meta: {} })
 // ── routing ──
 st.S().modelCat = { kling30: { kieModel: "kling-3.0/video" } };
 let rt = adapterFor("video", { kind: "video", model: "kling30" }, PROVIDERS); ok(rt.key === "kie@kling-3.0/video" && rt.a.name === "Kie AI", "routing: a model with a Kie id set in Admin → Models runs on Kie");
-rt = adapterFor("video", { kind: "video", model: "kling" }, PROVIDERS); ok(rt.key === "kling", "routing: models without a Kie id keep their direct provider");
-try { adapterFor("video", { kind: "video", model: "seedance20" }, PROVIDERS); ok(false, "flagship without ids should stop"); } catch (e) { ok(e.code === 503, "routing: a flagship model with neither an API id nor a Kie id still stops with the setup message"); }
-rt = adapterFor("video", { kind: "video", model: "auto" }, PROVIDERS); ok(rt.key === "video", "routing: no default video model → generic video provider unchanged");
+rt = adapterFor("video", { kind: "video", model: "kling" }, PROVIDERS); ok(rt.key === "kie@kling-2.6/text-to-video", "routing: a model whose own provider has no key runs on its built-in Kie model");
+rt = adapterFor("video", { kind: "video", model: "kling", inputs: { startImage: "https://x/f.png" } }, PROVIDERS); ok(rt.key === "kie@kling-2.6/image-to-video", "routing: a start frame picks the image-to-video variant");
+rt = adapterFor("video", { kind: "video", model: "seedance20" }, PROVIDERS); ok(rt.key === "kie@bytedance/seedance-2", "routing: a flagship model without its own API id runs on Kie instead of stopping");
+for (const [m, k] of [["nano", "nano-banana-2"], ["nanopro", "nano-banana-pro"], ["img20", "gpt-image-2-text-to-image"], ["qwen2", "qwen3/text-to-image"], ["flux", "flux-2/pro-text-to-image"], ["mj", "mj:7"]]) { rt = adapterFor("image", { kind: "image", model: m }, PROVIDERS); ok(rt.key === "kie@" + k, "routing: image model " + m + " → Kie " + k); }
+rt = adapterFor("image", { kind: "image", model: "nano", inputs: { iRef: "https://x/r.png" } }, PROVIDERS); ok(rt.key === "kie@google/nano-banana-edit", "routing: a reference image picks the edit variant");
+rt = adapterFor("tts", { kind: "voice" }, PROVIDERS); ok(!String(rt.key).startsWith("kie@"), "routing: voice is not sent to Kie");
+rt = adapterFor("video", { kind: "video", model: "auto" }, PROVIDERS); ok(rt.key === "kie@bytedance/seedance-2-fast", "routing: no default video model → built-in Kie video model");
 st.saveCfg("providers", "kie", { videoModel: "wan/3-0-video", musicModel: "suno:V5" });
 rt = adapterFor("video", { kind: "video", model: "auto" }, PROVIDERS); ok(rt.key === "kie@wan/3-0-video", "routing: direct video provider not connected → admin's default Kie video model");
 rt = adapterFor("music", { kind: "music" }, PROVIDERS); ok(rt.key === "kie@suno:V5", "routing: music falls back to the default Kie music model");
 ok(adapterByKey("kie@kling-3.0/video", PROVIDERS).name === "Kie AI", "poller rebuilds the Kie adapter from the stored job key");
+
+// ── Midjourney through Kie ──
+queue = [created("mj1")]; const MJ = kie("mj:7"); const rm = await MJ.submit({ kind: "image", prompt: "a fox", aspect: "16:9", inputs: {}, meta: {} }); s = seen.at(-1);
+ok(rm.remoteId === "mj:mj1" && /\/api\/v1\/mj\/generate$/.test(s.u) && s.body.taskType === "mj_txt2img" && s.body.version === "7" && s.body.aspectRatio === "16:9", "midjourney: POST /api/v1/mj/generate with mj_txt2img, version 7, aspect");
+queue = [record({ successFlag: 0 })]; ok((await MJ.poll("mj:mj1")).status === "rendering", "midjourney: successFlag 0 → rendering");
+queue = [record({ successFlag: 1, resultInfoJson: { resultUrls: [{ resultUrl: "https://cdn/x.png" }] } })]; ok((await MJ.poll("mj:mj1")).url === "https://cdn/x.png" && /record-info\?taskId=mj1$/.test(seen.at(-1).u), "midjourney: successFlag 1 → first result URL");
+queue = [record({ successFlag: 2, errorMessage: "banned prompt" })]; ok((await MJ.poll("mj:mj1")).error === "banned prompt", "midjourney: failure message passed on");
 
 // ── health probe ──
 queue = [resp(200, { code: 200, msg: "success", data: 1234 })]; let h = await testProvider("kie");
