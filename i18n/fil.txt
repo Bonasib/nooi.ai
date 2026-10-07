@@ -191,7 +191,7 @@
 191|Magpatuloy gamit ang Google
 192|Magpatuloy gamit ang Apple (iCloud)
 193|o gamit ang email
-194|Ipadala ang code
+194|Ipadala ang sign-in link
 195|o gamit ang iyong phone
 196|Country code
 197|Numero ng telepono
@@ -201,7 +201,7 @@
 201|Sa pagpapatuloy, sumasang-ayon ka sa Mga Tuntunin at Patakaran sa Privacy.
 202|Home
 203|Lumikha
-204|UGC at product ads
+204|UGC ads
 205|Gumuhit at lumikha
 206|Live sketch
 207|Mga 3D na mundo
@@ -346,3 +346,7 @@
 346|Tono
 347|Topic
 348|Sino
+349|I-tap ang link sa email para tapusin ang pag-sign in. Wala? Tingnan ang Spam.
+350|Nag-expire na o nagamit na ang sign-in link na ito. Magpadala ng bago.
+351|Ipinadala ang link na ito sa ibang email address.
+352|Display name

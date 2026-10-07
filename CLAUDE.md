@@ -187,6 +187,13 @@ Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v
 - Structured prompts: `parseBrief` maps labels shown in the visitor's language (from `UI_T`) back to the English keys (`BRIEF_LABELS`), so "Idée :" / "シーン：" lines parse like "Idea:" / "Scene:".
 - Layout fixes: story workspace columns scroll on desktop (long chapter lists no longer run under the timeline); timeline chips "01 00:08"; logo also in the 1080–1279 px rail; landing crew cards top-aligned.
 
+## v48 Admin access · sign-in link · email posters
+- Admin role: `loadMe()` now re-runs on every Firebase auth change (it ran once ~1 s after load, before the session was restored → admins saw no dashboard/CRM/ERP). Server `roleOf` only trusts **verified** emails (`email_verified` in the ID token / `profile.emailVerified`) — an unverified email/password account for admin@… gets no role. Owners & admins (`isStaff`) get the Studio plan in `/v1/billing` and run jobs without plan limits or credit charges.
+- Account page: `profileCard` (name, sign-in method, role pill, Admin dashboard button, Sign out).
+- Email sign-in: the link carries `?e=<email>` so it completes in any browser/device; errors (expired/used link, other address) are shown on the sign-in screen instead of silently returning to the landing page. `POST /v1/auth/email-link` sends the link with the branded "signin" poster when `FIREBASE_SERVICE_ACCOUNT` + an email provider are set (rate-limited 10/h per IP, 5/h per address); otherwise the browser falls back to Firebase's own email.
+- Email posters: `public/email-templates.js` (`renderEmail(kind, data)`, kinds signin · marketing · discount · feature · holiday · plain; ar/en; holidays eid · ramadan · national · founding · newyear · generic) — imported by the server (`/v1/admin/email` with `template` + `fields`, segment `me` = test to yourself) and by the admin Emails tab for a live preview. Previews: `docs/email-posters/`.
+- Small fixes: copy buttons use a copy icon; Visual-effects tabs show the open tab clearly (`.seg.fxtabs`); menu "UGC ads".
+
 ## Slash commands (in .claude/commands)
 `/test` full check · `/audit-i18n` translations & RTL · `/deploy root@IP` update the VPS · `/connect-provider Kling` wire & verify a real provider.
 

@@ -24,7 +24,10 @@ import { refillPlans } from "./lib/billing.js";
 import { S as platform, featureOn, configured } from "./lib/settings.js";
 import { createToken, listTokens, revokeToken, userFromToken } from "./lib/tokens.js";
 import { handleMcp } from "./lib/mcp.js";
-import { verify } from "./lib/auth.js";
+import { verify, canSendSignInLinks, signInLink } from "./lib/auth.js";
+import { isStaff } from "./lib/admin.js";
+import { sendEmail, emailConfigured } from "./lib/email.js";
+import { renderEmail } from "./public/email-templates.js";
 import { uiLang, uiDict, uiTranslate, rateOk } from "./lib/uit.js";
 
 const app = express();
@@ -76,7 +79,24 @@ app.get("/v1/llm/test", requireUser, wrap(async (req, res) => {
 }));
 
 // ---- Billing
-app.get("/v1/billing", requireUser, (req, res) => { const u = user(req.user.uid); res.json({ credits: balance(req.user.uid), plan: planOf(u), limits: LIMITS[planOf(u)], planUntil: u.planUntil || null, ledger: (u.ledger || []).slice(0, 50) }); });
+app.get("/v1/billing", requireUser, (req, res) => { const u = user(req.user.uid); const staff = isStaff(req.user); const plan = staff ? "studio" : planOf(u); res.json({ credits: balance(req.user.uid), plan, staff, limits: LIMITS[plan], planUntil: u.planUntil || null, ledger: (u.ledger || []).slice(0, 50) }); });
+
+// Branded sign-in email: the server makes the Firebase sign-in link and sends it with the nooi.ai design.
+// Public (people aren't signed in yet) → rate-limited per IP and per address. 501 = not set up → the browser
+// falls back to Firebase's own email.
+const linkHits = new Map();
+const tooMany = (key, max) => { const now = Date.now(), h = linkHits.get(key) || []; const recent = h.filter((t) => now - t < 3600e3); recent.push(now); linkHits.set(key, recent); if (linkHits.size > 5000) linkHits.clear(); return recent.length > max; };
+app.post("/v1/auth/email-link", wrap(async (req, res) => {
+  const email = String(req.body?.email || "").trim().toLowerCase(), lang = req.body?.lang === "ar" ? "ar" : "en";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || email.length > 200) throw Object.assign(new Error("Enter a valid email address"), { code: 400 });
+  if (!canSendSignInLinks() || !emailConfigured()) throw Object.assign(new Error("Branded sign-in email is not set up"), { code: 501 });
+  if (tooMany("ip:" + req.ip, 10) || tooMany("em:" + email, 5)) throw Object.assign(new Error("Too many requests — try again later"), { code: 429 });
+  const base = (process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
+  const link = await signInLink(email, `${base}/?e=${encodeURIComponent(email)}`);
+  const m = renderEmail("signin", { lang, link, base });
+  await sendEmail({ to: email, subject: m.subject, text: m.text, html: m.html });
+  res.json({ sent: true });
+}));
 app.post("/v1/billing/checkout", requireUser, wrap(async (req, res) => {
   if (!featureOn("payments")) throw Object.assign(new Error("Payments are paused"), { code: 403 });
   const name = providerName(req.body.provider); const P = provider(req.body.provider); if (!P) throw Object.assign(new Error("Payments are not connected yet"), { code: 501 });

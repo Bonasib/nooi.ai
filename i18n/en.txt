@@ -191,7 +191,7 @@
 191|Continue with Google
 192|Continue with Apple (iCloud)
 193|or with email
-194|Send code
+194|Send sign-in link
 195|or with your phone
 196|Country code
 197|Phone number
@@ -201,7 +201,7 @@
 201|By continuing you agree to the Terms and Privacy Policy.
 202|Home
 203|Create
-204|UGC & product ads
+204|UGC ads
 205|Draw & create
 206|Live Sketch
 207|3D worlds
@@ -346,3 +346,7 @@
 346|Tone
 347|Topic
 348|Who
+349|Tap the link in the email to finish signing in. Not there? Check Spam.
+350|This sign-in link has expired or was already used. Send a new one.
+351|This link was sent to a different email address.
+352|Display name

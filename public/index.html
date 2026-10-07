@@ -2107,7 +2107,7 @@ function vAuth(){
   if(AU.step==="start"){
     f='<h1>'+L("Sign in to nooi.ai","سجّل الدخول إلى nooi.ai")+'</h1><p class="lede" style="margin:0">'+L("Create films, characters and stories in your own language.","اصنع أفلاماً وشخصيات وقصصاً بلغتك.")+"</p>"+
     '<div class="oauth"><button class="btn" data-act="auth-oauth" data-m="google">'+G_ICON+L("Continue with Google","المتابعة عبر Google")+'</button><button class="btn" data-act="auth-oauth" data-m="apple">'+APPLE_ICON+L("Continue with Apple (iCloud)","المتابعة عبر Apple (iCloud)")+"</button></div>"+
-    '<div class="or">'+L("or with email","أو عبر البريد")+'</div><div class="row" style="flex-wrap:nowrap"><input type="email" id="au-email" placeholder="name@example.com" autocomplete="email" dir="ltr" aria-label="'+L("Email","البريد الإلكتروني")+'"><button class="btn primary" data-act="auth-email">'+L("Send code","أرسل الرمز")+"</button></div>"+
+    '<div class="or">'+L("or with email","أو عبر البريد")+'</div><div class="row" style="flex-wrap:nowrap"><input type="email" id="au-email" placeholder="name@example.com" autocomplete="email" dir="ltr" aria-label="'+L("Email","البريد الإلكتروني")+'"><button class="btn primary" data-act="auth-email">'+L("Send sign-in link","أرسل رابط الدخول")+"</button></div>"+
     '<div class="or">'+L("or with your phone","أو برقم الجوال")+'</div><div class="phone"><select id="au-cc" aria-label="'+L("Country code","رمز الدولة")+'">'+[["+966","🇸🇦 +966"],["+971","🇦🇪 +971"],["+965","🇰🇼 +965"],["+973","🇧🇭 +973"],["+974","🇶🇦 +974"],["+968","🇴🇲 +968"],["+20","🇪🇬 +20"],["+962","🇯🇴 +962"],["+1","🇺🇸 +1"],["+44","🇬🇧 +44"]].map(c=>'<option value="'+c[0]+'" '+(AU.cc===c[0]?"selected":"")+">"+c[1]+"</option>").join("")+'</select><input type="tel" id="au-phone" placeholder="5X XXX XXXX" autocomplete="tel-national" inputmode="tel" aria-label="'+L("Phone number","رقم الجوال")+'"></div><button class="btn primary big" style="margin-top:10px" data-act="auth-phone">'+ic("phone")+L("Send SMS code","أرسل رمز SMS")+"</button>"+
     (AU.err?'<div class="status err">'+esc(AU.err)+"</div>":"")+
     '<button class="btn ghost" style="margin-top:14px" data-act="auth-guest">'+L("Continue as guest","المتابعة كضيف")+"</button>";
@@ -2859,7 +2859,7 @@ Object.assign(ICONS,{
 });
 const FXV=["bg","grade","mocap"];
 const EDV=["edit","bg","grade","mocap","voice","finish"];
-function fxTabs(){return'<div class="seg" style="margin-bottom:18px">'+[["bg","Background & keying","الخلفية والكروما"],["grade","Color grading","تدريج الألوان"],["mocap","Motion capture","التقاط الحركة"]].map(x=>'<button data-go="'+x[0]+'" aria-pressed="'+(S.view===x[0])+'">'+L(x[1],x[2])+"</button>").join("")+"</div>"}
+function fxTabs(){return'<div class="seg fxtabs" role="tablist" style="margin-bottom:18px">'+[["bg","Background & keying","الخلفية والكروما"],["grade","Color grading","تدريج الألوان"],["mocap","Motion capture","التقاط الحركة"]].map(x=>'<button data-go="'+x[0]+'" aria-pressed="'+(S.view===x[0]||(S.view==="fx"&&(S.fxTab||"bg")===x[0]))+'">'+L(x[1],x[2])+"</button>").join("")+"</div>"}
 ["bg","grade","mocap"].forEach(k=>{const f=VIEWS[k];VIEWS[k]=()=>{S.fxTab=k;return f().replace('<div class="view">','<div class="view">'+fxTabs())}});
 Object.assign(TOOLDESC,{fx:["Keying, color grading and motion capture.","الكروما وتدريج الألوان والتقاط الحركة."],plan:["Analyze your website and get a ready content plan.","حلّل موقعك واحصل على خطة محتوى جاهزة."],calendar:["Schedule and publish to every platform.","جدول وانشر على كل المنصات."],library:["Everything you made.","كل ما صنعته."],explore:["Ready-made starting points.","نقاط بداية جاهزة."],connect:["Plug in your APIs and accounts.","اربط واجهاتك البرمجية وحساباتك."],account:["Profile, plan and credits.","الملف والباقة والرصيد."]});
 VIEWS.tools=()=>'<div class="view"><h1>'+L("Studio","الاستوديو")+'</h1><p class="lede">'+L("Every tool, grouped by what you're doing: create, tell the story, edit, then publish.","كل الأدوات مرتبة حسب مرحلة العمل: أنشئ، ثم احكِ القصة، ثم حرّر، ثم انشر.")+"</p>"+NAVS.slice(1).map(g=>'<h2 class="sec">'+L(g[0][0],g[0][1])+"</h2>"+toolGrid(g[1].map(x=>x[0]))).join("")+"</div>";
@@ -2910,7 +2910,11 @@ function loadScript(src){return new Promise((res,rej)=>{const s=document.createE
 async function initFirebase(cfg){
   try{await loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js");await loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js");
     firebase.initializeApp(cfg);API.fb=firebase;const auth=firebase.auth();auth.languageCode=S.lang;
-    if(auth.isSignInWithEmailLink(location.href)){let em=localStorage.getItem("dotai-email")||prompt(L("Confirm your email","أكّد بريدك الإلكتروني"));if(em){await auth.signInWithEmailLink(em,location.href);history.replaceState(null,"",location.pathname)}}
+    if(auth.isSignInWithEmailLink(location.href)){const q=new URLSearchParams(location.search);let cu=null;try{cu=q.get("continueUrl")&&new URL(q.get("continueUrl")).searchParams}catch(e){}
+      let em=localStorage.getItem("dotai-email")||q.get("e")||(cu&&cu.get("e"))||prompt(L("Confirm your email","أكّد بريدك الإلكتروني"))||"";
+      try{if(em){await auth.signInWithEmailLink(em.trim(),location.href);localStorage.removeItem("dotai-email")}}
+      catch(err){const c=String(err&&err.code||"");AU={step:"start",err:/invalid-action-code|expired/.test(c)?L("This sign-in link has expired or was already used. Send a new one.","انتهت صلاحية رابط الدخول أو استُخدم من قبل. أرسل رابطاً جديداً."):/invalid-email|mismatch/.test(c)?L("This link was sent to a different email address.","هذا الرابط أُرسل إلى بريد إلكتروني آخر."):String(err.message||err)};S.authOpen=true}
+      history.replaceState(null,"",location.pathname)}
     auth.onAuthStateChanged(u=>{if(u){const pid=(u.providerData[0]||{}).providerId||"";S.user={name:u.displayName||(u.email?u.email.split("@")[0]:u.phoneNumber)||L("Creator","مبدع"),method:pid.includes("google")?"google":pid.includes("apple")?"apple":u.phoneNumber?"phone":"email",contact:u.email||u.phoneNumber||"",uid:u.uid}}else S.user=null;persist();renderAll()});
   }catch(e){API.fb=null}
 }
@@ -2919,7 +2923,8 @@ document.addEventListener("click",async e=>{
   e.stopImmediatePropagation();e.preventDefault();const auth=API.fb.auth();
   try{
     if(act==="auth-oauth"){await auth.signInWithPopup(a.dataset.m==="apple"?new firebase.auth.OAuthProvider("apple.com"):new firebase.auth.GoogleAuthProvider())}
-    else if(act==="auth-email"){const v=($("#au-email").value||"").trim();if(!/^\S+@\S+\.\S+$/.test(v)){AU.err=L("Enter a valid email address.","أدخل بريداً إلكترونياً صحيحاً.");renderView();return}await auth.sendSignInLinkToEmail(v,{url:location.origin+location.pathname,handleCodeInApp:true});localStorage.setItem("dotai-email",v);AU={step:"emailLink",contact:v,cc:AU.cc,err:""};renderView()}
+    else if(act==="auth-email"){const v=($("#au-email").value||"").trim();if(!/^\S+@\S+\.\S+$/.test(v)){AU.err=L("Enter a valid email address.","أدخل بريداً إلكترونياً صحيحاً.");renderView();return}let viaServer=false;if(API.mode==="server"){try{await API.req("/v1/auth/email-link",{json:{email:v,lang:S.lang==="ar"?"ar":"en"}});viaServer=true}catch(e2){if(!/not set up/i.test(String(e2.message||e2)))throw e2}}
+      if(!viaServer)await auth.sendSignInLinkToEmail(v,{url:location.origin+location.pathname+"?e="+encodeURIComponent(v),handleCodeInApp:true});localStorage.setItem("dotai-email",v);AU={step:"emailLink",contact:v,cc:AU.cc,err:""};renderView()}
     else if(act==="auth-phone"){const cc=$("#au-cc").value,dg=($("#au-phone").value||"").replace(/\D/g,"").replace(/^0+/,"");if(dg.length<7){AU.err=L("Enter a valid phone number.","أدخل رقم جوال صحيحاً.");renderView();return}
       let box=$("#recap");if(!box){box=document.createElement("div");box.id="recap";document.body.appendChild(box)}if(!window._rv)window._rv=new firebase.auth.RecaptchaVerifier("recap",{size:"invisible"});
       window._conf=await auth.signInWithPhoneNumber(cc+dg,window._rv);AU={step:"phone",contact:cc+" "+dg,cc,err:"",real:true};renderView();setTimeout(()=>{const f=$('[data-otp="0"]');f&&f.focus()},50)}
@@ -2931,7 +2936,7 @@ document.addEventListener("click",async e=>{
   }catch(err){AU.err=String(err.message||err);renderView()}
 },true);
 const _vAuth=vAuth;
-vAuth=function(){if(AU.step==="emailLink")return'<div class="auth"><div class="art"><canvas class="frame live" data-ref="auth"></canvas></div><div class="form"><div class="brand" style="padding:0 0 26px"><i class="dot"></i><b>nooi</b><span>.ai</span></div><h1>'+L("Check your inbox","تحقق من بريدك")+'</h1><p class="lede">'+L("We sent a sign-in link to ","أرسلنا رابط الدخول إلى ")+'<b dir="ltr">'+esc(AU.contact)+"</b>. "+L("Open it on this device.","افتحه على هذا الجهاز.")+'</p><button class="btn ghost" data-act="auth-back">'+L("Use another method","استخدم طريقة أخرى")+"</button></div></div>";let h=_vAuth();if(AU.real||API.fb)h=h.replace(/<div class="democode">.*?<\/div>/,"");return h};
+vAuth=function(){if(AU.step==="emailLink")return'<div class="auth"><div class="art"><canvas class="frame live" data-ref="auth"></canvas></div><div class="form"><div class="brand" style="padding:0 0 26px"><i class="dot"></i><b>nooi</b><span>.ai</span></div><h1>'+L("Check your inbox","تحقق من بريدك")+'</h1><p class="lede">'+L("We sent a sign-in link to ","أرسلنا رابط الدخول إلى ")+'<b dir="ltr">'+esc(AU.contact)+"</b>. "+L("Tap the link in the email to finish signing in. Not there? Check Spam.","اضغط الرابط في الرسالة لإكمال الدخول. لم تجدها؟ افحص البريد المزعج.")+'</p><button class="btn ghost" data-act="auth-back">'+L("Use another method","استخدم طريقة أخرى")+"</button></div></div>";let h=_vAuth();if(AU.real||API.fb)h=h.replace(/<div class="democode">.*?<\/div>/,"");return h};
 
 /* ================= CHARACTER BUILDER ================= */
 const EYES=[["#5b3a1e","Brown","بني"],["#2b1a10","Dark brown","بني غامق"],["#8a6a2a","Hazel","عسلي"],["#4a7a3a","Green","أخضر"],["#3f6fa8","Blue","أزرق"],["#6d7a86","Grey","رمادي"],["#0e0e0e","Black","أسود"]];
@@ -4479,7 +4484,7 @@ let TOKENS={list:[],fresh:null};
 async function loadTokens(){if(API.mode!=="server")return;try{TOKENS.list=(await API.req("/v1/tokens")).tokens||[];if(S.view==="integrations")renderView()}catch(e){}}
 const mcpUrl=()=>(API.mode==="server"?location.origin:"https://nooi.ai")+"/mcp";
 const tokenOr=()=>TOKENS.fresh||"nooi_YOUR_TOKEN";
-function codeBox(id,txt){return'<div class="codebox"><pre id="'+id+'" dir="ltr">'+esc(txt)+'</pre><button class="btn sm" data-act="copy" data-t="'+id+'">'+ic("plus")+L("Copy","نسخ")+"</button></div>"}
+function codeBox(id,txt){return'<div class="codebox"><pre id="'+id+'" dir="ltr">'+esc(txt)+'</pre><button class="btn sm" data-act="copy" data-t="'+id+'">'+ic("copy")+L("Copy","نسخ")+"</button></div>"}
 VIEWS.integrations=()=>{const srv=API.mode==="server";const url=mcpUrl(),tk=tokenOr();
   const clients=[
    ["claude","Claude","Claude",'<path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/>',L("Claude (web, desktop, mobile): Settings → Connectors → Add custom connector, and paste this URL.","Claude (الويب وسطح المكتب والجوال): الإعدادات ← الموصلات ← إضافة موصل مخصص، والصق هذا الرابط."),url+"?token="+tk],
@@ -4755,8 +4760,8 @@ document.addEventListener("click",async e=>{const a=e.target.closest("[data-act]
   case"adm-emailsel":S.admSeg="selected";S.admTab="emails";renderView();break;
   case"adm-seg":S.admSeg=X.v;renderView();break;
   case"adm-tpl":{const t=EM_TPL[X.v];S.emSub=L(t[0][0],t[0][1]);S.emBody=L(t[1][0],t[1][1]);renderView();break}
-  case"adm-send":{const sub=($("#emsub")||{}).value||"",body=($("#embody")||{}).value||"";if(!sub.trim()||!body.trim()){toast(L("Add a subject and a message.","أضف عنواناً ورسالة."));break}const seg=S.admSeg||"all";const ids=seg==="selected"?(S.admPick||[]):null;
-    const r=await admCall("/v1/admin/email",{json:{segment:seg,ids,subject:sub,body}},()=>{const n=ids?ids.length:{all:D.users.length,paid:D.users.filter(u=>u.plan!=="free").length,free:D.users.filter(u=>u.plan==="free").length,inactive:D.users.filter(u=>Date.now()-u.lastSeen>14*864e5).length}[seg];D.emails.unshift({t:Date.now(),subject:sub,count:n});audit("Emailed "+n+" clients: "+sub)});
+  case"adm-send":case"adm-test":{const sub=($("#emsub")||{}).value||"",body=($("#embody")||{}).value||"",tpl=S.admPoster||"plain";if(tpl==="plain"&&(!sub.trim()||!body.trim())){toast(L("Add a subject and a message.","أضف عنواناً ورسالة."));break}const seg=X.act==="adm-test"?"me":(S.admSeg||"all");const ids=seg==="selected"?(S.admPick||[]):null;
+    const r=await admCall("/v1/admin/email",{json:{segment:seg,ids,subject:sub,body,template:tpl,fields:emFields()}},()=>{const n=ids?ids.length:{all:D.users.length,paid:D.users.filter(u=>u.plan!=="free").length,free:D.users.filter(u=>u.plan==="free").length,inactive:D.users.filter(u=>Date.now()-u.lastSeen>14*864e5).length}[seg];D.emails.unshift({t:Date.now(),subject:sub,count:n});audit("Emailed "+n+" clients: "+sub)});
     if(r){S.emSub="";S.emBody="";toast(API.mode==="server"?L("Emails sent","تم إرسال الرسائل"):L("Demo — logged, not actually sent.","تجريبي — سُجّلت ولم تُرسل فعلياً."));renderView()}break}
   case"adm-tf":S.admTF=X.v;renderView();break;
   case"adm-t":S.admT=X.id;renderView();break;
@@ -4885,7 +4890,7 @@ document.addEventListener("click",e=>{const a=e.target.closest("[data-act]");if(
   if(X.act==="ugc-rm"){delete M[X.k];if(S.mediaKeys&&S.mediaKeys[X.k]){delete S.mediaKeys[X.k];IDB.del(X.k)}persist();renderView()}});
 document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.dataset.ugc;if(k&&e.target.files&&e.target.files[0]){loadSlot(k,e.target.files[0]);setTimeout(renderView,60)}});
 const _rt3=rootFor;rootFor=function(p){if(p.startsWith("draft.ugc.")){return[S.draft.ugc,p.split(".").slice(2)]}return _rt3(p)};
-NAVS[1][1].splice(1,0,["ugcads","coin","UGC & product ads","إعلانات UGC والمنتجات",1]);ALLNAV.length=0;NAVS.flatMap(g=>g[1]).forEach(x=>ALLNAV.push(x));TOOLDESC.ugcads=["Market a product with a presenter, product shots, an image or motion graphics.","سوّق منتجاً بمقدّم أو لقطات منتج أو صورة أو موشن جرافيك."];FEATURE_OF_VIEW.ugcads="video";
+NAVS[1][1].splice(1,0,["ugcads","coin","UGC ads","إعلانات UGC",1]);ALLNAV.length=0;NAVS.flatMap(g=>g[1]).forEach(x=>ALLNAV.push(x));TOOLDESC.ugcads=["Market a product with a presenter, product shots, an image or motion graphics.","سوّق منتجاً بمقدّم أو لقطات منتج أو صورة أو موشن جرافيك."];FEATURE_OF_VIEW.ugcads="video";
 VIEWS.ugcads=()=>{S.draft.type="ugc";S.view="video";return VIEWS.video()};
 /* ================= UNIVERSAL PROMPT: pick the task and the AI ================= */
 const TASKS=[["auto","Auto","تلقائي","wand"],["video","Video","فيديو","video"],["image","Image","صورة","image"],["story","Story","قصة","story"],["board","Storyboard","ستوري بورد","board"],["character","Character","شخصية","char"],["voice","Voiceover","تعليق صوتي","voice"],["music","Music","موسيقى","voice"],["hook","Hooks","خطافات","hook"],["coloring","Coloring page","صفحة تلوين","brush"],["3d","3D asset","مجسّم 3D","cube"]];
@@ -5827,7 +5832,7 @@ const _vexp_30=VIEWS.explore;VIEWS.explore=()=>H1(_vexp_30(),"Templates","الق
 const _vfin_30=VIEWS.finish;VIEWS.finish=()=>H1(_vfin_30(),"Enhance","التحسين");
 const _vplan_30=VIEWS.plan;VIEWS.plan=()=>H1(_vplan_30(),"Content plan","خطة المحتوى");
 const _vcon_30=VIEWS.connect;VIEWS.connect=()=>H1(_vcon_30(),"Connections & APIs","الربط والواجهات");
-const _vv9_30=VIEWS.video;VIEWS.video=()=>{const h=_vv9_30();return isUgc()?H1(h,"UGC & product ads","إعلانات UGC والمنتجات").replace(/<p class="lede">[^<]*<\/p>/,'<p class="lede">'+L("Market a product with a presenter, product shots, an image or motion graphics.","سوّق منتجك بمقدّم أو لقطات منتج أو صورة أو موشن جرافيك.")+"</p>"):h};
+const _vv9_30=VIEWS.video;VIEWS.video=()=>{const h=_vv9_30();return isUgc()?H1(h,"UGC ads","إعلانات UGC").replace(/<p class="lede">[^<]*<\/p>/,'<p class="lede">'+L("Market a product with a presenter, product shots, an image or motion graphics.","سوّق منتجك بمقدّم أو لقطات منتج أو صورة أو موشن جرافيك.")+"</p>"):h};
 /* ---- 3. templates: category chips, full-bleed cards, clean titles ---- */
 VIEWS.explore=(o=>()=>{let h=o();
   h=h.replace(/<div class="tiles"( role="group")?>((?:(?!<\/div>)[\s\S])*?data-set="exploreType"[\s\S]*?)<\/div>/,(m,rg,inner)=>'<div class="tplcats" role="group">'+inner.replace(/class="tile"/g,'class="tplcat"')+"</div>");
@@ -6647,6 +6652,64 @@ html:is([lang=ar],[lang=fa],[lang=ckb],[lang=ur]) .small{font-size:12.5px}
 .langsug .lsg-t b{font-size:15px;color:var(--text)}
 .langsug .lsg-b{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end}
 .langsug .lsg-b .btn{min-width:110px}
+`;document.head.appendChild(st)})();
+
+/* ================= v48: ADMIN ACCESS · PROFILE CARD · EMAIL POSTERS ================= */
+Object.assign(ICONS,{copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>'});
+/* admin role & plan: ask the server again every time sign-in changes. Before, the role was asked once ~1 s after
+   load — before Firebase had restored the session — so admins never saw the dashboard, CRM or ERP. */
+initFirebase=(o=>async function(c){await o(c);try{if(API.fb)API.fb.auth().onAuthStateChanged(u=>{if(u){loadMe();syncServer()}else{ME.role=null;ME.perms=[]}})}catch(e){}})(initFirebase);
+/* --- account: profile card with role, admin shortcut and sign-out --- */
+function profileCard(u){const role=isAdmin()&&ME.role?(ROLE_DEF[ME.role]||[[ME.role,ME.role]])[0]:null;
+  return'<div class="panel pcard"><span class="av pav">'+esc(initials(u.name))+'</span><div class="pinfo"><label class="small mute" for="pname">'+L("Display name","اسم العرض")+'</label><input id="pname" type="text" data-bind="user.name" value="'+esc(u.name)+'" dir="auto"><div class="pmeta"><span class="small mute">'+L("Signed in with ","مسجّل عبر ")+esc(methodName(u.method))+(u.contact?' · <span dir="ltr">'+esc(u.contact)+"</span>":"")+"</span>"+(role?'<span class="rolepill">'+ic("shield")+esc(L(role[0],role[1]))+"</span>":"")+'</div></div><div class="pact">'+(role?'<button class="btn primary" data-go="admin">'+ic("dash")+L("Admin dashboard","لوحة الإدارة")+"</button>":"")+'<button class="btn" data-act="signout">'+ic("logout")+L("Sign out","خروج")+"</button></div></div>"}
+VIEWS.account=(o=>()=>{const h=o(),u=S.user;if(!u)return h;const a=h.indexOf('<div class="panel set"><div class="row" style="flex-wrap:nowrap"><span class="av"');if(a<0)return h;const so=h.indexOf('data-act="signout"',a);const b=so<0?-1:h.indexOf("</button></div></div>",so);return b<0?h:h.slice(0,a)+profileCard(u)+h.slice(b+"</button></div></div>".length)})(VIEWS.account);
+/* --- admin → emails: designed "posters" (sign-in, marketing, discount, new feature, holiday) with a live preview --- */
+let EMT=null;import("./email-templates.js").then(m=>{EMT=m;emPreview()}).catch(()=>{});
+const POSTERS=[["plain","Simple","بسيطة","mail"],["marketing","Marketing","تسويق","spark"],["discount","Discount","خصم","card"],["feature","New feature","ميزة جديدة","wand"],["holiday","Holiday","مناسبة","calendar"],["signin","Sign-in link","رابط الدخول","lock"]];
+const emVal=id=>(document.getElementById(id)||{}).value||"";
+function emFields(){const F=S.emF||{};return{lang:F.lang||(S.lang==="ar"?"ar":"en"),title:F.title||"",cta:F.cta||"",url:F.url||"",percent:F.percent||"",code:F.code||"",date:F.date||"",holiday:F.holiday||"eid"}}
+function emPreview(){const f=document.getElementById("empv");if(!f)return;if(!EMT){f.srcdoc='<p style="font:14px sans-serif;color:#888;padding:20px">'+esc(L("The preview appears when the studio runs on your server.","تظهر المعاينة عند تشغيل الاستوديو على خادمك."))+"</p>";return}
+  const F=emFields(),kind=S.admPoster||"plain",sub=emVal("emsub"),body=emVal("embody");const m=EMT.renderEmail(kind,Object.assign({},F,{subject:sub||undefined,body:body||undefined,name:L("Sara","سارة"),base:location.protocol.startsWith("http")?location.origin:"https://nooi.ai",link:"https://nooi.ai/?signin=example",unsub:"https://nooi.ai/v1/unsubscribe"}));f.srcdoc=m.html;const sl=document.getElementById("emsubj");if(sl)sl.textContent=m.subject}
+function posterFields(){const k=S.admPoster||"plain",F=emFields();if(k==="plain"||k==="signin")return"";const inp=(id,label,ph,v,t)=>'<div><label class="lbl" for="'+id+'">'+label+'</label><input id="'+id+'" data-emf="'+id.slice(2)+'" type="'+(t||"text")+'" dir="auto" placeholder="'+esc(ph||"")+'" value="'+esc(v||"")+'"></div>';
+  let x='<div class="grid2">'+inp("emtitle",L("Headline","العنوان الرئيسي"),L("Uses the poster's default","يستخدم نص القالب"),F.title)+inp("emcta",L("Button text","نص الزر"),L("e.g. Start creating","مثال: ابدأ الإنشاء"),F.cta)+inp("emurl",L("Button link","رابط الزر"),"https://nooi.ai",F.url,"url");
+  if(k==="discount")x+=inp("empercent",L("Discount %","نسبة الخصم %"),"20",F.percent,"number")+inp("emcode",L("Coupon code","رمز الخصم"),"EID20",F.code)+inp("emdate",L("Valid until","صالح حتى"),L("e.g. 30 June","مثال: 30 يونيو"),F.date);
+  if(k==="holiday")x+='<div><label class="lbl" for="emholiday">'+L("Occasion","المناسبة")+'</label><select id="emholiday" data-emf="holiday">'+[["eid","Eid","العيد"],["ramadan","Ramadan","رمضان"],["national","Saudi National Day","اليوم الوطني"],["founding","Founding Day","يوم التأسيس"],["newyear","New Year","رأس السنة"],["generic","Any season","مناسبة عامة"]].map(o=>'<option value="'+o[0]+'"'+(F.holiday===o[0]?" selected":"")+">"+L(o[1],o[2])+"</option>").join("")+"</select></div>"+inp("emcode",L("Gift code (optional)","رمز هدية (اختياري)"),"",F.code);
+  return x+"</div>"}
+admEmails=(o=>function(){let h=o();const k=S.admPoster||"plain",F=emFields();
+  const a=h.indexOf('<span class="lbl">'+L("Template","قالب")),b=h.indexOf('<label class="lbl">'+L("Subject","العنوان"));if(a<0||b<0)return h;
+  const quick=h.slice(a,b);
+  const pick='<span class="lbl">'+L("Poster design","تصميم الرسالة")+'</span><div class="tiles">'+POSTERS.map(p=>'<button class="tile" data-act="adm-poster" data-v="'+p[0]+'" aria-pressed="'+(k===p[0])+'"><span class="gl">'+ic(p[3])+'</span><span class="lb">'+L(p[1],p[2])+"</span></button>").join("")+"</div>"+
+    (k==="signin"?note(L("This is the email people get when they sign in. It is sent automatically — you can preview it here.","هذه الرسالة التي تصل عند تسجيل الدخول، وتُرسل تلقائياً — يمكنك معاينتها هنا.")):"")+
+    '<div class="seg" style="margin-top:12px"><button data-act="adm-emlang" data-v="ar" aria-pressed="'+(F.lang==="ar")+'">العربية</button><button data-act="adm-emlang" data-v="en" aria-pressed="'+(F.lang==="en")+'">English</button></div>'+posterFields();
+  h=h.slice(0,a)+pick+(k==="plain"?quick:"")+h.slice(b);
+  if(k!=="plain")h=h.replace(L("Use {name} for the client's name. An unsubscribe link is added automatically.","استخدم {name} لاسم العميل. يُضاف رابط إلغاء الاشتراك تلقائياً."),L("Subject and message are optional — empty fields use the poster's text. Use {name} for the client's name.","العنوان والرسالة اختياريان — الحقول الفارغة تستخدم نص القالب. استخدم {name} لاسم العميل."));
+  const send='<button class="btn primary" data-act="adm-send">';
+  if(k==="signin")h=h.replace(new RegExp('<label class="lbl">'+L("Subject","العنوان")+'[\\s\\S]*?'+send.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+'[\\s\\S]*?</button>'),"");
+  else h=h.replace(send,'<div class="row" style="margin-top:4px"><button class="btn" data-act="adm-test">'+ic("mail")+L("Send a test to me","أرسل نسخة تجريبية لي")+"</button>"+send).replace(L("Send","أرسل")+"</button></div>",L("Send","أرسل")+"</button></div></div>");
+  return'<div class="emgrid">'+h.replace('<h3 class="sec">'+L("Sent","المرسلة"),'<div class="empanel"><div class="small mute">'+L("Preview","معاينة")+' · <b id="emsubj"></b></div><iframe id="empv" title="'+L("Email preview","معاينة الرسالة")+'" sandbox=""></iframe></div></div><h3 class="sec">'+L("Sent","المرسلة"))})(admEmails);
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest('[data-act="adm-poster"],[data-act="adm-emlang"]');if(!b)return;e.stopImmediatePropagation();
+  if(b.dataset.act==="adm-poster")S.admPoster=b.dataset.v;else{S.emF=Object.assign({},S.emF,{lang:b.dataset.v})}S.emSub=emVal("emsub");S.emBody=emVal("embody");persist();renderView();setTimeout(emPreview,0)},true);
+document.addEventListener("input",e=>{const t=e.target;if(!t||!t.closest||!t.closest(".emgrid"))return;if(t.dataset&&t.dataset.emf){S.emF=Object.assign({},S.emF,{[t.dataset.emf]:t.value})}clearTimeout(emPreview._t);emPreview._t=setTimeout(emPreview,150)});
+document.addEventListener("change",e=>{const t=e.target;if(t&&t.dataset&&t.dataset.emf&&t.closest&&t.closest(".emgrid")){S.emF=Object.assign({},S.emF,{[t.dataset.emf]:t.value});emPreview()}});
+renderView=(o=>function(){o();if(S.view==="admin"&&document.getElementById("empv"))setTimeout(emPreview,0)})(renderView);
+(function(){const st=document.createElement("style");st.id="v48";st.textContent=`
+.pcard{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px 18px;align-items:center;padding:18px 20px}
+.pcard .pav{width:56px;height:56px;font-size:22px}
+.pcard .pinfo{display:grid;gap:4px;min-width:0}
+.pcard .pinfo input{max-width:440px}
+.pcard .pmeta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.pcard .pact{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.rolepill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;background:color-mix(in srgb,var(--lime) 20%,transparent);color:var(--lime-ink);font-size:12px;font-weight:600;white-space:nowrap}
+.rolepill svg{width:14px;height:14px}
+@media (max-width:767px){.pcard{grid-template-columns:auto minmax(0,1fr)}.pcard .pact{grid-column:1/-1;justify-content:stretch}.pcard .pact .btn{flex:1}}
+.codebox .btn svg{width:15px;height:15px}
+.seg.fxtabs{padding:4px;gap:4px}
+.seg.fxtabs button{padding:10px 18px;font-size:14px;font-weight:500;color:var(--mute)}
+.seg.fxtabs button[aria-pressed="true"]{background:color-mix(in srgb,var(--lime) 24%,var(--panel));color:var(--text);font-weight:600;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--lime) 55%,transparent)}
+.emgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:stretch}
+.empanel{display:flex;flex-direction:column;gap:8px}
+.empanel iframe{flex:1;width:100%;min-height:600px;border:1px solid var(--line2);border-radius:16px;background:#eef0ea}
+@media (max-width:1079px){.emgrid{grid-template-columns:1fr}.empanel iframe{min-height:560px}}
 `;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */

@@ -191,7 +191,7 @@
 191|Continuar com Google
 192|Continuar com Apple (iCloud)
 193|ou com e-mail
-194|Enviar código
+194|Enviar link de acesso
 195|ou com o seu telefone
 196|Código do país
 197|Número de telefone
@@ -201,7 +201,7 @@
 201|Ao continuar, aceita os Termos e a Política de privacidade.
 202|Início
 203|Criar
-204|UGC e anúncios de produto
+204|Anúncios UGC
 205|Desenhar e criar
 206|Esboço ao vivo
 207|Mundos 3D
@@ -346,3 +346,7 @@
 346|Tom
 347|Tema
 348|Quem
+349|Toque no link do e-mail para concluir o acesso. Não está lá? Veja o spam.
+350|Este link de acesso expirou ou já foi usado. Envie um novo.
+351|Este link foi enviado para outro endereço de e-mail.
+352|Nome de exibição

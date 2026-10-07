@@ -191,7 +191,7 @@
 191|Google ile devam et
 192|Apple (iCloud) ile devam et
 193|veya e-posta ile
-194|Kod gönder
+194|Giriş bağlantısı gönder
 195|veya telefonunuzla
 196|Ülke kodu
 197|Telefon numarası
@@ -201,7 +201,7 @@
 201|Devam ederek Koşulları ve Gizlilik Politikasını kabul etmiş olursunuz.
 202|Ana sayfa
 203|Oluştur
-204|UGC ve ürün reklamları
+204|UGC reklamları
 205|Çiz ve oluştur
 206|Canlı eskiz
 207|3D dünyalar
@@ -346,3 +346,7 @@
 346|Ton
 347|Başlık
 348|Kim
+349|Girişi tamamlamak için e-postadaki bağlantıya dokunun. Yok mu? Spam klasörüne bakın.
+350|Bu giriş bağlantısının süresi doldu veya zaten kullanıldı. Yenisini gönderin.
+351|Bu bağlantı başka bir e-posta adresine gönderildi.
+352|Görünen ad

@@ -191,7 +191,7 @@
 191|Teruskan dengan Google
 192|Teruskan dengan Apple (iCloud)
 193|atau dengan e-mel
-194|Hantar kod
+194|Hantar pautan log masuk
 195|atau dengan telefon anda
 196|Kod negara
 197|Nombor telefon
@@ -201,7 +201,7 @@
 201|Dengan meneruskan, anda bersetuju dengan Terma dan Dasar Privasi.
 202|Utama
 203|Cipta
-204|UGC & iklan produk
+204|Iklan UGC
 205|Lukis & cipta
 206|Lakaran langsung
 207|Dunia 3D
@@ -346,3 +346,7 @@
 346|Nada
 347|Topik
 348|Siapa
+349|Ketik pautan dalam e-mel untuk melengkapkan log masuk. Tiada? Semak Spam.
+350|Pautan log masuk ini telah tamat tempoh atau sudah digunakan. Hantar yang baharu.
+351|Pautan ini dihantar ke alamat e-mel lain.
+352|Nama paparan

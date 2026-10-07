@@ -191,7 +191,7 @@
 191|Endelea na Google
 192|Endelea na Apple (iCloud)
 193|au kwa barua pepe
-194|Tuma msimbo
+194|Tuma kiungo cha kuingia
 195|au kwa simu yako
 196|Msimbo wa nchi
 197|Nambari ya simu
@@ -201,7 +201,7 @@
 201|Kwa kuendelea, unakubali Masharti na Sera ya Faragha.
 202|Nyumbani
 203|Unda
-204|UGC na matangazo ya bidhaa
+204|Matangazo ya UGC
 205|Chora na uunde
 206|Mchoro wa moja kwa moja
 207|Ulimwengu wa 3D
@@ -346,3 +346,7 @@
 346|Toni
 347|Mada
 348|Nani
+349|Gusa kiungo kwenye barua pepe ili kukamilisha kuingia. Hakipo? Angalia Spam.
+350|Kiungo hiki cha kuingia kimeisha muda au kimeshatumika. Tuma kipya.
+351|Kiungo hiki kilitumwa kwa anwani nyingine ya barua pepe.
+352|Jina la kuonyesha

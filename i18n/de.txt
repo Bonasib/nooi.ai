@@ -191,7 +191,7 @@
 191|Weiter mit Google
 192|Weiter mit Apple (iCloud)
 193|oder mit E-Mail
-194|Code senden
+194|Anmeldelink senden
 195|oder mit deinem Telefon
 196|Ländervorwahl
 197|Telefonnummer
@@ -201,7 +201,7 @@
 201|Mit dem Fortfahren stimmst du den Bedingungen und der Datenschutzerklärung zu.
 202|Start
 203|Erstellen
-204|UGC & Produktanzeigen
+204|UGC-Anzeigen
 205|Zeichnen & erstellen
 206|Live-Skizze
 207|3D-Welten
@@ -346,3 +346,7 @@
 346|Tonfall
 347|Thema
 348|Wer
+349|Tippe auf den Link in der E-Mail, um die Anmeldung abzuschließen. Nicht da? Schau im Spam nach.
+350|Dieser Anmeldelink ist abgelaufen oder wurde schon benutzt. Fordere einen neuen an.
+351|Dieser Link wurde an eine andere E-Mail-Adresse gesendet.
+352|Anzeigename

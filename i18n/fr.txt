@@ -191,7 +191,7 @@
 191|Continuer avec Google
 192|Continuer avec Apple (iCloud)
 193|ou par e-mail
-194|Envoyer le code
+194|Envoyer le lien de connexion
 195|ou avec votre téléphone
 196|Indicatif pays
 197|Numéro de téléphone
@@ -201,7 +201,7 @@
 201|En continuant, vous acceptez les Conditions et la Politique de confidentialité.
 202|Accueil
 203|Créer
-204|UGC et pubs produit
+204|Pubs UGC
 205|Dessiner et créer
 206|Croquis en direct
 207|Mondes 3D
@@ -346,3 +346,7 @@
 346|Ton
 347|Thème
 348|Qui
+349|Appuyez sur le lien dans l'e-mail pour terminer la connexion. Introuvable ? Vérifiez les spams.
+350|Ce lien de connexion a expiré ou a déjà été utilisé. Envoyez-en un nouveau.
+351|Ce lien a été envoyé à une autre adresse e-mail.
+352|Nom affiché

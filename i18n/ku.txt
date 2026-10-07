@@ -191,7 +191,7 @@
 191|Bi Google berdewam bike
 192|Bi Apple (iCloud) berdewam bike
 193|an bi e-nameyê
-194|Kodê bişîne
+194|Girêdana têketinê bişîne
 195|an bi telefona xwe
 196|Koda welat
 197|Hejmara telefonê
@@ -201,7 +201,7 @@
 201|Bi berdewamkirinê tu Merc û Siyaseta Nepeniyê dipejirînî.
 202|Destpêk
 203|Biafirîne
-204|UGC û reklamên berheman
+204|Reklamên UGC
 205|Xêz bike û biafirîne
 206|Xêzkirina zindî
 207|Cîhanên 3D
@@ -346,3 +346,7 @@
 346|Awaz
 347|Babet
 348|Kî
+349|Ji bo temamkirina têketinê li girêdana di e-nameyê de bitikîne. Tune ye? Spamê kontrol bike.
+350|Ev girêdana têketinê qediyaye an berê hatiye bikaranîn. Yeka nû bişîne.
+351|Ev girêdan ji navnîşaneke din re hatiye şandin.
+352|Navê xuyakirinê

@@ -191,7 +191,7 @@
 191|Nastavi s Googleom
 192|Nastavi s Appleom (iCloud)
 193|ili e-poštom
-194|Pošalji kod
+194|Pošalji poveznicu za prijavu
 195|ili telefonom
 196|Pozivni broj zemlje
 197|Broj telefona
@@ -201,7 +201,7 @@
 201|Nastavkom prihvaćaš Uvjete i Pravila privatnosti.
 202|Početna
 203|Stvaraj
-204|UGC i oglasi za proizvode
+204|UGC oglasi
 205|Crtaj i stvaraj
 206|Skica uživo
 207|3D svjetovi
@@ -346,3 +346,7 @@
 346|Ton
 347|Tema
 348|Tko
+349|Dodirnite poveznicu u e-pošti da završite prijavu. Nema je? Provjerite neželjenu poštu.
+350|Ova poveznica za prijavu je istekla ili je već iskorištena. Pošaljite novu.
+351|Ova poveznica poslana je na drugu adresu e-pošte.
+352|Prikazano ime

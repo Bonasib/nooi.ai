@@ -191,7 +191,7 @@
 191|Ku sii wad Google
 192|Ku sii wad Apple (iCloud)
 193|ama iimayl
-194|Dir koodka
+194|Dir xiriirka galitaanka
 195|ama taleefankaaga
 196|Koodka waddanka
 197|Lambarka taleefanka
@@ -201,7 +201,7 @@
 201|Markaad sii wadato, waxaad aqbashay Shuruudaha iyo Siyaasadda Asturnaanta.
 202|Bogga hore
 203|Abuur
-204|UGC iyo xayeysiisyada alaabta
+204|Xayeysiisyada UGC
 205|Sawir oo abuur
 206|Sawir toos ah
 207|Adduunyo 3D
@@ -346,3 +346,7 @@
 346|Lahjad
 347|Cinwaan
 348|Yaa
+349|Riix xiriirka iimaylka si aad u dhammaystirto galitaanka. Ma jiro? Fiiri Spam.
+350|Xiriirkan galitaanka wuu dhacay ama hore ayaa loo isticmaalay. Dir mid cusub.
+351|Xiriirkan waxaa loo diray cinwaan iimayl kale.
+352|Magaca la muujiyo

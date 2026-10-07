@@ -191,7 +191,7 @@
 191|Doorgaan met Google
 192|Doorgaan met Apple (iCloud)
 193|of met e-mail
-194|Code versturen
+194|Inloglink versturen
 195|of met je telefoon
 196|Landcode
 197|Telefoonnummer
@@ -201,7 +201,7 @@
 201|Door verder te gaan ga je akkoord met de Voorwaarden en het Privacybeleid.
 202|Home
 203|Maken
-204|UGC & productadvertenties
+204|UGC-advertenties
 205|Tekenen & maken
 206|Live schets
 207|3D-werelden
@@ -346,3 +346,7 @@
 346|Toon
 347|Thema
 348|Wie
+349|Tik op de link in de e-mail om het inloggen af te ronden. Niet ontvangen? Kijk in je spam.
+350|Deze inloglink is verlopen of al gebruikt. Vraag een nieuwe aan.
+351|Deze link is naar een ander e-mailadres gestuurd.
+352|Weergavenaam
