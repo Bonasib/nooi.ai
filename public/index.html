@@ -9138,6 +9138,297 @@ histGo=(o=>function(d){o(d);const st=HIST.stack[HIST.i];if(!st)return;try{const 
 .swc{width:26px;height:26px;border-radius:50%;border:2px solid var(--line2);cursor:pointer;padding:0}.swc.on{box-shadow:0 0 0 2px var(--lime)}
 .vogrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 `;document.head.appendChild(st)})();
+/* ================= v72: steady editor preview · sound lanes · logo fixes · realistic sketches · character from a photo · AI full 3D (objects, characters) · 3D world from a photo · AI effects · tidy templates ================= */
+(function(){const st=document.createElement("style");st.textContent=`
+#main{scroll-behavior:auto;overflow-anchor:none}
+@media (max-width:767px){
+ .edgrid .panel.edtools72{background:none;border:0;box-shadow:none;padding:0;margin-top:14px}
+ .edgrid .panel.edtools72>.tabs{position:sticky;top:calc(var(--edsh,300px) + 56px + env(safe-area-inset-top,0px));display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 0 12px;padding:6px 2px 0;z-index:4;background:var(--bg)}
+ .edgrid .panel.edtools72>.tabs::-webkit-scrollbar{display:none}
+ .edgrid .panel.edtools72>.tabs>button{flex:none;white-space:nowrap}
+}
+.brandkit .bkrow{flex-wrap:wrap}.brandkit .bkrow>div[style*="flex:1"]{min-width:min(100%,240px)!important}
+.brandkit .ctrl output{min-width:3.6em;text-align:end;white-space:nowrap;overflow:hidden}
+.a3card{margin-top:14px;border:1px solid color-mix(in srgb,var(--accent,#9CD245) 45%,var(--line));background:linear-gradient(135deg,color-mix(in srgb,var(--accent,#9CD245) 9%,var(--panel)),var(--panel))}
+.a3card h3{margin:0 0 4px;font-size:15px;display:flex;gap:8px;align-items:center}.a3card h3 svg{width:18px;height:18px;flex:none}.a3card p{margin:0 0 10px}
+.a3list{display:grid;gap:6px;margin-top:10px}.a3row{display:flex;gap:8px;align-items:center;font-size:12.5px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+.a3row .bar{flex:1;height:6px;border-radius:9px;background:var(--line);overflow:hidden}.a3row .bar i{display:block;height:100%;background:var(--accent,#9CD245);transition:width .4s}
+.a3views{display:flex;gap:4px}.a3views img,.a3views span{width:34px;height:34px;border-radius:7px;object-fit:cover;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;font-size:10px;color:var(--mute)}
+.pwview{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#0d1012;touch-action:none}
+.pwview canvas{width:100%!important;height:100%!important;display:block}
+.pwview .pwhint{position:absolute;inset:auto 10px 10px;font-size:11.5px;color:#fff;opacity:.8;text-shadow:0 1px 2px #000;pointer-events:none}
+.pwpad{position:absolute;bottom:10px;inset-inline-end:10px;display:grid;grid-template-columns:repeat(3,34px);gap:4px}
+.pwpad button{width:34px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.45);color:#fff;font-size:14px}
+.pwpad button:nth-child(1){grid-column:2}.pwpad button:nth-child(2){grid-column:1;grid-row:2}.pwpad button:nth-child(3){grid-column:2;grid-row:2}.pwpad button:nth-child(4){grid-column:3;grid-row:2}
+.pwup{display:flex;gap:10px;align-items:center}.pwup .drop{flex:1;min-height:84px}
+.pwup img{width:120px;height:84px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+.chphoto{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.chphoto .drop{flex:1;min-width:200px;min-height:90px}
+.chphoto img{width:90px;height:90px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+.vfxai{display:flex;gap:6px;margin:0 0 10px}.vfxai input{flex:1;min-width:0}
+.sklive72{margin-top:12px}.sklive72 .dres{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.tplgrp{margin-top:22px}.tplgrp:first-of-type{margin-top:16px}.tplgrp h2{display:flex;gap:8px;align-items:baseline;font-size:17px;margin:0 0 10px}.tplgrp h2 small{font-size:12px;color:var(--mute);font-weight:500}
+.card.tpl.tpl2 .ti{padding:10px 12px 0;min-height:0}.card.tpl.tpl2 .tpd{padding:0 12px;margin:4px 0 8px}.card.tpl.tpl2 .tpf{padding:0 12px 12px;margin-top:auto}
+.card.tpl .thumb{position:relative;overflow:hidden}
+.card.tpl .thumb>.frame{position:absolute;inset:0;width:100%!important;height:100%!important;object-fit:cover}
+.card.tpl .thumb>.frame.ph0{display:grid;place-items:center;background:linear-gradient(160deg,var(--panel2),var(--panel))}
+.card.tpl .thumb>.frame.ph0>img{width:38%;height:auto;opacity:.9}
+`;document.head.appendChild(st)})();
+
+/* --- 1) the page no longer jumps when the preview re-renders (smooth scroll animated from the top on every tap) --- */
+renderView=(o=>function(){const m=$("#main"),sc=m?m.scrollTop:0;o();if(m&&Math.abs(m.scrollTop-sc)>1)m.scrollTop=sc;
+  /* phones: the preview stays pinned while you scroll through every tool below it */
+  if(S.view==="edit"&&innerWidth<768){const g=document.querySelector(".edgrid");if(g&&g.children.length>1){const p1=g.children[0].querySelector(".panel"),p2=g.children[1];if(p1&&p2&&p2.classList.contains("panel")&&!p1.contains(p2)){p2.classList.add("edtools72");p1.appendChild(p2)}}
+    const s=document.querySelector(".edstage");if(s)document.documentElement.style.setProperty("--edsh",Math.round(s.getBoundingClientRect().height)+"px")}})(renderView);
+
+/* --- 2) sound effects, layers and blur boxes get their own lanes, so none hides another --- */
+function lanes72(items){const L0=[];items.slice().sort((a,b)=>a.s-b.s).forEach(v=>{let l=L0.find(q=>q[q.length-1].e<=v.s+.01);if(!l){l=[];L0.push(l)}l.push(v)});return L0}
+function relane72(h,tn,cls,items){const head='<div class="trk"><span class="tn">'+tn+"</span>",i=h.indexOf(head);if(i<0||items.length<2)return h;
+  const re=new RegExp('<div class="blk '+cls+'"[^>]*data-edxsel="'+cls+':([^"]+)"[^>]*>[^<]*</div>',"g");let j=i+head.length,blocks={};let m;re.lastIndex=j;
+  while((m=re.exec(h))&&m.index===j){blocks[m[1]]=m[0];j=re.lastIndex}
+  if(h.substr(j,6)!=="</div>")return h;const ls=lanes72(items.filter(x=>blocks[x.id]));if(ls.length<2)return h;
+  return h.slice(0,i)+ls.map((l,k)=>'<div class="trk"><span class="tn">'+(k?"":tn)+"</span>"+l.map(x=>blocks[x.id]).join("")+"</div>").join("")+h.slice(j+6)}
+VIEWS.edit=(o=>()=>{let h=o();const E=S.ed;
+  try{h=relane72(h,"FX","sx",(E.sfx||[]).map(x=>({id:x.id,s:x.t,e:x.t+edxSfxDur(x)})));
+    h=relane72(h,"L","ly",(E.layers||[]).map(x=>({id:x.id,s:x.start,e:x.end})));
+    h=relane72(h,"◌","rg",(E.regions||[]).map(x=>({id:x.id,s:x.start,e:x.end})))}catch(e){}
+  if(E.tab==="vfx")h=h.replace('<div class="vfxgrid">',vfxAiBox()+'<div class="vfxgrid">');
+  return h})(VIEWS.edit);
+
+/* --- 3) logo: a clean size number, drag/pinch stays inside the slider range, picking a corner resets a dragged logo --- */
+edScaleTo=(o=>function(D,k){o(D,k);if(D.p.k==="logo")D.it.size=Math.round(clamp(D.it.size,4,40)*10)/10;else if(D.it.k!=null)D.it.k=Math.round(D.it.k*100)/100})(edScaleTo);
+function tidyBrand72(){const B=S.brand;if(B&&typeof B.size==="number"&&B.size!==Math.round(B.size*10)/10)B.size=Math.round(clamp(B.size,4,40)*10)/10}
+renderView=(o=>function(){tidyBrand72();o()})(renderView);tidyBrand72();
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest('[data-set="brand.pos"]');if(t&&S.brand){S.brand.x=null;S.brand.y=null}},true);
+
+/* --- 4) every file slot is read the moment a job is sent (later uploads can't pick up a stale or missing file) --- */
+SLOTS_FOR.image=[...new Set(["iRef","iRef2","iRef3","iRef4","skImg","ugcP","ugcX1","ugcX2","ugcX3","ugcLogo"].concat(SLOTS_FOR.image||[]))];
+SLOTS_FOR.look=["chRef"];SLOTS_FOR.sheet=["chRef"];
+serverSubmit=async function(o,kind,payload){const snap=(SLOTS_FOR[kind]||[]).map(s=>[s,M[s]]).filter(x=>x[1]),cap=kind==="edit"?M.capture:null;
+  try{const inputs={};for(const[s,m]of snap){if(m.file){const u=await API.upload(m.file,m.name||s+".png");inputs[s]=u.url}else if(m.remote)inputs[s]=m.remote}
+    if(cap){const b=await(await fetch(cap)).blob();inputs.frame=(await API.upload(b,"frame.jpg")).url}
+    const res=await API.req("/v1/jobs",{json:Object.assign({kind,inputs},payload)});o.remote=res.id;o.status="queued";persist()}
+  catch(e){o.status="failed";o.error=String(e.message||e);statusChanged()}};
+/* run a job with a temporary reference picture, without touching what the user loaded elsewhere */
+function withRef72(slot,file,fn){const keep=M[slot];if(file)M[slot]={type:"image",file,name:(file.name||"ref.png"),url:""};else delete M[slot];try{return fn()}finally{if(keep)M[slot]=keep;else delete M[slot]}}
+const bestImg72=()=>IMG_MODELS.nanopro&&imgOK("nanopro")?"nanopro":IMG_MODELS.nano?"nano":"dotimg";
+async function jobBlob72(j){const u=j&&mediaUrl(j);if(!u)return null;try{const b=await(await fetch(u)).blob();if(!/^image\//.test(b.type)&&!/\.(png|jpe?g|webp)(\?|#|$)/i.test(u))return null;return b}catch(e){return null}}
+async function blobImg72(b){if(!b)return null;try{const bm=await createImageBitmap(b);if(bm.width<48||bm.height<48)return null;const c=document.createElement("canvas");c.width=bm.width;c.height=bm.height;c.getContext("2d").drawImage(bm,0,0);return c}catch(e){return null}}
+
+/* --- 5) drawings become realistic pictures: clearer instructions + the strongest picture model --- */
+const DRW_LOOK72={realistic:"a photorealistic photograph — real materials, natural light, real depth of field, fine detail; it must look like a real photo, not a drawing, no sketch lines",anime:"a polished anime illustration",cartoon:"a clean colourful cartoon illustration",watercolor:"a watercolour painting",oil:"an oil painting",pixar:"a high-end 3D animated film still",anim3d:"a high-end 3D animated film still",clay:"a claymation still",comic:"a comic-book panel",concept:"cinematic concept art",sketch:"a refined pencil illustration"};
+function sketchPrompt72(desc,style,fid){const look=DRW_LOOK72[style]||DRW_LOOK72.realistic;return "Turn this rough hand-drawn sketch into "+look+". Subject: "+(desc||"what the sketch shows")+". Use the sketch only as the layout: keep where things are, their size and shape ("+(fid||70)+"% faithful), and invent all the real detail, texture, colour and lighting."}
+drwGenerate=async function(){drwInit();const D=S.drw;if(drwEmpty()){toast(L("Draw your scene first.","ارسم مشهدك أولاً."),{type:"warn"});return}const blob=await drwBlob();
+  const m=IMG_MODELS[S.img.model]&&!["auto","dotimg","sdxl","flux"].includes(S.img.model)?S.img.model:bestImg72(),batch=uid(),prompt=sketchPrompt72(D.scene.trim(),D.style,D.fid);let n=0;
+  withRef72("iRef",new File([blob],"sketch.png",{type:"image/png"}),()=>{for(let i=0;i<D.n;i++){if(addJob({kind:"image",prompt,title:(D.scene.trim()||L("Sketch scene","مشهد من رسمة")).slice(0,40),model:m,aspect:D.aspect,cost:(IMG_MODELS[m]||{cr:2}).cr,batch,secs:6,art:"scene",meta:{sketch:true,style:D.style,fidelity:D.fid,variant:i+1}}))n++}});
+  if(n){D.batch=batch;persist();renderAll();toast(n+L(" pictures are being made from your drawing"," صور تُصنع من رسمتك"),{type:"ok"})}};
+/* live sketch: “Make it real” sends the sketch to the picture model and shows the results right there */
+window.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="sk-hd"]');if(!a)return;e.stopImmediatePropagation();e.preventDefault();const K=S.sketch;
+  if(!SK.strokes.length){toast(L("Draw something first.","ارسم شيئاً أولاً."));return}const blob=await new Promise(r=>skInk(1024,true).toBlob(r,"image/png"));const t=ENT_TYPES.find(x=>x[0]===K.target)||ENT_TYPES[0],m=bestImg72();
+  const st=K.style==="anim3d"?"anim3d":K.style;const desc=K.prompt||t[1];
+  const j=withRef72("skImg",new File([blob],"sketch.png",{type:"image/png"}),()=>addJob({kind:"image",prompt:sketchPrompt72(desc,st,K.strength),title:(K.prompt||L("Sketch","رسمة")).slice(0,40),model:m,aspect:"1:1",cost:(IMG_MODELS[m]||{cr:3}).cr,secs:6,art:"scene",meta:{sketch:true,skLive:true,strength:K.strength/100}}));
+  if(j){toast(L("Making it real — the picture appears under the live preview","جارٍ تحويلها لصورة حقيقية — تظهر تحت المعاينة الحية"),{type:"ok"});renderAll()}},true);
+VIEWS.sketch=(o=>()=>{let h=o();if(S.sketch.target==="floorplan")return h;const m=bestImg72();
+  h=h.replace(/(data-act="sk-hd"[^>]*>[\s\S]*?<span class="lb">)[^<]*(<\/span>)/,"$1"+L("Make it real · ","اجعلها حقيقية · ")+(IMG_MODELS[m]||{cr:3}).cr+" cr$2");
+  const res=S.jobs.filter(j=>j.meta&&j.meta.skLive).slice(-6).reverse();
+  if(res.length){const box='<div class="sklive72"><span class="lbl">'+L("Real pictures from your sketch","صور حقيقية من رسمتك")+'</span><div class="dres">'+res.map(j=>'<figure class="dfig"><div class="dthumb">'+thumb("j:"+j.id,{ar:"1/1"})+"</div>"+(j.status==="complete"?'<div class="row" style="gap:4px;margin-top:6px"><button class="btn sm" data-act="drw-animate" data-id="'+j.id+'">'+ic("video")+L("Animate","حرّكها")+"</button></div>":'<div class="small dim" style="margin-top:6px">'+badge(j.status)+"</div>")+"</figure>").join("")+"</div></div>";
+    const k=h.indexOf('<div class="small dim" id="sknote"');if(k>0)h=h.slice(0,k)+box+h.slice(k)}
+  return h})(VIEWS.sketch);
+
+/* --- 6) characters from a photo: upload → the AI reads the person → looks, sheet and 3D keep that face --- */
+const charPhotoKey=id=>"chph_"+id;
+async function charPhotoBlob(c){if(!c||!c.photo)return null;const v=await IDB.get(charPhotoKey(c.id));if(v instanceof Blob)return v;if(typeof v==="string")return dataURLtoBlob(v);return dataURLtoBlob(c.photo)}
+async function charFromPhoto(file){const big=await shrinkImage(URL.createObjectURL(file),1024),small=await shrinkImage(URL.createObjectURL(file),320);if(!big){toast(L("Couldn't read this picture.","تعذّرت قراءة الصورة."),{type:"warn"});return}
+  const c=normChar({id:uid(),name:L("Character ","شخصية ")+(S.chars.length+1),age:28,gender:"female",look:"",outfit:"",persona:"",voice:{dialect:S.lang==="ar"?"najdi":"enUS",gender:"female",age:"young",tone:"warm"},looks:[1,2,3,4].map(()=>Math.floor(Math.random()*1e6)),lookSeed:null,locked:true,photo:small});
+  await IDB.put(charPhotoKey(c.id),dataURLtoBlob(big));S.chars.push(c);S.charSel=S.chars.length-1;persist();renderView();toast(L("Character created from the photo","أُنشئت الشخصية من الصورة"),{type:"ok"});
+  if(API.mode==="server"&&API.cfg&&API.cfg.providers&&API.cfg.providers.llm){try{const r=await API.req("/v1/llm/json",{json:{task:"character from photo",tier:"quick",images:[await shrinkImage(big,640)],prompt:'Describe the main person or character in this photo for an AI video app. Reply only JSON: {"name":"a fitting first name","gender":"male|female","age":number,"hair":"#hex hair colour","eyes":"#hex eye colour","look":"face, hair and build in one short sentence","outfit":"clothing in one short sentence","persona":"one short line of personality"}. Language for name/look/outfit/persona: '+(S.lang==="ar"?"Arabic":"English")+"."}});
+    const x=S.chars.find(q=>q.id===c.id);if(x&&r){if(r.name)x.name=String(r.name).slice(0,30);if(/^(male|female)$/.test(r.gender))x.gender=r.gender;if(+r.age>0&&+r.age<100)x.age=Math.round(+r.age);if(/^#[0-9a-f]{6}$/i.test(r.hair||""))x.hair=r.hair;if(/^#[0-9a-f]{6}$/i.test(r.eyes||""))x.eyes=r.eyes;if(r.look)x.look=String(r.look).slice(0,160);if(r.outfit)x.outfit=String(r.outfit).slice(0,160);if(r.persona)x.persona=String(r.persona).slice(0,160);x.voice.gender=x.gender;persist();renderView()}}catch(e){}}}
+document.addEventListener("change",e=>{const t=e.target;if(t.dataset&&t.dataset.chphoto&&t.files&&t.files[0]){const f=t.files[0];if(t.dataset.chphoto==="new")charFromPhoto(f);else{const c=S.chars[S.charSel];if(!c)return;shrinkImage(URL.createObjectURL(f),1024).then(async big=>{if(!big)return;c.photo=await shrinkImage(big,320);await IDB.put(charPhotoKey(c.id),dataURLtoBlob(big));persist();renderView();toast(L("Photo set — new looks keep this face","عُيّنت الصورة — الأشكال الجديدة تحافظ على هذا الوجه"),{type:"ok"})})}}});
+VIEWS.chars=(o=>()=>{let h=o();const c=S.chars[S.charSel];
+  const box='<div class="panel pad a3card" style="margin:0 0 14px"><h3>'+ic("upload")+L("Create a character from a photo","أنشئ شخصية من صورة")+'</h3><p class="small mute">'+L("Upload a clear photo of a person or a drawn character. The AI reads the face, hair and clothes; every look, sheet, 3D model and video then keeps that identity.","ارفع صورة واضحة لشخص أو شخصية مرسومة. يقرأ الذكاء الوجه والشعر والملابس، وتحافظ كل الأشكال والأوراق والمجسّمات والفيديوهات على هذه الهوية.")+'</p><div class="chphoto"><label class="drop">'+ic("upload")+"<div>"+L("Upload a photo → new character","ارفع صورة ← شخصية جديدة")+'</div><input type="file" accept="image/*" data-chphoto="new"></label>'+(c?'<label class="btn sm" style="position:relative">'+ic("image")+(c.photo?L("Change this character's photo","غيّر صورة هذه الشخصية"):L("Add a photo to this character","أضف صورة لهذه الشخصية"))+'<input type="file" accept="image/*" data-chphoto="cur" style="position:absolute;inset:0;opacity:0"></label>'+(c.photo?'<img src="'+c.photo+'" alt="">':""):"")+"</div></div>";
+  h=h.replace(/(<p class="lede">[\s\S]*?<\/p>)/,"$1"+box);
+  h=h.replace(/<button class="btn" data-act="char-3dbody">[\s\S]*?<\/button>/,'<button class="btn" data-act="char-3dbody">'+ic("cube")+L("Full 3D character (AI)","شخصية 3D كاملة (ذكاء)")+' <span class="mono dim">'+a3Cost()+"cr</span></button>");
+  return h})(VIEWS.chars);
+thumb=(o=>function(ref,opt){const m=/^(cp|cb):(.+)$/.exec(ref||"");if(m){const c=S.chars.find(x=>x.id===m[2]);if(c&&c.photo)return'<div class="thumb"'+(opt&&opt.ar?' style="aspect-ratio:'+opt.ar+'"':"")+'><img class="frame" src="'+c.photo+'" alt="" style="width:100%;height:100%;object-fit:cover"></div>'}return o(ref,opt)})(thumb);
+/* looks & sheets use the photo as the face reference */
+window.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="gen-looks"],[data-act="gen-sheet"]');if(!a||S.view!=="chars")return;const c=S.chars[S.charSel];if(!c||!c.photo)return;e.stopImmediatePropagation();e.preventDefault();
+  const b=await charPhotoBlob(c);if(!b)return;const f=new File([b],"face.jpg",{type:b.type||"image/jpeg"}),keep=" — the same person as the reference photo: keep the exact face, hair and identity";
+  withRef72("chRef",f,()=>{if(a.dataset.act==="gen-looks"){const n=+a.dataset.n||4;for(let i=0;i<n;i++)addJob({kind:"look",prompt:c.name+" · "+(c.look||"")+keep,title:c.name,cost:2,secs:5,art:"portrait",aspect:"3:4",opt:charOpt(c),meta:{char:c.id,photo:true}})}
+    else addJob({kind:"sheet",prompt:c.name+" · "+L("front, side, back, expressions","أمام، جانب، خلف، تعابير")+keep,title:c.name,cost:6,secs:7,art:"portrait",opt:charOpt(c),seed:c.lookSeed||c.looks[0],meta:{char:c.id,photo:true}})});renderAll()},true);
+
+/* --- 7) AI full 3D: the picture model draws the hidden sides, then a closed textured mesh is built from front + side + back --- */
+S.a3=Array.isArray(S.a3)?S.a3.filter(p=>p&&p.status==="wait"&&Date.now()-p.created<36e5):[];
+const a3Cost=()=>3*((IMG_MODELS[bestImg72()]||{cr:2}).cr);
+const A3_VIEW={front:"seen straight from the front",side:"seen exactly from its right side (90° profile view)",back:"seen exactly from behind (rear view, turned 180°) — show what its back really looks like"};
+function a3Prompt(kind,view,desc){return kind==="body"
+  ?"Full-body character turnaround reference of the same character as the reference image"+(desc?" ("+desc+")":"")+", "+A3_VIEW[view]+", standing straight in a relaxed A-pose with the arms slightly away from the body, the whole body from head to feet in frame, plain pure white background, soft even light, no shadow. Keep exactly the same face, hair, body, clothes and colours."
+  :"Studio product reference of exactly the same "+(desc||"object")+" as in the reference image, "+A3_VIEW[view]+", isolated, complete and uncropped, centred, plain pure white background, soft even light, no shadow, nothing else in the picture. Keep the same shape, materials and colours."}
+async function a3Start(kind,srcBlob,name,desc,extra){if(!srcBlob&&!desc){toast(L("Add a photo first.","أضف صورة أولاً."),{type:"warn"});return null}
+  const m=bestImg72(),cr=(IMG_MODELS[m]||{cr:2}).cr,p={id:uid(),kind,name:name||L("3D model","مجسّم"),desc:desc||"",created:Date.now(),status:"wait",jobs:{},charId:extra&&extra.charId||null};
+  if(srcBlob)await IDB.put("a3src_"+p.id,srcBlob);const f=srcBlob?new File([srcBlob],"ref.png",{type:srcBlob.type||"image/png"}):null;
+  for(const v of["front","side","back"]){const j=withRef72("iRef",f,()=>addJob({kind:"image",model:m,prompt:a3Prompt(kind,v,desc),title:p.name+" · "+L({front:"front",side:"side",back:"back"}[v],{front:"أمام",side:"جانب",back:"خلف"}[v]),aspect:kind==="body"?"3:4":"1:1",cost:cr,secs:8,art:kind==="body"?"portrait":"scene",meta:{a3:p.id,view:v}}));if(!j){if(v==="front")return null;continue}p.jobs[v]=j.id}
+  S.a3.push(p);persist();toast(L("The AI is drawing the front, side and back — the 3D model builds itself when they're ready","يرسم الذكاء الأمام والجانب والخلف — يُبنى المجسّم تلقائياً عند جاهزيتها"),{type:"ok"});return p}
+/* silhouette on a plain background: flood-fill the background from the border, keep the biggest part */
+function a3Mask(img,G){const k=G/Math.max(img.width,img.height),w=Math.max(8,Math.round(img.width*k)),h=Math.max(8,Math.round(img.height*k));const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d",{willReadFrequently:true});x.drawImage(img,0,0,w,h);const d=x.getImageData(0,0,w,h).data;
+  let r=0,g=0,b=0,n=0;for(let i=0;i<w;i++)for(const y of[0,h-1]){const q=(y*w+i)*4;r+=d[q];g+=d[q+1];b+=d[q+2];n++}for(let y=0;y<h;y++)for(const i of[0,w-1]){const q=(y*w+i)*4;r+=d[q];g+=d[q+1];b+=d[q+2];n++}r/=n;g/=n;b/=n;
+  const bgish=i=>{const q=i*4;return d[q+3]<20||Math.hypot(d[q]-r,d[q+1]-g,d[q+2]-b)<42};const out=new Uint8Array(w*h),stk=[];for(let i=0;i<w;i++){stk.push(i,(h-1)*w+i)}for(let y=0;y<h;y++){stk.push(y*w,y*w+w-1)}
+  while(stk.length){const i=stk.pop();if(out[i]||!bgish(i))continue;out[i]=1;const xx=i%w,yy=(i/w)|0;if(xx>0)stk.push(i-1);if(xx<w-1)stk.push(i+1);if(yy>0)stk.push(i-w);if(yy<h-1)stk.push(i+w)}
+  let mask=new Uint8Array(w*h);for(let i=0;i<w*h;i++)mask[i]=out[i]?0:1;
+  const lab=new Int32Array(w*h).fill(-1);let best=-1,bestN=0;for(let s=0;s<w*h;s++){if(!mask[s]||lab[s]>=0)continue;let cnt=0;const q=[s];lab[s]=s;while(q.length){const i=q.pop();cnt++;const xx=i%w,yy=(i/w)|0;for(const j of[xx>0?i-1:-1,xx<w-1?i+1:-1,yy>0?i-w:-1,yy<h-1?i+w:-1])if(j>=0&&mask[j]&&lab[j]<0){lab[j]=s;q.push(j)}}if(cnt>bestN){bestN=cnt;best=s}}
+  const frac=bestN/(w*h);if(frac<.01)return null;if(frac>.985){mask.fill(1)}else for(let i=0;i<w*h;i++)mask[i]=lab[i]===best?1:0;
+  let x0=w,y0=h,x1=-1,y1=-1;for(let y=0;y<h;y++)for(let i=0;i<w;i++)if(mask[y*w+i]){if(i<x0)x0=i;if(i>x1)x1=i;if(y<y0)y0=y;if(y>y1)y1=y}
+  return{w,h,mask,k,img,bb:{x:x0,y:y0,w:x1-x0+1,h:y1-y0+1}}}
+function a3Tex(M0,flip){const b=M0.bb,s=1/M0.k,sc=Math.min(1,1024/Math.max(b.w*s,b.h*s)),c=document.createElement("canvas");c.width=Math.max(4,Math.round(b.w*s*sc));c.height=Math.max(4,Math.round(b.h*s*sc));const x=c.getContext("2d");if(flip){x.translate(c.width,0);x.scale(-1,1)}x.drawImage(M0.img,b.x*s,b.y*s,b.w*s,b.h*s,0,0,c.width,c.height);return c}
+function a3Mesh(front,side,back,kind){const F=a3Mask(front,kind==="body"?200:170);if(!F)return null;const{w,mask,bb}=F,gw=bb.w,gh=bb.h;
+  /* thickness of each row: read from the side view when the AI drew one, otherwise a rounded guess */
+  const rowW=new Float32Array(gh);for(let y=0;y<gh;y++){let n=0;for(let x=0;x<gw;x++)if(mask[(bb.y+y)*w+bb.x+x])n++;rowW[y]=n}
+  let T=new Float32Array(gh);const Sd=side&&a3Mask(side,kind==="body"?200:170);
+  if(Sd&&Sd.bb.h>8){const sb=Sd.bb;for(let y=0;y<gh;y++){const sy=Math.min(sb.y+sb.h-1,Math.round(sb.y+(y+.5)/gh*sb.h-.5));let n=0;for(let x=sb.x;x<sb.x+sb.w;x++)if(Sd.mask[sy*Sd.w+x])n++;T[y]=n*gh/sb.h}}
+  else for(let y=0;y<gh;y++)T[y]=rowW[y]*(kind==="body"?.55:.75);
+  {const R=Math.max(3,Math.round(gh/40)),t2=new Float32Array(gh);for(let y=0;y<gh;y++){let s=0,c=0;for(let k=-R;k<=R;k++){const q=y+k;if(q>=0&&q<gh&&T[q]>0){s+=T[q];c++}}t2[y]=c?s/c:0}T=t2}
+  const dist=new Float32Array(gw*gh);for(let y=0;y<gh;y++)for(let x=0;x<gw;x++)dist[y*gw+x]=mask[(bb.y+y)*w+bb.x+x]?1e6:0;
+  for(let y=0;y<gh;y++)for(let x=0;x<gw;x++){const i=y*gw+x;if(!dist[i])continue;let v=dist[i];if(x>0)v=Math.min(v,dist[i-1]+1);if(y>0)v=Math.min(v,dist[i-gw]+1);if(x>0&&y>0)v=Math.min(v,dist[i-gw-1]+1.414);if(x<gw-1&&y>0)v=Math.min(v,dist[i-gw+1]+1.414);if(x===0||y===0||x===gw-1)v=Math.min(v,1);dist[i]=v}
+  for(let y=gh-1;y>=0;y--)for(let x=gw-1;x>=0;x--){const i=y*gw+x;if(!dist[i])continue;let v=dist[i];if(x<gw-1)v=Math.min(v,dist[i+1]+1);if(y<gh-1)v=Math.min(v,dist[i+gw]+1);if(x<gw-1&&y<gh-1)v=Math.min(v,dist[i+gw+1]+1.414);if(x>0&&y<gh-1)v=Math.min(v,dist[i+gw-1]+1.414);if(y===gh-1||x===gw-1)v=Math.min(v,1);dist[i]=v}
+  const sz=2/Math.max(gw,gh),pos=[],uv=[],vid=new Int32Array(gw*gh).fill(-1);
+  for(let y=0;y<gh;y++)for(let x=0;x<gw;x++){const i=y*gw+x;if(!dist[i])continue;const r=Math.max(1,T[y]/2),d=Math.min(Math.max(0,dist[i]-1),r),z=Math.sqrt(Math.max(0,r*r-(r-d)*(r-d)));vid[i]=pos.length/3;pos.push((x+.5-gw/2)*sz,(gh/2-y-.5)*sz,z*sz);uv.push((x+.5)/gw,1-(y+.5)/gh)}
+  const nf=pos.length/3,idx=[];for(let y=0;y<gh-1;y++)for(let x=0;x<gw-1;x++){const a=vid[y*gw+x],b2=vid[y*gw+x+1],c=vid[(y+1)*gw+x],d=vid[(y+1)*gw+x+1];const n=(a>=0)+(b2>=0)+(c>=0)+(d>=0);
+    if(n===4){idx.push(a,c,b2,b2,c,d)}else if(n===3){if(a<0)idx.push(b2,c,d);else if(b2<0)idx.push(a,c,d);else if(c<0)idx.push(a,d,b2);else idx.push(a,c,b2)}}
+  const mk=(zs,flipW,tex)=>{const p=new Float32Array(pos.length);for(let k=0;k<nf;k++){p[k*3]=pos[k*3];p[k*3+1]=pos[k*3+1];p[k*3+2]=pos[k*3+2]*zs}const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(p,3));g.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));
+    const ix=flipW?idx.slice():idx;if(flipW)for(let k=0;k<ix.length;k+=3){const t=ix[k+1];ix[k+1]=ix[k+2];ix[k+2]=t}g.setIndex(ix);g.computeVertexNormals();const t=new THREE.CanvasTexture(tex);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;return new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:t,roughness:.78,metalness:0}))};
+  const ft=a3Tex(F,false);let btex;const Bk=back&&a3Mask(back,kind==="body"?200:170);
+  if(Bk)btex=a3Tex(Bk,true);else{btex=document.createElement("canvas");btex.width=ft.width;btex.height=ft.height;const x=btex.getContext("2d");x.filter="blur(6px) brightness(.8)";x.translate(ft.width,0);x.scale(-1,1);x.drawImage(ft,0,0)}
+  const grp=new THREE.Group();const fm=mk(1,false,ft);fm.name="nooi_ai3d_front";const bm=mk(-1,true,btex);bm.name="nooi_ai3d_back";grp.add(fm,bm);grp.name="nooi_ai3d";return grp}
+async function a3Finish(p){const js=["front","side","back"].map(v=>S.jobs.find(j=>j.id===p.jobs[v]));
+  const src=await blobImg72(await IDB.get("a3src_"+p.id));let front=await blobImg72(await jobBlob72(js[0]));const side=await blobImg72(await jobBlob72(js[1])),back=await blobImg72(await jobBlob72(js[2]));
+  if(!front)front=src;if(!front){p.status="failed";persist();toast(L("The front view didn't arrive — try again.","لم تصل الواجهة الأمامية — حاول مجدداً."),{type:"warn"});return}
+  if(!await ensureThree()){p.status="failed";persist();return}
+  let obj=null;try{obj=a3Mesh(front,front===src?null:side,front===src?null:back,p.kind)}catch(e){console.warn("ai3d",e)}if(!obj){p.status="failed";persist();toast(L("Couldn't find the object in the picture.","تعذّر إيجاد العنصر في الصورة."),{type:"warn"});return}
+  const j={id:uid(),kind:"3d",status:"complete",progress:1,created:Date.now(),title:p.name+" · "+L("AI full 3D","3D كامل بالذكاء"),prompt:p.desc||p.name,seed:1,pal:S.story.palette,art:"scene",dur:5,aspect:"1:1",cost:0,local:true,meta:{mode:p.kind==="body"?"body":"objects",ai3d:p.id,views:p.jobs,char:p.charId||undefined}};
+  {const t=document.createElement("canvas");t.width=192;t.height=Math.round(192*front.height/front.width);t.getContext("2d").drawImage(front,0,0,t.width,t.height);j.thumb=t.toDataURL("image/jpeg",.72)}
+  const glb=await s3dGlb(obj);EXPORTS[j.id]=URL.createObjectURL(glb)+"#nooi.glb";IDB.put("x_"+j.id,glb);if(API.mode==="server"){try{j.resultUrl=(await API.upload(glb,"nooi-ai3d-"+j.id+".glb")).url}catch(e){}}
+  S.jobs.push(j);p.status="done";p.res=j.id;S.s3d.sel=j.id;persist();if(S.view==="studio3d"&&V3.r){setObj(obj,"local:"+j.id)}renderView();
+  toast(L("Full 3D model ready — rotate it, download .glb, send it to the editor or a scene","المجسّم الكامل جاهز — دوّره، نزّل ‎.glb، أرسله للمحرر أو لمشهد"),{type:"ok"})}
+setInterval(()=>{for(const p of S.a3){if(p.status!=="wait"||p.busy)continue;const js=Object.values(p.jobs).map(id=>S.jobs.find(j=>j.id===id));const fr=S.jobs.find(j=>j.id===p.jobs.front);
+  if(!fr||fr.status==="failed"){p.status="failed";persist();toast(L("The AI couldn't draw the views: ","تعذّر على الذكاء رسم الزوايا: ")+((fr&&fr.error)||""),{type:"warn"});continue}
+  if(js.every(j=>!j||j.status==="complete"||j.status==="failed")){p.busy=true;a3Finish(p).finally(()=>{p.busy=false})}}},1200);
+function a3Status(){const ps=S.a3.filter(p=>p.status==="wait");if(!ps.length)return"";return'<div class="a3list">'+ps.map(p=>{const js=["front","side","back"].map(v=>S.jobs.find(j=>j.id===p.jobs[v]));const pr=js.reduce((s,j)=>s+(j?(j.status==="complete"?1:(j.progress||0)):1),0)/3;
+  return'<div class="a3row"><b style="white-space:nowrap">'+esc(p.name)+'</b><div class="a3views">'+js.map(j=>j&&j.status==="complete"&&mediaUrl(j)?'<img src="'+esc(mediaUrl(j))+'" alt="">':"<span>…</span>").join("")+'</div><div class="bar"><i style="width:'+Math.round(pr*100)+'%"></i></div><span class="mono small">'+Math.round(pr*100)+"%</span></div>"}).join("")+"</div>"}
+VIEWS.studio3d&&(VIEWS.studio3d=(o=>()=>{let h=o();const m=s3dSource();
+  const card='<div class="panel pad a3card"><h3>'+ic("cube")+L("AI full 3D — fills in the hidden sides","3D كامل بالذكاء — يملأ الجوانب المخفية")+'</h3><p class="small mute">'+L("A photo only shows one side. The AI draws the front, side and back of your object or person, then nooi builds a closed, textured 3D model from all three — not a flat cutout. Rotate it, download .glb, send a turntable to the editor or use it in a scene.","الصورة تُظهر جانباً واحداً فقط. يرسم الذكاء الأمام والجانب والخلف لعنصرك أو شخصيتك، ثم يبني nooi مجسّماً مغلقاً بالألوان من الثلاثة — لا قصاصة مسطحة. دوّره، نزّل ‎.glb، أرسل فيديو دوران للمحرر أو استخدمه في مشهد.")+'</p><input type="text" data-bind="s3d.a3desc" dir="auto" value="'+esc(S.s3d.a3desc||"")+'" placeholder="'+esc(L("What is it? e.g. a red sports car, a ceramic vase, a girl in a yellow dress","ما هو؟ مثال: سيارة رياضية حمراء، مزهرية خزفية، فتاة بفستان أصفر"))+'" style="margin-bottom:8px"><div class="row"><button class="btn primary" data-act="a3-run" '+(m?"":"disabled")+">"+ic("spark")+L("Make full 3D with AI","اصنع 3D كاملاً بالذكاء")+'<span class="cost">'+a3Cost()+" cr</span></button>"+(m?"":'<span class="small dim">'+L("Upload a photo below first","ارفع صورة بالأسفل أولاً")+"</span>")+"</div>"+a3Status()+"</div>";
+  h=h.replace('<div class="edgrid" style="margin-top:16px">',card+'<div class="edgrid" style="margin-top:16px">');
+  h=h.replace(/(<button class="btn sm" id="s3drec" data-act="s3d-turntable">[\s\S]*?<\/button>)/,"$1"+'<button class="btn sm" data-act="a3-ed">'+ic("scissors")+L("Send to editor","أرسل للمحرر")+'</button><button class="btn sm" data-act="a3-scene">'+ic("video")+L("Use in a scene","استخدم في مشهد")+"</button>");
+  return h})(VIEWS.studio3d));
+const _rt72=rootFor;rootFor=function(p){if(p==="s3d.a3desc")return[S.s3d,["a3desc"]];return _rt72(p)};
+/* record a 6 s turntable of whatever is in the 3D viewer */
+async function v3Record(sec){const cvs=V3.r&&V3.r.domElement;if(!V3.obj||!cvs||!cvs.captureStream||!window.MediaRecorder)return null;const mime=["video/webm;codecs=vp9","video/webm","video/mp4"].find(t=>MediaRecorder.isTypeSupported(t))||"";const rec=new MediaRecorder(cvs.captureStream(30),mime?{mimeType:mime,videoBitsPerSecond:6e6}:{}),ch=[];rec.ondataavailable=ev=>{if(ev.data.size)ch.push(ev.data)};const done=new Promise(r=>rec.onstop=r);
+  const sp=V3.ctl.autoRotateSpeed,ar=V3.ctl.autoRotate;V3.ctl.autoRotate=true;V3.ctl.autoRotateSpeed=60/sec;rec.start(250);await new Promise(r=>setTimeout(r,sec*1000));rec.stop();await done;V3.ctl.autoRotateSpeed=sp;V3.ctl.autoRotate=ar;return new Blob(ch,{type:(mime||"video/webm").split(";")[0]})}
+async function clipJob72(blob,title,dur,aspect){const j={id:uid(),kind:"video",status:"complete",progress:1,created:Date.now(),title,prompt:title,dur,aspect:aspect||"1:1",seed:1,pal:S.story.palette,art:"scene",local:true,meta:{rendered:true}};EXPORTS[j.id]=URL.createObjectURL(blob);IDB.put("x_"+j.id,blob);if(API.mode==="server"){try{j.resultUrl=(await API.upload(blob,"nooi-"+j.id+(blob.type.includes("mp4")?".mp4":".webm"))).url}catch(e){}}S.jobs.push(j);persist();return j}
+function snapCanvas72(cv){return new Promise(r=>{try{cv.toBlob(r,"image/png")}catch(e){r(null)}})}
+window.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="a3-run"],[data-act="a3-ed"],[data-act="a3-scene"],[data-act="char-3dbody"]');if(!a)return;const act=a.dataset.act;e.stopImmediatePropagation();e.preventDefault();
+  if(act==="a3-run"){const m=s3dSource();if(!m)return;a.classList.add("busy");const b=await s3dBlob();const p=await a3Start(S.s3d.mode==="body"?"body":"object",b,(m.name||S.s3d.srcName||L("3D model","مجسّم")).replace(/\.[a-z0-9]+$/i,"").slice(0,30),(S.s3d.a3desc||"").trim());a.classList.remove("busy");if(p)renderAll();return}
+  if(act==="char-3dbody"){const c=S.chars[S.charSel];if(!c)return;let b=await charPhotoBlob(c);if(!b){const lj=S.jobs.find(j=>j.kind==="look"&&j.meta&&j.meta.char===c.id&&j.seed===c.lookSeed&&j.status==="complete");b=await jobBlob72(lj)}
+    const p=await a3Start("body",b,c.name,charPrompt(c),{charId:c.id});if(p){if(b){try{await setS3dFromDataURL(await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(b)}),c.name)}catch(e){}}S.s3d.mode="body";S.s3d.char=c.id;go("studio3d")}return}
+  if(!V3.obj){toast(L("Build or pick a 3D model first.","ابنِ مجسّماً أو اختر واحداً أولاً."),{type:"warn"});return}
+  if(act==="a3-ed"){a.classList.add("busy");a.disabled=true;const b=await v3Record(6);a.classList.remove("busy");a.disabled=false;if(!b){toast(L("Recording isn't supported in this browser.","التسجيل غير مدعوم في هذا المتصفح."),{type:"warn"});return}const cv=V3.r.domElement,j=await clipJob72(b,L("3D turntable","دوران 360 لمجسّم"),6,cv.width+":"+cv.height);await edUseJob(j);return}
+  if(act==="a3-scene"){const b=await snapCanvas72(V3.r.domElement);if(!b)return;loadSlot("vStart",new File([b],"3d.png",{type:"image/png"}));S.draft.startJob=null;const sel=S.jobs.find(j=>j.id===S.s3d.sel);S.draft.prompt=(sel&&sel.prompt&&sel.prompt.length>2?sel.prompt:L("This 3D model","هذا المجسّم"))+" — "+L("placed in a real cinematic scene, natural light, slow camera move","في مشهد سينمائي حقيقي، إضاءة طبيعية، حركة كاميرا بطيئة");go("video");toast(L("Set as the first frame — describe the scene and generate","عُيّن كإطار أول — صِف المشهد وولّد"),{type:"ok"})}},true);
+
+/* --- 8) 3D world from a photo: the AI extends it into a full 360° panorama, then you walk inside it (ground-projected sphere) --- */
+S.wld.pw=Object.assign({desc:"",jobs:[],sel:null},S.wld.pw||{});
+const PW={r:null,scene:null,cam:null,mesh:null,yaw:0,pitch:0,fov:75,pos:{x:0,z:0},keys:{},img:null,url:"",src:null};
+function pwPanoFromPhoto(img){const c=document.createElement("canvas");c.width=2048;c.height=1024;const x=c.getContext("2d");const h=1024*.62,w=h*img.width/img.height;let px=0;for(let i=0;px<2048;i++){x.save();if(i%2){x.translate(px+w,0);x.scale(-1,1);x.drawImage(img,0,(1024-h)/2,w,h)}else x.drawImage(img,px,(1024-h)/2,w,h);x.restore();px+=w}
+  const top=x.getImageData(0,Math.round((1024-h)/2)+2,2048,1).data,bot=x.getImageData(0,Math.round((1024+h)/2)-3,2048,1).data,avg=d=>{let r=0,g=0,b=0;for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2]}const n=d.length/4;return"rgb("+Math.round(r/n)+","+Math.round(g/n)+","+Math.round(b/n)+")"};
+  let gr=x.createLinearGradient(0,0,0,(1024-h)/2+4);gr.addColorStop(0,avg(top));gr.addColorStop(1,"rgba(0,0,0,0)");x.fillStyle=avg(top);x.fillRect(0,0,2048,(1024-h)/2+2);gr=x.createLinearGradient(0,(1024+h)/2-4,0,1024);x.fillStyle=avg(bot);x.fillRect(0,(1024+h)/2-2,2048,(1024-h)/2+2);return c}
+function pwBuild(tex){const R=30,camH=1.6,g=new THREE.SphereGeometry(R,160,80),p=g.attributes.position,uv=g.attributes.uv;const span=tex.image&&tex.image.width/tex.image.height>2.2?77:90;
+  for(let i=0;i<p.count;i++){const v=new THREE.Vector3(p.getX(i),p.getY(i),p.getZ(i)).normalize(),lat=Math.asin(v.y)*180/Math.PI;uv.setY(i,clamp(.5+lat/(2*span),0,1));
+    if(v.y<-.03){const t=Math.min(R,camH/(-v.y));p.setXYZ(i,v.x*t,v.y*t,v.z*t)}}
+  p.needsUpdate=true;uv.needsUpdate=true;g.scale(-1,1,1);g.computeVertexNormals();const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));m.name="nooi_world360";return m}
+async function pwMount(){const box=$("#pwview");if(!box||!PW.src)return;if(!await ensureThree())return;
+  if(!PW.r){PW.r=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});PW.r.setPixelRatio(Math.min(2,devicePixelRatio||1));PW.r.outputEncoding=THREE.sRGBEncoding;PW.scene=new THREE.Scene();PW.cam=new THREE.PerspectiveCamera(75,16/9,.05,200);
+    let last=performance.now();(function loop(now){requestAnimationFrame(loop);if(!PW.r||!document.body.contains(PW.r.domElement))return;const dt=Math.min(.05,(now-last)/1000);last=now;const K=PW.keys,sp=2.2*dt;
+      if(K.f||K.b){const s=K.f?sp:-sp;PW.pos.x+=Math.sin(PW.yaw)*s*-1;PW.pos.z+=Math.cos(PW.yaw)*s*-1}if(K.l)PW.yaw+=1.4*dt;if(K.r)PW.yaw-=1.4*dt;if(PW.auto)PW.yaw+=PW.auto*dt;
+      const d=Math.hypot(PW.pos.x,PW.pos.z);if(d>6){PW.pos.x*=6/d;PW.pos.z*=6/d}PW.cam.position.set(PW.pos.x,0,PW.pos.z);PW.cam.fov=PW.fov;PW.cam.updateProjectionMatrix();
+      PW.cam.rotation.order="YXZ";PW.cam.rotation.set(PW.pitch,PW.yaw,0);PW.r.render(PW.scene,PW.cam)})(last)}
+  if(PW.built!==PW.src){if(PW.mesh){PW.scene.remove(PW.mesh);PW.mesh.geometry.dispose();PW.mesh.material.map&&PW.mesh.material.map.dispose();PW.mesh.material.dispose()}const t=new THREE.CanvasTexture(PW.src);t.encoding=THREE.sRGBEncoding;PW.mesh=pwBuild(t);PW.scene.add(PW.mesh);PW.built=PW.src;PW.pos={x:0,z:0}}
+  if(PW.r.domElement.parentNode!==box)box.prepend(PW.r.domElement);const w=box.clientWidth||640,h=box.clientHeight||360;PW.r.setSize(w,h,false);PW.cam.aspect=w/h;PW.cam.updateProjectionMatrix()}
+async function pwLoadJob(j){let c=await blobImg72(await jobBlob72(j));if(c&&c.width/c.height<1.6)c=pwPanoFromPhoto(c);if(!c){const s=await blobImg72(await IDB.get("pwsrc_"+(j.meta&&j.meta.pw||"")));if(s)c=pwPanoFromPhoto(s)}if(!c)return false;const first=!PW.src;PW.src=c;S.wld.pw.sel=j.id;persist();if(S.view==="world"){if(first||!$("#pwview"))renderView();else pwMount()}return true}
+setInterval(()=>{const P=S.wld.pw;if(!P||!P.wait)return;const j=S.jobs.find(x=>x.id===P.wait);if(!j){P.wait=null;return}if(j.status==="failed"){P.wait=null;persist();toast(L("The 360° world couldn't be made: ","تعذّر صنع العالم 360°: ")+(j.error||""),{type:"warn"});if(S.view==="world")renderView();return}
+  if(j.status==="complete"){P.wait=null;persist();pwLoadJob(j).then(ok=>{if(S.view==="world")renderView();toast(ok?L("Your 3D world is ready — drag to look around, use the arrows to walk","عالمك ثلاثي الأبعاد جاهز — اسحب للنظر حولك واستخدم الأسهم للمشي"):L("The world image didn't arrive.","لم تصل صورة العالم."),{type:ok?"ok":"warn"})})}},1200);
+VIEWS.world=(o=>()=>{let h=o();const P=S.wld.pw,m=bestImg72(),cr=(IMG_MODELS[m]||{cr:2}).cr*2,wj=P.wait&&S.jobs.find(x=>x.id===P.wait),ph=M.pwRef;
+  const card='<div class="panel pad a3card" style="margin:0 0 16px"><h3>'+ic("image")+L("3D world from a photo (AI)","عالم ثلاثي الأبعاد من صورة (ذكاء)")+'</h3><p class="small mute">'+L("Upload a photo of a place (or just describe it). The AI extends it into a full 360° world — it paints what's behind the camera, the sky and the ground — and you can walk inside it, download it as .glb, record a walk-through for the editor or use the view as a scene.","ارفع صورة لمكان (أو صِفه فقط). يمدّها الذكاء إلى عالم كامل 360° — يرسم ما خلف الكاميرا والسماء والأرض — وتستطيع المشي داخله وتنزيله ‎.glb وتسجيل جولة للمحرر أو استخدام المنظر كمشهد.")+'</p>'+
+    '<div class="pwup"><label class="drop">'+ic("upload")+"<div>"+(ph?L("Change the photo","غيّر الصورة"):L("Upload a photo","ارفع صورة"))+'</div><input type="file" accept="image/*" data-pwup="1"></label>'+(ph?'<img src="'+esc(ph.url)+'" alt="">':"")+'</div><input type="text" data-bind="wld.pw.desc" dir="auto" value="'+esc(P.desc||"")+'" placeholder="'+esc(L("Describe the place (optional) — e.g. an old Riyadh souq at sunset","صِف المكان (اختياري) — مثال: سوق قديم في الرياض وقت الغروب"))+'" style="margin-top:8px">'+
+    '<div class="row" style="margin-top:10px"><button class="btn primary" data-act="pw-go" '+(wj?"disabled":"")+">"+ic("spark")+(wj?L("Building the world… ","يُبنى العالم… ")+Math.round((wj.progress||0)*100)+"%":L("Make a 3D world","اصنع عالماً ثلاثي الأبعاد"))+'<span class="cost">'+cr+" cr</span></button></div>"+
+    (PW.src||P.sel?'<div class="pwview" id="pwview" style="margin-top:12px"><div class="pwpad">'+[["f","▲"],["l","◀"],["b","▼"],["r","▶"]].map(x=>'<button data-pwk="'+x[0]+'" aria-label="'+x[0]+'">'+x[1]+"</button>").join("")+'</div><span class="pwhint">'+L("Drag to look · pinch or scroll to zoom · arrows to walk","اسحب للنظر · قرّب بإصبعين أو بالعجلة · الأسهم للمشي")+'</span></div><div class="row" style="margin-top:10px"><button class="btn sm" data-act="pw-glb">'+ic("download")+L("Download .glb","تنزيل ‎.glb")+'</button><button class="btn sm" data-act="pw-ed">'+ic("scissors")+L("Walk-through → editor (8 s)","جولة ← المحرر (8 ث)")+'</button><button class="btn sm" data-act="pw-scene">'+ic("video")+L("Use this view in a scene","استخدم هذا المنظر في مشهد")+"</button></div>":"")+"</div>";
+  return h.replace(/(<p class="lede">[\s\S]*?<\/p>)/,"$1"+card)})(VIEWS.world);
+const _rt72w=rootFor;rootFor=function(p){if(p==="wld.pw.desc")return[S.wld.pw,["desc"]];return _rt72w(p)};
+renderView=(o=>function(){o();if(S.view==="world"){if(!PW.src&&S.wld.pw.sel){const j=S.jobs.find(x=>x.id===S.wld.pw.sel);if(j&&j.status==="complete")pwLoadJob(j)}else requestAnimationFrame(pwMount)}})(renderView);
+document.addEventListener("change",e=>{const t=e.target;if(t.dataset&&t.dataset.pwup&&t.files&&t.files[0]){loadSlot("pwRef",t.files[0]);setTimeout(renderView,60)}});
+let pwDrag=null;const pwPts=new Map();
+document.addEventListener("pointerdown",e=>{const k=e.target.closest&&e.target.closest("[data-pwk]");if(k){e.preventDefault();PW.keys[k.dataset.pwk]=true;return}if(!PW.r||e.target!==PW.r.domElement)return;pwPts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pwPts.size===2){const[a,b]=[...pwPts.values()];pwDrag={pinch:Math.hypot(a.x-b.x,a.y-b.y),fov:PW.fov};return}pwDrag={x:e.clientX,y:e.clientY,yaw:PW.yaw,pitch:PW.pitch};try{e.target.setPointerCapture(e.pointerId)}catch(_){}});
+document.addEventListener("pointermove",e=>{if(!pwDrag||!pwPts.has(e.pointerId))return;pwPts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pwDrag.pinch&&pwPts.size>=2){const[a,b]=[...pwPts.values()];PW.fov=clamp(pwDrag.fov*pwDrag.pinch/Math.max(10,Math.hypot(a.x-b.x,a.y-b.y)),35,100);return}if(pwDrag.pinch)return;PW.yaw=pwDrag.yaw+(e.clientX-pwDrag.x)*.005;PW.pitch=clamp(pwDrag.pitch+(e.clientY-pwDrag.y)*.004,-1.3,1.3)});
+const pwUp=e=>{pwPts.delete(e.pointerId);if(!pwPts.size)pwDrag=null;PW.keys={}};document.addEventListener("pointerup",pwUp);document.addEventListener("pointercancel",pwUp);
+document.addEventListener("wheel",e=>{if(!PW.r||e.target!==PW.r.domElement)return;e.preventDefault();PW.fov=clamp(PW.fov+e.deltaY*.04,35,100)},{passive:false});
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act^="pw-"]');if(!a)return;const P=S.wld.pw;
+  if(a.dataset.act==="pw-go"){const desc=(P.desc||S.wld.prompt||"").trim();if(!M.pwRef&&!desc){toast(L("Upload a photo or describe the place.","ارفع صورة أو صِف المكان."),{type:"warn"});return}const m=bestImg72(),cr=(IMG_MODELS[m]||{cr:2}).cr*2,key=uid();
+    if(M.pwRef&&M.pwRef.file)IDB.put("pwsrc_"+key,M.pwRef.file);
+    const pr="A seamless 360-degree equirectangular panorama"+(M.pwRef?" that continues the place in the reference photo in every direction — extend it naturally to the left, right and behind the camera, with the matching sky above and ground below":"")+(desc?". The place: "+desc:"")+". Eye-level camera in the middle of the space, straight horizon across the middle, photorealistic, consistent light, no people close to the camera, no text, no borders; the left and right edges must join seamlessly.";
+    const j=withRef72("iRef",M.pwRef&&M.pwRef.file,()=>addJob({kind:"image",model:m,prompt:pr,title:L("3D world · ","عالم 3D · ")+(desc||L("from a photo","من صورة")).slice(0,30),aspect:"21:9",cost:cr,secs:10,art:"scene",meta:{pw:key,world360:true}}));
+    if(j){P.wait=j.id;P.jobs=(P.jobs||[]).concat(j.id).slice(-12);persist();renderView();if(API.mode!=="server"){const s=await blobImg72(M.pwRef&&M.pwRef.file);if(s){PW.src=pwPanoFromPhoto(s);renderView()}}}return}
+  if(!PW.r||!PW.mesh){toast(L("Make a world first.","اصنع عالماً أولاً."),{type:"warn"});return}
+  if(a.dataset.act==="pw-glb"){const g=new THREE.Group();g.add(PW.mesh.clone());new THREE.GLTFExporter().parse(g,r=>saveFile("nooi-world-360.glb",new Blob([r],{type:"model/gltf-binary"})),{binary:true});toast(L("World saved as .glb","حُفظ العالم بصيغة ‎.glb"),{type:"ok"});return}
+  if(a.dataset.act==="pw-scene"){const b=await snapCanvas72(PW.r.domElement);if(!b)return;loadSlot("vStart",new File([b],"world.png",{type:"image/png"}));S.draft.startJob=null;S.draft.prompt=(P.desc||L("This place","هذا المكان"))+" — "+L("slow cinematic camera move through the scene","حركة كاميرا سينمائية بطيئة داخل المشهد");go("video");toast(L("View set as the first frame","عُيّن المنظر كإطار أول"),{type:"ok"});return}
+  if(a.dataset.act==="pw-ed"){const cv=PW.r.domElement;if(!cv.captureStream||!window.MediaRecorder){toast(L("Recording isn't supported in this browser.","التسجيل غير مدعوم في هذا المتصفح."),{type:"warn"});return}a.disabled=true;a.classList.add("busy");
+    const mime=["video/webm;codecs=vp9","video/webm","video/mp4"].find(t=>MediaRecorder.isTypeSupported(t))||"",rec=new MediaRecorder(cv.captureStream(30),mime?{mimeType:mime,videoBitsPerSecond:6e6}:{}),ch=[];rec.ondataavailable=ev=>{if(ev.data.size)ch.push(ev.data)};const done=new Promise(r=>rec.onstop=r);
+    PW.auto=.45;PW.keys.f=true;rec.start(250);await new Promise(r=>setTimeout(r,8000));PW.keys={};PW.auto=0;rec.stop();await done;a.disabled=false;a.classList.remove("busy");
+    const j=await clipJob72(new Blob(ch,{type:(mime||"video/webm").split(";")[0]}),L("3D world walk-through","جولة في عالم 3D"),8,"16:9");await edUseJob(j)}});
+
+/* --- 9) AI effects: describe any effect → the AI designs it (particles, colours, motion, glow) → it's added and saved to your effects --- */
+S.vfxLib=Array.isArray(S.vfxLib)?S.vfxLib:[];
+const VFX_SPEC={};function vfxRegister(sp){if(!sp||!sp.id)return;VFX_SPEC[sp.id]=sp;if(!VFX.find(x=>x[0]===sp.id))VFX.push([sp.id,sp.en||"Custom effect",sp.ar||"مؤثر مخصص",sp.icon||"✦"])}
+S.vfxLib.forEach(vfxRegister);
+function vfxAiBox(){return'<div class="vfxai"><input type="text" id="vfxaiq" dir="auto" placeholder="'+esc(L("Describe an effect — e.g. golden glitter falling slowly, blue magic sparks swirling","صِف مؤثراً — مثال: لمعان ذهبي يتساقط ببطء، شرارات سحرية زرقاء تدور"))+'"><button class="btn sm primary" data-act="vfxai-gen">'+ic("spark")+L("Generate","ولّد")+"</button></div>"}
+const VFX_COL={red:"#ff4a4a",أحمر:"#ff4a4a",حمراء:"#ff4a4a",blue:"#4aa8ff",أزرق:"#4aa8ff",زرقاء:"#4aa8ff",green:"#5be37a",أخضر:"#5be37a",خضراء:"#5be37a",yellow:"#ffd84a",أصفر:"#ffd84a",صفراء:"#ffd84a",gold:"#f5c542",golden:"#f5c542",ذهبي:"#f5c542",ذهبية:"#f5c542",silver:"#dfe6ee",فضي:"#dfe6ee",فضية:"#dfe6ee",purple:"#b06bff",بنفسجي:"#b06bff",بنفسجية:"#b06bff",pink:"#ff7ac8",وردي:"#ff7ac8",وردية:"#ff7ac8",orange:"#ff9a3c",برتقالي:"#ff9a3c",برتقالية:"#ff9a3c",white:"#ffffff",أبيض:"#ffffff",بيضاء:"#ffffff",cyan:"#5cf0ff",سماوي:"#5cf0ff",black:"#111111",أسود:"#111111"};
+const VFX_SHAPES=[[/spark|شرار|شرر/i,"spark"],[/glitter|لمعان|بريق|sparkl/i,"spark"],[/star|نجم|نجوم/i,"star"],[/bubble|فقاع/i,"ring"],[/smoke|دخان|mist|ضباب/i,"smoke"],[/heart|قلب|قلوب/i,"heart"],[/snow|ثلج/i,"snow"],[/rain|مطر/i,"streak"],[/firefl|يراع/i,"glow"],[/petal|بتل|ورد|flower|زهر/i,"petal"],[/square|مربع|pixel|بكسل/i,"square"],[/light|ضوء|أضواء|glow|توهج/i,"glow"]];
+const VFX_EMO=[[/money|cash|فلوس|نقود|دولار/i,"💵"],[/leaf|leaves|أوراق|ورق شجر|خريف/i,"🍂"],[/butterfl|فراش/i,"🦋"],[/fire|flame|نار|لهب/i,"🔥"],[/balloon|بالون/i,"🎈"],[/music|notes|نوت|موسيق/i,"🎵"],[/laugh|ضحك/i,"😂"],[/like|إعجاب|لايك/i,"👍"]];
+function vfxLocalSpec(q){const t=String(q||"");const cols=t.toLowerCase().split(/[\s،,.]+/).map(w=>VFX_COL[w]).filter(Boolean);const emo=(t.match(/\p{Extended_Pictographic}/u)||[])[0]||(VFX_EMO.find(x=>x[0].test(t))||[])[1];
+  const sh=emo?"emoji":(VFX_SHAPES.find(x=>x[0].test(t))||[0,"spark"])[1];const dir=/up|rise|rising|أعلى|يصعد|تصعد|صاعد/i.test(t)?"up":/swirl|spin|دوام|تدور|يدور|حلزون/i.test(t)?"swirl":/explo|burst|انفجار|تنفجر|ينفجر/i.test(t)?"out":/left|يسار/i.test(t)?"left":/right|يمين/i.test(t)?"right":/float|still|تطفو|يطفو|عائم/i.test(t)?"still":sh==="smoke"||sh==="glow"?"still":/fire|نار|ember/i.test(t)?"up":"down";
+  const fast=/fast|quick|سريع/i.test(t),slow=/slow|بطيء|ببطء|هادئ/i.test(t),many=/lots|many|heavy|كثير|كثيف|غزير/i.test(t),big=/big|large|كبير/i.test(t),small=/tiny|small|صغير|ناعم/i.test(t);
+  const def={spark:"#ffd27a",star:"#fff2a8",ring:"#bfe8ff",smoke:"#d9dde2",heart:"#ff6aa2",snow:"#ffffff",streak:"#cfe0f5",glow:"#fff0a0",petal:"#ff9ec8",square:"#7af0ff",emoji:"#ffffff"};
+  return{shape:sh,emoji:emo||undefined,color:cols[0]||def[sh],color2:cols[1]||cols[0]||def[sh],count:Math.round((many?220:sh==="smoke"?14:sh==="glow"?50:110)*(small?1.3:1)),size:big?2:small?.6:1,speed:fast?2:slow?.45:1,dir,glow:/glow|shin|مضي|متوهج|لامع|neon|نيون|magic|سحر/i.test(t)||sh==="spark"||sh==="glow"?.8:.2,blend:sh==="smoke"?"normal":"screen",tint:/dark|مظلم|night|ليل/i.test(t)?.25:0}}
+async function vfxDesign(q){let sp=null;if(API.mode==="server"&&API.cfg&&API.cfg.providers&&API.cfg.providers.llm){try{const r=await API.req("/v1/llm/json",{json:{task:"video effect",tier:"quick",prompt:'You design particle overlay effects for a video editor. The user asks for: "'+q+'". Reply only JSON: {"en":"short English name","ar":"short Arabic name","icon":"one emoji","layers":[{"shape":"spark|star|ring|smoke|heart|snow|streak|glow|petal|square|emoji","emoji":"only when shape is emoji","color":"#hex","color2":"#hex","count":10-300,"size":0.3-3,"speed":0.2-3,"dir":"down|up|left|right|out|swirl|still","glow":0-1,"blend":"screen|normal","tint":0-0.4}]} with 1 to 3 layers.'}});if(r&&Array.isArray(r.layers)&&r.layers.length)sp={en:String(r.en||q).slice(0,28),ar:String(r.ar||q).slice(0,28),icon:String(r.icon||"✦").slice(0,4),layers:r.layers.slice(0,3)}}catch(e){}}
+  if(!sp){const l=vfxLocalSpec(q);sp={en:q.slice(0,28),ar:q.slice(0,28),icon:l.emoji||"✦",layers:[l]}}sp.id="c_"+uid();sp.q=q;return sp}
+function vfxDrawLayer(ctx,W,H,lt,l,q,seed){const n=Math.round(clamp(+l.count||80,4,400)*(.4+q*.6)),S0=clamp(+l.size||1,.2,4)*W/260,sp=clamp(+l.speed||1,.1,4),c1=/^#[0-9a-f]{3,8}$/i.test(l.color||"")?l.color:"#ffffff",c2=/^#[0-9a-f]{3,8}$/i.test(l.color2||"")?l.color2:c1,dir=l.dir||"down",sh=l.shape||"spark";
+  if(+l.tint>0){ctx.fillStyle="rgba(0,0,0,"+clamp(+l.tint,0,.5)*q+")";ctx.fillRect(0,0,W,H)}
+  ctx.globalCompositeOperation=l.blend==="normal"?"source-over":"screen";if(+l.glow>0){ctx.shadowColor=c1;ctx.shadowBlur=S0*6*clamp(+l.glow,0,1)}const A0=ctx.globalAlpha;
+  for(let i=0;i<n;i++){const a=hsh(i,seed+1),b=hsh(i,seed+2),c=hsh(i,seed+3),v=(.5+c)*sp;let x,y;
+    if(dir==="down"){x=a*W+Math.sin(lt*1.5+i)*W*.015;y=((b+lt*.12*v)%1)*H*1.1-H*.05}else if(dir==="up"){x=a*W+Math.sin(lt*1.5+i)*W*.02;y=H*1.05-((b+lt*.12*v)%1)*H*1.1}
+    else if(dir==="left"){y=b*H;x=W*1.05-((a+lt*.12*v)%1)*W*1.1}else if(dir==="right"){y=b*H;x=((a+lt*.12*v)%1)*W*1.1-W*.05}
+    else if(dir==="out"){const ang=a*6.283,r=((c+lt*.25*v)%1)*Math.hypot(W,H)*.6;x=W/2+Math.cos(ang)*r;y=H/2+Math.sin(ang)*r}
+    else if(dir==="swirl"){const ang=a*6.283+lt*v*.8,r=(.08+b*.5)*Math.min(W,H);x=W/2+Math.cos(ang)*r*1.4;y=H/2+Math.sin(ang)*r}
+    else{x=a*W+Math.sin(lt*.6+i)*W*.02;y=b*H+Math.cos(lt*.5+i)*H*.02}
+    const s=S0*(.5+c*1.2),tw=.55+.45*Math.sin(lt*4*v+i);ctx.fillStyle=i%2?c2:c1;ctx.strokeStyle=ctx.fillStyle;ctx.globalAlpha=A0*(sh==="spark"||sh==="star"||sh==="glow"?tw:1);
+    if(sh==="streak"){ctx.lineWidth=Math.max(1,s*.35);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-s*.6,y+s*5);ctx.stroke()}
+    else if(sh==="ring"){ctx.lineWidth=Math.max(1,s*.25);ctx.beginPath();ctx.arc(x,y,s*1.6,0,7);ctx.stroke()}
+    else if(sh==="smoke"){const r=s*18,g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,c1+"55");g.addColorStop(1,c1+"00");ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2)}
+    else if(sh==="glow"){const r=s*3,g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,c1);g.addColorStop(1,c1+"00");ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2)}
+    else if(sh==="star"||sh==="spark"){const r=s*(sh==="star"?1.8:1.2);ctx.beginPath();for(let k=0;k<8;k++){const ang=k*Math.PI/4+lt,rr=k%2?r*.3:r;ctx.lineTo(x+Math.cos(ang)*rr,y+Math.sin(ang)*rr)}ctx.closePath();ctx.fill()}
+    else if(sh==="heart"||sh==="emoji"||sh==="petal"){ctx.font=Math.round(s*4)+"px sans-serif";ctx.textAlign="center";if(sh==="petal"){ctx.save();ctx.translate(x,y);ctx.rotate(lt*2+i);ctx.beginPath();ctx.ellipse(0,0,s*1.6,s*.8,0,0,7);ctx.fill();ctx.restore()}else ctx.fillText(sh==="heart"?"♥":(l.emoji||"✦"),x,y)}
+    else if(sh==="square"){ctx.save();ctx.translate(x,y);ctx.rotate(lt*3+i);ctx.fillRect(-s,-s/2,s*2,s);ctx.restore()}
+    else{ctx.beginPath();ctx.arc(x,y,s,0,7);ctx.fill()}}
+  ctx.shadowBlur=0}
+edVfxDraw=(o=>function(ctx,W,H,t){o(ctx,W,H,t);for(const v of S.ed.vfx||[]){const sp=VFX_SPEC[v.kind];if(!sp||t<v.start||t>v.end)continue;const lt=t-v.start,dur=v.end-v.start,a=Math.min(1,lt/.35,(dur-lt)/.35),q=(v.amt||60)/100;if(a<=0)continue;
+  (sp.layers||[]).forEach((l,k)=>{ctx.save();ctx.globalAlpha=a;try{vfxDrawLayer(ctx,W,H,lt,l,q,k*17+(v.id.length%7))}catch(e){}ctx.restore()})}})(edVfxDraw);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="vfxai-gen"]');if(!a)return;const inp=$("#vfxaiq"),q=(inp&&inp.value||"").trim();if(!q){toast(L("Describe the effect first.","صِف المؤثر أولاً."),{type:"warn"});inp&&inp.focus();return}
+  a.classList.add("busy");const sp=await vfxDesign(q);a.classList.remove("busy");S.vfxLib.push(sp);S.vfxLib=S.vfxLib.slice(-24);vfxRegister(sp);
+  const tot=Math.max(edTotal(),1),s=Math.min(ED.t,Math.max(0,tot-.5));edAddVfx(sp.id,s,Math.min(tot,s+4)>s?Math.min(tot,s+4):s+4,70);persist();renderView();toast(L("Effect designed and added: ","صُمّم المؤثر وأُضيف: ")+L(sp.en,sp.ar),{type:"ok"})});
+/* the prompt bar: words that aren't a built-in effect but describe particles become an AI effect */
+edAiEdit=(o=>async function(prompt,mode){const p=String(prompt||"");if(!vfxFromText(p).length&&/(effect|مؤثر|particles|جزيئات|sparkl|glitter|لمعان|بريق|شرار|نجوم|stars|bubbles|فقاعات|petals|بتلات|fireflies|يراعات|smoke|دخان)/i.test(p)){const sp=await vfxDesign(p);S.vfxLib.push(sp);vfxRegister(sp);const [s,e]=edRangeFor(mode||"clip");edAddVfx(sp.id,s,e,70);S.ed.tab="vfx";persist();renderView();toast(L("Effect designed and added: ","صُمّم المؤثر وأُضيف: ")+L(sp.en,sp.ar),{type:"ok"});return true}return o(prompt,mode)})(edAiEdit);
+
+/* --- 10) templates: ordered by kind, each card the same shape --- */
+function divEnd72(h,i){let d=0;const re=/<div\b|<\/div>/g;re.lastIndex=i;let m;while((m=re.exec(h))){if(m[0]==="</div>"){d--;if(!d)return re.lastIndex}else d++}return -1}
+VIEWS.explore=(o=>()=>{let h=o();if(S.exploreType!=="all")return h;const k=h.indexOf('<div class="cards" style="margin-top:16px">');if(k<0)return h;const e=divEnd72(h,k);if(e<0)return h;
+  const ord=TYPES.map(t=>t[0]),l=TEMPLATES.slice().sort((x,y)=>(ord.indexOf(x.type)-ord.indexOf(y.type))||(x.dur-y.dur));
+  return h.slice(0,k)+'<div class="cards" style="margin-top:16px">'+l.map(tplCard).join("")+"</div>"+h.slice(e)})(VIEWS.explore);
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

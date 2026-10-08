@@ -22,7 +22,7 @@ const MUSIC_KINDS = new Set(["music", "sfx"]);
 
 const fullPrompt = (p) => [p.prompt, p.character && `Main character: ${p.character.description}`, ...(p.meta?.refs || []).map((r) => `${r.type}: ${r.description}`), p.camera && `Camera: ${p.camera}`].filter(Boolean).join("\n");
 const startImg = (p) => p.inputs?.startImage || p.inputs?.vStart || (p.meta?.refs || []).find((r) => r.url)?.url || undefined;
-const refImg = (p) => p.inputs?.iRef || p.inputs?.skImg || p.inputs?.dmIn || p.inputs?.eRef || undefined;
+const refImg = (p) => p.inputs?.iRef || p.inputs?.skImg || p.inputs?.chRef || p.inputs?.dmIn || p.inputs?.eRef || undefined;
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const drop = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && v !== ""));
 

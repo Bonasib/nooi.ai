@@ -16,7 +16,7 @@ AUDIT=r"""()=>{const out={fields:[],toggles:[],cards:[],overflow:[]};const W=doc
  // 3) sibling cards in one grid row with different heights
  document.querySelectorAll('#main *').forEach(g=>{const cs=getComputedStyle(g);if(cs.display!=='grid'||g.children.length<2)return;const kids=[...g.children].filter(k=>vis(k)&&/panel|card|tile|plan|botcard|kcol|tpl/.test(k.className));if(kids.length<2)return;const rows={};kids.forEach(k=>{const r=k.getBoundingClientRect();(rows[Math.round(r.top/4)]=rows[Math.round(r.top/4)]||[]).push(Math.round(r.height))});Object.values(rows).forEach(h=>{if(h.length>1&&Math.max(...h)-Math.min(...h)>4)out.cards.push((g.className||'grid')+': h='+h.join('/'))})});
  // 4) anything wider than the screen (outside intentional scrollers)
- document.querySelectorAll('#main *').forEach(e=>{if(!vis(e))return;if(e.closest('.tlwrap,.cmpwrap,.kanban,.tasks,.mrail,.tplcats,.botstrip,.crewline,.hbar,.strip,.board,.pnl,table,.seglist'))return;const r=e.getBoundingClientRect();if(r.right>W+2&&r.width<W*3)out.overflow.push((e.className&&typeof e.className==='string'?e.className.split(' ')[0]:e.tagName)+' +'+Math.round(r.right-W)+'px')});
+ document.querySelectorAll('#main *').forEach(e=>{if(!vis(e))return;if(e.closest('.tlwrap,.edtools72>.tabs,.cmpwrap,.kanban,.tasks,.mrail,.tplcats,.botstrip,.crewline,.hbar,.strip,.board,.pnl,table,.seglist'))return;const r=e.getBoundingClientRect();if(r.right>W+2&&r.width<W*3)out.overflow.push((e.className&&typeof e.className==='string'?e.className.split(' ')[0]:e.tagName)+' +'+Math.round(r.right-W)+'px')});
  for(const k in out)out[k]=[...new Set(out[k])].slice(0,6);return out}"""
 async def main():
     async with async_playwright() as p:

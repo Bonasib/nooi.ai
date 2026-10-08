@@ -21,7 +21,7 @@ const wanBody = (p) => ({
 
 export const PROVIDERS = {
   video:   make("WAN 3.0", "WAN", wanBody),
-  image:   make("Image", "IMAGE", (p) => ({ prompt: [p.prompt, ...(p.meta?.refs || []).map((r) => `${r.type}: ${r.description}`)].join("\n"), model: p.model, aspect_ratio: p.aspect, seed: p.seed, style: p.meta?.style, reference_image_url: p.inputs?.iRef || p.inputs?.skImg || p.inputs?.dmIn, control_strength: (p.meta?.sketch || p.meta?.mode) ? p.meta.strength : undefined, edit_mode: p.meta?.mode, num_outputs: 1 })),
+  image:   make("Image", "IMAGE", (p) => ({ prompt: [p.prompt, ...(p.meta?.refs || []).map((r) => `${r.type}: ${r.description}`)].join("\n"), model: p.model, aspect_ratio: p.aspect, seed: p.seed, style: p.meta?.style, reference_image_url: p.inputs?.iRef || p.inputs?.skImg || p.inputs?.chRef || p.inputs?.dmIn, control_strength: (p.meta?.sketch || p.meta?.mode) ? p.meta.strength : undefined, edit_mode: p.meta?.mode, num_outputs: 1 })),
   tts:     make("TTS", "TTS", (p) => p.kind === "voiceconvert"
     // speech-to-speech: keep the words & timing, change the voice (library voice or a consented clone)
     ? { task: "convert", audio_url: p.inputs?.alSrc, voice_id: p.meta?.target?.remote || undefined, language: p.meta?.target?.dialect, gender: p.meta?.target?.gender }
