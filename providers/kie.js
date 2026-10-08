@@ -58,7 +58,8 @@ export function kieInput(model, p) {
   if (/^volcengine\/video-to-video-lip-sync/.test(m)) return { mode: "basic", video_url: absUrl(inp.lsV), audio_url: absUrl(inp.lsA) };
   if (IMAGE_KINDS.has(kind)) {
     const ref = refImg(p) ? absUrl(refImg(p)) : undefined, prompt = fullPrompt(p);
-    if (/nano-banana-(2|pro)/.test(m)) return drop({ prompt, image_input: ref ? [ref] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"]), resolution: pickRes(p, ["1K", "2K", "4K"], "2K") });
+    const more = ["iRef2", "iRef3", "iRef4"].map((k) => inp[k]).filter(Boolean).map(absUrl);   // extra angles of the same face (avatars)
+    if (/nano-banana-(2|pro)/.test(m)) return drop({ prompt, image_input: ref ? [ref, ...more] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"]), resolution: pickRes(p, ["1K", "2K", "4K"], "2K") });
     if (/nano-banana-edit/.test(m)) return drop({ prompt, image_urls: ref ? [ref] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"]) });
     if (/^gpt-image-2/.test(m)) return drop({ prompt, input_urls: /image-to-image/.test(m) && ref ? [ref] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "3:2", "2:3", "4:3", "3:4", "5:4", "4:5", "9:16", "16:9"]), resolution: pickRes(p, ["1K", "2K", "4K"], "2K") });
     if (/^flux-2\//.test(m)) return drop({ prompt, input_urls: /image-to-image/.test(m) && ref ? [ref] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3"]), resolution: pickRes(p, ["1K", "2K"], "2K") });

@@ -95,6 +95,13 @@ try {
   const again = await api("/v1/admin/showcase", { json: { ids: pick } }); ok(pick.every((id) => again.d.items.find((x) => x.id === id).status === "done"), "showcase: finished items are not made twice unless asked");
   const del = await fetch(`http://localhost:${NPORT}/v1/admin/showcase`, { method: "DELETE", headers: { "content-type": "application/json" }, body: JSON.stringify({ ids: pick }) }).then((r) => r.json());
   ok(pick.every((id) => del.items.find((x) => x.id === id).status === "none") && !((await api("/v1/explore")).d.items || []).some((x) => x.author === "nooi"), "showcase: admin can remove items (test data cleaned up)");
+  // nooi Studio 2.0: a long video with a different engine model per part · the bots learn from approvals (only for your own jobs)
+  const mix = await api("/v1/jobs", { json: { kind: "video", prompt: "A woman runs through a neon market", model: "kling30", dur: 30, meta: { parts: 3, partModels: ["kling30", "hailuo", "kling30"], cat: "action" } } });
+  let mx = null; const t2 = Date.now(); while (Date.now() - t2 < 60000) { mx = (await api("/v1/jobs/" + mix.d.id)).d; if (["done", "failed"].includes(mx.status)) break; await new Promise((r) => setTimeout(r, 1500)); }
+  const partReqs = seen.filter((x) => x.body && /A woman runs through a neon market/.test(x.body.input?.prompt || x.body.prompt || "")).map((x) => x.body.model);
+  ok(mix.status === 200 && mx.status === "done" && partReqs.includes("kling-3.0/video") && partReqs.some((m) => /minimax|hailuo/.test(m)), "studio 2.0: each part runs on its own engine model (" + partReqs.join(", ") + ")");
+  const l0 = (await api("/v1/learn")).d.n, la = await api("/v1/learn", { json: { job: mix.d.id, ev: "approve" } }), la2 = await api("/v1/learn", { json: { job: mix.d.id, ev: "approve" } }), lb = await api("/v1/learn", { json: { job: "not-mine", ev: "approve" } }), l1 = (await api("/v1/learn")).d;
+  ok(la.d.ok === true && la2.d.ok === false && lb.status === 404 && l1.n === l0 + 1 && l1.stats.kling30?.action?.g >= 1 && l1.stats.hailuo?.action?.g >= 1, "learning: approve counts once per job, for every model it used; unknown jobs are refused");
 } catch (e) { ok(false, "crashed: " + e.message); }
 finally { srv.kill(); kieSrv.close(); }
 console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);

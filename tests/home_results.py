@@ -61,7 +61,14 @@ async def main():
                 use = await E("()=>[...document.querySelectorAll('.hfuc')].map(b=>b.dataset.act)")
                 await E("()=>document.querySelector('[data-act=hfu-ugc]').click()"); await pg.wait_for_timeout(200)
                 ugc = await E("()=>[S.hf.tab,S.hf.aspect,!!(M.hfRef&&M.hfRef.url),S.draft.type]")
-                if use != ["hfu-scene","hfu-ugc","hfu-poster","hfu-post","hfu-talk"] or ugc != ["video","9:16",True,"ugc"]: fails.append(f"{w}: avatar use-in {use} {ugc}")
+                if use != ["hfe-ed","hfu-scene","hfu-ugc","hfu-poster","hfu-post","hfu-talk"] or ugc != ["video","9:16",True,"ugc"]: fails.append(f"{w}: avatar use-in {use} {ugc}")
+                await E("()=>{S.hf.out=['aud1'];S.hf.tab='audio';renderView()}"); await pg.wait_for_timeout(300)
+                # × removes the reference photo; nooi Studio 2.0 plans each shot (lighter model between hero shots) and shows the saving
+                await E("()=>{S.hf.tab='avatar';M.hfRef={url:'/logo.png',remote:'/logo.png',name:'f.png'};renderView()}")
+                await E("()=>document.querySelector('.hfrefx').click()"); refx = await E("()=>!M.hfRef&&!!document.querySelector('.hfang.add')")
+                await E("()=>{S.myPlan='studio';S.hf.tab='video';S.hf.vModel='auto';S.hf.bots=true;S.hf.dur=30;S.hf.prompt='A woman runs through a neon market';renderView()}")
+                plan = await E("()=>{const p=hfStudioP();return[p.n,p.shots[0].m===p.shots[2].m,p.shots[1].m!==p.shots[0].m,p.total<p.all,+document.querySelector('.hfcost').textContent===p.total,!!document.querySelector('.hfbots.pro .hfstplan')]}")
+                if not refx or plan != [3, True, True, True, True, True]: fails.append(f"{w}: photo x {refx} / studio plan {plan}")
                 await E("()=>{S.hf.out=['aud1'];S.hf.tab='audio';renderView()}"); await pg.wait_for_timeout(300)
                 audio_ok = bool(aud) and aud["h"] < 160 and aud["svg"] <= 48 and aud["play"] and aud["mute"] and aud["t"].endswith("0:01") and "music" in aud["ph"].lower() and aud["cost"] == 15 and muted
                 r = {"modelRow": row, "picked": picked, "stayedOnHome": stay, "cards": cards, "statuses": done, "approveImage": img_view, "autoFirst": auto_first, "approveVideo": vid_view, "botsKeepModel": [off, on], "audio": aud, "errors": errs}

@@ -33,6 +33,7 @@ import { newCode, checkCode } from "./lib/otp.js";
 import { isStaff } from "./lib/admin.js";
 import { registerShowcase } from "./lib/showcase.js";
 import { registerScenes } from "./lib/scenes.js";
+import { registerLearn } from "./lib/learn.js";
 import { cbSig, findJob, pollOne } from "./lib/jobs.js";
 import { registerGifts } from "./lib/gifts.js";
 import { registerInvoices } from "./lib/invoices.js";
@@ -184,6 +185,7 @@ app.put("/v1/admin/pricing", requireUser, (req, res) => { if (!isStaff(req.user)
 // the engine calls back when a job is ready → check it now (the body is never trusted; we poll the job ourselves)
 app.post("/v1/engine/cb/:id/:sig", (req, res) => { if (req.params.sig === cbSig(req.params.id)) { const f = findJob(req.params.id); if (f) pollOne(f[0], f[1]); } res.json({ ok: true }); });
 registerScenes(app);
+registerLearn(app);
 registerExplore(app); registerShowcase(app); registerGifts(app); registerInvoices(app);
 // Low-latency voice preview (ElevenLabs stream, key never leaves the server)
 app.post("/v1/tts/stream", requireUser, async (req, res) => { try { const { planOf } = await import("./lib/plans.js"); const plan = planOf(user(req.user.uid)); if (!["pro", "studio"].includes(plan)) return res.status(402).json({ error: "ElevenLabs voices start from the Pro plan" }); await streamTTS(res, req.body || {}); } catch (e) { if (!res.headersSent) res.status(502).json({ error: e.message }); } });

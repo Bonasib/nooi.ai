@@ -8497,6 +8497,174 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
 .hfuse>div{display:flex;flex-wrap:wrap;gap:6px}.hfuc{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:999px;border:1px solid color-mix(in srgb,var(--lime) 45%,var(--line2));background:color-mix(in srgb,var(--lime) 10%,var(--panel));color:var(--text);font-size:12.5px;font-weight:600;cursor:pointer;min-height:32px}
 .hfuc svg{width:14px;height:14px}
 `;document.head.appendChild(st)})();
+/* ================= v65: × on the reference photo · more face angles for avatars · bots that learn · nooi Studio 2.0 mixes models per shot ================= */
+/* reference photo: an × to remove it; avatar: up to 3 more angles of the same face */
+hfBox=(o=>function(){let h=o();const H=S.hf;
+  h=h.replace(/(<label class="hfref has"[\s\S]*?<\/label>)/,'<span class="hfrefw">$1<button class="hfrefx" data-act="hfz-rm" aria-label="'+esc(L("Remove photo","إزالة الصورة"))+'">'+ic("x")+"</button></span>");
+  if(H.tab==="avatar"){const ang=[1,2,3].map(i=>M["hfAng"+i]);
+    h=h.replace('<div class="hfbar">','<div class="hfangs"><span class="small mute">'+L("More angles of the same face (optional): side, ¾, smiling — the bots join them into one sharp face first.","زوايا أخرى للوجه نفسه (اختياري): جانب، ¾، ابتسامة — تدمجها البوتات أولاً في وجه واحد دقيق.")+'</span><div class="hfangl">'+
+      ang.map((m,i)=>m?'<span class="hfang"><img src="'+esc(m.url)+'" alt=""><button data-act="hfz-ang" data-v="'+(i+1)+'" aria-label="'+esc(L("Remove angle "+(i+1),"إزالة الزاوية "+(i+1)))+'">'+ic("x")+"</button></span>"
+        :'<label class="hfang add">'+ic("plus")+'<input type="file" accept="image/*" data-hfslot="hfAng'+(i+1)+'" aria-label="'+esc(L("Add angle "+(i+1),"أضف زاوية "+(i+1)))+'"></label>').join("")+'</div></div><div class="hfbar">')}
+  return h})(hfBox);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act^="hfz-"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
+  const k=a.dataset.act==="hfz-rm"?"hfRef":"hfAng"+a.dataset.v;if(M[k]&&M[k].file&&M[k].url)URL.revokeObjectURL(M[k].url);M[k]=null;renderView()},true);
+/* avatar with extra angles: first one clean front portrait made from all photos, then the talking avatar from it */
+hfSend=(o=>async function(){const H=S.hf,ang=[1,2,3].map(i=>M["hfAng"+i]).filter(Boolean);
+  if(H.tab!=="avatar"||!ang.length||!M.hfRef)return o.apply(this,arguments);
+  const q=$("#hfq"),p=((q&&q.value)||H.prompt||"").trim();if(!p&&!M.hfAud){toast(L("Type what they say, or add a voice file.","اكتب ما يقوله أو أضف ملفاً صوتياً."));return}
+  if(API.mode!=="server"){toast(L("Extra angles are joined on your nooi server — this demo uses the main photo.","تُدمج الزوايا الإضافية على خادم nooi — هذا العرض يستخدم الصورة الرئيسية."),{type:"info"});return o.apply(this,arguments)}
+  const keep=["iRef","iRef2","iRef3","iRef4"].map(k=>[k,M[k]]);M.iRef=M.hfRef;ang.forEach((m,i)=>M["iRef"+(i+2)]=m);
+  const im=imgOK("nanopro")?"nanopro":"nano";HF_GRAB=[];
+  const j=addJob({kind:"image",model:im,aspect:"3:4",cost:(IMG_MODELS[im]||{cr:5}).cr,title:L("Avatar face from "+(ang.length+1)+" photos","وجه الأفاتار من "+(ang.length+1)+" صور"),
+    prompt:"Studio portrait of exactly the same person shown in all reference photos: the same face, features, skin tone, hair and age. Front-facing, looking straight at the camera, mouth closed, soft even light, plain light background, head and shoulders, photorealistic.",meta:{avatarFace:1,res:"2K"}});
+  const g=HF_GRAB;HF_GRAB=null;if(!j){keep.forEach(([k,v])=>M[k]=v);return}
+  H.out=g.concat((H.out||[]).filter(x=>!g.includes(x))).slice(0,12);persist();renderView();
+  toast(L("The bots are joining your "+(ang.length+1)+" photos into one face, then the avatar starts by itself.","تدمج البوتات صورك الـ"+(ang.length+1)+" في وجه واحد، ثم يبدأ الأفاتار تلقائياً."),{type:"info",ms:4500});
+  const t0=Date.now();let restored=false;
+  const jid=j.id;const tick=setInterval(()=>{const j=S.jobs.find(x=>x.id===jid)||{status:"failed"};if(!restored&&(j.remote||j.status==="failed")){restored=true;keep.forEach(([k,v])=>M[k]=v)}
+    if(j.status==="failed"||Date.now()-t0>15*60e3){clearInterval(tick);if(!restored)keep.forEach(([k,v])=>M[k]=v);toast(L("Joining the photos failed — try again or use one photo.","تعذّر دمج الصور — حاول مجدداً أو استخدم صورة واحدة."),{type:"warn"});return}
+    if(j.status!=="complete"||!mediaUrl(j))return;clearInterval(tick);const u=mediaUrl(j),tab=H.tab;
+    M.hfRef={url:u,remote:u,name:"avatar-face.png"};[1,2,3].forEach(i=>M["hfAng"+i]=null);H.tab="avatar";H.prompt=p;const qq=$("#hfq");if(qq)qq.value=p;
+    Promise.resolve(o()).finally(()=>{if(tab!=="avatar"){H.tab=tab;persist();renderView()}})},1500)})(hfSend);
+SLOTS_FOR.image=["iRef","iRef2","iRef3","iRef4"];
+
+/* ---- the bots learn: every approve / make-again / remove / failure updates what works best for each kind of shot ---- */
+const LRN={stats:{},n:0,at:0};
+function lrnLoad(force){if(API.mode!=="server"||LRN._l||(!force&&Date.now()-LRN.at<120e3))return;LRN._l=1;API.req("/v1/learn").then(r=>{LRN.stats=r.stats||{};LRN.n=r.n||0;LRN.at=Date.now();hfStudioPaint()}).catch(()=>{}).finally(()=>{LRN._l=0})}
+const lrnLocal=()=>(S.learn=S.learn||{stats:{},n:0});
+function hfCat(p){p=String(p||"").toLowerCase();return/(anime|cartoon|pixel|manga|أنمي|انمي|كرتون|بكسل)/.test(p)?"anime":/(explo|fire|portal|vfx|magic|lightning|shatter|انفجار|نار|بوابة|سحر|برق|مؤثرات)/.test(p)?"vfx":/(product|bottle|perfume|watch|shoe|phone|منتج|زجاجة|عطر|ساعة|حذاء|جوال)/.test(p)?"product":/(run|fight|chase|dance|jump|race|drift|skate|يركض|قتال|مطاردة|رقص|يقفز|سباق|تزلج)/.test(p)?"action":/(man|woman|girl|boy|person|people|face|portrait|singer|chef|رجل|امرأة|فتاة|ولد|شخص|أشخاص|وجه|بورتريه|مغن|طاه)/.test(p)?"people":/(sea|ocean|desert|forest|mountain|sky|river|sunset|بحر|محيط|صحراء|غابة|جبل|سماء|نهر|غروب)/.test(p)?"nature":"general"}
+const LRN_W={approve:[1,0],again:[0,.5],remove:[0,.5],fail:[0,1]};
+function lrnEvent(j,ev){if(!j||!["video","image"].includes(j.kind))return;j._lev=j._lev||{};if(j._lev[ev])return;j._lev[ev]=1;
+  const ms=(j.meta&&j.meta.partModels)||[j.model],cat=(j.meta&&j.meta.cat)||hfCat(j.prompt),w=LRN_W[ev],D=lrnLocal();
+  [...new Set(ms)].forEach(m=>{if(!m||m==="auto")return;const s=D.stats[m]=D.stats[m]||{},c=s[cat]=s[cat]||{g:0,b:0};c.g+=w[0];c.b+=w[1]});D.n++;persist();
+  if(API.mode==="server"&&j.remote&&ev!=="fail")API.req("/v1/learn",{json:{job:j.remote,ev}}).then(()=>{LRN.at=0}).catch(()=>{})}
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="hfr-ok"],[data-act="hfr-again"],[data-act="hfr-x"]');if(!a)return;const j=S.jobs.find(x=>x.id===a.dataset.id);if(!j)return;
+  const act=a.dataset.act;if(act==="hfr-ok")lrnEvent(j,"approve");else if(act==="hfr-again")lrnEvent(j,"again");else if(j.status==="complete"&&!j.approved)lrnEvent(j,"remove")},true);
+setInterval(()=>{S.jobs.forEach(j=>{if(j.status==="failed"&&!(j._lev&&j._lev.fail)&&Date.now()-(j.created||0)<36e5)lrnEvent(j,"fail")})},4000);
+/* what the bots know about each engine model before learning (quality 0–1 + strengths) */
+const STU_Q={veo31:.95,kling30:.92,seedance25:.9,seedance20:.85,wan30:.82,veo31f:.82,kling26:.8,kling:.78,hailuoh3:.8,wan27:.72,hailuo:.72,pixverse6:.7,grok:.68,seedance:.6};
+const STU_B={people:{kling30:.04,veo31:.03,wan27:.03},action:{kling30:.04,hailuoh3:.05,seedance25:.02},anime:{pixverse6:.1,seedance20:.04},product:{veo31:.03,wan30:.04,veo31f:.03},vfx:{hailuoh3:.05,kling30:.02,pixverse6:.04},nature:{veo31f:.03,wan30:.02}};
+function stuScore(m,cat){const p=Math.min(.99,(STU_Q[m]||.6)+((STU_B[cat]||{})[m]||0));let g=0,b=0;[LRN.stats,lrnLocal().stats].forEach(T=>{const s=(T||{})[m]||{};g+=((s[cat]||{}).g||0)+((s.general||{}).g||0)*(cat==="general"?0:.3);b+=((s[cat]||{}).b||0)+((s.general||{}).b||0)*(cat==="general"?0:.3)});
+  const n=g+b,mean=(g+6*p)/(n+6);return{q:mean+.08/Math.sqrt(1+n),n}}
+/* nooi Studio 2.0 plan: hero shots (first, last, or a single shot of people/action/products) get the strongest model worth it;
+   the shots in between get a lighter model that still fits — the result stays great and costs fewer credits */
+function hfStudio(prompt,dur){dur=+dur||5;const cat=hfCat(prompt),n=dur<=10?1:Math.min(6,Math.ceil(dur/10)),per=Math.ceil(dur/n);
+  const cands=Object.keys(STU_Q).filter(m=>MODELS[m]&&!(M_ALIAS||{})[m]&&modelAllowed(m)&&engMax(m)>=per&&PRICE_TABLE.video[m]);if(!cands.length)return null;
+  const pick=lam=>cands.map(m=>{const s=stuScore(m,cat);return{m,u:s.q-lam*PRICE_TABLE.video[m]/100}}).sort((a,b)=>b.u-a.u)[0].m;
+  const heroOne=["people","action","product","vfx"].includes(cat),hero=pick(.05),light=pick(.8),shots=[];
+  for(let i=0;i<n;i++){const isHero=n===1?heroOne:(i===0||i===n-1);shots.push({m:n===1&&!heroOne?pick(.15):isHero?hero:light,hero:isHero})}
+  const total=shots.reduce((s,x)=>s+vcost(x.m,per),0),all=vcost(hero,per)*n;return{cat,n,per,shots,total,all,save:Math.max(0,all-total)}}
+const hfStudioP=()=>{const H=S.hf,q=$("#hfq");return hfStudio((q&&q.value)||H.prompt||"",H.dur)};
+hfCost=(o=>function(){const H=S.hf;if(H.tab==="video"&&nooiOn()){const pl=hfStudioP();if(pl)return pl.total}return o()})(hfCost);
+const CAT_N={people:["people","أشخاص"],action:["action","حركة"],product:["product","منتج"],nature:["nature","طبيعة"],anime:["anime","أنمي"],vfx:["VFX","مؤثرات"],general:["general","عام"]};
+function hfStudioPlanHTML(){const H=S.hf;if(H.tab!=="video"||!nooiOn())return"";const pl=hfStudioP();if(!pl)return"";
+  return'<div class="hfstplan"><span class="lbl2">'+L("Plan for this video","خطة هذا الفيديو")+" · "+L(CAT_N[pl.cat][0],CAT_N[pl.cat][1])+'</span><div class="hfstshots">'+pl.shots.map((s,i)=>'<span class="hfsts'+(s.hero?" hero":"")+'"><small>'+(pl.n>1?L("Shot ","لقطة ")+(i+1):L("Shot","اللقطة"))+" · "+pl.per+L("s","ث")+"</small><b>"+esc(hfMName("video",s.m))+'</b><i>'+ic("coin")+vcost(s.m,pl.per)+"</i></span>").join("")+"</div>"+
+    '<p class="hfstsum">'+L("Total ","المجموع ")+"<b>"+pl.total+"</b>"+(pl.save?' · <span class="hfsave">'+L("saves "+pl.save+" credits vs. "+hfMName("video",pl.shots.find(s=>s.hero)?pl.shots.find(s=>s.hero).m:pl.shots[0].m)+" for every shot","توفير "+pl.save+" رصيد مقارنة بـ "+hfMName("video",pl.shots.find(s=>s.hero)?pl.shots.find(s=>s.hero).m:pl.shots[0].m)+" لكل اللقطات")+"</span>":"")+"</p></div>"}
+function hfStudioPaint(){const box=document.querySelector(".hfbots .hfstplanw");if(box)box.innerHTML=hfStudioPlanHTML();const c=document.querySelector(".hfbox .hfcost"),v=hfCost();if(c&&v!=null)c.innerHTML=ic("coin")+v;const n=document.querySelector(".hfbots .hflearn b");if(n)n.textContent=(LRN.n||0)+(lrnLocal().n||0)}
+document.addEventListener("input",e=>{if(e.target&&e.target.id==="hfq"){clearTimeout(S._hfsp);S._hfsp=setTimeout(hfStudioPaint,350)}});
+/* nooi Studio 2.0 panel: a premium look + what the bots will do */
+hfBox=(o=>function(){let h=o();const H=S.hf;if(!/class="hfbots"/.test(h))return h;lrnLoad();const nooi=nooiOn(),learned=(LRN.n||0)+(lrnLocal().n||0);
+  h=h.replace('<div class="hfbots">','<div class="hfbots pro'+(nooi?" nooi":"")+'">').replace(/<div class="hfbh"><b>nooi Studio 2.0<\/b><span class="small mute">([\s\S]*?)<\/span>(<button class="btn sm ghost" data-go="crew">[^<]*<\/button>)<\/div>/,(m0,desc,btn)=>
+    '<div class="hfbh"><span class="nst"><span class="nstw">nooi Studio</span><em>2.0</em></span>'+btn+'</div><p class="hfstd">'+(nooi?L("8 AI bots direct every shot and pick the right model for each one — the strongest where it shows, a lighter one where it doesn't. Better videos, fewer credits.","8 بوتات ذكية تخرج كل لقطة وتختار النموذج المناسب لكل واحدة — الأقوى حيث يظهر الفرق، والأخف حيث لا يظهر. فيديو أفضل برصيد أقل."):desc)+"</p>"+
+    '<div class="hfstf"><span>'+ic("users")+L("8 AI bots","8 بوتات ذكية")+"</span><span>"+ic("layers")+L("Best model per shot","أفضل نموذج لكل لقطة")+"</span><span>"+ic("coin")+L("Saves credits","يوفّر الرصيد")+'</span><span class="hflearn">'+ic("spark")+L("Learned from ","تعلّمت من ")+"<b>"+learned+"</b>"+L(" results"," نتيجة")+"</span></div>"+
+    '<div class="hfstplanw">'+hfStudioPlanHTML()+"</div>");
+  return h})(hfBox);
+/* jobs from the box carry their category (for learning); nooi videos carry the per-shot plan */
+addJob=(o=>function(j){const H=S.hf;
+  if(j&&HF_GRAB&&j.kind==="video"&&H.tab==="video"&&nooiOn()&&!(j.meta&&j.meta.parts)){const pl=hfStudio(j.prompt,j.dur||H.dur);
+    if(pl){j.model=pl.shots[0].m;j.cost=pl.total;j.meta=Object.assign({},j.meta,{cat:pl.cat,studio:2});
+      if(pl.n>1)Object.assign(j.meta,{parts:pl.n,partSec:pl.per,partModels:pl.shots.map(s=>s.m)},HF_PLAN&&HF_PLAN.shots&&HF_PLAN.shots.length>=pl.n?{shots:HF_PLAN.shots.slice(0,pl.n),bible:HF_PLAN.bible||""}:{})}}
+  else if(j&&HF_GRAB&&["video","image"].includes(j.kind))j.meta=Object.assign({},j.meta,{cat:hfCat(j.prompt)});
+  return o.apply(this,arguments)})(addJob);
+(()=>{const st=document.createElement("style");st.textContent=`
+.hfrefw{position:relative;flex:none;display:inline-flex}.hfrefx{position:absolute;top:-6px;inset-inline-end:-6px;width:26px;height:26px;border-radius:50%;border:2px solid var(--panel);background:rgba(0,0,0,.75);color:#fff;display:grid;place-items:center;cursor:pointer;z-index:3;padding:0}.hfrefx svg{width:13px;height:13px}
+.hfangs{margin-top:8px;display:flex;flex-direction:column;gap:6px}.hfangl{display:flex;gap:8px;flex-wrap:wrap}
+.hfang{position:relative;width:54px;height:54px;border-radius:12px;overflow:visible;flex:none;display:grid;place-items:center}.hfang img{width:100%;height:100%;object-fit:cover;border-radius:12px}
+.hfang.add{border:1.5px dashed var(--line2);color:var(--mute);cursor:pointer}.hfang.add svg{width:18px;height:18px}.hfang.add input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.hfang button{position:absolute;top:-6px;inset-inline-end:-6px;width:22px;height:22px;border-radius:50%;border:2px solid var(--panel);background:rgba(0,0,0,.75);color:#fff;display:grid;place-items:center;padding:0;cursor:pointer}.hfang button svg{width:11px;height:11px}
+.hfbots.pro{position:relative;padding:14px 14px 12px;border:0;border-radius:20px;isolation:isolate;background:radial-gradient(120% 140% at 0% 0%,color-mix(in srgb,var(--lime) 22%,transparent),transparent 55%),radial-gradient(120% 140% at 100% 100%,color-mix(in srgb,#8a5cff 20%,transparent),transparent 60%),var(--panel2)}
+.hfbots.pro::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;background:conic-gradient(from var(--hfa,0deg),var(--lime),#8a5cff,#ffd36a,var(--lime));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;z-index:-1;animation:hfspin 6s linear infinite}
+@property --hfa{syntax:"<angle>";inherits:false;initial-value:0deg}@keyframes hfspin{to{--hfa:360deg}}
+.hfbots.pro .hfbh{justify-content:space-between}.nst{display:inline-flex;align-items:baseline;gap:6px}.nstw{font:800 19px/1.1 var(--sans);letter-spacing:-.02em;background:linear-gradient(90deg,var(--text),color-mix(in srgb,var(--lime) 85%,var(--text)),var(--text));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:hfshine 4s ease-in-out infinite}
+.nst em{font:800 12px var(--mono);font-style:normal;padding:2px 7px;border-radius:999px;background:linear-gradient(90deg,var(--lime),#ffd36a);color:#111}
+@keyframes hfshine{0%,100%{background-position:0 0}50%{background-position:100% 0}}
+.hfstd{margin:6px 0 8px;font-size:13px;color:var(--mute);line-height:1.5}
+.hfstf{display:flex;flex-wrap:wrap;gap:6px}.hfstf span{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;background:color-mix(in srgb,var(--panel) 70%,transparent);border:1px solid var(--line);font-size:12px;font-weight:600}.hfstf svg{width:13px;height:13px}.hfstf .hflearn{border-color:color-mix(in srgb,var(--lime) 50%,var(--line))}
+.hfstplan{margin-top:10px;padding:10px;border-radius:14px;background:color-mix(in srgb,var(--panel) 75%,transparent);border:1px solid var(--line)}.hfstplan .lbl2{font-size:11.5px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+.hfstshots{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px;margin-top:6px}.hfsts{display:flex;flex-direction:column;gap:1px;padding:7px 9px;border-radius:12px;background:var(--panel2);border:1px solid var(--line)}
+.hfsts.hero{border-color:color-mix(in srgb,var(--lime) 60%,var(--line));background:color-mix(in srgb,var(--lime) 10%,var(--panel2))}.hfsts small{font-size:11px;color:var(--mute)}.hfsts b{font-size:13px}.hfsts i{font-style:normal;font:600 11.5px var(--mono);display:inline-flex;align-items:center;gap:3px}.hfsts i svg{width:11px;height:11px}
+.hfstsum{margin:8px 0 0;font-size:12.5px}.hfsave{color:color-mix(in srgb,var(--lime) 75%,var(--text));font-weight:700}
+@media (prefers-reduced-motion: reduce){.hfbots.pro::before,.nstw{animation:none}}
+`;document.head.appendChild(st)})();
+/* ================= v66: every result can go to the editor (and the other places that take it) · add or change things in the editor with a prompt ================= */
+const urlFile=async(u,name)=>{const b=await(await fetch(u)).blob();return new File([b],name||"media",{type:b.type||"application/octet-stream"})};
+/* put a finished result in the editor: videos/avatars/images → timeline clip · music → background music · voice/sfx → sound at the playhead */
+async function edUseJob(j,opt){opt=opt||{};const u=mediaUrl(j);edxInit();const E=S.ed;
+  if(["video","lipsync","image"].includes(j.kind)){const c={id:uid(),src:{k:"job",job:j.id},in:0,out:j.kind==="image"?3:Math.max(1,j.dur||5),speed:1,trans:"cut",vol:100};
+    const at=opt.after?E.clips.findIndex(x=>x.id===opt.after):-1;if(at>=0)E.clips.splice(at+1,0,c);else E.clips.push(c);E.sel=c.id;E.tab="clip";persist();if(!opt.stay)go("edit");else renderView();
+    if(!opt.quiet)toast(L("Added to the editor timeline","أُضيف إلى الخط الزمني في المحرر"),{type:"ok"});return true}
+  if(!["music","voice","sfx"].includes(j.kind))return false;
+  if(!u){toast(L("This audio is ready on your nooi server — the demo has no file to add.","هذا الصوت يجهز على خادم nooi — العرض التجريبي لا يحتوي ملفاً لإضافته."),{type:"info"});return false}
+  try{const nm=String(j.title||j.prompt||j.kind).slice(0,40),f=await urlFile(u,nm+".mp3");
+    if(j.kind==="music"){loadSlot("edMusic",f);E.tab="audio";persist();if(!opt.stay)go("edit");else renderView();if(!opt.quiet)toast(L("Set as the editor's background music","أصبحت موسيقى الخلفية في المحرر"),{type:"ok"});return true}
+    const it={id:uid(),n:"file",name:nm,t:+(opt.t!=null?opt.t:ED.t||0).toFixed(2),vol:100};loadSlot("sx_"+it.id,f);E.sfx.push(it);E.selSfx=it.id;edxBuffer(it).then(()=>renderView());E.tab="audio";persist();if(!opt.stay)go("edit");else renderView();
+    if(!opt.quiet)toast(L("Added to the editor at the playhead","أُضيف إلى المحرر عند المؤشر"),{type:"ok"});return true}catch(e){toast(L("Couldn't load this file: ","تعذّر تحميل الملف: ")+(e.message||e),{type:"warn"});return false}}
+/* result cards: "Use in" row for every kind */
+const HFE={video:[["ed","In the editor","في المحرر","edit"]],lipsync:[["ed","In the editor","في المحرر","edit"]],image:[["ed","In the editor","في المحرر","edit"],["anim","Animate it","حرّكها","video"],["ref","Use as reference","استخدمها مرجعاً","image"]],
+  music:[["ed","Editor music","موسيقى للمحرر","edit"]],voice:[["ed","In the editor","في المحرر","edit"],["av","Avatar voice","صوت لأفاتار","char"]],sfx:[["ed","In the editor","في المحرر","edit"]]};
+hfrCard=(o=>function(j){let h=o(j);const R=HFE[j.kind];if(!R||j.status!=="complete")return h;
+  const row='<div class="hfuse hfe"><span>'+L("Use in","استخدم في")+"</span><div>"+R.map(u=>'<button class="hfuc" data-act="hfe-'+u[0]+'" data-id="'+j.id+'">'+(ICONS[u[3]]?ic(u[3]):"")+L(u[1],u[2])+"</button>").join("")+"</div></div>";
+  return /<div class="hfuse">/.test(h)?h.replace(/(<div class="hfuse"><span>[^<]*<\/span><div>)/,'$1'+R.map(u=>'<button class="hfuc" data-act="hfe-'+u[0]+'" data-id="'+j.id+'">'+(ICONS[u[3]]?ic(u[3]):"")+L(u[1],u[2])+"</button>").join("")):h.replace('<div class="hfra">',row+'<div class="hfra">')})(hfrCard);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act^="hfe-"]');if(!a)return;e.stopImmediatePropagation();const j=S.jobs.find(x=>x.id===a.dataset.id);if(!j)return;const H=S.hf,act=a.dataset.act,u=mediaUrl(j);
+  if(act==="hfe-ed"){await edUseJob(j);return}
+  if(act==="hfe-anim"||act==="hfe-ref"){if(!u){toast(L("The picture is still being made.","الصورة ما زالت قيد الإنشاء."));return}M.hfRef={url:u,remote:u,name:"ref.png"};H.tab=act==="hfe-anim"?"video":"image";H.prompt=act==="hfe-anim"?L("Bring this picture to life: gentle camera move, natural motion","حرّك هذه الصورة: حركة كاميرا هادئة وحركة طبيعية"):"";persist();renderView();
+    requestAnimationFrame(()=>{const b=document.querySelector(".hfbox");if(b)b.scrollIntoView({behavior:"smooth",block:"start"});const q=$("#hfq");if(q)q.focus({preventScroll:true})});toast(L("Ready — describe it and press create.","جاهز — صِف ما تريد ثم اضغط إنشاء."),{type:"ok"});return}
+  if(act==="hfe-av"){if(!u){toast(L("This audio is ready on your nooi server.","هذا الصوت يجهز على خادم nooi."));return}try{const f=await urlFile(u,"voice.mp3");loadSlot("hfAud",f);H.tab="avatar";persist();renderView();toast(L("Voice added — add a face photo and press create.","أُضيف الصوت — أضف صورة وجه ثم اضغط إنشاء."),{type:"ok"})}catch(err){toast(String(err.message||err),{type:"warn"})}}},true);
+
+/* ---- the editor's prompt bar: "add a shot of…", "add calm oud music", "add a thunder sound", "add the title …", or a change to the selected clip ---- */
+const EDP={};   // job id → what to do with it when it is ready
+function edIntent(p){const s=p.toLowerCase();
+  if(/(music|song|beat|soundtrack|موسيق|أغنية|اغنية|لحن)/.test(s))return"music";
+  if(/(sound effect|sfx|\bsounds?\b|مؤثر|صوت (رعد|باب|انفجار|مطر|رياح|خطوات|تصفيق|سيارة))/.test(s))return"sfx";
+  if(/(voice ?-?over|narrat|say:|يقول|تعليق صوتي|راوي|اقرأ)/.test(s))return"voice";
+  if(/(add|put|write|أضف|اضف|اكتب|ضع)/.test(s)&&/(text|title|caption|subtitle|نص|عنوان|كتابة|جملة)/.test(s))return"text";
+  if(/(add|insert|put|أضف|اضف|أدرج|ادرج|ضع)/.test(s)&&/(image|photo|picture|poster|صورة|بوستر)/.test(s))return"image";
+  if(/(add|insert|append|then|أضف|اضف|أدرج|ادرج|بعدها|ثم)/.test(s)&&/(shot|clip|scene|video|لقطة|مقطع|مشهد|فيديو)/.test(s))return"shot";
+  return S.ed.clips.length?"change":"shot"}
+const edStrip=p=>p.replace(/^\s*(please\s+)?(add|insert|append|put|make|create|أضف|اضف|أدرج|ادرج|ضع|اصنع|أنشئ|انشئ)\s+(a|an|the)?\s*/i,"").replace(/^(shot|clip|scene|video|image|photo|picture|music|sound effect|sound|voice ?over|لقطة|مقطع|مشهد|فيديو|صورة|موسيقى|مؤثر صوتي|مؤثر|تعليق صوتي)\s*(of|for|لـ|ل|عن|فيها|فيه|:)?\s*/i,"").trim()||p;
+function edSelClip(){const E=S.ed;let c=E.clips.find(x=>x.id===E.sel);if(!c){const st=edStarts();c=E.clips.find((x,i)=>ED.t>=st[i]&&ED.t<st[i]+clipDur(x))||E.clips[E.clips.length-1]}return c}
+async function edRun(p){p=String(p||"").trim();if(!p){toast(L("Describe what to add or change.","صِف ما تريد إضافته أو تغييره."));return}edxInit();const E=S.ed,it=edIntent(p),what=edStrip(p),sel=edSelClip(),at=+(ED.t||0).toFixed(2);let j=null;
+  if(it==="text"){const m=p.match(/["“«](.+?)["”»]/)||p.match(/[:：]\s*(.+)$/),tx=(m?m[1]:what).slice(0,120),s0=Math.min(at,Math.max(0,edTotal()-1));
+    const t={id:uid(),text:tx,start:s0,end:s0+3,pos:"bottom",style:"caption",size:7,anim:"pop"};E.texts.push(t);E.selText=t.id;E.tab="text";persist();renderView();toast(L("Text added at the playhead","أُضيف النص عند المؤشر"),{type:"ok"});return}
+  if(it==="music")j=addJob({kind:"music",prompt:what,dur:Math.max(15,Math.round(edTotal()||30)),cost:PRICE_TABLE.fixed.music,secs:6,art:"wave"});
+  else if(it==="sfx")j=addJob({kind:"sfx",prompt:what,dur:3,cost:PRICE_TABLE.fixed.sfx,secs:2,art:"wave"});
+  else if(it==="voice"){const say=(p.match(/["“«](.+?)["”»]/)||p.match(/[:：]\s*(.+)$/)||[0,what])[1];j=addJob({kind:"voice",prompt:say,title:say.slice(0,60),cost:PRICE_TABLE.fixed.voice,secs:4,art:"wave",meta:{dialect:S.tools.voice.dialect,gender:S.tools.voice.gender,age:S.tools.voice.age,tone:S.tools.voice.tone}})}
+  else if(it==="image"){const m=IMG_MODELS.nano?"nano":"dotimg";j=addJob({kind:"image",prompt:what,model:m,aspect:S.ed.format==="reels"?"9:16":"16:9",cost:(IMG_MODELS[m]||{cr:5}).cr,meta:{cat:hfCat(what)}})}
+  else {const ar=E.format==="reels"||E.format==="story"?"9:16":E.format==="square"?"1:1":"16:9",base=sel&&sel.src.k==="job"?S.jobs.find(x=>x.id===sel.src.job):null;
+    let prompt=what,mdl=base&&MODELS[base.model]&&base.kind==="video"?base.model:(hfStudio(what,5)||{shots:[{m:"seedance"}]}).shots[0].m,dur=5;
+    if(it==="change"){if(!sel){toast(L("Add a clip first, or ask to add a shot.","أضف مقطعاً أولاً، أو اطلب إضافة لقطة."));return}
+      dur=Math.min(10,Math.max(5,Math.round(clipDur(sel)/5)*5));prompt=(base&&base.prompt?base.prompt+". ":"")+"Change: "+p+". Keep everything else the same.";
+      const cv=$("#wk");if(cv){try{ED.playing=false;const b=await new Promise(r=>cv.toBlob(r,"image/jpeg",.9));if(b)M.vStart={type:"image",file:new File([b],"frame.jpg",{type:"image/jpeg"}),url:URL.createObjectURL(b),name:"frame.jpg"}}catch(e){}}}
+    if(engMax(mdl)<dur)dur=engMax(mdl)>=5?5:dur;
+    j=addJob({kind:"video",prompt,model:mdl,dur,aspect:ar,cost:vcost(mdl,dur),meta:{cat:hfCat(what),start:!!M.vStart,edCmd:it}});if(it==="change")setTimeout(()=>{M.vStart=null},60e3)}
+  if(!j)return;EDP[j.id]={it,clip:sel&&sel.id,after:sel&&sel.id,t:at};S.edCmd="";persist();renderView();
+  toast(it==="change"?L("Remaking the selected clip with your change — it replaces the clip when ready.","يُعاد صنع المقطع المحدد بتعديلك — سيحل محله عند الجاهزية."):L("Making it now — it lands in the timeline by itself.","يُصنع الآن — سيُضاف إلى الخط الزمني تلقائياً."),{type:"info",ms:4000})}
+setInterval(()=>{for(const id of Object.keys(EDP)){const j=S.jobs.find(x=>x.id===id),d=EDP[id];if(!j){delete EDP[id];continue}if(j.status==="failed"){delete EDP[id];toast(L("The editor request failed: ","تعذّر طلب المحرر: ")+(j.error||""),{type:"warn"});continue}if(j.status!=="complete")continue;delete EDP[id];
+  if(d.it==="change"){const c=S.ed.clips.find(x=>x.id===d.clip);if(c){c.src={k:"job",job:j.id};c.in=0;c.out=Math.max(1,j.dur||5);persist();if(S.view==="edit")renderView();toast(L("Clip updated with your change","تم تحديث المقطع بتعديلك"),{type:"ok"})}else edUseJob(j,{stay:S.view!=="edit"})}
+  else edUseJob(j,{after:d.after,t:d.t,stay:true,quiet:false})}},1500);
+VIEWS.edit=(o=>function(){let h=o();const bar='<div class="edcmd" role="group" aria-label="'+esc(L("Edit with a prompt","التعديل بالوصف"))+'">'+ic("wand")+'<input id="edcmdq" dir="auto" maxlength="400" value="'+esc(S.edCmd||"")+'" placeholder="'+esc(L("Add or change anything with a prompt…","أضف أو عدّل أي شيء بالوصف…"))+'" aria-label="'+esc(L("Add or change with a prompt","أضف أو عدّل بالوصف"))+'"><button class="btn sm primary" data-act="edcmd-go">'+L("Go","نفّذ")+"</button></div>"+
+    '<div class="edcmdx">'+[["Add a drone shot of the city at sunset","أضف لقطة درون للمدينة وقت الغروب"],["Add calm oud music","أضف موسيقى عود هادئة"],["Add a thunder sound","أضف صوت رعد"],["Add the title: “Grand opening”","أضف العنوان: «الافتتاح الكبير»"],["Make the selected clip night","اجعل المقطع المحدد ليلاً"]].map(x=>'<button class="chip" data-act="edcmd-ex" data-v="'+esc(L(x[0],x[1]))+'">'+esc(L(x[0],x[1]))+"</button>").join("")+"</div>";
+  return /<p class="lede">[\s\S]*?<\/p>/.test(h)?h.replace(/(<p class="lede">[\s\S]*?<\/p>)/,"$1"+bar):h.replace('<div class="view">','<div class="view">'+bar)})(VIEWS.edit);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="edcmd-go"],[data-act="edcmd-ex"]');if(!a)return;e.stopImmediatePropagation();const q=$("#edcmdq");
+  if(a.dataset.act==="edcmd-ex"){if(q){q.value=a.dataset.v;S.edCmd=q.value;q.focus()}return}edRun(q?q.value:"")},true);
+document.addEventListener("keydown",e=>{if(e.target&&e.target.id==="edcmdq"&&e.key==="Enter"){e.preventDefault();edRun(e.target.value)}},true);
+document.addEventListener("input",e=>{if(e.target&&e.target.id==="edcmdq")S.edCmd=e.target.value});
+(()=>{const st=document.createElement("style");st.textContent=`
+.edcmd{display:flex;align-items:center;gap:8px;margin:4px 0 6px;padding:6px 6px 6px 12px;border-radius:16px;border:1.5px solid color-mix(in srgb,var(--lime) 55%,var(--line2));background:color-mix(in srgb,var(--lime) 7%,var(--panel))}
+.edcmd>svg{width:18px;height:18px;flex:none;color:color-mix(in srgb,var(--lime) 70%,var(--text))}.edcmd input{flex:1;min-width:0;border:0;background:transparent;padding:8px 2px;font-size:15px}.edcmd input:focus{outline:none;box-shadow:none}
+.edcmdx{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.edcmdx .chip{font-size:12.5px;max-width:100%;white-space:normal;text-align:start}
+.hfuse.hfe{margin-top:8px}
+`;document.head.appendChild(st)})();
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
