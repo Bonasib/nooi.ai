@@ -191,8 +191,12 @@ registerExplore(app); registerShowcase(app); registerGifts(app); registerInvoice
 app.post("/v1/tts/stream", requireUser, async (req, res) => { try { const { planOf } = await import("./lib/plans.js"); const plan = planOf(user(req.user.uid)); if (!["pro", "studio"].includes(plan)) return res.status(402).json({ error: "ElevenLabs voices start from the Pro plan" }); await streamTTS(res, req.body || {}); } catch (e) { if (!res.headersSent) res.status(502).json({ error: e.message }); } });
 // Export: convert a browser WebM recording to MP4 (H.264/AAC) with ffmpeg
 app.post("/v1/media/transcode", requireUser, express.raw({ type: ["video/webm", "application/octet-stream"], limit: "300mb" }), (req, res) => {
-  const inp = saveBuffer(req.body, ".webm"), outName = inp.name.replace(/\.webm$/, ".mp4"), out = inp.file.replace(/\.webm$/, ".mp4");
-  const p = spawn(process.env.FFMPEG_PATH || "ffmpeg", ["-y", "-i", inp.file, "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p", "-c:a", "aac", "-movflags", "+faststart", out]);
+  // the editor's recording → the exact size of the chosen format (scaled + padded), with a proper duration; MP4 (H.264/AAC) or WebM (VP9/Opus)
+  const ev = (v) => { v = Math.round(+v || 0); return v >= 16 && v <= 4096 ? v - (v % 2) : 0; }, W = ev(req.query.w), H = ev(req.query.h), webm = req.query.fmt === "webm";
+  const inp = saveBuffer(req.body, ".webm"), ext = webm ? ".v.webm" : ".mp4", outName = inp.name.replace(/\.webm$/, ext), out = inp.file.replace(/\.webm$/, ext);
+  const vf = W && H ? ["-vf", `scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1`] : [];
+  const codec = webm ? ["-c:v", "libvpx-vp9", "-deadline", "realtime", "-cpu-used", "8", "-b:v", "6M", "-c:a", "libopus"] : ["-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart"];
+  const p = spawn(process.env.FFMPEG_PATH || "ffmpeg", ["-y", "-i", inp.file, ...vf, "-r", "30", ...codec, out]);
   p.on("error", (e) => res.status(500).json({ error: "ffmpeg: " + e.message })); p.on("close", (code) => code === 0 ? res.json({ url: (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "") + "/media/" + outName }) : res.status(500).json({ error: "ffmpeg exited " + code }));
 });
 setInterval(() => testAll().catch(() => {}), 15 * 60e3);

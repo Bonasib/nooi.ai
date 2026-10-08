@@ -8822,6 +8822,71 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
 .durticks{display:flex;justify-content:space-between;font:600 11px var(--mono);color:var(--mute);padding:0 4px;margin-top:2px}.durticks .off{opacity:.35}
 .durbox{display:flex;align-items:center;gap:4px;padding:6px 10px;border-radius:12px;background:var(--panel2);border:1px solid var(--line2)}.durbox input{width:46px;border:0;background:transparent;font:700 18px var(--mono);padding:0;text-align:center}.durbox input:focus{outline:none;box-shadow:none}.durbox span{color:var(--mute);font-weight:600}
 `;document.head.appendChild(st)})();
+/* ================= v70: editor that works by touch and mouse · no demo content · real media everywhere · tools grid ================= */
+/* --- editor timeline: one clean layer for taps and drags (it runs before every older handler) ---
+   tap anywhere on the timeline (not on a clip) → move the playhead there · drag on the ruler or the playhead → scrub smoothly
+   swipe on the tracks (touch) → scrolls the timeline · tapping a track never adds anything by itself (use the "+" buttons) */
+const TLX={s:null};
+const edSeekX=(x)=>{const tl=$("#tlin");if(!tl)return;const r=tl.getBoundingClientRect();ED.playing=false;ED.t=clamp((x-r.left-40)/S.ed.zoom,0,Math.max(0,edTotal()-.01));const ph=$("#ph");if(ph)ph.style.left=(40+ED.t*S.ed.zoom)+"px"};
+window.addEventListener("pointerdown",e=>{if(S.view!=="edit")return;const tl=e.target.closest&&e.target.closest("#tlin");if(!tl||e.target.closest(".blk,.trkadd,button,input,label"))return;e.stopImmediatePropagation();
+  const scrub=e.pointerType==="mouse"||!!e.target.closest(".ruler,#ph");TLX.s={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false,scrub};
+  if(scrub){e.preventDefault();edSeekX(e.clientX);try{tl.setPointerCapture(e.pointerId)}catch(_){}tl.classList.add("scrubbing")}},true);
+window.addEventListener("pointermove",e=>{const s=TLX.s;if(!s||e.pointerId!==s.id)return;e.stopImmediatePropagation();if(s.scrub){edSeekX(e.clientX);return}if(Math.hypot(e.clientX-s.x,e.clientY-s.y)>8)s.moved=true},true);
+const tlEnd=e=>{const s=TLX.s;if(!s||e.pointerId!==s.id)return;e.stopImmediatePropagation();if(!s.scrub&&!s.moved&&e.type==="pointerup")edSeekX(e.clientX);const tl=$("#tlin");if(tl)tl.classList.remove("scrubbing");TLX.s=null;TLX.lastEnd=performance.now();persist()};
+window.addEventListener("pointerup",tlEnd,true);window.addEventListener("pointercancel",tlEnd,true);
+window.addEventListener("click",e=>{if(S.view!=="edit")return;const tl=e.target.closest&&e.target.closest("#tlin");if(!tl)return;const add=e.target.closest(".trkadd");
+  if(add){e.stopImmediatePropagation();e.preventDefault();if(add.dataset.k==="t"){const s0=Math.min(ED.t,Math.max(0,edTotal()-1)),tx={id:uid(),text:L("Your text","نصك هنا"),start:s0,end:s0+2.5,pos:"bottom",style:"caption",size:7,anim:"pop"};S.ed.texts.push(tx);S.ed.selText=tx.id;S.ed.tab="text";persist();renderView();setTimeout(()=>{const i=document.querySelector('[data-bind="edtext.text"]');if(i){i.focus();i.select()}},60)}
+    else{const inp=document.querySelector('input[data-edaudio="edMusic"]');if(inp)inp.click();else{S.ed.tab="audio";renderView()}}return}
+  if(!e.target.closest(".blk")){e.stopImmediatePropagation();e.preventDefault()}},true);
+/* the editor page: real "+" buttons instead of "tap the track to add", no demo clip, sliders read left→right like the timeline */
+VIEWS.edit=(o=>function(){let h=o();
+  h=h.replace(/<span class="trkhint">\+ [^<]*<\/span>/,'<button class="trkadd" data-k="t">'+ic("plus")+L("Text","نص")+"</button>").replace(/<span class="trkhint">\+ [^<]*<\/span>/,'<button class="trkadd" data-k="a">'+ic("plus")+L("Music","موسيقى")+"</button>");
+  h=h.replace(/<button[^>]*data-act="ed-demo"[^>]*>[\s\S]*?<\/button>/g,"");
+  return h})(VIEWS.edit);
+/* preview: say "Loading…" while a clip loads; "missing" only when the file really can't be read; a result still being made says so */
+clipMedia=(o=>function(c){if(c&&c.src&&c.src.k==="job"){const j=S.jobs.find(x=>x.id===c.src.job);if(j&&!mediaUrl(j)&&!M["c_"+c.id])return{type:"wait",name:j.prompt,el:{},job:j}}return o(c)})(clipMedia);
+drawFit=(o=>function(ctx,m,ow,oh,lt,filter){if(m&&(m.type==="wait"||(m.type==="video"&&!(m.el.error)&&!(m.el.readyState>=2&&m.el.videoWidth>0))||(m.type==="image"&&!(m.el.complete&&m.el.naturalWidth>0)&&!m.el._err))){
+    ctx.fillStyle="#0d0d0d";ctx.fillRect(0,0,ow,oh);ctx.fillStyle="#9a9a9a";ctx.font="500 "+Math.round(oh*.03)+"px Geist, sans-serif";ctx.textAlign="center";ctx.fillText(m.type==="wait"?L("This result is still being made…","هذه النتيجة ما زالت قيد الإنشاء…"):L("Loading…","جارٍ التحميل…"),ow/2,oh/2);ctx.textAlign="start";return}
+  return o(ctx,m,ow,oh,lt,filter)})(drawFit);
+/* --- home: the tools are a proper grid (4 / 2 columns), not a narrow column --- */
+/* --- no demo art: every decorative picture uses real media — the showcase, community posts or your own results; otherwise a clean card --- */
+function realPool(){const P=[];try{Object.values(SHOWREAL||{}).forEach(r=>r&&r.url&&P.push({url:r.url,kind:r.kind==="image"?"image":"video"}))}catch(e){}
+  try{(XP.items||[]).forEach(x=>{const u=x.url||x.mediaUrl;if(u)P.push({url:u,kind:x.kind==="image"||/\.(png|jpe?g|webp)(\?|$)/i.test(u)?"image":"video"})})}catch(e){}
+  S.jobs.forEach(j=>{const u=mediaUrl(j);if(j.status==="complete"&&u&&["image","video","lipsync"].includes(j.kind))P.push({url:u,kind:j.kind==="image"?"image":"video"})});return P}
+thumb=(o=>function(ref,opt){const h=o(ref,opt);if(!/^(s|t):/.test(ref||"")||h.indexOf('<canvas class="frame"')<0)return h;const P=realPool();
+  if(!P.length)return h.replace(/<canvas class="frame" data-ref="[^"]*"><\/canvas>/,'<div class="frame ph0"><img src="'+logoFor("auto")+'" alt=""></div>');
+  const r=P[Math.abs(hashStr(ref))%P.length],media=r.kind==="image"?'<img class="frame" style="object-fit:cover" src="'+esc(r.url)+'" alt="" loading="lazy">':'<video class="frame sv" style="object-fit:cover" src="'+esc(r.url)+'#t=0.1" muted loop playsinline preload="metadata"></video>';
+  return h.replace(/<canvas class="frame" data-ref="[^"]*"><\/canvas>/,media)})(thumb);
+(()=>{const st=document.createElement("style");st.textContent=`
+.hftools{width:100%;align-self:stretch;text-align:start}.hftools .toolgrid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;width:100%;max-width:none}
+@media (max-width:1079px){.hftools .toolgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.hftools .tool{width:auto;min-width:0}
+#tlin{touch-action:pan-x pan-y}#tlin .ruler,#tlin #ph{touch-action:none;cursor:ew-resize}#tlin.scrubbing{cursor:ew-resize}
+#ph::before{content:"";position:absolute;top:-2px;left:50%;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 3px color-mix(in srgb,var(--lime) 30%,transparent)}
+.trkadd{position:absolute;inset-inline-start:46px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;border:1px dashed var(--line2);background:var(--panel);color:var(--mute);font-size:12px;font-weight:600;cursor:pointer;z-index:2}.trkadd svg{width:12px;height:12px}
+[dir="rtl"] .trkadd{inset-inline-start:auto;left:46px}
+.edgrid input[type=range],.view input[type=range][data-bind^="ed"]{direction:ltr}
+@media (max-width:767px){.edstage{max-height:40vh}.edstage canvas{max-height:calc(40vh - 10px);width:auto!important;max-width:100%}.edgrid,.view:has(#tlin){padding-bottom:96px}}
+.frame.ph0{display:grid;place-items:center;background:radial-gradient(120% 100% at 30% 20%,color-mix(in srgb,var(--lime) 18%,var(--panel2)),var(--panel2))}.frame.ph0 img{width:34%;max-width:72px;opacity:.85}
+`;document.head.appendChild(st)})();
+/* saving files on the website: a normal browser download (phones and desktops); inside Claude it keeps the Claude download */
+saveFile=(o=>async function(filename,data){if(hasClaude())return o(filename,data);
+  try{const blob=data instanceof Blob?data:typeof data==="string"&&/^data:/.test(data)?await(await fetch(data)).blob():new Blob([data]);const url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download=filename||"nooi-file";a.rel="noopener";a.style.display="none";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),120000);toast(L("Saved: ","تم الحفظ: ")+filename,{type:"ok"})}
+  catch(e){toast(L("The file couldn't be saved.","تعذّر حفظ الملف."),{type:"warn"})}})(saveFile);
+/* export: on the server the recording becomes a file at the exact size of the format (e.g. 1080×1920), MP4 by default, with a proper duration */
+edExport=(o=>async function(){const srv=API.mode==="server",want=S.ed.fmtOut||(srv?"mp4":"webm"),keep=S.ed.fmtOut,sf=saveFile;let cap=null;
+  if(srv){saveFile=async(n,d)=>{cap={n,d}};S.ed.fmtOut="webm"}
+  try{await o()}finally{saveFile=sf;S.ed.fmtOut=keep}
+  if(!srv||!cap)return;const F=fmt(),w=F[2],h=F[3];toast(L("Preparing your "+want.toUpperCase()+" · "+w+"×"+h+"…","جارٍ تجهيز ملف "+want.toUpperCase()+" · "+w+"×"+h+"…"),{type:"info",ms:6000});
+  try{const blob=cap.d instanceof Blob?cap.d:await(await fetch(cap.d)).blob();const r=await fetch("/v1/media/transcode?w="+w+"&h="+h+"&fmt="+want,{method:"POST",headers:Object.assign({"Content-Type":"video/webm"},await authH()),body:blob}).then(x=>x.json());
+    if(!r.url)throw new Error(r.error||"failed");const out=await(await fetch(r.url)).blob();await sf(String(cap.n).replace(/\.\w+$/,"")+"."+want,out);if(S.ed.lastExport)EXPORTS[S.ed.lastExport]=r.url}
+  catch(e){toast(L("Converting failed — saving the original recording.","تعذّر التحويل — يُحفظ التسجيل الأصلي."),{type:"warn"});await sf(cap.n,cap.d)}})(edExport);
+VIEWS.edit=(o=>function(){if(API.mode==="server"&&!S.ed.fmtOut)S.ed.fmtOut="mp4";return o()})(VIEWS.edit);
+/* live server: no sample data and no "try a demo" buttons */
+crmData=(o=>function(){const D=A(),fresh=!D.crm,x=o();if(API.mode==="server"){const n=x.deals.length;x.deals=x.deals.filter(d=>!/^d\d+$/.test(d.id));if(fresh||n!==x.deals.length)saveAdm("crm",x)}return x})(crmData);
+erpData=(o=>function(){const D=A(),fresh=!D.erp,x=o();if(API.mode==="server"){const n=(x.expenses||[]).length;x.expenses=(x.expenses||[]).filter(e=>!/^e\d+$/.test(e.id));if(fresh||n!==x.expenses.length)saveAdm("erp",x)}return x})(erpData);
+renderView=(o=>function(){const r=o.apply(this,arguments);if(API.mode==="server")document.querySelectorAll('#main [data-act="ed-demo"],#main [data-act="demo-src"],#main [data-act="s3d-demo"],#main [data-act="subs-demo"]').forEach(b=>b.remove());return r})(renderView);
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

@@ -54,7 +54,7 @@ async def main():
                 await E("()=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.lang='en';S.user={name:'Test',method:'google'};AU.showAuth=false;renderAll()}")
                 await E(MOCK)
                 # editor: every tab, every control
-                await E("()=>{go('edit');PJ.fresh('edit');document.querySelector('[data-act=ed-demo]').click();document.querySelector('[data-act=ed-demo]').click();S.ed.sel=S.ed.clips[0].id;S.ed.caps.words=edxSpread('one two three four',0.2,2.5);S.ed.caps.on=true;S.ed.sfx=[{id:'s1',n:'pop',t:1,vol:100}];S.ed.regions=[{id:'r1',kind:'blur',shape:'rect',box:{x:.5,y:.5,w:.2,h:.1},start:0,end:4,amt:10}];renderView()}")
+                await E("()=>{go('edit');PJ.fresh('edit');S.ed.clips.push({id:uid(),src:{k:'demo',kind:'scene',seed:11},in:0,out:5,speed:1,trans:'cut',vol:100},{id:uid(),src:{k:'demo',kind:'green',seed:12},in:0,out:5,speed:1,trans:'cut',vol:100});S.ed.sel=S.ed.clips[0].id;S.ed.caps.words=edxSpread('one two three four',0.2,2.5);S.ed.caps.on=true;S.ed.sfx=[{id:'s1',n:'pop',t:1,vol:100}];S.ed.regions=[{id:'r1',kind:'blur',shape:'rect',box:{x:.5,y:.5,w:.2,h:.1},start:0,end:4,amt:10}];renderView()}")
                 tabs = await E("()=>[...document.querySelectorAll('.tabs [data-set=\"ed.tab\"]')].map(b=>b.dataset.val)")
                 out["checks"][f"{w}:tabs"] = len(tabs)
                 if w < 800: tabs = [t for t in tabs if t in ("clip", "text", "motion", "color", "sfx", "words", "erase", "layers")]
@@ -62,13 +62,14 @@ async def main():
                     await E(f"()=>{{S.ed.tab='{t}';S.ed.sel=S.ed.clips[0]&&S.ed.clips[0].id;if(!S.ed.texts.length)document.querySelector('[data-act=ed-addtext]')?.click();S.ed.selText=S.ed.texts[0]&&S.ed.texts[0].id;S.ed.tab='{t}';ED.playing=false;renderView()}}")
                     await pg.wait_for_timeout(150)
                     out["clicks"] += await click_all(pg, ".edgrid>.panel:last-child", errs, f"{w}:edit:{t}", 60 if w > 800 else 35)
-                    await E("()=>{ED.playing=false;if(!S.ed.clips.length)document.querySelector('[data-act=ed-demo]').click()}")
+                    await E("()=>{ED.playing=false;if(!S.ed.clips.length)S.ed.clips.push({id:uid(),src:{k:'demo',kind:'scene',seed:11},in:0,out:5,speed:1,trans:'cut',vol:100})}")
                 # play through every clip with all effects on
                 await E("()=>{const c=S.ed.clips[0];if(c){c.vfx={shake:1,pulse:1,rgb:1,glow:1,radial:1,pixel:1,mirror:1,strobe:1,invert:1,comic:1,vhs:1,leak:1};c.cg={look:'teal',exp:10,temp:30};c.trans='glitch';c.mo={kf:[{t:0,s:1,x:0,y:0,r:0},{t:1,s:1.5,x:.1,y:0,r:10}],ease:'smooth'}}S.ed.tab='clip';renderView();for(let t=0;t<edTotal();t+=.25){ED.t=t;edTick(performance.now())}}")
                 # 3D studio
                 await E("()=>go('studio3d')"); await pg.wait_for_timeout(300)
-                await E("()=>{document.querySelector('[data-act=s3d-clear]')?.click();renderView();document.querySelector('[data-act=s3d-demo]')?.click()}"); await pg.wait_for_timeout(800)
+                await E("async()=>{document.querySelector('[data-act=s3d-clear]')?.click();renderView();const c=document.createElement('canvas');c.width=1280;c.height=720;drawGreen(c.getContext('2d'),1280,720,1.2);await setS3dFromDataURL(c.toDataURL('image/jpeg',.92),'photo');const U=S.s3d||{};U.points=[{x:.5,y:.45,pos:true},{x:.5,y:.24,pos:true},{x:.47,y:.75,pos:true}];U.mode='body';renderView()}"); await pg.wait_for_timeout(800)
                 out["clicks"] += await click_all(pg, "#main", errs, f"{w}:studio3d", 60)
+                await E("async()=>{const c=document.createElement('canvas');c.width=1280;c.height=720;drawGreen(c.getContext('2d'),1280,720,1.2);await setS3dFromDataURL(c.toDataURL('image/jpeg',.92),'photo')}"); await pg.wait_for_timeout(500)
                 await E("()=>{S.s3d.mode='body';S.s3d.points=[{x:.5,y:.45,pos:true}];s3dMask();renderView()}"); await pg.wait_for_timeout(300)
                 await E("()=>s3dRunLocal()"); await pg.wait_for_timeout(1500)
                 out["checks"][f"{w}:3d"] = await E("()=>{const j=S.jobs.filter(x=>x.kind==='3d').pop();return j?j.status:'none'}")
