@@ -6087,7 +6087,7 @@ const EDIT_PRESETS=[["style","Change the style","غيّر الأسلوب","wand"
 const DCOLORS=["#1b1b2b","#ffffff","#e53935","#fb8c00","#fdd835","#43a047","#1e88e5","#8e24aa","#6d4c41","#9e9e9e"];
 function drwInit(){const cv=$("#drwcv");if(!cv||cv===DRW.cv)return;const [a,b]=S.drw.aspect.split(":").map(Number);cv.width=1024;cv.height=Math.round(1024*b/a);DRW.cv=cv;DRW.ctx=cv.getContext("2d");
   if(DRW.saved&&DRW.saved.width===cv.width&&DRW.saved.height===cv.height)DRW.ctx.putImageData(DRW.saved,0,0);else{DRW.ctx.fillStyle="#fff";DRW.ctx.fillRect(0,0,cv.width,cv.height)}}
-function drwPt(e){const r=DRW.cv.getBoundingClientRect();return{x:(e.clientX-r.left)*DRW.cv.width/r.width,y:(e.clientY-r.top)*DRW.cv.height/r.height}}
+function drwPt(e){if(!DRW.cv||!DRW.cv.isConnected){DRW.cv=null;drwInit()}const r=DRW.cv.getBoundingClientRect();return{x:(e.clientX-r.left)*DRW.cv.width/r.width,y:(e.clientY-r.top)*DRW.cv.height/r.height}}
 function drwSnap(){DRW.undo.push(DRW.ctx.getImageData(0,0,DRW.cv.width,DRW.cv.height));if(DRW.undo.length>25)DRW.undo.shift()}
 document.addEventListener("pointerdown",e=>{if(!e.target.closest||!e.target.closest("#drwcv"))return;drwInit();e.preventDefault();DRW.cv.setPointerCapture&&DRW.cv.setPointerCapture(e.pointerId);drwSnap();DRW.drawing=true;DRW.last=drwPt(e);const c=DRW.ctx,D=S.drw;c.beginPath();c.fillStyle=D.tool==="eraser"?"#fff":D.color;c.arc(DRW.last.x,DRW.last.y,(D.tool==="brush"?D.size*2.2:D.size)/2,0,7);c.fill()});
 document.addEventListener("pointermove",e=>{if(!DRW.drawing)return;const p=drwPt(e),c=DRW.ctx,D=S.drw;c.strokeStyle=D.tool==="eraser"?"#fff":D.color;c.lineWidth=D.tool==="eraser"?D.size*3:D.tool==="brush"?D.size*2.2:D.size;c.lineCap="round";c.lineJoin="round";c.globalAlpha=D.tool==="brush"?.55:1;c.beginPath();c.moveTo(DRW.last.x,DRW.last.y);const mx=(DRW.last.x+p.x)/2,my=(DRW.last.y+p.y)/2;c.quadraticCurveTo(DRW.last.x,DRW.last.y,mx,my);c.lineTo(p.x,p.y);c.stroke();c.globalAlpha=1;DRW.last=p});
@@ -6119,7 +6119,7 @@ document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.c
    case"drw-go":a.classList.add("busy");await drwGenerate();a.classList.remove("busy");break;
    case"drw-edit":drwEdit();break;
    case"drw-animate":{const j=S.jobs.find(x=>x.id===a.dataset.id);if(j){S.draft.startJob=j.id;S.draft.prompt=j.prompt;go("video");toast(L("Set as the first frame — describe the motion and generate.","عُيّنت كإطار أول — صِف الحركة وولّد."),{type:"ok"})}break}
-   case"drw-again":{const j=S.jobs.find(x=>x.id===a.dataset.id);if(!j)break;const c=document.createElement("canvas");c.width=1024;c.height=Math.round(1024*9/16);drawItem(c,{seed:j.seed,pal:j.pal,status:"complete",art:j.art},0);const url=mediaUrl(j);const blob=url?await fetch(url).then(r=>r.blob()).catch(()=>null):null;const b=blob||await new Promise(r=>c.toBlob(r,"image/png"));loadSlot("eRef",new File([b],"result.png",{type:"image/png"}));D.mode="upload";persist();renderView();break}}});
+   case"drw-again":{const j=S.jobs.find(x=>x.id===a.dataset.id);if(!j)break;const c=document.createElement("canvas");c.width=1024;c.height=Math.round(1024*9/16);drawItem(c,{seed:j.seed,pal:j.pal,status:"complete",art:j.art},0);const url=mediaUrl(j);const blob=url?await fetch(url).then(r=>r.blob()).catch(()=>null):null;const b=blob||await new Promise(r=>c.toBlob(r,"image/png"));loadSlot("eRef",new File([b],"result.png",{type:"image/png"}));S.drw.mode="upload";persist();renderView();break}}});
 document.addEventListener("change",e=>{const t=e.target;if(!t.dataset)return;
   if(t.dataset.drwup&&t.files&&t.files[0]){loadSlot("eRef",t.files[0]);setTimeout(renderView,80)}
   if(t.dataset.drwbg&&t.files&&t.files[0]){drwInit();const im=new Image();im.onload=()=>{drwSnap();const c=DRW.ctx,k=Math.min(DRW.cv.width/im.width,DRW.cv.height/im.height);c.globalAlpha=.35;c.drawImage(im,(DRW.cv.width-im.width*k)/2,(DRW.cv.height-im.height*k)/2,im.width*k,im.height*k);c.globalAlpha=1;DRW.saved=c.getImageData(0,0,DRW.cv.width,DRW.cv.height)};im.src=URL.createObjectURL(t.files[0])}});
@@ -9150,7 +9150,7 @@ histGo=(o=>function(d){o(d);const st=HIST.stack[HIST.i];if(!st)return;try{const 
 .brandkit .bkrow{flex-wrap:wrap}.brandkit .bkrow>div[style*="flex:1"]{min-width:min(100%,240px)!important}
 .brandkit .ctrl output{min-width:3.6em;text-align:end;white-space:nowrap;overflow:hidden}
 .a3card{margin-top:14px;border:1px solid color-mix(in srgb,var(--accent,#9CD245) 45%,var(--line));background:linear-gradient(135deg,color-mix(in srgb,var(--accent,#9CD245) 9%,var(--panel)),var(--panel))}
-.a3card h3{margin:0 0 4px;font-size:15px;display:flex;gap:8px;align-items:center}.a3card h3 svg{width:18px;height:18px;flex:none}.a3card p{margin:0 0 10px}
+.a3card h3{margin:0 0 4px;font-size:15px;display:flex;gap:8px;align-items:center}.a3card h3 svg{width:18px;height:18px;flex:none}.a3card .row{flex-wrap:wrap}.a3card .btn{white-space:normal;height:auto;min-height:40px;max-width:100%;text-align:start;line-height:1.3;padding-block:8px}.a3card .btn .cost{flex:none}.a3card p{margin:0 0 10px}
 .a3list{display:grid;gap:6px;margin-top:10px}.a3row{display:flex;gap:8px;align-items:center;font-size:12.5px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
 .a3row .bar{flex:1;height:6px;border-radius:9px;background:var(--line);overflow:hidden}.a3row .bar i{display:block;height:100%;background:var(--accent,#9CD245);transition:width .4s}
 .a3views{display:flex;gap:4px}.a3views img,.a3views span{width:34px;height:34px;border-radius:7px;object-fit:cover;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;font-size:10px;color:var(--mute)}
@@ -9221,7 +9221,7 @@ function sketchPrompt72(desc,style,fid){const look=DRW_LOOK72[style]||DRW_LOOK72
 drwGenerate=async function(){drwInit();const D=S.drw;if(drwEmpty()){toast(L("Draw your scene first.","ارسم مشهدك أولاً."),{type:"warn"});return}const blob=await drwBlob();
   const m=IMG_MODELS[S.img.model]&&!["auto","dotimg","sdxl","flux"].includes(S.img.model)?S.img.model:bestImg72(),batch=uid(),prompt=sketchPrompt72(D.scene.trim(),D.style,D.fid);let n=0;
   withRef72("iRef",new File([blob],"sketch.png",{type:"image/png"}),()=>{for(let i=0;i<D.n;i++){if(addJob({kind:"image",prompt,title:(D.scene.trim()||L("Sketch scene","مشهد من رسمة")).slice(0,40),model:m,aspect:D.aspect,cost:(IMG_MODELS[m]||{cr:2}).cr,batch,secs:6,art:"scene",meta:{sketch:true,style:D.style,fidelity:D.fid,variant:i+1}}))n++}});
-  if(n){D.batch=batch;persist();renderAll();toast(n+L(" pictures are being made from your drawing"," صور تُصنع من رسمتك"),{type:"ok"})}};
+  if(n){S.drw.batch=batch;persist();renderAll();toast(n+L(" pictures are being made from your drawing"," صور تُصنع من رسمتك"),{type:"ok"})}};
 /* live sketch: “Make it real” sends the sketch to the picture model and shows the results right there */
 window.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="sk-hd"]');if(!a)return;e.stopImmediatePropagation();e.preventDefault();const K=S.sketch;
   if(!SK.strokes.length){toast(L("Draw something first.","ارسم شيئاً أولاً."));return}const blob=await new Promise(r=>skInk(1024,true).toBlob(r,"image/png"));const t=ENT_TYPES.find(x=>x[0]===K.target)||ENT_TYPES[0],m=bestImg72();
@@ -9479,7 +9479,7 @@ VIEWS.vss=()=>{if(API.mode==="server"&&!VSSD.loaded&&!VSSD.loading){VSSD.loading
    (V.tab==="search"?vssSearchTab():V.tab==="alerts"?vssAlertTab():vssSumTab())+"</div>")};
 const _rt73=rootFor;rootFor=function(p){if(p.startsWith("vss.")){return[S.vss,p.split(".").slice(1)]}return _rt73(p)};
 (function(){const st=document.createElement("style");st.textContent=`
-.vsstabs{margin:4px 0 14px}.vssview h3 svg{width:18px;height:18px;vertical-align:-3px;margin-inline-end:4px}.vssev{display:flex;flex-wrap:wrap;gap:6px}.vssev .chip{border-radius:999px;aspect-ratio:auto;height:auto;min-height:34px;padding:6px 12px}.vsstwo{align-items:start}
+.vsstabs{margin:4px 0 14px}.vssview>.spread{flex-wrap:wrap;gap:6px}.vssview>.spread .badge{white-space:normal;max-width:100%}.vssview .selbtn{max-width:100%;height:auto;min-height:40px}.vssview .selbtn .sv{white-space:normal;overflow-wrap:anywhere;text-align:start}.vssview h3 svg{width:18px;height:18px;vertical-align:-3px;margin-inline-end:4px}.vssev{display:flex;flex-wrap:wrap;gap:6px}.vssev .chip{border-radius:999px;aspect-ratio:auto;height:auto;min-height:34px;padding:6px 12px}.vsstwo{align-items:start}
 .vssdrop{min-height:84px}.vssruns{display:grid;gap:6px}
 .vssrun{display:grid;gap:2px;text-align:start;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--text);width:100%}
 .vssrun[aria-pressed="true"]{border-color:var(--accent,#9CD245);box-shadow:0 0 0 1px var(--accent,#9CD245) inset}
@@ -9561,6 +9561,9 @@ function nvBadge(){return API.mode==="server"&&API.cfg&&API.cfg.providers&&API.c
 ["image","video","vss","studio3d","sketch","draw","edit","chars","world"].forEach(k=>{const f=VIEWS[k];if(!f)return;VIEWS[k]=()=>{const h=f(),b=nvBadge();if(!b)return h;const use={image:"image",video:"video",vss:"vision",studio3d:"3d",sketch:"image",draw:"image",edit:"text",chars:"image",world:"image"}[k];if(!nvUse(use))return h;return h.replace(/(<h1[^>]*>[\s\S]*?<\/h1>)/,"$1"+b)}});
 (function(){const st=document.createElement("style");st.textContent=".nvbadge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:3px 9px 3px 4px;border-radius:999px;background:color-mix(in srgb,#76B900 14%,var(--panel));color:var(--text);border:1px solid color-mix(in srgb,#76B900 45%,var(--line));margin-inline-start:8px;vertical-align:middle}.nvbadge img{width:16px;height:16px;border-radius:4px}";document.head.appendChild(st)})();
 
+/* Draw & create: a page refresh (e.g. a job finishing) waits until the pen is lifted, so a stroke is never cut or lost */
+renderView=(o=>function(){if(S.view==="draw"&&DRW.drawing){DRW.pend=true;return}o()})(renderView);
+document.addEventListener("pointerup",()=>{if(DRW.pend&&!DRW.drawing){DRW.pend=false;setTimeout(renderView,0)}});
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

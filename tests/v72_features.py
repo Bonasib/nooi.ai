@@ -84,7 +84,8 @@ async def run(p, w):
     bx = await pg.locator('#drwcv').bounding_box()
     await pg.mouse.move(bx['x'] + 40, bx['y'] + 40); await pg.mouse.down(); await pg.mouse.move(bx['x'] + 180, bx['y'] + 120, steps=8); await pg.mouse.up()
     await E("()=>{M.iRef={type:'image',file:new Blob(['x'],{type:'image/png'}),name:'mine.png',url:''};document.querySelector('[data-act=drw-go]').click()}")
-    ok(await wait_for(E, "()=>S.jobs.some(j=>j.batch===S.drw.batch&&j.remote)"), f"{tag}: draw job sent")
+    sent = await wait_for(E, "()=>S.jobs.some(j=>j.batch===S.drw.batch&&j.remote)")
+    ok(sent, f"{tag}: draw job sent " + ("" if sent else json.dumps(await E("()=>({batch:S.drw.batch,jobs:S.jobs.filter(j=>j.batch&&j.batch===S.drw.batch).map(j=>[j.status,j.error,j.remote]),empty:DRW.ctx?drwEmpty():'noctx',view:S.view,toasts:[...document.querySelectorAll('.toast')].map(t=>t.textContent).slice(-3)})"))))
     r["keepRef"] = await E("()=>M.iRef&&M.iRef.name"); ok(r["keepRef"] == "mine.png", f"{tag}: the user's reference was replaced ({r['keepRef']})")
     # character from a photo → looks keep the face
     await E("()=>{go('chars');renderAll()}"); await pg.wait_for_timeout(500); n0 = await E("()=>S.chars.length")
