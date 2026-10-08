@@ -219,7 +219,7 @@ app.post("/v1/realtime/sketch", requireUser, wrap(async (req, res) => {
 // ---- MCP endpoint (Claude · ChatGPT · Qwen · Cursor …). Auth: Bearer nooi_… or ?token=nooi_…
 app.post("/mcp", async (req, res) => {
   const h = req.headers.authorization || ""; const t = h.startsWith("Bearer ") ? h.slice(7) : req.query.token;
-  const u = userFromToken(t) || (await verify(t)); if (!u) return res.status(401).set("WWW-Authenticate", "Bearer").json({ jsonrpc: "2.0", id: null, error: { code: -32001, message: "Invalid or missing nooi.ai token" } });
+  const u = userFromToken(t) || (String(t || "").startsWith("nooi_") ? null : await verify(t)); if (!u) return res.status(401).set("WWW-Authenticate", "Bearer").json({ jsonrpc: "2.0", id: null, error: { code: -32001, message: "Invalid or missing nooi.ai token" } });
   const body = req.body; const msgs = Array.isArray(body) ? body : [body];
   const out = (await Promise.all(msgs.map((m) => handleMcp(u.uid, m)))).filter(Boolean);
   if (!out.length) return res.status(202).end();

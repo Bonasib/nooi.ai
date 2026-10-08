@@ -2139,7 +2139,7 @@ VIEWS.home=()=>{
   '<div class="spread sec"><h2 style="margin:0">'+L("Start from a template","ابدأ من قالب")+'</h2><button class="btn ghost sm" data-go="explore">'+L("All templates","كل القوالب")+"</button></div>"+
   '<div class="cards">'+TEMPLATES.slice(0,4).map(tplCard).join("")+"</div>"+
   '<h2 class="sec">'+L("Tools","الأدوات")+"</h2>"+toolGrid(["video","image","chars","story","edit","fx","plan","calendar"])+
-  '<h2 class="sec">'+L("Recent","الأحدث")+"</h2>"+(recent.length?'<div class="cards">'+recent.map(jobCard).join("")+"</div>":'<p class="mute">'+L("Nothing yet. Describe a shot above to make your first clip.","لا شيء بعد. صِف لقطة في الأعلى لتصنع أول مقطع.")+"</p>")+"</div>";
+  "</div>";
 };
 const TOOLDESC={video:["Text or image to video with camera control and keyframes.","نص أو صورة إلى فيديو مع تحكم بالكاميرا وإطارات مفتاحية."],image:["Several images per prompt, pick the best.","عدة صور لكل وصف، واختر الأفضل."],story:["Multi-chapter films that continue from the last frame.","أفلام متعددة الفصول تُكمل من آخر إطار."],board:["Frames, dialogue, sound and transitions on a canvas.","إطارات وحوار وصوت وانتقالات على لوحة."],chars:["Characters with ages, voices and several looks.","شخصيات بأعمار وأصوات وأشكال متعددة."],edit:["Trim, effects, text, and edit frames with a prompt.","قص ومؤثرات ونصوص وتعديل الإطار بالوصف."],bg:["Remove green, blue or any background and replace it.","إزالة الخلفية الخضراء أو الزرقاء أو أي خلفية واستبدالها."],grade:["Match colors from a reference shot or image.","طابق الألوان من لقطة أو صورة مرجعية."],mocap:["Capture motion from a video and apply it to a character.","التقط الحركة من فيديو وطبّقها على شخصية."],voice:["Voices by dialect and age, lip sync, music and SFX.","أصوات حسب اللهجة والعمر، ومزامنة الشفاه، وموسيقى ومؤثرات."],finish:["Upscale, 60fps, extend, reframe, captions, dubbing.","رفع الدقة، 60 إطاراً، تمديد، إعادة تأطير، ترجمة، دبلجة."]};
 function toolGrid(keys){return'<div class="toolgrid">'+keys.map(k=>{const n=ALLNAV.find(x=>x[0]===k);return'<button class="panel tool" data-go="'+k+'"><span class="ico">'+ic(n[1])+"</span><b>"+L(n[2],n[3])+"</b><span>"+L(TOOLDESC[k][0],TOOLDESC[k][1])+"</span></button>"}).join("")+"</div>"}
@@ -8743,6 +8743,84 @@ document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.c
 .fdlist{display:flex;flex-direction:column;max-height:240px;overflow:auto;margin-bottom:6px}
 .fdgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}.fdcard{padding:10px;display:flex;flex-direction:column;gap:2px}
 .fdthumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px}.fdthumbs img,.fdthumbs .fdk{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;background:var(--panel2);display:grid;place-items:center}.fdk svg{width:18px;height:18px}
+`;document.head.appendChild(st)})();
+/* ================= v68: ChatGPT (and Claude, Qwen) with their own logos · ChatGPT setup steps · "Test connection" runs the same MCP handshake ChatGPT does ================= */
+const AI_LOGO={Claude:"claude",ChatGPT:"openai",Qwen:"qwen"};
+const MCPT={busy:null,res:{}};
+async function mcpTest(who){if(API.mode!=="server"){MCPT.res[who]={ok:false,steps:[[false,L("Connections are tested on your nooi server.","يُختبر الربط على خادم nooi الخاص بك.")]]};renderView();return}
+  MCPT.busy=who;MCPT.res[who]=null;renderView();const steps=[],add=(ok,t)=>{steps.push([ok,t]);return ok};let tk=TOKENS.fresh,temp=null;
+  try{if(!tk){const r=await API.req("/v1/tokens",{json:{name:"Connection test · "+who}});tk=r.token;temp=true}
+    const url=mcpUrl()+"?token="+encodeURIComponent(tk),call=async(body,expect)=>{const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json, text/event-stream","MCP-Protocol-Version":"2025-06-18"},body:JSON.stringify(body)});return{status:r.status,d:r.status===202?null:await r.json().catch(()=>null)}};
+    const i=await call({jsonrpc:"2.0",id:1,method:"initialize",params:{protocolVersion:"2025-06-18",capabilities:{},clientInfo:{name:who==="ChatGPT"?"openai-mcp":"claude-ai",version:"1.0"}}});
+    if(add(i.status===200&&i.d&&i.d.result&&i.d.result.serverInfo,L("Server answers (MCP "+((i.d&&i.d.result&&i.d.result.protocolVersion)||"?")+")","الخادم يستجيب (MCP "+((i.d&&i.d.result&&i.d.result.protocolVersion)||"?")+")"))){
+      const n=await call({jsonrpc:"2.0",method:"notifications/initialized"});add(n.status===202,L("Session started","بدأت الجلسة"));
+      const t=await call({jsonrpc:"2.0",id:2,method:"tools/list"}),tl=(t.d&&t.d.result&&t.d.result.tools)||[];add(tl.length>0&&tl.every(x=>x.name&&x.inputSchema),L(tl.length+" tools ready: ","أدوات جاهزة: "+tl.length+" — ")+tl.slice(0,4).map(x=>x.name).join(", ")+(tl.length>4?"…":""));
+      const c=await call({jsonrpc:"2.0",id:3,method:"tools/call",params:{name:"nooi_credits",arguments:{}}}),txt=c.d&&c.d.result&&c.d.result.content&&c.d.result.content[0]&&c.d.result.content[0].text||"";let cr=null;try{cr=JSON.parse(txt).credits}catch(e){}
+      add(cr!=null,L("Tool call works · your credits: ","استدعاء الأدوات يعمل · رصيدك: ")+(cr!=null?cr:"?"))}
+    const bad=await fetch(mcpUrl()+"?token=nooi_wrong",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:9,method:"ping"})});add(bad.status===401,L("A wrong token is refused","الرمز الخاطئ مرفوض"));
+  }catch(e){add(false,String(e.message||e))}
+  finally{if(temp){try{const l=(await API.req("/v1/tokens")).tokens||[];const x=l.filter(z=>/^Connection test/.test(z.name||""));for(const z of x)await API.req("/v1/tokens/"+z.id,{method:"DELETE"})}catch(e){}}MCPT.busy=null;MCPT.res[who]={ok:steps.every(s=>s[0]),steps};renderView()}}
+VIEWS.integrations=(o=>function(){let h=o();h=h.replace('<code dir="ltr">nooi_create_3d</code>','');
+  Object.entries(AI_LOGO).forEach(([nm,k])=>{const u=LOGO_SRC[k];if(u)h=h.replace(new RegExp('<span class="ico3"><svg[\\s\\S]*?<\\/svg><\\/span>(<b style="font-weight:500">'+nm+"</b>)"),'<span class="ico3 lgo"><img src="'+u+'" alt=""></span>$1')});
+  ["Claude","ChatGPT"].forEach(nm=>{const r=MCPT.res[nm],busy=MCPT.busy===nm;
+    const extra=(nm==="ChatGPT"?'<ol class="gptsteps small"><li>'+L("In ChatGPT open Settings → Apps & Connectors → Advanced and turn on Developer mode.","في ChatGPT افتح الإعدادات ← التطبيقات والموصلات ← متقدم، وفعّل وضع المطوّر.")+"</li><li>"+L("Create a connector: name it nooi, paste the URL above, authentication: none (the token is in the URL).","أنشئ موصلاً: سمّه nooi، الصق الرابط أعلاه، المصادقة: بدون (الرمز داخل الرابط).")+"</li><li>"+L("In a new chat pick Developer mode → nooi and ask: “Use nooi to make a 9:16 video of a falcon at sunrise”.","في محادثة جديدة اختر وضع المطوّر ← nooi واطلب: «استخدم nooi لعمل فيديو 9:16 لصقر عند الشروق».")+"</li></ol>":"")+
+      '<div class="row" style="margin-top:8px"><button class="btn sm primary" data-act="mcp-test" data-v="'+nm+'"'+(busy?" disabled":"")+">"+ic(busy?"refresh":"check")+(busy?L("Testing…","جارٍ الاختبار…"):L("Test connection","اختبر الربط"))+"</button></div>"+
+      (r?'<ul class="mcpres'+(r.ok?" ok":" bad")+'">'+r.steps.map(s=>'<li class="'+(s[0]?"y":"n")+'">'+(s[0]?"✓":"✗")+" "+esc(s[1])+"</li>").join("")+"</ul>":"");
+    h=h.replace(new RegExp('(<b style="font-weight:500">'+nm+'</b></div><p class="small mute">[\\s\\S]*?</p><div class="codebox">[\\s\\S]*?</div>)'),"$1"+extra)});
+  return h})(VIEWS.integrations);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="mcp-test"]');if(!a)return;e.stopImmediatePropagation();if(!MCPT.busy)mcpTest(a.dataset.v)},true);
+/* home: the "nooi inside Claude & ChatGPT" pill shows both logos */
+VIEWS.home=(o=>function(){let h=o();if(LOGO_SRC.claude&&LOGO_SRC.openai)h=h.replace(/(<button class="hfpill" data-go="integrations">)<svg[\s\S]*?<\/svg>/,'$1<span class="hfpl2"><img src="'+LOGO_SRC.claude+'" alt=""><img src="'+LOGO_SRC.openai+'" alt=""></span>');return h})(VIEWS.home);
+(()=>{const st=document.createElement("style");st.textContent=`
+.ico3.lgo{background:#fff;display:grid;place-items:center}.ico3.lgo img{width:70%;height:70%;object-fit:contain}
+.gptsteps{margin:8px 0 0;padding-inline-start:18px;display:flex;flex-direction:column;gap:4px;color:var(--mute)}
+.mcpres{list-style:none;margin:8px 0 0;padding:8px 10px;border-radius:12px;font-size:12.5px;display:flex;flex-direction:column;gap:3px;background:var(--panel2);border:1px solid var(--line)}
+.mcpres.ok{border-color:color-mix(in srgb,var(--lime) 55%,var(--line))}.mcpres.bad{border-color:color-mix(in srgb,var(--red) 50%,var(--line))}.mcpres li.y{color:var(--text)}.mcpres li.n{color:var(--red)}
+.hfpl2{display:inline-flex}.hfpl2 img{width:20px;height:20px;border-radius:50%;background:#fff;padding:2px;object-fit:contain;box-shadow:0 0 0 2px var(--panel)}.hfpl2 img+img{margin-inline-start:-6px}
+`;document.head.appendChild(st)})();
+/* ================= v69: Claude & ChatGPT pill under the box · tools under the results · no "Recent" · templates described the same way · Dreamina-style length slider · ratio numbers fit ================= */
+/* home order: box → Claude & ChatGPT pill → results → tools → the rest; "Recent" removed */
+VIEWS.home=(o=>function(){let h=o();
+  const pill=h.match(/<button class="hfpill" data-go="integrations">[\s\S]*?<\/button>/);
+  if(pill){h=h.replace(pill[0],"");const p2=pill[0].replace(/<span>[^<]*<\/span>/,"<span>Claude & ChatGPT</span>");h=h.indexOf('<section class="hfres"')>=0?h.replace('<section class="hfres"',p2+'<section class="hfres"'):h.replace('</div><div class="hfrail">',p2+'</div><div class="hfrail">')}
+  const tools=h.match(/<h2 class="sec">(Tools|الأدوات)<\/h2><div class="toolgrid">[\s\S]*?<\/button><\/div>/);
+  if(tools){h=h.replace(tools[0],"");const t2='<div class="hftools">'+tools[0]+"</div>",r=h.indexOf("</section>",h.indexOf('<section class="hfres"'));
+    if(h.indexOf('<section class="hfres"')>=0&&r>0)h=h.slice(0,r+10)+t2+h.slice(r+10);else h=h.replace('<div class="hfrail">',t2+'<div class="hfrail">')}
+  return h})(VIEWS.home);
+/* templates: one clear line each, then the same three facts (type · length · format) */
+const TPL_D={t1:["A creator reviews a skincare product to the camera, phone-selfie style.","صانعة محتوى تراجع منتج عناية أمام الكاميرا بأسلوب سيلفي الجوال."],t2:["Hands open a parcel and react to what's inside.","يدان تفتحان طرداً وتتفاعلان مع ما بداخله."],t3:["A fast crash-zoom beat for a cinematic action trailer.","لقطة تقريب خاطفة لإعلان فيلم أكشن سينمائي."],t4:["An anime title shot with a sweeping crane move.","لقطة افتتاحية أنمي بحركة كرين واسعة."],
+  t5:["A perfume bottle turning 360° on a dark set.","زجاجة عطر تدور 360 درجة على خلفية داكنة."],t6:["A smooth FPV drone flight through a villa.","جولة درون FPV سلسة داخل فيلا."],t7:["A top-down shot of a kabsa platter being served.","لقطة علوية لطبق كبسة يُقدَّم."],t8:["A singer in a rainy neon alley, tracking shot.","مغنٍّ في زقاق نيون ممطر بلقطة تتبّع."],
+  t9:["A clean 2D animation that explains an app.","رسوم 2D واضحة تشرح تطبيقاً."],t10:["Aerial views of desert dunes for a documentary.","مشاهد جوية لكثبان الصحراء لفيلم وثائقي."],t11:["A presenter reads the news to the camera.","مذيع يقرأ الأخبار أمام الكاميرا."],t12:["A fast travel opener that hooks in the first second.","افتتاحية سفر سريعة تشد من الثانية الأولى."],
+  t13:["A friendly 3D mascot presents your product.","شخصية 3D لطيفة تقدّم منتجك."],t14:["A soft clay-animation story for bedtime.","قصة صلصال هادئة قبل النوم."],t15:["A vintage horror shot with a dolly-zoom.","لقطة رعب بطابع قديم مع دولي زووم."],t16:["A frozen bullet-time moment in sport.","لحظة رياضية مجمّدة بتأثير تجميد الزمن."]};
+tplCard=function(t){const d=TPL_D[t.id]||[L(t.p[0],t.p[1]).split(/[.،,]/)[0],L(t.p[0],t.p[1]).split(/[.،,]/)[0]];
+  return'<button class="panel card tpl tpl2" data-act="use-tpl" data-id="'+t.id+'">'+thumb("t:"+t.id,{dur:t.dur,tag:t.aspect})+'<div class="ti">'+esc(L(t.t[0],t.t[1]))+'</div><p class="tpd">'+esc(L(d[0],d[1]))+'</p><div class="tpf"><span>'+esc(lab(TYPES,t.type))+"</span><span>"+t.dur+L(" s"," ث")+'</span><span dir="ltr">'+esc(t.aspect)+"</span></div></button>"};
+/* ratio tiles: the shape on top, the numbers under it (they never overflow the shape) */
+glyphFor=(o=>function(path,k,txt){if(/^\d+(\.\d+)?:\d+(\.\d+)?$/.test(String(k))){const [a,b]=String(k).split(":").map(Number),s=Math.min(26/b,34/a);
+  return'<span class="ratio2"><i style="width:'+Math.max(8,Math.round(a*s))+"px;height:"+Math.max(8,Math.round(b*s))+'px"></i><small dir="ltr">'+k+"</small></span>"}return o(path,k,txt)})(glyphFor);
+/* video length: one slider 0–30 s like Dreamina — drag smoothly, it snaps to 5 s steps, the number box follows */
+hfDurSheet=function(){const H=S.hf,m=H.vModel,long=nooiOn()||hfBotsOn(),mx=long?30:engMax(m),cap=Math.min(mx,lim().maxDur||mx);
+  hfSheet(L("Total duration","المدة الكاملة"),'<div class="durpop"><div class="durrow" dir="ltr"><div class="durtrack"><input type="range" id="hfdr" min="0" max="30" step="1" value="'+H.dur+'" aria-label="'+esc(L("Video length in seconds","مدة الفيديو بالثواني"))+'" style="--v:'+(H.dur/30*100)+'%;--cap:'+(cap/30*100)+'%"><div class="durticks" dir="ltr">'+[0,5,10,15,20,25,30].map(x=>'<span class="'+(x>cap?"off":"")+'">'+x+"</span>").join("")+'</div></div><label class="durbox" dir="ltr"><input id="hfdn" type="number" min="5" max="'+cap+'" step="5" value="'+H.dur+'" aria-label="'+esc(L("Seconds","ثوانٍ"))+'"><span>s</span></label></div>'+
+    '<p class="small mute" id="hfdnote" style="margin:10px 0 0">'+hfDurNote(H.dur,cap,mx)+'</p><div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn sm primary" data-act="close-sheet">'+L("Done","تم")+"</button></div></div>");
+  const r=$("#hfdr"),n=$("#hfdn");if(!r)return;const set=(v,final)=>{v=Math.max(5,Math.min(cap,v));if(final)v=Math.max(5,Math.min(cap,Math.round(v/5)*5));H.dur=v;r.value=final?v:r.value;r.style.setProperty("--v",(+r.value/30*100)+"%");if(n&&document.activeElement!==n)n.value=v;const nt=$("#hfdnote");if(nt)nt.innerHTML=hfDurNote(v,cap,mx);
+    const chip=document.querySelector('.hfbox [data-act="hfx-dur"] span');if(chip)chip.textContent=v+L("s","ث");if(final){persist();hfStudioPaint()}};
+  r.addEventListener("input",()=>set(+r.value,false));r.addEventListener("change",()=>set(+r.value,true));n.addEventListener("change",()=>{set(+n.value||5,true);r.value=H.dur;r.style.setProperty("--v",(H.dur/30*100)+"%")})};
+function hfDurNote(v,cap,mx){const m=S.hf.vModel;if(v>=cap&&cap<mx)return L("Longer videos are on a bigger plan.","الفيديو الأطول متاح في باقة أعلى.");
+  if(nooiOn()||hfBotsOn()){const p=nooiOn()?Math.min(6,Math.ceil(v/10)):Math.ceil(v/engMax(m));return p>1?L("The bots make "+p+" connected shots that continue from each other.","تصنع البوتات "+p+" لقطات متصلة تكمل بعضها."):L("One shot.","لقطة واحدة.")}
+  return L(hfMName("video",m)+" makes up to "+mx+" s. Turn the bots on for up to 30 s.",hfMName("video",m)+" يصنع حتى "+mx+" ثانية. شغّل البوتات للوصول إلى 30 ثانية.")}
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="close-sheet"]');if(a&&$("#hfdr"))setTimeout(()=>{persist();renderView()},0)},true);
+(()=>{const st=document.createElement("style");st.textContent=`
+.hfpill{margin-top:12px}.hftools{margin-top:18px}.hftools h2.sec{margin-top:0}
+.tpl2 .ti{font-weight:700}.tpl2 .tpd{margin:2px 0 6px;font-size:12.5px;color:var(--mute);line-height:1.45;white-space:normal;overflow-wrap:anywhere}
+.tpl2 .tpf{display:flex;flex-wrap:wrap;gap:4px}.tpl2 .tpf span{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);color:var(--text)}
+.ratio2{display:inline-flex;flex-direction:column;align-items:center;gap:3px}.ratio2 i{display:block;border:1.6px solid currentColor;border-radius:3px}.ratio2 small{font:600 9.5px/1 var(--mono);letter-spacing:-.02em;white-space:nowrap}
+.durpop{padding:2px 0}.durrow{display:flex;align-items:center;gap:14px}.durtrack{flex:1;min-width:0}
+#hfdr{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;margin:0;cursor:pointer;touch-action:pan-y}
+#hfdr::-webkit-slider-runnable-track{height:8px;border-radius:8px;background:linear-gradient(90deg,var(--lime) 0 var(--v),color-mix(in srgb,var(--text) 22%,transparent) var(--v) var(--cap),color-mix(in srgb,var(--text) 8%,transparent) var(--cap))}
+#hfdr::-moz-range-track{height:8px;border-radius:8px;background:linear-gradient(90deg,var(--lime) 0 var(--v),color-mix(in srgb,var(--text) 22%,transparent) var(--v) var(--cap),color-mix(in srgb,var(--text) 8%,transparent) var(--cap))}
+#hfdr::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-7px;border-radius:50%;background:#fff;border:3px solid var(--lime);box-shadow:0 2px 8px rgba(0,0,0,.35);transition:transform .12s}
+#hfdr:active::-webkit-slider-thumb{transform:scale(1.15)}#hfdr::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--lime)}
+.durticks{display:flex;justify-content:space-between;font:600 11px var(--mono);color:var(--mute);padding:0 4px;margin-top:2px}.durticks .off{opacity:.35}
+.durbox{display:flex;align-items:center;gap:4px;padding:6px 10px;border-radius:12px;background:var(--panel2);border:1px solid var(--line2)}.durbox input{width:46px;border:0;background:transparent;font:700 18px var(--mono);padding:0;text-align:center}.durbox input:focus{outline:none;box-shadow:none}.durbox span{color:var(--mute);font-weight:600}
 `;document.head.appendChild(st)})();
 /* ================= LOOP + BOOT ================= */
 let playing=true;

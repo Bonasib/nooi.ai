@@ -316,6 +316,16 @@ Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v
 - Results are grouped (Videos · Avatars · Images · Audio; audio cards wider). "Select" (`S.hf.selMode/sel`) picks many → "Add to a project" (new edit project with all of them: clips, background music, sounds one after another; or the open edit) or "Add to a folder" (`S.folders`, shown in the Library with "Open as project").
 - Audio time stays on one line (tabular numbers).
 
+## v68 ChatGPT connection with its logo + "Test connection"
+- Integrations: Claude, ChatGPT and Qwen show their own logos; ChatGPT has setup steps (Developer mode → connector → URL with token, no extra auth). "Test connection" (`mcpTest`) creates a temporary token, runs initialize → notifications/initialized → tools/list → tools/call nooi_credits and a wrong-token check, shows each step, then deletes the token.
+- `/mcp`: a `nooi_…` token that doesn't match is always refused (even in local no-sign-in mode). `tests/mcp_chatgpt.mjs` does ChatGPT's handshake against a fresh server (own data folder) — part of `run_all.sh`.
+
+## v69 Home order · templates · length slider · ratio tiles
+- Home: box → "Claude & ChatGPT · Connect" pill (both logos) → results → tools → the rest; the "Recent" section is gone.
+- Template cards: title, one clear sentence (`TPL_D`), then type · length · format pills.
+- Video length: one slider 0–30 s (Dreamina style) with ticks and a number box; drag is smooth, it snaps to 5 s on release, the chip/credits update live; beyond the plan is dimmed.
+- Ratio tiles: the shape on top, the numbers under it (`.ratio2`), so "9:16" never overflows.
+
 ## v56 Showcase: nooi's own marketing videos & pictures made with Kie AI
 - `lib/showcase.js` → `SHOWCASE`: 21 curated prompts (English + Arabic): motion (desert flyover, neon drift, coffee pour, volcanic shore, perfume UGC ad), anime (rooftop run, sakura samurai, rainy window, fox chef), VFX (shattering tower, fire portal, liquid chrome, time freeze), pixel-art animation (knight, night city, island) and 5 pictures. Each has a studio model id (routed to Kie), aspect, category, and `slot` 0–5 for the six demo tiles.
 - Admin → AI providers → "Showcase for marketing" (`scAdmin`, appended to `kieQuick`): "Make the showcase with Kie AI" → `POST /v1/admin/showcase {ids?, force?}` creates staff jobs (no nooi credits; uses the Kie balance). A 4 s watcher turns finished jobs into records (`col("showcase")`) and posts each to Explore as featured, author "nooi", with its prompt (`showcase` field). `DELETE /v1/admin/showcase {ids}` removes records + posts. Per-row remake (`sc-one`), "Retry failed", live status.
