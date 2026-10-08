@@ -34,6 +34,7 @@ echo "▶ home create box: model logo row, results under the box, approve → ed
 echo "▶ top-ups, gift cards (credits & plans), redeem, invoices with VAT (test payment provider)"; node tests/gifts_e2e.mjs | tail -1
 echo "▶ Kie AI end to end (mock Kie server + real nooi server: image, edit, Midjourney, video, image→video, music)"; node tests/kie_e2e.mjs | tail -1
 echo "▶ video editor with real media (touch + mouse: seek, scrub, select, play, split, duplicate, move, delete, undo, trim, speed, text, music, MP4 export)"; python3 tests/editor_real.py | python3 -c "import sys,json;d=json.load(sys.stdin);print('fails',d['fails']);sys.exit(1 if d['fails'] else 0)"
+echo "▶ editor pro tools (smooth playback, drag/resize/delete on the preview, timeline edges, effects, infographics, AI translate, AI voice types, export)"; python3 tests/editor_pro.py | python3 -c "import sys,json;d=json.load(sys.stdin);print('fails',d['fails']);sys.exit(1 if d['fails'] else 0)"
 echo "▶ ChatGPT / Claude MCP connector handshake (initialize · tools/list · tools/call · token checks)"; node tests/mcp_chatgpt.mjs | tail -1
 echo "▶ shipped translations (i18n/*.txt → public/i18n/*.json up to date, no lost numbers)"; node i18n/build.mjs --check | grep -v "^✓" || echo "all languages OK"
 echo "▶ shared interface translations with a mocked text AI (whitelist · cache · one call · rate limit)"; node tests/uit_mock.mjs | tail -1

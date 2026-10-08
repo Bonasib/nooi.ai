@@ -39,7 +39,7 @@ const AR = (a) => { const [w, h] = String(a || "16:9").split(":").map(Number); r
 // closest allowed aspect ratio (Kie rejects values outside each model's list)
 const snapAR = (a, list) => { if (!a) return list[0]; if (list.includes(a)) return a; const r = AR(a); return list.filter((x) => /^\d+:\d+$/.test(x)).reduce((best, x) => (Math.abs(Math.log(AR(x) / r)) < Math.abs(Math.log(AR(best) / r)) ? x : best), list.find((x) => /^\d+:\d+$/.test(x))); };
 const snapDur = (d, list) => list.reduce((b, x) => (Math.abs(+x - d) < Math.abs(+b - d) ? x : b), list[0]);
-const ELEVEN_VOICE = { female: "Sarah", male: "George" };
+const ELEVEN_VOICE = { female: "Sarah", male: "George", girl: "Jessica", boy: "Liam" };   // children: a young-sounding voice (the editor also lifts the pitch a little)
 // the resolution the user picked (720P / 1080P / 2K / 4K for video, 1K / 2K / 4K for images) in each model's own spelling
 const pickRes = (p, list, def) => { const r = String(p.meta?.res || "").toLowerCase(); const hit = list.find((x) => x.toLowerCase() === r) || (r === "2k" ? list.find((x) => /1080/.test(x)) : null) || (r === "4k" ? list.find((x) => /1080/.test(x)) : null); return hit || def; };
 const TOOL_SCALE = (p) => (String((p.meta?.opt || {}).scale || "2x").startsWith("4") ? "4" : "2");
@@ -48,7 +48,7 @@ const TOOL_SCALE = (p) => (String((p.meta?.opt || {}).scale || "2x").startsWith(
 // on docs.kie.ai (cross-checked with the @apicity/kie model registry). Exported for tests.
 export function kieInput(model, p) {
   const m = String(model).toLowerCase(), kind = p.kind || "video", inp = p.inputs || {};
-  if (/^elevenlabs\/text-to-speech/.test(m)) return drop({ text: p.prompt, voice: p.meta?.voiceId || ELEVEN_VOICE[p.meta?.gender] || "Sarah", language_code: p.meta?.lang || undefined });
+  if (/^elevenlabs\/text-to-speech/.test(m)) return drop({ text: p.prompt, voice: p.meta?.voiceId || (p.meta?.age === "child" ? ELEVEN_VOICE[p.meta?.gender === "male" ? "boy" : "girl"] : null) || ELEVEN_VOICE[p.meta?.gender] || "Sarah", language_code: p.meta?.lang || undefined });
   if (/^elevenlabs\/sound-effect/.test(m)) return drop({ text: p.prompt, loop: p.meta?.loop || undefined });
   if (MUSIC_KINDS.has(kind)) return drop({ prompt: p.prompt, custom_mode: false, instrumental: p.meta?.instrumental ?? kind === "sfx" });
   if (/^recraft\/remove-background/.test(m)) return { image: absUrl(inp.bgFg || refImg(p)) };
