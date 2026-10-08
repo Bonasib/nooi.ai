@@ -8267,6 +8267,103 @@ engQuick=(o=>function(){return o()+prAdmin()})(engQuick);
 document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="pr-save"]');if(!a)return;e.stopImmediatePropagation();const costs={};document.querySelectorAll("[data-prc]").forEach(i=>{costs[i.dataset.prc]=+i.value});PR.busy=true;renderView();
   try{const r=await API.req("/v1/admin/pricing",{method:"PUT",json:{costs,factor:+(($("#prf")||{}).value||1.5)}});PR.rows=r.rows;PR.factor=r.factor;const c=await API.req("/v1/config").catch(()=>null);if(c){API.cfg=c;applyPrices(c.prices)}toast(L("Prices updated","تم تحديث الأسعار"),{type:"ok"})}catch(err){toast(String(err.message||err),{type:"warn"})}finally{PR.busy=false;renderView()}},true);
 (()=>{const st=document.createElement("style");st.textContent=`.prtable{margin-top:12px;display:flex;flex-direction:column;gap:4px;max-height:460px;overflow:auto}.prh,.prr{display:grid;grid-template-columns:minmax(0,2fr) 110px 70px 70px;gap:8px;align-items:center;font-size:13px}.prh{font-weight:700;color:var(--mute);font-size:12px}.prr{padding:4px 6px;border-radius:8px;background:var(--panel2)}.prr input{padding:4px 6px;min-height:30px}`;document.head.appendChild(st)})();
+/* ================= v60: nooi Studio 2.0 (bots, 30 s for every model) · one model chip · durations · scene lock · faster updates ================= */
+/* longest single shot each engine model makes; longer videos are made in connected parts (nooi Studio 2.0) */
+const ENG_MAX={seedance:10,wan27:10,kling:10,kling26:10,hailuo:10,hailuoh3:10,pixverse6:8,grok:6,wan30:10,seedance20:15,seedance25:12,kling30:15,veo31f:8,veo31:8};
+const engMax=id=>ENG_MAX[(M_ALIAS&&M_ALIAS[id])||id]||10;
+const HF_DURS=[5,10,15,20,25,30];
+const nooiOn=()=>{const H=S.hf;return(H.tab==="video"?H.vModel:H.tab==="image"?H.iModel:"auto")==="auto"};
+function hfDurOK(v){const H=S.hf;if(nooiOn())return v<=30;return v<=engMax(H.vModel)}
+/* model row → nooi button + one model chip (everything else lives in the sheet) + bots + scene */
+hfMRow=function(t){const H=S.hf,cur=t==="video"?H.vModel:H.iModel,auto=cur==="auto",u=!auto&&logoFor(cur);
+  return'<div class="hfmrow g">'+
+    '<button class="hfmi nooi'+(auto?" on":"")+'" data-act="hfx-nooi" aria-pressed="'+auto+'" title="'+esc(L("nooi Studio 2.0 — 8 AI bots pick the model and make every second","nooi Studio 2.0 — 8 بوتات ذكية تختار النموذج وتصنع كل ثانية"))+'"><span class="lg"><img src="'+logoFor("auto")+'" alt=""></span><b>nooi</b></button>'+
+    '<button class="hfmi pick'+(auto?"":" on")+'" data-act="hf-model" aria-label="'+esc(L("Choose a model","اختر نموذجاً"))+'">'+(auto?ic("grid")+"<b>"+L("Model","النموذج")+"</b>":'<span class="lg">'+(u?'<img src="'+u+'" alt="">':ic("spark"))+"</span><b>"+esc(hfMName(t,cur))+"</b>")+svg('<path d="M6 9l6 6 6-6"/>')+"</button>"+
+    '<button class="hfmi bots'+(H.bots!==false&&auto?" on":"")+'" data-act="hfx-bots" aria-pressed="'+(H.bots!==false&&auto)+'">'+ic("users")+"<b>"+L("Bots","البوتات")+"</b></button>"+
+    '<button class="hfmi scene'+(H.scene?" on":"")+'" data-act="hfx-scene" aria-pressed="'+!!H.scene+'">'+ic("layers")+"<b>"+(H.scene?esc(H.sceneName||L("Scene","مشهد")):L("Scene: off","المشهد: متوقف"))+"</b></button></div>"};
+const HF_BOT_IDS=["director","writer","cine","casting","sound","editor","producer","proof"];
+hfBox=(o=>function(){let h=o();const H=S.hf,t=H.tab;if(t!=="video"&&t!=="image")return h;
+  /* duration chip → picker (5–30 s by model; nooi makes 30 s with any model) */
+  if(t==="video"){if(!hfDurOK(H.dur))H.dur=HF_DURS.filter(hfDurOK).pop()||5;h=h.replace(/<button class="hfchip" data-act="hf-dur"[^>]*>[\s\S]*?<\/button>/,'<button class="hfchip" data-act="hfx-dur" aria-haspopup="dialog">'+ic("clock")+"<span>"+H.dur+L("s","ث")+"</span>"+svg('<path d="M6 9l6 6 6-6"/>')+"</button>")}
+  /* nooi Studio 2.0: the 8 bots appear and work */
+  if(nooiOn()&&H.bots!==false)h=h.replace('<div class="hfbar">','<div class="hfbots"><div class="hfbh"><b>nooi Studio 2.0</b><span class="small mute">'+(t==="video"?L("8 AI bots plan the shots, keep continuity and check every frame — up to 30 s with any model.","8 بوتات ذكية تخطط اللقطات وتحافظ على الاستمرارية وتراجع كل إطار — حتى 30 ثانية مع أي نموذج."):L("8 AI bots pick the best model and check every picture.","8 بوتات ذكية تختار أفضل نموذج وتراجع كل صورة."))+'</span><button class="btn sm ghost" data-go="crew">'+L("Meet them","تعرّف عليهم")+"</button></div>"+botStrip(HF_BOT_IDS,true)+'</div><div class="hfbar">');
+  return h})(hfBox);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest("[data-act]");if(!a||!/^hfx-/.test(a.dataset.act))return;e.stopImmediatePropagation();const H=S.hf,act=a.dataset.act;
+  if(act==="hfx-nooi"){if(H.tab==="video")H.vModel="auto";else H.iModel="auto";H.bots=true;persist();renderView();return}
+  if(act==="hfx-bots"){if(!nooiOn()){if(H.tab==="video")H.vModel="auto";else H.iModel="auto";H.bots=true}else H.bots=H.bots===false;persist();renderView();return}
+  if(act==="hfx-dur"){hfDurSheet();return}
+  if(act==="hfx-d"){const v=+a.dataset.v;if(v>lim().maxDur){toast(L("Videos up to "+v+" s are on a bigger plan.","الفيديو حتى "+v+" ثانية متاح في باقة أعلى."),{type:"warn"});return}H.dur=v;persist();closeSheet();renderView();return}
+  if(act==="hfx-scene"){sceneSheet();return}
+  if(act==="hfx-scoff"){H.scene=null;H.sceneName="";persist();closeSheet();renderView();return}
+  if(act==="hfx-scnew"){const name=(($("#scname")||{}).value||"").trim();if(API.mode!=="server"){toast(L("Scenes work on your nooi server.","المشاهد تعمل على خادم nooi."));return}
+    try{const s=await API.req("/v1/scenes",{json:{name}});H.scene=s.id;H.sceneName=s.name;SCN.items=null;persist();closeSheet();renderView();toast(L("New scene ready — everything you make now stays in it.","المشهد الجديد جاهز — كل ما تصنعه الآن يبقى داخله."),{type:"ok"})}catch(err){toast(String(err.message||err),{type:"warn"})}return}
+  if(act==="hfx-scpick"){const s=(SCN.items||[]).find(x=>x.id===a.dataset.v);if(s){H.scene=s.id;H.sceneName=s.name;persist();closeSheet();renderView()}return}},true);
+function hfDurSheet(){const H=S.hf,m=H.vModel,auto=nooiOn(),mx=auto?30:engMax(m);
+  hfSheet(L("Video length","مدة الفيديو"),'<p class="small mute" style="margin:0 0 10px">'+(auto?L("nooi Studio 2.0 makes up to 30 s with any model: the bots split it into connected shots that continue from each other.","nooi Studio 2.0 يصنع حتى 30 ثانية مع أي نموذج: تقسمها البوتات إلى لقطات متصلة تكمل بعضها."):L(hfMName("video",m)+" makes up to "+mx+" s per shot. Tap nooi for up to 30 s.",hfMName("video",m)+" يصنع حتى "+mx+" ثانية للقطة. اضغط nooi للوصول إلى 30 ثانية."))+"</p>"+
+    '<div class="hfdurs">'+HF_DURS.filter(hfDurOK).map(v=>{const lock=v>lim().maxDur;return'<button data-act="hfx-d" data-v="'+v+'" aria-pressed="'+(H.dur===v)+'"'+(lock?' class="lockd"':"")+">"+v+L(" s"," ث")+(lock?" 🔒":"")+(auto&&v>engMax("seedance")?'<small>'+L("connected shots","لقطات متصلة")+"</small>":"")+"</button>"}).join("")+"</div>"+
+    '<div class="hfdscale" aria-hidden="true"><i style="width:'+(H.dur/30*100)+'%"></i></div><div class="hfdticks" aria-hidden="true">'+[0,5,10,15,20,25,30].map(x=>"<span>"+x+"</span>").join("")+"</div>")}
+/* scenes: keep photos and videos inside one world */
+const SCN={items:null};
+async function sceneSheet(){const H=S.hf;if(API.mode==="server"&&!SCN.items){try{SCN.items=(await API.req("/v1/scenes")).items||[]}catch(e){SCN.items=[]}}const list=SCN.items||[];
+  hfSheet(L("Same scene?","نفس المشهد؟"),'<p class="small mute" style="margin:0 0 10px">'+L("Keep your photos and videos in one world: the same place, light, colours and characters. Each new shot starts from the scene's latest picture, and nooi checks every result — if one leaves the scene, it is made again.","اجعل صورك وفيديوهاتك في عالم واحد: نفس المكان والإضاءة والألوان والشخصيات. كل لقطة جديدة تبدأ من آخر صورة في المشهد، ويراجع nooi كل نتيجة — وإذا خرجت إحداها عن المشهد تُصنع من جديد.")+"</p>"+
+    '<button class="scopt'+(H.scene?"":" on")+'" data-act="hfx-scoff">'+ic("x")+"<span><b>"+L("No — every result is new","لا — كل نتيجة جديدة")+"</b><small>"+L("Free creation, no scene memory","إنشاء حر بدون ذاكرة مشهد")+"</small></span></button>"+
+    '<div class="scnew"><label class="lbl" for="scname">'+L("Yes — start a new scene","نعم — ابدأ مشهداً جديداً")+'</label><div class="row" style="flex-wrap:nowrap"><input id="scname" dir="auto" maxlength="60" placeholder="'+esc(L("e.g. Old town, 1949","مثال: البلدة القديمة 1949"))+'" style="flex:1;min-width:0"><button class="btn sm primary" data-act="hfx-scnew">'+ic("plus")+L("Start","ابدأ")+"</button></div></div>"+
+    (list.length?'<span class="lbl">'+L("Yes — continue a previous scene","نعم — أكمل مشهداً سابقاً")+'</span><div class="sclist2">'+list.map(s=>'<button class="scrow2'+(H.scene===s.id?" on":"")+'" data-act="hfx-scpick" data-v="'+esc(s.id)+'"><span class="scth">'+(s.latest||s.anchor?'<img src="'+esc(s.latest||s.anchor)+'" alt="" loading="lazy">':ic("layers"))+'</span><span class="nm"><b>'+esc(s.name)+"</b><small>"+(s.count||0)+L(" shots"," لقطات")+(s.bible?" · "+esc(String(s.bible).slice(0,60)):"")+"</small></span></button>").join("")+"</div>":""))}
+/* jobs sent from the box carry the scene, the 30 s plan and the parts split */
+let HF_PLAN=null;
+addJob=(o=>function(j){const H=S.hf;if(j&&HF_GRAB&&H.scene&&["image","video"].includes(j.kind))j.meta=Object.assign({},j.meta,{scene:H.scene});
+  if(j&&j.kind==="video"&&!(j.meta&&j.meta.parts)){const m=j.model==="auto"||!j.model?pickVideo(j.prompt||"").id:j.model,mx=engMax(m);if((j.dur||5)>mx){const n=Math.min(6,Math.ceil(j.dur/mx));j.meta=Object.assign({},j.meta,{parts:n,partSec:Math.ceil(j.dur/n)},HF_PLAN&&HF_PLAN.shots&&HF_PLAN.shots.length>=n?{shots:HF_PLAN.shots.slice(0,n),bible:HF_PLAN.bible||""}:{})}}
+  return o.apply(this,arguments)})(addJob);
+/* nooi Studio 2.0: before a long video the Director bot plans one shot per part (when the text AI is connected) */
+hfSend=(o=>async function(){const H=S.hf;HF_PLAN=null;const q=$("#hfq"),p=((q&&q.value)||H.prompt||"").trim();
+  if(H.tab==="video"&&nooiOn()&&H.dur>10&&p&&API.mode==="server"&&API.cfg&&API.cfg.llm){const n=Math.min(6,Math.ceil(H.dur/10));toast(L("Sima the Director is planning "+n+" connected shots…","سيما المخرجة تخطط "+n+" لقطات متصلة…"),{type:"info",ms:3500});AI_BUSY=true;
+    try{HF_PLAN=await Promise.race([API.req("/v1/llm/json",{json:{task:"nooi studio plan",tier:"quick",prompt:"You are the director of a "+H.dur+"-second video made of "+n+" consecutive shots of about "+Math.ceil(H.dur/n)+" seconds. Each shot continues exactly where the previous one ended (same characters, place, light and style). Idea: "+p+"\nReturn {\"bible\": \"one paragraph that fixes the world: place, time, light, palette, characters and their clothes, style\", \"shots\": [\""+n+" shot descriptions, one per shot, each a self-contained video prompt with camera move and action\"]}"}}),new Promise((_,r)=>setTimeout(()=>r(new Error("plan timeout")),25000))])}catch(e){HF_PLAN=null}finally{AI_BUSY=false}}
+  try{return await o.apply(this,arguments)}finally{HF_PLAN=null}})(hfSend);
+/* result cards: scene badge, small play/pause instead of the big native overlay, live progress estimate */
+hfrCard=(o=>function(j){let h=o(j);const sc=j.sceneCheck;
+  if(j.meta&&j.meta.scene)h=h.replace("<small>",'<span class="scbadge'+(sc&&!sc.same?" bad":"")+'">'+ic("layers")+(sc?sc.retrying&&j.status!=="complete"?L("Re-making to stay in the scene","يُعاد صنعها لتبقى في المشهد"):sc.first?L("Scene anchor","مرجع المشهد"):sc.same?L("In scene · ","داخل المشهد · ")+sc.score+"%":L("Left the scene · ","خرجت عن المشهد · ")+sc.score+"%":j.status==="complete"?L("Checking the scene…","فحص المشهد…"):L("Scene lock on","قفل المشهد مفعّل"))+"</span><small>");
+  h=h.replace(/<video src="([^"]*)" controls playsinline muted loop preload="metadata"><\/video>/,'<video class="sv hfv" src="$1" playsinline muted loop preload="metadata"></video><button class="hfvp" data-act="hfvp" aria-label="'+esc(L("Play or pause","تشغيل أو إيقاف"))+'">'+svg('<path d="M8 5v14l11-7z"/>')+'</button><button class="hfvf" data-act="hfvf" aria-label="'+esc(L("Full screen","ملء الشاشة"))+'">'+svg('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>')+"</button>");
+  return h})(hfrCard);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="hfvp"],[data-act="hfvf"],.hfrm video.hfv');if(!a)return;const box=a.closest(".hfrm"),v=box&&box.querySelector("video");if(!v)return;e.stopImmediatePropagation();
+  if(a.dataset.act==="hfvf"){(v.requestFullscreen||v.webkitEnterFullscreen||function(){}).call(v);return}if(v.paused){const p=v.play();if(p&&p.catch)p.catch(()=>{})}else v.pause()},true);
+document.addEventListener("play",e=>{const b=e.target.closest&&e.target.closest(".hfrm");if(b)b.classList.add("playing")},true);
+document.addEventListener("pause",e=>{const b=e.target.closest&&e.target.closest(".hfrm");if(b)b.classList.remove("playing")},true);
+/* faster updates: follow the box's jobs every 1.5 s, keep following scene jobs until their check arrives, estimate progress */
+setInterval(async()=>{if(API.mode!=="server"||!S.hf||!(S.hf.out||[]).length)return;const now=Date.now();
+  for(const id of S.hf.out){const o=S.jobs.find(x=>x.id===id);if(!o||!o.remote)continue;const sceneWait=o.meta&&o.meta.scene&&o.status==="complete"&&!o.sceneCheck&&now-(o.created||now)<15*60e3;
+    if(!["queued","rendering"].includes(o.status)&&!sceneWait&&!(o.sceneCheck&&o.sceneCheck.retrying&&o.status!=="failed"))continue;
+    if(["queued","rendering"].includes(o.status)){const exp=(o.kind==="video"?((MODELS[o.model]||{}).sec||70)*Math.max(1,(o.dur||5)/5):25)*1000,est=Math.min(.93,(now-(o.created||now))/exp);if(!(o.progress>est))o.progress=est}
+    try{const r=await API.req("/v1/jobs/"+o.remote);const before=o.status+"|"+JSON.stringify(o.sceneCheck||null);
+      if(r.status==="queued"||r.status==="rendering")o.status="rendering";else if(r.status==="done")o.status="complete";else if(r.status==="failed")o.status="failed";
+      if(r.url)o.resultUrl=r.url;if(r.error)o.error=r.error;if(r.detail)o.detail=r.detail;if(r.progress)o.progress=Math.max(o.progress||0,r.progress);if(r.sceneCheck)o.sceneCheck=r.sceneCheck;
+      if(before!==o.status+"|"+JSON.stringify(o.sceneCheck||null)){persist();statusChanged()}else liveUpdate()}catch(e){}}},1500);
+(()=>{const st=document.createElement("style");st.textContent=`
+.hfmrow.g{gap:6px}.hfmi.nooi{padding:0 12px 0 4px}.hfmi.nooi b{padding:0}.hfmi.pick{padding:0 10px 0 4px}.hfmi.pick>svg:last-child{width:14px;height:14px;opacity:.7}
+.hfmi.pick:not(.on){padding-inline-start:10px}.hfmi.pick:not(.on)>svg:first-child{width:15px;height:15px}
+.hfmi.bots,.hfmi.scene{padding:0 10px}.hfmi.bots svg,.hfmi.scene svg{width:15px;height:15px}.hfmi.bots b,.hfmi.scene b{padding:0;font-weight:600;max-width:140px;overflow:hidden;text-overflow:ellipsis}
+.hfbots{margin-top:8px;padding:8px 10px;border-radius:16px;background:color-mix(in srgb,var(--lime) 8%,var(--panel2));border:1px solid color-mix(in srgb,var(--lime) 25%,var(--line))}
+.hfbh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.hfbh b{font-size:13.5px}.hfbh .small{flex:1;min-width:180px}
+.hfbots .botstrip{margin-top:6px;justify-content:flex-start;flex-wrap:wrap;overflow:visible}
+.hfdurs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.hfdurs button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 6px;border:1px solid var(--line2);border-radius:14px;background:var(--panel2);color:var(--text);font:700 15px var(--mono);cursor:pointer}
+.hfdurs button small{font:500 10.5px var(--sans);color:var(--mute)}.hfdurs button[aria-pressed=true]{border-color:var(--lime);background:color-mix(in srgb,var(--lime) 16%,var(--panel))}.hfdurs button.lockd{opacity:.6}
+.hfdscale{height:6px;border-radius:6px;background:var(--line);margin:14px 2px 4px;overflow:hidden}.hfdscale i{display:block;height:100%;background:var(--lime)}
+.hfdticks{display:flex;justify-content:space-between;font:11px var(--mono);color:var(--mute);padding:0 2px}
+.scopt,.scrow2{display:flex;align-items:center;gap:10px;width:100%;text-align:start;padding:10px 12px;border:1px solid var(--line2);border-radius:14px;background:var(--panel2);color:var(--text);cursor:pointer;margin-bottom:8px}
+.scopt.on,.scrow2.on{border-color:var(--lime);background:color-mix(in srgb,var(--lime) 12%,var(--panel))}.scopt svg{width:18px;height:18px}
+.scopt span,.scrow2 .nm{display:flex;flex-direction:column;min-width:0}.scopt small,.scrow2 small{color:var(--mute);font-size:12px}
+.scnew{margin:4px 0 12px}.sclist2{display:flex;flex-direction:column;max-height:300px;overflow:auto}
+.scth{width:56px;height:40px;border-radius:8px;overflow:hidden;background:var(--panel);display:grid;place-items:center;flex:none}.scth img{width:100%;height:100%;object-fit:cover}
+.scbadge{display:inline-flex;align-items:center;gap:4px;margin-inline-end:6px;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--lime) 16%,var(--panel));color:var(--text);font-size:11.5px;font-weight:600}
+.scbadge.bad{background:color-mix(in srgb,var(--red) 16%,var(--panel))}.scbadge svg{width:12px;height:12px}
+.hfrm .hfvp,.hfrm .hfvf{position:absolute;bottom:8px;width:34px;height:34px;border-radius:50%;border:0;display:grid;place-items:center;background:rgba(0,0,0,.55);color:#fff;cursor:pointer;z-index:2}
+.hfrm .hfvp{inset-inline-start:8px}.hfrm .hfvf{inset-inline-end:8px}.hfrm .hfvp svg,.hfrm .hfvf svg{width:16px;height:16px}.hfrm .hfvp svg path{fill:#fff;stroke:none}
+.hfrm.playing .hfvp svg path{d:path("M7 5h4v14H7zM13 5h4v14h-4z")}
+#side .crslot .crbtn2{min-height:0!important;width:52px!important;padding:4px 2px!important;gap:1px!important}
+#side .crslot .crbtn2 svg{width:13px!important;height:13px!important}#side .crslot .crbtn2 .crn{font-size:10.5px!important}
+#side .crslot .gfbtn{width:32px!important;height:28px!important;min-height:0!important;font-size:13px!important;padding:0!important}
+.crbtn2 svg{width:14px!important;height:14px!important}.gfbtn{font-size:14px!important}
+`;document.head.appendChild(st)})();
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

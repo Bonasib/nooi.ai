@@ -25,7 +25,7 @@ const kieSrv = http.createServer((req, res) => {
     res.statusCode = 404; res.end("{}");
   });
 }).listen(KPORT);
-const srv = spawn("node", ["server.js"], { cwd: ROOT, env: { ...process.env, PORT: String(NPORT), SECRET_KEY: "e".repeat(40), KIE_API_KEY: KEY, KIE_BASE_URL: `http://localhost:${KPORT}`, FIREBASE_PROJECT_ID: "" }, stdio: "ignore" });
+const srv = spawn("node", ["server.js"], { cwd: ROOT, env: { ...process.env, PORT: String(NPORT), SECRET_KEY: "e".repeat(40), KIE_API_KEY: KEY, KIE_BASE_URL: `http://localhost:${KPORT}`, FIREBASE_PROJECT_ID: "", PUBLIC_BASE_URL: `http://localhost:${NPORT}` }, stdio: "ignore" });
 let pass = 0, fail = 0; const ok = (c, m) => { c ? pass++ : fail++; console.log((c ? "✓ " : "✗ ") + m); };
 const api = async (p, o = {}) => { const r = await fetch(`http://localhost:${NPORT}${p}`, { method: o.json ? "POST" : "GET", headers: { "content-type": "application/json" }, body: o.json ? JSON.stringify(o.json) : undefined }); return { status: r.status, d: await r.json().catch(() => ({})) }; };
 try {
@@ -57,13 +57,23 @@ try {
   while (Date.now() - t0 < 60000) { jobs = await Promise.all(made.map(([, id]) => api("/v1/jobs/" + id).then((r) => r.d))); if (jobs.every((j) => j.status === "done" || j.status === "failed")) break; await new Promise((r) => setTimeout(r, 1500)); }
   made.forEach(([name, , want], i) => { const j = jobs[i] || {}; const sent = seen.find((s) => (want === "mj" ? s.path === "/api/v1/mj/generate" : s.body && s.body.model === want));
     ok(!!sent, name + ": Kie received model " + want);
-    ok(j.status === "done" && /^\/media\//.test(j.url || ""), name + ": finished and saved to /media (" + j.status + (j.error ? " · " + j.error : "") + ")"); });
+    ok(j.status === "done" && /\/media\//.test(j.url || ""), name + ": finished and saved to /media (" + j.status + (j.error ? " · " + j.error : "") + ")"); });
   const mj = seen.find((s) => s.path === "/api/v1/mj/generate"); ok(mj && mj.body.taskType === "mj_txt2img" && mj.body.aspectRatio === "16:9", "Midjourney request shape");
   const av = seen.filter((s) => s.body && s.body.model === "kling/ai-avatar-standard").find((s) => s.body.input.prompt === ""), tts = seen.filter((s) => s.body && s.body.model === "elevenlabs/text-to-speech-multilingual-v2" && s.body.input.text === "Welcome to our store");
   ok(tts.length === 1 && av && /out\.mp3$/.test(av.body.input.audio_url), "lip-sync from a script: ElevenLabs voice first, then the avatar uses that audio");
   const fb = jobs[made.findIndex((m) => /falls back/.test(m[0]))] || {}; ok(fb.status === "done" && seen.some((s) => s.body?.model === "nano-banana-2" && /FAILME/.test(s.body.input.prompt)), "fallback: the failed Nano Banana job finished on Seedream instead of refunding");
   const dt = await api("/v1/jobs/" + made[0][1]); ok("via" in dt.d, "owners and admins see which provider ran a job (via: " + dt.d.via + ")");
   const kl = seen.find((s) => s.body && s.body.model === "kling-2.6/image-to-video"); ok(kl && kl.body.input.image_urls && kl.body.input.image_urls[0] === ref, "Kling gets the start frame as image_urls");
+  // scenes: the first picture becomes the anchor; the next shot starts from it, carries the scene rules, and is checked
+  const scn = await api("/v1/scenes", { json: { name: "Old town 1949" } }); ok(scn.status === 200 && scn.d.id, "scene created");
+  const runJob = async (body) => { const r = await api("/v1/jobs", { json: body }); const t0 = Date.now(); let j = {}; while (Date.now() - t0 < 30000) { j = (await api("/v1/jobs/" + r.d.id)).d; if (j.status === "failed" || (j.status === "done" && j.sceneCheck)) break; await new Promise((z) => setTimeout(z, 800)); } return j; };
+  const s1 = await runJob({ kind: "image", model: "nano", prompt: "a silver sci-fi car in an old town street, 1949", aspect: "16:9", meta: { scene: scn.d.id } });
+  ok(s1.status === "done" && s1.sceneCheck?.first, "scene: the first result becomes the scene's anchor (" + JSON.stringify(s1.sceneCheck) + ")");
+  const s2 = await runJob({ kind: "image", model: "nano", prompt: "close-up of the driver", aspect: "16:9", meta: { scene: scn.d.id } });
+  const req2 = seen.filter((x) => x.body?.input?.prompt?.startsWith("close-up of the driver")).pop();
+  ok(req2 && /Scene lock/.test(req2.body.input.prompt) && /old town/.test(req2.body.input.prompt) && (req2.body.input.image_input || [])[0], "scene: the next shot carries the scene rules and starts from the scene's picture");
+  ok(s2.status === "done" && s2.sceneCheck && s2.sceneCheck.same && s2.sceneCheck.score >= 62, "scene: the result is checked against the anchor (" + JSON.stringify(s2.sceneCheck) + ")");
+  const sl = (await api("/v1/scenes")).d.items || []; ok(sl.length >= 1 && sl[0].count >= 2 && /\/media\//.test(sl[0].anchor || ""), "scene list: count and anchor picture for the picker");
   // the browser never learns which provider runs the models
   const leak = (t) => /kie/i.test(String(t).replace(/cookie/gi, ""));
   const pages = await Promise.all(["/v1/config", "/v1/showcase", "/v1/explore", "/v1/jobs/" + made[0][1], "/v1/admin/settings"].map((p) => fetch(`http://localhost:${NPORT}${p}`).then((r) => r.text())));
@@ -77,8 +87,8 @@ try {
   const pick = ["desert-rider", "pixel-knight", "abaya-portrait", "av-faisal"];
   const sg = await api("/v1/admin/showcase", { json: { ids: pick, force: true } }); ok(sg.status === 200 && pick.every((id) => sg.d.items.find((x) => x.id === id).status === "rendering"), "showcase: three items and one avatar started (" + (sg.d.error || sg.status) + ")");
   let sc = null; const t1 = Date.now(); while (Date.now() - t1 < 40000) { sc = (await api("/v1/showcase")).d; if ((await api("/v1/admin/showcase")).d.items.filter((x) => pick.includes(x.id)).every((x) => x.status === "done")) break; await new Promise((r) => setTimeout(r, 1500)); }
-  ok(pick.filter((id) => !id.startsWith("av-")).every((id) => /^\/media\//.test((sc.items.find((x) => x.id === id) || {}).url || "")) && !sc.items.some((x) => x.cat === "avatar"), "showcase: finished media saved to /media and served by /v1/showcase (avatars listed separately)");
-  const avs = (await api("/v1/avatars")).d.items || []; ok(avs.length === 1 && avs[0].id === "av-faisal" && /^\/media\//.test(avs[0].url), "avatars: a made avatar is listed with its picture for the Avatar tool");
+  ok(pick.filter((id) => !id.startsWith("av-")).every((id) => /\/media\//.test((sc.items.find((x) => x.id === id) || {}).url || "")) && !sc.items.some((x) => x.cat === "avatar"), "showcase: finished media saved to /media and served by /v1/showcase (avatars listed separately)");
+  const avs = (await api("/v1/avatars")).d.items || []; ok(avs.length === 1 && avs[0].id === "av-faisal" && /\/media\//.test(avs[0].url), "avatars: a made avatar is listed with its picture for the Avatar tool");
   const sv = seen.filter((x) => x.body && x.body.model === "nano-banana-pro" && /fictional person/.test(x.body.input?.prompt || "")); ok(sv.length >= 1, "avatars: made as a photoreal portrait of a fictional person");
   const xp = (await api("/v1/explore")).d.items || []; ok(!xp.some((x) => /fictional person/.test(x.prompt || "")), "avatars are not posted to Explore");
   ok(pick.filter((id) => !id.startsWith("av-")).every((id) => xp.some((x) => x.author === "nooi" && x.featured && x.prompt === sc.items.find((s) => s.id === id).prompt[0])), "showcase: each one posted to Explore as featured, with its prompt");

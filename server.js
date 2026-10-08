@@ -32,6 +32,8 @@ import { verify, canSendSignInLinks, signInLink, customTokenForEmail } from "./l
 import { newCode, checkCode } from "./lib/otp.js";
 import { isStaff } from "./lib/admin.js";
 import { registerShowcase } from "./lib/showcase.js";
+import { registerScenes } from "./lib/scenes.js";
+import { cbSig, findJob, pollOne } from "./lib/jobs.js";
 import { registerGifts } from "./lib/gifts.js";
 import { registerInvoices } from "./lib/invoices.js";
 import { registerExplore } from "./lib/explore.js";
@@ -179,6 +181,9 @@ app.put("/v1/admin/pricing", requireUser, (req, res) => { if (!isStaff(req.user)
   for (const [id, v] of Object.entries(b.costs || {})) { const n = +v; if (Object.values(ENGINE_COST).some((m) => id in m) && n >= 0 && n < 50) st.costs[id] = n; }
   if (b.factor != null) { const f = +b.factor; if (f >= 1 && f <= 10) st.priceFactor = f; }
   save(); res.json({ rows: pricingRows(), factor: priceFactor(), floor: CREDIT_FLOOR_USD }); });
+// the engine calls back when a job is ready → check it now (the body is never trusted; we poll the job ourselves)
+app.post("/v1/engine/cb/:id/:sig", (req, res) => { if (req.params.sig === cbSig(req.params.id)) { const f = findJob(req.params.id); if (f) pollOne(f[0], f[1]); } res.json({ ok: true }); });
+registerScenes(app);
 registerExplore(app); registerShowcase(app); registerGifts(app); registerInvoices(app);
 // Low-latency voice preview (ElevenLabs stream, key never leaves the server)
 app.post("/v1/tts/stream", requireUser, async (req, res) => { try { const { planOf } = await import("./lib/plans.js"); const plan = planOf(user(req.user.uid)); if (!["pro", "studio"].includes(plan)) return res.status(402).json({ error: "ElevenLabs voices start from the Pro plan" }); await streamTTS(res, req.body || {}); } catch (e) { if (!res.headersSent) res.status(502).json({ error: e.message }); } });

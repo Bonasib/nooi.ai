@@ -125,12 +125,12 @@ export const kie = (model) => {
       if (!mo) throw Object.assign(new Error("Set a Kie AI model id (Admin → AI providers → Kie AI, or Admin → Models)"), { code: 503 });
       if (VEO.has(mo)) {
         const img = startImg(p);
-        const d = await call("/api/v1/veo/generate", { method: "POST", body: JSON.stringify(drop({ prompt: fullPrompt(p), model: mo, aspect_ratio: VEO_RATIOS.has(p.aspect) ? p.aspect : "Auto", imageUrls: img ? [img] : undefined, ...extraInputs(c, mo) })) });
+        const d = await call("/api/v1/veo/generate", { method: "POST", body: JSON.stringify(drop({ prompt: fullPrompt(p), model: mo, aspect_ratio: VEO_RATIOS.has(p.aspect) ? p.aspect : "Auto", imageUrls: img ? [img] : undefined, callBackUrl: p.callbackUrl, ...extraInputs(c, mo) })) });
         return { remoteId: "veo:" + d.taskId };
       }
       if (mo.startsWith("mj:")) {  // Midjourney through Kie: POST /api/v1/mj/generate, GET /api/v1/mj/record-info
         const ref = refImg(p), ar = p.aspect && /^\d+:\d+$/.test(p.aspect) ? p.aspect : "1:1";
-        const d = await call("/api/v1/mj/generate", { method: "POST", body: JSON.stringify(drop({ taskType: ref ? "mj_img2img" : "mj_txt2img", prompt: fullPrompt(p), speed: "fast", aspectRatio: ar, version: mo.slice(3) || "7", fileUrls: ref ? [ref] : undefined, ...extraInputs(c, mo) })) });
+        const d = await call("/api/v1/mj/generate", { method: "POST", body: JSON.stringify(drop({ taskType: ref ? "mj_img2img" : "mj_txt2img", prompt: fullPrompt(p), speed: "fast", aspectRatio: ar, version: mo.slice(3) || "7", fileUrls: ref ? [ref] : undefined, callBackUrl: p.callbackUrl, ...extraInputs(c, mo) })) });
         return { remoteId: "mj:" + d.taskId };
       }
       // lip-sync from a typed script: make the voice with ElevenLabs on Kie first, then animate the face with it
@@ -145,7 +145,7 @@ export const kie = (model) => {
       const suno = mo.startsWith("suno:");
       const apiModel = suno ? "ai-music-api/generate" : mo;
       const input = { ...kieInput(apiModel, p), ...(suno ? { model: mo.slice(5) || "V5" } : {}), ...extraInputs(c, mo) };
-      const d = await call("/api/v1/jobs/createTask", { method: "POST", body: JSON.stringify({ model: apiModel, input }) });
+      const d = await call("/api/v1/jobs/createTask", { method: "POST", body: JSON.stringify(drop({ model: apiModel, callBackUrl: p.callbackUrl, input })) });
       return { remoteId: "m:" + d.taskId };
     },
     async poll(rid) {

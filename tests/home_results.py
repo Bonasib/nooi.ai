@@ -1,4 +1,4 @@
-# Home create box: pick a model from the logo row, send, results appear under the box (no page change),
+# Home create box: nooi button + one model chip (sheet), bots, durations, send, results appear under the box (no page change),
 # Approve opens the editor (video) or the Images page (image). Demo mode (jobs simulated in the browser).
 import asyncio, json, os, subprocess, time, urllib.request
 from playwright.async_api import async_playwright
@@ -23,8 +23,8 @@ async def main():
                 await pg.goto(f"http://localhost:{PORT}/"); await pg.wait_for_timeout(1200)
                 E = pg.evaluate
                 await E("()=>{API.mode='demo';S.langAsked=true;document.getElementById('langsug')?.remove();S.lang='en';S.user={name:'T',method:'google'};AU.showAuth=false;S.credits=5000;S.hf.out=[];S.hf.n=2;S.hf.tab='image';go('home');renderAll()}")
-                row = await E("()=>[...document.querySelectorAll('.hfmrow .hfmi')].map(b=>b.dataset.v||'more')")
-                await E("()=>document.querySelector('.hfmi[data-v=nanopro]').click()")
+                row = await E("()=>[...document.querySelectorAll('.hfmrow .hfmi')].map(b=>b.dataset.act)")
+                await E("()=>document.querySelector('.hfmi[data-act=hf-model]').click()"); await pg.wait_for_timeout(200); await E("()=>document.querySelector('.hfmodel[data-v=nanopro]').click()"); await pg.wait_for_timeout(200)
                 picked = await E("()=>S.hf.iModel")
                 await E("()=>{document.querySelector('#hfq').value='a red fox in snow';document.querySelector('.hfsend').click()}")
                 await pg.wait_for_timeout(400)
@@ -34,18 +34,18 @@ async def main():
                 await E("()=>document.querySelector('[data-act=hfr-ok]').click()"); await pg.wait_for_timeout(300)
                 img_view = await E("()=>S.view")
                 await E("()=>{go('home');S.hf.tab='video';S.hf.vModel='auto';renderView()}")
-                auto_first = await E("()=>{const b=document.querySelector('.hfmi');return b&&b.dataset.v==='auto'&&/nooi Auto/.test(b.textContent)}")
+                auto_first = await E("()=>{const b=document.querySelector('.hfmi');b.click();return b.dataset.act==='hfx-nooi'&&/nooi/.test(b.textContent)&&nooiOn()&&!!document.querySelector('.hfbots .botstrip')&&HF_DURS.filter(hfDurOK).includes(30)}")
                 await E("()=>{document.querySelector('#hfq').value='waves at sunset';document.querySelector('.hfsend').click()}")
                 await pg.wait_for_timeout(14000)
                 await E("()=>document.querySelector('[data-act=hfr-ok]').click()"); await pg.wait_for_timeout(300)
                 vid_view = await E("()=>S.view")
                 r = {"modelRow": row, "picked": picked, "stayedOnHome": stay, "cards": cards, "statuses": done, "approveImage": img_view, "autoFirst": auto_first, "approveVideo": vid_view, "errors": errs}
                 out[w] = r
-                if not (row and row[0] == "auto" and "nanopro" in row and picked == "nanopro"): fails.append(f"{w}: model row")
+                if not (row and row[0] == "hfx-nooi" and "hf-model" in row and picked == "nanopro"): fails.append(f"{w}: model row")
                 if stay != "home" or cards != 2: fails.append(f"{w}: results not under the box ({stay}, {cards})")
                 if done != ["complete", "complete"]: fails.append(f"{w}: images did not finish {done}")
                 if img_view != "image" or vid_view != "edit": fails.append(f"{w}: approve went to {img_view}/{vid_view}")
-                if not auto_first: fails.append(f"{w}: nooi Auto not first")
+                if not auto_first: fails.append(f"{w}: nooi button / bots / 30 s")
                 if errs: fails.append(f"{w}: page errors {errs}")
                 await ctx.close()
             await b.close()
