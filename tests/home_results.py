@@ -53,7 +53,7 @@ async def main():
                 aud = await E("()=>{const c=document.querySelector('.hfrc.aud');return c?{h:c.querySelector('.hfrm').getBoundingClientRect().height,svg:Math.max(...[...c.querySelectorAll('svg')].map(s=>s.getBoundingClientRect().width)),play:!!c.querySelector('[data-act=hfap]'),mute:!!c.querySelector('[data-act=hfam]'),t:c.querySelector('.hfat .t').textContent,ph:document.querySelector('#hfq').placeholder,cost:+document.querySelector('.hfcost').textContent}:null}")
                 await E("()=>document.querySelector('[data-act=hfam]').click()")
                 muted = await E("()=>document.querySelector('.hfaud audio').muted")
-                audio_ok = bool(aud) and aud["h"] < 160 and aud["svg"] <= 48 and aud["play"] and aud["mute"] and aud["t"].endswith("0:01") and "music" in aud["ph"].lower() and aud["cost"] == 17 and muted
+                audio_ok = bool(aud) and aud["h"] < 160 and aud["svg"] <= 48 and aud["play"] and aud["mute"] and aud["t"].endswith("0:01") and "music" in aud["ph"].lower() and aud["cost"] == 15 and muted
                 r = {"modelRow": row, "picked": picked, "stayedOnHome": stay, "cards": cards, "statuses": done, "approveImage": img_view, "autoFirst": auto_first, "approveVideo": vid_view, "botsKeepModel": [off, on], "audio": aud, "errors": errs}
                 out[w] = r
                 if not (row and row[0] == "hfx-nooi" and "hf-model" in row and picked == "nanopro"): fails.append(f"{w}: model row")

@@ -7578,7 +7578,7 @@ const HF_PH={agent:[["Create a cinematic trailer for my brand","أنشئ إعل�
   avatar:[["Type what the avatar says, or add a voice file","اكتب ما يقوله الأفاتار أو أضف ملفاً صوتياً"]]};
 const hfModels=tab=>tab==="video"?[["auto","Smart","nooi"]].concat(VRAIL.filter(r=>r[0]!=="auto"&&MODELS[r[0]])):tab==="image"?[["auto","Smart","nooi"]].concat(IRAIL.filter(r=>r[0]!=="auto"&&IMG_MODELS[r[0]])):[];
 const hfModelName=(tab,id)=>{if(id==="auto")return L("Auto","تلقائي");const r=hfModels(tab).find(x=>x[0]===id);return r?r[1]:id};
-function hfCost(){const H=S.hf;if(H.tab==="video"){const m=H.vModel==="auto"?"wan22":H.vModel;return vcost(m,H.dur)}if(H.tab==="image"){const m=H.iModel==="auto"?"dotimg":H.iModel;return(IMG_MODELS[m]||{cr:2}).cr*H.n}if(H.tab==="audio")return PRICE_TABLE.fixed[H.audio]||{voice:9,music:17,sfx:6}[H.audio];if(H.tab==="avatar")return PRICE_TABLE.fixed.lipsync||108;return null}
+function hfCost(){const H=S.hf;if(H.tab==="video"){const m=H.vModel==="auto"?"wan22":H.vModel;return vcost(m,H.dur)}if(H.tab==="image"){const m=H.iModel==="auto"?"dotimg":H.iModel;return(IMG_MODELS[m]||{cr:2}).cr*H.n}if(H.tab==="audio")return PRICE_TABLE.fixed[H.audio]||{voice:8,music:15,sfx:5}[H.audio];if(H.tab==="avatar")return PRICE_TABLE.fixed.lipsync||90;return null}
 const hfChip=(act,inner,extra)=>'<button class="hfchip" data-act="'+act+'"'+(extra||"")+">"+inner+"</button>";
 const hfPhKey=()=>{const H=S.hf;return H.tab==="audio"&&H.audio!=="voice"&&HF_PH["audio_"+H.audio]?"audio_"+H.audio:H.tab};
 function hfBox(){const H=S.hf,t=H.tab,ref=M.hfRef,ph=(HF_PH[hfPhKey()]||HF_PH.agent)[0],cost=hfCost(),logo=id=>{const u=logoFor(id);return u?'<img src="'+u+'" alt="">':ic("spark")};
@@ -8255,7 +8255,7 @@ CMP[7]=[["Video models","نماذج الفيديو"],p=>({free:L("Seedance Fast 
 pickVideo=(o=>function(prompt,opt){const r=o(prompt,opt);let id=({ltxfast:"seedance",wan22:"wan27",hunyuan:"kling26",ltx23:"veo31f",qwenwan:"wan27"})[r.id]||r.id;if(!modelAllowed(id))id=modelAllowed("wan27")&&/(people|faces|أشخاص|وجوه)/.test(r.why.join(" "))?"wan27":"seedance";return{id,why:r.why}})(pickVideo);
 pickImage=(o=>function(prompt){const k=o(prompt);return({flux:"ideogram3",sdxl:"nano"})[k]||k})(pickImage);
 /* one price list: the server's (engine cost × margin), the same table built in for the offline demo */
-const PRICE_TABLE={video:{seedance:23,wan27:57,kling:80,kling26:80,hailuo:57,hailuoh3:71,pixverse6:57,grok:29,wan30:85,seedance20:71,kling30:142,seedance25:100,veo31f:54,veo31:221},image:{nano:6,dotimg:6,nanopro:26,img20:12,img25:8,seedream5:9,qwen:6,flux2:10,mj:15,imagen4:17,ideogram3:13,grokimg:6},fixed:{voice:9,music:17,sfx:6,bg:3,finish:20,lipsync:108}};
+const PRICE_TABLE={video:{veo31:189,seedance25:101,kling30:83,wan30:71,seedance20:68,kling:67,kling26:67,hailuoh3:59,veo31f:48,wan27:48,pixverse6:48,hailuo:30,grok:27,seedance:19},image:{nanopro:22,imagen4:15,mj:12,img20:12,ideogram3:11,seedream5:9,flux2:9,img25:6,nano:5,dotimg:5,qwen:5,grokimg:5},fixed:{lipsync:90,finish:17,music:15,voice:8,sfx:5,bg:3}};
 function applyPrices(t){t=t||PRICE_TABLE;Object.entries(t.video||{}).forEach(([k,v])=>{if(!M_ALIAS[k]&&MODELS[k])MODELS[k].cr=v;const f=FLAG.find(x=>x.id===k);if(f)f.cr=v});Object.entries(t.image||{}).forEach(([k,v])=>{if(!I_ALIAS[k]&&IMG_MODELS[k])IMG_MODELS[k].cr=v});PRICE_TABLE.fixed=Object.assign({},PRICE_TABLE.fixed,t.fixed||{})}
 applyPrices();
 setTimeout(function w(n){if(API.cfg&&API.cfg.prices&&API.cfg.prices.video){applyPrices(API.cfg.prices);renderAll()}else if((n||0)<30)setTimeout(()=>w((n||0)+1),500)},300);
@@ -8264,11 +8264,11 @@ addJob=(o=>function(j){if(j&&PRICE_TABLE.fixed[j.kind]!=null&&!(j.kind==="voice"
 const PR={rows:null,factor:null,busy:false};
 function prAdmin(){if(!PR.rows&&!PR._l){PR._l=1;API.req("/v1/admin/pricing").then(r=>{PR.rows=r.rows;PR.factor=r.factor;PR.floor=r.floor;renderView()}).catch(()=>{PR.rows=[]})}const rows=PR.rows||[];
   return'<div class="panel pad pradm" style="margin-bottom:14px"><h3 style="margin:0 0 6px">'+ic("coin","width:18px;height:18px")+" "+L("Pricing vs engine cost","التسعير مقابل تكلفة المحرك")+'</h3><p class="small mute" style="margin:0 0 10px">'+L("Credits charged = engine cost × margin ÷ value of the cheapest credit ($"+(PR.floor||0.0053)+"). The costs are estimates — type the real cost per run from your engine dashboard and every price updates.","الرصيد المخصوم = تكلفة المحرك × هامش الربح ÷ قيمة أرخص رصيد ($"+(PR.floor||0.0053)+"). التكاليف تقديرية — اكتب التكلفة الفعلية لكل عملية من لوحة المحرك وتتحدث الأسعار.")+"</p>"+
-    '<div class="row" style="flex-wrap:nowrap;align-items:flex-end;gap:10px"><div style="max-width:180px"><label class="lbl" for="prf">'+L("Margin (× cost)","هامش الربح (× التكلفة)")+'</label><input id="prf" type="number" step="0.1" min="1" max="10" dir="ltr" value="'+(PR.factor||1.5)+'"></div><button class="btn sm primary" data-act="pr-save" '+(PR.busy?"disabled":"")+">"+ic("check")+L("Save","احفظ")+"</button></div>"+
+    '<div class="row" style="flex-wrap:nowrap;align-items:flex-end;gap:10px"><div style="max-width:180px"><label class="lbl" for="prf">'+L("Margin (× cost)","هامش الربح (× التكلفة)")+'</label><input id="prf" type="number" step="0.1" min="1" max="10" dir="ltr" value="'+(PR.factor||1.25)+'"></div><button class="btn sm primary" data-act="pr-save" '+(PR.busy?"disabled":"")+">"+ic("check")+L("Save","احفظ")+"</button></div>"+
     (rows.length?'<div class="prtable"><div class="prh"><span>'+L("Model","النموذج")+"</span><span>"+L("Engine cost $","تكلفة المحرك $")+"</span><span>"+L("Credits","الرصيد")+"</span><span>"+L("Margin","الهامش")+"</span></div>"+rows.map(r=>'<div class="prr"><span>'+esc(r.name||r.id)+'<small class="mute"> · '+esc(r.group)+"</small></span><span><input type=\"number\" step=\"0.005\" min=\"0\" dir=\"ltr\" data-prc=\""+esc(r.id)+'" value="'+r.cost+'" aria-label="'+esc((r.name||r.id)+" cost")+'"></span><span class="mono">'+r.credits+(r.override?" *":"")+'</span><span class="mono" style="color:'+(r.margin<0?"var(--red)":r.margin<30?"#c99400":"inherit")+'">'+r.margin+"%</span></div>").join("")+"</div>":"")+"</div>"}
 engQuick=(o=>function(){return o()+prAdmin()})(engQuick);
 document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="pr-save"]');if(!a)return;e.stopImmediatePropagation();const costs={};document.querySelectorAll("[data-prc]").forEach(i=>{costs[i.dataset.prc]=+i.value});PR.busy=true;renderView();
-  try{const r=await API.req("/v1/admin/pricing",{method:"PUT",json:{costs,factor:+(($("#prf")||{}).value||1.5)}});PR.rows=r.rows;PR.factor=r.factor;const c=await API.req("/v1/config").catch(()=>null);if(c){API.cfg=c;applyPrices(c.prices)}toast(L("Prices updated","تم تحديث الأسعار"),{type:"ok"})}catch(err){toast(String(err.message||err),{type:"warn"})}finally{PR.busy=false;renderView()}},true);
+  try{const r=await API.req("/v1/admin/pricing",{method:"PUT",json:{costs,factor:+(($("#prf")||{}).value||1.25)}});PR.rows=r.rows;PR.factor=r.factor;const c=await API.req("/v1/config").catch(()=>null);if(c){API.cfg=c;applyPrices(c.prices)}toast(L("Prices updated","تم تحديث الأسعار"),{type:"ok"})}catch(err){toast(String(err.message||err),{type:"warn"})}finally{PR.busy=false;renderView()}},true);
 (()=>{const st=document.createElement("style");st.textContent=`.prtable{margin-top:12px;display:flex;flex-direction:column;gap:4px;max-height:460px;overflow:auto}.prh,.prr{display:grid;grid-template-columns:minmax(0,2fr) 110px 70px 70px;gap:8px;align-items:center;font-size:13px}.prh{font-weight:700;color:var(--mute);font-size:12px}.prr{padding:4px 6px;border-radius:8px;background:var(--panel2)}.prr input{padding:4px 6px;min-height:30px}`;document.head.appendChild(st)})();
 /* ================= v60: nooi Studio 2.0 (bots, 30 s for every model) · one model chip · durations · scene lock · faster updates ================= */
 /* longest single shot each engine model makes; longer videos are made in connected parts (nooi Studio 2.0) */
@@ -8440,6 +8440,28 @@ svg.bot.boop{animation:botHop .6s cubic-bezier(.3,1.6,.5,1)}
 @keyframes botHop{0%{translate:0 0}35%{translate:0 -10px;scale:1.12}70%{translate:0 2px;scale:.97}100%{translate:0 0}}
 @media (prefers-reduced-motion: reduce){svg.bot.look,svg.bot.look .eyes{transform:none;translate:none}svg.bot.boop{animation:none}}
 `;document.head.appendChild(st)})();
+/* ================= v63: models ranked strongest → lightest (by credits), with what each one is best at ================= */
+const MFEAT={veo31:["Cinematic realism · native sound & dialogue · 1080p","واقعية سينمائية · صوت وحوار أصليان · 1080p"],
+  seedance25:["Multi-shot stories · strong motion · consistent characters","قصص متعددة اللقطات · حركة قوية · شخصيات ثابتة"],
+  kling30:["Best human motion & physics · up to 15 s · sound","أفضل حركة بشرية وفيزياء · حتى 15 ث · صوت"],
+  wan30:["Sharp detail · sound sync · up to 10 s","تفاصيل حادة · مزامنة صوت · حتى 10 ث"],
+  seedance20:["Multi-shot · up to 15 s · great value","متعدد اللقطات · حتى 15 ث · قيمة ممتازة"],
+  kling26:["Smooth motion · sound · reliable","حركة ناعمة · صوت · موثوق"],kling:["Smooth motion · reliable","حركة ناعمة · موثوق"],
+  hailuoh3:["Dynamic action · physics · 1080p","حركة ديناميكية · فيزياء · 1080p"],
+  veo31f:["Fast Veo · native sound · 8 s","Veo السريع · صوت أصلي · 8 ث"],
+  wan27:["Everyday clips · faces & people","مقاطع يومية · وجوه وأشخاص"],pixverse6:["Stylized effects · trends · fast","مؤثرات مميزة · ترندات · سريع"],
+  hailuo:["Lively motion · low cost","حركة حيوية · تكلفة منخفضة"],grok:["Very fast · sound · 6 s","سريع جداً · صوت · 6 ث"],seedance:["Fastest drafts · lowest cost","أسرع مسودات · أقل تكلفة"],
+  nanopro:["Top quality · readable text · 4K · edits","أعلى جودة · نص واضح · 4K · تعديل"],imagen4:["Photoreal detail · natural light","تفاصيل واقعية · إضاءة طبيعية"],
+  mj:["Artistic, aesthetic looks","مظهر فني وجمالي"],img20:["Follows long prompts · text in images","يتبع الأوصاف الطويلة · نص داخل الصور"],
+  ideogram3:["Posters & typography","ملصقات وخطوط"],seedream5:["4K posters · great value","ملصقات 4K · قيمة ممتازة"],flux2:["Clean photoreal · products","واقعية نظيفة · منتجات"],
+  img25:["Balanced quality","جودة متوازنة"],nano:["Fast edits · consistent faces","تعديل سريع · وجوه ثابتة"],dotimg:["Quick drafts","مسودات سريعة"],qwen:["Quick drafts · Arabic text","مسودات سريعة · نص عربي"],grokimg:["Fast, bold images","صور جريئة وسريعة"]};
+hfModelSheet=(o=>function(){o();const g=document.querySelector(".hfsheet .hfmodels");if(!g)return;const t=S.hf.tab,num=b=>+((b.querySelector(".cr")||{}).textContent||"").replace(/\D/g,"")||0;
+  const items=[...g.querySelectorAll(".hfmodel")],auto=items.filter(b=>b.dataset.v==="auto"),rest=items.filter(b=>b.dataset.v!=="auto").sort((a,b)=>num(b)-num(a));
+  rest.forEach((b,i)=>{const f=MFEAT[(t==="video"?M_ALIAS:I_ALIAS)[b.dataset.v]||b.dataset.v],s=b.querySelector(".nm small");if(f&&s)s.textContent=(s.textContent?s.textContent+" · ":"")+L(f[0],f[1]);
+    const lg=b.querySelector(".lg");if(lg&&!b.querySelector(".mrk")&&i<3)lg.insertAdjacentHTML("beforeend",'<span class="mrk" aria-label="'+esc(L("Rank "+(i+1),"المرتبة "+(i+1)))+'">'+(i+1)+"</span>")});
+  auto.concat(rest).forEach(b=>g.appendChild(b));
+  if(!g.previousElementSibling||!g.previousElementSibling.classList.contains("mrkh"))g.insertAdjacentHTML("beforebegin",'<p class="small mute mrkh" style="margin:0 0 8px">'+L("Strongest first — sorted by credits per run.","الأقوى أولاً — مرتبة حسب الرصيد لكل عملية.")+"</p>")})(hfModelSheet);
+(()=>{const st=document.createElement("style");st.textContent=`.hfmodel .lg{position:relative;overflow:visible}.hfmodel .mrk{position:absolute;top:-7px;inset-inline-end:-7px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font:700 10.5px var(--mono);background:var(--lime);color:#111;box-shadow:0 0 0 2px var(--panel)}`;document.head.appendChild(st)})();
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
