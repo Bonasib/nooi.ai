@@ -8397,7 +8397,7 @@ function hfaSeek(box,frac){const a=box.querySelector("audio");if(!a)return;const
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest('[data-act="hfap"],[data-act="hfam"],[data-act="hfas"]');if(!b)return;const box=b.closest(".hfaud"),a=box&&box.querySelector("audio");if(!a)return;e.stopImmediatePropagation();
   if(b.dataset.act==="hfap"){if(a.paused||a.ended)hfaPlay(a);else a.pause();return}
   if(b.dataset.act==="hfam"){a.muted=!a.muted;b.setAttribute("aria-pressed",String(!a.muted));hfaSync(a);return}
-  const r=b.getBoundingClientRect();hfaSeek(box,(e.clientX-r.left)/r.width)},true);
+  if(e.detail===0){const r=b.getBoundingClientRect();hfaSeek(box,(e.clientX-r.left)/r.width)}},true);
 document.addEventListener("keydown",e=>{const b=e.target.closest&&e.target.closest('.hfaud [data-act="hfas"]');if(!b)return;const a=b.closest(".hfaud").querySelector("audio");
   if(e.key==="ArrowRight"||e.key==="ArrowLeft"){e.preventDefault();if(isFinite(a.duration))a.currentTime=Math.max(0,Math.min(a.duration,a.currentTime+(e.key==="ArrowRight"?5:-5)))}else if(e.key===" "||e.key==="Enter"){e.preventDefault();if(a.paused)hfaPlay(a);else a.pause()}},true);
 /* a playing clip keeps playing when the page refreshes the results */
@@ -8462,6 +8462,41 @@ hfModelSheet=(o=>function(){o();const g=document.querySelector(".hfsheet .hfmode
   auto.concat(rest).forEach(b=>g.appendChild(b));
   if(!g.previousElementSibling||!g.previousElementSibling.classList.contains("mrkh"))g.insertAdjacentHTML("beforebegin",'<p class="small mute mrkh" style="margin:0 0 8px">'+L("Strongest first — sorted by credits per run.","الأقوى أولاً — مرتبة حسب الرصيد لكل عملية.")+"</p>")})(hfModelSheet);
 (()=>{const st=document.createElement("style");st.textContent=`.hfmodel .lg{position:relative;overflow:visible}.hfmodel .mrk{position:absolute;top:-7px;inset-inline-end:-7px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font:700 10.5px var(--mono);background:var(--lime);color:#111;box-shadow:0 0 0 2px var(--panel)}`;document.head.appendChild(st)})();
+/* ================= v64: drag or tap to move through audio · −5/+5 s · use a finished avatar in a scene, UGC ad, poster or post ================= */
+/* audio: press and drag the wave (finger or mouse) to move back and forth; −5 s / +5 s buttons */
+hfAudio=(o=>function(j,url){return o(j,url).replace('<span class="t">','<button class="hfsk" data-act="hfab" aria-label="'+esc(L("Back 5 seconds","رجوع 5 ثوانٍ"))+'">−5</button><span class="t">').replace(/(<span class="t">[^<]*<\/span>)/,'$1<button class="hfsk" data-act="hfaf" aria-label="'+esc(L("Forward 5 seconds","تقديم 5 ثوانٍ"))+'">+5</button>')})(hfAudio);
+const hfaFrac=(w,x)=>{const r=w.getBoundingClientRect();return Math.max(0,Math.min(1,(x-r.left)/r.width))};
+document.addEventListener("pointerdown",e=>{const w=e.target.closest&&e.target.closest('.hfaud [data-act="hfas"]');if(!w)return;e.preventDefault();const box=w.closest(".hfaud");box.classList.add("scrub");try{w.setPointerCapture(e.pointerId)}catch(_){}hfaSeek(box,hfaFrac(w,e.clientX));
+  const mv=ev=>{box.style.setProperty("--p",(hfaFrac(w,ev.clientX)*100).toFixed(2)+"%");hfaSeek(box,hfaFrac(w,ev.clientX))},up=()=>{box.classList.remove("scrub");w.removeEventListener("pointermove",mv);w.removeEventListener("pointerup",up);w.removeEventListener("pointercancel",up)};
+  w.addEventListener("pointermove",mv);w.addEventListener("pointerup",up);w.addEventListener("pointercancel",up)},true);
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest('[data-act="hfas"],[data-act="hfab"],[data-act="hfaf"]');if(!b||!b.closest(".hfaud"))return;e.stopImmediatePropagation();if(b.dataset.act==="hfas")return;   // the wave moves on press/drag
+  const a=b.closest(".hfaud").querySelector("audio"),go=()=>{if(isFinite(a.duration)){a.currentTime=Math.max(0,Math.min(a.duration,a.currentTime+(b.dataset.act==="hfaf"?5:-5)));hfaSync(a)}};if(a.readyState>=1)go();else{a.addEventListener("loadedmetadata",go,{once:true});a.load()}},true);
+/* avatars: remember the face used, then offer to use it in a scene, a UGC ad, a poster, a social post or a new line */
+const AVF={};
+hfSend=(o=>async function(){const H=S.hf,ref=H.tab==="avatar"&&M.hfRef?Object.assign({},M.hfRef):null,before=new Set(S.jobs.map(j=>j.id));const r=await o.apply(this,arguments);
+  if(ref)S.jobs.filter(j=>j.kind==="lipsync"&&!before.has(j.id)).forEach(j=>{AVF[j.id]=ref;j.meta=Object.assign({},j.meta,{face:ref.remote||(/^https?:|^\//.test(ref.url||"")?ref.url:null),faceName:ref.name||""});persist()});return r})(hfSend);
+const HFU=[["scene","video","Video scene","مشهد فيديو","video"],["ugc","video","UGC ad","إعلان UGC","megaphone"],["poster","image","Poster","بوستر","image"],["post","image","Social post","منشور سوشال","grid"],["talk","avatar","New line","جملة جديدة","mic"]];
+hfrCard=(o=>function(j){let h=o(j);if(j.kind!=="lipsync"||j.status!=="complete")return h;
+  return h.replace('<div class="hfra">','<div class="hfuse"><span>'+L("Use this avatar in","استخدم هذا الأفاتار في")+'</span><div>'+HFU.map(u=>'<button class="hfuc" data-act="hfu-'+u[0]+'" data-id="'+j.id+'">'+(ICONS[u[4]]?ic(u[4]):"")+L(u[2],u[3])+"</button>").join("")+'</div></div><div class="hfra">')})(hfrCard);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act^="hfu-"]');if(!a)return;e.stopImmediatePropagation();const j=S.jobs.find(x=>x.id===a.dataset.id);if(!j)return;
+  const face=AVF[j.id]||(j.meta&&j.meta.face?{url:j.meta.face,remote:j.meta.face,name:j.meta.faceName||"face.png"}:null);
+  if(!face){toast(L("Add the face photo again to use it here.","أضف صورة الوجه مرة أخرى لاستخدامها هنا."),{type:"warn"})}
+  const H=S.hf,u=HFU.find(x=>"hfu-"+x[0]===a.dataset.act),who=L("the same person from the reference photo","نفس الشخص الظاهر في الصورة المرجعية");
+  const P={scene:L("Cinematic scene: "+who+" walks through a busy street at golden hour, natural movement, the face stays exactly the same","مشهد سينمائي: "+who+" يمشي في شارع مزدحم وقت الغروب، حركة طبيعية، والوجه يبقى نفسه تماماً"),
+    ugc:L("UGC ad, selfie style: "+who+" holds the product, smiles and talks to the camera about it, phone video look","إعلان UGC بأسلوب السيلفي: "+who+" يمسك المنتج ويبتسم ويتحدث عنه للكاميرا، بمظهر فيديو الجوال"),
+    poster:L("Poster featuring "+who+", bold title space, studio light, high-end campaign look","بوستر يظهر فيه "+who+"، مساحة لعنوان عريض، إضاءة استوديو، مظهر حملة احترافية"),
+    post:L("Lifestyle photo of "+who+" for social media, natural light, candid smile","صورة لايف ستايل لـ "+who+" للسوشال ميديا، إضاءة طبيعية، ابتسامة عفوية"),talk:""}[u[0]];
+  H.tab=u[1];if(face)M.hfRef=face;H.prompt=P;
+  if(u[0]==="ugc"){S.draft.type="ugc";H.aspect="9:16"}else if(u[0]==="scene")H.aspect="16:9";else if(u[0]==="poster")H.aspect="3:4";else if(u[0]==="post")H.aspect="1:1";
+  persist();renderView();requestAnimationFrame(()=>{const b=document.querySelector(".hfbox");if(b)b.scrollIntoView({behavior:"smooth",block:"start"});const q=$("#hfq");if(q){q.focus({preventScroll:true});q.setSelectionRange(q.value.length,q.value.length)}});
+  toast(L("Ready — edit the description and press create.","جاهز — عدّل الوصف ثم اضغط إنشاء."),{type:"ok"})},true);
+(()=>{const st=document.createElement("style");st.textContent=`
+.hfaw{touch-action:none}.hfaud.scrub .hfaw .f{transition:none}.hfaud.scrub .hfaw{box-shadow:0 0 0 2px color-mix(in srgb,var(--lime) 60%,transparent)}
+.hfsk{border:1px solid var(--line2);background:var(--panel);color:var(--text);border-radius:999px;padding:1px 8px;font:700 11px var(--mono);cursor:pointer;min-height:24px}
+.hfuse{display:flex;flex-direction:column;gap:6px;margin:8px 0 2px}.hfuse>span{font-size:12px;font-weight:700;color:var(--mute)}
+.hfuse>div{display:flex;flex-wrap:wrap;gap:6px}.hfuc{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:999px;border:1px solid color-mix(in srgb,var(--lime) 45%,var(--line2));background:color-mix(in srgb,var(--lime) 10%,var(--panel));color:var(--text);font-size:12.5px;font-weight:600;cursor:pointer;min-height:32px}
+.hfuc svg{width:14px;height:14px}
+`;document.head.appendChild(st)})();
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

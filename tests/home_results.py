@@ -53,6 +53,16 @@ async def main():
                 aud = await E("()=>{const c=document.querySelector('.hfrc.aud');return c?{h:c.querySelector('.hfrm').getBoundingClientRect().height,svg:Math.max(...[...c.querySelectorAll('svg')].map(s=>s.getBoundingClientRect().width)),play:!!c.querySelector('[data-act=hfap]'),mute:!!c.querySelector('[data-act=hfam]'),t:c.querySelector('.hfat .t').textContent,ph:document.querySelector('#hfq').placeholder,cost:+document.querySelector('.hfcost').textContent}:null}")
                 await E("()=>document.querySelector('[data-act=hfam]').click()")
                 muted = await E("()=>document.querySelector('.hfaud audio').muted")
+                # avatar: when it is done, offer to use the face in a scene, UGC ad, poster, post or a new line
+                await E("()=>{S.hf.out=[];S.hf.tab='avatar';M.hfRef={url:'/logo.png',remote:'/logo.png',name:'face.png'};renderView();document.querySelector('#hfq').value='hello';document.querySelector('.hfsend').click()}")
+                for _ in range(20):
+                    await pg.wait_for_timeout(1000)
+                    if await E("()=>S.hf.out.length&&S.jobs.find(j=>j.id===S.hf.out[0]).status==='complete'"): break
+                use = await E("()=>[...document.querySelectorAll('.hfuc')].map(b=>b.dataset.act)")
+                await E("()=>document.querySelector('[data-act=hfu-ugc]').click()"); await pg.wait_for_timeout(200)
+                ugc = await E("()=>[S.hf.tab,S.hf.aspect,!!(M.hfRef&&M.hfRef.url),S.draft.type]")
+                if use != ["hfu-scene","hfu-ugc","hfu-poster","hfu-post","hfu-talk"] or ugc != ["video","9:16",True,"ugc"]: fails.append(f"{w}: avatar use-in {use} {ugc}")
+                await E("()=>{S.hf.out=['aud1'];S.hf.tab='audio';renderView()}"); await pg.wait_for_timeout(300)
                 audio_ok = bool(aud) and aud["h"] < 160 and aud["svg"] <= 48 and aud["play"] and aud["mute"] and aud["t"].endswith("0:01") and "music" in aud["ph"].lower() and aud["cost"] == 15 and muted
                 r = {"modelRow": row, "picked": picked, "stayedOnHome": stay, "cards": cards, "statuses": done, "approveImage": img_view, "autoFirst": auto_first, "approveVideo": vid_view, "botsKeepModel": [off, on], "audio": aud, "errors": errs}
                 out[w] = r

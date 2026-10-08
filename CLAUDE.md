@@ -297,6 +297,10 @@ Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v
 - Default margin `priceFactor` = 1.25 (25% over engine cost, measured at the cheapest credit $0.0053; bigger packs earn more). A factor saved in Admin overrides it. The client `PRICE_TABLE` is the same table for the offline demo.
 - The model sheet sorts by credits (strongest first, nooi Auto on top), marks the top 3 and shows each model's strengths (`MFEAT`); admin pricing rows are sorted by credits too.
 
+## v64 Drag through audio · ±5 s · use a finished avatar elsewhere
+- Audio cards: press and drag the wave with a finger or the mouse to move back and forth (pointer capture, `touch-action:none`); −5 s / +5 s buttons beside the time.
+- Avatar (lip-sync) results remember the face (`AVF` in memory, `meta.face` when it has a URL) and offer "Use this avatar in": video scene, UGC ad (video 9:16, `S.draft.type="ugc"`), poster (image 3:4), social post (image 1:1) or a new line — each fills the box with the face as reference and a ready description.
+
 ## v56 Showcase: nooi's own marketing videos & pictures made with Kie AI
 - `lib/showcase.js` → `SHOWCASE`: 21 curated prompts (English + Arabic): motion (desert flyover, neon drift, coffee pour, volcanic shore, perfume UGC ad), anime (rooftop run, sakura samurai, rainy window, fox chef), VFX (shattering tower, fire portal, liquid chrome, time freeze), pixel-art animation (knight, night city, island) and 5 pictures. Each has a studio model id (routed to Kie), aspect, category, and `slot` 0–5 for the six demo tiles.
 - Admin → AI providers → "Showcase for marketing" (`scAdmin`, appended to `kieQuick`): "Make the showcase with Kie AI" → `POST /v1/admin/showcase {ids?, force?}` creates staff jobs (no nooi credits; uses the Kie balance). A 4 s watcher turns finished jobs into records (`col("showcase")`) and posts each to Explore as featured, author "nooi", with its prompt (`showcase` field). `DELETE /v1/admin/showcase {ids}` removes records + posts. Per-row remake (`sc-one`), "Retry failed", live status.
