@@ -8131,7 +8131,7 @@ document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.c
 /* marketing posters for the admin email composer */
 POSTERS.push(["giftpromo","Gift cards","بطاقات الهدايا","spark"],["topup","Top up credits","شحن الرصيد","coin"]);
 (()=>{const st=document.createElement("style");st.textContent=`
-.gfsec{margin-top:14px}.gfh{display:flex;align-items:center;gap:8px;font-size:18px;margin:0 0 12px}
+.gfsec{margin-top:14px}.gfh{display:flex;align-items:center;gap:8px;font-size:18px;margin:0 0 12px}.gfh>svg,.gfh .gfst svg{width:20px!important;height:20px!important;flex:none}.gfh{min-width:0;flex-wrap:wrap}
 .gfst{display:inline-flex}.gfst svg{width:18px;height:18px}
 .gftops{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .gftop{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 8px;border:1px solid var(--line2);border-radius:16px;background:var(--panel2);color:var(--text);cursor:pointer;transition:transform .15s,border-color .15s}
@@ -8322,9 +8322,10 @@ hfSend=(o=>async function(){const H=S.hf;HF_PLAN=null;const q=$("#hfq"),p=((q&&q
 /* result cards: scene badge, small play/pause instead of the big native overlay, live progress estimate */
 hfrCard=(o=>function(j){let h=o(j);const sc=j.sceneCheck;
   if(j.meta&&j.meta.scene)h=h.replace("<small>",'<span class="scbadge'+(sc&&!sc.same?" bad":"")+'">'+ic("layers")+(sc?sc.retrying&&j.status!=="complete"?L("Re-making to stay in the scene","يُعاد صنعها لتبقى في المشهد"):sc.first?L("Scene anchor","مرجع المشهد"):sc.same?L("In scene · ","داخل المشهد · ")+sc.score+"%":L("Left the scene · ","خرجت عن المشهد · ")+sc.score+"%":j.status==="complete"?L("Checking the scene…","فحص المشهد…"):L("Scene lock on","قفل المشهد مفعّل"))+"</span><small>");
-  h=h.replace(/<video src="([^"]*)" controls playsinline muted loop preload="metadata"><\/video>/,'<video class="sv hfv" src="$1" playsinline muted loop preload="metadata"></video><button class="hfvp" data-act="hfvp" aria-label="'+esc(L("Play or pause","تشغيل أو إيقاف"))+'">'+svg('<path d="M8 5v14l11-7z"/>')+'</button><button class="hfvf" data-act="hfvf" aria-label="'+esc(L("Full screen","ملء الشاشة"))+'">'+svg('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>')+"</button>");
+  h=h.replace(/<video src="([^"]*)" controls playsinline muted loop preload="metadata"><\/video>/,'<video class="sv hfv" src="$1" playsinline muted loop preload="metadata"></video><button class="hfvp" data-act="hfvp" aria-label="'+esc(L("Play or pause","تشغيل أو إيقاف"))+'">'+svg('<path d="M8 5v14l11-7z"/>')+'</button><button class="hfvm" data-act="hfvm" aria-label="'+esc(L("Sound on or off","تشغيل الصوت أو كتمه"))+'" aria-pressed="false">'+svg('<path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="w1" d="M16.5 8.5a5 5 0 0 1 0 7"/><path class="mx" d="M17 9l5 6M22 9l-5 6"/>')+'</button><button class="hfvf" data-act="hfvf" aria-label="'+esc(L("Full screen","ملء الشاشة"))+'">'+svg('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>')+"</button>");
   return h})(hfrCard);
-document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="hfvp"],[data-act="hfvf"],.hfrm video.hfv');if(!a)return;const box=a.closest(".hfrm"),v=box&&box.querySelector("video");if(!v)return;e.stopImmediatePropagation();
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="hfvp"],[data-act="hfvf"],[data-act="hfvm"],.hfrm video.hfv');if(!a)return;const box=a.closest(".hfrm"),v=box&&box.querySelector("video");if(!v)return;e.stopImmediatePropagation();
+  if(a.dataset.act==="hfvm"){v.muted=!v.muted;if(!v.muted&&v.paused){const p=v.play();if(p&&p.catch)p.catch(()=>{})}box.classList.toggle("sound",!v.muted);a.setAttribute("aria-pressed",String(!v.muted));return}
   if(a.dataset.act==="hfvf"){(v.requestFullscreen||v.webkitEnterFullscreen||function(){}).call(v);return}if(v.paused){const p=v.play();if(p&&p.catch)p.catch(()=>{})}else v.pause()},true);
 document.addEventListener("play",e=>{const b=e.target.closest&&e.target.closest(".hfrm");if(b)b.classList.add("playing")},true);
 document.addEventListener("pause",e=>{const b=e.target.closest&&e.target.closest(".hfrm");if(b)b.classList.remove("playing")},true);
@@ -8343,7 +8344,14 @@ setInterval(async()=>{if(API.mode!=="server"||!S.hf||!(S.hf.out||[]).length)retu
 .hfmi.bots,.hfmi.scene{padding:0 10px}.hfmi.bots svg,.hfmi.scene svg{width:15px;height:15px}.hfmi.bots b,.hfmi.scene b{padding:0;font-weight:600;max-width:140px;overflow:hidden;text-overflow:ellipsis}
 .hfbots{margin-top:8px;padding:8px 10px;border-radius:16px;background:color-mix(in srgb,var(--lime) 8%,var(--panel2));border:1px solid color-mix(in srgb,var(--lime) 25%,var(--line))}
 .hfbh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.hfbh b{font-size:13.5px}.hfbh .small{flex:1;min-width:180px}
-.hfbots .botstrip{margin-top:6px;justify-content:flex-start;flex-wrap:wrap;overflow:visible}
+.hfbots .botstrip{margin-top:10px;display:grid!important;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px;overflow:visible;justify-items:center}
+.hfbots .sbot{width:100%;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px}
+.hfbots .sbot .sav{width:64px;height:64px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--bc,#9CD245) 38%,transparent),transparent 70%)}
+.hfbots .sbot .sav svg.bot{width:60px!important;height:60px!important;filter:saturate(1.6) brightness(1.18) contrast(1.05) drop-shadow(0 4px 10px color-mix(in srgb,var(--bc,#9CD245) 55%,transparent))}
+.hfbots .sbot .snm{font-size:12.5px;font-weight:700;color:var(--text);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:767px){.hfbots .botstrip{grid-template-columns:repeat(4,minmax(0,1fr));row-gap:12px}.hfbots .sbot .sav{width:58px;height:58px}.hfbots .sbot .sav svg.bot{width:54px!important;height:54px!important}}
+:root[data-theme="dark"] .hfbots .sbot .sav svg.bot{filter:saturate(1.7) brightness(1.4) contrast(1.05) drop-shadow(0 0 12px color-mix(in srgb,var(--bc,#9CD245) 70%,transparent))}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .hfbots .sbot .sav svg.bot{filter:saturate(1.7) brightness(1.4) contrast(1.05) drop-shadow(0 0 12px color-mix(in srgb,var(--bc,#9CD245) 70%,transparent))}}
 .hfdurs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .hfdurs button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 6px;border:1px solid var(--line2);border-radius:14px;background:var(--panel2);color:var(--text);font:700 15px var(--mono);cursor:pointer}
 .hfdurs button small{font:500 10.5px var(--sans);color:var(--mute)}.hfdurs button[aria-pressed=true]{border-color:var(--lime);background:color-mix(in srgb,var(--lime) 16%,var(--panel))}.hfdurs button.lockd{opacity:.6}
@@ -8357,7 +8365,7 @@ setInterval(async()=>{if(API.mode!=="server"||!S.hf||!(S.hf.out||[]).length)retu
 .scbadge{display:inline-flex;align-items:center;gap:4px;margin-inline-end:6px;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--lime) 16%,var(--panel));color:var(--text);font-size:11.5px;font-weight:600}
 .scbadge.bad{background:color-mix(in srgb,var(--red) 16%,var(--panel))}.scbadge svg{width:12px;height:12px}
 .hfrm .hfvp,.hfrm .hfvf{position:absolute;bottom:8px;width:34px;height:34px;border-radius:50%;border:0;display:grid;place-items:center;background:rgba(0,0,0,.55);color:#fff;cursor:pointer;z-index:2}
-.hfrm .hfvp{inset-inline-start:8px}.hfrm .hfvf{inset-inline-end:8px}.hfrm .hfvp svg,.hfrm .hfvf svg{width:16px;height:16px}.hfrm .hfvp svg path{fill:#fff;stroke:none}
+.hfrm .hfvp{inset-inline-start:8px}.hfrm .hfvm{position:absolute;bottom:8px;inset-inline-start:48px;width:34px;height:34px;border-radius:50%;border:0;display:grid;place-items:center;background:rgba(0,0,0,.55);color:#fff;cursor:pointer;z-index:2}.hfrm .hfvm svg{width:17px;height:17px}.hfrm .hfvm .spk{fill:#fff}.hfrm .hfvm .w1{display:none}.hfrm.sound .hfvm .w1{display:inline}.hfrm.sound .hfvm .mx{display:none}.hfrm .hfvf{inset-inline-end:8px}.hfrm .hfvp svg,.hfrm .hfvf svg{width:16px;height:16px}.hfrm .hfvp svg path{fill:#fff;stroke:none}
 .hfrm.playing .hfvp svg path{d:path("M7 5h4v14H7zM13 5h4v14h-4z")}
 #side .crslot .crbtn2{min-height:0!important;width:52px!important;padding:4px 2px!important;gap:1px!important}
 #side .crslot .crbtn2 svg{width:13px!important;height:13px!important}#side .crslot .crbtn2 .crn{font-size:10.5px!important}
