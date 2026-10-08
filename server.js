@@ -34,6 +34,7 @@ import { isStaff } from "./lib/admin.js";
 import { registerShowcase } from "./lib/showcase.js";
 import { registerScenes } from "./lib/scenes.js";
 import { registerLearn } from "./lib/learn.js";
+import { registerVss, vssServer } from "./lib/vss.js";
 import { cbSig, findJob, pollOne } from "./lib/jobs.js";
 import { registerGifts } from "./lib/gifts.js";
 import { registerInvoices } from "./lib/invoices.js";
@@ -77,7 +78,7 @@ app.get("/v1/config", (_, res) => res.json({
   firebase: firebaseWebConfig(), localAI: { tfUrl: fs.existsSync(TF_DIR + "/transformers.min.js") ? "/vendor/transformers/transformers.min.js" : null, ortBase: fs.existsSync(ORT_DIR) ? "/vendor/ort/" : null, modelsHost: process.env.MODELS_DIR ? "/models/" : null, models: platform().localModels || {} }, emailCode: canSendSignInLinks() && emailConfigured(), kieRoutes: kieRoutes(),
   llm: llmConfigured() ? { provider: llmInfo().provider, model: llmInfo().model } : null,
   billing: enabledPayments().length > 0, payments: enabledPayments(), modelLogos: platform().modelLogos || {}, worldEngine: !!(process.env.WORLD_API_URL || (platform().providers || {}).world), modelCat: Object.fromEntries(Object.entries(platform().modelCat || {}).map(([k, v]) => [k, { cr: v.cr, verified: !!v.verified, kie: !!v.kieModel }])), features: platform().features, models: platform().models, prices: priceTable(), support: "contact@nooi.ai",
-  providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || !!kieDefault(k) || !!kieAuto(k, { kind: k === "tts" ? "voice" : k })])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!process.env.REALTIME_API_URL, billing: enabledPayments().length > 0 }
+  providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || !!kieDefault(k) || !!kieAuto(k, { kind: k === "tts" ? "voice" : k })])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!process.env.REALTIME_API_URL, vss: vssServer(), billing: enabledPayments().length > 0 }
 }));
 
 // Uploads (start frames, references, exports, music…)
@@ -186,6 +187,7 @@ app.put("/v1/admin/pricing", requireUser, (req, res) => { if (!isStaff(req.user)
 app.post("/v1/engine/cb/:id/:sig", (req, res) => { if (req.params.sig === cbSig(req.params.id)) { const f = findJob(req.params.id); if (f) pollOne(f[0], f[1]); } res.json({ ok: true }); });
 registerScenes(app);
 registerLearn(app);
+registerVss(app);
 registerExplore(app); registerShowcase(app); registerGifts(app); registerInvoices(app);
 // Low-latency voice preview (ElevenLabs stream, key never leaves the server)
 app.post("/v1/tts/stream", requireUser, async (req, res) => { try { const { planOf } = await import("./lib/plans.js"); const plan = planOf(user(req.user.uid)); if (!["pro", "studio"].includes(plan)) return res.status(402).json({ error: "ElevenLabs voices start from the Pro plan" }); await streamTTS(res, req.body || {}); } catch (e) { if (!res.headersSent) res.status(502).json({ error: e.message }); } });
