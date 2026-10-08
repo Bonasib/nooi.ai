@@ -280,6 +280,18 @@ Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v
 - Result videos autoplay muted on screen with small play/pause + full-screen buttons (no big native overlay); the rail credits/gift buttons are smaller.
 - Tests: `kie_e2e.mjs` covers scenes (anchor, scene rules + reference on the next shot, check score, scene list; server now runs with `PUBLIC_BASE_URL`); `home_results.py` checks the nooi button, bots and 30 s.
 
+## v61 Sound on result videos · wallet icons · bigger, brighter bots
+- Result videos get a sound button (`.hfvm`, toggles `muted`, `.hfrm.sound`); wallet section headings size their icons (`.gfh>svg`).
+- The box's bots: one row of 8 on tablet/desktop, 4 + 4 on phones (`.hfbots .botstrip` grid), 60 px, stronger saturation/glow (more in dark mode).
+
+## v62 Audio player · real audio prices · bots follow the pointer · Bots keep the chosen model
+- Audio results (voice/music/sfx) use a compact player (`hfAudio`): play/pause, a wave you tap (or arrow keys) to jump, "played / length" time, sound on/off; one clip plays at a time and a playing clip survives re-renders. The card is no longer 16:9 (`.hfrc.aud`).
+- The Audio tab shows examples for the chosen type (`HF_PH.audio_music/audio_sfx`, `hfPhKey`) and the real price from `PRICE_TABLE.fixed` (voice 9 · music 17 · sfx 6; avatar = lipsync 108) instead of the old 3/4/1. A voice prompt like "Warm voiceover: Welcome…" speaks only the words after the colon.
+- Cards being made show a live seconds counter ("0:23 · ~1:30", `.hfel`); the progress estimate is per kind (music 90 s, voice 15 s, sfx 20 s).
+- Bots: the [Bots] chip only toggles `S.hf.bots` (`hfBotsOn`) — it never switches the model back to nooi. With the bots on, any chosen model gets 5–30 s (connected parts + Director plan); with them off it gets its own `ENG_MAX`.
+- Every visible `svg.bot` turns and looks toward the mouse or finger (`--rx/--ry` tilt, `.eyes` `translate`), leans in when close (`.near`) and hops when tapped (`.boop`); off with `prefers-reduced-motion`.
+- Tests: `home_results.py` checks Kling 3.0 stays picked with Bots off/on (15 s / 30 s) and the audio card (height, icon size, play/sound buttons, time, example, price).
+
 ## v56 Showcase: nooi's own marketing videos & pictures made with Kie AI
 - `lib/showcase.js` → `SHOWCASE`: 21 curated prompts (English + Arabic): motion (desert flyover, neon drift, coffee pour, volcanic shore, perfume UGC ad), anime (rooftop run, sakura samurai, rainy window, fox chef), VFX (shattering tower, fire portal, liquid chrome, time freeze), pixel-art animation (knight, night city, island) and 5 pictures. Each has a studio model id (routed to Kie), aspect, category, and `slot` 0–5 for the six demo tiles.
 - Admin → AI providers → "Showcase for marketing" (`scAdmin`, appended to `kieQuick`): "Make the showcase with Kie AI" → `POST /v1/admin/showcase {ids?, force?}` creates staff jobs (no nooi credits; uses the Kie balance). A 4 s watcher turns finished jobs into records (`col("showcase")`) and posts each to Explore as featured, author "nooi", with its prompt (`showcase` field). `DELETE /v1/admin/showcase {ids}` removes records + posts. Per-row remake (`sc-one`), "Retry failed", live status.
