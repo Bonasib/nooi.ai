@@ -70,6 +70,14 @@ async def main():
                 plan = await E("()=>{const p=hfStudioP();return[p.n,p.shots[0].m===p.shots[2].m,p.shots[1].m!==p.shots[0].m,p.total<p.all,+document.querySelector('.hfcost').textContent===p.total,!!document.querySelector('.hfbots.pro .hfstplan')]}")
                 if not refx or plan != [3, True, True, True, True, True]: fails.append(f"{w}: photo x {refx} / studio plan {plan}")
                 await E("()=>{S.hf.out=['aud1'];S.hf.tab='audio';renderView()}"); await pg.wait_for_timeout(300)
+                # v67: send bar above the bots, the plan written by the bots, results grouped by type, select many → folder / project
+                lay = await E("()=>{S.hf.tab='video';renderView();const b=document.querySelector('.hfbox .hfbar'),t=document.querySelector('.hfbox .hfbots');return[!!b&&!!t&&b.getBoundingClientRect().top<t.getBoundingClientRect().top,document.querySelectorAll('.hbl').length>=7,document.querySelectorAll('.hbl .mdl').length===3]}")
+                await E("()=>{const mk=(id,kind)=>({id,kind,status:'complete',prompt:id,created:Date.now(),progress:1,pal:PALS[0],seed:1,dur:5,aspect:'16:9'});S.jobs.push(mk('gv','video'),mk('gi','image'),mk('gm','music'));S.hf.out=['gv','gi','gm'];S.hf.tab='video';renderView()}")
+                grp = await E("()=>[...document.querySelectorAll('.hfgrp')].map(g=>g.dataset.g)")
+                await E("()=>{document.querySelector('[data-act=hfs-mode]').click();document.querySelector('.hfrc[data-id=gv]').click();document.querySelector('.hfrc[data-id=gi]').click();document.querySelector('[data-act=hfs-folder]').click();document.querySelector('#hffdn').value='F1';document.querySelector('[data-act=hfs-fdnew]').click()}")
+                fd = await E("()=>(S.folders||[]).filter(f=>f.name==='F1').map(f=>f.items.join(','))")
+                if lay != [True, True, True] or grp != ["video","image","audio"] or fd != ["gv,gi"]: fails.append(f"{w}: v67 layout/plan {lay} groups {grp} folder {fd}")
+                await E("()=>{S.hf.out=['aud1'];S.hf.tab='audio';renderView()}"); await pg.wait_for_timeout(300)
                 audio_ok = bool(aud) and aud["h"] < 160 and aud["svg"] <= 48 and aud["play"] and aud["mute"] and aud["t"].endswith("0:01") and "music" in aud["ph"].lower() and aud["cost"] == 15 and muted
                 r = {"modelRow": row, "picked": picked, "stayedOnHome": stay, "cards": cards, "statuses": done, "approveImage": img_view, "autoFirst": auto_first, "approveVideo": vid_view, "botsKeepModel": [off, on], "audio": aud, "errors": errs}
                 out[w] = r

@@ -8532,7 +8532,7 @@ SLOTS_FOR.image=["iRef","iRef2","iRef3","iRef4"];
 const LRN={stats:{},n:0,at:0};
 function lrnLoad(force){if(API.mode!=="server"||LRN._l||(!force&&Date.now()-LRN.at<120e3))return;LRN._l=1;API.req("/v1/learn").then(r=>{LRN.stats=r.stats||{};LRN.n=r.n||0;LRN.at=Date.now();hfStudioPaint()}).catch(()=>{}).finally(()=>{LRN._l=0})}
 const lrnLocal=()=>(S.learn=S.learn||{stats:{},n:0});
-function hfCat(p){p=String(p||"").toLowerCase();return/(anime|cartoon|pixel|manga|أنمي|انمي|كرتون|بكسل)/.test(p)?"anime":/(explo|fire|portal|vfx|magic|lightning|shatter|انفجار|نار|بوابة|سحر|برق|مؤثرات)/.test(p)?"vfx":/(product|bottle|perfume|watch|shoe|phone|منتج|زجاجة|عطر|ساعة|حذاء|جوال)/.test(p)?"product":/(run|fight|chase|dance|jump|race|drift|skate|يركض|قتال|مطاردة|رقص|يقفز|سباق|تزلج)/.test(p)?"action":/(man|woman|girl|boy|person|people|face|portrait|singer|chef|رجل|امرأة|فتاة|ولد|شخص|أشخاص|وجه|بورتريه|مغن|طاه)/.test(p)?"people":/(sea|ocean|desert|forest|mountain|sky|river|sunset|بحر|محيط|صحراء|غابة|جبل|سماء|نهر|غروب)/.test(p)?"nature":"general"}
+function hfCat(p){p=String(p||"").toLowerCase();return/(anime|cartoon|pixel|manga|أنمي|انمي|كرتون|بكسل)/.test(p)?"anime":/(explo|fire|portal|vfx|magic|lightning|shatter|انفجار|نار|بوابة|سحر|برق|مؤثرات)/.test(p)?"vfx":/(product|bottle|perfume|watch|shoe|phone|منتج|زجاجة|عطر|ساعة|حذاء|جوال)/.test(p)?"product":/(run|fight|chase|dance|jump|race|drift|skate|car|motorbike|يركض|قتال|مطاردة|رقص|يقفز|سباق|تزلج|سيارة|دراجة)/.test(p)?"action":/(man|woman|girl|boy|person|people|face|portrait|singer|chef|رجل|امرأة|فتاة|ولد|شخص|أشخاص|وجه|بورتريه|مغن|طاه)/.test(p)?"people":/(sea|ocean|desert|forest|mountain|sky|river|sunset|بحر|محيط|صحراء|غابة|جبل|سماء|نهر|غروب)/.test(p)?"nature":"general"}
 const LRN_W={approve:[1,0],again:[0,.5],remove:[0,.5],fail:[0,1]};
 function lrnEvent(j,ev){if(!j||!["video","image"].includes(j.kind))return;j._lev=j._lev||{};if(j._lev[ev])return;j._lev[ev]=1;
   const ms=(j.meta&&j.meta.partModels)||[j.model],cat=(j.meta&&j.meta.cat)||hfCat(j.prompt),w=LRN_W[ev],D=lrnLocal();
@@ -8664,6 +8664,85 @@ document.addEventListener("input",e=>{if(e.target&&e.target.id==="edcmdq")S.edCm
 .edcmd>svg{width:18px;height:18px;flex:none;color:color-mix(in srgb,var(--lime) 70%,var(--text))}.edcmd input{flex:1;min-width:0;border:0;background:transparent;padding:8px 2px;font-size:15px}.edcmd input:focus{outline:none;box-shadow:none}
 .edcmdx{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.edcmdx .chip{font-size:12.5px;max-width:100%;white-space:normal;text-align:start}
 .hfuse.hfe{margin-top:8px}
+`;document.head.appendChild(st)})();
+/* ================= v67: the bots write the plan · send bar above the bots · nooi logo in Agent · results grouped by type · select many → project or folder ================= */
+/* the plan, written by the bots: each bot says what it will do; the producer names the model of every shot (small logo + name) */
+const mchip=m=>{const u=logoFor(m);return'<span class="mdl">'+(u?'<img src="'+u+'" alt="">':"")+esc(hfMName("video",m))+"</span>"};
+const hfBotLine=(id,txt,extra)=>{const b=BOT(id)||{name:[id,id],role:["",""]};return'<li class="hbl"><span class="hbav">'+botSVG(id,"idle",26)+'</span><span class="hbt"><b>'+esc(L(b.name[0],b.name[1]))+"</b> <small>"+esc(L(b.role[0],b.role[1]))+"</small><span>"+txt+"</span>"+(extra||"")+"</span></li>"};
+hfStudioPlanHTML=function(){const H=S.hf,t=H.tab;if(t!=="video"&&t!=="image")return"";const q=$("#hfq"),p=(q&&q.value)||H.prompt||"",cat=hfCat(p),cn=L(CAT_N[cat][0],CAT_N[cat][1]);let li=[];
+  if(t==="video"){const pl=nooiOn()?hfStudioP():null,mdl=nooiOn()?null:H.vModel,per=pl?pl.per:Math.min(H.dur,engMax(mdl||"seedance")),n=pl?pl.n:Math.max(1,Math.ceil(H.dur/engMax(mdl||"seedance")));
+    li.push(hfBotLine("director",n>1?L("Splits "+H.dur+" s into "+n+" connected shots of "+per+" s ("+cn+").","يقسّم "+H.dur+" ثانية إلى "+n+" لقطات متصلة، كل لقطة "+per+" ث ("+cn+")."):L("Plans one "+H.dur+" s shot ("+cn+").","يخطط لقطة واحدة مدتها "+H.dur+" ث ("+cn+").")));
+    li.push(hfBotLine("writer",L("Writes a detailed prompt for every shot.","يكتب وصفاً مفصلاً لكل لقطة.")));
+    li.push(hfBotLine("cine",L("Sets camera, lens and light for each shot.","يضبط الكاميرا والعدسة والإضاءة لكل لقطة.")));
+    li.push(hfBotLine("casting",cat==="people"||cat==="action"?L("Keeps the same faces and clothes in every shot.","يحافظ على نفس الوجوه والملابس في كل لقطة."):L("Keeps the look the same from shot to shot.","يحافظ على نفس الشكل من لقطة لأخرى.")));
+    li.push(hfBotLine("producer",pl?L("Picks the model for each shot:","يختار نموذج كل لقطة:"):L("Uses the model you chose for every shot:","يستخدم النموذج الذي اخترته لكل لقطة:"),'<span class="mchips">'+(pl?pl.shots.map((s,i)=>'<span class="mshot"><small>'+(i+1)+"</small>"+mchip(s.m)+"</span>").join(""):mchip(mdl))+"</span>"+(pl&&pl.save?'<em class="hfsave">'+L("saves "+pl.save+" credits","يوفّر "+pl.save+" رصيد")+"</em>":"")));
+    li.push(hfBotLine("sound",L("Adds sound where the model makes it.","يضيف الصوت حيث يدعمه النموذج.")));
+    if(n>1)li.push(hfBotLine("editor",L("Joins the shots seamlessly.","يصل اللقطات بسلاسة.")));
+    li.push(hfBotLine("proof",L("Checks every frame before you see it.","يراجع كل إطار قبل أن تراه.")))}
+  else{const m=nooiOn()?pickImage(p||"photo"):H.iModel;li.push(hfBotLine("cine",L("Writes the picture prompt: light, lens and colour.","يكتب وصف الصورة: الإضاءة والعدسة والألوان.")));
+    li.push(hfBotLine("producer",nooiOn()?L("Picks the best picture model:","يختار أفضل نموذج صور:"):L("Uses your model:","يستخدم نموذجك:"),'<span class="mchips">'+(()=>{const u=logoFor(m);return'<span class="mdl">'+(u?'<img src="'+u+'" alt="">':"")+esc(hfMName("image",m))+"</span>"})()+"</span>"));
+    li.push(hfBotLine("proof",L("Checks every picture.","يراجع كل صورة.")))}
+  return'<div class="hfstplan bots"><span class="lbl2">'+L("The bots' plan","خطة البوتات")+'</span><ul class="hbls">'+li.join("")+"</ul></div>"};
+/* send bar (length, ratio, credits, send) above the bots panel; nooi logo in the Agent tab */
+hfBox=(o=>function(){let h=o();const i=h.indexOf('<div class="hfbots');if(i>=0){let j=h.indexOf('<div class="hfangs',i);const k=h.indexOf('<div class="hfbar">',i);if(j<0||j>k)j=k;if(j>i){const bots=h.slice(i,j);h=h.slice(0,i)+h.slice(j);h=h.replace(/<\/div>$/,bots+"</div>")}}
+  h=h.replace(/(<button role="tab" data-act="hf-tab" data-v="agent"[^>]*>)<svg[\s\S]*?<\/svg>/,'$1<img class="hftlogo" src="'+logoFor("auto")+'" alt="">');
+  h=h.replace(/<button class="hfchip" data-act="hf-model" aria-label="[^"]*" disabled[^>]*>[\s\S]*?<\/button>/,'<span class="hfmi nooi on hfagent"><span class="lg"><img src="'+logoFor("auto")+'" alt=""></span><b>nooi</b></span>');
+  return h})(hfBox);
+/* results grouped by type (videos · avatars · images · audio), each with its own grid; "Select" picks many at once */
+const HF_GROUPS=[["video",["video"],"Videos","فيديوهات","video"],["avatar",["lipsync"],"Avatars","أفاتارات","char"],["image",["image","look","sheet"],"Images","صور","image"],["audio",["voice","music","sfx"],"Audio","صوتيات","voice"]];
+hfResults=function(){const H=S.hf,list=(H.out||[]).map(id=>S.jobs.find(j=>j.id===id)).filter(j=>j&&!j.approved);H.out=list.map(j=>j.id);if(!list.length){H.selMode=false;return""}
+  const busy=list.filter(j=>!["complete","failed"].includes(j.status)).length,sel=new Set(H.sel||[]);
+  const groups=HF_GROUPS.map(g=>[g,list.filter(j=>g[1].includes(j.kind))]).filter(x=>x[1].length),other=list.filter(j=>!HF_GROUPS.some(g=>g[1].includes(j.kind)));if(other.length)groups.push([["other",[],"Other","أخرى","grid"],other]);
+  return'<section class="hfres'+(H.selMode?" selmode":"")+'" aria-live="polite"><div class="spread"><h2>'+L("Your results","نتائجك")+(busy?' <small class="mute">· '+busy+" "+L("in progress","قيد الإنشاء")+"</small>":"")+'</h2><div class="row" style="gap:6px"><button class="btn sm'+(H.selMode?" primary":" ghost")+'" data-act="hfs-mode" aria-pressed="'+!!H.selMode+'">'+ic("check")+(H.selMode?L("Done","تم"):L("Select","تحديد"))+'</button><button class="btn sm ghost" data-act="hfr-clear">'+L("Clear","مسح")+"</button></div></div>"+
+    '<p class="small mute" style="margin:2px 0 10px">'+(H.selMode?L("Tap results to pick them, then add them to a project or a folder.","اضغط على النتائج لاختيارها، ثم أضفها إلى مشروع أو مجلد."):L("Approve a result to open it, or use “Select” to gather several into a project or a library folder.","اعتمد نتيجة لفتحها، أو استخدم «تحديد» لجمع عدة نتائج في مشروع أو مجلد في المكتبة."))+"</p>"+
+    groups.map(([g,js])=>'<div class="hfgrp" data-g="'+g[0]+'"><h3 class="hfgh">'+ic(g[4])+L(g[2],g[3])+' <span class="mute">'+js.length+'</span></h3><div class="hfrgrid'+(g[0]==="audio"?" aud":"")+'">'+js.map(hfrCard).join("")+"</div></div>").join("")+
+    (H.selMode?'<div class="hfselbar" role="toolbar"><b>'+sel.size+" "+L("selected","محدد")+'</b><button class="btn sm primary" data-act="hfs-proj"'+(sel.size?"":" disabled")+">"+ic("edit")+L("Add to a project","أضف إلى مشروع")+'</button><button class="btn sm" data-act="hfs-folder"'+(sel.size?"":" disabled")+">"+ic("folder")+L("Add to a folder","أضف إلى مجلد")+'</button><button class="btn sm ghost" data-act="hfs-all">'+L("All","الكل")+"</button></div>":"")+"</section>"};
+hfrCard=(o=>function(j){let h=o(j);if(!S.hf.selMode||j.status!=="complete")return h;const on=(S.hf.sel||[]).includes(j.id);
+  return h.replace('<article class="hfrc','<article data-act="hfs-tog" data-id="'+j.id+'" aria-pressed="'+on+'" class="hfsel'+(on?" on":"")+' hfrc').replace('<div class="hfrm">','<div class="hfrm"><span class="hfck" aria-hidden="true">'+ic("check")+"</span>")})(hfrCard);
+const FOLD=()=>(S.folders=S.folders||[]);
+async function hfToProject(ids,name){const js=ids.map(id=>S.jobs.find(j=>j.id===id)).filter(j=>j&&j.status==="complete");if(!js.length)return;PJ.fresh("edit");S.cur.edit=null;edxInit();S.ed.sfx=[];let t=0;
+  const order=["video","lipsync","image","music","voice","sfx"];js.sort((a,b)=>order.indexOf(a.kind)-order.indexOf(b.kind));
+  for(const j of js){if(["voice","sfx"].includes(j.kind)){await edUseJob(j,{stay:true,quiet:true,t});t+=4}else await edUseJob(j,{stay:true,quiet:true})}
+  const p=PJ.saveCurrent("edit");if(p&&name){p.name=name}persist();go("edit");toast(L("New project with "+js.length+" items — saved in your library","مشروع جديد فيه "+js.length+" عناصر — حُفظ في مكتبتك"),{type:"ok"})}
+function hfToFolder(ids,fid,name){let f=FOLD().find(x=>x.id===fid);if(!f){f={id:uid(),name:(name||"").trim().slice(0,40)||L("Folder ","مجلد ")+(FOLD().length+1),items:[],created:Date.now()};FOLD().unshift(f)}
+  ids.forEach(id=>{if(!f.items.includes(id))f.items.push(id)});f.updated=Date.now();persist();toast(L("Added "+ids.length+" to “"+f.name+"” in your library","أُضيف "+ids.length+" إلى «"+f.name+"» في مكتبتك"),{type:"ok"});return f}
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act^="hfs-"]');if(!a)return;if(e.target.closest(".hfrc button,.hfrc a,.hfaud")&&a.dataset.act==="hfs-tog")return;e.preventDefault();e.stopImmediatePropagation();const H=S.hf,act=a.dataset.act;H.sel=H.sel||[];
+  if(act==="hfs-mode"){H.selMode=!H.selMode;if(!H.selMode)H.sel=[];renderView();return}
+  if(act==="hfs-tog"){const id=a.dataset.id;H.sel=H.sel.includes(id)?H.sel.filter(x=>x!==id):H.sel.concat(id);renderView();return}
+  if(act==="hfs-all"){H.sel=(H.out||[]).filter(id=>{const j=S.jobs.find(x=>x.id===id);return j&&j.status==="complete"});renderView();return}
+  if(act==="hfs-proj"){if(!H.sel.length)return;hfSheet(L("Add to a project","أضف إلى مشروع"),'<label class="lbl" for="hfpjn">'+L("New project name","اسم المشروع الجديد")+'</label><input id="hfpjn" dir="auto" maxlength="40" placeholder="'+esc(L("My campaign","حملتي"))+'"><div class="row" style="margin-top:12px"><button class="btn primary" data-act="hfs-pjnew">'+ic("plus")+L("Create project & open editor","أنشئ المشروع وافتح المحرر")+'</button><button class="btn" data-act="hfs-pjcur">'+ic("edit")+L("Add to the open edit","أضف إلى المونتاج المفتوح")+"</button></div>");return}
+  if(act==="hfs-pjnew"){const n=(($("#hfpjn")||{}).value||"").trim(),ids=H.sel.slice();closeSheet();H.sel=[];H.selMode=false;await hfToProject(ids,n);return}
+  if(act==="hfs-pjcur"){const ids=H.sel.slice();closeSheet();H.sel=[];H.selMode=false;edxInit();let t=+(ED.t||0);for(const id of ids){const j=S.jobs.find(x=>x.id===id);if(!j)continue;if(["voice","sfx"].includes(j.kind)){await edUseJob(j,{stay:true,quiet:true,t});t+=4}else await edUseJob(j,{stay:true,quiet:true})}go("edit");toast(L("Added "+ids.length+" items to the editor","أُضيف "+ids.length+" عناصر إلى المحرر"),{type:"ok"});return}
+  if(act==="hfs-folder"){if(!H.sel.length)return;hfSheet(L("Add to a folder","أضف إلى مجلد"),(FOLD().length?'<span class="lbl" style="margin-top:0">'+L("Your folders","مجلداتك")+'</span><div class="fdlist">'+FOLD().map(f=>'<button class="scrow2" data-act="hfs-fd" data-v="'+f.id+'">'+ic("folder")+'<span class="nm"><b>'+esc(f.name)+"</b><small>"+f.items.length+L(" items"," عنصر")+"</small></span></button>").join("")+"</div>":"")+
+    '<label class="lbl" for="hffdn">'+L("New folder","مجلد جديد")+'</label><div class="row" style="flex-wrap:nowrap"><input id="hffdn" dir="auto" maxlength="40" placeholder="'+esc(L("e.g. Ramadan campaign","مثال: حملة رمضان"))+'" style="flex:1;min-width:0"><button class="btn sm primary" data-act="hfs-fdnew">'+ic("plus")+L("Create","أنشئ")+"</button></div>");return}
+  if(act==="hfs-fd"||act==="hfs-fdnew"){const ids=H.sel.slice();hfToFolder(ids,act==="hfs-fd"?a.dataset.v:null,act==="hfs-fdnew"?(($("#hffdn")||{}).value||""):"");closeSheet();H.sel=[];H.selMode=false;renderView();return}},true);
+/* library: folders (open in a new project, or delete) */
+VIEWS.library=(o=>function(){const h=o();const F=FOLD();if(!F.length)return h;
+  const sec='<div class="spread sec"><h2 style="margin:0">'+ic("folder","width:18px;vertical-align:-3px")+" "+L("Folders","المجلدات")+'</h2></div><div class="fdgrid">'+F.map(f=>{const js=f.items.map(id=>S.jobs.find(j=>j.id===id)).filter(Boolean);
+    return'<div class="panel fdcard"><div class="fdthumbs">'+js.slice(0,3).map(j=>{const u=mediaUrl(j);return["image","look","sheet"].includes(j.kind)&&u?'<img src="'+esc(u)+'" alt="">':'<span class="fdk">'+ic(["voice","music","sfx"].includes(j.kind)?"voice":j.kind==="lipsync"?"char":"video")+"</span>"}).join("")+'</div><b>'+esc(f.name)+'</b><small class="mute">'+js.length+L(" items"," عنصر")+'</small><div class="row" style="gap:6px;margin-top:6px"><button class="btn sm primary" data-act="fd-open" data-v="'+f.id+'">'+ic("edit")+L("Open as project","افتحه كمشروع")+'</button><button class="btn sm ghost" data-act="fd-del" data-v="'+f.id+'" aria-label="'+esc(L("Delete folder","احذف المجلد"))+'">'+ic("x")+"</button></div></div>"}).join("")+'</div><div style="height:18px"></div>';
+  return h.replace(/(<div class="spread"><h1>)/,sec+"$1")})(VIEWS.library);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="fd-open"],[data-act="fd-del"]');if(!a)return;e.stopImmediatePropagation();const f=FOLD().find(x=>x.id===a.dataset.v);if(!f)return;
+  if(a.dataset.act==="fd-del"){S.folders=FOLD().filter(x=>x!==f);persist();renderView();toast(L("Folder deleted (the results stay in your library)","حُذف المجلد (النتائج باقية في مكتبتك)"));return}await hfToProject(f.items,f.name)},true);
+(()=>{const st=document.createElement("style");st.textContent=`
+.hfbots.pro{margin-top:10px}
+.hfstplan.bots .hbls{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.hbl{display:flex;gap:8px;align-items:flex-start}.hbav{flex:none;width:28px;height:28px;display:grid;place-items:center}.hbav svg.bot{width:26px!important;height:26px!important}
+.hbt{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px;font-size:12.5px;line-height:1.45;min-width:0}.hbt b{font-size:12.5px}.hbt small{color:var(--mute);font-size:11px}.hbt>span{flex-basis:100%;color:var(--text)}
+.mchips{display:flex;flex-wrap:wrap;gap:5px;flex-basis:100%;margin-top:3px}.mshot{display:inline-flex;align-items:center;gap:3px}.mshot>small{font:700 10px var(--mono);color:var(--mute)}
+.mdl{display:inline-flex;align-items:center;gap:4px;padding:2px 8px 2px 3px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:11.5px;font-weight:600;white-space:nowrap}.mdl img{width:16px;height:16px;border-radius:5px;background:#fff;object-fit:contain;padding:1px}
+.hbt .hfsave{font-style:normal;flex-basis:100%;font-size:12px}
+.hftlogo{width:18px;height:18px;object-fit:contain}.hfagent{pointer-events:none}
+.hfgrp{margin-top:6px}.hfgh{display:flex;align-items:center;gap:6px;font-size:15px;margin:10px 0 8px}.hfgh svg{width:16px;height:16px}.hfgh .mute{font-weight:500;font-size:13px}
+.hfrgrid.aud{grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr))!important}
+.hfat{flex-wrap:nowrap!important;white-space:nowrap}.hfat .t{white-space:nowrap;font-variant-numeric:tabular-nums}
+@media (max-width:420px){.hfat .k{display:none}}
+.hfrc.hfsel{position:relative;cursor:pointer;outline:2px solid transparent;transition:outline-color .15s}.hfrc.hfsel.on{outline-color:var(--lime)}
+.hfck{position:absolute;top:8px;inset-inline-start:8px;width:26px;height:26px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:4;color:transparent}.hfck svg{width:14px;height:14px}.hfrc.hfsel.on .hfck{background:var(--lime);border-color:var(--lime);color:#111}
+.hfselbar{position:sticky;bottom:calc(env(safe-area-inset-bottom) + 70px);z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;padding:10px 12px;border-radius:16px;background:var(--panel);border:1px solid color-mix(in srgb,var(--lime) 50%,var(--line2));box-shadow:0 12px 30px -12px rgba(0,0,0,.5)}
+@media (min-width:768px){.hfselbar{bottom:16px}}
+.fdlist{display:flex;flex-direction:column;max-height:240px;overflow:auto;margin-bottom:6px}
+.fdgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}.fdcard{padding:10px;display:flex;flex-direction:column;gap:2px}
+.fdthumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px}.fdthumbs img,.fdthumbs .fdk{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;background:var(--panel2);display:grid;place-items:center}.fdk svg{width:18px;height:18px}
 `;document.head.appendChild(st)})();
 /* ================= LOOP + BOOT ================= */
 let playing=true;
