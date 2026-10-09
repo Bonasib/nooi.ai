@@ -6,6 +6,7 @@ import { elevenlabs } from "./elevenlabs.js";
 import { nanoBanana, midjourney, gptImage } from "./images2.js";
 import { kie, kieDefault, kieAuto } from "./kie.js";
 import { nvRoute, nvAdapter } from "./nvidia.js";
+import { gen3dRoute, GEN3D } from "./gen3d.js";
 // Flagship models → provider + API model id set by the admin (Admin → Models)
 const FLAGSHIP = { kling40: "kling", kling30: "kling", seedance25: "seedance", seedance20: "seedance", hailuoh3: "minimax" };
 const makers = () => ({ kling, seedance, minimax });
@@ -52,6 +53,8 @@ export const minimax = (mo) => { const c = cfg("minimax"); const base = (c.baseU
 export function adapterFor(cap, body, PROVIDERS) {
   // NVIDIA AI first when it handles this job (explicit NVIDIA model, or "nooi Auto" with that capability switched on)
   const nt = nvRoute(cap, body); if (nt) return { key: "nv@" + nt, a: nvAdapter(nt) };
+  // 3D objects on Tripo3D / Meshy, 360° worlds on Blockade Labs Skybox
+  const g = gen3dRoute(cap, body); if (g) return g;
   // Any studio model with a Kie model id set in Admin → Models runs on Kie AI
   const km = body.model && (settingsS().modelCat || {})[body.model]?.kieModel;
   if (km) return { key: "kie@" + km, a: kie(km) };
@@ -76,4 +79,4 @@ function directAdapter(cap, body, PROVIDERS) {
   if (cap === "image" && body.model === "qwen") return { key: "qwen-image", a: dashscope("image") };
   return { key: cap, a: PROVIDERS[cap] };
 }
-export function adapterByKey(key, PROVIDERS) { if (String(key).startsWith("nv@")) return nvAdapter(key.slice(3)); if (String(key).startsWith("kie@")) return kie(key.slice(4)); if (String(key).startsWith("gpt@")) return gptImage(key.slice(4)); if (key === "elevenlabs") return elevenlabs(); if (key === "midjourney") return midjourney(); if (String(key).startsWith("nano@")) return nanoBanana(key.slice(5)); if (String(key).includes("@")) { const [prov, mo] = key.split("@"); return makers()[prov](mo); } return key === "minimax" ? minimax() : key === "seedance" ? seedance() : key === "kling" ? kling() : key === "qwen-video" ? dashscope("video") : key === "qwen-image" ? dashscope("image") : PROVIDERS[key]; }
+export function adapterByKey(key, PROVIDERS) { if (String(key).startsWith("nv@")) return nvAdapter(key.slice(3)); if (GEN3D[key]) return GEN3D[key](); if (String(key).startsWith("kie@")) return kie(key.slice(4)); if (String(key).startsWith("gpt@")) return gptImage(key.slice(4)); if (key === "elevenlabs") return elevenlabs(); if (key === "midjourney") return midjourney(); if (String(key).startsWith("nano@")) return nanoBanana(key.slice(5)); if (String(key).includes("@")) { const [prov, mo] = key.split("@"); return makers()[prov](mo); } return key === "minimax" ? minimax() : key === "seedance" ? seedance() : key === "kling" ? kling() : key === "qwen-video" ? dashscope("video") : key === "qwen-image" ? dashscope("image") : PROVIDERS[key]; }

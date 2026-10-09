@@ -15,21 +15,21 @@ const DEF = {
   chat: "https://integrate.api.nvidia.com/v1", vision: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning", text: "nvidia/nemotron-3-super-120b-a12b",
   image: "https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux.1-dev", image2: "https://ai.api.nvidia.com/v1/genai/stabilityai/stable-diffusion-3_5-large",
   edit: "https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux.1-kontext-dev", trellis: "https://ai.api.nvidia.com/v1/genai/microsoft/trellis",
-  video: "https://ai.api.nvidia.com/v1/cosmos/nvidia/cosmos-predict1-7b", status: "https://api.nvcf.nvidia.com/v2/nvcf/pexec/status/"
+  video: "https://ai.api.nvidia.com/v1/cosmos/nvidia/cosmos-predict1-7b", status: "https://api.nvcf.nvidia.com/v2/nvcf/pexec/status/", assets: "https://api.nvcf.nvidia.com/v2/nvcf/assets"
 };
 // what NVIDIA runs by default when the key is saved (video stays opt-in: Cosmos is made for physical-world clips, not ads)
 const USE_DEFAULT = { text: true, vision: true, image: true, edit: true, "3d": true, video: false };
 export const nvCfg = () => { const c = cfg("nvidia"); let use = {}; try { use = typeof c.use === "string" ? (c.use.trim().startsWith("{") ? JSON.parse(c.use) : Object.fromEntries(c.use.split(/[,;\s]+/).filter(Boolean).map((x) => x.split(":")).map(([k, v]) => [k.trim().toLowerCase(), !/^(off|no|false|0)$/i.test((v || "on").trim())]))) : c.use || {}; } catch { use = {}; }
   return { key: c.apiKey || "", chat: (c.baseUrl || DEF.chat).replace(/\/$/, ""), vision: c.model || DEF.vision, text: c.textModel || DEF.text,
-    image: c.imageUrl || DEF.image, image2: c.image2Url || DEF.image2, edit: c.editUrl || DEF.edit, trellis: c.trellisUrl || DEF.trellis, video: c.videoUrl || DEF.video, status: c.statusUrl || process.env.NVIDIA_STATUS_URL || DEF.status, use: { ...USE_DEFAULT, ...use } }; };
+    image: c.imageUrl || DEF.image, image2: c.image2Url || DEF.image2, edit: c.editUrl || DEF.edit, trellis: c.trellisUrl || DEF.trellis, video: c.videoUrl || DEF.video, status: c.statusUrl || process.env.NVIDIA_STATUS_URL || DEF.status, assets: c.assetsUrl || process.env.NVIDIA_ASSETS_URL || DEF.assets, use: { ...USE_DEFAULT, ...use } }; };
 export const nvReady = () => !!nvCfg().key;
 export const nvOn = (what) => { const c = nvCfg(); return !!c.key && c.use[what] !== false && c.use[what] !== "false"; };
 export const NV_MODELS = { image: ["nvflux", "nvsd35"], edit: ["nvkontext"], video: ["nvcosmos"] };
 
 const hdr = (accept) => ({ Authorization: "Bearer " + nvCfg().key, Accept: accept || "application/json", "content-type": "application/json" });
-async function call(url, body, ms = 120000) {
+async function call(url, body, ms = 120000, extra) {
   const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), ms);
-  try { const r = await fetch(url, { method: "POST", signal: ctl.signal, headers: hdr(), body: JSON.stringify(body) });
+  try { const r = await fetch(url, { method: "POST", signal: ctl.signal, headers: { ...hdr(), ...(extra || {}) }, body: JSON.stringify(body) });
     if (r.status === 202) { const id = r.headers.get("nvcf-reqid") || r.headers.get("NVCF-REQID"); if (!id) throw new Error("NVIDIA AI accepted the job without a request id"); return { pending: id }; }
     return await read(r);
   } finally { clearTimeout(t); } }
@@ -51,6 +51,18 @@ function unzipFirst(buf, ext) { let i = 0; while (i + 30 < buf.length && buf.rea
   if (name.toLowerCase().endsWith(ext)) return method === 8 ? zlib.inflateRawSync(data) : data; i = s + csize; } return null; }
 function payload(res, ext) { if (res.bin) { if (res.bin[0] === 0x50 && res.bin[1] === 0x4b) { const f = unzipFirst(res.bin, ext); if (f) return f; const j = unzipFirst(res.bin, ".json"); if (j) return payload({ json: JSON.parse(j.toString()) }, ext); throw new Error("NVIDIA AI returned an archive without a " + ext + " file"); } return res.bin; }
   const b = b64Of(res.json); if (!b) throw new Error("NVIDIA AI returned no " + ext.slice(1) + " (" + Object.keys(res.json || {}).join(", ").slice(0, 80) + ")"); return Buffer.from(b, "base64"); }
+
+// NVIDIA's hosted picture models (TRELLIS, FLUX Kontext, Cosmos) don't take a picture inline ("Expected: example_id, got: base64"):
+// the picture is uploaded to the NVCF asset store first, then passed as "data:<type>;asset_id,<id>" + the NVCF-INPUT-ASSET-REFERENCES header.
+export async function nvAsset(dataUrl) {
+  const m = /^data:([^;,]+);base64,(.+)$/.exec(dataUrl || ""); if (!m) throw new Error("NVIDIA AI needs a picture");
+  const mime = /png|jpeg|jpg|webp/.test(m[1]) ? m[1].replace("jpg", "jpeg") : "image/png", buf = Buffer.from(m[2], "base64"), desc = "nooi-input";
+  const r = await fetch(nvCfg().assets, { method: "POST", headers: hdr(), body: JSON.stringify({ contentType: mime, description: desc }) });
+  const d = (await read(r)).json || {}; if (!d.uploadUrl || !d.assetId) throw new Error("NVIDIA AI asset upload gave no upload URL");
+  const u = await fetch(d.uploadUrl, { method: "PUT", headers: { "Content-Type": mime, "x-amz-meta-nvcf-asset-description": desc }, body: buf });
+  if (!u.ok) throw new Error("NVIDIA AI asset upload failed (" + u.status + ")");
+  return { ref: `data:${mime};asset_id,${d.assetId}`, headers: { "NVCF-INPUT-ASSET-REFERENCES": d.assetId } };
+}
 
 // ── text & vision ─────────────────────────────────────────────
 export async function nvChat(prompt, { image, images, system, maxTokens = 1500, timeoutMs = 120000, vision } = {}) {
@@ -82,9 +94,11 @@ export function nvAdapter(task) {
   return { name: "NVIDIA AI", configured: !!c.key,
     async submit(p) { let res;
       if (task === "image") { const url = p.model === "nvsd35" ? c.image2 : c.image; res = await call(url, imageBody(url, p)); }
-      else if (task === "edit") { const ref = await toDataUrl(refOf(p)); if (!ref) throw new Error("Add the picture to edit"); res = await call(c.edit, { prompt: fullPrompt(p), image: ref, aspect_ratio: "match_input_image", cfg_scale: 3.5, steps: 30, seed: Math.abs(+p.seed || 0) % 4294967295 }); }
-      else if (task === "3d") { const ref = await toDataUrl(refOf(p)); res = await call(c.trellis, ref ? { mode: "image", image: ref, output_format: "glb", seed: 0, ss_sampling_steps: 25, slat_sampling_steps: 25 } : { mode: "text", prompt: fullPrompt(p), output_format: "glb", seed: 0 }, 300000); }
-      else if (task === "video") { const ref = await toDataUrl(p.inputs?.startImage || p.inputs?.vStart); res = await call(c.video, { prompt: fullPrompt(p), seed: Math.abs(+p.seed || 0) % 4294967295, ...(ref ? { image: ref } : {}), video_params: { height: p.aspect === "9:16" ? 1280 : 704, width: p.aspect === "9:16" ? 704 : 1280, frames_count: 121, frames_per_sec: 24 } }, 600000); }
+      else if (task === "edit") { const ref = await toDataUrl(refOf(p)); if (!ref) throw new Error("Add the picture to edit"); const a = await nvAsset(ref);
+        res = await call(c.edit, { prompt: fullPrompt(p), image: a.ref, aspect_ratio: p.meta?.world360 || p.meta?.keepAspect === false ? (SIZES[p.aspect] ? p.aspect : "16:9") : "match_input_image", cfg_scale: 3.5, steps: 30, seed: Math.abs(+p.seed || 0) % 4294967295 }, 180000, a.headers); }
+      else if (task === "3d") { const ref = await toDataUrl(refOf(p)); const a = ref ? await nvAsset(ref) : null;
+        res = await call(c.trellis, a ? { mode: "image", image: a.ref, output_format: "glb", seed: 0, ss_sampling_steps: 25, slat_sampling_steps: 25, ss_cfg_strength: 7.5, slat_cfg_strength: 3 } : { mode: "text", prompt: fullPrompt(p), output_format: "glb", seed: 0, ss_sampling_steps: 25, slat_sampling_steps: 25 }, 300000, a?.headers); }
+      else if (task === "video") { const ref = await toDataUrl(p.inputs?.startImage || p.inputs?.vStart); const a = ref ? await nvAsset(ref) : null; res = await call(c.video, { prompt: fullPrompt(p), seed: Math.abs(+p.seed || 0) % 4294967295, ...(a ? { image: a.ref } : {}), video_params: { height: p.aspect === "9:16" ? 1280 : 704, width: p.aspect === "9:16" ? 704 : 1280, frames_count: 121, frames_per_sec: 24 } }, 600000, a?.headers); }
       else throw new Error("Unknown NVIDIA task " + task);
       return res.pending ? { remoteId: res.pending } : finish(res); },
     async poll(id) { const res = await status(id); if (res.pending) return { status: "rendering" }; try { return { status: "done", url: finish(res).url }; } catch (e) { return { status: "failed", error: e.message }; } } }; }

@@ -2898,7 +2898,7 @@ enqueueChapter=function(c){
 };
 setInterval(async()=>{
   if(API.mode!=="server")return;const list=S.jobs.concat(S.story.chapters).filter(o=>o.remote&&!["complete","failed"].includes(o.status));
-  for(const o of list){try{const r=await API.req("/v1/jobs/"+o.remote);const ch=r.status!==o.status;o.status=r.status==="done"?"complete":r.status;o.progress=r.progress||o.progress;if(r.url)o.resultUrl=r.url;if(r.error)o.error=r.error;if(r.detail)o.detail=r.detail;if(r.via)o.via=r.via;if(r.segments&&o.kind==="transcribe"&&!o.imported){o.imported=true;importSegments(r.segments)}if(ch){persist();statusChanged()}else liveUpdate()}catch(e){}}
+  for(const o of list){try{const r=await API.req("/v1/jobs/"+o.remote);const ch=r.status!==o.status;o.status=r.status==="done"?"complete":r.status;o.progress=r.progress||o.progress;if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.detail)o.detail=r.detail;if(r.via)o.via=r.via;if(r.segments&&o.kind==="transcribe"&&!o.imported){o.imported=true;importSegments(r.segments)}if(ch){persist();statusChanged()}else liveUpdate()}catch(e){}}
 },3000);
 const _stl=stLabel;stLabel=st=>({failed:L("Failed","فشل"),scheduled:L("Scheduled","مجدول"),published:L("Published","منشور")})[st]||_stl(st);
 const _thumb=thumb;
@@ -8342,7 +8342,7 @@ setInterval(async()=>{if(API.mode!=="server"||!S.hf||!(S.hf.out||[]).length)retu
     if(["queued","rendering"].includes(o.status)){const exp=(o.kind==="video"?((MODELS[o.model]||{}).sec||70)*Math.max(1,(o.dur||5)/5):({music:90,voice:15,sfx:20,lipsync:120})[o.kind]||25)*1000,est=Math.min(.93,(now-(o.created||now))/exp);if(!(o.progress>est))o.progress=est}
     try{const r=await API.req("/v1/jobs/"+o.remote);const before=o.status+"|"+JSON.stringify(o.sceneCheck||null);
       if(r.status==="queued"||r.status==="rendering")o.status="rendering";else if(r.status==="done")o.status="complete";else if(r.status==="failed")o.status="failed";
-      if(r.url)o.resultUrl=r.url;if(r.error)o.error=r.error;if(r.detail)o.detail=r.detail;if(r.progress)o.progress=Math.max(o.progress||0,r.progress);if(r.sceneCheck)o.sceneCheck=r.sceneCheck;
+      if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.detail)o.detail=r.detail;if(r.progress)o.progress=Math.max(o.progress||0,r.progress);if(r.sceneCheck)o.sceneCheck=r.sceneCheck;
       if(before!==o.status+"|"+JSON.stringify(o.sceneCheck||null)){persist();statusChanged()}else liveUpdate()}catch(e){}}},1500);
 (()=>{const st=document.createElement("style");st.textContent=`
 .hfmrow.g{gap:6px}.hfmi.nooi{padding:0 12px 0 4px}.hfmi.nooi b{padding:0}.hfmi.pick{padding:0 10px 0 4px}.hfmi.pick>svg:last-child{width:14px;height:14px;opacity:.7}
@@ -9564,6 +9564,47 @@ function nvBadge(){return API.mode==="server"&&API.cfg&&API.cfg.providers&&API.c
 /* Draw & create: a page refresh (e.g. a job finishing) waits until the pen is lifted, so a stroke is never cut or lost */
 renderView=(o=>function(){if(S.view==="draw"&&DRW.drawing){DRW.pend=true;return}o()})(renderView);
 document.addEventListener("pointerup",()=>{if(DRW.pend&&!DRW.drawing){DRW.pend=false;setTimeout(renderView,0)}});
+/* ================= v75: 3D WORLD STUDIO (public/world3d/) · NVIDIA pictures via asset upload · 3D Studio & 3D worlds without "not connected" errors ================= */
+ICONS.w3d='<path d="M12 2l8.5 4.9v10.2L12 22l-8.5-4.9V6.9z"/><path d="M12 22V12"/><path d="M20.5 6.9L12 12 3.5 6.9"/><circle cx="18.5" cy="18.5" r="2.5" fill="currentColor" stroke="none" opacity=".35"/>';
+NAVS.forEach(g=>{const i=g[1].findIndex(x=>x[0]==="world");if(i>=0&&!g[1].some(x=>x[0]==="w3d"))g[1].splice(i+1,0,["w3d","w3d","3D World Studio","استوديو العوالم 3D",1])});ALLNAV.length=0;NAVS.flatMap(g=>g[1]).forEach(x=>ALLNAV.push(x));
+TOOLDESC.w3d=["Describe an object or a world — the AI builds it in 3D, you arrange it, light it and export it or turn it into a video.","صِف مجسّماً أو عالماً — يبنيه الذكاء ثلاثي الأبعاد، فترتّبه وتضيئه وتصدّره أو تحوّله إلى فيديو."];
+let W3LOAD=null;function w3Load(){if(window.W3D)return Promise.resolve(true);if(W3LOAD)return W3LOAD;const v="?v=75";
+  W3LOAD=new Promise(ok=>{if(!document.getElementById("w3css")){const l=document.createElement("link");l.id="w3css";l.rel="stylesheet";l.href="/world3d/styles.css"+v;document.head.appendChild(l)}const sc=document.createElement("script");sc.src="/world3d/app.js"+v;sc.onload=()=>ok(true);sc.onerror=()=>{W3LOAD=null;ok(false)};document.head.appendChild(sc)});return W3LOAD}
+VIEWS.w3d=()=>{if(window.W3D)return tilify(W3D.view());w3Load().then(ok=>{if(S.view==="w3d")renderView()});return'<div class="view"><h1>'+L("3D World Studio","استوديو العوالم 3D")+'</h1><p class="lede">'+L("Loading…","جارٍ التحميل…")+"</p></div>"};
+renderView=(o=>function(){o();if(S.view==="w3d"&&window.W3D)requestAnimationFrame(()=>W3D.mount())})(renderView);
+/* deep link: /world3d/ and /?view=w3d open the studio */
+(function(){const v=new URLSearchParams(location.search).get("view");if(!v||!VIEWS[v])return;let n=0;const t=setInterval(()=>{if(S.user&&!AU.showAuth){clearInterval(t);go(v);history.replaceState(null,"",location.pathname)}else if(++n>40)clearInterval(t)},250)})();
+/* links into the studio from the 3D pages */
+["studio3d","world"].forEach(k=>{const f=VIEWS[k];if(!f)return;VIEWS[k]=()=>f().replace(/(<\/h1>)/,'$1<button class="btn sm" data-go="w3d" style="margin-inline-start:8px">'+ic("w3d")+L("3D World Studio","استوديو العوالم 3D")+"</button>")});
+/* 3D Studio's main button: objects & people go to NVIDIA TRELLIS (or Tripo3D / Meshy); without a 3D server the scene is built on the device */
+window.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="s3d-run"]');if(!a||API.mode!=="server"||s3dServer())return;const U=S.s3d,g=(API.cfg.providers.gen3d||{});
+  if(U.mode==="scene"||!(nvUse("3d")||g.tripo||g.meshy))return;/* the on-device builder handles it */
+  e.stopImmediatePropagation();e.preventDefault();const m=s3dSource();if(!m)return;a.classList.add("busy");const b=await s3dBlob();
+  const eng=nvUse("3d")?"trellis":g.tripo?"tripo":"meshy",title=(m.name||U.srcName||L("3D model","مجسّم")).replace(/\.[a-z0-9]+$/i,"").slice(0,30);
+  const j=withRef72("s3dImg",b?new File([b],"photo.png",{type:b.type||"image/png"}):null,()=>addJob({kind:"3d",prompt:(U.a3desc||title),title:title+" · "+({trellis:"NVIDIA TRELLIS",tripo:"Tripo3D",meshy:"Meshy"})[eng],cost:S3D_COST[U.mode==="body"?"body":"objects"]||12,secs:60,art:"scene",aspect:"1:1",meta:{mode:U.mode,engine:eng}}));
+  a.classList.remove("busy");if(j){const th=typeof snapThumb==="function"&&snapThumb();if(th)j.thumb=th;U.sel=j.id;persist();renderAll();toast(L("Building a real 3D model…","يُبنى مجسّم ثلاثي الأبعاد حقيقي…"),{type:"ok"})}},true);
+/* 3D worlds: the "AI world" button works without World Labs — Blockade Labs Skybox when connected, otherwise the 360° world from the picture model */
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="wld-ai"]');if(!a||(API.cfg&&API.cfg.providers&&API.cfg.providers.world))return;e.stopImmediatePropagation();e.preventDefault();
+  const W=S.wld,bi=BIOMES_V33.find(x=>x[0]===W.biome)||BIOMES_V33[0],desc=(W.prompt||"").trim()||L(bi[1],bi[2]);
+  if(API.mode==="server"&&((API.cfg.providers.gen3d||{}).skybox)){const j=addJob({kind:"world",prompt:desc,title:L("World · ","عالم · ")+desc.slice(0,30),cost:40,secs:60,art:"scene",aspect:"21:9",meta:{engine:"skybox",biome:W.biome,time:W.tod}});if(j){W.pw.wait=j.id;W.pw.jobs=(W.pw.jobs||[]).concat(j.id).slice(-12);persist();renderView();toast(L("Building your 360° world…","يُبنى عالمك 360°…"),{type:"ok"})}return}
+  W.pw.desc=desc;persist();const b=document.querySelector('[data-act="pw-go"]');if(b)b.click();else renderView()},true);
+/* without a world engine the engine chips (World Labs / Hunyuan / Custom) only confused — hide them */
+VIEWS.world=(o=>()=>{let h=o();if(API.cfg&&API.cfg.providers&&API.cfg.providers.world)return h;return h.replace(/<div class="seg segwrap" style="margin:6px 0 8px">[\s\S]*?<\/div>/,"")})(VIEWS.world);
+/* a picture that isn't a panorama: a blurred "cover" of the same picture all around, the sharp picture in front, soft edges — no mirrored tiles */
+pwPanoFromPhoto=function(img){const W0=2048,H0=1024,c=document.createElement("canvas");c.width=W0;c.height=H0;const x=c.getContext("2d");const k=Math.max(W0/img.width,H0/img.height);
+  x.filter="blur(28px) saturate(1.1)";x.drawImage(img,(W0-img.width*k)/2,(H0-img.height*k)/2,img.width*k,img.height*k);x.filter="none";
+  const h=H0*.62,w=Math.min(W0*.45,h*img.width/img.height),fx=(W0-w)/2,fy=(H0-h)/2,t=document.createElement("canvas");t.width=Math.max(4,Math.round(w));t.height=Math.max(4,Math.round(h));const tx=t.getContext("2d");tx.drawImage(img,0,0,t.width,t.height);
+  tx.globalCompositeOperation="destination-in";const gx=tx.createLinearGradient(0,0,t.width,0);gx.addColorStop(0,"rgba(0,0,0,0)");gx.addColorStop(.12,"#000");gx.addColorStop(.88,"#000");gx.addColorStop(1,"rgba(0,0,0,0)");tx.fillStyle=gx;tx.fillRect(0,0,t.width,t.height);
+  const t2=document.createElement("canvas");t2.width=t.width;t2.height=t.height;const t2x=t2.getContext("2d");t2x.drawImage(t,0,0);t2x.globalCompositeOperation="destination-in";const gy=t2x.createLinearGradient(0,0,0,t.height);gy.addColorStop(0,"rgba(0,0,0,0)");gy.addColorStop(.1,"#000");gy.addColorStop(.9,"#000");gy.addColorStop(1,"rgba(0,0,0,0)");t2x.fillStyle=gy;t2x.fillRect(0,0,t.width,t.height);x.drawImage(t2,fx,fy);return c};
+/* Skybox worlds come with a depth map: the sphere takes the real shape of the place (walls closer, horizon far) */
+pwLoadJob=(o=>async function(j){PW.depth=null;const d=j&&j.segments&&j.segments[0];if(d){const im=await blobImg72(await fetch(d).then(r=>r.blob()).catch(()=>null));if(im)PW.depth=im}PW.built=null;return o(j)})(pwLoadJob);
+pwBuild=(o=>function(tex){if(!PW.depth)return o(tex);const R=30,g=new THREE.SphereGeometry(R,192,96),p=g.attributes.position,uv=g.attributes.uv,dc=document.createElement("canvas");dc.width=512;dc.height=256;const dx=dc.getContext("2d");dx.drawImage(PW.depth,0,0,512,256);const dd=dx.getImageData(0,0,512,256).data;
+  for(let i=0;i<p.count;i++){const v=new THREE.Vector3(p.getX(i),p.getY(i),p.getZ(i)).normalize(),u=uv.getX(i),w=uv.getY(i),px=Math.min(511,Math.max(0,Math.round(u*511))),py=Math.min(255,Math.max(0,Math.round((1-w)*255))),dep=dd[(py*512+px)*4]/255,r=R*(.18+.82*(1-dep));p.setXYZ(i,v.x*r,v.y*r,v.z*r)}
+  p.needsUpdate=true;g.scale(-1,1,1);g.computeVertexNormals();const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));m.name="nooi_world360_depth";return m})(pwBuild);
+/* 3D engines in Admin → AI providers */
+AI_PROVIDERS.push(["tripo","Tripo3D — text / picture → 3D","Tripo3D — نص / صورة ← 3D","3D objects",[["apiKey","API key"],["baseUrl","API URL (default https://api.tripo3d.ai/v2/openapi)"]],"https://"]);
+AI_PROVIDERS.push(["meshy","Meshy — text / picture → 3D","Meshy — نص / صورة ← 3D","3D objects",[["apiKey","API key"],["baseUrl","API URL (default https://api.meshy.ai/openapi)"]],"https://"]);
+AI_PROVIDERS.push(["blockade","Blockade Labs Skybox — 360° worlds","Blockade Labs Skybox — عوالم 360°","3D worlds",[["apiKey","API key"],["baseUrl","API URL (default https://backyard.blockadelabs.com/api/v1)"],["model","Skybox style id (optional)"]],"https://"]);
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
