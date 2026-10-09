@@ -69,7 +69,7 @@ const vendorHeaders = (res, f) => { if (f.endsWith(".mjs")) res.setHeader("Conte
 const TF_DIR = path.resolve("node_modules/@huggingface/transformers/dist");
 if (fs.existsSync(TF_DIR)) app.use("/vendor/transformers", express.static(TF_DIR, { maxAge: "30d", immutable: true, setHeaders: vendorHeaders }));
 const THREE_DIR = path.resolve("node_modules/three");
-if (fs.existsSync(THREE_DIR)) { app.use("/vendor/three/build", express.static(THREE_DIR + "/build", { maxAge: "30d", immutable: true })); app.use("/vendor/three/examples/js", express.static(THREE_DIR + "/examples/js", { maxAge: "30d", immutable: true })); }
+if (fs.existsSync(THREE_DIR)) { app.use("/vendor/three/build", express.static(THREE_DIR + "/build", { maxAge: "30d", immutable: true })); app.use("/vendor/three/examples/js", express.static(THREE_DIR + "/examples/js", { maxAge: "30d", immutable: true })); app.use("/vendor/three/examples/jsm", express.static(THREE_DIR + "/examples/jsm", { maxAge: "30d", immutable: true })); }
 app.use("/vendor/ort", express.static(ORT_DIR, { maxAge: "30d", immutable: true, setHeaders: vendorHeaders }));
 if (process.env.MODELS_DIR) app.use("/models", express.static(path.resolve(process.env.MODELS_DIR), { maxAge: "30d" }));
 const wrap = (fn) => (req, res) => fn(req, res).catch((e) => res.status(e.code && e.code >= 400 && e.code < 600 ? e.code : 500).json({ error: e.message }));

@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>On-device 3D · nooi.ai</title>
+<meta name="description" content="Turn a photo into a 3D model entirely in your browser — WebGPU AI, no uploads, no servers.">
+<meta name="theme-color" content="#101214">
+<script>
+/* three.js: the copy on this server when there is one (nooi), otherwise the public CDN — so the same files also work as plain
+   static files (e.g. Hostinger public_html). The import map must exist before any module loads. */
+(function () {
+  var base = "https://cdn.jsdelivr.net/npm/three@0.128.0/", local = false;
+  try { var x = new XMLHttpRequest(); x.open("HEAD", "/vendor/three/build/three.module.js", false); x.send(); if (x.status === 200) { base = "/vendor/three/"; local = true; } } catch (e) {}
+  window.NOOI_LOCAL_VENDOR = local;
+  var s = document.createElement("script"); s.type = "importmap";
+  s.textContent = JSON.stringify({ imports: { "three": base + "build/three.module.js", "three/addons/": base + "examples/jsm/" } });
+  document.currentScript.after(s);
+})();
+</script>
+<style>
+[hidden]{display:none!important}
+:root{--bg:#101214;--panel:#181b1e;--panel2:#1f2327;--line:#2c3237;--text:#eef1f3;--mute:#9aa4ad;--acc:#9CD245;--warn:#f2b84b;--bad:#ef5b5b;--r:14px}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f6f7f8;--panel:#fff;--panel2:#f1f3f5;--line:#dfe3e7;--text:#15191c;--mute:#5d6873}}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI","IBM Plex Sans Arabic",sans-serif}
+body.embed header{display:none}
+header{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+header b{font-size:16px}header .sp{flex:1}
+.wrap{display:grid;grid-template-columns:340px minmax(0,1fr);gap:14px;padding:14px;max-width:1500px;margin:0 auto}
+@media (max-width:900px){.wrap{grid-template-columns:1fr;padding:12px}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.card h2{font-size:14px;margin:0 0 10px;letter-spacing:.2px}
+.stack{display:grid;gap:12px;align-content:start}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel2)}
+.badge.ok{border-color:color-mix(in srgb,var(--acc) 60%,var(--line));color:var(--acc)}.badge.warn{border-color:color-mix(in srgb,var(--warn) 60%,var(--line));color:var(--warn)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:13px}.kv span:nth-child(odd){color:var(--mute)}
+.advice{margin:8px 0 0;padding-inline-start:18px;font-size:12.5px;color:var(--mute)}
+.drop{position:relative;display:grid;place-items:center;gap:4px;min-height:140px;border:1.5px dashed var(--line);border-radius:12px;background:var(--panel2);text-align:center;padding:10px;cursor:pointer;overflow:hidden}
+.drop img{max-width:100%;max-height:200px;border-radius:8px}.drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.seg{display:flex;flex-wrap:wrap;gap:4px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{flex:1;min-width:0;border:0;background:transparent;color:var(--text);padding:7px 8px;border-radius:8px;font:inherit;font-size:13px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--panel);box-shadow:0 0 0 1px var(--line);font-weight:600}
+label.rng{display:grid;grid-template-columns:1fr auto;gap:2px 8px;font-size:13px}label.rng input{grid-column:1/-1;width:100%;accent-color:var(--acc)}label.rng output{color:var(--mute);font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:inherit;font-weight:600;font-size:13.5px;cursor:pointer}
+.btn.primary{background:var(--acc);border-color:var(--acc);color:#10140b}.btn[disabled]{opacity:.5;cursor:not-allowed}.btn.full{width:100%}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.prog{display:grid;gap:8px;font-size:12.5px}.bar{height:6px;border-radius:9px;background:var(--panel2);overflow:hidden;border:1px solid var(--line)}.bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .25s}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:4px}.steps li{display:flex;gap:8px;align-items:center;color:var(--mute)}.steps li.on{color:var(--text)}.steps li.done{color:var(--acc)}.steps li b{min-width:16px}.steps li small{margin-inline-start:auto;color:var(--mute);font-variant-numeric:tabular-nums}
+.viewer{position:relative;min-height:420px;height:min(72vh,760px);border-radius:var(--r);overflow:hidden;border:1px solid var(--line);background:#0c0e10}
+@media (max-width:900px){.viewer{height:58vh;min-height:320px}}
+.viewer canvas{display:block;width:100%;height:100%;touch-action:none}
+.empty{position:absolute;inset:0;display:grid;place-items:center;color:#aab3bb;text-align:center;padding:20px;pointer-events:none;font-size:14px}
+.ctrls{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px 16px}
+.stats{font-size:12px;color:var(--mute)}
+.note{font-size:12px;color:var(--mute);margin:0}
+.err{color:var(--bad);font-size:13px}
+</style>
+</head>
+<body>
+<header><b>nooi.ai</b><span>· <span data-t="title">On-device 3D</span></span><span class="sp"></span><span class="badge" id="devBadge">…</span></header>
+<main class="wrap">
+  <section class="stack">
+    <div class="card"><h2 data-t="device">This device</h2><div class="kv" id="devKv"></div><ul class="advice" id="devAdvice" hidden></ul></div>
+    <div class="card stack">
+      <h2 data-t="photo">1 · Your photo</h2>
+      <label class="drop" id="drop"><span id="dropTxt" data-t="drop">Drop a photo or tap to choose — it never leaves this device</span><input type="file" id="file" accept="image/*"></label>
+      <div><div class="note" data-t="subject">Subject</div><div class="seg" id="subj"><button data-v="auto" aria-pressed="true" data-t="auto">Auto</button><button data-v="person" aria-pressed="false" data-t="person">Person (AI cut-out)</button><button data-v="relief" aria-pressed="false" data-t="relief">Whole scene</button></div></div>
+      <div><div class="note" data-t="detail">Detail</div><div class="seg" id="detail"><button data-v="128" aria-pressed="false" data-t="fast">Fast</button><button data-v="192" aria-pressed="true" data-t="bal">Balanced</button><button data-v="256" aria-pressed="false" data-t="high">High</button></div></div>
+      <label class="rng"><span data-t="depthAmt">Depth strength</span><output id="o_depth">0.35</output><input type="range" id="depth" min="0.1" max="0.8" step="0.01" value="0.35"></label>
+      <label class="rng"><span data-t="backAmt">Back thickness</span><output id="o_back">0.45</output><input type="range" id="back" min="0" max="1" step="0.01" value="0.45"></label>
+      <button class="btn primary full" id="go" disabled data-t="go">Make 3D on this device</button>
+    </div>
+    <div class="card prog" id="prog" hidden>
+      <h2 data-t="progress">Progress</h2>
+      <div><div class="row" style="justify-content:space-between"><span data-t="dl">Model download</span><span id="dlTxt">—</span></div><div class="bar"><i id="dlBar"></i></div></div>
+      <div class="row" style="justify-content:space-between"><span data-t="gpu">GPU</span><span id="gpuTxt">—</span></div>
+      <ul class="steps" id="steps"></ul>
+      <div class="err" id="err" hidden></div>
+    </div>
+    <div class="card"><h2 data-t="storage">Saved on this device</h2><div class="row" style="justify-content:space-between;align-items:center"><span id="cacheTxt" class="note">—</span><button class="btn" id="clearCache" data-t="clear">Delete models</button></div></div>
+  </section>
+  <section class="stack">
+    <div class="viewer"><canvas id="cv"></canvas><div class="empty" id="empty" data-t="empty">Your 3D model appears here — drag to orbit, pinch or scroll to zoom</div></div>
+    <div class="card">
+      <div class="ctrls">
+        <label class="rng"><span data-t="wind">Wind speed</span><output id="o_wind">0.35</output><input type="range" id="wind" min="0" max="2" step="0.01" value="0.35"></label>
+        <label class="rng"><span data-t="windDir">Wind direction</span><output id="o_windDir">20°</output><input type="range" id="windDir" min="0" max="360" step="1" value="20"></label>
+        <label class="rng"><span data-t="snow">Snow</span><output id="o_snow">0</output><input type="range" id="snow" min="0" max="1" step="0.01" value="0"></label>
+        <label class="rng"><span data-t="sunAz">Sun direction</span><output id="o_sunAz">35°</output><input type="range" id="sunAz" min="0" max="360" step="1" value="35"></label>
+        <label class="rng"><span data-t="sunEl">Sun height</span><output id="o_sunEl">40°</output><input type="range" id="sunEl" min="2" max="88" step="1" value="40"></label>
+        <label class="rng"><span data-t="exposure">Exposure</span><output id="o_exposure">1.00</output><input type="range" id="exposure" min="0.3" max="2" step="0.01" value="1"></label>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <div class="seg" id="view" style="flex:0 1 220px"><button data-v="solid" aria-pressed="true" data-t="solid">Solid</button><button data-v="wire" aria-pressed="false" data-t="wire">Wireframe</button></div>
+        <label class="btn" style="position:relative"><span data-t="hdr">Your HDR sky (.hdr)</span><input type="file" id="hdr" accept=".hdr" style="position:absolute;inset:0;opacity:0"></label>
+        <button class="btn" id="noHdr" hidden data-t="sky">Back to the live sky</button>
+        <button class="btn" id="glb" disabled data-t="glb">Download .glb</button>
+        <button class="btn" id="png" disabled data-t="png">Snapshot</button>
+        <button class="btn primary" id="toNooi" hidden disabled data-t="nooi">Save to my nooi library</button>
+        <button class="btn" id="free" data-t="free">Free GPU memory</button>
+      </div>
+      <p class="stats" id="stats"></p>
+      <p class="note" data-t="privacy">Everything runs on this device — the AI (WebGPU, or the CPU when WebGPU is off), the 3D rebuild and the shaders. The AI models download once and stay in this browser (IndexedDB). One photo shows one side: the hidden side is closed with a smooth shell.</p>
+    </div>
+  </section>
+</main>
+<script type="module">
+import { detectDevice, IDBModelCache, LocalInference, reconstruct, MODELS } from "./localInference.js";
+import { RECON_WGSL } from "./shaders.js";
+import { createViewer, THREE } from "./sceneSetup.js";
+
+const q = new URLSearchParams(location.search), EMBED = q.get("embed") === "1";
+const AR = (q.get("lang") || navigator.language || "en").startsWith("ar"); if (AR) { document.documentElement.lang = "ar"; document.documentElement.dir = "rtl"; }
+if (EMBED) document.body.classList.add("embed");
+const T = { title: "ثلاثي الأبعاد على جهازك", device: "هذا الجهاز", photo: "1 · صورتك", drop: "اسحب صورة أو اضغط للاختيار — لا تغادر جهازك أبداً", subject: "الموضوع", auto: "تلقائي", person: "شخص (قص بالذكاء)", relief: "المشهد كاملاً", detail: "التفاصيل", fast: "سريع", bal: "متوازن", high: "عالٍ", depthAmt: "قوة العمق", backAmt: "سماكة الخلف", go: "اصنع 3D على هذا الجهاز", progress: "التقدم", dl: "تنزيل النموذج", gpu: "المعالج الرسومي", storage: "محفوظ على هذا الجهاز", clear: "احذف النماذج", empty: "يظهر مجسّمك هنا — اسحب للدوران، وقرّب بإصبعين أو بالعجلة", wind: "سرعة الرياح", windDir: "اتجاه الرياح", snow: "الثلج", sunAz: "اتجاه الشمس", sunEl: "ارتفاع الشمس", exposure: "الإضاءة", solid: "مصمت", wire: "شبكي", hdr: "سماء HDR خاصة بك (.hdr)", sky: "عُد إلى السماء الحية", glb: "تنزيل ‎.glb", png: "لقطة", nooi: "احفظ في مكتبتي على nooi", free: "حرّر ذاكرة المعالج", privacy: "كل شيء يعمل على هذا الجهاز — الذكاء (WebGPU، أو المعالج عند إيقافه) وإعادة البناء ثلاثي الأبعاد والمؤثرات. تُنزَّل نماذج الذكاء مرة واحدة وتبقى في هذا المتصفح (IndexedDB). الصورة الواحدة تُظهر جانباً واحداً: يُغلق الجانب المخفي بغلاف ناعم." };
+const L = (en, ar) => (AR ? ar : en); if (AR) document.querySelectorAll("[data-t]").forEach((el) => { const k = el.dataset.t; if (T[k]) el.textContent = T[k]; });
+const $ = (id) => document.getElementById(id), fmtMB = (b) => (b / 1048576).toFixed(b > 104857600 ? 0 : 1) + " MB";
+const S = { file: null, img: null, subject: "auto", res: 192, dev: null, viewer: null, ai: null, last: null, busy: false };
+
+// device
+S.dev = await detectDevice();
+$("devBadge").textContent = S.dev.webgpu ? "WebGPU ✓" : S.dev.webgl2 ? L("WebGL2 · CPU AI", "WebGL2 · ذكاء على المعالج") : L("Not supported", "غير مدعوم");
+$("devBadge").className = "badge " + (S.dev.webgpu ? "ok" : "warn");
+const kv = [[L("AI runs on", "الذكاء يعمل على"), S.dev.webgpu ? "WebGPU" + (S.dev.f16 ? " · fp16" : " · fp32") : L("CPU (WASM)", "المعالج (WASM)")], [L("GPU", "المعالج الرسومي"), S.dev.adapter || S.dev.webglRenderer || "—"], [L("3D", "ثلاثي الأبعاد"), S.dev.webgl2 ? "WebGL2" : "—"],
+  [L("Cores", "الأنوية"), S.dev.cores], [L("Memory", "الذاكرة"), S.dev.memoryGB ? S.dev.memoryGB + " GB" : "—"], [L("Mesh", "الشبكة"), S.dev.plan.meshRes + "²"]];
+if (S.dev.limits) kv.push([L("GPU buffer", "ذاكرة المعالج"), fmtMB(S.dev.limits.maxStorageBufferBindingSize)]);
+$("devKv").innerHTML = kv.map(([k, v]) => "<span>" + k + "</span><span>" + String(v).replace(/</g, "&lt;") + "</span>").join("");
+if (S.dev.advice.length) { $("devAdvice").hidden = false; const AR_ADV = { "WebGPU isn't": "WebGPU غير مفعّل في هذا المتصفح — يعمل الذكاء على المعالج (أبطأ) وتستخدم الأبعاد الثلاثية WebGL2.", "Neither WebGPU": "لا يتوفر WebGPU ولا WebGL2 — جرّب أحدث إصدار من Chrome أو Edge أو Safari.", "iPhone / iPad": "آيفون / آيباد: الإعدادات ← التطبيقات ← Safari ← متقدم ← Feature Flags ← فعّل WebGPU (iOS 17/18)، أو حدّث إلى iOS 26 حيث يكون مفعّلاً.", "Android:": "أندرويد: استخدم Chrome 121 أو أحدث (WebGPU مفعّل افتراضياً على معظم معالجات Adreno / Mali).", "Desktop:": "الحاسوب: Chrome / Edge 113+ أو Safari 26+. ويمكنك في Chrome فحص chrome://gpu." };
+  const adv = (a) => { if (!AR) return a; for (const k in AR_ADV) if (a.startsWith(k)) return AR_ADV[k]; return a; };
+  $("devAdvice").innerHTML = S.dev.advice.map((a) => "<li>" + adv(a).replace(/</g, "&lt;") + "</li>").join(""); }
+S.res = S.dev.plan.meshRes; document.querySelectorAll("#detail button").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.v === (S.res >= 256 ? 256 : S.res <= 160 ? 128 : 192))));
+if (!S.dev.webgl2) { $("go").disabled = true; $("empty").textContent = L("This browser can't show 3D (no WebGL2).", "هذا المتصفح لا يعرض 3D (لا يوجد WebGL2)."); }
+else S.viewer = createViewer($("cv"), { mobile: S.dev.mobile });
+
+// models cached on the device
+const cache = new IDBModelCache();
+async function showCache() { try { const u = await cache.usage(); $("cacheTxt").textContent = u.files ? u.files + L(" files · ", " ملفات · ") + fmtMB(u.bytes) : L("No models yet", "لا نماذج بعد"); } catch (e) { $("cacheTxt").textContent = "—"; } }
+showCache(); $("clearCache").onclick = async () => { await cache.clear(); showCache(); };
+
+// controls
+const seg = (id, fn) => $(id).addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; $(id).querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); fn(b.dataset.v); });
+seg("subj", (v) => (S.subject = v)); seg("detail", (v) => (S.res = +v)); seg("view", (v) => S.viewer && S.viewer.setMode(v));
+const rng = (id, fn, f = (v) => v) => { const el = $(id), out = $("o_" + id); const up = () => { out.textContent = f(el.value); fn(+el.value); }; el.addEventListener("input", up); up(); };
+rng("depth", () => {}); rng("back", () => {});
+if (S.viewer) { rng("wind", (v) => S.viewer.setWind(v)); rng("windDir", (v) => S.viewer.setWindDir(v), (v) => v + "°"); rng("snow", (v) => S.viewer.setSnow(v));
+  rng("sunAz", (v) => S.viewer.setSun(v, +$("sunEl").value), (v) => v + "°"); rng("sunEl", (v) => S.viewer.setSun(+$("sunAz").value, v), (v) => v + "°"); rng("exposure", (v) => S.viewer.setExposure(v), (v) => (+v).toFixed(2)); }
+$("hdr").addEventListener("change", async (e) => { const f = e.target.files[0]; if (!f || !S.viewer) return; try { await S.viewer.setHDR(await f.arrayBuffer()); $("noHdr").hidden = false; } catch (er) { alert(er.message); } });
+$("noHdr").onclick = () => { S.viewer.clearHDR(); $("noHdr").hidden = true; };
+
+// the photo
+$("file").addEventListener("change", async (e) => { const f = e.target.files[0]; if (!f) return; S.file = f; if (S.img && S.img.close) S.img.close();
+  S.img = await createImageBitmap(f, { imageOrientation: "from-image" }).catch(() => null); if (!S.img) return;
+  $("dropTxt").innerHTML = '<img alt="" src="' + URL.createObjectURL(f) + '">'; $("go").disabled = !S.viewer; });
+
+// progress
+const STEPS = [["load", L("Load the AI on the GPU", "تحميل الذكاء على المعالج الرسومي")], ["matte", L("Cut out the subject", "قص الموضوع")], ["depth", L("Estimate depth", "تقدير العمق")], ["grid", L("Prepare the grid", "تجهيز الشبكة")], ["mask", L("Find the subject", "تحديد الموضوع")], ["surface", L("Build the surface (WebGPU compute)", "بناء السطح (حوسبة WebGPU)")], ["maps", L("Bake PBR maps", "تجهيز خرائط PBR")], ["show", L("Show in 3D", "العرض ثلاثي الأبعاد")]];
+const files = {};
+function stepsReset(skip) { $("steps").innerHTML = STEPS.filter((s) => !skip.includes(s[0])).map((s) => '<li id="st_' + s[0] + '"><b>○</b><span>' + s[1] + "</span><small></small></li>").join(""); $("err").hidden = true; }
+function step(k, info, done = true) { const li = $("st_" + k); if (!li) return; document.querySelectorAll(".steps li.on").forEach((x) => x !== li && x.classList.remove("on")); li.classList.toggle("done", done); li.classList.toggle("on", !done); li.querySelector("b").textContent = done ? "✓" : "◌"; if (info != null) li.querySelector("small").textContent = info; }
+function onProgress(m) {
+  if (m.stage === "download" && m.file) { const f = (files[m.file] = files[m.file] || { loaded: 0, total: 0 }); if (m.total) f.total = m.total; if (m.loaded != null) f.loaded = m.loaded; if (m.status === "done" && f.total) f.loaded = f.total;
+    let L0 = 0, T0 = 0; for (const k in files) { L0 += files[k].loaded; T0 += files[k].total; } $("dlBar").style.width = (T0 ? Math.round((100 * L0) / T0) : 0) + "%"; $("dlTxt").textContent = T0 ? fmtMB(L0) + " / " + fmtMB(T0) : "…"; }
+  else if (m.stage === "gpu") $("gpuTxt").textContent = m.status === "fallback" ? L("WebGPU failed → CPU", "فشل WebGPU ← المعالج") : (m.status || "") + (m.message ? " · " + m.message.slice(0, 60) : "");
+  else if (m.stage === "infer") step(m.status, null, false);
+}
+
+// the run
+async function run() {
+  if (!S.img || S.busy || !S.viewer) return; S.busy = true; $("go").disabled = true; $("prog").hidden = false; stepsReset(S.subject === "person" ? [] : ["matte"]);
+  const t0 = performance.now(), time = () => Math.round(performance.now() - t0) + " ms";
+  try {
+    let depth, alpha = null; const blob = S.file;
+    if (window.__L3D_TEST_DEPTH) { step("load", "test"); depth = await window.__L3D_TEST_DEPTH(S.img); if (S.subject === "person") { step("matte", "test"); alpha = window.__L3D_TEST_ALPHA ? await window.__L3D_TEST_ALPHA(S.img) : null; } step("depth", time()); }
+    else {
+      if (!S.ai) S.ai = new LocalInference({ onProgress, plan: S.dev.plan, modelsHost: q.get("models") || undefined, ortBase: window.NOOI_LOCAL_VENDOR ? "/vendor/ort/" : undefined });
+      step("load", null, false); const r = await S.ai.init(); $("gpuTxt").textContent = r.device === "webgpu" ? "WebGPU · " + r.dtype : L("CPU (WASM) · 8-bit", "المعالج (WASM) · 8 بت"); step("load", time());
+      if (S.subject === "person") { step("matte", null, false); alpha = await S.ai.matte(blob); step("matte", alpha.ms + " ms"); }
+      step("depth", null, false); depth = await S.ai.depth(blob); step("depth", depth.ms + " ms · " + depth.w + "×" + depth.h);
+    }
+    step("grid", null, false);
+    const out = await reconstruct(THREE, { image: S.img, depth, alpha, plan: S.dev.plan, WGSL: RECON_WGSL, opts: { res: S.res, depthScale: +$("depth").value, back: +$("back").value, mode: S.subject === "relief" ? "relief" : undefined }, onStep: (k, info) => step(k, info) });
+    step("show", null, false); S.viewer.setModel(out.group); S.last = out; step("show", time());
+    $("empty").hidden = true; ["glb", "png", "toNooi"].forEach((id) => ($(id).disabled = false));
+    $("stats").textContent = out.stats.vertices.toLocaleString() + L(" vertices · ", " رأس · ") + out.stats.triangles.toLocaleString() + L(" triangles · surface on ", " مثلث · السطح على ") + out.stats.surface + " · " + time();
+    if (S.dev.plan.disposeAfterRun && S.ai) await S.ai.dispose(); // phones: give the AI's GPU memory back right away
+  } catch (e) { $("err").hidden = false; $("err").textContent = L("Couldn't make the 3D model: ", "تعذّر صنع المجسّم: ") + (e.message || e); }
+  finally { S.busy = false; $("go").disabled = !S.img; showCache(); }
+}
+$("go").onclick = run;
+const save = (blob, name) => { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); };
+$("glb").onclick = async () => save(await S.viewer.exportGLB(), "nooi-ondevice-3d.glb");
+$("png").onclick = async () => save(await S.viewer.snapshot(), "nooi-3d.png");
+$("free").onclick = async () => { if (S.ai) { await S.ai.dispose(); S.ai.terminate(); S.ai = null; } $("gpuTxt").textContent = L("released", "حُرّرت"); };
+// inside nooi: hand the model to the app (library, 3D World Studio, editor)
+if (EMBED && parent !== window) { $("toNooi").hidden = false;
+  $("toNooi").onclick = async () => { const glb = await (await S.viewer.exportGLB()).arrayBuffer(), shot = await S.viewer.snapshot("image/jpeg"), thumb = await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(shot); });
+    parent.postMessage({ type: "nooi-local3d-glb", name: (S.file && S.file.name || "3D").replace(/\.[a-z0-9]+$/i, "").slice(0, 40), glb, thumb, stats: S.last && S.last.stats }, location.origin, [glb]); }; }
+addEventListener("pagehide", () => { if (S.ai) S.ai.terminate(); if (S.viewer) S.viewer.dispose(); });
+window.L3D = { S, run, cache, viewer: S.viewer };
+</script>
+</body>
+</html>

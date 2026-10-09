@@ -341,6 +341,13 @@ Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v
 - AI: captions (+ text layers) translated with the server text AI keeping each phrase's timing; AI sound effect at the playhead; AI music for the video length; AI voice-over sheet with man / woman / boy / girl (server picks a young ElevenLabs voice for children; the editor also lifts the pitch ×1.22 and adds it as a WAV sound at the playhead).
 - Undo/redo also cover effects, infographics and the logo position (`snap71`). Test: `tests/editor_pro.py`.
 
+## v76 On-device 3D (free, no API key)
+- `public/local3d/` static tool (index.html, localInference.js, sceneSetup.js, shaders.js), served at `/local3d/`, embedded in nooi as view `l3d` ("On-device 3D (free)") and linked from 3D World Studio / 3D Studio.
+- AI runs in a Web Worker with transformers.js (WebGPU → WASM fallback): Depth Anything V2 small + MODNet matte; model files cached in IndexedDB (`nooi-local3d-models`). `?models=` can point to self-hosted weights.
+- Reconstruction: depth + distance field → closed mesh (front relief + smooth back), WebGPU compute (`RECON_WGSL`) with identical CPU fallback; all GPU buffers destroyed after each run. PBR albedo/normal/roughness maps.
+- Viewer: three.js r128 (`/vendor/three`, jsm route added in server.js, CDN fallback), OrbitControls, procedural sky → PMREM, optional user .hdr, wind + snow shaders via onBeforeCompile, falling snow, .glb export, snapshot, "Save to my nooi library" (postMessage `nooi-local3d-glb`, origin checked).
+- Honest limit: depth-based reconstruction (visible side + smooth back), not a full generative 3D model. WebGPU path untested in headless CI; CPU path tested by `tests/local3d.py`.
+
 ## v75 3D World Studio + 3D engines
 - NVIDIA's hosted picture models reject inline base64 ("Expected: example_id, got: base64"): `nvAsset()` uploads the picture to the NVCF asset store (`POST …/v2/nvcf/assets {contentType, description}` → `PUT uploadUrl` with `x-amz-meta-nvcf-asset-description`) and the request uses `data:<type>;asset_id,<id>` + header `NVCF-INPUT-ASSET-REFERENCES` (TRELLIS, FLUX Kontext, Cosmos). `NVIDIA_ASSETS_URL` overrides the store URL. Kontext keeps the requested aspect for 360° jobs.
 - `/v1/config.providers.sam3d` no longer turns true because of NVIDIA (that sent full-scene jobs to the GPU gate → "3D generation is not available yet"). 3D Studio's main button: objects / people → TRELLIS (or Tripo3D / Meshy) job; scene → on-device builder.

@@ -9605,6 +9605,20 @@ pwBuild=(o=>function(tex){if(!PW.depth)return o(tex);const R=30,g=new THREE.Sphe
 AI_PROVIDERS.push(["tripo","Tripo3D — text / picture → 3D","Tripo3D — نص / صورة ← 3D","3D objects",[["apiKey","API key"],["baseUrl","API URL (default https://api.tripo3d.ai/v2/openapi)"]],"https://"]);
 AI_PROVIDERS.push(["meshy","Meshy — text / picture → 3D","Meshy — نص / صورة ← 3D","3D objects",[["apiKey","API key"],["baseUrl","API URL (default https://api.meshy.ai/openapi)"]],"https://"]);
 AI_PROVIDERS.push(["blockade","Blockade Labs Skybox — 360° worlds","Blockade Labs Skybox — عوالم 360°","3D worlds",[["apiKey","API key"],["baseUrl","API URL (default https://backyard.blockadelabs.com/api/v1)"],["model","Skybox style id (optional)"]],"https://"]);
+/* ================= v76: ON-DEVICE 3D (public/local3d/) — photo → 3D in the visitor's browser: WebGPU AI, no cloud, no credits ================= */
+ICONS.l3d='<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/><path d="M12 7l3 1.7v3.6L12 14l-3-1.7V8.7z"/>';
+NAVS.forEach(g=>{const i=g[1].findIndex(x=>x[0]==="w3d");if(i>=0&&!g[1].some(x=>x[0]==="l3d"))g[1].splice(i+1,0,["l3d","l3d","On-device 3D (free)","3D على جهازك (مجاني)",1])});ALLNAV.length=0;NAVS.flatMap(g=>g[1]).forEach(x=>ALLNAV.push(x));
+TOOLDESC.l3d=["Photo → 3D model made by AI on your own device (WebGPU). Nothing is uploaded and it costs no credits.","صورة ← مجسّم ثلاثي الأبعاد يصنعه الذكاء على جهازك (WebGPU). لا يُرفع شيء ولا يستهلك رصيداً."];
+VIEWS.l3d=()=>{const mh=(API.cfg&&API.cfg.localAI&&API.cfg.localAI.modelsHost)||"";return'<div class="view l3dview"><div class="spread"><h1>'+L("On-device 3D","ثلاثي الأبعاد على جهازك")+'</h1><span class="badge b-complete">'+L("Free · private · WebGPU","مجاني · خاص · WebGPU")+'</span></div><p class="lede">'+L("Turn a photo into a 3D model with AI that runs on this device — nothing is uploaded and no credits are used. Add wind, snow and a live sky, then save it to your library.","حوّل صورة إلى مجسّم ثلاثي الأبعاد بذكاء يعمل على هذا الجهاز — لا يُرفع شيء ولا يُستهلك رصيد. أضف الرياح والثلج والسماء الحية ثم احفظه في مكتبتك.")+'</p><iframe class="l3dframe" title="'+esc(L("On-device 3D","ثلاثي الأبعاد على جهازك"))+'" src="/local3d/?embed=1&lang='+(S.lang==="ar"?"ar":"en")+(mh?"&models="+encodeURIComponent(mh):"")+'" allow="fullscreen; cross-origin-isolated"></iframe></div>'};
+(function(){const st=document.createElement("style");st.textContent=".l3dframe{width:100%;height:calc(100vh - 210px);min-height:640px;border:1px solid var(--line);border-radius:16px;background:var(--panel);display:block}@media (max-width:900px){.l3dframe{height:calc(100vh - 180px);min-height:1100px}}";document.head.appendChild(st)})();
+/* the tool hands its model to the app: a local 3D job (library, 3D Studio, 3D World Studio, editor) */
+addEventListener("message",async e=>{if(e.origin!==location.origin||!e.data||e.data.type!=="nooi-local3d-glb")return;const d=e.data,blob=new Blob([d.glb],{type:"model/gltf-binary"});
+  const j={id:uid(),kind:"3d",status:"complete",progress:1,created:Date.now(),title:(d.name||"3D")+" · "+L("on-device","على الجهاز"),prompt:d.name||"3D",seed:1,pal:S.story.palette,art:"scene",dur:5,aspect:"1:1",cost:0,local:true,thumb:d.thumb||null,meta:{mode:"objects",local:true,ondevice:true,stats:d.stats||null}};
+  EXPORTS[j.id]=URL.createObjectURL(blob)+"#nooi.glb";IDB.put("x_"+j.id,blob);S.jobs.push(j);persist();
+  if(API.mode==="server"){try{j.resultUrl=(await API.upload(blob,"nooi-ondevice-"+j.id+".glb")).url;persist()}catch(err){}}
+  toast(L("Saved to your library — open it in the 3D World Studio","حُفظ في مكتبتك — افتحه في استوديو العوالم 3D"),{type:"ok"})});
+/* 3D World Studio & 3D Studio point to it */
+["w3d","studio3d"].forEach(k=>{const f=VIEWS[k];if(!f)return;VIEWS[k]=()=>f().replace(/(<\/h1>)/,'$1<button class="btn sm" data-go="l3d" style="margin-inline-start:8px">'+ic("l3d")+L("On-device 3D (free)","3D على جهازك (مجاني)")+"</button>")});
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
