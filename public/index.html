@@ -8880,8 +8880,8 @@ edExport=(o=>async function(){const srv=API.mode==="server",want=S.ed.fmtOut||(s
   if(srv){saveFile=async(n,d)=>{cap={n,d}};S.ed.fmtOut="webm"}
   try{await o()}finally{saveFile=sf;S.ed.fmtOut=keep}
   if(!srv||!cap)return;const F=fmt(),w=F[2],h=F[3];toast(L("Preparing your "+want.toUpperCase()+" · "+w+"×"+h+"…","جارٍ تجهيز ملف "+want.toUpperCase()+" · "+w+"×"+h+"…"),{type:"info",ms:6000});
-  try{const blob=cap.d instanceof Blob?cap.d:await(await fetch(cap.d)).blob();const r=await fetch("/v1/media/transcode?w="+w+"&h="+h+"&fmt="+want,{method:"POST",headers:Object.assign({"Content-Type":"video/webm"},await authH()),body:blob}).then(x=>x.json());
-    if(!r.url)throw new Error(r.error||"failed");const out=await(await fetch(r.url)).blob();await sf(String(cap.n).replace(/\.\w+$/,"")+"."+want,out);if(S.ed.lastExport)EXPORTS[S.ed.lastExport]=r.url}
+  try{const blob=cap.d instanceof Blob?cap.d:await(await fetch(cap.d)).blob();const r=await fetch("/v1/media/transcode?w="+w+"&h="+h+"&fmt="+want+"&fps="+(+S.ed.fps||30),{method:"POST",headers:Object.assign({"Content-Type":"video/webm"},await authH()),body:blob}).then(x=>x.json());
+    if(!r.url)throw new Error(r.error||"failed");const out=await(await fetch(r.url)).blob();await sf(String(cap.n).replace(/\.\w+$/,"")+"."+({prores:"mov",dnxhr:"mxf",hevc:"mp4"}[want]||want),out);if(S.ed.lastExport)EXPORTS[S.ed.lastExport]=r.url;S.ed.lastDeliverable={url:r.url,fmt:want}}
   catch(e){toast(L("Converting failed — saving the original recording.","تعذّر التحويل — يُحفظ التسجيل الأصلي."),{type:"warn"});await sf(cap.n,cap.d)}})(edExport);
 VIEWS.edit=(o=>function(){if(API.mode==="server"&&!S.ed.fmtOut)S.ed.fmtOut="mp4";return o()})(VIEWS.edit);
 /* live server: no sample data and no "try a demo" buttons */
@@ -9652,6 +9652,7 @@ const X3OPS={
   async pano({prompt,biome,tod,blob}){const f=blob?new File([blob],"place.jpg",{type:blob.type||"image/jpeg"}):null;const j=withRef72("iRef",f,()=>addJob({kind:"image",model:bestImg72(),prompt:"A seamless 360-degree equirectangular panorama"+(f?" that continues the place in the reference photo in every direction":"")+". The place: "+prompt+(tod&&tod!=="day"?", at "+tod:"")+". Eye-level camera in the middle of the space, straight horizon across the middle, photorealistic, consistent light, no text, no borders; the left and right edges must join seamlessly.",title:L("360° sky · ","سماء 360° · ")+String(prompt).slice(0,30),aspect:"21:9",cost:x3Cost().pano,secs:12,art:"scene",meta:{world360:true}}));if(!j)throw new Error(L("Not enough credits.","الرصيد غير كافٍ."));renderShell();return{id:j.id,credits:S.credits}},
   async skybox({prompt}){const j=addJob({kind:"world",prompt,title:L("World · ","عالم · ")+String(prompt).slice(0,30),cost:40,secs:60,art:"scene",aspect:"21:9",meta:{engine:"skybox"}});if(!j)throw new Error(L("Not enough credits.","الرصيد غير كافٍ."));renderShell();return{id:j.id,credits:S.credits}},
   async vision({image,label}){if(!x3Server())throw new Error(L("Sign in on the live site to use AI vision.","سجّل الدخول في الموقع لاستخدام رؤية الذكاء."));const r=await API.req("/v1/vision/locate",{json:{image,label}});S.credits=Math.max(0,(S.credits||0)-1);renderShell();return r},
+  async review3d({image,subject,category}){if(!x3Server())throw new Error(L("Sign in on the live site to use the AI review.","سجّل الدخول في الموقع لاستخدام مراجعة الذكاء."));const r=await API.req("/v1/vision/review",{json:{image,subject,category}});S.credits=Math.max(0,(S.credits||0)-1);renderShell();return Object.assign({credits:S.credits},r)},
   async jobs({ids}){return ids.map(id=>{if(String(id).startsWith("a3:")){const p=(S.a3||[]).find(x=>x.id===id.slice(3));if(!p)return{id,gone:true,status:"failed",error:"gone"};if(p.status==="done"&&p.res){const j=S.jobs.find(x=>x.id===p.res);return{id,status:j&&mediaUrl(j)?"complete":"running",progress:1,url:j?mediaUrl(j):null}}
       const vs=Object.values(p.jobs||{}).map(k=>S.jobs.find(x=>x.id===k)).filter(Boolean);return{id,status:p.status==="failed"?"failed":"running",progress:vs.length?vs.reduce((a,j)=>a+(j.status==="complete"?1:(j.progress||0)),0)/3:0,error:p.error||null}}
     const j=S.jobs.find(x=>x.id===id);if(!j)return{id,gone:true,status:"failed",error:"gone"};return{id,status:j.status,progress:j.progress||0,error:j.error||null,url:j.status==="complete"?mediaUrl(j):null}})},
@@ -9668,6 +9669,101 @@ addEventListener("message",async e=>{if(e.origin!==location.origin||!e.data||e.d
   try{if(!fn)throw new Error("Unknown request");const data=await fn(args||{});e.source.postMessage({type:"x3d-res",id,ok:true,data},location.origin)}catch(err){e.source.postMessage({type:"x3d-res",id,ok:false,error:String((err&&err.message)||err)},location.origin)}});
 /* other tools that hand a 3D model over open it in the studio */
 const _x3go=go;go=function(v,...a){if(v==="studio3d"&&S.s3d&&S.s3d.sel){X3F.hand=S.s3d.sel;S.s3d.sel=null}if(v==="studio3d"&&(X3F.hand||s3dSource()))X3F.force=true;return _x3go(v,...a)};
+/* ================= v78: render review & AI corrections · "Export video" button (pro formats) · brand names keep their order in every language ================= */
+(function(){const st=document.createElement("style");st.textContent=`
+.nst{direction:ltr;unicode-bidi:isolate;display:inline-flex;align-items:center;gap:6px}
+.edout{white-space:nowrap;min-height:44px}
+.xfmts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}.xfmts button{display:grid;gap:2px;text-align:start;border:1px solid var(--line);background:var(--panel2);border-radius:12px;padding:10px 12px;cursor:pointer;color:var(--text)}
+.xfmts button[aria-pressed="true"]{border-color:var(--accent,#9CD245);box-shadow:inset 0 0 0 1px var(--accent,#9CD245)}.xfmts button[disabled]{opacity:.45;cursor:not-allowed}.xfmts b{font-size:14px}.xfmts small{color:var(--mute);font-size:12px;line-height:1.3}
+.rck{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:4px;font-size:13px}.rck li{display:flex;gap:8px;align-items:flex-start}.rck i{font-style:normal;flex:none;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;margin-top:1px}
+.rck li.ok i{background:#9CD245;color:#10140b}.rck li.bad i{background:#f2b84b;color:#1b1404}.rck li.err i{background:#ef5b5b;color:#fff}
+.rcksheet{max-width:100%;max-height:300px;object-fit:contain;border-radius:10px;margin-top:10px;display:block;background:#000}
+`;document.head.appendChild(st)})();
+/* ---------- the editor's "Export video" button and sheet ---------- */
+const XFMT=[["mp4","MP4 · H.264","Plays everywhere — social, web, phones","MP4 · H.264","يعمل في كل مكان — المنصات والويب والهواتف",0],["prores","ProRes 422 HQ","Apple ProRes .mov for editing & broadcast","ProRes 422 HQ","ملف ‎.mov للمونتاج والبث",1],["dnxhr","DNxHR HQ","Avid .mxf for broadcast & post houses","DNxHR HQ","ملف ‎.mxf لـ Avid والبث",1],["hevc","H.265 · 10-bit","Same quality, about half the size","H.265 · ‏10 بت","نفس الجودة بنصف الحجم تقريباً",1],["webm","WebM · VP9","For websites and browsers","WebM · VP9","للمواقع والمتصفحات",0],["gif","GIF","Short loop without sound","GIF","حلقة قصيرة بلا صوت",1],["wav","WAV · 24-bit","The sound only, 48 kHz","WAV · ‏24 بت","الصوت فقط ‎48 kHz",1]];
+VIEWS.edit=(o=>function(){let h=o();const a=h.indexOf('data-act="open-fmt"');if(a<0||h.indexOf('data-act="ed-out"')>=0)return h;const e=h.indexOf("</button>",a);if(e<0)return h;
+  return h.slice(0,e+9)+'<button class="btn primary edout" data-act="ed-out" aria-haspopup="dialog">'+ic("download")+L("Export video","تصدير الفيديو")+"</button>"+h.slice(e+9)})(VIEWS.edit);
+function edOutSheet(){const srv=API.mode==="server",F=fmt(),cur=S.ed.fmtOut||(srv?"mp4":"webm"),fps=+S.ed.fps||30,P=(API.cfg&&API.cfg.providers)||{},canAI=srv&&!!(P.llm||(P.nvidia&&P.nvUse&&P.nvUse.vision!==false));
+  if(S.ed.rcheck==null)S.ed.rcheck=true;
+  hfSheet(L("Export video","تصدير الفيديو"),'<span class="lbl" style="margin-top:0">'+L("Platform & size","المنصة والمقاس")+'</span><button class="fmtbtn" data-act="open-fmt" style="width:100%"><span><b>'+esc(F[1])+'</b><small class="mono">'+F[2]+"×"+F[3]+'</small></span></button>'+
+    '<span class="lbl">'+L("File type","نوع الملف")+'</span><div class="xfmts">'+XFMT.map(x=>{const off=x[5]&&!srv;return'<button data-act="xout-fmt" data-v="'+x[0]+'" aria-pressed="'+(cur===x[0])+'"'+(off?" disabled":"")+'><b>'+esc(L(x[1],x[3]))+"</b><small>"+esc(off?L("Needs the nooi server","يحتاج خادم nooi"):L(x[2],x[4]))+"</small></button>"}).join("")+"</div>"+
+    '<span class="lbl">'+L("Frame rate","معدل الإطارات")+'</span><div class="seg">'+[24,25,30,50,60].map(v=>'<button data-act="xout-fps" data-v="'+v+'" aria-pressed="'+(fps===v)+'">'+v+" fps</button>").join("")+"</div>"+
+    '<div style="display:grid;gap:8px;margin-top:14px"><label class="row" style="gap:8px;cursor:pointer"><input type="checkbox" data-act="xout-check"'+(S.ed.rcheck?" checked":"")+'> '+L("Check the render when it's done (free) — black or frozen frames, sound, text, size","افحص النتيجة بعد الانتهاء (مجاناً) — إطارات سوداء أو متجمدة، الصوت، النصوص، المقاس")+"</label>"+
+    (canAI?'<label class="row" style="gap:8px;cursor:pointer"><input type="checkbox" data-act="xout-ai"'+(S.ed.rcheckAI?" checked":"")+"> "+L("…and let AI vision look at the key frames (1 cr)","…ودع رؤية الذكاء تراجع الإطارات الرئيسية (1 رصيد)")+"</label>":"")+"</div>"+
+    '<button class="btn primary big" style="margin-top:14px;width:100%" data-act="xout-go">'+ic("download")+L("Export · ","تصدير · ")+esc(L((XFMT.find(x=>x[0]===cur)||XFMT[0])[1],(XFMT.find(x=>x[0]===cur)||XFMT[0])[3]))+" · "+mmss(edTotal())+"</button>")}
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest("[data-act]");if(!a)return;const act=a.dataset.act;
+  if(act==="ed-out"){e.preventDefault();if(!S.ed.clips.length&&!(S.ed.texts||[]).length){toast(L("Add a clip first.","أضف مقطعاً أولاً."),{type:"warn"});return}edOutSheet();return}
+  if(act==="xout-fmt"){S.ed.fmtOut=a.dataset.v;persist();edOutSheet();return}
+  if(act==="xout-fps"){S.ed.fps=+a.dataset.v;persist();edOutSheet();return}
+  if(act==="xout-check"){S.ed.rcheck=a.checked;persist();return}
+  if(act==="xout-ai"){S.ed.rcheckAI=a.checked;persist();return}
+  if(act==="xout-go"){$("#modalRoot").innerHTML="";await edExport();return}
+  if(act==="rc-fix"){const r=S.ed.rc;if(!r)return;const done=vrFix(r);$("#modalRoot").innerHTML="";toast(done.length?L("Fixed: ","صُحّح: ")+done.join(" · "):L("Nothing to fix automatically.","لا شيء يُصحّح تلقائياً."),{type:"ok"});renderView();if(done.length&&a.dataset.again)await edExport();return}});
+/* ---------- the render check: the finished video is examined before it's delivered ---------- */
+const VR={master:null};
+const once=(el,ev,ms)=>new Promise(ok=>{let t=0;const f=()=>{clearTimeout(t);el.removeEventListener(ev,f);ok(true)};el.addEventListener(ev,f);t=setTimeout(()=>{el.removeEventListener(ev,f);ok(false)},ms||8000)});
+async function vrFrames(blob,n){const url=URL.createObjectURL(blob),v=document.createElement("video");v.muted=true;v.playsInline=true;v.preload="auto";v.src=url;
+  try{await once(v,"loadedmetadata",15000);let dur=v.duration;if(!isFinite(dur)||!dur){v.currentTime=1e7;await once(v,"durationchange",4000);dur=v.duration;v.currentTime=0;await once(v,"seeked",3000)}
+    if(!isFinite(dur)||!dur)return{dur:0,w:v.videoWidth,h:v.videoHeight,frames:[]};const W=64,H=Math.max(8,Math.round(64*(v.videoHeight||1)/(v.videoWidth||1))),c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d",{willReadFrequently:true}),N=n||Math.min(36,Math.max(8,Math.ceil(dur*3))),frames=[];
+    const big=document.createElement("canvas"),bw=200,bh=Math.round(200*(v.videoHeight||1)/(v.videoWidth||1));big.width=bw;big.height=bh;
+    for(let i=0;i<N;i++){const t=Math.min(dur-0.05,(i+.5)/N*dur);v.currentTime=t;await once(v,"seeked",4000);x.drawImage(v,0,0,W,H);const d=x.getImageData(0,0,W,H).data,g=new Float32Array(W*H);let s=0;for(let k=0;k<W*H;k++){g[k]=(d[k*4]*.3+d[k*4+1]*.59+d[k*4+2]*.11)/255;s+=g[k]}const m=s/(W*H);let vv=0;for(let k=0;k<W*H;k++)vv+=(g[k]-m)**2;
+      const f={t,mean:m,std:Math.sqrt(vv/(W*H)),g};if(i%Math.max(1,Math.floor(N/6))===0&&frames.filter(z=>z.thumb).length<6){const bx=big.getContext("2d");bx.drawImage(v,0,0,bw,bh);f.thumb=big.toDataURL("image/jpeg",.8)}frames.push(f)}
+    return{dur,w:v.videoWidth,h:v.videoHeight,frames}}finally{URL.revokeObjectURL(url)}}
+async function vrAudio(blob){try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;const ac=new AC(),buf=await ac.decodeAudioData(await blob.arrayBuffer());ac.close&&ac.close();
+  const ch=buf.numberOfChannels,len=buf.length,win=Math.round(buf.sampleRate*.05);let peak=0,clip=0,sum=0,quiet=0,wins=0;const data=[...Array(ch)].map((_,i)=>buf.getChannelData(i));
+  for(let s0=0;s0<len;s0+=win){let e=0,n=0;for(let s=s0;s<Math.min(len,s0+win);s+=2)for(let c=0;c<ch;c++){const v=data[c][s],a=Math.abs(v);if(a>peak)peak=a;if(a>=.999)clip++;e+=v*v;n++}const r=Math.sqrt(e/(n||1));sum+=e;wins++;if(r<.0018)quiet++}
+  const rms=Math.sqrt(sum/Math.max(1,len*ch/2));return{peak,rmsDb:20*Math.log10(rms||1e-9),silent:quiet/Math.max(1,wins),clipRatio:clip/Math.max(1,len*ch/2),dur:buf.duration}}catch(e){return null}}
+function vrExpect(){const F=fmt(),E=S.ed;return{secs:edTotal(),w:F[2],h:F[3],audio:!!(M.edMusic||M.edVoice||(E.sfx||[]).length||E.clips.some(c=>M["c_"+c.id]&&M["c_"+c.id].type==="video"&&(c.vol==null||c.vol>0)&&E.clipSound!==false)),still:E.clips.length>0&&E.clips.every(c=>{const m=M["c_"+c.id];return m&&m.type==="image"})}}
+async function vrCheck(blob,exp,deliv){const out=[],add=(id,lvl,en,ar,fix)=>out.push({id,lvl,en,ar,fix:fix||null});const V=await vrFrames(blob);
+  if(!V.dur)add("decode","err","The video couldn't be opened to check it","تعذّر فتح الفيديو لفحصه");
+  else{const dd=Math.abs(V.dur-exp.secs);add("duration",dd<=Math.max(.6,exp.secs*.05)?"ok":"bad",`Length ${V.dur.toFixed(1)} s (timeline ${exp.secs.toFixed(1)} s)`,`المدة ${V.dur.toFixed(1)} ث (الخط الزمني ${exp.secs.toFixed(1)} ث)`,dd>Math.max(.6,exp.secs*.05)?"reexport":null);
+    const ar=V.w/V.h,er=exp.w/exp.h;add("aspect",Math.abs(ar-er)/er<.03?"ok":"bad",`Picture ${V.w}×${V.h} for ${exp.w}×${exp.h}`,`الصورة ${V.w}×${V.h} للمقاس ${exp.w}×${exp.h}`,Math.abs(ar-er)/er<.03?null:"reexport");
+    const F=V.frames,black=F.filter(f=>f.mean<.04&&f.std<.025),step=V.dur/F.length,bs=F.findIndex(f=>!(f.mean<.04&&f.std<.025)),be=[...F].reverse().findIndex(f=>!(f.mean<.04&&f.std<.025));
+    add("black",black.length<=1?"ok":"bad",black.length<=1?"No black frames":`${black.length} black frame(s)`+(bs>0?` · ${(bs*step).toFixed(1)} s at the start`:"")+(be>0?` · ${(be*step).toFixed(1)} s at the end`:""),black.length<=1?"لا إطارات سوداء":`${black.length} إطار أسود`,black.length>1&&(bs>0||be>0)?"trimBlack":null);
+    let still=0,run=0;for(let i=1;i<F.length;i++){let d=0;for(let k=0;k<F[i].g.length;k+=3)d+=Math.abs(F[i].g[k]-F[i-1].g[k]);d/=F[i].g.length/3;if(d<.004){run++;still=Math.max(still,run)}else run=0}
+    const frozen=!exp.still&&still*step>Math.max(3,V.dur*.4);add("motion",frozen?"bad":"ok",frozen?`The picture doesn't move for ${(still*step).toFixed(1)} s`:"The picture moves",frozen?`الصورة لا تتحرك لمدة ${(still*step).toFixed(1)} ث`:"الصورة تتحرك");
+    const mean=F.reduce((s,f)=>s+f.mean,0)/Math.max(1,F.length);add("exposure",mean<.06?"bad":mean>.93?"bad":"ok",mean<.06?"Very dark overall":mean>.93?"Washed out (almost white)":`Exposure looks right (${Math.round(mean*100)}%)`,mean<.06?"داكن جداً":mean>.93?"باهت (شبه أبيض)":"الإضاءة سليمة");
+    out.frames=F.filter(f=>f.thumb).map(f=>({t:f.t,src:f.thumb}))}
+  if(exp.audio&&deliv!=="gif"){const A=await vrAudio(blob);if(!A)add("audio","bad","The sound couldn't be read","تعذّرت قراءة الصوت");
+    else{if(A.rmsDb<-55)add("audio","err","The video is silent but the timeline has sound","الفيديو صامت مع أن الخط الزمني فيه صوت","reexport");
+      else{add("loud",A.clipRatio>.001||A.rmsDb>-8?"bad":A.rmsDb<-32?"bad":"ok",A.clipRatio>.001?`The sound clips (distorts) — peak ${(20*Math.log10(A.peak||1e-9)).toFixed(1)} dB`:A.rmsDb>-8?"The sound is too loud":A.rmsDb<-32?`The sound is very quiet (${A.rmsDb.toFixed(0)} dB)`:`Sound level is good (${A.rmsDb.toFixed(0)} dB, peak ${(20*Math.log10(A.peak||1e-9)).toFixed(1)} dB)`,
+        A.clipRatio>.001?"الصوت مشوّه (تشبّع)":A.rmsDb>-8?"الصوت عالٍ جداً":A.rmsDb<-32?"الصوت منخفض جداً":"مستوى الصوت جيد",A.clipRatio>.001||A.rmsDb>-8?"quieter":A.rmsDb<-32?"louder":null)}}}
+  // text that can't fit the frame
+  const cw=document.createElement("canvas").getContext("2d"),long=[];(S.ed.texts||[]).forEach(t=>{const fs=Math.round(Math.min(exp.w,exp.h)*(t.size||7)*(t.k||1)/100);cw.font="700 "+fs+"px system-ui, sans-serif";const wd=Math.max(...String(t.text||"").split(/\s+/).map(wd=>cw.measureText(wd).width));const cx=(t.x!=null?t.x:.5)*exp.w;if(wd>exp.w*.92||cx-wd/2<-exp.w*.02||cx+wd/2>exp.w*1.02)long.push(t)});
+  add("text",long.length?"bad":"ok",long.length?`${long.length} text(s) don't fit the frame`:"All text fits the frame",long.length?`${long.length} نص لا يتسع في الإطار`:"كل النصوص داخل الإطار",long.length?"fitText":null);
+  return out}
+function vrFix(r){const done=[],E=S.ed;for(const c of r.checks||[]){if(c.lvl==="ok"||!c.fix)continue;
+  if(c.fix==="quieter"){E.musicVol=Math.max(10,Math.round((E.musicVol||80)*.7));E.clips.forEach(x=>{if(x.vol!=null)x.vol=Math.max(5,Math.round(x.vol*.8))});done.push(L("lowered the sound","خُفض الصوت"))}
+  if(c.fix==="louder"){E.musicVol=Math.min(100,Math.round((E.musicVol||80)*1.35));E.clips.forEach(x=>{if(x.vol!=null)x.vol=Math.min(150,Math.round(x.vol*1.3))});done.push(L("raised the sound","رُفع الصوت"))}
+  if(c.fix==="fitText"){const F=fmt(),W=F[2],H=F[3],cw=document.createElement("canvas").getContext("2d");(E.texts||[]).forEach(t=>{const fs=Math.min(W,H)*(t.size||7)*(t.k||1)/100;cw.font="700 "+Math.round(fs)+"px system-ui, sans-serif";
+      const wd=Math.max(...String(t.text||"").split(/\s+/).map(x=>cw.measureText(x).width));if(wd>W*.88)t.size=Math.max(2.5,Math.floor((t.size||7)*(W*.86/wd)*10)/10);if(t.x!=null)t.x=Math.min(.85,Math.max(.15,t.x))});done.push(L("text made to fit","صُغّرت النصوص لتتسع"))}
+  if(c.fix==="trimBlack"){const f=E.clips[0],l=E.clips[E.clips.length-1];if(f&&f.in!=null&&f.out!=null&&f.out-f.in>1){f.in=Math.min(f.out-.5,f.in+.3)}if(l&&l!==f&&l.out!=null&&l.in!=null&&l.out-l.in>1){l.out=Math.max(l.in+.5,l.out-.3)}done.push(L("trimmed the black edges","قُصّت الأطراف السوداء"))}
+  if(c.fix==="reexport"&&!done.includes("re-export"))done.push(L("export again","أعد التصدير"))}
+  persist();return done}
+function vrSheet(r){const ok=r.checks.filter(c=>c.lvl==="ok").length,fixable=r.checks.some(c=>c.lvl!=="ok"&&c.fix);
+  hfSheet(L("Render check","فحص النتيجة"),'<p class="small mute" style="margin:0">'+L(ok+" of "+r.checks.length+" checks passed","نجح "+ok+" من "+r.checks.length+" فحوص")+(r.deliv?" · "+esc(r.deliv):"")+"</p>"+
+    '<ul class="rck">'+r.checks.map(c=>'<li class="'+c.lvl+'"><i>'+(c.lvl==="ok"?"✓":"!")+"</i><span>"+esc(L(c.en,c.ar))+"</span></li>").join("")+"</ul>"+
+    (r.ai?'<p class="small" style="margin:10px 0 0"><b>'+L("AI review: ","مراجعة الذكاء: ")+"</b>"+esc(r.ai.summary||(r.ai.issues.length?r.ai.issues.map(i=>i.note||i.code).join(" · "):L("looks right","سليم")))+"</p>":"")+
+    (fixable?'<div class="row" style="margin-top:12px"><button class="btn primary" data-act="rc-fix" data-again="1">'+ic("wand")+L("Fix & export again","صحّح وصدّر مجدداً")+'</button><button class="btn" data-act="rc-fix">'+L("Just fix","صحّح فقط")+"</button></div>":"")+
+    (r.sheet?'<img class="rcksheet" alt="'+esc(L("Frames from the render","إطارات من النتيجة"))+'" src="'+r.sheet+'">':""))}
+function vrContact(frames){if(!frames||!frames.length)return null;const im=frames.map(f=>{const i=new Image();i.src=f.src;return i}),cols=3,rows=Math.ceil(im.length/cols),c=document.createElement("canvas");return new Promise(ok=>{let n=0;im.forEach(i=>i.onload=i.onerror=()=>{if(++n<im.length)return;const w=im[0].naturalWidth||200,h=im[0].naturalHeight||112;c.width=w*cols;c.height=h*rows;const x=c.getContext("2d");x.fillStyle="#000";x.fillRect(0,0,c.width,c.height);
+  im.forEach((ii,k)=>{x.drawImage(ii,(k%cols)*w,Math.floor(k/cols)*h,w,h);x.fillStyle="rgba(0,0,0,.6)";x.fillRect((k%cols)*w,Math.floor(k/cols)*h,54,18);x.fillStyle="#fff";x.font="bold 12px system-ui";x.fillText(mmss(frames[k].t),(k%cols)*w+5,Math.floor(k/cols)*h+13)});ok(c.toDataURL("image/jpeg",.82))})})}
+/* every export: keep the master recording, then check it (and the delivered pro file through ffprobe) */
+edExport=(o=>async function(){if(recording)return o();const coURL=URL.createObjectURL;let master=null;URL.createObjectURL=function(b){if(!master&&b instanceof Blob&&/^video\//.test(b.type))master=b;return coURL.call(URL,b)};
+  // record in a format this browser can also PLAY (some browsers can encode H.264 but not decode it — the library preview and the check need playback)
+  const ITS=window.MediaRecorder&&MediaRecorder.isTypeSupported,mp4ok=!!document.createElement("video").canPlayType('video/mp4; codecs="avc1.42E01E"');if(ITS&&!mp4ok)MediaRecorder.isTypeSupported=t=>!/mp4/.test(t)&&ITS.call(MediaRecorder,t);
+  const before=S.ed.lastExport;S.ed.lastDeliverable=null;try{await o()}finally{URL.createObjectURL=coURL;if(ITS)MediaRecorder.isTypeSupported=ITS}
+  if(!master||S.ed.lastExport===before||S.ed.rcheck===false)return;VR.master=master;const exp=vrExpect(),want=S.ed.fmtOut||"webm";toast(L("Checking the render…","جارٍ فحص النتيجة…"),{type:"info",ms:3000});
+  try{const checks=await vrCheck(master,exp,want),r={checks,at:Date.now(),deliv:""};
+    if(S.ed.lastDeliverable&&API.mode==="server"){try{const pr=await API.req("/v1/media/probe",{json:{url:S.ed.lastDeliverable.url}}),vv=pr.video,want2={prores:"prores",dnxhr:"dnxhd",hevc:"hevc",mp4:"h264",webm:"vp9",gif:"gif"}[want];
+      r.deliv=(vv?(vv.codec+(vv.profile?" "+vv.profile:"")+" · "+vv.width+"×"+vv.height+" · "+vv.fps+" fps"):"")+(pr.audio?" · "+pr.audio.codec+" "+pr.audio.rate/1000+" kHz":"")+" · "+pr.duration.toFixed(1)+" s";
+      if(want2&&vv)checks.push({id:"file",lvl:vv.codec===want2&&(want==="gif"||vv.width===exp.w&&vv.height===exp.h)?"ok":"bad",en:"Delivered file: "+r.deliv,ar:"الملف المسلَّم: "+r.deliv,fix:vv.codec===want2?null:"reexport"});
+      if(want==="wav")checks.push({id:"file",lvl:pr.audio&&pr.audio.codec.startsWith("pcm")?"ok":"bad",en:"Delivered file: "+r.deliv,ar:"الملف المسلَّم: "+r.deliv})}catch(e){}}
+    r.sheet=await vrContact(checks.frames);
+    if(S.ed.rcheckAI&&API.mode==="server"&&r.sheet){try{r.ai=await API.req("/v1/vision/review",{json:{image:r.sheet,mode:"video",subject:"video",brief:(S.ed.title||S.ed.brief||"").slice(0,300)}});S.credits=Math.max(0,(S.credits||0)-1);
+      (r.ai.issues||[]).forEach(i=>checks.push({id:"ai_"+i.code,lvl:"bad",en:"AI: "+(i.note||i.code)+(i.view?" ("+i.view+")":""),ar:"الذكاء: "+(i.note||i.code),fix:i.code==="text_cut_off"?"fitText":i.code==="black_frames"?"trimBlack":null}))}catch(e){r.ai={issues:[],summary:L("AI review unavailable: ","مراجعة الذكاء غير متاحة: ")+e.message}}}
+    S.ed.rc=r;const bad=checks.filter(c=>c.lvl!=="ok");if(bad.length)vrSheet(r);else toast(L("Render check passed — ","نجح فحص النتيجة — ")+checks.length+L(" checks"," فحوص"),{type:"ok"})}
+  catch(e){toast(L("Couldn't check the render: ","تعذّر فحص النتيجة: ")+e.message,{type:"warn"})}})(edExport);
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

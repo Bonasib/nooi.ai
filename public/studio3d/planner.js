@@ -56,6 +56,8 @@ export function techniques(cap) {
     { id: "tripo", step: "asset", en: "Tripo3D — image → 3D", ar: "Tripo3D — صورة ← 3D", where: "Tripo cloud", cost: C.tripo || 12, ok: inNooi && signed && srv && !!cap.tripo },
     { id: "meshy", step: "asset", en: "Meshy — image → 3D", ar: "Meshy — صورة ← 3D", where: "Meshy cloud", cost: C.meshy || 12, ok: inNooi && signed && srv && !!cap.meshy },
     { id: "sam3d", step: "asset", en: "SAM 3D (GPU server)", ar: "SAM 3D (خادم GPU)", where: "nooi GPU", cost: C.sam3d || 12, ok: inNooi && signed && srv && !!cap.sam3d },
+    { id: "check", step: "review", en: "Automatic checks + fixes (ground, size, lighting, the back ≠ the front)", ar: "فحص وتصحيح تلقائي (الأرض، الحجم، الإضاءة، الخلف ≠ الأمام)", where: dev, cost: 0, ok: true },
+    { id: "aireview", step: "review", en: "AI vision review of 3 views + fixes", ar: "مراجعة رؤية الذكاء لثلاث زوايا + تصحيح", where: "nooi AI", cost: C.review || 1, ok: inNooi && signed && srv && !!cap.vision },
     { id: "procedural", step: "world", en: "Procedural world — built on your GPU", ar: "عالم إجرائي — يُبنى على معالجك الرسومي", where: "WebGL2", cost: 0, ok: true },
     { id: "pano", step: "world", en: "AI 360° sky painted for your prompt", ar: "سماء 360° يرسمها الذكاء لطلبك", where: "nooi credits", cost: C.pano || 4, ok: inNooi && signed && !!cap.pano },
     { id: "skybox", step: "world", en: "Blockade Labs Skybox (360° + depth)", ar: "Blockade Labs Skybox (‏360° + عمق)", where: "Blockade cloud", cost: C.skybox || 40, ok: inNooi && signed && srv && !!cap.skybox },
@@ -67,7 +69,7 @@ export function techniques(cap) {
   ];
 }
 export const STEPS = [
-  ["select", "Pick the subject in your photo", "حدّد العنصر في صورتك"], ["asset", "Turn it into a 3D object", "حوّله إلى مجسّم ثلاثي الأبعاد"],
+  ["select", "Pick the subject in your photo", "حدّد العنصر في صورتك"], ["asset", "Turn it into a 3D object", "حوّله إلى مجسّم ثلاثي الأبعاد"], ["review", "Check the render & fix mistakes", "افحص النتيجة وصحّح الأخطاء"],
   ["world", "Build the world around it", "ابنِ العالم من حوله"], ["fx", "Add life & weather", "أضف الحياة والطقس"],
   ["explore", "Walk through it", "تجوّل داخله"], ["capture", "Capture & share", "التقط وشارك"],
 ];
@@ -79,7 +81,7 @@ export function makePlan(intent, cap, prev = {}) {
   const S = Object.fromEntries(steps.map((s) => [s.id, s]));
   S.select.choice = pick("select", cap.ai === false ? ["classic"] : ["sam", "classic"]); S.select.on = hasPhoto;
   S.asset.choice = "device"; S.asset.upgrade = useCloud ? cloud : null; S.asset.on = hasPhoto;
-  S.world.choice = "procedural"; S.world.sky = prev.sky || null; S.fx.choice = "fx"; S.explore.choice = "walk"; S.explore.on = true;
+  S.review.choice = "check"; S.review.on = hasPhoto; S.world.choice = "procedural"; S.world.sky = prev.sky || null; S.fx.choice = "fx"; S.explore.choice = "walk"; S.explore.on = true;
   S.capture.choice = intent.record ? "video" : "glb"; S.capture.on = !!intent.record;
   const plan = { intent, steps, biome: intent.biome || prev.biome || "rainforest", size: intent.size || prev.size || [8, 8], tod: intent.tod || prev.tod || "day", fx: Object.assign({}, intent.fx),
     subject: intent.subject || (hasPhoto ? "subject" : null), category: intent.category || "object", walk: intent.walk || !intent.record, notes: [] };

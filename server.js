@@ -195,12 +195,32 @@ app.post("/v1/tts/stream", requireUser, async (req, res) => { try { const { plan
 // Export: convert a browser WebM recording to MP4 (H.264/AAC) with ffmpeg
 app.post("/v1/media/transcode", requireUser, express.raw({ type: ["video/webm", "application/octet-stream"], limit: "300mb" }), (req, res) => {
   // the editor's recording → the exact size of the chosen format (scaled + padded), with a proper duration; MP4 (H.264/AAC) or WebM (VP9/Opus)
-  const ev = (v) => { v = Math.round(+v || 0); return v >= 16 && v <= 4096 ? v - (v % 2) : 0; }, W = ev(req.query.w), H = ev(req.query.h), webm = req.query.fmt === "webm";
-  const inp = saveBuffer(req.body, ".webm"), ext = webm ? ".v.webm" : ".mp4", outName = inp.name.replace(/\.webm$/, ext), out = inp.file.replace(/\.webm$/, ext);
-  const vf = W && H ? ["-vf", `scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1`] : [];
-  const codec = webm ? ["-c:v", "libvpx-vp9", "-deadline", "realtime", "-cpu-used", "8", "-b:v", "6M", "-c:a", "libopus"] : ["-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart"];
-  const p = spawn(process.env.FFMPEG_PATH || "ffmpeg", ["-y", "-i", inp.file, ...vf, "-r", "30", ...codec, out]);
+  // + professional deliveries: ProRes 422 HQ (.mov), DNxHR HQ (.mxf), H.265 10-bit (.mp4), GIF, WAV 24-bit/48 kHz (audio only)
+  const ev = (v) => { v = Math.round(+v || 0); return v >= 16 && v <= 4096 ? v - (v % 2) : 0; }, W = ev(req.query.w), H = ev(req.query.h), F = String(req.query.fmt || "mp4");
+  const fps = [24, 25, 30, 50, 60].includes(+req.query.fps) ? +req.query.fps : 30;
+  const PRESET = { mp4: [".mp4", ["-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart"]],
+    webm: [".v.webm", ["-c:v", "libvpx-vp9", "-deadline", "realtime", "-cpu-used", "8", "-b:v", "6M", "-c:a", "libopus"]],
+    prores: [".mov", ["-c:v", "prores_ks", "-profile:v", "3", "-pix_fmt", "yuv422p10le", "-vendor", "apl0", "-c:a", "pcm_s24le", "-ar", "48000"]],
+    dnxhr: [".mxf", ["-c:v", "dnxhd", "-profile:v", "dnxhr_hq", "-pix_fmt", "yuv422p", "-c:a", "pcm_s24le", "-ar", "48000", "-f", "mxf"]],
+    hevc: [".hevc.mp4", ["-c:v", "libx265", "-preset", "fast", "-crf", "22", "-pix_fmt", "yuv420p10le", "-tag:v", "hvc1", "-x265-params", "log-level=error", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart"]],
+    gif: [".gif", null], wav: [".wav", null] };
+  if (!PRESET[F]) return res.status(400).json({ error: "Unknown format" });
+  const inp = saveBuffer(req.body, ".webm"), ext = PRESET[F][0], outName = inp.name.replace(/\.webm$/, ext), out = inp.file.replace(/\.webm$/, ext);
+  const fit = W && H ? `scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1` : "";
+  const args = F === "wav" ? ["-y", "-i", inp.file, "-vn", "-c:a", "pcm_s24le", "-ar", "48000", out]
+    : F === "gif" ? ["-y", "-i", inp.file, "-vf", `fps=12,scale=${Math.min(W || 540, 720)}:-2:flags=lanczos,split[a][b];[a]palettegen=max_colors=160[p];[b][p]paletteuse=dither=sierra2_4a`, out]
+    : ["-y", "-i", inp.file, ...(fit ? ["-vf", fit] : []), "-r", String(fps), ...PRESET[F][1], out];
+  const p = spawn(process.env.FFMPEG_PATH || "ffmpeg", args);
   p.on("error", (e) => res.status(500).json({ error: "ffmpeg: " + e.message })); p.on("close", (code) => code === 0 ? res.json({ url: (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "") + "/media/" + outName }) : res.status(500).json({ error: "ffmpeg exited " + code }));
+});
+// what a delivered file really is (codec, size, frame rate, duration, audio) — the editor's render check reads it for pro formats
+app.post("/v1/media/probe", requireUser, (req, res) => {
+  const name = path.basename(String((req.body && req.body.url) || "").split("?")[0]); const file = path.join(MEDIA_DIR, name);
+  if (!name || !fs.existsSync(file)) return res.status(404).json({ error: "Not found" });
+  const p = spawn(process.env.FFPROBE_PATH || "ffprobe", ["-v", "error", "-print_format", "json", "-show_streams", "-show_format", file]); let out = "";
+  p.stdout.on("data", (d) => (out += d)); p.on("error", (e) => res.status(500).json({ error: "ffprobe: " + e.message }));
+  p.on("close", (code) => { if (code !== 0) return res.status(500).json({ error: "ffprobe exited " + code }); try { const j = JSON.parse(out), v = (j.streams || []).find((x) => x.codec_type === "video"), a = (j.streams || []).find((x) => x.codec_type === "audio"), fr = v && v.r_frame_rate ? v.r_frame_rate.split("/") : null;
+    res.json({ duration: +(j.format && j.format.duration) || 0, format: j.format && j.format.format_name, video: v ? { codec: v.codec_name, profile: v.profile || "", width: v.width, height: v.height, pix: v.pix_fmt, fps: fr ? Math.round((+fr[0] / (+fr[1] || 1)) * 100) / 100 : 0 } : null, audio: a ? { codec: a.codec_name, rate: +a.sample_rate, channels: a.channels, bits: a.bits_per_raw_sample || a.bits_per_sample || 0 } : null }); } catch (e) { res.status(500).json({ error: "probe parse" }); } });
 });
 setInterval(() => testAll().catch(() => {}), 15 * 60e3);
 

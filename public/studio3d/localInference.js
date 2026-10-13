@@ -288,7 +288,7 @@ function solidBody(THREE, { mask, D, gw, gh, cell, L, vehicle, front }) {
   let wheels = null;
   if (vehicle) { let bx0 = gw, bx1 = 0; for (let y = Math.round(y1 - (y1 - y0) * 0.15); y <= y1; y++) for (let x = x0; x <= x1; x++) if (body[y * gw + x]) { if (x < bx0) bx0 = x; if (x > bx1) bx1 = x; }
     const Wb = (bx1 - bx0 + 1) * cell, cx = wx((bx0 + bx1 + 1) / 2), tw = 0.15 * Wb; wheels = { r, tw, y: Ymin + r, xs: [cx - Wb / 2 + tw * 0.42, cx + Wb / 2 - tw * 0.42], zs: [-0.18 * L, -0.76 * L] }; }
-  return { vehicle, walls: { pos, nor, glass, idx }, cap: { pos: cpos, uv: cuv, idx: cidx }, wheels, belt, hood, H, L };
+  return { vehicle, walls: { pos, nor, glass, idx }, cap: { pos: cpos, uv: cuv, idx: cidx }, wheels, belt, hood, H, L, Ymin, Ymax, clear };
 }
 function addBody(THREE, group, B, { albedo, mask, gw, gh, tex }) {
   // the paint: the median colour of the lower body (lights and deep shadows left out)
@@ -298,14 +298,13 @@ function addBody(THREE, group, B, { albedo, mask, gw, gh, tex }) {
   const glassC = new THREE.Color(0.02, 0.025, 0.03), cols = []; for (const g of B.walls.glass) { const c = g ? glassC : paint; cols.push(c.r, c.g, c.b); }
   const wg = new THREE.BufferGeometry(); wg.setAttribute("position", new THREE.Float32BufferAttribute(B.walls.pos, 3)); wg.setAttribute("normal", new THREE.Float32BufferAttribute(B.walls.nor, 3)); wg.setAttribute("color", new THREE.Float32BufferAttribute(cols, 3)); wg.setIndex(B.walls.idx); wg.computeBoundingBox(); wg.computeBoundingSphere();
   const wm = new THREE.Mesh(wg, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: B.vehicle ? 0.3 : 0.6, metalness: B.vehicle ? 0.45 : 0.08 })); wm.name = "sides"; wm.castShadow = wm.receiveShadow = true; group.add(wm);
-  // the back face: the photo's colours softened and darker; on a car the bright headlights become red tail lights
-  const rc = document.createElement("canvas"); rc.width = w; rc.height = h; const rx = rc.getContext("2d"); rx.filter = "blur(" + Math.max(2, Math.round(w / (B.vehicle ? 70 : 300))) + "px) brightness(0.8)"; rx.drawImage(albedo, 0, 0); rx.filter = "none";
-  if (B.vehicle) { // the front's details are washed out (the back isn't a second front); its bright lamps come back as red tail lights
-    const lc = document.createElement("canvas"); lc.width = w; lc.height = h; const lx = lc.getContext("2d"); lx.filter = "blur(" + Math.max(1, Math.round(w / 400)) + "px)"; lx.drawImage(albedo, 0, 0);
-    const li = lx.getImageData(0, 0, w, h).data, im = rx.getImageData(0, 0, w, h), a = im.data;
-    for (let i = 0; i < a.length; i += 4) { const l = (li[i] + li[i + 1] + li[i + 2]) / 765; if (l > 0.62) { const k = Math.min(1, (l - 0.62) * 6); a[i] = a[i] * (1 - k) + 205 * k; a[i + 1] = a[i + 1] * (1 - k) + 22 * k; a[i + 2] = a[i + 2] * (1 - k) + 26 * k; } } rx.putImageData(im, 0, 0); }
+  // the back face: a car gets a real rear painted on its own outline (glass, tail lights, plate, bumper) — never a copy of
+  // its front; other solid objects get their own colours spread smoothly (no mirrored front details)
+  const srgb = (a) => (a.length ? a.slice().sort((p, q) => p - q)[a.length >> 1] : 100), pc = [srgb(R), srgb(G), srgb(Bl)];
+  const rc = B.vehicle ? paintRear(B, w, h, pc) : fillTexture(albedo, mask, gw, gh, 0.08);
+  group.userData.rear = { B: { cap: B.cap, belt: B.belt, Ymin: B.Ymin, Ymax: B.Ymax, vehicle: B.vehicle }, w, h, rgb: pc }; // the reviewer can repaint it
   const cg = new THREE.BufferGeometry(); cg.setAttribute("position", new THREE.Float32BufferAttribute(B.cap.pos, 3)); cg.setAttribute("uv", new THREE.Float32BufferAttribute(B.cap.uv, 2)); cg.setIndex(B.cap.idx); cg.computeVertexNormals(); cg.computeBoundingBox(); cg.computeBoundingSphere();
-  const cm = new THREE.Mesh(cg, new THREE.MeshStandardMaterial({ map: tex(rc, true), roughness: 0.45, metalness: B.vehicle ? 0.3 : 0.05 })); cm.name = "rear"; cm.castShadow = cm.receiveShadow = true; group.add(cm);
+  const cm = new THREE.Mesh(cg, new THREE.MeshStandardMaterial({ map: tex(rc, true), roughness: B.vehicle ? 0.32 : 0.6, metalness: B.vehicle ? 0.35 : 0.05 })); cm.name = "rear"; cm.userData.generated = B.vehicle ? "vehicle-rear" : "fill"; cm.castShadow = cm.receiveShadow = true; group.add(cm);
   if (B.wheels) { const W = B.wheels, tyre = new THREE.CylinderGeometry(W.r, W.r, W.tw, 28).rotateZ(Math.PI / 2), rim = new THREE.CylinderGeometry(W.r * 0.6, W.r * 0.6, W.tw * 1.04, 20).rotateZ(Math.PI / 2);
     const tm = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.92 }), rm = new THREE.MeshStandardMaterial({ color: 0xb9bcc0, roughness: 0.28, metalness: 0.9 });
     for (const x of W.xs) for (const z of W.zs) { const t = new THREE.Mesh(tyre, tm), m = new THREE.Mesh(rim, rm); t.position.set(x, W.y, z); m.position.set(x, W.y, z); t.name = "wheel"; m.name = "rim"; t.castShadow = m.castShadow = true; group.add(t, m); } }
@@ -313,14 +312,47 @@ function addBody(THREE, group, B, { albedo, mask, gw, gh, tex }) {
 // the hidden sides of a solid object: its own colours spread outwards from the visible pixels (a masked blur — the canvas
 // blurs premultiplied colour, so reading it back gives the average of the subject's pixels only), with a little of the
 // photo's detail mirrored in, slightly darker — so the sides & back look like the same object, not like smeared edges.
-function fillTexture(albedo, mask, gw, gh) {
+// a car's rear, painted on the outline of its body (the cap's UVs map the outline into this canvas):
+// rear window (inset, rounded), two upright tail lights at the edges + a light bar, plate, tailgate seams, a darker bumper
+export function paintRear(B, w, h, rgb) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d"), uv = B.cap.uv, n = uv.length / 2;
+  const P = []; for (let i = 0; i < n; i++) P.push([uv[i * 2] * w, (1 - uv[i * 2 + 1]) * h]);
+  let top = h, bot = 0; for (const p of P) { if (p[1] < top) top = p[1]; if (p[1] > bot) bot = p[1]; } const Hc = Math.max(1, bot - top);
+  const span = (y) => { let a = Infinity, b = -Infinity; for (let i = 0; i < n; i++) { const p = P[i], q = P[(i + 1) % n]; if ((p[1] <= y && q[1] > y) || (q[1] <= y && p[1] > y)) { const t = (y - p[1]) / (q[1] - p[1]), X = p[0] + (q[0] - p[0]) * t; if (X < a) a = X; if (X > b) b = X; } } return a < b ? [a, b] : null; };
+  // world height → canvas row, read off the cap itself (its UVs are a linear map of its positions)
+  let i0 = 0, i1 = 0; for (let i = 1; i < n; i++) { if (B.cap.pos[i * 3 + 1] < B.cap.pos[i0 * 3 + 1]) i0 = i; if (B.cap.pos[i * 3 + 1] > B.cap.pos[i1 * 3 + 1]) i1 = i; }
+  const y0w = B.cap.pos[i0 * 3 + 1], y1w = B.cap.pos[i1 * 3 + 1], toY = (wy) => P[i0][1] + ((wy - y0w) / ((y1w - y0w) || 1)) * (P[i1][1] - P[i0][1]);
+  const yb = Math.min(bot - Hc * 0.3, Math.max(top + Hc * 0.18, toY(B.belt))), col = (k, a = 1) => `rgba(${Math.round(rgb[0] * k)},${Math.round(rgb[1] * k)},${Math.round(rgb[2] * k)},${a})`;
+  x.fillStyle = col(1); x.fillRect(0, 0, w, h);
+  x.save(); x.beginPath(); P.forEach((p, i) => (i ? x.lineTo(p[0], p[1]) : x.moveTo(p[0], p[1]))); x.closePath(); x.clip();
+  const g = x.createLinearGradient(0, top, 0, bot); g.addColorStop(0, col(1.18)); g.addColorStop(0.5, col(1)); g.addColorStop(1, col(0.82)); x.fillStyle = g; x.fillRect(0, top, w, Hc);
+  const rr = (X, Y, W, H, r) => { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + W, Y, X + W, Y + H, r); x.arcTo(X + W, Y + H, X, Y + H, r); x.arcTo(X, Y + H, X, Y, r); x.arcTo(X, Y, X + W, Y, r); x.closePath(); };
+  // rear window
+  const wt = top + Hc * 0.1, wb = yb - Hc * 0.05, st = span(wt + 2) || [0, w], sb = span(wb) || st, it = (st[1] - st[0]) * 0.12, ib = (sb[1] - sb[0]) * 0.11;
+  if (wb > wt + 4) { x.beginPath(); x.moveTo(st[0] + it, wt); x.lineTo(st[1] - it, wt); x.lineTo(sb[1] - ib, wb); x.lineTo(sb[0] + ib, wb); x.closePath();
+    const gg = x.createLinearGradient(0, wt, 0, wb); gg.addColorStop(0, "#0b0f13"); gg.addColorStop(0.55, "#161d24"); gg.addColorStop(1, "#0a0d10"); x.fillStyle = gg; x.fill();
+    x.globalAlpha = 0.18; x.fillStyle = "#cfe3f2"; x.beginPath(); x.moveTo(st[0] + it * 1.6, wt + 3); x.lineTo(st[0] + it * 1.6 + (st[1] - st[0]) * 0.18, wt + 3); x.lineTo(sb[0] + ib * 1.6 + (sb[1] - sb[0]) * 0.05, wb - 3); x.lineTo(sb[0] + ib * 1.6, wb - 3); x.closePath(); x.fill(); x.globalAlpha = 1; }
+  // tail lights (upright bars at the outer edges) + a thin light bar between them
+  const ly0 = yb - Hc * 0.02, ly1 = yb + Hc * 0.3, sl = span((ly0 + ly1) / 2) || [0, w], bw = (sl[1] - sl[0]) * 0.075;
+  for (const side of [0, 1]) { const X = side ? sl[1] - bw - (sl[1] - sl[0]) * 0.015 : sl[0] + (sl[1] - sl[0]) * 0.015; const lg = x.createLinearGradient(X, 0, X + bw, 0);
+    lg.addColorStop(0, "#5a0508"); lg.addColorStop(0.5, "#e01b24"); lg.addColorStop(1, "#5a0508"); x.fillStyle = lg; rr(X, ly0, bw, ly1 - ly0, Math.min(bw, ly1 - ly0) * 0.25); x.fill();
+    x.fillStyle = "rgba(255,190,190,.7)"; x.fillRect(X + bw * 0.42, ly0 + (ly1 - ly0) * 0.08, bw * 0.16, (ly1 - ly0) * 0.84); }
+  const lb = yb + Hc * 0.07; x.fillStyle = "#a3121a"; x.fillRect(sl[0] + bw * 1.4, lb, (sl[1] - sl[0]) - bw * 2.8, Math.max(2, Hc * 0.012));
+  // tailgate seams, plate, bumper
+  x.strokeStyle = col(0.55); x.lineWidth = Math.max(1.5, Hc * 0.006); x.beginPath(); x.moveTo(sb[0] + ib * 0.7, wb + Hc * 0.015); x.lineTo(sb[1] - ib * 0.7, wb + Hc * 0.015); x.stroke();
+  const sp = span(yb + Hc * 0.25) || sl, pw = (sp[1] - sp[0]) * 0.26, ph = Hc * 0.1, px = (sp[0] + sp[1]) / 2 - pw / 2, py = yb + Hc * 0.2; x.fillStyle = "#dfe3e6"; rr(px, py, pw, ph, ph * 0.15); x.fill(); x.strokeStyle = "#2b2f33"; x.lineWidth = Math.max(1.5, ph * 0.06); x.stroke();
+  const bt = bot - Hc * 0.22, bg = x.createLinearGradient(0, bt, 0, bot); bg.addColorStop(0, col(0.62)); bg.addColorStop(0.15, col(0.9)); bg.addColorStop(1, col(0.45)); x.fillStyle = bg; x.fillRect(0, bt, w, bot - bt);
+  const sbm = span(bt + Hc * 0.08) || sl; x.fillStyle = "#8d0f15"; for (const side of [0, 1]) x.fillRect(side ? sbm[1] - (sbm[1] - sbm[0]) * 0.1 : sbm[0] + (sbm[1] - sbm[0]) * 0.05, bt + Hc * 0.07, (sbm[1] - sbm[0]) * 0.05, Hc * 0.025);
+  x.restore(); return c;
+}
+function fillTexture(albedo, mask, gw, gh, detail = 0.35) {
   const w = albedo.width, h = albedo.height, m = document.createElement("canvas"); m.width = gw; m.height = gh; const mi = m.getContext("2d").createImageData(gw, gh);
   for (let i = 0; i < gw * gh; i++) mi.data[i * 4 + 3] = mask[i] ? 255 : 0; m.getContext("2d").putImageData(mi, 0, 0);
   const cut = document.createElement("canvas"); cut.width = w; cut.height = h; const cx = cut.getContext("2d"); cx.drawImage(m, 0, 0, w, h); cx.globalCompositeOperation = "source-in"; cx.drawImage(albedo, 0, 0);
   const out = document.createElement("canvas"); out.width = w; out.height = h; const ox = out.getContext("2d"); const r = Math.max(6, Math.round(Math.max(w, h) * 0.03));
   for (const k of [4, 2, 1]) { ox.filter = "blur(" + r * k + "px)"; ox.drawImage(cut, 0, 0); } ox.filter = "none";
   const d = ox.getImageData(0, 0, w, h), a = d.data; for (let i = 0; i < a.length; i += 4) { a[i + 3] = 255; }
-  ox.putImageData(d, 0, 0); ox.globalAlpha = 0.35; ox.filter = "blur(2px)"; ox.drawImage(albedo, 0, 0); ox.globalAlpha = 1; ox.filter = "none";
+  ox.putImageData(d, 0, 0); if (detail > 0) { ox.globalAlpha = detail; ox.filter = "blur(2px)"; ox.drawImage(albedo, 0, 0); ox.globalAlpha = 1; ox.filter = "none"; }
   ox.globalCompositeOperation = "multiply"; ox.fillStyle = "rgb(205,205,205)"; ox.fillRect(0, 0, w, h); ox.globalCompositeOperation = "source-over"; return out;
 }
 

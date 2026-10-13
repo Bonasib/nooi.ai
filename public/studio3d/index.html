@@ -78,6 +78,9 @@ label.sw i::after{content:"";position:absolute;top:2px;inset-inline-start:2px;wi
 .advice{margin:0;padding-inline-start:18px;font-size:12.5px;color:var(--mute)}
 #vid{width:100%;border-radius:10px;background:#000;max-height:260px}
 .libs{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}.libit{display:grid;gap:3px;border:1px solid var(--line);background:var(--panel2);border-radius:10px;padding:6px;cursor:pointer;text-align:start;font-size:12px}.libit img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px}.libit small{color:var(--mute)}
+.review:empty{display:none}.review{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--panel2)}.rvh{display:flex;justify-content:space-between;align-items:center}
+.rv{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:3px;font-size:12.5px}.rv li{display:flex;gap:6px;align-items:flex-start}.rv i{font-style:normal;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;font-size:10px;flex:none;margin-top:2px}
+.rv li.ok i{background:var(--acc);color:#10140b}.rv li.bad i{background:var(--warn);color:#1b1404}
 /* viewport HUD */
 .hud{position:absolute;display:flex;gap:6px;align-items:center;z-index:2}.hud.tl{top:10px;inset-inline-start:10px}.hud.tr{top:10px;inset-inline-end:10px}
 .hud .seg{background:rgba(15,17,19,.72);border-color:rgba(255,255,255,.14);backdrop-filter:blur(6px)}.hud .seg button{color:#e8ecef}.hud .seg button[aria-pressed="true"]{background:rgba(255,255,255,.12);color:var(--acc);box-shadow:none}
@@ -126,6 +129,7 @@ label.sw i::after{content:"";position:absolute;top:2px;inset-inline-start:2px;wi
       <span class="dim" data-t="AI generates the missing parts (all sides) — replaces the preview in place:|الذكاء يولّد الأجزاء الناقصة (كل الجوانب) — ويحل محل المعاينة في مكانها:">AI generates the missing parts (all sides) — replaces the preview in place:</span>
       <div class="row" id="cloudBtns"></div>
       <div id="assets" style="display:grid;gap:6px"></div>
+      <div id="review" class="review"></div>
       <div class="row"><button class="btn sm" id="libOpenBtn" data-x3="libOpen" hidden data-t="From my library…|من مكتبتي…">From my library…</button></div><div class="libs" id="libList" hidden></div>
     </div></details>
     <details class="card" id="pWorld"><summary><span data-t="3 · The world|3 · العالم">3 · The world</span></summary><div class="in">
