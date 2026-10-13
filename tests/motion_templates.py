@@ -175,6 +175,13 @@ async def ui(p, w):
     ok("loops too long" in r["loop"][0] and r["loop"][1] < 8000, f"{tag}: a runaway loop stops {r['loop']}")
     r["guard"] = await E("()=>{const g=mgGuard('function draw(ctx,t,W,H){for(let i=0;i<3;i++){}for(const a of [1]){}do{}while(false);const s=\"for(;;)\";}');return [g.includes('__g()&&(i<3)'),g.includes('for(const a of [1])'),g.includes('while(__g()&&(false))'),g.includes('\"for(;;)\"')]}")
     ok(r["guard"] == [True, True, True, True], f"{tag}: loop guard rewrites loops only {r['guard']}")
+    r["presets"] = await E("""()=>{const bad=[];for(const p of MG_PRESETS)for(const [W,H] of [[640,360],[360,640]])for(const T of ['Grand opening of our flagship store','الافتتاح الكبير لمتجرنا']){try{const draw=new Function('TEXT',mgGuard(p[3])+';return draw')(T);const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');for(const t of [0,.7,1.6,3,5])draw(x,t,W,H)}catch(e){bad.push(p[0]+':'+e.message)}}return [MG_PRESETS.length,bad]}""")
+    ok(r["presets"][0] == 6 and not r["presets"][1], f"{tag}: every ready motion graphic draws in EN/AR, 16:9 and 9:16 {r['presets']}")
+    await E("()=>{S.ed.tab='info';S.story.title='Desert Rally';renderView()}")
+    r["ideas"] = await E("()=>document.querySelectorAll('.mgbox [data-act=mg-idea]').length")
+    await pg.click(".mgbox [data-act=mg-idea][data-v=explain]"); await pg.wait_for_timeout(150)
+    r["idea"] = await E("()=>[document.querySelector('#mgp').value.includes('Desert Rally'),MGX.dur,[...document.querySelectorAll('.mgbox [data-act=mg-dur]')].some(b=>b.dataset.v==='20'&&b.getAttribute('aria-pressed')==='true')]")
+    ok(r["ideas"] == 12 and r["idea"] == [True, 20, True], f"{tag}: 12 ideas, a brief with your title and length {r['ideas']} {r['idea']}")
     # ---- the agents put a storyboard together in the editor
     await E("""()=>{S.story.title='The Lost Kite';S.chars=S.chars.length?S.chars:[{id:'k1',name:'Lina',gender:'female',persona:'Brave'}];const ch=S.chars[0];
       ['a','b','c'].forEach((k,i)=>S.jobs.push({id:'sbj'+k,kind:'image',status:'complete',progress:1,created:Date.now(),title:'scene '+k,prompt:'scene',resultUrl:'/media/sb'+i+'.png',aspect:'16:9',seed:i,pal:PALS[0],art:'scene'}));

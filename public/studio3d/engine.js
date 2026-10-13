@@ -97,11 +97,15 @@ export function createEngine(canvas, { tier = "high", mobile = false } = {}) {
   }
   E.dripTextures = function (object) {
     object.traverse((n) => { if (!n.isMesh) return; const ts = new Set(); (Array.isArray(n.material) ? n.material : [n.material]).forEach((m) => m && TEX_KEYS.forEach((k) => m[k] && m[k].isTexture && ts.add(m[k])));
-      if (!ts.size) return; ts.forEach(fitTexture); n.visible = false; dripQ.push({ mesh: n, tex: [...ts] }); });
+      if (!ts.size || !n.visible) return; ts.forEach(fitTexture); n.visible = false; n.userData._drip = true; dripQ.push({ mesh: n, tex: [...ts] }); });
     E.quality.drip = dripQ.length; return dripQ.length;
   };
+  const dripShow = (m) => { if (m.userData._drip) { m.visible = true; delete m.userData._drip; } };   // a part someone hid meanwhile (e.g. a loose piece) stays hidden
+  E.dripFlush = function () { while (dripQ.length) { const d = dripQ.shift(); d.tex.forEach((t) => { try { r.initTexture(t); } catch (e) {} }); dripShow(d.mesh); } E.quality.drip = 0; };
+  let inLoop = false; const render0 = r.render.bind(r);
+  r.render = function (sc, c) { if (!inLoop && dripQ.length) E.dripFlush(); return render0(sc, c); };   // checks and captures always see the whole model
   function dripStep() { if (!dripQ.length) return; const t0 = performance.now();
-    while (dripQ.length && performance.now() - t0 < 6) { const d = dripQ[0], t = d.tex.shift(); if (t) { try { r.initTexture(t); } catch (e) {} } if (!d.tex.length) { d.mesh.visible = true; dripQ.shift(); } }
+    while (dripQ.length && performance.now() - t0 < 6) { const d = dripQ[0], t = d.tex.shift(); if (t) { try { r.initTexture(t); } catch (e) {} } if (!d.tex.length) { dripShow(d.mesh); dripQ.shift(); } }
     E.quality.drip = dripQ.length; if (!dripQ.length) E.emit("drip", 0); }
   E.addAsset = function (object, { name = "3D", category = "object", height, source = "device", pos = null, rot = 0, rigid = true, id } = {}) {
     const a = { id: id || "a" + Math.random().toString(36).slice(2, 8), name, category, source, object, height: height || REAL_HEIGHT[category] || 0.6, rot, pos: pos || [0, 0], rigid, fit: 1 };
@@ -179,13 +183,13 @@ export function createEngine(canvas, { tier = "high", mobile = false } = {}) {
   function loop() { raf = requestAnimationFrame(loop); if (!running || document.hidden) return; const dt = Math.min(0.05, clock.getDelta()); size(); U.uTime.value += dt; acc += dt; frames++; if (acc > 1) { fps = Math.round(frames / acc); acc = 0; frames = 0; adapt(); } dripStep();
     if (tour) { const t = ((performance.now() - tour.t0) / 1000) / tour.sec, pose = E.tourPose(t % 1); cam.position.copy(pose.pos); cam.lookAt(pose.look); W.yaw = cam.rotation.y; W.pitch = cam.rotation.x; if (t >= 1 && tour.once) tour = null; }
     else if (E.mode === "walk") walkStep(dt); else orbit.update();
-    U.uUpView.value.set(0, 1, 0).transformDirection(cam.matrixWorldInverse); sky.position.copy(cam.position); if (fx) fx.update(cam); r.render(scene, cam); if (E._recTrack && E._recTrack.requestFrame) E._recTrack.requestFrame(); }
+    U.uUpView.value.set(0, 1, 0).transformDirection(cam.matrixWorldInverse); sky.position.copy(cam.position); if (fx) fx.update(cam); inLoop = true; try { r.render(scene, cam); } finally { inLoop = false; } if (E._recTrack && E._recTrack.requestFrame) E._recTrack.requestFrame(); }
   loop();
   canvas.addEventListener("webglcontextlost", (e) => { e.preventDefault(); running = false; E.lost = true; E.emit("lost"); }); canvas.addEventListener("webglcontextrestored", () => { running = true; E.lost = false; bakeEnv(); });
 
   // ── capture & export
   E.snapshot = (type = "image/png", q = 0.92) => { gizmo.visible = false; r.render(scene, cam); const p = new Promise((ok) => canvas.toBlob(ok, type, q)); gizmo.visible = true; return p; };
-  E.record = async function (sec = 10, { tourMode = true, onTick } = {}) {
+  E.record = async function (sec = 10, { tourMode = true, onTick } = {}) { E.dripFlush();
     if (!canvas.captureStream || !window.MediaRecorder) throw new Error("This browser can't record video");
     const vs = canvas.captureStream(30); E._recTrack = vs.getVideoTracks()[0]; const as = amb.on ? amb.stream() : null, tracks = [...vs.getVideoTracks(), ...(as ? as.getAudioTracks() : [])], st = new MediaStream(tracks);
     const mime = (tier === "low" ? ["video/webm;codecs=vp8,opus", "video/webm;codecs=vp9,opus"] : ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus"]).concat(["video/webm", "video/mp4"]).find((t) => MediaRecorder.isTypeSupported(t)) || "";
@@ -204,9 +208,9 @@ export function createEngine(canvas, { tier = "high", mobile = false } = {}) {
       world.group.traverse((o) => { if (o.name === "ground") { const c = o.clone(); c.geometry = o.geometry; g.add(c); return; }
         if (o.isInstancedMesh) { for (let i = 0; i < o.count && n < 1600; i++) { o.getMatrixAt(i, m4); v.setFromMatrixPosition(m4); if (Math.hypot(v.x, v.z) > radius) continue; const m = new THREE.Mesh(o.geometry, o.material); m.applyMatrix4(m4); m.name = o.name; g.add(m); n++; } } }); }
     return g; }
-  E.exportGLB = (opts = {}) => new Promise((ok, no) => { const g = opts.assetsOnly ? (() => { const x = new THREE.Group(); E.assets.forEach((a) => x.add(a.holder.clone(true))); return x; })() : exportGroup(opts.radius); if (!g.children.length) return no(new Error("Nothing to export yet"));
+  E.exportGLB = (opts = {}) => new Promise((ok, no) => { E.dripFlush(); const g = opts.assetsOnly ? (() => { const x = new THREE.Group(); E.assets.forEach((a) => x.add(a.holder.clone(true))); return x; })() : exportGroup(opts.radius); if (!g.children.length) return no(new Error("Nothing to export yet"));
     new GLTFExporter().parse(g, (res) => ok(new Blob([res], { type: "model/gltf-binary" })), { binary: true, onlyVisible: true, maxTextureSize: 2048 }); });
-  E.exportUSDZ = async () => { const g = new THREE.Group(); E.assets.forEach((a) => g.add(a.holder.clone(true))); if (!g.children.length) throw new Error("Add an object first"); const buf = await new USDZExporter().parse(g); return new Blob([buf], { type: "model/vnd.usdz+zip" }); };
+  E.exportUSDZ = async () => { E.dripFlush(); const g = new THREE.Group(); E.assets.forEach((a) => g.add(a.holder.clone(true))); if (!g.children.length) throw new Error("Add an object first"); const buf = await new USDZExporter().parse(g); return new Blob([buf], { type: "model/vnd.usdz+zip" }); };
   E.info = () => ({ lost: !!E.lost, fps, calls: r.info.render.calls, triangles: r.info.render.triangles, geometries: r.info.memory.geometries, textures: r.info.memory.textures, programs: (r.info.programs || []).length, mode: E.mode, assets: E.assets.length, world: world && world.info });
   E.dispose = () => { cancelAnimationFrame(raf); ro.disconnect(); amb.dispose(); E.assets.slice().forEach((a) => E.removeAsset(a.id)); if (world) world.dispose(); if (fx) fx.dispose(); disposeObject(sky); disposeObject(skyEnv); if (envRT) envRT.dispose(); pmrem.dispose(); gizmo.dispose(); orbit.dispose(); r.renderLists.dispose(); r.dispose(); };
   return E;

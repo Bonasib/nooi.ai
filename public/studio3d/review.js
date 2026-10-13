@@ -85,7 +85,7 @@ export function applyFix(E, a, fix, { REAL_HEIGHT, repaintRear, rebuild } = {}) 
     case "reground": E.layout(a); return ["Stood it back on the ground", "أُعيد وضعه على الأرض"];
     case "realHeight": a.height = (REAL_HEIGHT && REAL_HEIGHT[a.category]) || a.height; E.layout(a); return ["Real height reset to " + a.height + " m", "أُعيد الارتفاع الحقيقي إلى " + a.height + " م"];
     case "fit": return null; // handled by the app (shrink to the area, or make the area bigger)
-    case "dropLoose": { let n = 0; a.object.traverse((m) => { if (m.isMesh && m.userData.loose) { m.visible = false; n++; } }); E.layout(a); return n ? ["Removed " + n + " loose part(s)", "أُزيلت " + n + " قطعة منفصلة"] : null; }
+    case "dropLoose": { let n = 0; a.object.traverse((m) => { if (m.isMesh && m.userData.loose) { m.visible = false; delete m.userData._drip; n++; } }); E.layout(a); return n ? ["Removed " + n + " loose part(s)", "أُزيلت " + n + " قطعة منفصلة"] : null; }
     case "relight": E.clearPanorama(); E.setExposure(1); return ["Lighting reset", "أُعيدت الإضاءة"];
     case "turnAround": a.rot = (a.rot || 0) + Math.PI; E.layout(a); return ["Turned it round — the front now faces you", "أُدير — الأمام يواجهك الآن"];
     case "repaintRear": return repaintRear ? repaintRear(a) : null;

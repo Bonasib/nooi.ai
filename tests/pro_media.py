@@ -84,7 +84,7 @@ async def ui(p, w):
             if await E(js): return True
             await asyncio.sleep(.25)
         return False
-    await E("()=>{window.__t=[];const t0=toast;toast=function(m,o){window.__t.push(String(m));return t0.apply(this,arguments)};S.langAsked=true;document.getElementById('langsug')?.remove();S.lang='%s';S.user={name:'T',method:'google'};AU.showAuth=false;S.proMedia=[];go('voice');renderAll()}" % ("ar" if mob else "en"))
+    await E("()=>{window.__t=[];const t0=toast;toast=function(m,o){window.__t.push(String(m));return t0.apply(this,arguments)};S.langAsked=true;document.getElementById('langsug')?.remove();S.lang='%s';S.user={name:'T',method:'google'};AU.showAuth=false;S.proMedia=[];PRO_H264=true;go('voice');renderAll()}" % ("ar" if mob else "en"))   # a normal browser (this test Chromium has no H.264)
     await pg.wait_for_timeout(400)
     await pg.set_input_files("input[data-slot=lsV]", S + "/A001C003.mov")
     ok(await wait_for("()=>M.lsV&&M.lsV.name==='A001C003.mov.mp4'", 60), f"{tag}: ProRes arrives as an editing proxy " + str(await E("()=>[M.lsV&&M.lsV.name,window.__t.slice(-2)]")))
