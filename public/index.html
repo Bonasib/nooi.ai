@@ -8325,7 +8325,9 @@ addJob=(o=>function(j){const H=S.hf;if(j&&HF_GRAB&&H.scene&&["image","video"].in
   return o.apply(this,arguments)})(addJob);
 /* nooi Studio 2.0: before a long video the Director bot plans one shot per part (when the text AI is connected) */
 hfSend=(o=>async function(){const H=S.hf;HF_PLAN=null;const q=$("#hfq"),p=((q&&q.value)||H.prompt||"").trim();
-  if(H.tab==="video"&&(nooiOn()||hfBotsOn())&&H.dur>(nooiOn()?10:engMax(H.vModel))&&p&&API.mode==="server"&&API.cfg&&API.cfg.llm){const n=Math.min(6,Math.ceil(H.dur/10));toast(L("Sima the Director is planning "+n+" connected shots…","سيما المخرجة تخطط "+n+" لقطات متصلة…"),{type:"info",ms:3500});AI_BUSY=true;
+  // the agents already planned the shots (v78c) → use their shots and continuity bible
+  if(typeof AGP==="object"&&AGP.plan&&Array.isArray(AGP.plan.shots)&&AGP.plan.shots.length>1){HF_PLAN={shots:AGP.plan.shots,bible:AGP.plan.bible||""};try{return await o.apply(this,arguments)}finally{HF_PLAN=null}}
+  if(H.tab==="video"&&(nooiOn()||hfBotsOn())&&H.dur>(nooiOn()?10:engMax(H.vModel))&&p&&API.mode==="server"&&API.cfg&&API.cfg.llm){const n=Math.min(6,Math.ceil(H.dur/10));toast(L(BOT("director").name[0]+" the Director is planning "+n+" connected shots…",BOT("director").name[1]+" المخرج يخطط "+n+" لقطات متصلة…"),{type:"info",ms:3500});AI_BUSY=true;
     try{HF_PLAN=await Promise.race([API.req("/v1/llm/json",{json:{task:"nooi studio plan",tier:"quick",prompt:"You are the director of a "+H.dur+"-second video made of "+n+" consecutive shots of about "+Math.ceil(H.dur/n)+" seconds. Each shot continues exactly where the previous one ended (same characters, place, light and style). Idea: "+p+"\nReturn {\"bible\": \"one paragraph that fixes the world: place, time, light, palette, characters and their clothes, style\", \"shots\": [\""+n+" shot descriptions, one per shot, each a self-contained video prompt with camera move and action\"]}"}}),new Promise((_,r)=>setTimeout(()=>r(new Error("plan timeout")),25000))])}catch(e){HF_PLAN=null}finally{AI_BUSY=false}}
   try{return await o.apply(this,arguments)}finally{HF_PLAN=null}})(hfSend);
 /* result cards: scene badge, small play/pause instead of the big native overlay, live progress estimate */
@@ -9884,6 +9886,163 @@ async function vssDubThis(rec){if(!rec)return;let j=(rec.job&&S.jobs.find(x=>x.i
 document.addEventListener("click",e=>{const a=e.target.closest('[data-act="vss-dub"]');if(!a)return;const rec=(typeof VSSD==="object"&&VSSD.items.find(x=>x.id===a.dataset.id))||(typeof vssSel==="function"?vssSel():null);vssDubThis(rec)});
 AI_PROVIDERS.push(["camb","CAMB.AI dubbing","دبلجة CAMB.AI","Subtitles & dubbing",[["apiKey","API key"],["baseUrl","API URL (optional)"]],"https://"]);
 AI_PROVIDERS.push(["nvloc","NVIDIA Content Localization (your server)","توطين المحتوى من NVIDIA (خادمك)","Subtitles & dubbing",[["baseUrl","Controller address (host:50056)"],["apiKey","Token (if set)"],["model","Mode: elevenlabs · camb · lipsync"]],"host:50056"]);
+
+/* ================= v78c: THE 8 AGENTS — they learn skills from the web and from results, understand the brief, decide and check; their icons appear one at a time in the create box as each task starts; the Storyboard option makes a picture for every scene, then the video from them ================= */
+(function(){const st=document.createElement("style");st.textContent=`
+.agstrip{display:flex;align-items:center;gap:6px;padding:8px 12px 10px;border-top:1px solid var(--line);min-height:48px}
+.agb{position:relative;width:32px;height:32px;flex:none;display:grid;place-items:center;border-radius:50%;animation:agpop .45s cubic-bezier(.2,1.4,.4,1) both}
+.agb svg{width:32px;height:32px}.agb.working{background:color-mix(in srgb,var(--lime) 16%,transparent)}
+.agnote{font-size:12.5px;line-height:1.35;color:var(--mute);min-width:0;flex:1;padding-inline-start:4px}.agnote b{color:var(--text);font-weight:600}
+@keyframes agpop{0%{transform:scale(.2) translateY(6px);opacity:0}100%{transform:none;opacity:1}}
+.agsk{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-top:10px}.agcard{border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--panel)}
+.agcard .hd{display:flex;align-items:center;gap:8px}.agcard .hd svg{width:36px;height:36px;flex:none}.agcard ul{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:6px}.agcard li{font-size:12.5px;line-height:1.4}
+.agcard li b{font-weight:600}.agcard li small{display:block;color:var(--mute)}.agcard li.off{opacity:.5}.agsrc{min-height:120px;font:12px/1.5 var(--mono)}
+.agsbst{font-size:12.5px;color:var(--mute);margin:6px 0 0}
+@media (prefers-reduced-motion:reduce){.agb{animation:none}}
+`;document.head.appendChild(st)})();
+var AGP={plan:null,sending:false,original:""};
+const AG={shown:[],cur:null,done:{},note:{},summary:"",run:0,watch:0,busy:false};
+const AGD={agents:null,loaded:false,loading:false,busy:false,msg:""};
+const AG_DEF={writer:["is reading your idea and sharpening the hook","يقرأ فكرتك ويقوّي الافتتاحية"],casting:["keeps every character's face, outfit and voice the same","يثبّت وجه كل شخصية وملابسها وصوتها"],director:["plans the shots and how they connect","يخطط اللقطات وكيف تتصل ببعضها"],
+  cine:["chooses the camera, lens, light and colour","يختار الكاميرا والعدسة والإضاءة والألوان"],sound:["plans the voice, music and sound effects","يخطط الصوت والموسيقى والمؤثرات"],editor:["sets the rhythm, cuts and captions","يضبط الإيقاع والقطع والنصوص"],
+  producer:["picks the best model for each shot at the lowest cost","يختار أفضل نموذج لكل لقطة بأقل تكلفة"],proof:["checks every result against your idea","تراجع كل نتيجة مقابل فكرتك"]};
+const AG_ROLES={video:["writer","casting","director","cine","sound","editor","producer","proof"],image:["writer","casting","cine","producer","proof"],storyboard:["writer","casting","director","cine","sound","editor","producer","proof"]};
+const agName=id=>{const b=BOT(id);return b?L(b.name[0],b.name[1]):id};
+const agSleep=ms=>new Promise(r=>setTimeout(r,ms));
+function agSkillTip(id){const a=AGD.agents&&AGD.agents.find(x=>x.id===id),s=a&&a.skills&&a.skills[0];return s?" · "+L("learned: ","تعلّم: ")+s.title:""}
+function agStrip(){if(!AG.shown.length)return"";const cur=AG.cur;
+  return'<div class="agstrip" id="agstrip" role="status" aria-live="polite">'+AG.shown.map(id=>{const b=BOT(id),st=id===cur?"working":AG.done[id]?"done":"idle";return'<span class="agb '+st+'" title="'+esc(agName(id)+" · "+(b?L(b.role[0],b.role[1]):"")+agSkillTip(id))+'">'+botSVG(id,st,32)+"</span>"}).join("")+
+    (cur?'<span class="agnote"><b>'+esc(agName(cur))+"</b> "+esc(AG.note[cur]||L(AG_DEF[cur][0],AG_DEF[cur][1]))+"</span>":AG.summary?'<span class="agnote">'+esc(AG.summary)+"</span>":"")+"</div>"}
+function agPaint(){const box=document.querySelector(".hfbox");if(!box)return;const old=$("#agstrip"),h=agStrip();if(old){if(h)old.outerHTML=h;else old.remove()}else if(h)box.insertAdjacentHTML("beforeend",h)}
+function agShow(id,note){if(AG.cur&&AG.cur!==id)AG.done[AG.cur]=true;if(!AG.shown.includes(id))AG.shown.push(id);AG.cur=id;if(note)AG.note[id]=note;agPaint()}
+function agReset(){AG.shown=[];AG.cur=null;AG.done={};AG.note={};AG.summary="";clearInterval(AG.watch);AG.watch=0;agPaint()}
+function agStart(){const run=++AG.run;clearInterval(AG.watch);AG.watch=0;AG.busy=true;AG.done={};AG.note={};AG.summary="";AG.shown=["writer"];AG.cur="writer";agPaint();return run}
+async function agLoad(){if(API.mode!=="server"||AGD.loading)return;AGD.loading=true;try{const d=await API.req("/v1/agents");AGD.agents=d.agents||[];AGD.info=d}catch(e){AGD.err=String(e.message||e)}AGD.loading=false;AGD.loaded=true}
+// the box: the strip lives at its bottom; the Storyboard option sits with the video chips
+hfBox=(o=>function(){let h=o();const H=S.hf;if(API.mode==="server"&&!AGD.loaded&&!AGD.loading)agLoad();
+  if(H.tab==="video")h=h.replace('</div><div class="hfgo">','<button class="hfchip agsbchip" data-act="agx-sb" aria-pressed="'+!!H.sb+'" title="'+esc(L("The agents write the scenes and make a picture for each one first — then you make the video from the storyboard","يكتب الوكلاء المشاهد ويصنعون صورة لكل مشهد أولاً — ثم تصنع الفيديو من الستوري بورد"))+'">'+ic("board")+"<span>"+L("Storyboard","ستوري بورد")+"</span></button></div><div class=\"hfgo\">");
+  if(!AG.shown.length)return h;const i=h.lastIndexOf("</div>");return h.slice(0,i)+agStrip()+h.slice(i)})(hfBox);
+hfCost=(o=>function(){const H=S.hf;if(H.tab==="video"&&H.sb){const m=agImgModel();return(IMG_MODELS[m]||{cr:2}).cr*agScenes()}return o()})(hfCost);
+const agScenes=()=>Math.max(3,Math.min(8,Math.round((+S.hf.dur||20)/4)));
+// typing is the writing task: Quill appears
+document.addEventListener("input",e=>{if(!e.target||e.target.id!=="hfq"||AG.busy)return;const v=e.target.value.trim();
+  if(v.length>=3&&(!AG.shown.length||(!AG.cur&&AG.shown.length>1))){AG.shown=["writer"];AG.cur="writer";AG.done={};AG.note={};AG.summary="";agPaint()}else if(!v&&AG.shown.length)agReset()});
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="agx-sb"]');if(!a)return;const H=S.hf,q=$("#hfq");if(q)H.prompt=q.value;H.sb=!H.sb;persist();renderView()});
+// Duke's note: which models, how many credits, what was saved
+function agProducerNote(tab,p){const H=S.hf;
+  if(tab==="video"){const pl=nooiOn()?hfStudio(p,H.dur):null;if(pl){const names=[...new Set(pl.shots.map(s=>hfMName("video",s.m)))].join(" + ");return L("picked "+names+" — "+pl.total+" credits"+(pl.save?", "+pl.save+" saved":""),"اختار "+names+" — "+pl.total+" رصيد"+(pl.save?"، وفّر "+pl.save:""))}
+    return L("uses "+hfMName("video",H.vModel)+" — "+hfCost()+" credits","يستخدم "+hfMName("video",H.vModel)+" — "+hfCost()+" رصيد")}
+  const m=H.iModel==="auto"?"dotimg":H.iModel;return L("uses "+hfMName("image",m)+" — "+hfCost()+" credits","يستخدم "+hfMName("image",m)+" — "+hfCost()+" رصيد")}
+// Iris watches the results of this send until they are all in
+function agWatch(run,ids){clearInterval(AG.watch);const n=ids.length;agShow("proof",n?L("is checking "+n+" result"+(n>1?"s":"")+" as they arrive","تراجع "+n+" نتيجة عند وصولها"):null);
+  if(!n){AG.done.proof=true;AG.cur=null;AG.busy=false;AG.summary=L("The agents are ready for the next idea.","الوكلاء جاهزون للفكرة التالية.");agPaint();return}
+  AG.watch=setInterval(()=>{if(AG.run!==run){clearInterval(AG.watch);return}const js=ids.map(id=>S.jobs.find(x=>x.id===id)).filter(Boolean);if(js.length&&!js.every(j=>["complete","failed"].includes(j.status)))return;
+    clearInterval(AG.watch);AG.watch=0;AG.done.proof=true;AG.cur=null;AG.busy=false;const ok=js.filter(j=>j.status==="complete").length;
+    AG.summary=ok===js.length?L("Done — Iris checked "+ok+" result"+(ok>1?"s":"")+". Approve the ones you like and the agents learn from it.","تم — راجعت "+agName("proof")+" "+ok+" نتيجة. اعتمد ما يعجبك ويتعلم الوكلاء منه."):L(ok+" of "+js.length+" ready — failed ones were refunded.",ok+" من "+js.length+" جاهزة — أُعيد رصيد ما فشل.");agPaint()},1500)}
+// sending: the agents understand the brief and decide (on the live site with a text AI), then the jobs start with their plan
+hfSend=(o=>async function(){const H=S.hf,q=$("#hfq"),p=((q&&q.value)||H.prompt||"").trim(),tab=H.tab;
+  if(tab==="video"&&H.sb&&p)return agStoryboard(p);
+  if(!p||!["video","image"].includes(tab)||!hfBotsOn())return o.apply(this,arguments);
+  const roles=AG_ROLES[tab],run=agStart();let plan=null,seq;
+  if(API.mode==="server"&&API.cfg&&API.cfg.llm){let k=1;const tick=setInterval(()=>{if(AG.run===run&&k<roles.length-2)agShow(roles[k++])},700);
+    try{plan=await Promise.race([API.req("/v1/agents/plan",{json:{prompt:p,task:tab,dur:H.dur,aspect:H.aspect,lang:S.lang}}),agSleep(tab==="image"?15000:30000).then(()=>{throw new Error("timeout")})])}catch(e){plan=null}finally{clearInterval(tick)}
+    if(plan&&plan.agents)for(const id of roles)if(plan.agents[id])AG.note[id]=plan.agents[id];
+    seq=(async()=>{for(const id of roles.slice(0,-2))if(!AG.shown.includes(id)){agShow(id);await agSleep(220)}})();await seq}
+  else seq=(async()=>{for(const id of roles.slice(1,-2)){await agSleep(450);if(AG.run!==run)return;agShow(id)}})();
+  const before=new Set(H.out||[]);AG.note.producer=agProducerNote(tab,p);AGP.plan=plan&&plan.by==="ai"&&plan.prompt?plan:null;AGP.sending=true;AGP.original=p;
+  try{await o.apply(this,arguments)}finally{AGP.sending=false;AGP.plan=null}
+  const ids=(S.hf.out||[]).filter(id=>!before.has(id));await seq;if(AG.run!==run)return;agShow("producer");await agSleep(400);if(AG.run===run)agWatch(run,ids)})(hfSend);
+// the jobs of this send carry the agents' plan: the engine prompt, the negative prompt and the skills used (to learn from the result)
+addJob=(o=>function(j){if(j&&AGP.sending&&AGP.plan&&["video","image"].includes(j.kind)){j.title=j.title||AGP.original;j.prompt=AGP.plan.prompt;j.meta=Object.assign({},j.meta,{neg:(j.meta&&j.meta.neg)||AGP.plan.negative||undefined,skills:(AGP.plan.skills||[]).slice(0,24),agents:1})}return o.apply(this,arguments)})(addJob);
+// jobs may carry their own input URLs (a storyboard picture as the reference) and skip the page's upload slots
+serverSubmit=(o=>function(job,kind,payload){if(!job||!job.inputsUrl)return o.apply(this,arguments);const keep={};for(const s of SLOTS_FOR[kind]||[]){keep[s]=M[s];M[s]=null}
+  for(const [k,v] of Object.entries(job.inputsUrl))if(v)M[k]={remote:v,name:k};
+  try{return o.apply(this,arguments)}finally{for(const s of Object.keys(keep))M[s]=keep[s]}})(serverSubmit);   // the slots are read before the first await
+/* ---- the Storyboard option: scenes → one picture per scene (the first picture sets the look for the rest) → the board ---- */
+const AG_IMGQ={nanopro:.95,img20:.92,seedream5:.9,imagen4:.9,mj:.9,flux2:.88,nano:.86,ideogram3:.85,img25:.84,qwen:.8,grokimg:.78,flux:.75,dotimg:.72,sdxl:.6};
+function agImgModel(){const c=Object.keys(IMG_MODELS).filter(m=>AG_IMGQ[m]&&imgOK(m)&&modelOn(m));
+  const good=c.filter(m=>AG_IMGQ[m]>=.84).sort((a,b)=>(IMG_MODELS[a].cr-IMG_MODELS[b].cr)||(AG_IMGQ[b]-AG_IMGQ[a]));
+  return good[0]||c.sort((a,b)=>AG_IMGQ[b]/IMG_MODELS[b].cr-AG_IMGQ[a]/IMG_MODELS[a].cr)[0]||"dotimg"}
+function agBoardRules(p,n){const parts=p.split(/(?<=[.!?؟。])\s+|\n+/).map(x=>x.trim()).filter(Boolean),k=Math.max(2,Math.min(n,parts.length||2));
+  return{by:"rules",title:p.slice(0,60),logline:p.slice(0,160),bible:p.slice(0,400),characters:[],agents:{},skills:[],scenes:Array.from({length:k},(_,i)=>{const t=parts[i]||p;return{shot:i===0?"ews":i===k-1?"cu":"ws",camera:i===0?"aerial":"static",transition:i?"cut":"fade",dur:4,action:t.slice(0,300),dialogue:"",speaker:"narrator",sfx:"",music:"",image:t+". "+p.slice(0,300)}})}}
+const sbOk=(list,v,d)=>list.some(x=>x[0]===v)?v:d;
+async function agStoryboard(p){const H=S.hf,roles=AG_ROLES.storyboard,run=agStart(),n=agScenes();let sb=null,k=1;
+  const tick=setInterval(()=>{if(AG.run===run&&k<roles.length-2)agShow(roles[k++])},700);
+  try{if(API.mode==="server")sb=await API.req("/v1/agents/storyboard",{json:{prompt:p,scenes:n,aspect:H.aspect,lang:S.lang}})}catch(e){toast(String(e.message||e),{type:"warn"})}finally{clearInterval(tick)}
+  if(AG.run!==run)return;if(!sb||!(sb.scenes||[]).length)sb=agBoardRules(p,n);
+  for(const [id,v] of Object.entries(sb.agents||{}))if(v)AG.note[id]=v;
+  for(const id of roles.slice(0,-2))if(!AG.shown.includes(id)){agShow(id);await agSleep(200)}
+  // the project: title, characters and frames
+  S.story.title=sb.title||p.slice(0,60);S.story.logline=sb.logline||"";S.story.aspect=H.aspect;S.story.bible=sb.bible||"";
+  const ids={};for(const c of sb.characters||[]){let ch=S.chars.find(x=>x.name.trim().toLowerCase()===c.name.trim().toLowerCase());
+    if(!ch){ch=normChar({id:uid(),name:c.name,age:30,gender:c.voice==="male"?"male":"female",look:c.look||"",outfit:"",persona:"",voice:{dialect:S.lang==="ar"?"najdi":"enUS",gender:c.voice==="male"?"male":"female",age:"adult",tone:"warm"},looks:[1,2,3,4].map(()=>Math.floor(Math.random()*1e6)),lookSeed:null,locked:true});S.chars.push(ch)}ids[c.name.trim().toLowerCase()]=ch.id}
+  S.board.frames=sb.scenes.map(s=>({id:uid(),shot:sbOk(SHOTS,s.shot,"ws"),camera:sbOk(CAMS,s.camera,"static"),action:String(s.action||"").slice(0,300),dialogue:String(s.dialogue||"").slice(0,300),speaker:ids[String(s.speaker||"").trim().toLowerCase()]||"narrator",sfx:String(s.sfx||"").slice(0,80),music:String(s.music||"").slice(0,80),transition:sbOk(TRANS,s.transition,"cut"),dur:clamp(parseInt(s.dur,10)||4,2,8),seed:Math.floor(Math.random()*1e6),x:0,y:0,image:String(s.image||s.action||"").slice(0,900)}));
+  S.board.sel=null;S.board.sb={prompt:p,model:agImgModel(),refs:(sb.characters||[]).map(c=>({type:"character",description:c.name+": "+c.look})).slice(0,4),skills:sb.skills||[],bible:sb.bible||""};
+  const m=S.board.sb.model,cr=(IMG_MODELS[m]||{cr:2}).cr,fr=S.board.frames;
+  agShow("producer",L(fr.length+" pictures on "+((IMG_MODELS[m]||{}).name||m)+" — "+cr*fr.length+" credits; the strongest models are kept for the video",fr.length+" صور على "+((IMG_MODELS[m]||{}).name||m)+" — "+cr*fr.length+" رصيد؛ وتُترك النماذج الأقوى للفيديو"));
+  arrangeBoard();persist();const first=agFramePic(fr[0],0);
+  if(!first){AG.busy=false;agPaint();return}
+  await agSleep(300);agShow("proof",L("checks that every picture matches the first one","تتأكد أن كل صورة تطابق الأولى"));
+  const H2=S.hf;H2.prompt="";H2.sb=false;persist();go("board");setTimeout(fitBoard,80);toast(L("Storyboard ready — a picture is being made for every scene","الستوري بورد جاهز — تُصنع صورة لكل مشهد"),{type:"ok"});
+  // the other scenes start once the first picture sets the look (on the live site), so faces, places and light match
+  const rest=()=>{fr.slice(1).forEach((f,i)=>{if(S.board.frames.includes(f)&&!f.job)agFramePic(f,i+1,agAnchor())});persist();if(S.view==="board")renderView();AG.done.proof=true;AG.cur=null;AG.busy=false;AG.summary=L("Storyboard made — "+fr.length+" scenes. Make the video from it when you like the pictures.","صُنع الستوري بورد — "+fr.length+" مشاهد. اصنع الفيديو منه عندما تعجبك الصور.")};
+  if(API.mode!=="server")return rest();
+  const t0=Date.now(),iv=setInterval(()=>{const j=S.jobs.find(x=>x.id===first.id);if(!j||["complete","failed"].includes(j.status)||Date.now()-t0>240e3){clearInterval(iv);rest()}},1500)}
+function agAnchor(){const f0=S.board.frames[0],j=f0&&f0.job&&S.jobs.find(x=>x.id===f0.job),u=j&&j.status==="complete"&&mediaUrl(j);return u&&/^(https?:|\/media\/)/.test(u)?u:null}
+function agFramePic(f,i,ref){const sb=S.board.sb||{},m=sb.model||agImgModel(),cr=(IMG_MODELS[m]||{cr:2}).cr;
+  const j=addJob({kind:"image",model:m,aspect:S.story.aspect||"16:9",cost:cr,secs:6,mediaType:"image",title:(S.story.title||L("Storyboard","ستوري بورد"))+" · "+L("Scene ","مشهد ")+(i+1),prompt:[f.image||f.action,sb.bible].filter(Boolean).join("\n").slice(0,1800),
+    meta:{refs:sb.refs||[],storyboard:1,frame:f.id,skills:(sb.skills||[]).slice(0,24)},inputsUrl:ref?{iRef:ref}:undefined});
+  if(j){f.job=j.id;persist()}return j}
+// frames show their pictures
+objFor=(o=>function(ref){const r=o(ref);if(r||!ref||ref.slice(0,2)!=="f:")return r;const f=S.board.frames.find(x=>x.id===ref.slice(2)),j=f&&f.job&&S.jobs.find(x=>x.id===f.job);if(j&&!j.mediaType)j.mediaType="image";return j||null})(objFor);
+function agSbCost(){const fr=S.board.frames,m=agVidModel();return fr.length?vcost(m,5)*fr.length:0}
+function agVidModel(){const p=[(S.board.sb||{}).prompt,S.story.title,...S.board.frames.map(f=>f.action)].filter(Boolean).join(" ");const pl=hfStudio(p,5);return pl&&pl.shots[0]?pl.shots[0].m:(MODELS.seedance?"seedance":"wan22")}
+function agBoardTools(){const fr=S.board.frames,have=fr.filter(f=>f.job&&(S.jobs.find(x=>x.id===f.job)||{}).status==="complete").length,lines=fr.filter(f=>(f.dialogue||"").trim()).length;
+  return'<div class="side-h" style="margin-top:18px">'+L("Agents","الوكلاء")+'</div><button class="btn big" data-act="agsb-pics" '+(fr.length?"":"disabled")+">"+ic("image")+L("A picture for every scene","صورة لكل مشهد")+'<span class="cost">'+fr.filter(f=>!f.job).length*((IMG_MODELS[(S.board.sb||{}).model||agImgModel()]||{cr:2}).cr)+" cr</span></button>"+
+    '<button class="btn primary big" style="margin-top:6px" data-act="agsb-video" '+(fr.length?"":"disabled")+">"+ic("video")+L("Make the video from the storyboard","اصنع الفيديو من الستوري بورد")+'<span class="cost">'+agSbCost()+" cr</span></button>"+
+    '<button class="btn big" style="margin-top:6px" data-act="agsb-voice" '+(lines?"":"disabled")+">"+ic("voice")+L("Voiceover with natural voices","تعليق صوتي بأصوات طبيعية")+"</button>"+
+    '<p class="agsbst">'+L("Pictures ready: ","الصور الجاهزة: ")+have+"/"+fr.length+(lines?" · "+L("lines to voice: ","جمل للتعليق: ")+lines:"")+"</p>"}
+VIEWS.board=(o=>function(){let h=o();const mark='<div class="side-h" style="margin-top:18px">'+L("Render","الإخراج")+"</div>";if(h.includes(mark))h=h.replace(mark,agBoardTools()+mark);
+  const f=S.board.frames.find(x=>x.id===S.board.sel),j=f&&f.job&&S.jobs.find(x=>x.id===f.job),u=j&&j.status==="complete"&&mediaUrl(j);
+  if(f){if(u)h=h.replace('<canvas class="frame" data-ref="f:'+f.id+'"></canvas>','<img class="frame" style="object-fit:cover" src="'+esc(u)+'" alt="">');
+    h=h.replace('<button class="btn sm" data-act="frame-reroll">','<button class="btn sm" data-act="agsb-repic">'+ic("image")+L("New picture","صورة جديدة")+"</button>"+'<button class="btn sm" data-act="frame-reroll" hidden>')}
+  return h})(VIEWS.board);
+setInterval(()=>{if(S.view!=="board")return;const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName))return;const ready=S.board.frames.filter(f=>{const j=f.job&&S.jobs.find(x=>x.id===f.job);return j&&j.status==="complete"&&f._pic!==j.id});
+  if(ready.length){ready.forEach(f=>{f._pic=f.job});renderView()}},2000);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act^="agsb-"]');if(!a)return;const fr=S.board.frames;
+  switch(a.dataset.act){
+  case"agsb-pics":{if(!S.board.sb)S.board.sb={prompt:S.story.title,model:agImgModel(),refs:S.chars.slice(0,4).map(c=>({type:"character",description:c.name+": "+(c.look||"")})),skills:[],bible:S.story.bible||S.story.logline||""};
+    const anchor=agAnchor();let n=0;fr.forEach((f,i)=>{if(!f.image)f.image=[f.action,f.dialogue?"("+f.dialogue+")":""].filter(Boolean).join(" ");if(!f.job){if(agFramePic(f,i,i?anchor:null))n++}});renderView();if(n)toast(n+L(" pictures on the way"," صور قيد الصنع"),{type:"ok"});break}
+  case"agsb-repic":{const f=fr.find(x=>x.id===S.board.sel);if(!f)break;const i=fr.indexOf(f);f.job=null;if(!f.image)f.image=f.action;agFramePic(f,i,i?agAnchor():null);renderView();break}
+  case"agsb-video":{if(!fr.length)break;const m=agVidModel(),urls=fr.map(f=>{const j=f.job&&S.jobs.find(x=>x.id===f.job);const u=j&&j.status==="complete"&&mediaUrl(j);return u&&/^(https?:|\/media\/)/.test(u)?u:null});
+    const sb=S.board.sb||{},chunks=[];for(let i=0;i<fr.length;i+=6)chunks.push([i,Math.min(fr.length,i+6)]);let made=0;
+    for(const [s,e2] of chunks){const part=fr.slice(s,e2),n=part.length;
+      const j=addJob({kind:"video",model:m,dur:5*n,aspect:S.story.aspect||"16:9",cost:vcost(m,5)*n,title:(S.story.title||L("Storyboard","ستوري بورد"))+(chunks.length>1?" · "+(s+1)+"–"+e2:""),prompt:part.map(f=>f.action).join(" "),
+        meta:{parts:n,partSec:5,shots:part.map(f=>[f.action,lab(SHOTS,f.shot)+", "+lab(CAMS,f.camera)].filter(Boolean).join(". ")),bible:sb.bible||S.story.bible||"",partImages:urls.slice(s,e2),partModels:part.map(()=>m),storyboard:1,skills:(sb.skills||[]).slice(0,24)}});if(j)made++}
+    if(made){toast(L("The video is being made scene by scene from your pictures","يُصنع الفيديو مشهداً بمشهد من صورك"),{type:"ok"});go("library")}break}
+  case"agsb-voice":{const lines=fr.filter(f=>(f.dialogue||"").trim());if(!lines.length)break;if(API.mode!=="server"){toast(L("Natural voices are made on the live site.","تُصنع الأصوات الطبيعية في الموقع."),{type:"info"});break}
+    const spk={};let k=0;a.classList.add("busy");
+    try{const r=await API.req("/v1/voice/natural",{json:{lang:S.lang,lines:lines.map(f=>{if(!(f.speaker in spk))spk[f.speaker]=k++;const c=charById(f.speaker);return{text:f.dialogue,speaker:spk[f.speaker],gender:c?c.gender:undefined}}),context:S.story.logline||S.story.title}});
+      const j={id:uid(),kind:"voice",status:"complete",progress:1,created:Date.now(),title:(S.story.title||"")+" · "+L("Voiceover","تعليق صوتي"),prompt:lines.map(f=>f.dialogue).join(" ").slice(0,200),resultUrl:r.url,dur:Math.round(r.dur||5),art:"wave",pal:S.story.palette,seed:1,aspect:"16:9"};S.jobs.push(j);persist();
+      toast(L("Voiceover ready in your library ("+Object.values(r.voices||{}).join(", ")+")","التعليق الصوتي جاهز في مكتبتك ("+Object.values(r.voices||{}).join("، ")+")"),{type:"ok"})}catch(err){toast(String(err.message||err))}finally{a.classList.remove("busy")}break}
+  }});
+/* ---- what the agents learned (Film crew page); admins edit the sources and can make them learn now ---- */
+function agSkillsHTML(){if(API.mode!=="server")return'<div class="panel pad" style="margin-top:14px"><h3 style="margin-top:0">'+L("What the agents learned","ما تعلّمه الوكلاء")+'</h3><p class="small mute" style="margin:0">'+L("On the live site the agents read trusted pages about their craft every week and keep the techniques that give the best results.","في الموقع يقرأ الوكلاء كل أسبوع صفحات موثوقة عن تخصصهم ويحتفظون بالتقنيات التي تعطي أفضل النتائج.")+"</p></div>";
+  if(!AGD.loaded){if(!AGD.loading)agLoad().then(()=>{if(S.view==="crew")renderView()});return'<div class="panel pad" style="margin-top:14px"><p class="small mute" style="margin:0">'+L("Loading what the agents learned…","جارٍ تحميل ما تعلّمه الوكلاء…")+"</p></div>"}
+  const I=AGD.info||{},staff=!!I.sources,list=AGD.agents||[],when=I.learnedAt?new Date(I.learnedAt).toLocaleDateString():"—";
+  return'<div class="panel pad" style="margin-top:14px"><div class="spread"><h3 style="margin:0">'+L("What the agents learned","ما تعلّمه الوكلاء")+'</h3><span class="small mute">'+L("Last learned: ","آخر تعلّم: ")+esc(when)+"</span></div>"+
+    '<p class="small mute" style="margin:6px 0 0">'+L("Every week each agent reads trusted pages about its craft and keeps short techniques. Results you approve make a technique stronger; results made again or removed make it weaker.","كل أسبوع يقرأ كل وكيل صفحات موثوقة عن تخصصه ويحتفظ بتقنيات قصيرة. النتائج التي تعتمدها تقوّي التقنية، والتي تُعاد أو تُحذف تضعفها.")+"</p>"+
+    '<div class="agsk">'+list.map(a=>{const b=BOT(a.id);return'<div class="agcard"><div class="hd">'+botSVG(a.id,"idle",36)+"<div><b>"+esc(agName(a.id))+'</b><div class="small mute">'+esc(b?L(b.role[0],b.role[1]):a.role)+"</div></div></div>"+
+      ((a.skills||[]).length?"<ul>"+a.skills.slice(0,staff?12:5).map(s=>'<li class="'+(s.off?"off":"")+'"><b dir="auto">'+esc(s.title)+'</b><small dir="auto">'+esc(s.how)+"</small><small>"+esc((()=>{try{return new URL(s.src).hostname}catch(e){return""}})())+(s.uses?" · "+s.wins+"/"+s.uses+L(" approved"," معتمد"):"")+"</small>"+(staff?'<button class="btn sm ghost" style="margin-top:4px" data-act="ag-skill" data-id="'+esc(s.id)+'" data-off="'+(s.off?0:1)+'">'+(s.off?L("Turn on","فعّل"):L("Turn off","أوقف"))+"</button>":"")+"</li>").join("")+"</ul>":'<p class="small dim" style="margin:8px 0 0">'+L("Nothing learned yet.","لم يتعلم شيئاً بعد.")+"</p>")+"</div>"}).join("")+"</div>"+
+    (staff?'<details class="acc" style="margin-top:12px"><summary>'+L("Sources & learning (admin)","المصادر والتعلّم (للمشرف)")+'</summary><label class="lbl" for="agsrc">'+L("One per line: agent id, then the page (https)","سطر لكل مصدر: معرّف الوكيل ثم الصفحة (https)")+'</label><textarea id="agsrc" class="agsrc" dir="ltr" spellcheck="false">'+esc(Object.entries(I.sources||{}).flatMap(([k,v])=>(v||[]).map(u=>k+" "+u)).join("\n"))+'</textarea><div class="row" style="margin-top:8px"><button class="btn sm" data-act="ag-src">'+ic("check")+L("Save sources","احفظ المصادر")+'</button><button class="btn sm primary" data-act="ag-learn" '+(I.learning||AGD.busy?"disabled":"")+">"+ic("spark")+L("Learn now","تعلّم الآن")+"</button></div>"+
+      (AGD.msg?'<p class="small mute" style="margin:8px 0 0">'+esc(AGD.msg)+"</p>":"")+((I.log||[]).length?'<div class="small mute" style="margin-top:8px;display:grid;gap:3px">'+I.log.slice(0,12).map(l=>"<span>"+(l.ok?"✓":"✕")+" "+esc(agName(l.agent))+" · "+esc((()=>{try{return new URL(l.url).hostname}catch(e){return l.url}})())+(l.ok?" · +"+(l.added||0):" · "+esc(l.error||""))+"</span>").join("")+"</div>":"")+"</details>":"")+"</div>"}
+VIEWS.crew=(o=>function(){const h=o(),i=h.lastIndexOf("</div>");return h.slice(0,i)+agSkillsHTML()+h.slice(i)})(VIEWS.crew);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="ag-learn"],[data-act="ag-src"],[data-act="ag-skill"]');if(!a)return;
+  if(a.dataset.act==="ag-skill"){try{await API.req("/v1/agents/skills/"+a.dataset.id,{method:"PUT",json:{off:a.dataset.off==="1"}});await agLoad();renderView()}catch(err){toast(String(err.message||err))}return}
+  if(a.dataset.act==="ag-src"){const out={};(($("#agsrc")||{}).value||"").split(/\n+/).forEach(l=>{const m=/^\s*([a-z]+)\s+(https:\/\/\S+)/.exec(l);if(m)(out[m[1]]=out[m[1]]||[]).push(m[2])});
+    try{await API.req("/v1/agents/sources",{method:"PUT",json:out});await agLoad();toast(L("Sources saved","حُفظت المصادر"),{type:"ok"});renderView()}catch(err){toast(String(err.message||err))}return}
+  AGD.busy=true;AGD.msg=L("The agents are reading their sources…","الوكلاء يقرؤون مصادرهم…");renderView();
+  try{const r=await API.req("/v1/agents/learn",{json:{}});AGD.msg=L("Learned "+r.added+" new techniques.","تعلّموا "+r.added+" تقنيات جديدة.")}catch(err){AGD.msg=String(err.message||err)}AGD.busy=false;await agLoad();if(S.view==="crew")renderView()});
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

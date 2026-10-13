@@ -36,6 +36,7 @@ import { registerScenes } from "./lib/scenes.js";
 import { registerLearn } from "./lib/learn.js";
 import { registerVss, vssServer } from "./lib/vss.js";
 import { registerLocalize, locEngines } from "./lib/localize.js";
+import { registerAgents } from "./lib/agents.js";
 import { nvReady, nvCfg, nvOn } from "./providers/nvidia.js";
 import { cbSig, findJob, pollOne } from "./lib/jobs.js";
 import { registerGifts } from "./lib/gifts.js";
@@ -192,6 +193,7 @@ registerScenes(app);
 registerLearn(app);
 registerVss(app);
 registerLocalize(app);
+registerAgents(app);
 registerExplore(app); registerShowcase(app); registerGifts(app); registerInvoices(app);
 // Low-latency voice preview (ElevenLabs stream, key never leaves the server)
 app.post("/v1/tts/stream", requireUser, async (req, res) => { try { const { planOf } = await import("./lib/plans.js"); const plan = planOf(user(req.user.uid)); if (!["pro", "studio"].includes(plan)) return res.status(402).json({ error: "ElevenLabs voices start from the Pro plan" }); await streamTTS(res, req.body || {}); } catch (e) { if (!res.headersSent) res.status(502).json({ error: e.message }); } });
