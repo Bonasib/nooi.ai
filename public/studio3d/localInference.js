@@ -1,14 +1,17 @@
-// nooi.ai · On-device 3D — local AI inference & 3D reconstruction. NOTHING leaves the device:
+// nooi.ai · 3D Studio — on-device AI & 3D reconstruction. NOTHING leaves the device:
 //   • detectDevice()      WebGPU adapter / limits / fp16, WebGL2, cores, memory → a plan (input size, mesh resolution, precision)
 //   • IDBModelCache       model weights are downloaded once, then served from IndexedDB (works offline afterwards)
 //   • LocalInference      a module Worker (this same file) running ONNX models with transformers.js on WebGPU (CPU/WASM fallback):
-//                           Depth Anything V2 (small) → per-pixel depth · MODNet → cut-out matte (people, optional)
+//                           Depth Anything V2 (small) → per-pixel depth · SlimSAM → tap-to-select any object · MODNet → people
 //   • reconstruct()       depth + subject mask → closed textured mesh. The surface is computed by a WebGPU compute shader
 //                         (RECON_WGSL) in GPU storage buffers — every buffer is destroyed right after — with an identical CPU path.
+//                         shape "pillow" (people, animals, plants: a smooth rounded back) or "solid" (cars, furniture, buildings:
+//                         the silhouette carried back to a real depth, sides and back painted from the object's own colours).
 //   • PBR maps            albedo from the photo, normal map from the depth relief, roughness from the photo's tone.
-// Honest scope: one photo gives the visible side; the hidden side is a smooth closed shell, not an invented back.
+// Honest scope: one photo shows one side; the hidden sides are estimated (shape + colours), not seen. For a fully generated
+// object use a cloud engine (NVIDIA TRELLIS, AI views, Tripo3D, Meshy) from the 3D Studio's plan.
 const IS_WORKER = typeof window === "undefined" && typeof document === "undefined";
-export const MODELS = { depth: "onnx-community/depth-anything-v2-small", matte: "Xenova/modnet" };
+export const MODELS = { depth: "onnx-community/depth-anything-v2-small", matte: "Xenova/modnet", sam: "Xenova/slimsam-77-uniform" };
 const TF_URLS = ["/vendor/transformers/transformers.min.js", "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.1/dist/transformers.min.js"];
 
 // ───────────────────────── IndexedDB model cache (transformers.js "custom cache": match / put) ─────────────────────────
@@ -70,6 +73,13 @@ if (IS_WORKER) {
       device = "wasm"; dtype = "q8"; return TF.pipeline(task, model, { device, dtype, progress_callback: report(id) }); });
     pipes.set(k, p); p.catch(() => pipes.delete(k)); return p;
   }
+  let sam = null;
+  async function getSam(id, name) {
+    if (sam && sam.name === name) return sam; const opt = (d) => ({ device: d, dtype: d === "webgpu" ? "fp32" : "q8", progress_callback: report(id) }); let m;
+    try { m = await TF.SamModel.from_pretrained(name, opt(device)); }
+    catch (e) { if (device !== "webgpu") throw e; send({ id, type: "progress", stage: "gpu", status: "fallback", message: "WebGPU failed (" + (e.message || e) + ") — using the CPU" }); device = "wasm"; dtype = "q8"; m = await TF.SamModel.from_pretrained(name, opt("wasm")); }
+    const processor = await TF.AutoProcessor.from_pretrained(name, { progress_callback: report(id) }); return (sam = { name, model: m, processor, emb: null, inputs: null });
+  }
   self.onmessage = async (ev) => {
     const { id, op, cfg, blob, model } = ev.data || {};
     try {
@@ -86,7 +96,22 @@ if (IS_WORKER) {
         for (let i = 0; i < a.length; i++) a[i] = c === 4 ? r.data[i * 4 + 3] : r.data[i * c];
         return send({ id, type: "result", result: { alpha: a, w: r.width, h: r.height, ms: Math.round(performance.now() - t0) } }, [a.buffer]);
       }
-      if (op === "dispose") { for (const p of pipes.values()) { try { (await p).dispose?.(); } catch (e) {} } pipes.clear(); return send({ id, type: "result", result: true }); }
+      if (op === "samEmbed") { // encode the picture once; every tap afterwards only runs the small decoder
+        const s = await getSam(id, model || MODELS.sam); send({ id, type: "progress", stage: "infer", status: "select" });
+        const img = await TF.RawImage.fromBlob(blob), t0 = performance.now(); s.inputs = await s.processor(img); s.emb = await s.model.get_image_embeddings(s.inputs);
+        return send({ id, type: "result", result: { w: img.width, h: img.height, ms: Math.round(performance.now() - t0), device } });
+      }
+      if (op === "samMask") {
+        const s = sam; if (!s || !s.emb) throw new Error("Pick the photo again"); const rs = s.inputs.reshaped_input_sizes[0], pts = ev.data.points || [];
+        const input_points = new TF.Tensor("float32", Float32Array.from(pts.flatMap((p) => [p.x * rs[1], p.y * rs[0]])), [1, 1, pts.length, 2]);
+        const input_labels = new TF.Tensor("int64", BigInt64Array.from(pts.map((p) => BigInt(p.label ? 1 : 0))), [1, 1, pts.length]);
+        const t0 = performance.now(), out = await s.model({ ...s.emb, input_points, input_labels });
+        const masks = await s.processor.post_process_masks(out.pred_masks, s.inputs.original_sizes, s.inputs.reshaped_input_sizes), m = masks[0], sc = out.iou_scores.data;
+        let best = 0; for (let i = 1; i < sc.length; i++) if (sc[i] > sc[best]) best = i;
+        const H = m.dims[m.dims.length - 2], W = m.dims[m.dims.length - 1], off = best * W * H, a = new Uint8Array(W * H); for (let i = 0; i < a.length; i++) a[i] = m.data[off + i] ? 255 : 0;
+        return send({ id, type: "result", result: { alpha: a, w: W, h: H, score: +sc[best].toFixed(3), ms: Math.round(performance.now() - t0) } }, [a.buffer]);
+      }
+      if (op === "dispose") { sam = null; for (const p of pipes.values()) { try { (await p).dispose?.(); } catch (e) {} } pipes.clear(); return send({ id, type: "result", result: true }); }
       throw new Error("Unknown op " + op);
     } catch (e) { send({ id, type: "error", error: String((e && e.message) || e) }); }
   };
@@ -102,6 +127,8 @@ export class LocalInference {
   async init() { if (!this.ready) this.ready = this.call("init", { cfg: this.cfg }).catch((e) => { this.ready = null; throw e; }); return this.ready; }
   async depth(blob) { await this.init(); return this.call("depth", { blob }); }
   async matte(blob) { await this.init(); return this.call("matte", { blob }); }
+  async samEmbed(blob) { await this.init(); return this.call("samEmbed", { blob }); }
+  async samMask(points) { return this.call("samMask", { points }); }
   async dispose() { if (this.w) { try { await this.call("dispose", {}); } catch (e) {} } }
   terminate() { if (this.w) { this.w.terminate(); this.w = null; this.ready = null; for (const p of this.wait.values()) p.no(new Error("stopped")); this.wait.clear(); } }
 }
@@ -172,20 +199,27 @@ export async function reconstruct(THREE, { image, depth, alpha, plan, opts = {},
   let mn = 1, mx = 0; for (let i = 0; i < n; i++) if (mask[i]) { if (Dn[i] < mn) mn = Dn[i]; if (Dn[i] > mx) mx = Dn[i]; }
   const D = new Float32Array(n); for (let i = 0; i < n; i++) D[i] = mask[i] ? (Dn[i] - mn) / (mx - mn || 1) : -1;
   const dist = relief ? new Float32Array(n).fill(1e6) : distance(mask, gw, gh); let maxd = 1; for (let i = 0; i < n; i++) if (dist[i] < 1e5 && dist[i] > maxd) maxd = dist[i];
-  const cell = 2 / Math.max(gw, gh), P = { thickness: (opts.depthScale ?? 0.35) * Math.max(gw, gh), relief: relief ? 1 : 0.7, round: relief ? 1 : Math.max(2, maxd * 0.45), maxd, cell, back: relief ? 0 : (opts.back ?? 0.45) };
+  // the subject's width in cells (for a "solid" object the back sits at length × width behind the front)
+  let bx0 = gw, bx1 = 0; for (let i = 0; i < n; i++) if (mask[i]) { const x = i % gw; if (x < bx0) bx0 = x; if (x > bx1) bx1 = x; }
+  const solid = !relief && opts.shape === "solid", subjW = Math.max(1, bx1 - bx0 + 1), thick = (opts.depthScale ?? (solid ? 0.12 : 0.35)) * Math.max(gw, gh);
+  const cell = 2 / Math.max(gw, gh), P = { thickness: thick, relief: relief ? 1 : 0.7, round: relief ? 1 : Math.max(2, maxd * (solid ? 0.14 : 0.45)), maxd, cell,
+    back: relief ? 0 : solid ? ((opts.length ?? 1) * subjW) / thick : (opts.back ?? 0.45) };
   // 4. the surface — WebGPU compute when possible
   let S, on = "cpu"; const t0 = performance.now();
   if (navigator.gpu && WGSL && opts.gpu !== false) { try { S = await surfaceGPU(D, dist, gw, gh, P, WGSL); on = "webgpu"; } catch (e) { S = null; } }
   if (!S) S = surfaceCPU(D, dist, gw, gh, P);
   onStep("surface", on + " · " + Math.round(performance.now() - t0) + " ms");
+  // 4b. a solid object's hidden body: walls traced from its outline + a back (cars: a hood, side windows, wheels)
+  const body = solid ? solidBody(THREE, { mask, D, gw, gh, cell, L: (opts.length ?? 1) * subjW * cell, vehicle: !!opts.vehicle, front: S.front }) : null;
+  if (body) onStep("body", (opts.vehicle ? "vehicle · " : "") + body.walls.idx.length / 3 + " wall triangles");
   // 5. triangles (front, and the closing back unless it's a relief), UVs
   const vid = new Int32Array(n).fill(-1), pos = [], uv = [], nor = []; let nv = 0;
   for (let i = 0; i < n; i++) if (mask[i]) { vid[i] = nv++; const o = i * 4; pos.push(S.front[o], S.front[o + 1], S.front[o + 2]); nor.push(S.normal[o], S.normal[o + 1], S.normal[o + 2]); uv.push(((i % gw) + 0.5) / gw, 1 - (((i / gw) | 0) + 0.5) / gh); }
   const tri = []; for (let y = 0; y < gh - 1; y++) for (let x = 0; x < gw - 1; x++) { const a = vid[y * gw + x], b = vid[y * gw + x + 1], c = vid[(y + 1) * gw + x], d = vid[(y + 1) * gw + x + 1], k4 = (a >= 0) + (b >= 0) + (c >= 0) + (d >= 0);
     if (k4 === 4) tri.push(a, c, b, b, c, d); else if (k4 === 3) { if (a < 0) tri.push(b, c, d); else if (b < 0) tri.push(a, c, d); else if (c < 0) tri.push(a, d, b); else tri.push(a, c, b); } }
   const mkGeo = (P3, N3, idx) => { const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(P3, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); if (N3) g.setAttribute("normal", new THREE.Float32BufferAttribute(N3, 3)); g.setIndex(idx); if (!N3) g.computeVertexNormals(); g.computeBoundingBox(); g.computeBoundingSphere(); return g; };
-  const frontGeo = mkGeo(pos, nor, tri); let backGeo = null;
-  if (!relief) { const bp = []; for (let i = 0; i < n; i++) if (mask[i]) { const o = i * 4; bp.push(S.back[o], S.back[o + 1], S.back[o + 2]); } const bt = tri.slice(); for (let i = 0; i < bt.length; i += 3) { const t = bt[i + 1]; bt[i + 1] = bt[i + 2]; bt[i + 2] = t; } backGeo = mkGeo(bp, null, bt); }
+  const frontGeo = mkGeo(pos, body && body.vehicle ? null : nor, tri); let backGeo = null;
+  if (!relief && !solid) { const bp = []; for (let i = 0; i < n; i++) if (mask[i]) { const o = i * 4; bp.push(S.back[o], S.back[o + 1], S.back[o + 2]); } const bt = tri.slice(); for (let i = 0; i < bt.length; i += 3) { const t = bt[i + 1]; bt[i + 1] = bt[i + 2]; bt[i + 2] = t; } backGeo = mkGeo(bp, null, bt); }
   // 6. PBR maps baked from the photo and the relief
   const T = Math.min(plan?.texSize || 2048, 2048), tk = T / Math.max(image.width, image.height), tw = Math.max(4, Math.round(image.width * tk)), th = Math.max(4, Math.round(image.height * tk));
   const albedo = document.createElement("canvas"); albedo.width = tw; albedo.height = th; const ax = albedo.getContext("2d"); ax.drawImage(image, 0, 0, tw, th);
@@ -199,9 +233,95 @@ export async function reconstruct(THREE, { image, depth, alpha, plan, opts = {},
   const tex = (c, srgb) => { const t = new THREE.CanvasTexture(c); if (srgb) { if ("colorSpace" in t) t.colorSpace = THREE.SRGBColorSpace; else t.encoding = THREE.sRGBEncoding; } t.anisotropy = 4; return t; };
   const mat = new THREE.MeshStandardMaterial({ map: tex(albedo, true), normalMap: tex(nmC), roughnessMap: tex(rgC), roughness: 1, metalness: 0, normalScale: new THREE.Vector2(0.6, 0.6) });
   const group = new THREE.Group(); group.name = "nooi_local3d"; const fm = new THREE.Mesh(frontGeo, mat); fm.name = "front"; fm.castShadow = fm.receiveShadow = true; group.add(fm);
-  if (backGeo) { const bc = document.createElement("canvas"); bc.width = tw; bc.height = th; const bx = bc.getContext("2d"); bx.filter = "blur(10px) brightness(0.85)"; bx.drawImage(albedo, 0, 0); const bm = new THREE.Mesh(backGeo, new THREE.MeshStandardMaterial({ map: tex(bc, true), roughness: 0.8, metalness: 0 })); bm.name = "back"; bm.castShadow = bm.receiveShadow = true; group.add(bm); }
+  if (body) addBody(THREE, group, body, { albedo, mask, gw, gh, tex });
+  if (backGeo) { const bc = solid ? fillTexture(albedo, mask, gw, gh) : (() => { const c = document.createElement("canvas"); c.width = tw; c.height = th; const bx = c.getContext("2d"); bx.filter = "blur(10px) brightness(0.85)"; bx.drawImage(albedo, 0, 0); return c; })();
+    const bm = new THREE.Mesh(backGeo, new THREE.MeshStandardMaterial({ map: tex(bc, true), roughness: solid ? 0.55 : 0.8, metalness: solid ? 0.15 : 0 })); bm.name = "back"; bm.castShadow = bm.receiveShadow = true; group.add(bm); }
   onStep("maps", "albedo · normal · roughness");
-  return { group, stats: { grid: [gw, gh], vertices: nv * (backGeo ? 2 : 1), triangles: (tri.length / 3) * (backGeo ? 2 : 1), surface: on, subject: how }, maps: { albedo, normal: nmC, roughness: rgC } };
+  const extraV = body ? body.walls.pos.length / 3 + body.cap.pos.length / 3 : 0, extraT = body ? (body.walls.idx.length + body.cap.idx.length) / 3 : 0;
+  return { group, stats: { grid: [gw, gh], vertices: nv * (backGeo ? 2 : 1) + extraV, triangles: (tri.length / 3) * (backGeo ? 2 : 1) + extraT, surface: on, subject: how, shape: relief ? "relief" : solid ? (opts.vehicle ? "vehicle" : "solid") : "pillow", wheels: body && body.wheels ? 4 : 0 }, maps: { albedo, normal: nmC, roughness: rgC } };
+}
+
+// ───────────────────────── the hidden body of a solid object ─────────────────────────
+const smooth01 = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a || 1))); return t * t * (3 - 2 * t); };
+function openMask(m, w, h, r) { // erode then dilate by r: thin parts (a car's mirrors) disappear, the body stays
+  const d = distance(m, w, h), er = new Uint8Array(w * h); for (let i = 0; i < w * h; i++) er[i] = m[i] && d[i] > r ? 1 : 0;
+  const inv = new Uint8Array(w * h); for (let i = 0; i < w * h; i++) inv[i] = er[i] ? 0 : 1; const di = distance(inv, w, h), out = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) out[i] = m[i] && (er[i] || di[i] <= r + 0.5) ? 1 : 0; return largest(out, w, h).mask; }
+function traceContour(m, w, h) { // Moore-neighbour tracing of the outer boundary
+  let s = -1; for (let i = 0; i < w * h; i++) if (m[i]) { s = i; break; } if (s < 0) return [];
+  const N = [[-1, 0], [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1]], inside = (x, y) => x >= 0 && y >= 0 && x < w && y < h && m[y * w + x];
+  const sx = s % w, sy = (s / w) | 0; let b = [sx, sy], c = [sx - 1, sy]; const pts = [[sx, sy]];
+  for (let it = 0; it < w * h * 2; it++) { const k = N.findIndex((d) => b[0] + d[0] === c[0] && b[1] + d[1] === c[1]); let found = false;
+    for (let t = 1; t <= 8; t++) { const j = (k + t) % 8, nx = b[0] + N[j][0], ny = b[1] + N[j][1]; if (inside(nx, ny)) { const pj = (k + t + 7) % 8; c = [b[0] + N[pj][0], b[1] + N[pj][1]]; b = [nx, ny]; found = true; break; } }
+    if (!found || (b[0] === sx && b[1] === sy)) break; pts.push(b.slice()); }
+  return pts; }
+function smoothResample(P, n) { let A = P; for (let pass = 0; pass < 3; pass++) A = A.map((_, i) => { let x = 0, y = 0; for (let k = -2; k <= 2; k++) { const q = A[(i + k + A.length) % A.length]; x += q[0]; y += q[1]; } return [x / 5, y / 5]; });
+  const len = [0]; for (let i = 1; i <= A.length; i++) len.push(len[i - 1] + Math.hypot(A[i % A.length][0] - A[i - 1][0], A[i % A.length][1] - A[i - 1][1])); const T = len[len.length - 1], out = []; let j = 0;
+  for (let k = 0; k < n; k++) { const d = (k / n) * T; while (len[j + 1] < d) j++; const a = A[j], b = A[(j + 1) % A.length], f = (d - len[j]) / (len[j + 1] - len[j] || 1); out.push([a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]); } return out; }
+function solidBody(THREE, { mask, D, gw, gh, cell, L, vehicle, front }) {
+  let x0 = gw, x1 = 0, y0 = gh, y1 = 0; for (let i = 0; i < gw * gh; i++) if (mask[i]) { const x = i % gw, y = (i / gw) | 0; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  const body = vehicle ? openMask(mask, gw, gh, Math.max(1, Math.round((x1 - x0) * 0.045))) : mask, wy = (y) => (gh * 0.5 - y) * cell, wx = (x) => (x - gw * 0.5) * cell;
+  const Ymin = wy(y1), Ymax = wy(y0), H = Math.max(cell, Ymax - Ymin); let belt = Ymin + H * 0.68, hood = 0;
+  if (vehicle) { // the beltline: from the top, the first row as near as halfway between the roof rows and the nearest rows (the hood/windshield edge)
+    const rm = []; for (let y = y0; y <= y1; y++) { let s = 0, c = 0; for (let x = x0; x <= x1; x++) { const i = y * gw + x; if (body[i] && D[i] >= 0) { s += D[i]; c++; } } rm.push(c ? s / c : 0); }
+    const topN = Math.max(1, Math.round(rm.length * 0.08)), top = rm.slice(0, topN).reduce((a, b) => a + b, 0) / topN, mx = Math.max(...rm), thr = top + (mx - top) * 0.5; let br = Math.round(rm.length * 0.32);
+    for (let k = 0; k < rm.length; k++) if (rm[k] >= thr) { br = k; break; } belt = Math.min(Ymin + H * 0.85, Math.max(Ymin + H * 0.45, wy(y0 + br))); hood = 0.26 * L; }
+  // the cabin rows sit back by the hood's length, and the windshield leans back (rake) towards the roof
+  const shift = (y) => (vehicle ? hood * smooth01(belt - 0.03 * H, belt + 0.03 * H, y) + 0.12 * L * Math.max(0, (y - belt) / Math.max(1e-6, Ymax - belt)) : 0), r = 0.2 * H, clear = vehicle ? r * 0.6 : 0, yc = (y) => Math.max(y, Ymin + clear);
+  if (vehicle) for (let i = 0; i < gw * gh; i++) if (mask[i]) front[i * 4 + 2] -= shift(wy((i / gw) | 0));
+  const raw = traceContour(body, gw, gh).map(([x, y]) => [wx(x), wy(y)]); if (raw.length < 8) return null; const pts = smoothResample(raw, Math.min(520, Math.max(64, raw.length)));
+  let area = 0; for (let i = 0; i < pts.length; i++) { const a = pts[i], b = pts[(i + 1) % pts.length]; area += a[0] * b[1] - b[0] * a[1]; } const ccw = area > 0, N = pts.length;
+  // walls
+  const NZ = vehicle ? 44 : 14, pos = [], nor = [], glass = [], idx = [];
+  for (let i = 0; i < N; i++) { const p = pts[(i - 1 + N) % N], q = pts[(i + 1) % N], tx = q[0] - p[0], ty = q[1] - p[1], l = Math.hypot(tx, ty) || 1, nx = (ccw ? ty : -ty) / l, ny = (ccw ? -tx : tx) / l, [x, y] = pts[i], zs = -shift(y);
+    for (let k = 0; k <= NZ; k++) { const f = k / NZ, z = zs + (-L - zs) * f; pos.push(x, yc(y), z); nor.push(nx, ny * (y < Ymin + clear ? 0 : 1), 0);
+      const zf = -z / L, pillar = Math.abs(zf - 0.55) < 0.025; glass.push(vehicle && y > belt + 0.05 * H && y < Ymax - 0.07 * H && zf > shift(y) / L + 0.03 && zf < 0.93 && !pillar ? 1 : 0); } }
+  for (let i = 0; i < N; i++) for (let k = 0; k < NZ; k++) { const a = i * (NZ + 1) + k, b = ((i + 1) % N) * (NZ + 1) + k; idx.push(a, b, a + 1, b, b + 1, a + 1); }
+  { const A = idx[0] * 3, B = idx[1] * 3, C = idx[2] * 3, ux = pos[B] - pos[A], uy = pos[B + 1] - pos[A + 1], uz = pos[B + 2] - pos[A + 2], vx = pos[C] - pos[A], vy = pos[C + 1] - pos[A + 1], vz = pos[C + 2] - pos[A + 2];
+    const fx = uy * vz - uz * vy, fy = uz * vx - ux * vz; if (fx * nor[idx[0] * 3] + fy * nor[idx[0] * 3 + 1] < 0) for (let t = 0; t < idx.length; t += 3) { const k = idx[t + 1]; idx[t + 1] = idx[t + 2]; idx[t + 2] = k; } }
+  // the back: the outline as a flat face at -L, facing backwards
+  const shape = pts.map(([x, y]) => new THREE.Vector2(x, yc(y))), faces = THREE.ShapeUtils.triangulateShape(shape, []), cpos = [], cuv = [], cidx = [];
+  for (const v of shape) { cpos.push(v.x, v.y, -L); cuv.push(0.5 + v.x / (cell * gw), 0.5 + v.y / (cell * gh)); }
+  // earcut returns one fixed winding whatever the outline's direction, so measure it: the back must face away (−z)
+  let fz = 0; for (const f of faces) { const a = shape[f[0]], b = shape[f[1]], c = shape[f[2]]; fz += (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x); }
+  for (const f of faces) fz > 0 ? cidx.push(f[0], f[2], f[1]) : cidx.push(f[0], f[1], f[2]);
+  let wheels = null;
+  if (vehicle) { let bx0 = gw, bx1 = 0; for (let y = Math.round(y1 - (y1 - y0) * 0.15); y <= y1; y++) for (let x = x0; x <= x1; x++) if (body[y * gw + x]) { if (x < bx0) bx0 = x; if (x > bx1) bx1 = x; }
+    const Wb = (bx1 - bx0 + 1) * cell, cx = wx((bx0 + bx1 + 1) / 2), tw = 0.15 * Wb; wheels = { r, tw, y: Ymin + r, xs: [cx - Wb / 2 + tw * 0.42, cx + Wb / 2 - tw * 0.42], zs: [-0.18 * L, -0.76 * L] }; }
+  return { vehicle, walls: { pos, nor, glass, idx }, cap: { pos: cpos, uv: cuv, idx: cidx }, wheels, belt, hood, H, L };
+}
+function addBody(THREE, group, B, { albedo, mask, gw, gh, tex }) {
+  // the paint: the median colour of the lower body (lights and deep shadows left out)
+  const w = albedo.width, h = albedo.height, d = albedo.getContext("2d").getImageData(0, 0, w, h).data, R = [], G = [], Bl = [];
+  for (let y = Math.round(h * 0.35); y < h * 0.8; y += 2) for (let x = 0; x < w; x += 2) { const gx = Math.min(gw - 1, ((x / w) * gw) | 0), gy = Math.min(gh - 1, ((y / h) * gh) | 0); if (!mask[gy * gw + gx]) continue; const i = (y * w + x) * 4, l = (d[i] + d[i + 1] + d[i + 2]) / 765; if (l < 0.03 || l > 0.75) continue; R.push(d[i]); G.push(d[i + 1]); Bl.push(d[i + 2]); }
+  const med = (a) => (a.length ? a.sort((p, q) => p - q)[a.length >> 1] / 255 : 0.4), paint = new THREE.Color(med(R), med(G), med(Bl)); if (paint.convertSRGBToLinear) paint.convertSRGBToLinear();
+  const glassC = new THREE.Color(0.02, 0.025, 0.03), cols = []; for (const g of B.walls.glass) { const c = g ? glassC : paint; cols.push(c.r, c.g, c.b); }
+  const wg = new THREE.BufferGeometry(); wg.setAttribute("position", new THREE.Float32BufferAttribute(B.walls.pos, 3)); wg.setAttribute("normal", new THREE.Float32BufferAttribute(B.walls.nor, 3)); wg.setAttribute("color", new THREE.Float32BufferAttribute(cols, 3)); wg.setIndex(B.walls.idx); wg.computeBoundingBox(); wg.computeBoundingSphere();
+  const wm = new THREE.Mesh(wg, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: B.vehicle ? 0.3 : 0.6, metalness: B.vehicle ? 0.45 : 0.08 })); wm.name = "sides"; wm.castShadow = wm.receiveShadow = true; group.add(wm);
+  // the back face: the photo's colours softened and darker; on a car the bright headlights become red tail lights
+  const rc = document.createElement("canvas"); rc.width = w; rc.height = h; const rx = rc.getContext("2d"); rx.filter = "blur(" + Math.max(2, Math.round(w / (B.vehicle ? 70 : 300))) + "px) brightness(0.8)"; rx.drawImage(albedo, 0, 0); rx.filter = "none";
+  if (B.vehicle) { // the front's details are washed out (the back isn't a second front); its bright lamps come back as red tail lights
+    const lc = document.createElement("canvas"); lc.width = w; lc.height = h; const lx = lc.getContext("2d"); lx.filter = "blur(" + Math.max(1, Math.round(w / 400)) + "px)"; lx.drawImage(albedo, 0, 0);
+    const li = lx.getImageData(0, 0, w, h).data, im = rx.getImageData(0, 0, w, h), a = im.data;
+    for (let i = 0; i < a.length; i += 4) { const l = (li[i] + li[i + 1] + li[i + 2]) / 765; if (l > 0.62) { const k = Math.min(1, (l - 0.62) * 6); a[i] = a[i] * (1 - k) + 205 * k; a[i + 1] = a[i + 1] * (1 - k) + 22 * k; a[i + 2] = a[i + 2] * (1 - k) + 26 * k; } } rx.putImageData(im, 0, 0); }
+  const cg = new THREE.BufferGeometry(); cg.setAttribute("position", new THREE.Float32BufferAttribute(B.cap.pos, 3)); cg.setAttribute("uv", new THREE.Float32BufferAttribute(B.cap.uv, 2)); cg.setIndex(B.cap.idx); cg.computeVertexNormals(); cg.computeBoundingBox(); cg.computeBoundingSphere();
+  const cm = new THREE.Mesh(cg, new THREE.MeshStandardMaterial({ map: tex(rc, true), roughness: 0.45, metalness: B.vehicle ? 0.3 : 0.05 })); cm.name = "rear"; cm.castShadow = cm.receiveShadow = true; group.add(cm);
+  if (B.wheels) { const W = B.wheels, tyre = new THREE.CylinderGeometry(W.r, W.r, W.tw, 28).rotateZ(Math.PI / 2), rim = new THREE.CylinderGeometry(W.r * 0.6, W.r * 0.6, W.tw * 1.04, 20).rotateZ(Math.PI / 2);
+    const tm = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.92 }), rm = new THREE.MeshStandardMaterial({ color: 0xb9bcc0, roughness: 0.28, metalness: 0.9 });
+    for (const x of W.xs) for (const z of W.zs) { const t = new THREE.Mesh(tyre, tm), m = new THREE.Mesh(rim, rm); t.position.set(x, W.y, z); m.position.set(x, W.y, z); t.name = "wheel"; m.name = "rim"; t.castShadow = m.castShadow = true; group.add(t, m); } }
+}
+// the hidden sides of a solid object: its own colours spread outwards from the visible pixels (a masked blur — the canvas
+// blurs premultiplied colour, so reading it back gives the average of the subject's pixels only), with a little of the
+// photo's detail mirrored in, slightly darker — so the sides & back look like the same object, not like smeared edges.
+function fillTexture(albedo, mask, gw, gh) {
+  const w = albedo.width, h = albedo.height, m = document.createElement("canvas"); m.width = gw; m.height = gh; const mi = m.getContext("2d").createImageData(gw, gh);
+  for (let i = 0; i < gw * gh; i++) mi.data[i * 4 + 3] = mask[i] ? 255 : 0; m.getContext("2d").putImageData(mi, 0, 0);
+  const cut = document.createElement("canvas"); cut.width = w; cut.height = h; const cx = cut.getContext("2d"); cx.drawImage(m, 0, 0, w, h); cx.globalCompositeOperation = "source-in"; cx.drawImage(albedo, 0, 0);
+  const out = document.createElement("canvas"); out.width = w; out.height = h; const ox = out.getContext("2d"); const r = Math.max(6, Math.round(Math.max(w, h) * 0.03));
+  for (const k of [4, 2, 1]) { ox.filter = "blur(" + r * k + "px)"; ox.drawImage(cut, 0, 0); } ox.filter = "none";
+  const d = ox.getImageData(0, 0, w, h), a = d.data; for (let i = 0; i < a.length; i += 4) { a[i + 3] = 255; }
+  ox.putImageData(d, 0, 0); ox.globalAlpha = 0.35; ox.filter = "blur(2px)"; ox.drawImage(albedo, 0, 0); ox.globalAlpha = 1; ox.filter = "none";
+  ox.globalCompositeOperation = "multiply"; ox.fillStyle = "rgb(205,205,205)"; ox.fillRect(0, 0, w, h); ox.globalCompositeOperation = "source-over"; return out;
 }
 
 // strict cleanup — geometry, materials and every texture on them

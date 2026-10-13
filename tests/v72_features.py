@@ -5,7 +5,7 @@
 #  · live sketch "Make it real" and Draw & create send the sketch to the engine (and leave the user's own reference alone)
 #  · a character made from an uploaded photo; its looks use the photo as the face reference
 #  · AI full 3D from a photo and for a character: front/side/back views → a closed mesh with real depth → editor / scene
-#  · a 3D world from a photo: 21:9 panorama job → explorable sphere → walk-through clip in the editor
+#  · a 3D world from a photo (3D Studio): 21:9 panorama job continuing the photo → sky + lighting → walk-through clip in the editor
 #  · templates ordered by kind
 import asyncio, json, os, shutil, subprocess, sys, tempfile, time, urllib.request
 from playwright.async_api import async_playwright
@@ -94,34 +94,53 @@ async def run(p, w):
     ok(r["char"][0] == n0 + 1 and r["char"][1] and r["char"][2], f"{tag}: character from photo {r['char']}")
     await E("()=>document.querySelector('[data-act=gen-looks]').click()")
     ok(await wait_for(E, "()=>S.jobs.filter(j=>j.kind==='look'&&j.meta&&j.meta.photo&&j.remote).length>=4"), f"{tag}: looks from the photo sent")
-    # AI full 3D from a photo
-    await E("()=>{S.s3d.mode='objects';go('studio3d');renderAll()}"); await pg.wait_for_timeout(800)
-    await pg.set_input_files('input[data-s3dfile]', K + "photo.jpg"); await pg.wait_for_timeout(1000)
-    await E("()=>{S.s3d.a3desc='a red box';document.querySelector('[data-act=a3-run]').click()}")
-    ok(await wait_for(E, "()=>S.a3.length&&S.a3[S.a3.length-1].status!=='wait'", 30), f"{tag}: AI 3D finished")
-    r["a3"] = await E("()=>{const p=S.a3[S.a3.length-1],j=S.jobs.find(x=>x.id===p.res);return [p.status,j&&j.kind,j&&j.local]}")
-    ok(r["a3"][0] == "done" and r["a3"][1] == "3d", f"{tag}: AI 3D result {r['a3']}")
-    r["mesh"] = await E("""async()=>{await ensureThree();const ld=async f=>{const b=await(await fetch('/media/'+f)).blob();return blobImg72(b)};const g=a3Mesh(await ld('front.png'),await ld('side.png'),await ld('back.png'),'object');const s=new THREE.Box3().setFromObject(g).getSize(new THREE.Vector3());return [g.children.length,+s.x.toFixed(2),+s.y.toFixed(2),+s.z.toFixed(2)]}""")
+    # AI full 3D from a photo — in the one 3D Studio: the photo is handed over, AI views (front/side/back) replace the preview
+    await E("async()=>{const b=await (await fetch('/media/photo.jpg')).blob();const u=await new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result);r.readAsDataURL(b)});await setS3dFromDataURL(u,'a red box');go('studio3d')}")
+    fr = None
+    for _ in range(80):
+        fr = next((f for f in pg.frames if "/studio3d/" in f.url), None)
+        try:
+            if fr and await fr.evaluate("()=>!!window.X3&&!!X3.S.img"): break
+        except Exception: pass
+        await asyncio.sleep(.25)
+    ok(fr is not None, f"{tag}: 3D Studio with the photo")
+    if fr:
+        await fr.evaluate("""()=>{window.__X3_TEST_MASK=async(img)=>{const w=img.width,h=img.height,a=new Uint8Array(w*h);for(let y=h*.2|0;y<h*.8;y++)for(let x=w*.25|0;x<w*.75;x++)a[y*w+x]=255;return{alpha:a,w,h}};
+          window.__X3_TEST_DEPTH=async(cv)=>{const w=64,h=48,d=new Float32Array(w*h).fill(1);return{depth:d,w,h,ms:1}};document.getElementById('label').value='a red box';X3.S.label='a red box'}""")
+        await fr.evaluate("()=>X3.make3D()"); await fr.evaluate("()=>{X3.cloudUpgrade('views')}")
+        ok(await wait_for(E, "()=>S.a3.length&&S.a3[S.a3.length-1].status!=='wait'", 30), f"{tag}: AI 3D finished")
+        r["a3"] = await E("()=>{const p=S.a3[S.a3.length-1],j=S.jobs.find(x=>x.id===p.res);return [p.status,j&&j.kind,j&&j.local]}")
+        ok(r["a3"][0] == "done" and r["a3"][1] == "3d", f"{tag}: AI 3D result {r['a3']}")
+        ok(await wait_for(fr.evaluate, "()=>X3.E.assets[0].source==='views'&&X3.E.assets[0].cloud.status==='done'", 30), f"{tag}: AI views model replaced the preview in the studio")
+    r["mesh"] = await E("""async()=>{await ensureThree();const ld=async f=>{const b=await(await fetch('/media/'+f)).blob();return blobImg72(b)};const g=a3Mesh(await ld('front.png'),await ld('side.png'),await ld('back.png'),'object');const s=new THREE.Box3().setFromObject(g).getSize(new THREE.Vector3());return [g.children.length,+s.x.toFixed(2),+s.y.toFixed(2),+(s.z/s.x).toFixed(2)]}""")
     ok(r["mesh"][0] == 2 and 0.35 < r["mesh"][3] < 0.75 and r["mesh"][2] > 1.9, f"{tag}: closed mesh with depth from the side view {r['mesh']}")
-    await E("()=>document.querySelector('[data-act=a3-ed]').click()")
-    ok(await wait_for(E, "()=>S.view==='edit'", 15), f"{tag}: 3D turntable sent to the editor")
-    await E("()=>go('studio3d')"); await pg.wait_for_timeout(1200); await wait_for(E, "()=>!!V3.obj", 10); await E("()=>document.querySelector('[data-act=a3-scene]').click()"); await wait_for(E, "()=>S.view==='video'", 10)
-    r["scene"] = await E("()=>[S.view,!!M.vStart]"); ok(r["scene"] == ["video", True], f"{tag}: use in a scene {r['scene']}")
+    if fr:  # the scene as an AI video's first frame
+        await fr.evaluate("()=>document.querySelector('[data-x3=still]').click()"); await wait_for(E, "()=>S.view==='video'", 10)
+        r["scene"] = await E("()=>[S.view,!!M.vStart]"); ok(r["scene"] == ["video", True], f"{tag}: use in a scene {r['scene']}")
     # 3D character
     await E("()=>{go('chars');renderAll()}"); await pg.wait_for_timeout(500); na = await E("()=>S.a3.length")
     r["charBtn"] = await E("()=>[S.view,S.chars.length,S.charSel,!!document.querySelector('[data-act=char-3dbody]'),!!document.querySelector('[data-act=gen-sheet]')]")
     ok(r["charBtn"][3], f"{tag}: 3D character button missing {r['charBtn']}")
     await E("()=>{const b=document.querySelector('[data-act=char-3dbody]');b&&b.click()}")
     ok(await wait_for(E, f"()=>S.a3.length>{na}&&S.a3[S.a3.length-1].status==='done'", 30), f"{tag}: 3D character built")
-    # 3D world from a photo
-    await E("()=>{go('world');renderAll()}"); await pg.wait_for_timeout(600)
-    await pg.set_input_files('input[data-pwup]', K + "photo.jpg"); await pg.wait_for_timeout(600)
-    await E("()=>{S.wld.pw.desc='a quiet harbour';document.querySelector('[data-act=pw-go]').click()}")
-    ok(await wait_for(E, "()=>!S.wld.pw.wait&&!!PW.mesh&&PW.src&&PW.src.width===1024", 30), f"{tag}: 3D world built from the panorama")
-    r["world"] = await E("()=>{const j=S.jobs.find(x=>x.id===S.wld.pw.sel);return [j&&j.aspect,!!document.querySelector('#pwview canvas')]}")
-    ok(r["world"] == ["21:9", True], f"{tag}: world {r['world']}")
-    await E("()=>document.querySelector('[data-act=pw-ed]').click()")
-    ok(await wait_for(E, "()=>S.view==='edit'", 20), f"{tag}: world walk-through sent to the editor")
+    # 3D world from a photo — the studio's AI 360° sky continuing the place in the photo, then a walk-through video
+    await E("async()=>{const b=await (await fetch('/media/photo.jpg')).blob();const u=await new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result);r.readAsDataURL(b)});await setS3dFromDataURL(u,'harbour');go('studio3d')}")
+    fr = None
+    for _ in range(80):
+        fr = next((f for f in pg.frames if "/studio3d/" in f.url), None)
+        try:
+            if fr and await fr.evaluate("()=>!!window.X3&&!!X3.S.img&&!document.getElementById('skyPhotoRow').hidden"): break
+        except Exception: pass
+        await asyncio.sleep(.25)
+    if fr:
+        await fr.evaluate("()=>{document.getElementById('q').value='a quiet harbour';document.getElementById('skyPhoto').checked=true;X3.cloudSky('pano')}")
+        ok(await wait_for(fr.evaluate, "()=>X3.E.hasPanorama()", 40), f"{tag}: 3D world sky built from the panorama")
+        r["world"] = await E("()=>{const j=S.jobs.filter(x=>x.meta&&x.meta.world360).pop();return [j&&j.aspect,j&&j.status]}")
+        ok(r["world"][0] == "21:9", f"{tag}: world {r['world']}")
+        if not mob:
+            await fr.evaluate("async()=>{await X3.record(3)}"); await fr.evaluate("()=>document.querySelector('[data-x3=toEditor]').click()")
+            ok(await wait_for(E, "()=>S.view==='edit'", 20), f"{tag}: world walk-through sent to the editor")
+    else: ok(False, f"{tag}: studio for the world")
     # templates ordered by kind
     await E("()=>{S.exploreType='all';go('explore');renderAll()}"); await pg.wait_for_timeout(500)
     r["tpl"] = await E("()=>{const ord=TYPES.map(t=>t[0]),ids=[...document.querySelectorAll('.card.tpl')].map(c=>TEMPLATES.find(t=>t.id===c.dataset.id).type),ix=ids.map(t=>ord.indexOf(t));return [ids.length,ix.every((v,i)=>!i||v>=ix[i-1])]}")

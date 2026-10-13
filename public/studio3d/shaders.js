@@ -1,9 +1,11 @@
-// nooi.ai · On-device 3D — GPU shaders.
+// nooi.ai · 3D Studio — GPU shaders.
 //   RECON_WGSL      WebGPU compute shader: depth + distance field → closed mesh (front & back surfaces) + normals
 //   applyEnvironmentShaders()  patches any three.js MeshStandardMaterial with
 //                      • wind  — vertex sway that grows with height, gusts from time + position (Wind Speed slider)
 //                      • snow  — accumulation on upward-facing normals: colour, roughness and a little thickness (Snow slider)
 //   createSnowfall()  falling snow particles blown by the same wind
+//                      • rain  — wet look: darker colour, glossy surfaces (Rain slider)
+//                      • foliage — instanced leaves / grass / fronds sway from their base, each plant with its own phase
 //   createSkyDome()   procedural HDR sky (sun, horizon glow) — rendered into a PMREM environment for reflections & light
 // All of it runs on the visitor's GPU; nothing is sent anywhere.
 
@@ -44,7 +46,7 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
 // Shared uniforms (one object for every material, the snowfall and the sky)
 export function createEnvUniforms(THREE) {
   return { uTime: { value: 0 }, uWind: { value: 0.35 }, uWindDir: { value: new THREE.Vector2(1, 0.3).normalize() }, uSnow: { value: 0 },
-    uHeight: { value: new THREE.Vector2(0, 1) }, uSnowColor: { value: new THREE.Color(0.96, 0.97, 1.0) }, uUpView: { value: new THREE.Vector3(0, 1, 0) } };
+    uHeight: { value: new THREE.Vector2(0, 1) }, uSnowColor: { value: new THREE.Color(0.96, 0.97, 1.0) }, uUpView: { value: new THREE.Vector3(0, 1, 0) }, uWet: { value: 0 } };
 }
 
 const WIND_VERT = /* glsl */ `
@@ -68,18 +70,49 @@ const SNOW_FRAG = /* glsl */ `
     float snowAmt = clamp(smoothstep(0.98 - uSnow * 0.75, 1.0 - uSnow * 0.25, upv) * (0.85 + 0.15 * n) * min(1.0, uSnow * 1.6), 0.0, 1.0);
     diffuseColor.rgb = mix(diffuseColor.rgb, uSnowColor, snowAmt);
     roughnessFactor = mix(roughnessFactor, 0.92, snowAmt);
+    // ── nooi rain: wet surfaces are darker and glossier (less where snow lies)
+    float wet = uWet * (1.0 - snowAmt);
+    diffuseColor.rgb *= mix(1.0, 0.7, wet);
+    roughnessFactor = mix(roughnessFactor, 0.16, wet * 0.85);
   }
 `;
+// still things (ground, rocks, trunks): no sway, but they still take snow & rain
+const STATIC_VERT = /* glsl */ `
+  #ifdef USE_INSTANCING
+    vSnowPos = (modelMatrix * instanceMatrix * vec4(transformed, 1.0)).xyz;
+  #else
+    vSnowPos = (modelMatrix * vec4(transformed, 1.0)).xyz;
+  #endif
+`;
+// instanced vegetation: sway grows with height inside the plant; the plant's own position gives it a phase
+const FOLIAGE_VERT = /* glsl */ `
+  #ifdef USE_INSTANCING
+    vec3 ip = vec3(instanceMatrix[3][0], instanceMatrix[3][1], instanceMatrix[3][2]);
+  #else
+    vec3 ip = vec3(modelMatrix[3][0], modelMatrix[3][1], modelMatrix[3][2]);
+  #endif
+  float fh = clamp(mix(position.y, length(position.xz), uRad) / uFH, 0.0, 1.0), ph = dot(ip.xz, vec2(0.37, 0.71));
+  float sw = uWind * (sin(uTime * 1.7 + ph) * 0.7 + sin(uTime * 3.3 + ph * 1.3 + position.x * 2.0) * 0.3) * fh * fh * uBend;
+  transformed.x += uWindDir.x * sw; transformed.z += uWindDir.y * sw;
+  #ifdef USE_INSTANCING
+    vSnowPos = (modelMatrix * instanceMatrix * vec4(transformed, 1.0)).xyz;
+  #else
+    vSnowPos = (modelMatrix * vec4(transformed, 1.0)).xyz;
+  #endif
+`;
 // Patch a three.js standard material in place. Keeps every built-in PBR feature (maps, env reflections, shadows).
-export function applyEnvironmentShaders(material, U) {
+// mode: undefined → a model (sways with height) · "static" → no sway · { height (m, where the sway is full), bend (sway in m at
+// full wind), radial (fronds: sway grows along the leaf) } → instanced plants.
+export function applyEnvironmentShaders(material, U, mode) {
+  const still = mode === "static", foliage = mode && typeof mode === "object" ? mode : null;
   material.onBeforeCompile = (sh) => {
-    Object.assign(sh.uniforms, U);
-    sh.vertexShader = "uniform float uTime; uniform float uWind; uniform vec2 uWindDir; uniform float uSnow; uniform vec2 uHeight; varying vec3 vSnowPos;\n" +
-      sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n" + WIND_VERT);
-    sh.fragmentShader = "uniform float uSnow; uniform vec3 uSnowColor; uniform vec3 uUpView; varying vec3 vSnowPos;\n" +
+    Object.assign(sh.uniforms, U); if (foliage) Object.assign(sh.uniforms, { uFH: { value: foliage.height || 1 }, uBend: { value: foliage.bend ?? 0.15 }, uRad: { value: foliage.radial ? 1 : 0 } });
+    sh.vertexShader = "uniform float uTime; uniform float uWind; uniform vec2 uWindDir; uniform float uSnow; uniform vec2 uHeight; varying vec3 vSnowPos;\n" + (foliage ? "uniform float uFH; uniform float uBend; uniform float uRad;\n" : "") +
+      sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n" + (foliage ? FOLIAGE_VERT : still ? STATIC_VERT : WIND_VERT));
+    sh.fragmentShader = "uniform float uSnow; uniform vec3 uSnowColor; uniform vec3 uUpView; uniform float uWet; varying vec3 vSnowPos;\n" +
       sh.fragmentShader.replace("#include <normal_fragment_maps>", "#include <normal_fragment_maps>\n" + SNOW_FRAG);
   };
-  material.customProgramCacheKey = () => "nooi-env-v1";
+  material.customProgramCacheKey = () => (still ? "nooi-env-s1" : foliage ? "nooi-env-f3-" + (foliage.height || 1) + "-" + (foliage.bend ?? 0.15) + (foliage.radial ? "r" : "") : "nooi-env-v2");
   material.needsUpdate = true;
   return material;
 }

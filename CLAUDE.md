@@ -341,6 +341,13 @@ Each bot has its own idle, working and done motion (CSS `fb*` keyframes in the v
 - AI: captions (+ text layers) translated with the server text AI keeping each phrase's timing; AI sound effect at the playhead; AI music for the video length; AI voice-over sheet with man / woman / boy / girl (server picks a young ElevenLabs voice for children; the editor also lifts the pitch ×1.22 and adds it as a WAV sound at the playhead).
 - Undo/redo also cover effects, infographics and the logo position (`snap71`). Test: `tests/editor_pro.py`.
 
+## v77 One 3D Studio (replaces 3D Studio/SAM 3D, 3D worlds, 3D World Studio, On-device 3D)
+- `public/studio3d/` static modules: index.html (UI), app.js (controller), planner.js (prompt → steps/techniques/costs, EN+AR), segment.js (SAM taps or instant geodesic colour/depth selection; 64-bit Dijkstra keys — 32-bit loops forever), localInference.js (worker: Depth Anything, SlimSAM, MODNet; reconstruct; `solidBody` = outline walls + back + vehicle hood/raked windshield/side glass/wheels), engine.js (three r128: sky→PMREM, orbit/walk with collisions, tour, record, glb/usdz), world.js (biomes, instanced plants, exact walkable plot), fx.js (rain/mist/rays/fireflies/leaves/snow + WebAudio ambience), bridge.js.
+- nooi: v77 block — single nav `studio3d` (iframe kept across re-renders; rebuilt on language change or hand-over), `world`/`w3d`/`l3d` views redirect, `X3OPS` bridge (cfg, job3d, views, pano[+photo ref], skybox, vision, jobs, fetch, save, video, still, library, libItem). `/world3d/` and `/local3d/` redirect.
+- server: `POST /v1/vision/locate` (lib/vss.js, 1 cr) → box for "find the car".
+- Real-size objects bigger than the plot are shrunk to leave ~0.8 m to walk, with a "Real size · area N×N" button.
+- Tests: tests/studio3d.py (new), world3d_studio.py / v72_features.py / pro_tools.py / draw_world.py drive the studio frame. Recording in headless needs ≥3 s.
+
 ## v76 On-device 3D (free, no API key)
 - `public/local3d/` static tool (index.html, localInference.js, sceneSetup.js, shaders.js), served at `/local3d/`, embedded in nooi as view `l3d` ("On-device 3D (free)") and linked from 3D World Studio / 3D Studio.
 - AI runs in a Web Worker with transformers.js (WebGPU → WASM fallback): Depth Anything V2 small + MODNet matte; model files cached in IndexedDB (`nooi-local3d-models`). `?models=` can point to self-hosted weights.

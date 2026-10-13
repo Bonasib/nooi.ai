@@ -36,16 +36,10 @@ async def main():
         await (await pg.query_selector('input[data-drwup]')).set_input_files(str(HERE/'noisy.wav').replace('noisy.wav','sample.png'));await pg.wait_for_timeout(300)
         await pg.evaluate("()=>{S.drw.instr='اجعلها ليلاً مع أضواء المدينة';S.drw.preset='time';drwEdit()}");await pg.wait_for_timeout(300)
         r["editJobs"]=await pg.evaluate("S.jobs.filter(j=>j.meta&&j.meta.instruct).map(j=>j.kind+':'+j.meta.preset).slice(-2)")
-        # 3D world
-        await pg.evaluate("()=>{S.view='world';S.wld.biome='islands';S.wld.tod='sunset';renderAll()}");await pg.wait_for_timeout(900)
-        stats=await pg.evaluate("""(()=>{const c=document.getElementById('wldcv');const x=c.getContext('2d');const d=x.getImageData(0,0,c.width,c.height).data;const top=d.slice(0,c.width*4*20),bot=d.slice(d.length-c.width*4*20);const avg=a=>{let r=0,g=0,b=0;for(let i=0;i<a.length;i+=4){r+=a[i];g+=a[i+1];b+=a[i+2]}const n=a.length/4;return[r/n|0,g/n|0,b/n|0]};return {w:c.width,h:c.height,sky:avg(top),ground:avg(bot)}})()""")
-        r["worldRender"]=stats
-        before=await pg.evaluate("document.getElementById('wldcv').toDataURL().length")
-        await pg.evaluate("()=>{WLD.keys.f=true;WLD.keys.r=true}");await pg.wait_for_timeout(600);await pg.evaluate("()=>{WLD.keys={}}")
-        after=await pg.evaluate("document.getElementById('wldcv').toDataURL().length")
-        r["movedViewChanged"]=before!=after
-        await pg.evaluate("document.querySelector('.wview').scrollIntoView({block:'start'});window.scrollBy(0,-70)");await pg.wait_for_timeout(300);await pg.screenshot(path="/tmp/world.png")
-        glb=await pg.evaluate("(async()=>{const b=worldGLB();const buf=new Uint8Array(await b.arrayBuffer());let s='';for(let i=0;i<buf.length;i+=8192)s+=String.fromCharCode.apply(null,buf.subarray(i,i+8192));return btoa(s)})()")
-        open(str(HERE/"_world.glb"),"wb").write(base64.b64decode(glb))
+        # 3D world — the old "3D worlds" page now opens the one 3D Studio (its 3D runs in a frame served by nooi; tests/studio3d.py
+        # covers building, walking and .glb export there — this file:// run only checks the hand-over)
+        await pg.evaluate("()=>{S.view='world';renderAll()}");await pg.wait_for_timeout(500)
+        r["worldRender"]=await pg.evaluate("()=>({view:S.view,frame:!!document.querySelector('iframe.x3frame'),menu:ALLNAV.filter(x=>['world','w3d','l3d'].includes(x[0])).length})")
+        r["movedViewChanged"]=r["worldRender"]["view"]=="studio3d" and r["worldRender"]["frame"] and r["worldRender"]["menu"]==0
         print(json.dumps(r,ensure_ascii=False,indent=1),errs);await b.close()
 asyncio.run(main())

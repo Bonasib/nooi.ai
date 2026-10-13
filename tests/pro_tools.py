@@ -19,7 +19,7 @@ SKIP = {"sc-gen", "sc-av", "sc-one", "sc-retry", "hf-send", "xp-dl", "ed-export"
 CLICK_JS = """async ([sel, cap, skip]) => { let n = 0;
   for (let i = 0; i < cap; i++) {
     const els = [...document.querySelectorAll(sel + ' button:not([disabled]),' + sel + ' [role=button],' + sel + ' input[type=checkbox]')]
-      .filter(e => e.dataset.set !== 'ed.tab' && e.dataset.act !== 'adm-tab' && !skip.includes(e.dataset.act || '') && !e.dataset.go && e.offsetParent !== null);
+      .filter(e => e.dataset.set !== 'ed.tab' && e.dataset.act !== 'adm-tab' && !skip.includes(e.dataset.act || e.dataset.x3 || '') && !e.dataset.go && e.offsetParent !== null);
     if (i >= els.length) break;
     els[i].click(); n++;
     if (typeof ED !== 'undefined') ED.playing = false;
@@ -65,14 +65,22 @@ async def main():
                     await E("()=>{ED.playing=false;if(!S.ed.clips.length)S.ed.clips.push({id:uid(),src:{k:'demo',kind:'scene',seed:11},in:0,out:5,speed:1,trans:'cut',vol:100})}")
                 # play through every clip with all effects on
                 await E("()=>{const c=S.ed.clips[0];if(c){c.vfx={shake:1,pulse:1,rgb:1,glow:1,radial:1,pixel:1,mirror:1,strobe:1,invert:1,comic:1,vhs:1,leak:1};c.cg={look:'teal',exp:10,temp:30};c.trans='glitch';c.mo={kf:[{t:0,s:1,x:0,y:0,r:0},{t:1,s:1.5,x:.1,y:0,r:10}],ease:'smooth'}}S.ed.tab='clip';renderView();for(let t=0;t<edTotal();t+=.25){ED.t=t;edTick(performance.now())}}")
-                # 3D studio
-                await E("()=>go('studio3d')"); await pg.wait_for_timeout(300)
-                await E("async()=>{document.querySelector('[data-act=s3d-clear]')?.click();renderView();const c=document.createElement('canvas');c.width=1280;c.height=720;drawGreen(c.getContext('2d'),1280,720,1.2);await setS3dFromDataURL(c.toDataURL('image/jpeg',.92),'photo');const U=S.s3d||{};U.points=[{x:.5,y:.45,pos:true},{x:.5,y:.24,pos:true},{x:.47,y:.75,pos:true}];U.mode='body';renderView()}"); await pg.wait_for_timeout(800)
-                out["clicks"] += await click_all(pg, "#main", errs, f"{w}:studio3d", 60)
-                await E("async()=>{const c=document.createElement('canvas');c.width=1280;c.height=720;drawGreen(c.getContext('2d'),1280,720,1.2);await setS3dFromDataURL(c.toDataURL('image/jpeg',.92),'photo')}"); await pg.wait_for_timeout(500)
-                await E("()=>{S.s3d.mode='body';S.s3d.points=[{x:.5,y:.45,pos:true}];s3dMask();renderView()}"); await pg.wait_for_timeout(300)
-                await E("()=>s3dRunLocal()"); await pg.wait_for_timeout(1500)
-                out["checks"][f"{w}:3d"] = await E("()=>{const j=S.jobs.filter(x=>x.kind==='3d').pop();return j?j.status:'none'}")
+                # 3D studio (one tool, in a frame): a photo handed over, every control clicked, a 3D object made
+                await E("async()=>{const c=document.createElement('canvas');c.width=1280;c.height=720;drawGreen(c.getContext('2d'),1280,720,1.2);await setS3dFromDataURL(c.toDataURL('image/jpeg',.92),'photo');go('studio3d')}"); await pg.wait_for_timeout(500)
+                fr = None
+                for _ in range(80):
+                    fr = next((f for f in pg.frames if "/studio3d/" in f.url), None)
+                    try:
+                        if fr and await fr.evaluate("()=>!!window.X3&&!!X3.S.img"): break
+                    except Exception: pass
+                    await asyncio.sleep(.25)
+                if fr:
+                    await fr.evaluate("()=>{window.__x3err=[];addEventListener('error',e=>__x3err.push(String(e.message)));addEventListener('unhandledrejection',e=>__x3err.push(String(e.reason&&e.reason.message||e.reason)));document.querySelectorAll('details').forEach(d=>d.open=true);window.__X3_TEST_DEPTH=async(cv)=>({depth:new Float32Array(64*48).fill(1).map((v,i)=>1+((i%64)/64)),w:64,h:48,ms:1})}")
+                    out["clicks"] += await fr.evaluate(CLICK_JS, ["main", 80, sorted(SKIP | {"rec", "dlVid", "toEditor", "still", "glb", "glbObj", "usdz", "lib", "libOpen", "shot", "full", "cloud", "sky", "realSize", "find"})])
+                    await fr.evaluate("async()=>{try{await X3.make3D()}catch(e){__x3err.push(e.message)}}")
+                    out["checks"][f"{w}:3d"] = await fr.evaluate("()=>X3.E.assets.length?'complete':'none'")
+                    for m in await fr.evaluate("()=>__x3err"): errs.append(f"{w}:studio3d: {m}")
+                else: errs.append(f"{w}:studio3d: frame didn't load")
                 # motion capture
                 await E("()=>go('mocap')"); await pg.wait_for_timeout(300)
                 out["clicks"] += await click_all(pg, "#main", errs, f"{w}:mocap", 40)

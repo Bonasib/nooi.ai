@@ -9619,6 +9619,55 @@ addEventListener("message",async e=>{if(e.origin!==location.origin||!e.data||e.d
   toast(L("Saved to your library — open it in the 3D World Studio","حُفظ في مكتبتك — افتحه في استوديو العوالم 3D"),{type:"ok"})});
 /* 3D World Studio & 3D Studio point to it */
 ["w3d","studio3d"].forEach(k=>{const f=VIEWS[k];if(!f)return;VIEWS[k]=()=>f().replace(/(<\/h1>)/,'$1<button class="btn sm" data-go="l3d" style="margin-inline-start:8px">'+ic("l3d")+L("On-device 3D (free)","3D على جهازك (مجاني)")+"</button>")});
+/* ================= v77: ONE 3D STUDIO (public/studio3d/) — replaces 3D Studio (SAM 3D), 3D worlds, 3D World Studio and On-device 3D ================= */
+/* The studio runs in a frame (its own WebGL + WebGPU context, released when you leave). Free steps run on the visitor's device;
+   everything that costs credits or needs a key goes through this bridge to the app's job pipeline (NVIDIA TRELLIS, AI views,
+   360° sky pictures, Tripo3D, Meshy, Skybox, SAM 3D, AI vision), the library and the video editor. */
+NAVS.forEach(g=>{g[1]=g[1].filter(x=>!["world","w3d","l3d"].includes(x[0]));g[1].forEach(x=>{if(x[0]==="studio3d"){x[1]="cube";x[2]="3D Studio";x[3]="استوديو 3D"}})});ALLNAV.length=0;NAVS.flatMap(g=>g[1]).forEach(x=>ALLNAV.push(x));
+TOOLDESC.studio3d=["Photo → 3D object, a world around it, weather, walk-through video and .glb — AI on your device plus NVIDIA with credits.","صورة ← مجسّم ثلاثي الأبعاد وعالم حوله وطقس وجولة فيديو و ‎.glb — ذكاء على جهازك و NVIDIA بالرصيد."];
+FEATURES.forEach(f=>{if(f[0]==="studio3d"){f[1]="3D Studio";f[2]="استوديو 3D"}});["world","w3d","l3d"].forEach(k=>{FEATURE_OF_VIEW[k]="studio3d"});
+const X3F={lang:null,force:false,hand:null};
+VIEWS.studio3d=()=>{const q=X3F.q?"&q="+encodeURIComponent(X3F.q):"",b=X3F.biome?"&biome="+encodeURIComponent(X3F.biome):"";X3F.q=X3F.biome=null;X3F.lang=S.lang;
+  return'<div class="view x3view"><iframe class="x3frame" data-lang="'+esc(S.lang)+'" title="'+esc(L("3D Studio","استوديو 3D"))+'" src="/studio3d/?embed=1&lang='+encodeURIComponent(S.lang)+q+b+'" allow="fullscreen; xr-spatial-tracking" allowfullscreen></iframe></div>'};
+/* the old pages open the one studio (deep links keep working) */
+["world","w3d","l3d"].forEach(k=>{VIEWS[k]=()=>{S.view="studio3d";if(k==="world"&&S.wld&&S.wld.prompt)X3F.q=S.wld.prompt;return VIEWS.studio3d()}});
+afterRender3D=async()=>{};
+(function(){const st=document.createElement("style");st.textContent=".x3view{padding:0!important;max-width:none!important}.x3frame{display:block;width:100%;height:calc(100vh - 96px);min-height:640px;border:0;border-radius:16px;background:var(--panel)}@media (max-width:980px){.x3frame{height:calc(100vh - 120px);min-height:1500px}}";document.head.appendChild(st)})();
+/* keep the frame (and everything in it) across the app's re-renders; rebuild only when the language changes */
+renderView=(o=>function(){if(S.user&&S.view==="studio3d"&&!X3F.force){const f=document.querySelector("#main iframe.x3frame");if(f&&f.dataset.lang===S.lang){renderShell();return}}X3F.force=false;o()})(renderView);
+const x3Server=()=>API.mode==="server",x3P=()=>(API.cfg&&API.cfg.providers)||{},x3Nv=k=>!!(x3P().nvidia&&x3P().nvUse&&x3P().nvUse[k]!==false);
+const x3Cost=()=>({trellis:(typeof S3D_COST==="object"&&S3D_COST.objects)||12,tripo:(typeof S3D_COST==="object"&&S3D_COST.objects)||12,meshy:(typeof S3D_COST==="object"&&S3D_COST.objects)||12,sam3d:(typeof S3D_COST==="object"&&S3D_COST.objects)||12,views:typeof a3Cost==="function"?a3Cost():6,pano:((IMG_MODELS[bestImg72()]||{cr:2}).cr)*2,skybox:40,vision:1});
+async function x3Blob(url){const r=await fetch(url);if(!r.ok)throw new Error("Couldn't load the file ("+r.status+")");return r.blob()}
+const X3OPS={
+  async cfg(){const p=x3P(),g=p.gen3d||{},src=s3dSource();let photo=null;
+    if(src&&(src.file||src.url)){try{photo={blob:src.file||await x3Blob(src.url),name:src.name||"photo",mode:{body:"person",objects:null,scene:null}[S.s3d&&S.s3d.mode]||null}}catch(e){}delete M.s3dCap;delete M.s3dImg;if(typeof S3==="object")S3.src=null}
+    let glb=null;if(X3F.hand){const j=S.jobs.find(x=>x.id===X3F.hand);X3F.hand=null;if(j&&mediaUrl(j)){try{glb={blob:await x3Blob(mediaUrl(j)),name:j.title||"3D"}}catch(e){}}}
+    return{nooi:true,server:x3Server(),signedIn:!!S.user,credits:S.credits,lang:S.lang,photo,glb,models:{host:(API.cfg&&API.cfg.localAI&&API.cfg.localAI.modelsHost)||null},
+      cap:{trellis:x3Nv("3d"),tripo:!!g.tripo,meshy:!!g.meshy,skybox:!!g.skybox,sam3d:!!p.sam3d,views:!!(p.image||!x3Server()),pano:!!(p.image||!x3Server()),vision:x3Server()&&!!(p.llm||x3Nv("vision"))},cost:x3Cost()}},
+  // AI generates the whole object (every side) from the clean cut-out
+  async job3d({engine,blob,name,prompt,category}){const f=new File([blob],"cutout.png",{type:"image/png"}),e={trellis:"trellis",tripo:"tripo",meshy:"meshy",sam3d:"sam3d"}[engine]||"trellis";
+    const j=withRef72("s3dImg",f,()=>addJob({kind:"3d",prompt:prompt||name||"object",title:(name||"3D")+" · "+({trellis:"NVIDIA TRELLIS",tripo:"Tripo3D",meshy:"Meshy",sam3d:"SAM 3D"})[e],cost:x3Cost()[engine]||12,secs:60,art:"scene",aspect:"1:1",meta:e==="sam3d"?{mode:category==="person"?"body":"objects"}:{mode:"objects",engine:e}}));
+    if(!j)throw new Error(L("Not enough credits, or 3D is turned off.","الرصيد غير كافٍ، أو ميزة 3D متوقفة."));renderShell();return{id:j.id,credits:S.credits}},
+  async views({blob,name,prompt,category}){const p=await a3Start(category==="person"?"body":"object",blob,name,prompt);if(!p)throw new Error(L("Not enough credits.","الرصيد غير كافٍ."));renderShell();return{id:"a3:"+p.id,credits:S.credits}},
+  async pano({prompt,biome,tod,blob}){const f=blob?new File([blob],"place.jpg",{type:blob.type||"image/jpeg"}):null;const j=withRef72("iRef",f,()=>addJob({kind:"image",model:bestImg72(),prompt:"A seamless 360-degree equirectangular panorama"+(f?" that continues the place in the reference photo in every direction":"")+". The place: "+prompt+(tod&&tod!=="day"?", at "+tod:"")+". Eye-level camera in the middle of the space, straight horizon across the middle, photorealistic, consistent light, no text, no borders; the left and right edges must join seamlessly.",title:L("360° sky · ","سماء 360° · ")+String(prompt).slice(0,30),aspect:"21:9",cost:x3Cost().pano,secs:12,art:"scene",meta:{world360:true}}));if(!j)throw new Error(L("Not enough credits.","الرصيد غير كافٍ."));renderShell();return{id:j.id,credits:S.credits}},
+  async skybox({prompt}){const j=addJob({kind:"world",prompt,title:L("World · ","عالم · ")+String(prompt).slice(0,30),cost:40,secs:60,art:"scene",aspect:"21:9",meta:{engine:"skybox"}});if(!j)throw new Error(L("Not enough credits.","الرصيد غير كافٍ."));renderShell();return{id:j.id,credits:S.credits}},
+  async vision({image,label}){if(!x3Server())throw new Error(L("Sign in on the live site to use AI vision.","سجّل الدخول في الموقع لاستخدام رؤية الذكاء."));const r=await API.req("/v1/vision/locate",{json:{image,label}});S.credits=Math.max(0,(S.credits||0)-1);renderShell();return r},
+  async jobs({ids}){return ids.map(id=>{if(String(id).startsWith("a3:")){const p=(S.a3||[]).find(x=>x.id===id.slice(3));if(!p)return{id,gone:true,status:"failed",error:"gone"};if(p.status==="done"&&p.res){const j=S.jobs.find(x=>x.id===p.res);return{id,status:j&&mediaUrl(j)?"complete":"running",progress:1,url:j?mediaUrl(j):null}}
+      const vs=Object.values(p.jobs||{}).map(k=>S.jobs.find(x=>x.id===k)).filter(Boolean);return{id,status:p.status==="failed"?"failed":"running",progress:vs.length?vs.reduce((a,j)=>a+(j.status==="complete"?1:(j.progress||0)),0)/3:0,error:p.error||null}}
+    const j=S.jobs.find(x=>x.id===id);if(!j)return{id,gone:true,status:"failed",error:"gone"};return{id,status:j.status,progress:j.progress||0,error:j.error||null,url:j.status==="complete"?mediaUrl(j):null}})},
+  async fetch({url}){return x3Blob(url)},
+  async save({glb,thumb,name,stats}){const blob=glb instanceof Blob?glb:new Blob([glb],{type:"model/gltf-binary"});let th=null;if(thumb)th=await new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result);r.readAsDataURL(thumb)});
+    const j={id:uid(),kind:"3d",status:"complete",progress:1,created:Date.now(),title:(name||"3D")+" · "+L("3D Studio","استوديو 3D"),prompt:name||"3D",seed:1,pal:S.story.palette,art:"scene",dur:5,aspect:"1:1",cost:0,local:true,thumb:th,meta:{mode:"objects",local:true,ondevice:true,stats:stats||null}};
+    EXPORTS[j.id]=URL.createObjectURL(blob)+"#nooi.glb";IDB.put("x_"+j.id,blob);S.jobs.push(j);persist();if(x3Server()){try{j.resultUrl=(await API.upload(blob,"nooi-3d-"+j.id+".glb")).url;persist()}catch(e){}}return{id:j.id}},
+  async video({blob,title,secs,aspect}){const j=await clipJob72(blob,title||L("3D walk-through","جولة ثلاثية الأبعاد"),secs||10,aspect);await edUseJob(j);return{id:j.id}},
+  async still({blob,prompt}){loadSlot("vStart",new File([blob],"3d-scene.jpg",{type:blob.type||"image/jpeg"}));S.draft.startJob=null;S.draft.prompt=prompt||"";go("video");toast(L("View set as the first frame","عُيّن المنظر كإطار أول"),{type:"ok"});return{ok:true}},
+  async library(){const it=S.jobs.filter(j=>j.status==="complete"&&mediaUrl(j)&&(j.kind==="3d"||j.kind==="image")).slice(-40).reverse().map(j=>({id:j.id,kind:j.kind,title:(j.title||j.prompt||"").slice(0,40),thumb:j.thumb||(j.kind==="image"?mediaUrl(j):null)}));return{items:it}},
+  async libItem({id}){const j=S.jobs.find(x=>x.id===id);if(!j||!mediaUrl(j))throw new Error("Not found");return{blob:await x3Blob(mediaUrl(j)),title:j.title||j.prompt||""}},
+};
+addEventListener("message",async e=>{if(e.origin!==location.origin||!e.data||e.data.type!=="x3d-req")return;const f=document.querySelector("iframe.x3frame");if(!f||e.source!==f.contentWindow)return;const{id,op,args}=e.data,fn=X3OPS[op];
+  try{if(!fn)throw new Error("Unknown request");const data=await fn(args||{});e.source.postMessage({type:"x3d-res",id,ok:true,data},location.origin)}catch(err){e.source.postMessage({type:"x3d-res",id,ok:false,error:String((err&&err.message)||err)},location.origin)}});
+/* other tools that hand a 3D model over open it in the studio */
+const _x3go=go;go=function(v,...a){if(v==="studio3d"&&S.s3d&&S.s3d.sel){X3F.hand=S.s3d.sel;S.s3d.sel=null}if(v==="studio3d"&&(X3F.hand||s3dSource()))X3F.force=true;return _x3go(v,...a)};
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

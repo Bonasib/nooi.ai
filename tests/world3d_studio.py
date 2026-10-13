@@ -1,9 +1,8 @@
 # 3D World Studio (v75) end to end: a fresh nooi server + mocked Tripo3D, Meshy, Blockade Labs Skybox and NVIDIA TRELLIS.
 # API: Tripo3D picture → upload → task → poll → .glb · Meshy text → .glb · Skybox → 360° picture + depth map (job segments)
 #      · NVIDIA TRELLIS failing → the same 3D job finishes on Tripo3D · 3D jobs pass without a GPU server when an engine is connected.
-# Browser (phone + desktop, WebGL): /world3d/ opens the studio inside the app, a prompt → object loaded into the three.js scene
-#      (placeholder → real model), gizmo modes, a 360° world → sky + image lighting, library re-add, scene .glb export,
-#      3D Studio's main button goes to the 3D engine (no "3D generation is not available yet"), 3D worlds' AI button → Skybox.
+# Browser (phone + desktop, WebGL): /world3d/ opens the one 3D Studio inside the app; a handed-over photo → on-device preview →
+#      Tripo3D / NVIDIA TRELLIS (falling back) generate every side and replace it in place; Skybox → sky + image lighting; .glb export.
 import asyncio, json, os, shutil, struct, subprocess, sys, tempfile, time, urllib.request
 from playwright.async_api import async_playwright
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); PORT, MPORT = 8072, 8071
@@ -21,7 +20,7 @@ open(D + "/out/model.glb", "wb").write(glb())
 FF = os.environ.get("FFMPEG_PATH", "ffmpeg")
 subprocess.run([FF, "-v", "error", "-y", "-f", "lavfi", "-i", "gradients=size=1024x512:duration=1", "-frames:v", "1", D + "/out/sky.jpg"], check=True)
 subprocess.run([FF, "-v", "error", "-y", "-f", "lavfi", "-i", "color=gray:size=512x256", "-frames:v", "1", D + "/out/depth.jpg"], check=True)
-subprocess.run([FF, "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=640x480", "-frames:v", "1", D + "/photo.png"], check=True)
+subprocess.run([FF, "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=640x480", "-frames:v", "1", D + "/photo.png"], check=True); shutil.copy(D + "/photo.png", D + "/media/photo.png")
 MOCK = r"""
 const http=require('http'),fs=require('fs'),O=process.argv[2],P=+process.argv[3];const seen=[];const t={};let n=0;
 http.createServer((q,s)=>{const ch=[];q.on('data',c=>ch.push(c));q.on('end',()=>{const raw=Buffer.concat(ch),u=new URL(q.url,'http://x'),ct=q.headers['content-type']||'',body=/json/.test(ct)&&raw.length?JSON.parse(raw):null;
@@ -67,54 +66,51 @@ async def wait_for(E, js, sec=20):
         await asyncio.sleep(.25)
     return False
 
+HOOKS = """()=>{window.__X3_TEST_MASK=async(img,pts)=>{const w=img.width,h=img.height,a=new Uint8Array(w*h);for(let y=0;y<h;y++)for(let x=0;x<w;x++){const u=x/w,v=y/h;if(u>.25&&u<.75&&v>.3&&v<.8)a[y*w+x]=255}return{alpha:a,w,h}};
+ window.__X3_TEST_DEPTH=async(cv)=>{const w=96,h=Math.max(16,Math.round(96*cv.height/cv.width)),d=new Float32Array(w*h);for(let y=0;y<h;y++)for(let x=0;x<w;x++){const dx=(x-w/2)/(w*.45),dy=(y-h/2)/(h*.45);d[y*w+x]=1+Math.max(0,1-dx*dx-dy*dy)*3}return{depth:d,w,h,ms:1}};return true}"""
+async def studio_frame(pg):
+    for _ in range(80):
+        f = next((f for f in pg.frames if "/studio3d/" in f.url), None)
+        if f:
+            try:
+                if await f.evaluate("()=>!!window.X3&&!!X3.S.cfg&&X3.S.cfg.nooi"): return f
+            except Exception: pass
+        await asyncio.sleep(.25)
+    return None
+
 async def run(p, w):
     mob = w < 800; tag = "phone" if mob else "desktop"; r = {}
     b = await p.chromium.launch(args=["--use-gl=swiftshader", "--enable-webgl", "--ignore-gpu-blocklist"])
     ctx = await b.new_context(viewport={"width": w, "height": 860}, is_mobile=mob, has_touch=mob, accept_downloads=True)
     pg = await ctx.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e)[:300]))
     await pg.goto(f"http://localhost:{PORT}/"); await pg.wait_for_timeout(1200); E = pg.evaluate
-    await E("()=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.lang='%s';S.user={name:'T',method:'google'};AU.showAuth=false;S.credits=50000;S.w3d=null;persist()}" % ("ar" if mob else "en"))
-    await pg.goto(f"http://localhost:{PORT}/world3d/"); await pg.wait_for_url("**/?view=w3d*", timeout=10000); await pg.wait_for_timeout(900)
-    await E("()=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.lang='%s';S.user={name:'T',method:'google'};AU.showAuth=false;S.credits=50000;S.w3d=null;renderAll()}" % ("ar" if mob else "en"))
-    ok(await wait_for(E, "()=>S.view==='w3d'&&!!window.W3D&&!!document.querySelector('#w3stage canvas')", 20), f"{tag}: /world3d/ opens the studio with a 3D canvas")
-    r["nav"] = await E("()=>ALLNAV.some(x=>x[0]==='w3d')"); ok(r["nav"], f"{tag}: studio in the menu")
-    r["eng"] = await E("()=>[...document.querySelectorAll('[data-w3=eng]')].map(b=>b.dataset.v+(b.disabled?'-off':''))")
-    ok("tripo" in r["eng"] and "meshy" in r["eng"] and "nvidia-off" not in r["eng"], f"{tag}: engines listed {r['eng']}")
-    # object from words on Tripo3D
-    await E("()=>{document.querySelector('[data-w3=eng][data-v=tripo]').click()}"); await pg.wait_for_timeout(200)
-    await E("()=>{const q=document.querySelector('#w3q');q.value='a red vintage motorbike';q.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('[data-w3form]').requestSubmit()}")
-    ok(await wait_for(E, "()=>S.w3d.items.length===1&&Object.keys(W3D.state.loaded).length===1", 30), f"{tag}: Tripo3D model loaded into the scene")
-    r["obj"] = await E("()=>{const o=Object.values(W3D.state.loaded)[0];const b=new THREE.Box3().setFromObject(o),s=b.getSize(new THREE.Vector3());return [+Math.max(s.x,s.y,s.z).toFixed(2),+b.min.y.toFixed(2),!!W3D.state.sel]}")
-    ok(r["obj"][0] == 1.6 and abs(r["obj"][1]) < .02 and r["obj"][2], f"{tag}: model fitted to 1.6 m, standing on the ground, selected {r['obj']}")
-    # gizmo & placement saved
-    await E("()=>document.querySelector('[data-w3=gizmo][data-v=rotate]').click()"); r["gizmo"] = await E("()=>W3D.state.tc&&W3D.state.tc.getMode()"); ok(r["gizmo"] == "rotate", f"{tag}: gizmo mode {r['gizmo']}")
-    # 360° world from Skybox
-    await E("()=>document.querySelector('[data-w3=mode][data-v=world]').click()"); await pg.wait_for_timeout(200)
-    await E("()=>{const q=document.querySelector('#w3q');q.value='a neon night market';document.querySelector('[data-w3form]').requestSubmit()}")
-    sky = await wait_for(E, "()=>!!S.w3d.sky&&W3D.state.scene.background&&W3D.state.scene.background.isTexture", 30)
-    ok(sky, f"{tag}: Skybox world set as sky + lighting " + ("" if sky else json.dumps(await E("()=>({mode:S.w3d.mode,jobs:S.w3d.jobs,sky:S.w3d.sky,world:S.jobs.filter(j=>j.kind==='world').map(j=>[j.status,j.error,j.remote,!!mediaUrl(j)]),bg:String(W3D.state.scene.background&&W3D.state.scene.background.type)})"))))
-    r["skyJob"] = await E("()=>{const j=S.jobs.find(x=>x.id===S.w3d.sky);return j&&[j.kind,(j.segments||[]).length]}"); ok(r["skyJob"] == ["world", 1], f"{tag}: world job with its depth map {r['skyJob']}")
-    # re-add from the library, export
-    await E("()=>{const b=document.querySelector('[data-w3=add]');b&&b.click()}"); ok(await wait_for(E, "()=>Object.keys(W3D.state.loaded).length===2", 15), f"{tag}: re-added from the library")
-    async with pg.expect_download() as dl:
-        await E("()=>document.querySelector('[data-w3=glb]').click()")
-    d = await dl.value; pth = await d.path(); data = open(pth, "rb").read(); ok(data[:4] == b"glTF", f"{tag}: scene exported as .glb")
+    sign = "()=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.lang='%s';S.user={name:'T',method:'google'};AU.showAuth=false;S.credits=50000;persist();renderAll()}" % ("ar" if mob else "en")
+    await E(sign)
+    # the old /world3d/ address opens the one 3D Studio inside the app
+    await pg.goto(f"http://localhost:{PORT}/world3d/"); await pg.wait_for_url("**/?view=studio3d*", timeout=10000); await pg.wait_for_timeout(900); await E(sign)
+    ok(await wait_for(E, "()=>S.view==='studio3d'&&!!document.querySelector('iframe.x3frame')", 20), f"{tag}: /world3d/ opens the 3D Studio")
+    r["nav"] = await E("()=>[ALLNAV.some(x=>x[0]==='studio3d'),ALLNAV.some(x=>['w3d','world','l3d'].includes(x[0]))]"); ok(r["nav"] == [True, False], f"{tag}: one 3D entry {r['nav']}")
+    # a photo handed over → the studio, with every connected engine offered
+    await E("async()=>{const b=await (await fetch('/media/photo.png')).blob();const u=await new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result);r.readAsDataURL(b)});await setS3dFromDataURL(u,'chair');go('studio3d')}")
+    await pg.wait_for_timeout(600); fr = await studio_frame(pg); ok(fr is not None, f"{tag}: studio frame ready")
+    if not fr: await b.close(); return r
+    ok(await wait_for(fr.evaluate, "()=>!!X3.S.img", 15), f"{tag}: the photo arrived")
+    r["cap"] = await fr.evaluate("()=>{const c=X3.S.cfg.cap;return [c.trellis,c.tripo,c.meshy,c.skybox]}"); ok(r["cap"] == [True, True, True, True], f"{tag}: engines {r['cap']}")
+    r["btns"] = await fr.evaluate("()=>[...document.querySelectorAll('#cloudBtns [data-x3=cloud]')].map(b=>b.dataset.v)"); ok({"trellis", "tripo", "meshy"} <= set(r["btns"]), f"{tag}: AI buttons for the hidden parts {r['btns']}")
+    await fr.evaluate(HOOKS); await fr.evaluate("()=>X3.make3D()"); ok(await fr.evaluate("()=>X3.E.assets.length===1&&X3.E.assets[0].source==='device'"), f"{tag}: on-device preview made")
+    # Tripo3D generates every side → replaces the preview in place
+    await fr.evaluate("()=>{X3.cloudUpgrade('tripo')}")
+    ok(await wait_for(fr.evaluate, "()=>{const a=X3.E.assets[0];return a.source==='tripo'&&a.cloud&&a.cloud.status==='done'}", 40), f"{tag}: Tripo3D model replaced the preview " + json.dumps(await fr.evaluate("()=>X3.E.assets[0].cloud")))
+    r["obj"] = await fr.evaluate("()=>{const a=X3.E.assets[0];return [a.size[1],+a.holder.position.y.toFixed(2),X3.E.assets.length]}"); ok(r["obj"][2] == 1 and r["obj"][1] == 0, f"{tag}: same place, on the ground {r['obj']}")
+    # NVIDIA TRELLIS (down) → the server finishes the same job on Tripo3D
+    await fr.evaluate("()=>{X3.cloudUpgrade('trellis')}")
+    ok(await wait_for(fr.evaluate, "()=>{const a=X3.E.assets[0];return a.source==='trellis'&&a.cloud.status==='done'}", 40), f"{tag}: NVIDIA TRELLIS request finished (fallback)")
+    # a 360° world from Skybox → sky + image lighting
+    await fr.evaluate("()=>{X3.cloudSky('skybox')}")
+    ok(await wait_for(fr.evaluate, "()=>X3.E.hasPanorama()", 40), f"{tag}: Skybox 360° world set as sky + lighting")
+    r["skyJob"] = await E("()=>{const j=S.jobs.filter(x=>x.kind==='world').pop();return j&&[j.kind,(j.segments||[]).length]}"); ok(r["skyJob"] == ["world", 1], f"{tag}: world job with its depth map {r['skyJob']}")
+    r["glb"] = await fr.evaluate("async()=>{const b=await X3.E.exportGLB();return String.fromCharCode(...new Uint8Array(await b.slice(0,4).arrayBuffer()))}"); ok(r["glb"] == "glTF", f"{tag}: scene exported as .glb")
     await pg.screenshot(path=os.environ.get("W3D_SHOT", "/tmp") + f"/w3d_{w}.png")
-    # 3D Studio main button → 3D engine, not "not available yet"
-    await E("()=>{S.s3d.mode='objects';go('studio3d');renderAll()}"); await pg.wait_for_timeout(700)
-    await pg.set_input_files("input[data-s3dfile]", D + "/photo.png"); await pg.wait_for_timeout(800)
-    n0 = await E("()=>S.jobs.filter(j=>j.kind==='3d').length")
-    await E("()=>{S.s3d.points=[{x:.5,y:.5,pos:true}];renderView()}"); await pg.wait_for_timeout(300)
-    await E("()=>{const b=document.querySelector('[data-act=s3d-run]');b.disabled=false;b.click()}")
-    ok(await wait_for(E, f"()=>S.jobs.filter(j=>j.kind==='3d').length>{n0}&&S.jobs.filter(j=>j.kind==='3d').slice(-1)[0].remote", 15), f"{tag}: 3D Studio's button sent a 3D engine job")
-    ok(await wait_for(E, "()=>{const j=S.jobs.filter(j=>j.kind==='3d').slice(-1)[0];return j.status==='complete'}", 30), f"{tag}: … and it finished")
-    # 3D worlds: the AI button → Skybox (no "not connected")
-    await E("()=>{S.wld.prompt='desert canyon at sunset';go('world');renderAll()}"); await pg.wait_for_timeout(600)
-    r["chips"] = await E("()=>!!document.querySelector('[data-set=\"wld.engine\"]')"); ok(not r["chips"], f"{tag}: unconnected world-engine chips hidden")
-    w0 = await E("()=>S.jobs.filter(j=>j.kind==='world').length")
-    await E("()=>{const b=document.querySelector('[data-act=wld-ai]');b&&b.click()}")
-    ok(await wait_for(E, f"()=>S.jobs.filter(j=>j.kind==='world').length>{w0}", 10), f"{tag}: 3D worlds' AI button → Skybox job")
-    ok(await wait_for(E, "()=>!!PW.mesh&&PW.mesh.name==='nooi_world360_depth'", 30), f"{tag}: world shown with its depth map")
     ok(not errs, f"{tag}: page errors {errs}")
     await b.close(); return r
 
