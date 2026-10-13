@@ -63,6 +63,8 @@ export function techniques(cap) {
     { id: "skybox", step: "world", en: "Blockade Labs Skybox (360° + depth)", ar: "Blockade Labs Skybox (‏360° + عمق)", where: "Blockade cloud", cost: C.skybox || 40, ok: inNooi && signed && srv && !!cap.skybox },
     { id: "fx", step: "fx", en: "Rain · mist · light rays · fireflies · leaves · snow · wind", ar: "مطر · ضباب · أشعة · يراعات · أوراق · ثلج · رياح", where: "GPU shaders", cost: 0, ok: true },
     { id: "walk", step: "explore", en: "Walk through it (first person) · guided tour", ar: "تجوّل داخله (منظور الشخص) · جولة موجّهة", where: "WebGL2", cost: 0, ok: true },
+    { id: "airender", step: "capture", en: "AI video in the cloud — a real video from your view (nothing heavy on this device)", ar: "فيديو بالذكاء في السحابة — فيديو حقيقي من منظورك (لا عمل ثقيل على جهازك)", where: "nooi cloud", cost: C.render || 20, ok: inNooi && signed },
+    { id: "aiphoto", step: "capture", en: "AI photo in the cloud — a real picture of your view", ar: "صورة بالذكاء في السحابة — صورة حقيقية من منظورك", where: "nooi cloud", cost: C.photo || 5, ok: inNooi && signed },
     { id: "video", step: "capture", en: "Record the walk-through as a video (+ ambience)", ar: "سجّل الجولة فيديو (+ الأصوات)", where: "this device", cost: 0, ok: true },
     { id: "editor", step: "capture", en: "Send the video to the nooi editor", ar: "أرسل الفيديو إلى محرر nooi", where: "nooi", cost: 0, ok: inNooi },
     { id: "glb", step: "capture", en: "Export .glb (Blender, Unity) / .usdz (iPhone AR)", ar: "تصدير ‎.glb (Blender و Unity) / ‎.usdz (واقع معزز)", where: "this device", cost: 0, ok: true },
@@ -79,13 +81,17 @@ export function makePlan(intent, cap, prev = {}) {
   const hasPhoto = !!cap.photo, cloud = pick("asset", ["trellis", "tripo", "meshy", "views", "sam3d"]), useCloud = prev.cloud ?? (cloud && cloud !== "device" && cap.autoCloud !== false);
   const steps = STEPS.map(([id, en, ar]) => ({ id, en, ar, options: T.filter((t) => t.step === id), choice: null, on: true, status: "todo" }));
   const S = Object.fromEntries(steps.map((s) => [s.id, s]));
-  S.select.choice = pick("select", cap.ai === false ? ["classic"] : ["sam", "classic"]); S.select.on = hasPhoto;
-  S.asset.choice = "device"; S.asset.upgrade = useCloud ? cloud : null; S.asset.on = hasPhoto;
+  // cloud mode (phones, low-memory devices, or chosen): no AI download on the device — the cloud makes the 3D and the render
+  const lite = !!cap.cloudFirst;
+  S.select.choice = pick("select", lite ? ["vision", "classic"] : cap.ai === false ? ["classic"] : ["sam", "classic"]); S.select.on = hasPhoto;
+  S.asset.choice = lite && cloud ? cloud : "device"; S.asset.upgrade = !lite && useCloud ? cloud : null; S.asset.on = hasPhoto;
   S.review.choice = "check"; S.review.on = hasPhoto; S.world.choice = "procedural"; S.world.sky = prev.sky || null; S.fx.choice = "fx"; S.explore.choice = "walk"; S.explore.on = true;
-  S.capture.choice = intent.record ? "video" : "glb"; S.capture.on = !!intent.record;
+  S.capture.choice = intent.record ? (lite ? pick("capture", ["airender", "video"]) : "video") : "glb"; S.capture.on = !!intent.record;
   const plan = { intent, steps, biome: intent.biome || prev.biome || "rainforest", size: intent.size || prev.size || [8, 8], tod: intent.tod || prev.tod || "day", fx: Object.assign({}, intent.fx),
     subject: intent.subject || (hasPhoto ? "subject" : null), category: intent.category || "object", walk: intent.walk || !intent.record, notes: [] };
-  plan.cost = (S.asset.upgrade ? (T.find((t) => t.id === S.asset.upgrade) || {}).cost || 0 : 0) + (S.world.sky ? (T.find((t) => t.id === S.world.sky) || {}).cost || 0 : 0);
+  const costOf = (id) => (id ? (T.find((t) => t.id === id) || {}).cost || 0 : 0);
+  plan.cost = costOf(S.asset.upgrade) + (S.asset.choice !== "device" && S.asset.on ? costOf(S.asset.choice) : 0) + costOf(S.world.sky) + (S.capture.on && /^ai/.test(S.capture.choice) ? costOf(S.capture.choice) : 0);
+  if (lite) plan.notes.push({ k: "lite", en: "Cloud mode: the heavy AI and the render run in nooi's cloud — this device only shows the scene, so it stays fast on a phone.", ar: "وضع السحابة: الذكاء الثقيل والتصيير يعملان في سحابة nooi — جهازك يعرض المشهد فقط، فيبقى سريعاً على الهاتف." });
   if (!hasPhoto && intent.subject) plan.notes.push({ k: "photo", en: "Add a photo of the " + intent.subject + " (or describe it and let AI views draw it).", ar: "أضف صورة " + intent.subject + " (أو صِفه وسترسمه زوايا الذكاء)." });
   if (!cloud && hasPhoto) plan.notes.push({ k: "cloud", en: "The hidden sides are estimated on this device. Sign in on nooi.ai to let AI generate them (credits).", ar: "تُقدَّر الجوانب المخفية على جهازك. سجّل الدخول في nooi.ai ليولّدها الذكاء (برصيد)." });
   return plan;

@@ -136,12 +136,7 @@ export const kie = (model) => {
       }
       // lip-sync from a typed script: make the voice with ElevenLabs on Kie first, then animate the face with it
       if (/^(kling\/ai-avatar|infinitalk\/|volcengine\/video-to-video-lip-sync)/.test(mo) && !(p.inputs || {}).lsA && p.prompt) {
-        const tm = "elevenlabs/text-to-speech-multilingual-v2", t = await call("/api/v1/jobs/createTask", { method: "POST", body: JSON.stringify({ model: tm, input: kieInput(tm, { ...p, kind: "voice" }) }) });
-        let audio = null;
-        for (let i = 0; i < 80 && !audio; i++) { await new Promise((r) => setTimeout(r, i ? 3000 : 1200)); const d = await call("/api/v1/jobs/recordInfo?taskId=" + encodeURIComponent(t.taskId), { method: "GET" }); const st = String(d.state || "").toLowerCase();
-          if (st === "success") { audio = kieResult(d); if (!audio) throw new Error("Kie AI voice finished without audio"); } else if (st === "fail") throw new Error("Voice for lip-sync failed: " + (d.failMsg || "")); }
-        if (!audio) throw Object.assign(new Error("The voice for lip-sync took too long"), { code: 504 });
-        p = { ...p, prompt: "", inputs: { ...(p.inputs || {}), lsA: audio } };
+        p = { ...p, prompt: "", inputs: { ...(p.inputs || {}), lsA: await lipVoice(p, call) } };
       }
       const suno = mo.startsWith("suno:");
       const apiModel = suno ? "ai-music-api/generate" : mo;
@@ -184,6 +179,27 @@ export const KIE_BUILTIN = {
 };
 const I2V = { "kling-2.6/text-to-video": "kling-2.6/image-to-video", "wan/2-7-text-to-video": "wan/2-7-image-to-video", "minimax-h3/text-to-video": "minimax-h3/image-to-video", "grok-imagine/text-to-video": "grok-imagine/image-to-video", "pixverse-v6/text-to-video": "pixverse-v6/image-to-video" };
 const EDIT = { "gpt-image-2-text-to-image": "gpt-image-2-image-to-image", "flux-2/pro-text-to-image": "flux-2/pro-image-to-image", "seedream/4.5-text-to-image": "seedream/4.5-edit", "qwen3/text-to-image": "qwen3/image-to-image", "seedream/5-pro-text-to-image": "seedream/5-pro-image-to-image", "grok-imagine/text-to-image": "grok-imagine/image-to-image" };
+// the voice an avatar speaks with: the site's own ElevenLabs key first (natural voice, saved in /media), then the engine's
+// ElevenLabs voices — each tried twice, multilingual v2 then turbo 2.5 — so one busy voice service doesn't fail the avatar
+async function lipVoice(p, call) {
+  const errs = [];
+  if (cfg("elevenlabs").apiKey) {
+    try { const { speak, polish } = await import("../lib/voice.js"), { saveBuffer } = await import("../lib/media.js"), fs = await import("fs");
+      const sp = await speak(p.prompt, { lang: p.meta?.lang, voice: /^[A-Za-z0-9]{18,}$/.test(p.meta?.voiceId || "") ? { id: p.meta.voiceId, name: p.meta.voiceId } : undefined, emotion: p.meta?.tone });
+      const fin = await polish(sp.file, { ext: ".mp3", room: false }), out = saveBuffer(fs.readFileSync(fin), ".mp3"); fs.unlink(fin, () => {}); if (sp.temp) fs.unlink(sp.file, () => {});
+      return out.url; } catch (e) { errs.push("ElevenLabs: " + e.message); }
+  }
+  for (const tm of ["elevenlabs/text-to-speech-multilingual-v2", "elevenlabs/text-to-speech-multilingual-v2", "elevenlabs/text-to-speech-turbo-2-5"]) {
+    try {
+      const t = await call("/api/v1/jobs/createTask", { method: "POST", body: JSON.stringify({ model: tm, input: kieInput(tm, { ...p, kind: "voice" }) }) });
+      for (let i = 0; i < 80; i++) { await new Promise((r) => setTimeout(r, i ? 3000 : 1200)); const d = await call("/api/v1/jobs/recordInfo?taskId=" + encodeURIComponent(t.taskId), { method: "GET" }); const st = String(d.state || "").toLowerCase();
+        if (st === "success") { const audio = kieResult(d); if (audio) return audio; throw new Error("finished without audio"); } if (st === "fail") throw new Error(d.failMsg || "failed"); }
+      throw new Error("took too long");
+    } catch (e) { errs.push(tm.split("/")[1] + ": " + String(e.message).slice(0, 120)); await new Promise((r) => setTimeout(r, 2500)); }
+  }
+  throw Object.assign(new Error("The voice service is busy — the avatar wasn't charged. Try again in a minute, or add a voice file (" + errs.join(" · ") + ")"), { type: "provider", retryable: false, noFallback: true });
+}
+export const _lipVoice = lipVoice;   // for tests
 export function kieAuto(cap, body = {}) {
   if (!configured("kie")) return null;
   const c = cfg("kie"), kind = body.kind || cap, inp = body.inputs || {}, isVid = (u) => /\.(mp4|mov|webm|mkv|m4v)(\?|$)/i.test(String(u || ""));

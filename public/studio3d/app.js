@@ -35,6 +35,8 @@ function fail(e) { const m = (e && e.message) || String(e); status(null); toast(
 // ───────── boot ─────────
 S.dev = await detectDevice();
 const tier = S.dev.mobile || (S.dev.memoryGB && S.dev.memoryGB <= 4) ? "low" : "high";
+// cloud mode: phones and low-memory devices don't download AI models or render videos — the cloud does the heavy work
+S.lite = (() => { try { const v = localStorage.getItem("x3lite"); if (v != null) return v === "1"; } catch (e) {} return tier === "low" || !S.dev.webgpu; })();
 $("badge").textContent = S.dev.webgpu ? "WebGPU ✓" : S.dev.webgl2 ? L("WebGL2 · CPU AI", "WebGL2 · ذكاء على المعالج") : L("No 3D", "لا يوجد 3D"); $("badge").className = "badge " + (S.dev.webgpu ? "ok" : "warn");
 const kv = [[L("AI runs on", "الذكاء يعمل على"), S.dev.webgpu ? "WebGPU" + (S.dev.f16 ? " · fp16" : "") : L("CPU (WASM)", "المعالج (WASM)")], [L("GPU", "المعالج الرسومي"), S.dev.adapter || S.dev.webglRenderer || "—"], ["3D", S.dev.webgl2 ? "WebGL2" : "—"], [L("Quality", "الجودة"), tier === "low" ? L("Light (phone)", "خفيفة (هاتف)") : L("Full", "كاملة")], [L("Cores", "الأنوية"), S.dev.cores], [L("Memory", "الذاكرة"), S.dev.memoryGB ? S.dev.memoryGB + " GB" : "—"]];
 $("devKv").innerHTML = kv.map(([k, v]) => "<span>" + k + "</span><span>" + esc(v) + "</span>").join("");
@@ -50,7 +52,7 @@ E.setWorld({ biome: q.get("biome") || "rainforest", size: [8, 8] }); E.setMode("
 async function loadCfg() { if (!EMBED) { renderCaps(); return; } try { S.cfg = Object.assign({ nooi: true }, await call("cfg", {}, { timeout: 8000 })); } catch (e) { S.cfg = { nooi: true, offline: true }; }
   renderCaps(); if (S.cfg.photo && S.cfg.photo.blob) await setPhoto(S.cfg.photo.blob, S.cfg.photo.name || "photo", S.cfg.photo.mode); if (S.cfg.glb && S.cfg.glb.blob) await addGLB(S.cfg.glb.blob, S.cfg.glb.name || "3D", "library"); }
 function renderCaps() { const c = S.cfg; $("credits").hidden = !(c.nooi && c.credits != null); $("credits").textContent = (c.credits ?? "") + " cr"; $("standalone").hidden = !!c.nooi; }
-function cap() { const c = S.cfg, k = c.cap || {}; return Object.assign({ nooi: !!c.nooi, signedIn: !!c.signedIn, server: !!c.server, cost: c.cost || {}, webgpu: S.dev.webgpu, webgl2: S.dev.webgl2, ai: S.aiOk, photo: !!S.img }, k); }
+function cap() { const c = S.cfg, k = c.cap || {}; return Object.assign({ cloudFirst: !!S.lite && !!c.nooi && !!c.signedIn, nooi: !!c.nooi, signedIn: !!c.signedIn, server: !!c.server, cost: c.cost || {}, webgpu: S.dev.webgpu, webgl2: S.dev.webgl2, ai: S.aiOk, photo: !!S.img }, k); }
 
 // ───────── 1 · the photo & the selection ─────────
 async function setPhoto(blob, name, mode) {
@@ -64,6 +66,7 @@ function drawSel() { if (S.img) drawSelection($("selCv"), S.img, S.M, S.points);
 // SAM: encode the picture once in the background (the first time also downloads the model, cached afterwards)
 function aiClient() { if (!S.ai) S.ai = new LocalInference({ onProgress, plan: S.dev.plan, modelsHost: q.get("models") || (S.cfg.models && S.cfg.models.host) || undefined, ortBase: window.NOOI_LOCAL_VENDOR ? "/vendor/ort/" : undefined }); return S.ai; }
 function prepSam() { if (window.__X3_TEST_MASK) { S.samReady = Promise.resolve(true); return; } if (!S.aiOk || !S.blob) { S.samReady = Promise.resolve(false); return; }
+  if (cap().cloudFirst && S.choice.select !== "sam") { S.samReady = Promise.resolve(false); log("Cloud mode: no AI download on this device — tap the object or let AI vision find it", "وضع السحابة: لا تنزيل للذكاء على جهازك — اضغط على العنصر أو دع رؤية الذكاء تجده", "cloud"); return; }
   S.samReady = aiClient().samEmbed(S.blob).then(() => { log("SAM ready on " + (S.dev.webgpu ? "WebGPU" : "CPU") + " — tap to select", "SAM جاهز على " + (S.dev.webgpu ? "WebGPU" : "المعالج") + " — اضغط للتحديد", "SAM"); return true; })
     .catch((e) => { S.aiOk = /fetch|load|library|network/i.test(e.message) ? false : S.aiOk; log("SAM unavailable (" + e.message.slice(0, 80) + ") — using instant select", "SAM غير متاح — يُستخدم التحديد الفوري", "classic"); renderPlan(); return false; }); }
 async function maskAt(points) {
@@ -121,6 +124,30 @@ async function cloudUpgrade(engine, a) {
         log("Full 3D from " + T.en.split(" — ")[0] + " replaced the preview — every side is generated now", "حلّ مجسّم كامل من " + T.ar.split(" — ")[0] + " محل المعاينة", T.where); toast(L("Full 3D ready — all sides generated", "المجسّم الكامل جاهز — كل الجوانب مولّدة"), "ok"); } catch (e) { a.cloud.status = "failed"; a.cloud.error = e.message; } renderAssets(); done(a); }
     else if (j.status === "failed" || j.gone) { log("The cloud engine failed: " + (j.error || "unknown") + " — the on-device object stays", "فشل المحرك السحابي — يبقى المجسّم المصنوع على جهازك"); done(a); } }); });
 }
+// cloud mode: a flat cut-out stands in while the cloud engine makes the full 3D object (nothing heavy runs on this device)
+async function makeCloud(engine) {
+  if (!S.img) throw new Error(L("Add a photo first", "أضف صورة أولاً")); if (!S.M && !(await autoSelect())) throw new Error(L("Select the object first", "حدّد العنصر أولاً"));
+  const box = maskBox(S.M), alpha = maskToAlpha(S.M, S.img.width, S.img.height); S.crop = cropToSubject(S.img, alpha, box);
+  const png = await cutoutPNG(S.crop), bmp = await createImageBitmap(png), tex = new THREE.CanvasTexture(bmp); tex.encoding = THREE.sRGBEncoding;
+  const g = new THREE.Group(), card = new THREE.Mesh(new THREE.PlaneGeometry(bmp.width / bmp.height, 1), new THREE.MeshBasicMaterial({ map: tex, transparent: true, alphaTest: 0.4, side: THREE.DoubleSide })); card.position.y = 0.5; g.add(card);
+  const name = S.label ? S.label[0].toUpperCase() + S.label.slice(1) : S.name || "Object";
+  const a = E.addAsset(g, { name, category: S.category, height: +$("height").value || S.height, source: "card", rigid: true }); a.photoKey = S.name; autoFit(a); renderAssets(); E.frame();
+  log("Cloud mode: a cut-out stands in while the cloud makes the full 3D object", "وضع السحابة: صورة مقصوصة مؤقتة حتى تصنع السحابة المجسّم الكامل", "cloud");
+  await cloudUpgrade(engine, a); return a;
+}
+// the real render in the cloud: one small picture of the view → a real video (image → video) or photo (image edit)
+async function aiRender(kind) {
+  const blob = await E.snapshot("image/jpeg", 0.88), what = ($("q").value || "").trim() || (S.label ? L("a " + S.label + " in a ", S.label + " في ") + L(BIOMES[E.state.biome].en, BIOMES[E.state.biome].ar) : L(BIOMES[E.state.biome].en + " landscape", "منظر " + BIOMES[E.state.biome].ar));
+  status(L("Sending your view to the cloud…", "إرسال منظورك إلى السحابة…")); const r = await call("airender", { blob, kind, prompt: what }, { timeout: 30000 }); status(null);
+  if (r && r.credits != null) { S.cfg.credits = r.credits; renderCaps(); }
+  const out = $("aiOut"); out.hidden = false; out.textContent = kind === "video" ? L("The cloud is making the video… ", "السحابة تصنع الفيديو… ") : L("The cloud is making the photo… ", "السحابة تصنع الصورة… ");
+  log((kind === "video" ? "AI video" : "AI photo") + " is rendering in the cloud — this device does nothing heavy", kind === "video" ? "فيديو الذكاء يُصنع في السحابة" : "صورة الذكاء تُصنع في السحابة", "cloud");
+  return new Promise((done) => { follow([r.id], (j) => {
+    if (j.status === "complete" && j.url) { out.innerHTML = ""; if (kind === "video") { const v = $("vid"); v.src = j.url; $("vidBox").hidden = false; } else { const im = document.createElement("img"); im.src = j.url; im.alt = ""; im.style.cssText = "width:100%;border-radius:10px"; out.appendChild(im); }
+      toast(kind === "video" ? L("AI video ready — it's in your library too", "فيديو الذكاء جاهز — وفي مكتبتك أيضاً") : L("AI photo ready — it's in your library too", "صورة الذكاء جاهزة — وفي مكتبتك أيضاً"), "ok"); done(j); }
+    else if (j.status === "failed" || j.gone) { out.textContent = L("The cloud render failed: ", "فشل التصيير السحابي: ") + (j.error || ""); done(j); }
+    else out.textContent = (kind === "video" ? L("The cloud is making the video… ", "السحابة تصنع الفيديو… ") : L("The cloud is making the photo… ", "السحابة تصنع الصورة… ")) + Math.round((j.progress || 0) * 100) + "%"; }); });
+}
 // ───────── the render reviewer: check every object, fix what's safe to fix, say what isn't ─────────
 const SAFE = new Set(["reground", "dropLoose", "relight", "repaintRear"]);
 function repaintRear(a) { const rd = a.object.userData.rear, m = a.object.getObjectByName("rear"); if (!rd || !m || !rd.B.vehicle) return null;
@@ -154,7 +181,7 @@ function renderReview() { const el = $("review"); if (!el) return; const a = E.s
     (ai ? '<p class="dim" style="margin:4px 0 0">' + esc(L("AI review: ", "مراجعة الذكاء: ") + (ai.summary || (ai.issues.length ? ai.issues.map((i) => i.note || i.code).join(" · ") : L("looks right", "سليم")))) + "</p>" : "") +
     '<div class="row" style="margin-top:6px"><button class="btn sm" data-x3="recheck">' + L("Check again", "افحص مجدداً") + "</button>" + (canAI && canAI.ok ? '<button class="btn sm" data-x3="aireview">' + L("AI review", "مراجعة الذكاء") + ' <span class="cost">' + canAI.cost + " cr</span></button>" : "") + "</div>"; }
 function renderAssets() { const el = $("assets"); if (!E.assets.length) { el.innerHTML = '<p class="dim">' + L("No objects yet.", "لا مجسّمات بعد.") + "</p>"; return; }
-  el.innerHTML = E.assets.map((a) => { const c = a.cloud, src = { device: L("this device", "هذا الجهاز"), trellis: "NVIDIA TRELLIS", views: L("AI views", "زوايا الذكاء"), tripo: "Tripo3D", meshy: "Meshy", sam3d: "SAM 3D", library: L("library", "المكتبة") }[a.source] || a.source;
+  el.innerHTML = E.assets.map((a) => { const c = a.cloud, src = { card: L("cut-out · the cloud is making the 3D", "مقصوصة · السحابة تصنع المجسّم"), device: L("this device", "هذا الجهاز"), trellis: "NVIDIA TRELLIS", views: L("AI views", "زوايا الذكاء"), tripo: "Tripo3D", meshy: "Meshy", sam3d: "SAM 3D", library: L("library", "المكتبة") }[a.source] || a.source;
     return '<div class="asset' + (E.sel === a ? " on" : "") + '"><button class="nm" data-x3="sel" data-v="' + a.id + '">' + esc(a.name) + '</button><span class="dim">' + a.size.join(" × ") + " m · " + esc(src) + (c && c.status !== "done" ? " · " + esc(c.status === "failed" ? L("cloud failed", "فشل السحابي") : L("AI generating ", "الذكاء يولّد ") + Math.round((c.progress || 0) * 100) + "%") : "") + "</span>" +
       '<span class="row"><button class="btn sm" data-x3="fit" data-v="' + a.id + '">' + L("Fit to area", "ملاءمة المساحة") + '</button><button class="btn sm" data-x3="turn" data-v="' + a.id + '">↻ 45°</button><button class="btn sm ghost" data-x3="del" data-v="' + a.id + '">' + L("Remove", "إزالة") + "</button></span></div>"; }).join(""); renderReview(); }
 
@@ -197,11 +224,11 @@ async function runPlan() {
     st("world", "run"); if (P.biome !== E.state.biome || P.size.join() !== E.state.size.join()) setWorld({ biome: P.biome, size: P.size }); E.setTime(P.tod); st("world", "done");
     st("fx", "run"); if (on("fx")) { E.setFX(Object.assign({ wind: BIOMES[P.biome].fx.wind }, P.fx)); } renderWorld(); log("Life & weather on the GPU: " + (Object.keys(P.fx).join(", ") || "biome defaults"), "الحياة والطقس على المعالج الرسومي", "GLSL"); st("fx", "done");
     if (S.img && on("select")) { st("select", "run"); if (!S.M) { const sel = P.steps.find((x) => x.id === "select").choice; if (sel === "vision") await visionFind(); else await autoSelect(); } st("select", S.M ? "done" : "fail"); }
-    if (S.img && on("asset")) { st("asset", "run"); const a = await make3D(); st("asset", "done");
+    if (S.img && on("asset")) { st("asset", "run"); const ach = P.steps.find((x) => x.id === "asset").choice, a = ach && ach !== "device" ? await makeCloud(ach) : await make3D(); st("asset", "done");
       if (on("review")) { st("review", "run"); const rv = a.review ? a.review.checks : review(a); if (P.steps.find((x) => x.id === "review").choice === "aireview") await aiReview(a).catch((e) => log(e.message, e.message)); st("review", (a.review.checks || rv).every((c) => c.ok) ? "done" : "fail"); } const up = P.steps.find((x) => x.id === "asset").upgrade; if (up) { st("asset", "cloud"); cloudUpgrade(up, a).then(() => st("asset", "done")).catch((e) => { st("asset", "done"); log(e.message, e.message); }); } }
     const sky = P.steps.find((x) => x.id === "world").sky; if (sky) cloudSky(sky).catch((e) => log(e.message, e.message));
     if (on("explore")) { st("explore", "run"); setMode(P.walk ? "walk" : "orbit"); st("explore", "done"); }
-    if (on("capture")) { st("capture", "run"); const c = P.steps.find((x) => x.id === "capture").choice; if (c === "video" || c === "editor") { const b = await record(+$("recSec").value || 10); if (c === "editor" && EMBED) await sendToEditor(b); } else if (c === "glb") save(await E.exportGLB(), "nooi-3d-scene.glb"); st("capture", "done"); }
+    if (on("capture")) { st("capture", "run"); const c = P.steps.find((x) => x.id === "capture").choice; if (c === "airender" || c === "aiphoto") await aiRender(c === "airender" ? "video" : "photo"); else if (c === "video" || c === "editor") { const b = await record(+$("recSec").value || 10); if (c === "editor" && EMBED) await sendToEditor(b); } else if (c === "glb") save(await E.exportGLB(), "nooi-3d-scene.glb"); st("capture", "done"); }
     toast(L("Done — explore your scene", "تم — استكشف مشهدك"), "ok");
   } catch (e) { fail(e); P.steps.forEach((s) => { if (s.status === "run") s.status = "fail"; }); renderStepsState(); }
   finally { S.busy = false; $("runAll").disabled = false; }
@@ -216,6 +243,7 @@ $("q").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey
 $("file").addEventListener("change", (e) => { const f = e.target.files[0]; if (f) setPhoto(f, f.name); e.target.value = ""; });
 $("drop").addEventListener("dragover", (e) => e.preventDefault()); $("drop").addEventListener("drop", (e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && /^image\//.test(f.type)) setPhoto(f, f.name); });
 $("runAll").onclick = () => runPlan();
+$("liteSw").addEventListener("change", (e) => { S.lite = e.target.checked; try { localStorage.setItem("x3lite", S.lite ? "1" : "0"); } catch (er) {} if (S.lite && S.ai) { S.ai.dispose(); S.ai.terminate(); S.ai = null; } if (!S.lite && S.blob && !S.samReady) prepSam(); renderPlan(); updateButtons(); });
 $("cat").innerHTML = CATS.map((c) => '<option value="' + c[0] + '">' + esc(L(c[1], c[2])) + "</option>").join(""); setCategory("object");
 $("cat").onchange = (e) => { S.catUser = true; setCategory(e.target.value); renderPlan(); }; $("label").oninput = (e) => { S.label = e.target.value.trim(); };
 $("height").onchange = (e) => { const a = E.sel || E.assets[E.assets.length - 1]; if (a) { a.height = Math.max(0.05, +e.target.value || 1); autoFit(a); renderAssets(); } };
@@ -262,6 +290,7 @@ document.addEventListener("click", async (e) => {
     case "rec": b.disabled = true; try { await record(+$("recSec").value || 10); } finally { b.disabled = false; } break;
     case "dlVid": if (S.lastVideo) save(S.lastVideo, "nooi-3d-walkthrough.webm"); break;
     case "toEditor": await sendToEditor(); break;
+    case "airender": await aiRender(v); break;
     case "shot": save(await E.snapshot(), "nooi-3d.png"); break;
     case "still": await call("still", { blob: await E.snapshot("image/jpeg"), prompt: ($("q").value || L("This 3D scene", "هذا المشهد ثلاثي الأبعاد")) + " — " + L("cinematic camera move, natural light", "حركة كاميرا سينمائية وإضاءة طبيعية") }); break;
     case "glb": save(await E.exportGLB(), "nooi-3d-scene.glb"); log("Scene exported as .glb", "صُدّر المشهد ‎.glb", "GLTFExporter"); break;
@@ -277,7 +306,8 @@ function updateButtons() { $("makeBtn").disabled = !S.img; for (const id of ["au
   const T = techniques(cap()); $("cloudBtns").innerHTML = T.filter((t) => t.step === "asset" && t.id !== "device" && t.ok).map((t) => '<button class="btn" data-x3="cloud" data-v="' + t.id + '">' + esc(L(t.en, t.ar).split(" — ")[0]) + ' <span class="cost">' + t.cost + " cr</span></button>").join("") || '<p class="dim">' + (S.cfg.nooi ? L("Sign in on nooi.ai to let AI generate the hidden sides (credits).", "سجّل الدخول في nooi.ai ليولّد الذكاء الجوانب المخفية (برصيد).") : L("Open this studio inside nooi.ai to let AI generate the hidden sides with credits.", "افتح هذا الاستوديو داخل nooi.ai ليولّد الذكاء الجوانب المخفية بالرصيد.")) + "</p>";
   $("skyPhotoRow").hidden = !(S.img && T.find((t) => t.id === "pano").ok);
   $("skyBtns").innerHTML = T.filter((t) => t.step === "world" && t.id !== "procedural" && t.ok).map((t) => '<button class="btn" data-x3="sky" data-v="' + t.id + '">' + esc(L(t.en, t.ar).split(" — ")[0].replace("Blockade Labs ", "")) + ' <span class="cost">' + t.cost + " cr</span></button>").join("");
-  for (const id of ["toEditor", "still", "libSave", "libOpenBtn"]) $(id).hidden = !S.cfg.nooi; }
+  for (const id of ["toEditor", "still", "libSave", "libOpenBtn"]) $(id).hidden = !S.cfg.nooi;
+  $("aiRow").hidden = !(S.cfg.nooi && S.cfg.signedIn); $("liteSw").checked = !!S.lite; }
 function onProgress(m) { if (m.stage === "download" && m.file) { const f = (S.files = S.files || {}), x = (f[m.file] = f[m.file] || { loaded: 0, total: 0 }); if (m.total) x.total = m.total; if (m.loaded != null) x.loaded = m.loaded; if (m.status === "done" && x.total) x.loaded = x.total;
     let a = 0, t = 0; for (const k in f) { a += f[k].loaded; t += f[k].total; } status(L("Downloading the AI once (then it's saved on this device) · ", "تنزيل الذكاء مرة واحدة (ثم يُحفظ على جهازك) · ") + (t ? fmtMB(a) + " / " + fmtMB(t) : "…"), t ? a / t : null); if (t && a >= t) setTimeout(showCache, 500); }
   else if (m.stage === "gpu" && m.status === "fallback") log("WebGPU failed → the AI runs on the CPU", "فشل WebGPU ← يعمل الذكاء على المعالج", "WASM"); }

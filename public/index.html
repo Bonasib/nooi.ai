@@ -2023,7 +2023,7 @@ function objFor(ref){const [k,id]=ref.split(":");return k==="j"?S.jobs.find(x=>x
 function requeue(){queue=[];cur=null;
   S.jobs.forEach(j=>{if(j.status==="rendering"||j.status==="queued"){j.status="queued";j.progress=0;queue.push("j:"+j.id)}});
   S.story.chapters.forEach(c=>{if(c.status==="rendering"||c.status==="queued"){c.status="queued";c.progress=0;queue.push("c:"+c.id)}});}
-function spend(n){if(S.credits<n){toast(L("Not enough credits for this.","الرصيد لا يكفي لهذه العملية."));return false}S.credits-=n;return true}
+function spend(n){if(crFree())return true;if(S.credits<n){toast(L("Not enough credits for this.","الرصيد لا يكفي لهذه العملية."));return false}S.credits-=n;return true}
 function addJob(o){
   Object.keys(o).forEach(k=>{if(o[k]===undefined)delete o[k]});
   const j=Object.assign({id:uid(),status:"queued",progress:0,created:Date.now(),pal:PALS[Math.floor(Math.random()*PALS.length)],seed:Math.floor(Math.random()*1e9),secs:30,dur:5,aspect:"16:9",art:"scene"},o);
@@ -2697,14 +2697,14 @@ function setPath(path,val){let [o,ks]=rootFor(path);if(!o)return;for(let i=0;i<k
 function go(v){S.view=v;persist();renderView();$("#main").scrollTop=0}
 function makeVideo(){
   const d=S.draft;if(!d.prompt.trim()){toast(L("Write a prompt first.","اكتب الوصف أولاً."));if(S.view!=="video")go("video");return}
-  const each=vcost(d.model,d.dur)+(d.vo.trim()?2:0);if(S.credits<each*d.variations){toast(L("Not enough credits for this.","الرصيد لا يكفي لهذه العملية."));return}
+  const each=vcost(d.model,d.dur)+(d.vo.trim()?2:0);if(!crFree()&&S.credits<each*d.variations){toast(L("Not enough credits for this.","الرصيد لا يكفي لهذه العملية."));return}
   const batch=uid();let first=null;const pal=PALS[hashStr(d.prompt+d.style)%PALS.length];
   for(let v=0;v<d.variations;v++){const j=addJob({kind:"video",prompt:d.prompt.trim(),model:d.model,dur:d.dur,aspect:d.aspect,cost:each,batch,pal,seed:(d.seed&&!isNaN(+d.seed)?+d.seed:hashStr(d.prompt))+v*131,meta:{type:d.type,style:d.style,camera:d.camera,neg:d.neg,char:d.charId,vo:d.vo,voice:d.voice,audio:d.audio,start:d.startJob||!!M.vStart,end:!!M.vEnd}});if(j&&!first)first=j}
   if(first){S.lastVideo=first.id;S.view="video";persist();renderAll();$("#main").scrollTop=0;toast(L("Added to the render queue","أُضيف إلى قائمة التوليد"))}
 }
 function makeImages(prompt){
   const d=S.img;prompt=(prompt||d.prompt).trim();if(!prompt){toast(L("Write a prompt first.","اكتب الوصف أولاً."));return}
-  const cr=IMG_MODELS[d.model].cr;if(S.credits<cr*d.count){toast(L("Not enough credits for this.","الرصيد لا يكفي لهذه العملية."));return}
+  const cr=IMG_MODELS[d.model].cr;if(!crFree()&&S.credits<cr*d.count){toast(L("Not enough credits for this.","الرصيد لا يكفي لهذه العملية."));return}
   const batch=uid();const base=PALS[hashStr(prompt+d.style)%PALS.length];let first=null;
   for(let i=0;i<d.count;i++){const j=addJob({kind:"image",prompt,model:d.model,aspect:d.aspect,cost:cr,batch,secs:5,pal:i%2?PALS[(hashStr(prompt)+i)%PALS.length]:base,meta:{style:d.style,char:d.charId}});if(j&&!first)first=j}
   if(first){S.lastBatch=batch;d.sel=first.id;persist();renderAll()}
@@ -2776,7 +2776,7 @@ document.addEventListener("click",async e=>{
   case"an-close":closeAnimatic();break;
   case"pick-char":S.charSel=+A.i;persist();renderView();break;
   case"new-char":S.chars.push({id:uid(),name:L("New character","شخصية جديدة"),age:28,gender:"female",look:"",outfit:"",persona:"",voice:{dialect:S.lang==="ar"?"najdi":"enUS",gender:"female",age:"young",tone:"warm"},looks:[1,2,3,4].map(()=>Math.floor(Math.random()*1e6)),lookSeed:null,locked:true});S.charSel=S.chars.length-1;persist();renderView();break;
-  case"gen-looks":{const c=S.chars[S.charSel];const n=+A.n||4;if(S.credits<2*n){toast(L("Not enough credits for this.","الرصيد لا يكفي لهذه العملية."));break}for(let i=0;i<n;i++)addJob({kind:"look",prompt:c.name+" · "+c.look,title:c.name,cost:2,secs:5,art:"portrait",aspect:"3:4",opt:charOpt(c),meta:{char:c.id}});renderAll();break}
+  case"gen-looks":{const c=S.chars[S.charSel];const n=+A.n||4;if(!crFree()&&S.credits<2*n){toast(L("Not enough credits for this.","الرصيد لا يكفي لهذه العملية."));break}for(let i=0;i<n;i++)addJob({kind:"look",prompt:c.name+" · "+c.look,title:c.name,cost:2,secs:5,art:"portrait",aspect:"3:4",opt:charOpt(c),meta:{char:c.id}});renderAll();break}
   case"gen-sheet":{const c=S.chars[S.charSel];if(addJob({kind:"sheet",prompt:c.name+" · "+L("front, side, back, expressions","أمام، جانب، خلف، تعابير"),title:c.name,cost:6,secs:7,art:"portrait",opt:charOpt(c),seed:c.lookSeed||c.looks[0],meta:{char:c.id}}))renderAll();break}
   case"pick-look":{const c=S.chars[S.charSel];if(A.job){const j=S.jobs.find(x=>x.id===A.job);if(!j||j.status!=="complete")break}c.lookSeed=+A.seed;persist();renderView();break}
   case"speak-char":{const c=S.chars[S.charSel];speak(c.voice.dialect.startsWith("en")?"Hi, I'm "+c.name+". Let's make a film.":"مرحباً، أنا "+c.name+". هيا نصنع فيلماً.",c.voice);break}
@@ -4073,7 +4073,7 @@ const _sc=statusChanged;statusChanged=function(){_sc();if(!notifyReady)return;co
   const failed=S.jobs.filter(j=>j.status==="failed"&&!j._n);failed.forEach(j=>j._n=1);
   if(failed.length)toast("✗ "+(failed[0].title||failed[0].prompt||"").slice(0,40)+" — "+String(failed[0].error||L("failed","فشل")).slice(0,80));
   else if(done.length+ch.length){const t=done[0]?(done[0].title||done[0].prompt):ch[0].title;toast("✓ "+L("Ready: ","جاهز: ")+String(t).slice(0,48)+(done.length+ch.length>1?" (+"+(done.length+ch.length-1)+")":""))}
-  if(S.credits<200&&!S._lowWarn){S._lowWarn=1;setTimeout(()=>toast(L("Credits are running low — top up from Account.","الرصيد قارب على النفاد — اشحنه من صفحة الحساب.")),2900)}};
+  if(!crFree()&&S.credits<200&&!S._lowWarn){S._lowWarn=1;setTimeout(()=>toast(L("Credits are running low — top up from Account.","الرصيد قارب على النفاد — اشحنه من صفحة الحساب.")),2900)}};
 /* 4) Account: clear saved media on this device */
 const _vacc2=VIEWS.account;VIEWS.account=()=>_vacc2().replace('<button class="btn danger" data-act="reset" id="resetbtn">','<button class="btn" data-act="media-clear">'+ic("trash")+L("Clear saved uploads on this device","امسح الملفات المرفوعة المحفوظة على هذا الجهاز")+'</button><button class="btn danger" data-act="reset" id="resetbtn">');
 document.addEventListener("click",e=>{const a=e.target.closest('[data-act="media-clear"]');if(!a)return;IDB.clear();S.mediaKeys={};persist();toast(L("Saved uploads cleared","تم مسح الملفات المحفوظة"))});
@@ -4264,7 +4264,7 @@ const HARD_LANGS=["sw","am","ha","yo","ig","zu","xh","af","so","om","ti","rw","w
 function taskOf(p){p=String(p);if(/user-interface strings/.test(p))return"ui";if(/Rewrite this video\/image generation prompt/.test(p))return"enhance";if(/social caption/.test(p))return"caption";if(/Extract every character/.test(p))return"cast";if(/retention expert/.test(p))return"hook";if(/subtitle lines/.test(p)){const m=p.match(/\(([a-z]{2,3})\)/g)||[];return m.some(x=>HARD_LANGS.includes(x.slice(1,-1)))?"subsHard":"subs"}if(/shot prompts for a multi-chapter/.test(p))return"story";if(/storyboard artist/.test(p))return"board";if(/social media strategist/.test(p))return"site";return"other"}
 function route(task){const r=ROUTES[task]||ROUTES.other;const m=S.routing.mode;if(m==="best")return["complex",Math.max(2,r[1])];if(m==="saver")return[r[0]==="complex"?"default":"quick",Math.max(0,r[1]-1)];return r}
 const TIER_NAME={quick:["Fast","سريع"],default:["Balanced","متوازن"],complex:["Most capable","الأقوى"]};
-getSample=(orig=>{let wrapped=null;return async function(){const s=await orig();if(!s)return s;if(wrapped)return wrapped;const pick=(input,opts)=>{const task=taskOf(input);const[tier,cr]=route(task);if(cr>0){if(S.credits<cr)throw{code:"credits"};S.credits-=cr}logUse(L(TASK_NAMES[task][0],TASK_NAMES[task][1]),cr,tier);if(cr)renderShell();return Object.assign({},opts||{},{modelTier:tier})};
+getSample=(orig=>{let wrapped=null;return async function(){const s=await orig();if(!s)return s;if(wrapped)return wrapped;const pick=(input,opts)=>{const task=taskOf(input);const[tier,cr]=route(task);if(cr>0&&!crFree()){if(S.credits<cr)throw{code:"credits"};S.credits-=cr}logUse(L(TASK_NAMES[task][0],TASK_NAMES[task][1]),cr,tier);if(cr)renderShell();return Object.assign({},opts||{},{modelTier:tier})};
   wrapped=function(input,opts){return s(input,pick(input,opts))};wrapped.json=function(input,opts){return s.json(input,pick(input,opts))};return wrapped}})(getSample);
 const _aiErr=aiErr;aiErr=e=>e&&e.code==="credits"?L("Not enough credits for this AI action.","الرصيد لا يكفي لهذه العملية."):_aiErr(e);
 API.req=(orig=>function(p,o){if(o&&o.json&&(p==="/v1/llm/json"||p==="/v1/analyze-site")){const t=p==="/v1/analyze-site"?"site":taskOf(o.json.prompt||"");o.json.tier=route(t)[0];o.json.task=t}return orig.call(API,p,o)})(API.req);
@@ -4515,7 +4515,7 @@ const _rv6=renderView;renderView=function(){_rv6();if(S.view==="integrations"&&A
 
 
 /* v13b: server sync — credits from the ledger, library from /v1/jobs, payment return */
-async function syncServer(){if(API.mode!=="server"||!S.user)return;try{const b=await API.req("/v1/billing");if(b.plan&&b.plan!==S.myPlan){S.myPlan=b.plan;persist()}if(typeof b.credits==="number"&&b.credits!==S.credits){S.credits=b.credits;renderShell()}}catch(e){}
+async function syncServer(){if(API.mode!=="server"||!S.user)return;try{const b=await API.req("/v1/billing");if(b.plan&&b.plan!==S.myPlan){S.myPlan=b.plan;persist()}if(API.cfg&&typeof b.free==="boolean")API.cfg.freeCredits=b.free;if(typeof b.credits==="number"&&b.credits!==S.credits){S.credits=b.credits;renderShell()}}catch(e){}
   try{const r=await API.req("/v1/jobs");let add=0;(r.jobs||[]).forEach(j=>{if(!j.url||S.jobs.some(x=>x.remote===j.id))return;S.jobs.push({id:uid(),remote:j.id,kind:j.kind||"video",status:j.status==="done"?"complete":j.status,progress:1,resultUrl:j.url,title:j.title||"",prompt:j.title||"",created:j.created||Date.now(),seed:hashStr(j.id),pal:PALS[hashStr(j.id)%PALS.length],dur:5,aspect:"16:9",art:"scene",meta:{synced:true}});add++});if(add){persist();if(["library","home"].includes(S.view))renderView()}}catch(e){}}
 setInterval(syncServer,30000);setTimeout(syncServer,2500);
 window.BOOT_Q=location.search;if(/[?&]paid=1/.test(location.search)){if(!/[?&]gift=/.test(location.search))setTimeout(()=>toast(L("Payment received — credits added.","تم الدفع — أُضيف الرصيد.")),800);history.replaceState(null,"",location.pathname+location.hash)}
@@ -4928,7 +4928,7 @@ API.req=(orig=>function(p,o){if(o&&o.json&&p==="/v1/llm/json"&&S.textPref&&S.tex
 
 /* ================= v18b: MOTION TRACKING (editor) ================= */
 ICONS.spark=ICONS.spark||I.spark;ICONS.track='<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><rect x="7" y="7" width="10" height="10" rx="2" stroke-dasharray="2 2"/>';
-go=(o=>function(v){if(v==="ugcads"){S.draft.type="ugc";return o("video")}return o(v)})(go);
+/* v79: UGC ads is its own page now (it used to open the Video page) */
 const TRK={sel:false,drag:null,busy:false,prog:0};
 function trackPt(tr,t){const p=tr.pts;if(!p||!p.length)return null;if(t<=p[0].t)return p[0];if(t>=p[p.length-1].t)return p[p.length-1];let lo=0,hi=p.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(p[m].t<=t)lo=m;else hi=m}const a=p[lo],b=p[hi],k=(t-a.t)/Math.max(1e-6,b.t-a.t);return{x:a.x+(b.x-a.x)*k,y:a.y+(b.y-a.y)*k,w:a.w,h:a.h}}
 /* layers that follow a track: text / emoji sticker / blur */
@@ -5737,7 +5737,7 @@ function hardAudit(ctx){const out=[],o=ctx.out,add=(sev,stage,problem,fix)=>out.
   const texts=[];(function walk(v){if(typeof v==="string")texts.push(v);else if(v&&typeof v==="object")Object.values(v).forEach(walk)})(o);const flag=texts.map(moderate).find(Boolean);if(flag)add("error","writer","Content breaks the Acceptable Use Policy ("+flag+")","Rewrite without prohibited content");
   if(/^(ar|fa|ckb|ur)/.test(ctx.brief.lang)&&o.writer){const lines=o.writer.scenes.flatMap(s=>s.dialogue.map(d=>d.line)).join(" ");const letters=lines.replace(/[^\p{L}]/gu,"");if(letters.length>20&&(lines.match(/[\u0600-\u06FF]/g)||[]).length/letters.length<.5)add("warning","writer","Dialogue is not mainly in the chosen language","Rewrite the dialogue in "+crewLangName(ctx.brief.lang))}
   BOTS.slice(0,7).forEach(b=>{if(o[b.id])crossCheck(b.id,o[b.id],ctx).forEach(p=>add(/missing|unknown|exceeds|not in|no design|No output/.test(p)?"error":"warning",b.id,p,"Fix and keep ids consistent"))});
-  if(o.producer&&o.producer.credits_estimate>S.credits)add("warning","producer","Estimated "+o.producer.credits_estimate+" credits > balance "+S.credits,"Top up or shorten the film");
+  if(o.producer&&!crFree()&&o.producer.credits_estimate>S.credits)add("warning","producer","Estimated "+o.producer.credits_estimate+" credits > balance "+S.credits,"Top up or shorten the film");
   return out}
 
 /* ---- engine: hand-offs, retries with repair, timeouts, cancel, send-back loop, audit log ---- */
@@ -5946,7 +5946,7 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
 uniRun=async function(){const U=S.uni,txt=(U.prompt||"").trim();if(!txt){toast(L("Write what you want first.","اكتب ما تريد أولاً."),{type:"warn"});return}const t=U.task==="auto"?detectTask2(txt):U.task,B=parseBrief(txt);
   const vprompt=[B.idea,B.scene,B.sound&&("Sound: "+B.sound),B.style&&("Style: "+B.style)].filter(Boolean).join(". ");const sty=(STYLE_KEYS.find(k=>k[1].test(B.style||""))||[])[0];
   if(t==="content"||t==="productad"){S.draft.type=t==="productad"?"ugc":S.draft.type==="ugc"?((TYPES.find(x=>!["ugc","ad","product"].includes(x[0]))||TYPES[0])[0]):S.draft.type;S.draft.prompt=vprompt;S.draft.vo=B.voice||"";S.draft.model=U.model;S.draft.dur=Math.min(lim().maxDur,B.seconds||U.dur);S.draft.fps=U.fps;S.draft.aspect=U.aspect;if(sty&&VSTYLES.some(v=>v[0]===sty))S.draft.style=sty;
-    if(t==="productad"){S.draft.ugc.name=B.product||S.draft.ugc.name;S.draft.ugc.price=B.offer||S.draft.ugc.price;S.draft.ugc.desc=B.idea||S.draft.ugc.desc;S.draft.ugc.cta=B.offer||S.draft.ugc.cta}go("video");makeVideo();return}
+    if(t==="productad"){S.draft.ugc.name=B.product||S.draft.ugc.name;S.draft.ugc.price=B.offer||S.draft.ugc.price;S.draft.ugc.desc=B.idea||S.draft.ugc.desc;S.draft.ugc.cta=B.offer||S.draft.ugc.cta;if(typeof ugcMake79==="function"){if(B.voice)S.ugc79.say=String(B.voice).replace(/[“”"«»]/g,"").split(/\s[—-]\s/)[0].trim();if(UGC_FMT.some(f=>f[0]===U.aspect))S.ugc79.fmt=U.aspect;go("ugcads");ugcMake79();return}}go("video");makeVideo();return}
   if(t==="image"){S.img.prompt=[B.idea,B.scene,B.voice&&(L('text "'+B.voice+'"',"بالنص "+B.voice)),B.style].filter(Boolean).join(isRTL(S.lang)?"، ":", ");S.img.model=U.imodel;S.img.aspect=U.aspect;S.img.count=U.n;go("image");makeImages(S.img.prompt);return}
   if(t==="voice"){go("voice");setTimeout(()=>{const ta=document.querySelector("#main textarea");if(ta){ta.value=B.voice||B.idea;ta.dispatchEvent(new Event("input",{bubbles:true}))}clickAfter('[data-act="voice-gen"]',80)},120);return}
   if(t==="film"){S.crew.brief.idea=txt;S.crew.brief.lang=S.lang;if(B.seconds)S.crew.brief.seconds=[15,30,60,90].reduce((a,b)=>Math.abs(b-B.seconds)<Math.abs(a-B.seconds)?b:a);go("crew");setTimeout(()=>runCrew(),120);return}
@@ -6271,7 +6271,7 @@ const notified=new Set();setInterval(()=>{S.jobs.forEach(j=>{if(j.status==="fail
 API.req=(orig=>async function(p,o){try{return await orig.call(API,p,o)}catch(e){const st=e.status||+(String(e.message).match(/\b(401|403|429|500|502|503|504)\b/)||[])[1]||0;if(st===429)e.message=ERR_MSG.rate;else if(st>=500)e.message=ERR_MSG.provider;throw e}})(API.req);
 /* ---- not enough credits → clear choice instead of a failed job ---- */
 function creditsSheet(need){$("#modalRoot").innerHTML='<div class="modal sheetwrap" data-act="close-sheet"><div class="sheet" role="dialog" aria-modal="true" data-act="noop" style="max-width:480px"><div class="spread"><h2 style="margin:0">'+ic("coin","width:18px;vertical-align:-3px")+" "+L("Not enough credits","الرصيد لا يكفي")+'</h2><button class="btn sm ghost" data-act="close-sheet" aria-label="'+esc(L("Close","إغلاق"))+'">'+ic("x")+'</button></div><div class="usage" style="margin:12px 0">'+(need?'<div><span>'+L("This needs","هذه العملية تحتاج")+'</span><span></span><b class="mono">'+need+' cr</b></div>':"")+'<div><span>'+L("Your balance","رصيدك")+'</span><span></span><b class="mono">'+S.credits+' cr</b></div></div><div class="row"><button class="btn primary" data-act="see-plans">'+L("Top up or upgrade","اشحن أو رقِّ")+'</button><button class="btn ghost" data-act="close-sheet">'+L("Change settings","غيّر الإعدادات")+"</button></div></div></div>"}
-addJob=(o=>function(j){if(j&&j.cost&&j.cost>S.credits&&!["export"].includes(j.kind)){creditsSheet(j.cost);return null}return o(j)})(addJob);
+addJob=(o=>function(j){if(j&&j.cost&&!crFree()&&j.cost>S.credits&&!["export"].includes(j.kind)){creditsSheet(j.cost);return null}return o(j)})(addJob);
 /* ---- phones: choose the model from a bottom sheet ---- */
 function modelSheet(fam){const rail=fam==="image"?IRAIL:VRAIL,cur=fam==="image"?S.uni.imodel:S.uni.model;$("#modalRoot").innerHTML='<div class="modal sheetwrap" data-act="close-sheet"><div class="sheet msheet" role="dialog" aria-modal="true" data-act="noop"><div class="spread"><h2 style="margin:0">'+(fam==="image"?L("Image models","نماذج الصور"):L("Video models","نماذج الفيديو"))+'</h2><button class="btn sm ghost" data-act="close-sheet" aria-label="'+esc(L("Close","إغلاق"))+'">'+ic("x")+'</button></div><div class="mlist">'+rail.map(m=>{const locked=m[0]!=="auto"&&(fam==="image"?!imgOK(m[0]):!modelAllowed(m[0]));const cr=fam==="image"?(IMG_MODELS[m[0]]||{}).cr:m[0]==="auto"?"":vcost(m[0],S.uni.dur);return'<button class="mrow" data-act="uni-m" data-m="'+m[0]+'" data-fam="'+fam+'" aria-checked="'+(cur===m[0])+'">'+modelBadge(m[0],m[2])+'<span class="mtx"><b>'+esc(m[0]==="auto"?L("Smart","ذكي"):m[1])+"</b><span>"+esc(m[2])+"</span></span>"+(m[0]==="auto"?"":statusTag(MODEL_PROV(m[0])))+'<span class="mcr">'+(locked?ic("shield","width:13px"):cr?cr+" cr":"")+"</span></button>"}).join("")+"</div></div></div>"}
 uniPanel=(o=>function(){const h=o();return h.replace(/(<div class="mrail"[^>]*>)/,'<div class="spread mrailhead"><span></span><button class="btn sm ghost allm" data-act="m-sheet" data-fam="'+(h.includes('data-fam="image"')?"image":"video")+'">'+ic("grid")+L("All models","كل النماذج")+"</button></div>$1")})(uniPanel);
@@ -9230,9 +9230,9 @@ drwGenerate=async function(){drwInit();const D=S.drw;if(drwEmpty()){toast(L("Dra
 /* live sketch: “Make it real” sends the sketch to the picture model and shows the results right there */
 window.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="sk-hd"]');if(!a)return;e.stopImmediatePropagation();e.preventDefault();const K=S.sketch;
   if(!SK.strokes.length){toast(L("Draw something first.","ارسم شيئاً أولاً."));return}const blob=await new Promise(r=>skInk(1024,true).toBlob(r,"image/png"));const t=ENT_TYPES.find(x=>x[0]===K.target)||ENT_TYPES[0],m=bestImg72();
-  const st=K.style==="anim3d"?"anim3d":K.style;const desc=K.prompt||t[1];
+  const st=K.style==="anim3d"?"anim3d":K.style;const sig79=lskSig(),seen79=K.prompt?"":await skSee79();const desc=K.prompt||seen79||t[1];
   const j=withRef72("skImg",new File([blob],"sketch.png",{type:"image/png"}),()=>addJob({kind:"image",prompt:sketchPrompt72(desc,st,K.strength),title:(K.prompt||L("Sketch","رسمة")).slice(0,40),model:m,aspect:"1:1",cost:(IMG_MODELS[m]||{cr:3}).cr,secs:6,art:"scene",meta:{sketch:true,skLive:true,strength:K.strength/100}}));
-  if(j){toast(L("Making it real — the picture appears under the live preview","جارٍ تحويلها لصورة حقيقية — تظهر تحت المعاينة الحية"),{type:"ok"});renderAll()}},true);
+  if(j){SKAI.job=j.id;SKAI.sig=sig79;SKAI.state="wait";SKAI.url="";toast(L("Making it real — the picture appears in the output panel","جارٍ تحويلها لصورة حقيقية — تظهر في لوحة النتيجة"),{type:"ok"});renderAll()}},true);
 VIEWS.sketch=(o=>()=>{let h=o();if(S.sketch.target==="floorplan")return h;const m=bestImg72();
   h=h.replace(/(data-act="sk-hd"[^>]*>[\s\S]*?<span class="lb">)[^<]*(<\/span>)/,"$1"+L("Make it real · ","اجعلها حقيقية · ")+(IMG_MODELS[m]||{cr:3}).cr+" cr$2");
   const res=S.jobs.filter(j=>j.meta&&j.meta.skLive).slice(-6).reverse();
@@ -9657,8 +9657,8 @@ const X3OPS={
   async views({blob,name,prompt,category}){const p=await a3Start(category==="person"?"body":"object",blob,name,prompt);if(!p)throw new Error(L("Not enough credits.","الرصيد غير كافٍ."));renderShell();return{id:"a3:"+p.id,credits:S.credits}},
   async pano({prompt,biome,tod,blob}){const f=blob?new File([blob],"place.jpg",{type:blob.type||"image/jpeg"}):null;const j=withRef72("iRef",f,()=>addJob({kind:"image",model:bestImg72(),prompt:"A seamless 360-degree equirectangular panorama"+(f?" that continues the place in the reference photo in every direction":"")+". The place: "+prompt+(tod&&tod!=="day"?", at "+tod:"")+". Eye-level camera in the middle of the space, straight horizon across the middle, photorealistic, consistent light, no text, no borders; the left and right edges must join seamlessly.",title:L("360° sky · ","سماء 360° · ")+String(prompt).slice(0,30),aspect:"21:9",cost:x3Cost().pano,secs:12,art:"scene",meta:{world360:true}}));if(!j)throw new Error(L("Not enough credits.","الرصيد غير كافٍ."));renderShell();return{id:j.id,credits:S.credits}},
   async skybox({prompt}){const j=addJob({kind:"world",prompt,title:L("World · ","عالم · ")+String(prompt).slice(0,30),cost:40,secs:60,art:"scene",aspect:"21:9",meta:{engine:"skybox"}});if(!j)throw new Error(L("Not enough credits.","الرصيد غير كافٍ."));renderShell();return{id:j.id,credits:S.credits}},
-  async vision({image,label}){if(!x3Server())throw new Error(L("Sign in on the live site to use AI vision.","سجّل الدخول في الموقع لاستخدام رؤية الذكاء."));const r=await API.req("/v1/vision/locate",{json:{image,label}});S.credits=Math.max(0,(S.credits||0)-1);renderShell();return r},
-  async review3d({image,subject,category}){if(!x3Server())throw new Error(L("Sign in on the live site to use the AI review.","سجّل الدخول في الموقع لاستخدام مراجعة الذكاء."));const r=await API.req("/v1/vision/review",{json:{image,subject,category}});S.credits=Math.max(0,(S.credits||0)-1);renderShell();return Object.assign({credits:S.credits},r)},
+  async vision({image,label}){if(!x3Server())throw new Error(L("Sign in on the live site to use AI vision.","سجّل الدخول في الموقع لاستخدام رؤية الذكاء."));const r=await API.req("/v1/vision/locate",{json:{image,label}});S.credits=crFree()?S.credits:Math.max(0,(S.credits||0)-1);renderShell();return r},
+  async review3d({image,subject,category}){if(!x3Server())throw new Error(L("Sign in on the live site to use the AI review.","سجّل الدخول في الموقع لاستخدام مراجعة الذكاء."));const r=await API.req("/v1/vision/review",{json:{image,subject,category}});S.credits=crFree()?S.credits:Math.max(0,(S.credits||0)-1);renderShell();return Object.assign({credits:S.credits},r)},
   async jobs({ids}){return ids.map(id=>{if(String(id).startsWith("a3:")){const p=(S.a3||[]).find(x=>x.id===id.slice(3));if(!p)return{id,gone:true,status:"failed",error:"gone"};if(p.status==="done"&&p.res){const j=S.jobs.find(x=>x.id===p.res);return{id,status:j&&mediaUrl(j)?"complete":"running",progress:1,url:j?mediaUrl(j):null}}
       const vs=Object.values(p.jobs||{}).map(k=>S.jobs.find(x=>x.id===k)).filter(Boolean);return{id,status:p.status==="failed"?"failed":"running",progress:vs.length?vs.reduce((a,j)=>a+(j.status==="complete"?1:(j.progress||0)),0)/3:0,error:p.error||null}}
     const j=S.jobs.find(x=>x.id===id);if(!j)return{id,gone:true,status:"failed",error:"gone"};return{id,status:j.status,progress:j.progress||0,error:j.error||null,url:j.status==="complete"?mediaUrl(j):null}})},
@@ -9766,7 +9766,7 @@ edExport=(o=>async function(){if(recording)return o();const coURL=URL.createObje
       if(want2&&vv)checks.push({id:"file",lvl:vv.codec===want2&&(want==="gif"||vv.width===exp.w&&vv.height===exp.h)?"ok":"bad",en:"Delivered file: "+r.deliv,ar:"الملف المسلَّم: "+r.deliv,fix:vv.codec===want2?null:"reexport"});
       if(want==="wav")checks.push({id:"file",lvl:pr.audio&&pr.audio.codec.startsWith("pcm")?"ok":"bad",en:"Delivered file: "+r.deliv,ar:"الملف المسلَّم: "+r.deliv})}catch(e){}}
     r.sheet=await vrContact(checks.frames);
-    if(S.ed.rcheckAI&&API.mode==="server"&&r.sheet){try{r.ai=await API.req("/v1/vision/review",{json:{image:r.sheet,mode:"video",subject:"video",brief:(S.ed.title||S.ed.brief||"").slice(0,300)}});S.credits=Math.max(0,(S.credits||0)-1);
+    if(S.ed.rcheckAI&&API.mode==="server"&&r.sheet){try{r.ai=await API.req("/v1/vision/review",{json:{image:r.sheet,mode:"video",subject:"video",brief:(S.ed.title||S.ed.brief||"").slice(0,300)}});S.credits=crFree()?S.credits:Math.max(0,(S.credits||0)-1);
       (r.ai.issues||[]).forEach(i=>checks.push({id:"ai_"+i.code,lvl:"bad",en:"AI: "+(i.note||i.code)+(i.view?" ("+i.view+")":""),ar:"الذكاء: "+(i.note||i.code),fix:i.code==="text_cut_off"?"fitText":i.code==="black_frames"?"trimBlack":null}))}catch(e){r.ai={issues:[],summary:L("AI review unavailable: ","مراجعة الذكاء غير متاحة: ")+e.message}}}
     S.ed.rc=r;const bad=checks.filter(c=>c.lvl!=="ok");if(bad.length)vrSheet(r);else toast(L("Render check passed — ","نجح فحص النتيجة — ")+checks.length+L(" checks"," فحوص"),{type:"ok"})}
   catch(e){toast(L("Couldn't check the render: ","تعذّر فحص النتيجة: ")+e.message,{type:"warn"})}})(edExport);
@@ -10560,6 +10560,364 @@ VIEWS.account=(o=>function(){const h=o();setTimeout(async()=>{const el=$("#devus
 document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act^="dev-"]');if(!a)return;
   if(a.dataset.act==="dev-q"){S.devQ=a.dataset.v;persist();renderView();toast(L("Quality updated for this device.","حُدّثت الجودة لهذا الجهاز."),{type:"ok"});return}
   if(a.dataset.act==="dev-clear"){try{await caches.delete(DRIP_CACHE)}catch(err){}toast(L("Cleared — media will be downloaded again when you open it.","تم المسح — ستُحمَّل الملفات من جديد عند فتحها."),{type:"ok"});renderView()}});
+/* ================= v79: FREE PERIOD (nothing charged, prices & icons stay) · NOOI STAR LOADERS EVERYWHERE · FAILED JOBS SAY WHY + TRY AGAIN · AVATAR NEEDS ITS SCRIPT · WHOLE-WORD LABELS · REAL CHARACTER LOOKS · THE SKETCH REALLY TURNS INTO WHAT YOU DREW · AI 3D WORLD (phone-light, cloud render) ================= */
+// ---- free period: the server decides (Admin → Features → "Free period"); cost badges and the credit icon stay as they are
+function crFree(){return API.mode==="server"&&!!(API.cfg&&API.cfg.freeCredits)}
+FEATURES.push(["freePeriod","Free period — no credits charged","فترة مجانية — بلا خصم رصيد","coin"]);
+// ---- loaders: the nooi stars, always moving (an animated SVG inside the image, plus a gentle pulse)
+(function(){const g='<defs><linearGradient id="g" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#6EC046"/><stop offset=".55" stop-color="#9CD245"/><stop offset="1" stop-color="#D2E33C"/></linearGradient></defs>';
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'+g+STAR_D.map((d,i)=>'<path d="'+d+'" fill="url(#g)"><animate attributeName="opacity" values=".3;1;.3" dur="1.5s" begin="'+(i*.25).toFixed(2)+'s" repeatCount="indefinite"/></path>').join("")+"</svg>";
+  document.documentElement.style.setProperty("--star79",'url("data:image/svg+xml,'+encodeURIComponent(svg)+'")');
+  const S7=`border:0!important;border-radius:0!important;background:var(--star79) center/contain no-repeat!important;animation:star79 1.6s ease-in-out infinite!important`;
+  const st=document.createElement("style");st.textContent=`
+@keyframes star79{0%,100%{transform:scale(.8) rotate(0deg)}50%{transform:scale(1.12) rotate(22deg)}}
+.star79{display:inline-block;width:22px;height:22px;flex:none;vertical-align:middle;background:var(--star79) center/contain no-repeat;animation:star79 1.6s ease-in-out infinite}
+.pipe .now::before{${S7};width:14px;height:14px}
+.btn.busy::after{${S7};width:20px!important;height:20px!important}
+.mchip.live::before{${S7};width:12px;height:12px}
+.mcard.live::after{${S7};width:13px;height:13px}
+.wview.loading::after{${S7};width:48px;height:48px}
+.hfspin{${S7};width:30px!important;height:30px!important}
+.thumb .veil:has([data-pct])>div::before{content:"";display:block;width:24px;height:24px;margin:0 auto 6px;background:var(--star79) center/contain no-repeat;animation:star79 1.6s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.nstars.load .ns1,.nstars.load .ns2,.nstars.load .ns3{animation:nsTw 3.2s ease-in-out infinite!important}}
+/* the caption on the preview: dark glass, always readable */
+.stage .cap{display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;gap:0;border:0!important;border-radius:10px!important;padding:6px 10px!important;background:rgba(8,10,9,.6)!important;color:#fff!important;font-weight:500!important;font-size:14.5px!important;line-height:1.35!important;font-family:inherit!important;font-style:normal!important;text-shadow:none!important;max-width:calc(100% - 32px)!important;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+/* a failed job says why and offers to try again */
+.pfail79{display:grid;gap:6px;margin:0;padding:12px 14px;border:1px solid color-mix(in srgb,#e5484d 45%,var(--line));border-radius:12px;background:color-mix(in srgb,#e5484d 8%,var(--panel));color:var(--text);font-size:13px}
+.pfail79 b{display:flex;align-items:center;gap:8px;font-weight:600}.pfail79 b svg{width:16px;height:16px;color:#e5484d;flex:none}
+.pfail79 .m{color:var(--mute)}.pfail79 small{color:var(--dim);font-family:var(--mono);font-size:11px;overflow-wrap:anywhere}
+.thumb .veil.fail79{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(22,8,8,.66);font-family:inherit;font-size:12px;padding:6px}
+.thumb .veil.fail79 svg{width:18px;height:18px;color:#ff8a80}
+.rt79{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(255,255,255,.45);border-radius:999px;padding:4px 10px;font-size:11.5px;cursor:pointer;color:#fff;background:rgba(255,255,255,.08)}.rt79 svg{width:13px!important;height:13px!important;color:#fff!important}
+/* labels never break inside a word: the font shrinks to fit the longest word (see fitLabels79) */
+.tile .lb,.mcard .mtx b,.mcard .mtx span,.ugcslot .lb{overflow-wrap:normal!important;word-break:normal!important;hyphens:manual!important}
+.tile .lb.lbw79{margin-inline:-4px;max-width:calc(100% + 8px)}
+.tile .lb.lbany79,.mcard .mtx .lbany79,.ugcslot .lb.lbany79{overflow-wrap:anywhere!important;word-break:break-word!important}
+/* the sketch: what the AI sees and is drawing */
+.skai79{position:absolute;inset-inline:10px;bottom:10px;display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:12px;background:rgba(8,10,9,.66);color:#fff;font-size:12.5px;line-height:1.3;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);pointer-events:none}
+.skai79[hidden]{display:none}.skai79 .star79{width:18px;height:18px}.skai79.ok{inset-inline-end:auto}.skai79.bad{background:rgba(60,12,12,.75)}
+/* AI 3D world */
+.w3stage{position:relative;border-radius:14px;overflow:hidden;background:#0d1012;aspect-ratio:16/10;touch-action:none}
+.w3stage canvas{display:block;width:100%;height:100%}
+.w3stage .w3msg{position:absolute;inset:0;display:grid;place-items:center;align-content:center;gap:10px;color:#fff;text-align:center;padding:20px;font-size:13.5px;background:radial-gradient(circle at 50% 40%,rgba(156,210,69,.12),rgba(0,0,0,.55))}
+.w3stage .w3msg .star79{width:40px;height:40px;margin:0 auto}
+.w3stage .w3tag{position:absolute;top:10px;inset-inline-start:10px;max-width:calc(100% - 20px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:rgba(0,0,0,.5);color:#fff;border-radius:8px;padding:3px 9px;font-size:11.5px;font-weight:500}
+@media (max-width:980px){.w3two:not(.has)>.preview-col{order:2}.w3two.has>.preview-col{order:-1}}
+.w3ideas{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.w3res{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
+.w3res figure{margin:0}.w3res figcaption{font-size:11.5px;color:var(--mute);margin-top:4px}
+`;document.head.appendChild(st)})();
+// ---- a failed job on the preview: the reason (the admin also sees the provider detail) and "Try again"
+function failMsg79(j){return (j.errorType&&ERR_MSG[j.errorType])||j.error||ERR_MSG.provider}
+pipeHTML=(o=>function(ref){const it=ref&&objFor(ref);if(!it||it.status!=="failed"||!/^j:/.test(ref))return o(ref);
+  return'<p class="pfail79" role="alert"><b>'+ic("warn")+esc(L("This one failed","فشل هذا الطلب"))+(crFree()?" · "+esc(L("nothing was charged","لم يُخصم شيء")):"")+'</b><span class="m">'+esc(failMsg79(it))+"</span>"+(it.detail?'<small dir="ltr">'+esc(String(it.detail).replace(/<[^>]*>/g," ").slice(0,220))+"</small>":"")+
+    '<span class="row"><button class="btn sm primary" data-act="job-retry" data-id="'+it.id+'">'+ic("refresh")+L("Try again","حاول مجدداً")+"</button></span></p>"})(pipeHTML);
+// every failed picture / clip thumbnail says so and can be made again
+thumb=(o=>function(ref,opt){let h=o(ref,opt);const it=/^j:/.test(ref||"")&&objFor(ref);if(it&&it.status==="failed"&&/<\/div>$/.test(h))h=h.slice(0,-6)+'<div class="veil fail79">'+ic("warn")+"<span>"+esc(L("Failed","فشل"))+'</span><span class="rt79" role="button" tabindex="0" data-act="job-retry" data-id="'+it.id+'" title="'+esc(failMsg79(it))+'">'+ic("refresh")+esc(L("Try again","حاول مجدداً"))+"</span></div></div>";return h})(thumb);
+function retry79(id){const j=S.jobs.find(x=>x.id===id);if(!j)return;
+  const n=addJob({kind:j.kind,prompt:j.prompt,title:j.title,model:j.model,dur:j.dur,aspect:j.aspect,cost:j.cost,secs:j.secs,art:j.art,pal:j.pal,batch:j.batch,opt:j.opt,meta:j.meta?Object.assign({},j.meta,{retryOf:j.id}):undefined});if(!n)return;
+  const i=S.jobs.indexOf(j);if(i>=0)S.jobs.splice(i,1);if(S.lastVideo===j.id)S.lastVideo=n.id;if(S.ugc79&&S.ugc79.last===j.id)S.ugc79.last=n.id;if(S.img&&S.img.sel===j.id)S.img.sel=n.id;if(SKAI.job===j.id){SKAI.job=n.id;SKAI.state="wait"}
+  persist();renderAll();toast(L("Trying again…","نحاول مجدداً…"),{type:"info"})}
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="job-retry"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();retry79(a.dataset.id)},true);
+window.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target&&e.target.dataset&&e.target.dataset.act==="job-retry"){e.preventDefault();retry79(e.target.dataset.id)}},true);
+// ---- the avatar speaks the typed words: the "bring this picture to life" motion prompt is not a script
+const ANIM79=["Bring this picture to life: gentle camera move, natural motion","حرّك هذه الصورة: حركة كاميرا هادئة وحركة طبيعية"];
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="hf-tab"][data-v="avatar"]');if(!a)return;const q=$("#hfq");if(ANIM79.includes(((q&&q.value)||S.hf.prompt||"").trim())){if(q)q.value="";S.hf.prompt=""}},true);
+hfSend=(o=>async function(){const H=S.hf,q=$("#hfq");if(H.tab==="avatar"&&ANIM79.includes(((q&&q.value)||H.prompt||"").trim())){if(q)q.value="";H.prompt="";
+  if(!M.hfAud){toast(L("Type what they should say — the avatar speaks your words.","اكتب ما يجب أن يقوله — الأفاتار ينطق كلماتك."),{type:"warn"});if(q)q.focus();return}}return o.apply(this,arguments)})(hfSend);
+// ---- labels: whole words only — shrink the text until its longest word fits, in every language
+const LB79=".tile .lb,.mcard .mtx b,.mcard .mtx span,.ugcslot .lb";
+function fitLabels79(root){(root||document).querySelectorAll(LB79).forEach(el=>{if(!el.offsetParent)return;el.style.fontSize="";el.style.letterSpacing="";el.classList.remove("lbw79","lbany79");
+  if(el.scrollWidth<=el.clientWidth+1)return;el.classList.add("lbw79");if(el.scrollWidth>el.clientWidth+1)el.style.letterSpacing="-.02em";
+  let fs=parseFloat(getComputedStyle(el).fontSize)||11,n=0;while(el.scrollWidth>el.clientWidth+1&&fs>8.5&&n++<10){fs-=.5;el.style.fontSize=fs+"px"}el.classList.toggle("lbany79",el.scrollWidth>el.clientWidth+1)})}
+renderView=(o=>function(){const r=o.apply(this,arguments);requestAnimationFrame(()=>fitLabels79($("#main")));return r})(renderView);
+addEventListener("resize",()=>{clearTimeout(fitLabels79.t);fitLabels79.t=setTimeout(()=>fitLabels79($("#main")),150)});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>fitLabels79($("#main")));
+// words that change after the page is drawn (live interface translations) are fitted again in the next frame
+(function(){let q=false;const mo=new MutationObserver(ms=>{if(q)return;for(const m of ms){const t=m.target.nodeType===3?m.target.parentElement:m.target;if(t&&t.closest&&t.closest(LB79)){q=true;requestAnimationFrame(()=>{q=false;fitLabels79($("#main"))});return}}});
+  mo.observe(document.body,{subtree:true,characterData:true,childList:true})})();
+if(document.fonts&&document.fonts.addEventListener)document.fonts.addEventListener("loadingdone",()=>requestAnimationFrame(()=>fitLabels79($("#main"))));
+// ---- character looks: the picture engine gets the whole character (not just its name), real looks replace the drawn previews
+addJob=(o=>function(j){if(j&&(j.kind==="look"||j.kind==="sheet")&&j.meta&&j.meta.char&&!j.meta.lp79){const c=S.chars.find(x=>x.id===j.meta.char);if(c){
+    const keep=/same person as the reference photo/.test(j.prompt||"")?" The same person as the reference photo: keep the exact face, hair and identity.":"",d=String(charPrompt(c,"en")||c.name).replace(/\s+/g," ").trim().replace(/\.$/,"");
+    j.prompt=(j.kind==="look"?"Portrait of "+d+". Waist-up, facing the camera, natural expression, plain soft studio background, sharp focus, the same identity in every picture.":"Character reference sheet of "+d+". Front, side and back views plus four facial expressions on a plain white background, the same design and colours in every view.")+keep;
+    j.meta=Object.assign({},j.meta,{lp79:1})}}return o(j)})(addJob);
+// the first real look that finishes becomes the character's look (once — the client can pick any other)
+setInterval(()=>{let ch=false;for(const c of S.chars||[]){if(c.autoLook79)continue;const sel=c.lookSeed;if(sel&&!(c.looks||[]).includes(sel))continue;
+  const j=S.jobs.find(x=>x.kind==="look"&&x.meta&&x.meta.char===c.id&&x.status==="complete"&&mediaUrl(x));if(j){c.lookSeed=j.seed;c.autoLook79=1;ch=true}}
+  if(ch){persist();if(S.view==="chars")renderView()}},1500);
+VIEWS.chars=(o=>()=>{let h=o();const c=S.chars[S.charSel];if(!c)return h;const real=c.lookSeed&&!(c.looks||[]).includes(c.lookSeed);
+  if(real)h=h.replace(/<div class="thumb [^"]*"[^>]*><canvas class="frame" data-ref="look:[^"]*"><\/canvas><\/div>/g,"");return h})(VIEWS.chars);
+// ---- the sketch: the AI looks at what was drawn (a car and a snake…), makes the real picture and shows it in the output panel
+const SKAI={job:null,sig:"",url:"",img:null,state:"",seen:{},label:""};
+async function skSee79(src){if(API.mode!=="server")return"";const sig=src?"drw":lskSig();if(!src&&!SK.strokes.length)return"";if(!src&&SKAI.seen[sig]!=null)return SKAI.seen[sig];
+  try{const image=src||skInk(512,true).toDataURL("image/jpeg",.85);if(!src){SKAI.state="see";skAiUI()}
+    const r=await API.req("/v1/sketch/see",{json:{image,lang:S.lang}});const s=(r&&r.subject)||"";if(!src){SKAI.seen={[sig]:s};SKAI.label=(r&&r.label)||s}return s}
+  catch(e){return""}finally{if(!src&&SKAI.state==="see"){SKAI.state=SKAI.job?"wait":"";skAiUI()}}}
+function skAiUI(){const el=$("#skai79");if(!el)return;const st=SKAI.state,lab=SKAI.label||S.sketch.prompt||"";el.className="skai79"+(st==="done"?" ok":st==="fail"?" bad":"");
+  if(!st){el.hidden=true;return}el.hidden=false;
+  el.innerHTML=st==="see"?'<i class="star79"></i><span>'+esc(L("Looking at what you drew…","يقرأ ما رسمته…"))+"</span>":
+    st==="wait"?'<i class="star79"></i><span>'+esc(L("The AI is drawing it for real","الذكاء يرسمها حقيقية"))+(lab?": "+esc(lab):"")+"…</span>":
+    st==="done"?"<span>✦ "+esc(L("AI picture","صورة الذكاء"))+(lab?" · "+esc(lab):"")+"</span>":"<span>⚠ "+esc(L("The picture failed — draw a little more, or tap Make it real","فشلت الصورة — ارسم قليلاً بعد، أو اضغط «اجعلها حقيقية»"))+"</span>"}
+lskMakeReal=async function(auto){const K=S.sketch;if(!SK.strokes.length)return null;const m0=auto?lskPauseModel():bestImg72(),c0=(IMG_MODELS[m0]||{cr:3}).cr;
+  if(auto&&!crFree()&&typeof S.credits==="number"&&c0>S.credits){lskStopAI(L("Not enough credits for the next picture — “When I pause” is off.","الرصيد لا يكفي للصورة التالية — توقف «عند التوقف»."));return null}LSK.pauseBusy=true;
+  try{const sig=lskSig(),seen=K.prompt?"":await skSee79();if(lskSig()!==sig)return null;            // still drawing — the next pause makes it
+    const blob=await new Promise(r=>lskInput(1024).toBlob(r,"image/png")),t=ENT_TYPES.find(x=>x[0]===K.target)||ENT_TYPES[0];
+    const j=withRef72("skImg",new File([blob],"sketch.png",{type:"image/png"}),()=>addJob({kind:"image",prompt:sketchPrompt72(K.prompt||seen||t[1],K.style,K.strength),title:(K.prompt||SKAI.label||seen||L("Sketch","رسمة")).slice(0,40),model:m0,aspect:"1:1",cost:c0,secs:6,art:"scene",meta:{sketch:true,skLive:true,auto:!!auto,strength:K.strength/100,seen:seen||undefined}}));
+    if(j){SKAI.job=j.id;SKAI.sig=sig;SKAI.state="wait";SKAI.url="";LSK.spent+=c0;lskMeter();skAiUI();if(!auto&&S.view==="sketch")renderView()}return j}finally{LSK.pauseBusy=false}};
+skTick=(o=>async function(now){const out=$("#skout");if(S.view!=="sketch"||S.sketch.target==="floorplan"||!out||!SKAI.job||lskMode()==="live")return o(now);
+  const j=S.jobs.find(x=>x.id===SKAI.job),same=lskSig()===SKAI.sig;
+  if(!j||j.status==="failed"){if(j&&SKAI.state!=="fail"){SKAI.state="fail";skAiUI()}return o(now)}
+  if(!same){if(SKAI.state==="done"||SKAI.state==="fail"){SKAI.state="";out.dataset.ai79="";SK.dirty=true;skAiUI()}return o(now)}
+  const u=j.status==="complete"&&mediaUrl(j);if(!u)return o(now);
+  if(SKAI.url!==u){SKAI.url=u;SKAI.img=null;const im=new Image();try{if(new URL(u,location.href).origin===location.origin)im.crossOrigin="anonymous"}catch(e){}im.onload=()=>{if(SKAI.url===u)SKAI.img=im};im.src=u}
+  if(!SKAI.img)return o(now);
+  if(out.dataset.ai79!==u){const r=out.getBoundingClientRect(),W=Math.min(1024,Math.round(r.width*Math.min(2,devicePixelRatio||1)))||512;if(out.width!==W){out.width=W;out.height=W}
+    out.getContext("2d").drawImage(SKAI.img,0,0,out.width,out.height);out.dataset.ai79=u;SKAI.state="done";skAiUI()}})(skTick);
+VIEWS.sketch=(o=>()=>{let h=o();if(S.sketch.target==="floorplan")return h;h=h.replace(/(<div class="skout[^"]*">)/,'$1<div class="skai79" id="skai79" hidden aria-live="polite"></div>');setTimeout(skAiUI,0);return h})(VIEWS.sketch);
+// on the live site the sketch turns into a real picture by default (the free preview is one tap away)
+if(S.sketch&&!S.sketch.v79){S.sketch.v79=1;if(!S.sketch.ai||S.sketch.ai==="off")S.sketch.ai="pause"}
+// Draw & create: nothing typed → the AI says what the drawing is (and writes it in the box, so the client can correct it)
+drwGenerate=(o=>async function(){const D=S.drw;try{drwInit();if(D&&!String(D.scene||"").trim()&&API.mode==="server"&&!drwEmpty()){const im=await shrinkImage(URL.createObjectURL(await drwBlob()),640);
+  const s=im?await skSee79(im):"";if(s){D.scene=s;persist();toast(L("The AI sees: ","يرى الذكاء: ")+s,{type:"info"})}}}catch(e){}return o.apply(this,arguments)})(drwGenerate);
+// ---- AI 3D world: describe a place → the AI designs it in a small scene language → three.js builds it from simple shapes at
+// phone quality and only draws when the view changes → "Render" sends one small snapshot to the cloud picture / video engines
+S.w3=Object.assign({prompt:"",scene:null,move:"orbit",busy:false},S.w3||{});
+const W3={T:null,r:null,scene:null,cam:null,root:null,cv:null,az:.6,el:.32,dist:18,tgt:[0,1,0],dirty:true,play:0,fx:null,raf:0,err:""};
+const W3_IDEAS=[["Desert oasis","واحة صحراوية","A desert oasis at sunset with palm trees, a small lake and a red sports car","واحة في الصحراء وقت الغروب بنخيل وبحيرة صغيرة وسيارة رياضية حمراء"],["Snowy cabin","كوخ في الثلج","A snowy pine forest at night with a glowing wooden cabin","غابة صنوبر مثلجة ليلاً وكوخ خشبي مضيء"],["Tropical beach","شاطئ استوائي","A tropical beach with a boat, palm trees and clear water","شاطئ استوائي بقارب ونخيل وماء صافٍ"],["Neon city","مدينة نيون","A futuristic city square at night with neon towers and people walking","ساحة مدينة مستقبلية ليلاً بأبراج نيون وأشخاص يمشون"],["Mountain village","قرية جبلية","A green valley with a small village, a road and mountains","وادٍ أخضر بقرية صغيرة وطريق وجبال"],["Crystal cave","كهف الكريستال","A crystal cave with glowing crystals and a dark pool","كهف كريستال بكريستالات مضيئة وبركة داكنة"]];
+const W3_MOVES=[["orbit","Orbit","دوران"],["dolly","Push in","اقتراب"],["fly","Fly over","طيران"],["still","Still","ثابت"]];
+const w3PhotoModel=()=>bestImg72(),w3VidModel=()=>MODELS[S.draft.model]?S.draft.model:Object.keys(MODELS).find(k=>MODELS[k]&&!MODELS[k].off)||"wan22";
+const w3Costs=()=>({photo:(IMG_MODELS[w3PhotoModel()]||{cr:5}).cr,video:vcost(w3VidModel(),5)});
+NAVS.forEach(g=>{const i=g[1].findIndex(x=>x[0]==="studio3d");if(i>=0&&!g[1].some(x=>x[0]==="w3ai"))g[1].splice(i,0,["w3ai","cube","AI 3D world","عالم 3D بالذكاء",1])});ALLNAV.length=0;NAVS.flatMap(g=>g[1]).forEach(x=>ALLNAV.push(x));
+TOOLDESC.w3ai=["Describe a place — the AI builds it in 3D in seconds, light enough for any phone, and renders it as a real photo or video in the cloud.","صف مكاناً — يبنيه الذكاء ثلاثي الأبعاد في ثوانٍ، خفيفاً على أي هاتف، ويصنع منه صورة أو فيديو حقيقياً في السحابة."];FEATURE_OF_VIEW.w3ai="studio3d";
+VIEWS.w3ai=()=>{const D=S.w3,c=w3Costs(),res=S.jobs.filter(j=>j.meta&&j.meta.w3).slice(-8).reverse();
+  return'<div class="view"><h1>'+L("AI 3D world","عالم 3D بالذكاء")+'</h1><p class="lede">'+L("Describe a place in any language. The AI designs it in 3D in seconds — light enough for any phone. Then render it as a real photo or video in the cloud: your device does no heavy work.","صف مكاناً بأي لغة. يصمّمه الذكاء ثلاثي الأبعاد في ثوانٍ — خفيفاً على أي هاتف. ثم اصنع منه صورة أو فيديو حقيقياً في السحابة: جهازك لا يقوم بأي عمل ثقيل.")+'</p><div class="two w3two'+(D.scene?" has":"")+'"><div class="panel pad">'+
+    '<label class="lbl" for="w3q">'+L("Your world","عالمك")+'</label><textarea id="w3q" data-bind="w3.prompt" dir="auto" placeholder="'+esc(L("A desert oasis at sunset with palm trees and a red car…","واحة صحراوية وقت الغروب بنخيل وسيارة حمراء…"))+'">'+esc(D.prompt)+"</textarea>"+
+    '<div class="w3ideas">'+W3_IDEAS.map((x,i)=>'<button class="chip" data-act="w3-idea" data-v="'+i+'" title="'+esc(L(x[2],x[3]))+'">'+esc(L(x[0],x[1]))+"</button>").join("")+"</div>"+
+    '<div style="margin-top:14px"><button class="btn primary big'+(D.busy?" busy":"")+'" data-act="w3-make"'+(D.busy?" disabled":"")+">"+ic("wand")+L("Design it in 3D","صمّمه ثلاثي الأبعاد")+'<span class="cost">1 cr</span></button></div>'+
+    (D.scene?'<span class="lbl">'+L("Camera move","حركة الكاميرا")+'</span><div class="seg" role="radiogroup">'+W3_MOVES.map(m=>'<button role="radio" data-act="w3-move" data-v="'+m[0]+'" aria-checked="'+(D.move===m[0])+'" aria-pressed="'+(D.move===m[0])+'">'+L(m[1],m[2])+"</button>").join("")+"</div>"+
+      '<span class="lbl">'+L("Render in the cloud","اصنعه في السحابة")+'</span><div class="row"><button class="btn" data-act="w3-photo">'+ic("image")+L("Real photo","صورة حقيقية")+'<span class="cost">'+c.photo+' cr</span></button><button class="btn" data-act="w3-video">'+ic("video")+L("Real video","فيديو حقيقي")+'<span class="cost">'+c.video+" cr</span></button></div>"+
+      '<p class="small mute" style="margin:8px 0 0">'+L("Only one small picture of your view is sent — the engines in the cloud do the real render.","تُرسل صورة صغيرة واحدة من منظورك فقط — المحركات في السحابة تقوم بالتصيير الحقيقي.")+"</p>":"")+
+    '</div><div class="preview-col"><div class="panel pad"><div class="w3stage" id="w3stage">'+(D.scene?'<span class="w3tag">'+esc(D.scene.label||D.scene.title||"3D")+"</span>":"")+'<canvas id="w3cv" aria-label="'+esc(L("3D view — drag to look around","عرض ثلاثي الأبعاد — اسحب للتجول"))+'"></canvas>'+
+    (D.busy?'<div class="w3msg"><i class="star79"></i><span>'+L("The AI is designing your world…","الذكاء يصمّم عالمك…")+"</span></div>":!D.scene?'<div class="w3msg"><i class="star79"></i><span>'+L("Your world appears here — drag to look around, pinch to zoom.","يظهر عالمك هنا — اسحب للتجول وقرّب بإصبعين.")+"</span></div>":W3.err?'<div class="w3msg"><span>'+esc(W3.err)+"</span></div>":"")+"</div>"+
+    (D.scene?'<div class="row" style="margin-top:10px"><button class="btn sm" data-act="w3-play">'+ic("play")+L("Play the camera move","شغّل حركة الكاميرا")+'</button><button class="btn sm ghost" data-act="w3-shot">'+ic("download")+L("Save view","احفظ المنظر")+"</button></div>":"")+"</div>"+
+    (res.length?'<div class="panel pad" style="margin-top:14px"><h2>'+L("Cloud renders","تصيير سحابي")+'</h2><div class="w3res">'+res.map(j=>'<figure><div data-open-job="'+j.id+'" role="button" tabindex="0">'+thumb("j:"+j.id,{ar:"16/9",dur:j.kind==="video"?j.dur:null})+"</div><figcaption>"+(j.kind==="video"?L("Video","فيديو"):L("Photo","صورة"))+" · "+badge(j.status)+"</figcaption></figure>").join("")+"</div></div>":"")+"</div></div></div>"};
+async function w3Three(){if(W3.T)return W3.T;let T=null;try{T=await import("/vendor/three/build/three.module.js")}catch(e){T=await import("https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js")}W3.T=T;return T}
+// local designer (no text AI connected, or it failed): reads the words for a place, a time of day and the main things in it
+function w3Local(p){const t=String(p||"").toLowerCase(),has=re=>re.test(t),o=[],sc={title:p.slice(0,60),label:p.slice(0,60),describe:p,objects:o};
+  const night=has(/night|ليل|moon|قمر/),sunset=has(/sunset|غروب|dusk/),snow=has(/snow|ثلج|winter|شتاء/),desert=has(/desert|صحراء|dune|oasis|واحة|رمال/),beach=has(/beach|شاطئ|sea|بحر|ocean|island|جزيرة/),city=has(/city|مدينة|street|شارع|tower|برج|neon|نيون/);
+  sc.sky={top:night?"#0b1430":sunset?"#3b2a6b":"#3f7fd6",horizon:night?"#22305a":sunset?"#ff9a5a":"#cfe6fa",sun:sunset?"#ffb070":"#fff3d6",sunElev:night?-8:sunset?6:45,stars:night?1:0};
+  sc.ground={kind:snow?"snow":desert?"sand":beach?"sand":city?"asphalt":"grass",color:snow?"#eef3f7":desert||beach?"#d9b77a":city?"#3a3d42":"#5f8f3e",size:80};
+  sc.fog={color:sc.sky.horizon,density:.012};sc.light={ambient:night?.35:.75,sun:night?.25:1.4};sc.camera={move:"orbit",dist:22,height:5,target:[0,1,0]};sc.fx={snow:snow?.6:0,rain:has(/rain|مطر/)?.6:0,particles:0};
+  if(desert){o.push({type:"palm",at:[-6,0,-4],size:[1,7,1],color:"#3f8f3a",color2:"#8a6a42",count:6,spread:9},{type:"water",at:[-5,0,-3],size:[9,.1,6],color:"#2b7fa8"},{type:"rock",at:[10,0,8],size:[3,2,3],color:"#a07a4e",count:5,spread:12})}
+  if(beach){o.push({type:"water",at:[0,0,-22],size:[90,.1,30],color:"#1f88b8"},{type:"palm",at:[6,0,2],size:[1,7,1],color:"#3f8f3a",color2:"#8a6a42",count:5,spread:8},{type:"boat",at:[-4,0,-14],size:[5,2,2],color:"#f2f2f2",color2:"#c84b31"})}
+  if(snow||has(/forest|غابة|pine|صنوبر/))o.push({type:"pine",at:[0,0,-8],size:[3,8,3],color:snow?"#2f5d46":"#2e6b3a",color2:"#5b3b22",count:30,spread:26});
+  if(has(/cabin|كوخ|house|بيت|منزل|village|قرية|villa|فيلا/))o.push({type:"house",at:[0,0,0],size:[7,5,7],color:"#b98b5a",color2:"#7a2e22",glow:night?.6:0,count:has(/village|قرية/)?6:1,spread:has(/village|قرية/)?16:0});
+  if(city)o.push({type:"tower",at:[0,0,-10],size:[6,26,6],color:"#2b3440",color2:"#5ef2ff",glow:has(/neon|نيون/)?.8:0,count:9,spread:24},{type:"person",at:[0,0,4],size:[.5,1.75,.3],color:"#33415c",count:8,spread:8},{type:"lamp",at:[0,0,0],size:[.3,4,.3],color:"#222",color2:"#ffe08a",glow:1,count:6,spread:14});
+  if(has(/mountain|جبل|جبال|valley|وادي|وادٍ/))o.push({type:"mountain",at:[0,0,-34],size:[30,22,30],color:"#6b7a68",color2:"#f3f6f8",count:4,spread:30});
+  if(has(/car|سيارة|vehicle/))o.push({type:"car",at:[2,0,3],size:[4.5,1.4,1.9],color:has(/red|حمراء|أحمر/)?"#c62828":has(/blue|زرقاء|أزرق/)?"#1e63c8":has(/black|سوداء|أسود/)?"#1c1c1c":"#e0e0e0",rot:30});
+  if(has(/crystal|كريستال|cave|كهف/)){sc.sky={top:"#07080c",horizon:"#141826",sun:"#9fd8ff",sunElev:-5,stars:.3};sc.ground={kind:"stone",color:"#2a2d35",size:50};sc.light={ambient:.3,sun:.2};o.push({type:"crystal",at:[0,0,0],size:[1.2,3,1.2],color:"#7fe6ff",glow:.9,count:14,spread:10},{type:"water",at:[0,0,4],size:[8,.1,5],color:"#0e2a3a"})}
+  if(has(/tree|شجر|park|حديقة|garden/)&&!has(/palm|نخيل|نخل/))o.push({type:"tree",at:[0,0,0],size:[3,6,3],color:"#3f8f3a",color2:"#6b4a2b",count:12,spread:18});
+  if(!o.length)o.push({type:"tree",at:[0,0,0],size:[3,6,3],color:"#3f8f3a",color2:"#6b4a2b",count:10,spread:16},{type:"rock",at:[0,0,0],size:[2,1.4,2],color:"#8a8f94",count:8,spread:16},{type:"house",at:[0,0,0],size:[7,5,7],color:"#d8c3a0",color2:"#8b3a2b"});
+  return sc}
+// builders: each kind is a few shared shapes (parts) → one mesh per part, or one instanced mesh per part when scattered
+function w3Parts(T,o){const P=[],G=W3.geo||(W3.geo={}),geo=(k,f)=>G[k]||(G[k]=f()),mats=W3.mat||(W3.mat={}),mat=(c,glow,extra)=>{const k=c+"|"+(glow||0)+"|"+(extra||"");if(!mats[k]){const m=new T.MeshStandardMaterial({color:c,roughness:extra==="water"?.12:.82,metalness:extra==="metal"?.55:extra==="water"?.1:0,transparent:extra==="water",opacity:extra==="water"?.86:1});if(glow){m.emissive=new T.Color(c);m.emissiveIntensity=glow*1.6}mats[k]=m}return mats[k]};
+  const M4=(x,y,z,sx,sy,sz,ry,rx)=>{const m=new T.Matrix4(),q=new T.Quaternion().setFromEuler(new T.Euler(rx||0,ry||0,0));m.compose(new T.Vector3(x,y,z),q,new T.Vector3(sx,sy,sz));return m};
+  const box=()=>geo("box",()=>new T.BoxGeometry(1,1,1)),sph=()=>geo("sph",()=>new T.SphereGeometry(.5,14,10)),cyl=()=>geo("cyl",()=>new T.CylinderGeometry(.5,.5,1,12)),cone=()=>geo("cone",()=>new T.ConeGeometry(.5,1,12)),pyr=()=>geo("pyr",()=>new T.ConeGeometry(.71,1,4)),ico=()=>geo("ico",()=>new T.IcosahedronGeometry(.5,0)),oct=()=>geo("oct",()=>new T.OctahedronGeometry(.5,0)),tor=()=>geo("tor",()=>new T.TorusGeometry(.4,.1,8,24)),half=()=>geo("half",()=>new T.SphereGeometry(.5,16,8,0,Math.PI*2,0,Math.PI/2));
+  const c=o.color,c2=o.color2||"",g=o.glow||0,add=(G,m,mx)=>P.push([G,m,mx]);
+  switch(o.type){
+  case"box":add(box(),mat(c,g),M4(0,.5,0,1,1,1));break;case"sphere":add(sph(),mat(c,g),M4(0,.5,0,1,1,1));break;case"cylinder":add(cyl(),mat(c,g),M4(0,.5,0,1,1,1));break;
+  case"cone":add(cone(),mat(c,g),M4(0,.5,0,1,1,1));break;case"pyramid":case"tent":add(pyr(),mat(c,g),M4(0,.5,0,1,1,1,Math.PI/4));break;case"torus":add(tor(),mat(c,g),M4(0,.5,0,1,1,1));break;
+  case"plane":case"road":add(box(),mat(c),M4(0,.01,0,1,.02,1));break;case"water":add(box(),mat(c,0,"water"),M4(0,.02,0,1,.03,1));break;
+  case"tree":add(cyl(),mat(c2||"#6b4a2b"),M4(0,.22,0,.12,.45,.12));add(sph(),mat(c),M4(0,.66,0,1,.7,1));break;
+  case"pine":add(cyl(),mat(c2||"#5b3b22"),M4(0,.12,0,.1,.25,.1));add(cone(),mat(c),M4(0,.42,0,1,.5,1));add(cone(),mat(c),M4(0,.68,0,.72,.42,.72));add(cone(),mat(c),M4(0,.88,0,.45,.3,.45));break;
+  case"palm":add(cyl(),mat(c2||"#8a6a42"),M4(0,.45,0,.07,.9,.07,0,.06));for(let i=0;i<7;i++){const a=i/7*Math.PI*2;add(sph(),mat(c),M4(Math.cos(a)*.42,.88,Math.sin(a)*.42,.95,.07,.26,-a,0))}add(sph(),mat(c2||"#6b4a2b"),M4(0,.9,0,.14,.1,.14));break;
+  case"bush":add(sph(),mat(c),M4(0,.4,0,1,.8,1));break;case"rock":add(ico(),mat(c),M4(0,.4,0,1,.85,1,.7,.2));break;
+  case"mountain":add(geo("mtn",()=>new T.ConeGeometry(.5,1,7)),mat(c),M4(0,.5,0,1,1,1));if(c2)add(geo("mtn",()=>new T.ConeGeometry(.5,1,7)),mat(c2),M4(0,.86,0,.3,.29,.3));break;
+  case"house":add(box(),mat(c,g*.5),M4(0,.33,0,1,.66,1));add(pyr(),mat(c2||"#7a2e22"),M4(0,.83,0,1.2,.34,1.2,Math.PI/4));add(box(),mat("#3a2a20"),M4(0,.16,.505,.2,.32,.02));add(box(),mat(g?"#ffd27a":"#9fc6e8",g),M4(.28,.42,.505,.18,.14,.02));break;
+  case"tower":add(box(),mat(c,0,"metal"),M4(0,.5,0,1,1,1));if(c2)for(let i=1;i<6;i++)add(box(),mat(c2,g||.4),M4(0,i/6,0,1.02,.012,1.02));break;
+  case"dome":add(half(),mat(c,g),M4(0,0,0,1,2,1));break;
+  case"arch":add(box(),mat(c),M4(-.4,.45,0,.2,.9,1));add(box(),mat(c),M4(.4,.45,0,.2,.9,1));add(box(),mat(c2||c),M4(0,.95,0,1,.12,1));break;
+  case"car":add(box(),mat(c,0,"metal"),M4(0,.36,0,1,.34,1));add(box(),mat(c2||"#1d2630",0,"metal"),M4(-.05,.66,0,.55,.3,.86));for(const[x,z]of[[.32,.5],[.32,-.5],[-.32,.5],[-.32,-.5]])add(cyl(),mat("#151515"),M4(x,.2,z,.36,.12,.4,0,Math.PI/2));add(box(),mat("#fff6d8",.9),M4(.5,.4,.3,.02,.06,.16));add(box(),mat("#fff6d8",.9),M4(.5,.4,-.3,.02,.06,.16));break;
+  case"person":add(cyl(),mat("#2b2f38"),M4(-.12,.24,0,.22,.48,.4));add(cyl(),mat("#2b2f38"),M4(.12,.24,0,.22,.48,.4));add(cyl(),mat(c),M4(0,.64,0,.62,.34,.75));add(sph(),mat(c2||"#d9a679"),M4(0,.9,0,.42,.18,.62));break;
+  case"animal":add(sph(),mat(c),M4(0,.55,0,1,.45,.42));add(sph(),mat(c),M4(.55,.78,0,.38,.3,.3));for(const[x,z]of[[.3,.13],[.3,-.13],[-.3,.13],[-.3,-.13]])add(cyl(),mat(c2||c),M4(x,.2,z,.1,.4,.1));break;
+  case"lamp":add(cyl(),mat(c||"#222"),M4(0,.48,0,.12,.96,.12));add(sph(),mat(c2||"#ffe08a",Math.max(.8,g)),M4(0,.98,0,.5,.1,.5));break;
+  case"cloud":for(const[x,y,s]of[[0,.5,1],[.45,.42,.75],[-.45,.42,.8],[.2,.62,.7]])add(sph(),mat(c||"#ffffff"),M4(x,y,0,s*.6,s*.5,s*.6));break;
+  case"fence":for(let i=0;i<6;i++)add(box(),mat(c),M4(-.5+i*.2,.5,0,.04,1,.04));add(box(),mat(c),M4(0,.75,0,1,.06,.03));add(box(),mat(c),M4(0,.35,0,1,.06,.03));break;
+  case"crystal":add(oct(),mat(c,g||.7),M4(0,.5,0,.6,1,.6));break;
+  case"boat":add(half(),mat(c),M4(0,.32,0,1,-.6,.45));add(cyl(),mat("#6b4a2b"),M4(0,.75,0,.04,.9,.04));add(box(),mat(c2||"#ffffff"),M4(.12,.8,0,.24,.6,.01));break;
+  default:add(box(),mat(c,g),M4(0,.5,0,1,1,1))}return P}
+function w3Rand(seed){let s=seed>>>0||1;return()=>(s=(s*1664525+1013904223)>>>0)/4294967296}
+function w3Build(sc){const T=W3.T,scene=new T.Scene(),phone=matchMedia("(pointer:coarse)").matches;W3.geo={};W3.mat={};
+  // sky: a gradient dome + a few stars at night
+  const top=new T.Color(sc.sky.top),hor=new T.Color(sc.sky.horizon);scene.background=hor.clone();scene.fog=new T.FogExp2(sc.fog.color,sc.fog.density);
+  const skyM=new T.ShaderMaterial({side:T.BackSide,depthWrite:false,fog:false,uniforms:{a:{value:top},b:{value:hor}},vertexShader:"varying vec3 v;void main(){v=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",fragmentShader:"uniform vec3 a;uniform vec3 b;varying vec3 v;void main(){float h=clamp(v.y*1.6,0.,1.);gl_FragColor=vec4(mix(b,a,pow(h,.7)),1.);}"});
+  scene.add(new T.Mesh(new T.SphereGeometry(400,24,12),skyM));
+  if(sc.sky.stars>0){const n=Math.round(500*sc.sky.stars),g=new T.BufferGeometry(),a=new Float32Array(n*3),R=w3Rand(7);for(let i=0;i<n;i++){const th=R()*Math.PI*2,ph=Math.acos(R()*.95);a[i*3]=Math.sin(ph)*Math.cos(th)*380;a[i*3+1]=Math.cos(ph)*380;a[i*3+2]=Math.sin(ph)*Math.sin(th)*380}g.setAttribute("position",new T.BufferAttribute(a,3));scene.add(new T.Points(g,new T.PointsMaterial({color:0xffffff,size:1.6,sizeAttenuation:false,fog:false})))}
+  scene.add(new T.HemisphereLight(new T.Color(sc.sky.top).lerp(new T.Color(0xffffff),.55),new T.Color(sc.ground.color).multiplyScalar(.6),sc.light.ambient));const sun=new T.DirectionalLight(sc.sky.sun,sc.light.sun),el=Math.max(4,sc.sky.sunElev)*Math.PI/180;sun.position.set(Math.cos(el)*60,Math.sin(el)*60,30);scene.add(sun);
+  const gs=sc.ground.size,ground=new T.Mesh(new T.CircleGeometry(gs*1.6,48),new T.MeshStandardMaterial({color:sc.ground.color,roughness:sc.ground.kind==="water"?.15:.95}));ground.rotation.x=-Math.PI/2;scene.add(ground);
+  let lights=0;const R=w3Rand(hashStr(JSON.stringify(sc.objects).slice(0,400)));
+  for(const o of sc.objects){const parts=w3Parts(T,o),n=Math.max(1,Math.min(40,o.count|0||1)),base=new T.Matrix4(),place=[];
+    for(let i=0;i<n;i++){let x=o.at[0],z=o.at[2],ry=(o.rot||0)*Math.PI/180,k=1;if(n>1){const a=R()*Math.PI*2,d=Math.sqrt(R())*(o.spread||8);x+=Math.cos(a)*d;z+=Math.sin(a)*d;ry=R()*Math.PI*2;k=.75+R()*.5}
+      const m=new T.Matrix4();m.compose(new T.Vector3(x,o.at[1],z),new T.Quaternion().setFromEuler(new T.Euler(0,ry,0)),new T.Vector3(o.size[0]*k,o.size[1]*k,o.size[2]*k));place.push(m)}
+    for(const[G,mat,local]of parts){if(n===1){const me=new T.Mesh(G,mat);me.applyMatrix4(local.clone().premultiply(place[0]));scene.add(me)}
+      else{const im=new T.InstancedMesh(G,mat,n);for(let i=0;i<n;i++)im.setMatrixAt(i,place[i].clone().multiply(local));im.instanceMatrix.needsUpdate=true;scene.add(im)}}
+    if(o.glow>.5&&(o.type==="lamp"||o.type==="house")&&lights<(phone?2:4)){lights++;const pl=new T.PointLight(o.color2||o.color,1.2,18);pl.position.set(o.at[0],o.at[1]+o.size[1]*.9,o.at[2]);scene.add(pl)}}
+  // weather: one points cloud that falls (only animates while the page shows it)
+  W3.fx=null;const fxn=Math.round(900*Math.max(sc.fx.rain,sc.fx.snow));if(fxn){const g=new T.BufferGeometry(),a=new Float32Array(fxn*3),Rr=w3Rand(11);for(let i=0;i<fxn;i++){a[i*3]=(Rr()-.5)*60;a[i*3+1]=Rr()*30;a[i*3+2]=(Rr()-.5)*60}g.setAttribute("position",new T.BufferAttribute(a,3));
+    const p=new T.Points(g,new T.PointsMaterial({color:sc.fx.snow?0xffffff:0xaecbe6,size:sc.fx.snow?.18:.08,transparent:true,opacity:.85}));scene.add(p);W3.fx={p,a,snow:sc.fx.snow>0}}
+  W3.scene=scene;W3.dist=sc.camera.dist;W3.tgt=sc.camera.target.slice();W3.el=Math.atan2(sc.camera.height,sc.camera.dist);W3.az=.6;W3.dirty=true}
+function w3Cam(){const c=W3.cam,t=W3.tgt,d=W3.dist,e=Math.max(.02,Math.min(1.45,W3.el));c.position.set(t[0]+Math.cos(W3.az)*Math.cos(e)*d,t[1]+Math.sin(e)*d,t[2]+Math.sin(W3.az)*Math.cos(e)*d);c.lookAt(t[0],t[1],t[2])}
+function w3Size(){const cv=W3.cv;if(!cv||!W3.r)return;const w=cv.clientWidth||640,h=cv.clientHeight||400,phone=matchMedia("(pointer:coarse)").matches;W3.r.setPixelRatio(Math.min(devicePixelRatio||1,phone?1:1.5));W3.r.setSize(w,h,false);W3.cam.aspect=w/h;W3.cam.updateProjectionMatrix();W3.dirty=true}
+function w3Loop(t){W3.raf=requestAnimationFrame(w3Loop);if(S.view!=="w3ai"||!W3.r||!W3.scene)return;
+  if(W3.play){const p=Math.min(1,(t-W3.play)/6000),mv=S.w3.move,b=W3.base;if(mv==="orbit")W3.az=b.az+p*1.2;else if(mv==="dolly")W3.dist=b.dist*(1-.45*p);else if(mv==="fly"){W3.az=b.az+p*.8;W3.el=b.el+.35*(1-p);W3.dist=b.dist*(1.25-.35*p)}if(p>=1){W3.play=0;if(mv!=="still")Object.assign(W3,b)}W3.dirty=true}
+  if(W3.fx&&!document.hidden&&t-(W3.fxT||0)>40){W3.fxT=t;const a=W3.fx.a,sp=W3.fx.snow?.05:.5;for(let i=1;i<a.length;i+=3){a[i]-=sp;if(a[i]<0)a[i]=30}W3.fx.p.geometry.attributes.position.needsUpdate=true;W3.dirty=true}
+  if(!W3.dirty)return;W3.dirty=false;w3Cam();W3.r.render(W3.scene,W3.cam)}
+async function w3Mount(){const cv=$("#w3cv");if(!cv||!S.w3.scene)return;W3.err="";
+  try{const T=await w3Three();if(!$("#w3cv"))return;const fresh=W3.cv!==cv;W3.cv=cv;
+    if(fresh){if(W3.r)W3.r.dispose();const phone=matchMedia("(pointer:coarse)").matches;W3.r=new T.WebGLRenderer({canvas:cv,antialias:!phone,powerPreference:"low-power",preserveDrawingBuffer:false});W3.r.outputEncoding=T.sRGBEncoding;W3.cam=new T.PerspectiveCamera(50,1.6,.1,900);w3Bind(cv)}
+    if(W3.built!==S.w3.scene){w3Build(S.w3.scene);W3.built=S.w3.scene}w3Size();W3.dirty=true;if(!W3.raf)W3.raf=requestAnimationFrame(w3Loop)}
+  catch(e){W3.err=L("3D can't start in this browser — you can still render the world in the cloud.","لا يمكن تشغيل 3D في هذا المتصفح — ما زال بإمكانك صنع العالم في السحابة.");const st=$("#w3stage");if(st&&!st.querySelector(".w3msg"))st.insertAdjacentHTML("beforeend",'<div class="w3msg"><span>'+esc(W3.err)+"</span></div>")}}
+function w3Bind(cv){const pts=new Map();let pinch=0;
+  cv.addEventListener("pointerdown",e=>{cv.setPointerCapture&&cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,[e.clientX,e.clientY]);W3.play=0});
+  cv.addEventListener("pointermove",e=>{if(!pts.has(e.pointerId))return;const p=pts.get(e.pointerId),dx=e.clientX-p[0],dy=e.clientY-p[1];pts.set(e.pointerId,[e.clientX,e.clientY]);
+    if(pts.size===1){W3.az+=dx*.008*(document.dir==="rtl"?-1:1);W3.el=Math.max(.02,Math.min(1.45,W3.el+dy*.006))}else if(pts.size===2){const v=[...pts.values()],d=Math.hypot(v[0][0]-v[1][0],v[0][1]-v[1][1]);if(pinch)W3.dist=Math.max(2,Math.min(160,W3.dist*pinch/d));pinch=d}W3.dirty=true});
+  const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=0};cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
+  cv.addEventListener("wheel",e=>{e.preventDefault();W3.dist=Math.max(2,Math.min(160,W3.dist*(1+Math.sign(e.deltaY)*.08)));W3.dirty=true},{passive:false})}
+renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="w3ai")requestAnimationFrame(w3Mount);return r})(renderView);
+addEventListener("resize",()=>{if(S.view==="w3ai")w3Size()});
+// one small frame of the current view (the cloud engines do the real render)
+function w3Snap(w){return new Promise(res=>{if(!W3.r||!W3.scene)return res(null);const cv=W3.cv,keep=[cv.width,cv.height],h=Math.round(w*keep[1]/keep[0]);W3.r.setPixelRatio(1);W3.r.setSize(w,h,false);W3.cam.aspect=w/h;W3.cam.updateProjectionMatrix();w3Cam();W3.r.render(W3.scene,W3.cam);
+  cv.toBlob(b=>{w3Size();res(b)},"image/jpeg",.9)})}
+async function w3Design(){const D=S.w3,p=String(D.prompt||"").trim();if(!p){toast(L("Describe your world first.","صف عالمك أولاً."));const q=$("#w3q");if(q)q.focus();return}if(D.busy)return;D.busy=true;renderView();
+  try{let sc=null;if(API.mode==="server"){try{const r=await API.req("/v1/world/design",{json:{prompt:p,lang:S.lang}});if(r&&r.ready&&r.scene)sc=r.scene;if(r&&typeof r.credits==="number")S.credits=r.credits}catch(e){toast(L("The world AI: ","ذكاء العوالم: ")+(e.message||e)+L(" — building a simple version."," — نبني نسخة مبسّطة."),{type:"warn"})}}
+    D.scene=sc||w3Local(p);D.move=D.scene.camera&&D.scene.camera.move||"orbit";W3.built=null;persist();if(API.mode==="server")syncServer()}
+  finally{D.busy=false;renderView()}}
+async function w3Render(kind){const D=S.w3;if(!D.scene)return;const b=await w3Snap(kind==="video"?1024:1280);if(!b){toast(L("The 3D view isn't ready yet.","العرض ثلاثي الأبعاد غير جاهز بعد."),{type:"warn"});return}
+  const f=new File([b],"world-view.jpg",{type:"image/jpeg"}),desc=(D.scene.describe||D.scene.title||D.prompt).slice(0,400),mv=D.move||"orbit",c=w3Costs();
+  const j=kind==="video"?withRef72("vStart",f,()=>addJob({kind:"video",prompt:desc+". Start exactly on the reference frame, then a smooth cinematic camera "+({orbit:"orbit around the scene",dolly:"push-in toward the centre",fly:"fly-over rising above the scene",still:"hold with subtle natural motion"}[mv]||"move")+". Photorealistic, real materials and light — the simple shapes become real things.",title:(D.scene.title||D.prompt).slice(0,40)+" · "+L("video","فيديو"),model:w3VidModel(),dur:5,aspect:"16:9",cost:c.video,art:"scene",meta:{w3:1,start:true}})):
+    withRef72("iRef",f,()=>addJob({kind:"image",prompt:"A photorealistic photograph of this scene: "+desc+". Use the reference picture only as the layout and camera: keep where everything is, its size and colour, and turn every simple shape into the real thing — real materials, real light and shadows, fine detail, no 3D-render look.",title:(D.scene.title||D.prompt).slice(0,40)+" · "+L("photo","صورة"),model:w3PhotoModel(),aspect:"16:9",cost:c.photo,secs:6,art:"scene",meta:{w3:1,sketch:true}}));
+  if(j){toast(kind==="video"?L("Rendering the video in the cloud…","يُصنع الفيديو في السحابة…"):L("Rendering the photo in the cloud…","تُصنع الصورة في السحابة…"),{type:"ok"});renderView()}}
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act^="w3-"]');if(!a||a.disabled)return;const A=a.dataset,D=S.w3;
+  if(A.act==="w3-idea"){const x=W3_IDEAS[+A.v];if(x){D.prompt=L(x[2],x[3]);persist();renderView()}return}
+  if(A.act==="w3-make"){const q=$("#w3q");if(q)D.prompt=q.value;w3Design();return}
+  if(A.act==="w3-move"){D.move=A.v;persist();renderView();setTimeout(()=>{if(W3.scene){W3.base={az:W3.az,el:W3.el,dist:W3.dist};W3.play=performance.now()}},120);return}
+  if(A.act==="w3-play"){if(W3.scene){W3.base={az:W3.az,el:W3.el,dist:W3.dist};W3.play=performance.now()}return}
+  if(A.act==="w3-shot"){w3Snap(1600).then(b=>b&&saveFile("nooi-3d-world.jpg",b));return}
+  if(A.act==="w3-photo"){w3Render("photo");return}if(A.act==="w3-video"){w3Render("video");return}});
+// 3D Studio (cloud mode): its "AI video / photo in the cloud" buttons send one small view here → a real video or photo job
+X3OPS.airender=async function({blob,kind,prompt}){const f=new File([blob],"3d-view.jpg",{type:blob.type||"image/jpeg"}),desc=String(prompt||"").slice(0,400)||"this 3D scene",c=w3Costs();
+  const j=kind==="video"?withRef72("vStart",f,()=>addJob({kind:"video",prompt:desc+". Start exactly on the reference frame, then a smooth cinematic camera move. Photorealistic, real materials and light — every simple 3D shape becomes the real thing.",title:L("3D scene · video","مشهد 3D · فيديو"),model:w3VidModel(),dur:5,aspect:"16:9",cost:c.video,art:"scene",meta:{w3:1,x3:1,start:true}})):
+    withRef72("iRef",f,()=>addJob({kind:"image",prompt:"A photorealistic photograph of "+desc+". Use the reference picture as the layout and camera: keep where everything is, its size and colour, and make every 3D shape real — real materials, light and fine detail, no 3D-render look.",title:L("3D scene · photo","مشهد 3D · صورة"),model:w3PhotoModel(),aspect:"16:9",cost:c.photo,secs:6,art:"scene",meta:{w3:1,x3:1,sketch:true}}));
+  if(!j)throw new Error(L("Not enough credits.","الرصيد غير كافٍ."));renderShell();return{id:j.id,credits:S.credits}};
+X3OPS.cfg=(o=>async function(){const r=await o.apply(this,arguments),c=w3Costs();r.cost=Object.assign({},r.cost,{render:c.video,photo:c.photo});return r})(X3OPS.cfg);
+// ---- Templates: each template shows its own picture (made once by staff from its own prompt), else a matching showcase
+// item, else a clean cover with its kind — never an unrelated clip
+const TPLPREV={},TPLP={loaded:false,admin:null};
+async function tplPrevLoad(){if(API.mode!=="server"||TPLP.loaded)return;TPLP.loaded=true;try{const r=await API.req("/v1/tplprev");Object.assign(TPLPREV,r.items||{});if(Object.keys(TPLPREV).length&&["explore","home","video"].includes(S.view))renderView()}catch(e){TPLP.loaded=false}}
+setTimeout(function w(){if(API.mode==="server")tplPrevLoad();else if(!w.n||w.n<20){w.n=(w.n||0)+1;setTimeout(w,500)}},700);
+const TPL_CAT={ugc:["ugc"],ad:["marketing","ecommerce"],product:["ecommerce","marketing"],food:["marketing","ecommerce"],trailer:["motion","vfx"],story:["motion","anime"],doc:["motion"],realestate:["motion"],music:["vfx","motion"],reel:["vfx","pixel"],explainer:["design"],avatar:["ugc"]};
+const TPL_IC={ugc:"char",ad:"megaphone",product:"coin",food:"spark",trailer:"video",story:"story",doc:"globe",realestate:"home",music:"voice",reel:"grid",explainer:"wand",avatar:"mic"};
+thumb=(o=>function(ref,opt){let h=o(ref,opt);const m=/^t:(.+)$/.exec(ref||"");if(!m)return h;const t=TEMPLATES.find(x=>x.id===m[1]);if(!t)return h;
+  const own=TPLPREV[t.id],pool=own?[]:(SC.items||[]).filter(x=>x.url&&(TPL_CAT[t.type]||[]).includes(x.cat)),sc=pool.length?pool[Math.abs(hashStr(t.id))%pool.length]:null,pal=PALS[t.pal]||PALS[0];
+  const media=own?'<img class="frame" style="object-fit:cover" src="'+esc(own)+'" alt="" loading="lazy">':sc?(sc.kind==="image"?'<img class="frame" style="object-fit:cover" src="'+esc(sc.url)+'" alt="" loading="lazy">':'<video class="frame sv" style="object-fit:cover" src="'+esc(sc.url)+'#t=0.1" muted loop playsinline preload="metadata"></video>'):
+    '<div class="frame tplcov" style="--a:'+pal[0]+';--b:'+(pal[3]||pal[1])+'">'+ic(TPL_IC[t.type]||"video")+"<span>"+esc(lab(TYPES,t.type))+"</span></div>";
+  return h.replace(/<div class="frame ph0">[\s\S]*?<\/div>|<img class="frame"[^>]*>|<video class="frame sv"[^>]*><\/video>|<canvas class="frame"[^>]*><\/canvas>/,media)})(thumb);
+(function(){const st=document.createElement("style");st.textContent=`.frame.tplcov{display:grid!important;place-items:center;align-content:center;gap:8px;width:100%;height:100%;background:radial-gradient(circle at 28% 18%,var(--b),var(--a) 75%);color:#fff}
+.frame.tplcov svg{width:36px;height:36px;opacity:.95}.frame.tplcov span{font-size:12.5px;font-weight:600;opacity:.92;padding:0 10px;text-align:center}`;document.head.appendChild(st)})();
+// Admin → AI providers → Showcase: make every template's own preview picture (staff jobs, no credits)
+scAdmin=(o=>function(){const h=o(),A=TPLP.admin||{},done=TEMPLATES.filter(t=>A[t.id]&&A[t.id].status==="done").length,run=TEMPLATES.filter(t=>A[t.id]&&A[t.id].status==="rendering").length;
+  return h+'<div class="row" style="margin-top:12px;align-items:center"><button class="btn sm" data-act="tp-make"'+(run?" disabled":"")+">"+ic("image")+L("Make the template previews","اصنع معاينات القوالب")+'</button><span class="small mute">'+done+" / "+TEMPLATES.length+L(" ready"," جاهزة")+(run?" · "+run+L(" making…"," قيد الإنشاء…"):"")+"</span></div>"})(scAdmin);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="tp-make"]');if(!a||a.disabled)return;a.disabled=true;
+  try{const r=await API.req("/v1/admin/tplprev",{json:{items:TEMPLATES.map(t=>({id:t.id,prompt:t.p[0],aspect:t.aspect}))}});TPLP.admin=r.items||{};toast(L("Making the template previews — they appear on the Templates page as they finish.","تُصنع معاينات القوالب — تظهر في صفحة القوالب عند انتهائها."),{type:"ok"});renderView()}
+  catch(err){toast(String(err.message||err),{type:"warn"})}finally{a.disabled=false}});
+setInterval(()=>{if(S.view!=="admin"||API.mode!=="server"||!TPLP.admin||!Object.values(TPLP.admin).some(x=>x.status==="rendering"))return;API.req("/v1/admin/tplprev").then(r=>{TPLP.admin=r.items||{};Object.entries(TPLP.admin).forEach(([k,v])=>{if(v.url)TPLPREV[k]=v.url});renderView()}).catch(()=>{})},5000);
+// ---- UGC ads: its own page — 1 your product · 2 how to market it · 3 who presents it · 4 the ad — with the result beside it.
+// (It used to be the whole Video page with a marketing box dropped in the middle.) With a product photo the ad really shows
+// YOUR product: a presenter ad is made in two steps (a photo of the presenter holding your product, then the video starts
+// from that photo); product and motion ads start from your photo; a still ad edits your photo.
+S.ugc79=Object.assign({fmt:"9:16",dur:8,model:"auto",say:"",last:null},S.ugc79||{});
+const UGC_FMT=[["9:16","TikTok · Reels · Shorts","تيك توك · ريلز · شورتس"],["4:5","Feed post","منشور في الصفحة"],["1:1","Square","مربع"],["16:9","YouTube · web","يوتيوب · الويب"]];
+const UGC_DESC={presenter:["A real-looking person holds your product and talks about it, selfie style.","شخص واقعي يمسك منتجك ويتحدث عنه بأسلوب السيلفي."],product:["Close-ups and a slow turn of your product in studio light.","لقطات قريبة ودوران بطيء لمنتجك بإضاءة استوديو."],image:["One scroll-stopping picture with room for your offer.","صورة واحدة تلفت الانتباه مع مساحة لعرضك."],motion:["Animated text, your product and the price.","نصوص متحركة ومنتجك والسعر."]};
+function withSlot79(slot,val,fn){const k=M[slot];if(val)M[slot]=val;else delete M[slot];try{return fn()}finally{if(k)M[slot]=k;else delete M[slot]}}
+const ugcEn79=()=>{try{return new Intl.DisplayNames(["en"],{type:"language"}).of(S.lang)||"English"}catch(e){return"English"}};
+function ugcVidModels79(){const off=(API.cfg&&API.cfg.models)||{};return Object.keys(ENG_MAX).filter(k=>MODELS[k]&&off[k]!==false&&modelAllowed(k))}
+function ugcVidModel79(){const G=S.ugc79,U=S.draft.ugc,av=ugcVidModels79();if(G.model!=="auto"&&av.includes(G.model))return G.model;
+  if(U.mode==="presenter"&&av.includes("kling30"))return"kling30";let id=pickVideo((U.name||"")+" "+(U.desc||"")+" product ad",{dur:G.dur,aspect:G.fmt}).id;return av.includes(id)||!av.length?id:av[0]}
+function ugcDur79(m){const max=ENG_MAX[m]||10,d=[5,8,10,15].filter(x=>x<=max);if(!d.includes(S.ugc79.dur))S.ugc79.dur=d.filter(x=>x<=S.ugc79.dur).pop()||d[0];return d}
+function ugcCost79(){const U=S.draft.ugc,m=ugcVidModel79(),ic0=(IMG_MODELS[bestImg72()]||{cr:5}).cr,v=vcost(m,S.ugc79.dur);return U.mode==="image"?ic0:U.mode==="presenter"&&M.ugcP?ic0+v:v}
+function ugcPrompts79(){const U=S.draft.ugc,G=S.ugc79,c=charById(S.draft.charId),photo=!!M.ugcP,prod=[U.name,U.desc].map(x=>String(x||"").trim()).filter(Boolean).join(" — ")||"the product",who=c?(t=>t.startsWith(c.name+",")?t.slice(c.name.length+1).trim():t)(String(charPrompt(c,"en")).replace(/\.$/,"")):"a relatable young creator",
+  price=String(U.price||"").trim(),cta=String(U.cta||"").trim(),say=String(G.say||"").trim(),exact=photo?" The product must be exactly the one in the reference photo — same shape, colours, label and logo.":"";
+  return{still:"Vertical UGC selfie photo for a social ad: "+who+" holds "+prod+" up to the camera with a genuine smile, at home in natural daylight, handheld phone look."+exact,
+    presenter:"UGC social ad, handheld selfie video: "+who+" presents "+prod+" to the camera"+(say?', speaking naturally in '+ugcEn79()+': "'+say+'"':", talking about it with genuine excitement")+"; natural gestures, brings the product close to the lens."+(photo?" Keep the product exactly as in the first frame.":"")+(cta?" Ends with: "+cta+".":""),
+    product:"Premium product commercial of "+prod+": hero close-ups, macro details, a slow 360° turn, clean studio light, soft reflections."+(photo?" Keep the product exactly as in the first frame.":"")+(cta?" End on the product with space for the words: "+cta+".":""),
+    image:"Scroll-stopping social ad photo of "+prod+", clean modern background, bold composition with empty space for the headline"+(price?" and the price "+price:"")+"."+exact,
+    motion:"Motion-graphics product ad for "+prod+": kinetic typography, the product "+(photo?"from the first frame ":"")+"animated in, brand colours, an animated price tag"+(price?" showing "+price:"")+(cta?' and the call to action "'+cta+'"':"")+"."}}
+function ugcMake79(){const U=S.draft.ugc,G=S.ugc79,photo=M.ugcP||null,mode=U.mode||"presenter";
+  if(!String(U.name||"").trim()&&!String(U.desc||"").trim()&&!photo){toast(L("Add your product first — a photo or its name.","أضف منتجك أولاً — صورة أو اسمه."),{type:"warn"});return}
+  const P=ugcPrompts79(),m=ugcVidModel79();ugcDur79(m);const dur=G.dur,ar=G.fmt,ic0=(IMG_MODELS[bestImg72()]||{cr:5}).cr,vc=vcost(m,dur),md=UGC_MODES.find(x=>x[0]===mode)||UGC_MODES[0];
+  const title=(String(U.name||"").trim()||L("Product","منتج"))+" · "+L(md[1],md[2]),meta={type:"ugc",ugc:Object.assign({},U,{presenter:S.draft.charId||null,photos:["ugcP","ugcX1","ugcX2","ugcX3"].filter(k=>M[k]).length})};
+  let j=null;
+  if(mode==="image")j=withSlot79("iRef",photo,()=>addJob({kind:"image",prompt:P.image,title,model:bestImg72(),aspect:ar,cost:ic0,secs:6,art:"scene",meta}));
+  else if(mode==="presenter"&&photo)j=withSlot79("iRef",photo,()=>addJob({kind:"image",prompt:P.still,title:title+" · "+L("step 1 of 2","الخطوة 1 من 2"),model:bestImg72(),aspect:ar,cost:ic0,secs:6,art:"portrait",meta:Object.assign({},meta,{ugcStep:1,ugcNext:{prompt:P.presenter,model:m,dur,aspect:ar,cost:vc,title}})}));
+  else j=withSlot79("vStart",photo&&mode!=="presenter"?photo:null,()=>addJob({kind:"video",prompt:P[mode]||P.presenter,title,model:m,dur,aspect:ar,cost:vc,art:"scene",meta:Object.assign({},meta,{start:!!photo&&mode!=="presenter",audio:true})}));
+  if(j){G.last=j.id;persist();renderView();const q=$("#main");if(q&&matchMedia("(max-width:980px)").matches)setTimeout(()=>{const pv=document.querySelector(".ugc79 .preview-col");if(pv)pv.scrollIntoView({behavior:"smooth",block:"start"})},80);
+    toast(j.meta&&j.meta.ugcStep===1?L("Step 1: a photo of the presenter with your product — the video starts from it.","الخطوة 1: صورة للمقدّم مع منتجك — ويبدأ الفيديو منها."):L("Your ad is being made…","يُصنع إعلانك…"),{type:"ok"})}}
+// step 2 of a presenter ad: the presenter photo is ready → the video starts from it
+setInterval(()=>{let ch=false;for(const j of S.jobs){const x=j.meta;if(!x||x.ugcStep!==1||x.ugcDone||j.status!=="complete")continue;const u=mediaUrl(j);if(!u)continue;x.ugcDone=1;ch=true;const n=x.ugcNext||{};
+  const v=withSlot79("vStart",{type:"image",remote:u,url:u,name:"ugc-first-frame.png"},()=>addJob({kind:"video",prompt:n.prompt,title:n.title,model:n.model,dur:n.dur,aspect:n.aspect,cost:n.cost,art:"scene",meta:Object.assign({},x,{ugcStep:2,ugcFrom:j.id,ugcNext:undefined,ugcDone:undefined,start:true,audio:true})}));
+  if(v&&S.ugc79.last===j.id)S.ugc79.last=v.id}if(ch){persist();if(S.view==="ugcads")renderView()}},1500);
+function ugcStage79(g){const ar=(g.aspect||"9:16").replace(":","/"),u=mediaUrl(g),done=g.status==="complete"&&u,img=g.kind==="image";
+  return'<div class="stage" style="aspect-ratio:'+ar+';max-height:70vh;margin:0 auto">'+(done?(img?'<img class="frame" style="object-fit:contain;background:#000" src="'+esc(u)+'" alt="">':stageMedia("j:"+g.id)):'<canvas class="frame live" data-ref="j:'+g.id+'"></canvas>')+'<div class="st">'+badge(g.status)+'</div><div class="cap">'+esc(g.title||"")+"</div></div>"}
+function ugcPreview79(){const G=S.ugc79,g=G.last&&S.jobs.find(x=>x.id===G.last),prev=S.jobs.filter(j=>j.meta&&j.meta.ugc&&(!g||j.id!==g.id)&&!(j.meta.ugcStep===1&&j.meta.ugcDone)).slice(-8).reverse();
+  let h='<div class="preview-col"><div class="panel pad">';
+  if(!g)h+='<div class="stage" style="aspect-ratio:'+S.ugc79.fmt.replace(":","/")+';max-height:44vh;margin:0 auto"><div class="empty">'+L("Your ad appears here.","يظهر إعلانك هنا.")+"</div></div>";
+  else{const u=mediaUrl(g),done=g.status==="complete"&&u;h+=ugcStage79(g)+(g.meta&&g.meta.ugcStep===1?'<p class="ugcnote">'+ic("info")+L("Step 1 of 2 — a photo of the presenter with your product. The video starts from this photo, so it shows your real product.","الخطوة 1 من 2 — صورة للمقدّم مع منتجك. يبدأ الفيديو من هذه الصورة فيظهر منتجك الحقيقي.")+"</p>":"")+
+    '<div class="pipe" id="pipe" data-ref="j:'+g.id+'">'+pipeHTML("j:"+g.id)+"</div>"+
+    (done?'<div class="row" style="margin-top:12px">'+(g.kind==="video"?'<button class="btn sm" data-act="send-edit" data-id="'+g.id+'">'+ic("edit")+L("Open in editor","افتح في المحرر")+"</button>":'<button class="btn sm primary" data-act="ugc-anim" data-id="'+g.id+'">'+ic("video")+L("Turn it into a video","حوّلها إلى فيديو")+"</button>")+'<a class="btn sm ghost" href="'+esc(u)+'" download>'+ic("download")+L("Download","تنزيل")+"</a></div>":"")}
+  h+="</div>"+(prev.length?'<div class="panel pad" style="margin-top:14px"><h2>'+L("Your earlier ads","إعلاناتك السابقة")+'</h2><div class="strip">'+prev.map(x=>'<div data-act="ugc-open" data-id="'+x.id+'" role="button" tabindex="0">'+thumb("j:"+x.id,{dur:x.kind==="video"?x.dur:null})+"</div>").join("")+"</div></div>":"")+"</div>";return h}
+VIEWS.ugcads=()=>{S.view="ugcads";const U=S.draft.ugc,G=S.ugc79,m=ugcVidModel79(),durs=ugcDur79(m),av=ugcVidModels79(),pres=U.mode==="presenter",cost=ugcCost79(),step=(n,t)=>'<div class="ugcstep"><b>'+n+"</b><span>"+t+"</span></div>";let n=1;
+  return'<div class="view ugc79"><h1>'+L("UGC ads","إعلانات UGC")+'</h1><p class="lede">'+L("Sell a product with a ready ad: add your product, choose how to market it, and get a vertical ad for TikTok, Reels and Shorts.","سوّق منتجك بإعلان جاهز: أضف منتجك، واختر طريقة التسويق، واحصل على إعلان عمودي لتيك توك وريلز وشورتس.")+'</p><div class="two ugctwo'+(G.last?" has":"")+'"><div class="panel pad">'+
+    step(n++,L("Your product","منتجك"))+'<div class="ugcslots">'+ugcSlot("ugcP",L("Main photo","الصورة الرئيسية"))+ugcSlot("ugcX1",L("Angle 2","زاوية 2"))+ugcSlot("ugcX2",L("Angle 3","زاوية 3"))+ugcSlot("ugcX3",L("In use","أثناء الاستخدام"))+'</div><p class="ugcnote">'+L("A clear photo makes the ad show your exact product.","الصورة الواضحة تجعل الإعلان يُظهر منتجك تماماً.")+"</p>"+
+    '<div class="grid2"><div><label class="lbl">'+L("Product name","اسم المنتج")+'</label><input type="text" data-bind="draft.ugc.name" value="'+esc(U.name)+'" dir="auto"></div><div><label class="lbl">'+L("Price / offer","السعر / العرض")+'</label><input type="text" data-bind="draft.ugc.price" value="'+esc(U.price)+'" dir="auto"></div></div><label class="lbl">'+L("What makes it special","ما يميّزه")+'</label><input type="text" data-bind="draft.ugc.desc" value="'+esc(U.desc)+'" dir="auto">'+
+    step(n++,L("How to market it","طريقة التسويق"))+'<div class="ugcmode" role="radiogroup">'+UGC_MODES.map(x=>'<button role="radio" data-act="ugc-mode" data-v="'+x[0]+'" aria-pressed="'+(U.mode===x[0])+'" aria-checked="'+(U.mode===x[0])+'"><span class="gl">'+ic(x[3])+"</span><span><b>"+L(x[1],x[2])+"</b><small>"+L(UGC_DESC[x[0]][0],UGC_DESC[x[0]][1])+"</small></span></button>").join("")+"</div>"+
+    (pres?step(n++,L("Who presents it","من يقدّم المنتج"))+'<div class="tiles">'+S.chars.map(c=>'<button class="tile" data-act="ugc-char" data-v="'+c.id+'" aria-pressed="'+(S.draft.charId===c.id)+'"><span class="gl" style="width:34px;height:34px;border-radius:50%;overflow:hidden">'+thumb("cp:"+c.id,{ar:"1/1"})+'</span><span class="lb">'+esc(c.name)+"</span></button>").join("")+PRESENTERS.filter(p=>!S.chars.some(c=>c.id===p[0])).map(p=>'<button class="tile" data-act="ugc-pre" data-v="'+p[0]+'" aria-pressed="'+(S.draft.charId===p[0])+'"><span class="gl"><span class="tx" style="font-size:20px">'+p[3]+'</span></span><span class="lb">'+L(p[1],p[2])+"</span></button>").join("")+'<button class="tile" data-go="chars"><span class="gl">'+ic("plus")+'</span><span class="lb">'+L("Create your own","اصنع شخصيتك")+"</span></button></div>":"")+
+    step(n++,L("The ad","الإعلان"))+(pres?'<label class="lbl" for="ugcsay">'+L("What they say (optional)","ماذا يقول (اختياري)")+'</label><textarea id="ugcsay" data-bind="ugc79.say" dir="auto" style="min-height:64px" placeholder="'+esc(L("I've tried a lot of serums — this is the first one that actually works.","جرّبت كثيراً من السيرومات — هذا أول واحد ينفع فعلاً."))+'">'+esc(G.say||"")+"</textarea>":"")+
+    '<label class="lbl">'+L("Call to action","الدعوة للإجراء")+'</label><input type="text" data-bind="draft.ugc.cta" value="'+esc(U.cta)+'" dir="auto" placeholder="'+esc(L("e.g. Order now — free delivery","مثال: اطلب الآن — توصيل مجاني"))+'">'+
+    '<span class="lbl">'+L("Where it will run","أين سيُنشر")+'</span><div class="ugcfmts" role="radiogroup">'+UGC_FMT.map(f=>'<button class="chip" role="radio" data-act="ugc-fmt" data-v="'+f[0]+'" aria-pressed="'+(G.fmt===f[0])+'" aria-checked="'+(G.fmt===f[0])+'"><b class="mono">'+f[0]+"</b> "+L(f[1],f[2])+"</button>").join("")+"</div>"+
+    (U.mode!=="image"?'<span class="lbl">'+L("Length","المدة")+'</span><div class="row" role="radiogroup">'+durs.map(d=>'<button class="chip" role="radio" data-act="ugc-dur" data-v="'+d+'" aria-pressed="'+(G.dur===d)+'" aria-checked="'+(G.dur===d)+'">'+d+" "+L("s","ث")+"</button>").join("")+"</div>"+
+      '<label class="lbl" for="ugcmodel">'+L("Video engine","محرك الفيديو")+'</label><select id="ugcmodel"><option value="auto"'+(G.model==="auto"?" selected":"")+">"+esc(L("Smart pick","اختيار ذكي"))+" · "+esc((MODELS[m]||{}).name||m)+"</option>"+av.map(k=>'<option value="'+k+'"'+(G.model===k?" selected":"")+">"+esc(MODELS[k].name)+" · "+vcost(k,G.dur)+" cr</option>").join("")+"</select>":"")+
+    '<div style="margin-top:18px"><button class="btn primary big" data-act="ugc-make">'+ic("megaphone")+L("Make the ad","اصنع الإعلان")+'<span class="cost">'+cost+" cr</span></button></div>"+
+    (pres&&M.ugcP?'<p class="ugcnote">'+L("Made in 2 steps: a photo of the presenter holding your product, then the video starts from it.","يُصنع على خطوتين: صورة للمقدّم يمسك منتجك، ثم يبدأ الفيديو منها.")+"</p>":"")+
+    "</div>"+ugcPreview79()+"</div></div>"};
+// the Video page no longer carries the marketing box — it points to UGC ads instead, and doesn't rewrite its prompt
+ugcPanel=(o=>function(){if(S.view==="ugcads")return o();return'<div class="ugcgo79">'+ic("megaphone")+"<span>"+L("Selling a product? <b>UGC ads</b> builds the whole ad from your product photos, a presenter and your offer.","تبيع منتجاً؟ <b>إعلانات UGC</b> تبني الإعلان كاملاً من صور منتجك ومقدّم وعرضك.")+'</span><button class="btn sm" data-go="ugcads">'+L("Open UGC ads","افتح إعلانات UGC")+"</button></div>"})(ugcPanel);
+addJob=(o=>function(j){if(S.view==="video"&&j&&j.kind==="video"&&isUgc()&&!(j.meta&&j.meta.ugc)){const t=S.draft.type;S.draft.type="-";try{return o(j)}finally{S.draft.type=t}}return o(j)})(addJob);
+makeVideo=(o=>function(){if(S.view==="video"&&isUgc()&&S.draft.ugc&&S.draft.ugc.mode==="image"){const u=S.draft.ugc.mode;S.draft.ugc.mode="presenter";try{return o()}finally{S.draft.ugc.mode=u}}return o()})(makeVideo);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest("[data-act]");if(!a||S.view!=="ugcads")return;const A=a.dataset,G=S.ugc79;
+  if(A.act==="ugc-make"){ugcMake79();return}
+  if(A.act==="ugc-fmt"){G.fmt=A.v;persist();renderView();return}
+  if(A.act==="ugc-dur"){G.dur=+A.v;persist();renderView();return}
+  if(A.act==="ugc-open"){G.last=A.id;persist();renderView();return}
+  if(A.act==="ugc-anim"){const j=S.jobs.find(x=>x.id===A.id),u=j&&mediaUrl(j);if(!u)return;const m=ugcVidModel79();ugcDur79(m);
+    const v=withSlot79("vStart",{type:"image",remote:u,url:u,name:"ugc-ad.png"},()=>addJob({kind:"video",prompt:"Bring this product ad to life: gentle camera push-in, subtle light sweep across the product, premium commercial feel. Keep everything exactly as in the first frame.",title:(j.title||"Ad")+" · "+L("video","فيديو"),model:m,dur:S.ugc79.dur,aspect:j.aspect||S.ugc79.fmt,cost:vcost(m,S.ugc79.dur),art:"scene",meta:Object.assign({},j.meta||{},{start:true,ugcStep:undefined,ugcDone:undefined})}));
+    if(v){G.last=v.id;persist();renderView()}return}});
+document.addEventListener("change",e=>{if(e.target&&e.target.id==="ugcmodel"){S.ugc79.model=e.target.value;persist();renderView()}});
+(function(){const st=document.createElement("style");st.textContent=`
+.ugcstep{display:flex;align-items:center;gap:10px;margin:22px 0 10px;font-weight:600;font-size:15px}.ugc79 .panel>.ugcstep:first-child{margin-top:0}
+.ugcstep b{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:color-mix(in srgb,var(--lime) 24%,var(--panel2));font-size:13px;flex:none}
+.ugcmode{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ugcmode button{display:flex;gap:10px;align-items:flex-start;text-align:start;padding:12px;border:1px solid var(--line2);border-radius:12px;background:var(--panel2);color:var(--text);min-width:0;cursor:pointer}
+.ugcmode button[aria-pressed="true"]{border-color:var(--lime);background:color-mix(in srgb,var(--lime) 12%,var(--panel2))}
+.ugcmode .gl{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--panel)}.ugcmode .gl svg{width:19px;height:19px}
+.ugcmode b{display:block;font-weight:600;font-size:13.5px;line-height:1.3}.ugcmode small{display:block;color:var(--mute);font-size:12px;line-height:1.35;margin-top:3px}
+.ugcfmts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.ugcfmts .chip{justify-content:flex-start;text-align:start;white-space:normal;min-height:40px}.ugcfmts .chip b{font-size:11.5px;margin-inline-end:4px}
+.ugcnote{display:flex;gap:6px;align-items:flex-start;font-size:12.5px;color:var(--mute);margin:8px 0 0;line-height:1.4}.ugcnote svg{width:14px;height:14px;flex:none;margin-top:2px}
+.ugc79 #ugcmodel{width:100%}
+.ugcslot{grid-template-columns:minmax(0,1fr)}.ugcslot .lb{max-width:100%;display:block}.ugc79 .ugcslot{aspect-ratio:auto;min-height:78px;padding:6px 4px}.ugc79 .ugcslot.main{min-height:96px}
+.ugcgo79{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:14px 0 6px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);font-size:13px;line-height:1.4}.ugcgo79>svg{width:18px;height:18px;flex:none}.ugcgo79 span{flex:1 1 200px}
+@media (max-width:980px){.ugctwo:not(.has)>.preview-col{order:2}.ugctwo.has>.preview-col{order:-1}}
+@media (max-width:400px){.ugcmode,.ugcfmts{grid-template-columns:1fr}}`;document.head.appendChild(st)})();
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

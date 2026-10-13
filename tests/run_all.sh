@@ -2,6 +2,7 @@
 # Full UI check. Usage: bash tests/run_all.sh   (NOOI_URL=https://nooi.ai to test the live site)
 set -e
 cd "$(dirname "$0")/.."
+export FREE_PERIOD="${FREE_PERIOD:-false}"   # the suite checks charging; tests/free_period.py checks the free period
 echo "▶ syntax"; for f in server.js lib/*.js providers/*.js social/*.js; do node --check "$f"; done
 python3 - <<'PY'
 import re,subprocess,sys
@@ -46,6 +47,7 @@ echo "▶ the 8 agents (skills from web pages & results · brief → decisions �
 echo "▶ layer animator + 24 animated templates (every word inside the frame and its card · EN/AR/DE/JA/HI/RU · 16:9/9:16/1:1 · corners · long words) · words in the viewer's language · AI motion graphics (checks, retry, refund, sandbox, runaway loop) · storyboard assembled in the editor"; python3 tests/motion_templates.py | python3 -c "import sys,json;t=sys.stdin.read();d=json.loads(t[t.find('{'):]);print('fails',d['fails'],'| template renders',d['out'].get('1280',{}).get('templates',{}).get('checked'));sys.exit(1 if d['fails'] else 0)"
 echo "▶ natural voice & dialogue (steady voice per speaker, rewritten for the ear, feelings, room) · editor voice-over · Live AI sketch (fal.ai / custom engine, credits per frame, refunds, limit, out of credits, when I pause, camera, recording)"; python3 tests/voice_sketch.py | python3 -c "import sys,json;t=sys.stdin.read();d=json.loads(t[t.find('{'):]);print('fails',d['fails']);sys.exit(1 if d['fails'] else 0)"
 echo "▶ pro camera & studio formats (ProRes · DNxHR/MXF · HEVC 10-bit · interlaced HDV · TIFF/EXR/DPX · camera RAW · AIFF/BWF/ALAC → facts + editing proxy, original kept) · drip: device quality, media kept on the device, 3D textures to the GPU a few at a time"; python3 tests/pro_media.py | python3 -c "import sys,json;t=sys.stdin.read();d=json.loads(t[t.find('{'):]);print('fails',d['fails']);sys.exit(1 if d['fails'] else 0)"
+echo "▶ v79: free period (nothing charged, Admin switch) · avatar voice retries · failed jobs say why + Try again · whole-word labels · star loaders · real character looks · the sketch becomes what you drew (AI vision) · AI 3D world (cloud render) · 3D Studio cloud mode on phones · template covers"; python3 tests/v79_fixes.py | python3 -c "import sys,json;t=sys.stdin.read();d=json.loads(t[t.find('{'):]);print('fails',d['fails']);sys.exit(1 if d['fails'] else 0)"
 echo "▶ ChatGPT / Claude MCP connector handshake (initialize · tools/list · tools/call · token checks)"; node tests/mcp_chatgpt.mjs | tail -1
 echo "▶ shipped translations (i18n/*.txt → public/i18n/*.json up to date, no lost numbers)"; node i18n/build.mjs --check | grep -v "^✓" || echo "all languages OK"
 echo "▶ shared interface translations with a mocked text AI (whitelist · cache · one call · rate limit)"; node tests/uit_mock.mjs | tail -1
