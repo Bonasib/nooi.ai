@@ -5,6 +5,8 @@
 //   • orbit (inspect, move / rotate / scale with a gizmo) or WALK: eye height 1.65 m, WASD / arrows / joystick / drag to look,
 //     you can't walk through objects or out of the plot · a guided tour path for walk-through videos
 //   • record a video of the canvas (+ the ambience sound) · export the scene as .glb (Blender, Unity) or .usdz (iPhone AR)
+//   • "drip" loading: a model's textures go to the GPU a few at a time (each part appears when its textures are ready, no
+//     frozen frames), phones/older GPUs get right-sized textures, and the resolution follows the real frame rate
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { TransformControls } from "three/addons/controls/TransformControls.js";
@@ -32,7 +34,7 @@ export function createEngine(canvas, { tier = "high", mobile = false } = {}) {
   r.setPixelRatio(Math.min(tier === "low" ? 1.25 : mobile ? 1.6 : 2, window.devicePixelRatio || 1)); r.outputEncoding = THREE.sRGBEncoding;
   r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1; r.shadowMap.enabled = true; r.shadowMap.type = tier === "low" ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(55, 1, 0.05, 400); cam.rotation.order = "YXZ"; cam.position.set(4, 2.6, 6);
-  const U = createEnvUniforms(THREE), pmrem = new THREE.PMREMGenerator(r);
+  const U = createEnvUniforms(THREE), pmrem = new THREE.PMREMGenerator(r), prCap = r.getPixelRatio(), maxTex = tier === "low" ? 2048 : 8192;
   const orbit = new OrbitControls(cam, canvas); orbit.enableDamping = true; orbit.target.set(0, 0.9, 0); orbit.maxPolarAngle = Math.PI * 0.49; orbit.minDistance = 0.5; orbit.maxDistance = 60;
   const gizmo = new TransformControls(cam, canvas); gizmo.addEventListener("dragging-changed", (e) => { orbit.enabled = !e.value && E.mode === "orbit"; if (!e.value) E.emit("moved", gizmo.object); }); scene.add(gizmo);
   // sky + lights
@@ -42,6 +44,7 @@ export function createEngine(canvas, { tier = "high", mobile = false } = {}) {
   let envRT = null, hdrTex = null, panoTex = null, world = null, fx = null; const amb = createAmbience();
   const E = {
     THREE, renderer: r, scene, camera: cam, controls: orbit, gizmo, uniforms: U, tier, mode: "orbit", assets: [], listeners: {}, state: { biome: "rainforest", size: [5, 5], seed: 7, tod: "day", fx: {} },
+    quality: { auto: true, pr: prCap, cap: prCap, min: Math.max(0.6, +(prCap * 0.55).toFixed(2)), fps: 60, drip: 0 },
     on(k, f) { (this.listeners[k] = this.listeners[k] || []).push(f); }, emit(k, v) { (this.listeners[k] || []).forEach((f) => f(v)); },
   };
   function bakeEnv() { if (hdrTex || panoTex) return; if (envRT) envRT.dispose(); envRT = pmrem.fromScene(skyScene, 0.03); scene.environment = envRT.texture; }
@@ -85,10 +88,25 @@ export function createEngine(canvas, { tier = "high", mobile = false } = {}) {
   E.hasPanorama = () => !!(hdrTex || panoTex);
 
   // ── assets: real size, standing on the ground, footprint for walking around them
+  const dripQ = [];
+  const TEX_KEYS = ["map", "normalMap", "roughnessMap", "metalnessMap", "aoMap", "emissiveMap", "alphaMap", "bumpMap", "displacementMap", "lightMap"];
+  function fitTexture(t) {   // a texture bigger than this device carries → resized once, on the CPU, before it reaches the GPU
+    const im = t && t.image; if (!im || !im.width || Math.max(im.width, im.height) <= maxTex || typeof document === "undefined") return;
+    const k = maxTex / Math.max(im.width, im.height), c = document.createElement("canvas"); c.width = Math.max(1, Math.round(im.width * k)); c.height = Math.max(1, Math.round(im.height * k));
+    try { c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); t.image = c; t.needsUpdate = true; } catch (e) {}
+  }
+  E.dripTextures = function (object) {
+    object.traverse((n) => { if (!n.isMesh) return; const ts = new Set(); (Array.isArray(n.material) ? n.material : [n.material]).forEach((m) => m && TEX_KEYS.forEach((k) => m[k] && m[k].isTexture && ts.add(m[k])));
+      if (!ts.size) return; ts.forEach(fitTexture); n.visible = false; dripQ.push({ mesh: n, tex: [...ts] }); });
+    E.quality.drip = dripQ.length; return dripQ.length;
+  };
+  function dripStep() { if (!dripQ.length) return; const t0 = performance.now();
+    while (dripQ.length && performance.now() - t0 < 6) { const d = dripQ[0], t = d.tex.shift(); if (t) { try { r.initTexture(t); } catch (e) {} } if (!d.tex.length) { d.mesh.visible = true; dripQ.shift(); } }
+    E.quality.drip = dripQ.length; if (!dripQ.length) E.emit("drip", 0); }
   E.addAsset = function (object, { name = "3D", category = "object", height, source = "device", pos = null, rot = 0, rigid = true, id } = {}) {
     const a = { id: id || "a" + Math.random().toString(36).slice(2, 8), name, category, source, object, height: height || REAL_HEIGHT[category] || 0.6, rot, pos: pos || [0, 0], rigid, fit: 1 };
     object.traverse((n) => { if (n.isMesh) { n.castShadow = n.receiveShadow = true; const ms = Array.isArray(n.material) ? n.material : [n.material]; ms.forEach((m) => { if (m && m.isMeshStandardMaterial) applyEnvironmentShaders(m, U, rigid ? "static" : undefined); }); n.userData.asset = a.id; } });
-    const holder = new THREE.Group(); holder.name = "asset_" + a.id; holder.add(object); holder.userData.asset = a.id; a.holder = holder; scene.add(holder); E.assets.push(a); E.layout(a); E.emit("assets", E.assets); return a;
+    const holder = new THREE.Group(); holder.name = "asset_" + a.id; holder.add(object); holder.userData.asset = a.id; a.holder = holder; scene.add(holder); E.assets.push(a); E.layout(a); E.dripTextures(object); E.emit("assets", E.assets); return a;
   };
   // scale to the real height, stand on the ground, apply position/rotation, measure the footprint, check it fits the plot
   E.layout = function (a) {
@@ -104,7 +122,7 @@ export function createEngine(canvas, { tier = "high", mobile = false } = {}) {
   E.fitToPlot = function (a, share = 0.62) { const p = world.plot; a.fit = 1; E.layout(a); const k = Math.min(1, (share * Math.min(p.hw, p.hd) * 2) / Math.max(a.size[0], a.size[2])); a.fit = k; E.layout(a); E.emit("assets", E.assets); return k; };
   E.replaceAssetObject = function (a, object, source) { a.holder.remove(a.object); disposeObject(a.object); a.object = object; a.source = source || a.source;
     object.traverse((n) => { if (n.isMesh) { n.castShadow = n.receiveShadow = true; (Array.isArray(n.material) ? n.material : [n.material]).forEach((m) => { if (m && m.isMeshStandardMaterial) applyEnvironmentShaders(m, U, a.rigid ? "static" : undefined); }); n.userData.asset = a.id; } });
-    a.holder.add(object); E.layout(a); E.emit("assets", E.assets); };
+    a.holder.add(object); E.layout(a); E.dripTextures(object); E.emit("assets", E.assets); };
   E.removeAsset = function (id) { const i = E.assets.findIndex((x) => x.id === id); if (i < 0) return; const a = E.assets[i]; if (gizmo.object === a.holder) gizmo.detach(); scene.remove(a.holder); disposeObject(a.holder); E.assets.splice(i, 1); r.renderLists.dispose(); E.emit("assets", E.assets); };
   E.select = function (id) { const a = E.assets.find((x) => x.id === id); if (a && E.mode === "orbit") gizmo.attach(a.holder); else gizmo.detach(); E.sel = a || null; E.emit("select", E.sel); };
   E.setGizmo = (m) => gizmo.setMode(m);
@@ -152,7 +170,13 @@ export function createEngine(canvas, { tier = "high", mobile = false } = {}) {
   const clock = new THREE.Clock(); let raf = 0, running = true, fps = 60, acc = 0, frames = 0;
   function size() { const w = canvas.clientWidth || 640, h = canvas.clientHeight || 400; if (canvas.width !== Math.round(w * r.getPixelRatio()) || canvas.height !== Math.round(h * r.getPixelRatio())) { r.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); } }
   const ro = new ResizeObserver(size); ro.observe(canvas);
-  function loop() { raf = requestAnimationFrame(loop); if (!running || document.hidden) return; const dt = Math.min(0.05, clock.getDelta()); size(); U.uTime.value += dt; acc += dt; frames++; if (acc > 1) { fps = Math.round(frames / acc); acc = 0; frames = 0; }
+  let slow = 0, fast = 0;
+  function adapt() { const Q = E.quality; Q.fps = fps; if (!Q.auto || E._recTrack || tour || dripQ.length) { slow = fast = 0; return; }
+    if (fps < 42) { fast = 0; if (++slow >= 2 && Q.pr > Q.min) { Q.pr = Math.max(Q.min, +(Q.pr * 0.85).toFixed(2)); r.setPixelRatio(Q.pr); size(); slow = 0; E.emit("quality", Q); } }
+    else if (fps >= 57) { slow = 0; if (++fast >= 4 && Q.pr < Q.cap) { Q.pr = Math.min(Q.cap, +(Q.pr * 1.12).toFixed(2)); r.setPixelRatio(Q.pr); size(); fast = 0; E.emit("quality", Q); } }
+    else slow = fast = 0; }
+  E.setQuality = function (auto, pr) { const Q = E.quality; Q.auto = !!auto; if (pr) { Q.pr = Math.min(Q.cap, Math.max(Q.min, +pr)); r.setPixelRatio(Q.pr); size(); } E.emit("quality", Q); };
+  function loop() { raf = requestAnimationFrame(loop); if (!running || document.hidden) return; const dt = Math.min(0.05, clock.getDelta()); size(); U.uTime.value += dt; acc += dt; frames++; if (acc > 1) { fps = Math.round(frames / acc); acc = 0; frames = 0; adapt(); } dripStep();
     if (tour) { const t = ((performance.now() - tour.t0) / 1000) / tour.sec, pose = E.tourPose(t % 1); cam.position.copy(pose.pos); cam.lookAt(pose.look); W.yaw = cam.rotation.y; W.pitch = cam.rotation.x; if (t >= 1 && tour.once) tour = null; }
     else if (E.mode === "walk") walkStep(dt); else orbit.update();
     U.uUpView.value.set(0, 1, 0).transformDirection(cam.matrixWorldInverse); sky.position.copy(cam.position); if (fx) fx.update(cam); r.render(scene, cam); if (E._recTrack && E._recTrack.requestFrame) E._recTrack.requestFrame(); }

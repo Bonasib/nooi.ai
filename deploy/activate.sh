@@ -15,6 +15,13 @@ ok() { echo "  ✓ $*"; }; warn() { echo "  ⚠ $*"; }
 echo "▶ 1/5 ffmpeg"
 if command -v ffmpeg >/dev/null && command -v ffprobe >/dev/null; then ok "ffmpeg is installed"; else
   apt-get update -qq && apt-get install -y -qq ffmpeg >/dev/null && ok "ffmpeg installed" || warn "couldn't install ffmpeg — run: apt-get install -y ffmpeg"; fi
+# camera formats: iPhone/Android HEIC (libheif) and camera RAW / PSD fallbacks (ImageMagick) — optional, nothing breaks without them
+if command -v heif-convert >/dev/null && { command -v magick >/dev/null || command -v convert >/dev/null; }; then ok "HEIC + RAW helpers are installed"; else
+  apt-get install -y -qq libheif-examples imagemagick >/dev/null 2>&1 && ok "HEIC + RAW helpers installed" || warn "optional: apt-get install -y libheif-examples imagemagick (HEIC photos, some RAW files)"; fi
+# camera files are big: let nginx accept uploads up to 2 GB (was 500 MB) and give them time to arrive
+NG=/etc/nginx/sites-available/nooi
+if [ -f "$NG" ] && grep -q "client_max_body_size 500M" "$NG"; then cp "$NG" "$NG.bak.$(date +%s)"; sed -i 's/client_max_body_size 500M;/client_max_body_size 2048M;/; s/proxy_read_timeout 300s; proxy_send_timeout 300s;/proxy_read_timeout 900s; proxy_send_timeout 900s; proxy_request_buffering off;/' "$NG"
+  if nginx -t >/dev/null 2>&1; then systemctl reload nginx && ok "uploads up to 2 GB (camera files)"; else cp "$(ls -t "$NG".bak.* | head -1)" "$NG"; warn "nginx didn't accept the change — kept the old limit"; fi; fi
 
 echo "▶ 2/5 public address"
 PB="$(get_env PUBLIC_BASE_URL)"

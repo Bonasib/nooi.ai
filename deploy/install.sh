@@ -11,7 +11,7 @@ say(){ printf "\n\033[1;32m▶ %s\033[0m\n" "$*"; }
 say "1/10 System update & packages"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y && apt-get upgrade -y
-apt-get install -y curl ca-certificates gnupg git rsync unzip ufw fail2ban nginx certbot python3-certbot-nginx ffmpeg unattended-upgrades dnsutils
+apt-get install -y curl ca-certificates gnupg git rsync unzip ufw fail2ban nginx certbot python3-certbot-nginx ffmpeg libheif-examples imagemagick unattended-upgrades dnsutils
 
 say "2/10 Node.js 20"
 if ! command -v node >/dev/null || [ "$(node -v | cut -d. -f1 | tr -d v)" -lt 18 ]; then
@@ -68,12 +68,12 @@ UNIT
 systemctl daemon-reload && systemctl enable --now nooi
 sleep 3; curl -fsS "http://127.0.0.1:$PORT/v1/health" >/dev/null && echo "  ✓ app is running" || { journalctl -u nooi -n 40 --no-pager; exit 1; }
 
-say "7/10 Nginx (reverse proxy, uploads up to 500 MB)"
+say "7/10 Nginx (reverse proxy, uploads up to 2 GB — camera files)"
 cat > /etc/nginx/sites-available/nooi <<NGX
 server {
   listen 80; listen [::]:80;
   server_name $DOMAIN www.$DOMAIN;
-  client_max_body_size 500M;
+  client_max_body_size 2048M;
   gzip on; gzip_types text/css application/javascript application/json image/svg+xml; gzip_min_length 1024;
   add_header X-Content-Type-Options nosniff always;
   add_header Referrer-Policy strict-origin-when-cross-origin always;
@@ -88,7 +88,7 @@ server {
     proxy_set_header X-Forwarded-Proto \$scheme;
     proxy_set_header Upgrade \$http_upgrade;
     proxy_set_header Connection "upgrade";
-    proxy_read_timeout 300s; proxy_send_timeout 300s;
+    proxy_read_timeout 900s; proxy_send_timeout 900s; proxy_request_buffering off;
   }
 }
 NGX

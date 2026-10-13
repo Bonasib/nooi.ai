@@ -37,6 +37,9 @@ import { registerLearn } from "./lib/learn.js";
 import { registerVss, vssServer } from "./lib/vss.js";
 import { registerLocalize, locEngines } from "./lib/localize.js";
 import { registerAgents } from "./lib/agents.js";
+import { registerMotion } from "./lib/motion.js";
+import { registerSketch, rtEngine } from "./lib/sketch.js";
+import { registerIngest } from "./lib/ingest.js";
 import { nvReady, nvCfg, nvOn } from "./providers/nvidia.js";
 import { cbSig, findJob, pollOne } from "./lib/jobs.js";
 import { registerGifts } from "./lib/gifts.js";
@@ -81,7 +84,7 @@ app.get("/v1/config", (_, res) => res.json({
   firebase: firebaseWebConfig(), localAI: { tfUrl: fs.existsSync(TF_DIR + "/transformers.min.js") ? "/vendor/transformers/transformers.min.js" : null, ortBase: fs.existsSync(ORT_DIR) ? "/vendor/ort/" : null, modelsHost: process.env.MODELS_DIR ? "/models/" : null, models: platform().localModels || {} }, emailCode: canSendSignInLinks() && emailConfigured(), kieRoutes: kieRoutes(),
   llm: llmConfigured() ? { provider: llmInfo().provider, model: llmInfo().model } : null,
   billing: enabledPayments().length > 0, payments: enabledPayments(), modelLogos: platform().modelLogos || {}, worldEngine: !!(process.env.WORLD_API_URL || (platform().providers || {}).world), modelCat: Object.fromEntries(Object.entries(platform().modelCat || {}).map(([k, v]) => [k, { cr: v.cr, verified: !!v.verified, kie: !!v.kieModel }])), features: platform().features, models: platform().models, prices: priceTable(), support: "contact@nooi.ai",
-  providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || !!kieDefault(k) || !!kieAuto(k, { kind: k === "tts" ? "voice" : k }) || (k === "image" && (nvOn("image") || nvOn("edit"))) || (k === "edit" && nvOn("edit")) || (k === "video" && nvOn("video"))])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!process.env.REALTIME_API_URL, vss: vssServer(), localize: (() => { try { const e = locEngines(); return { nooi: e.nooi, elevenlabs: e.elevenlabs, camb: e.camb, nvidia: e.nvidia, stt: e.stt }; } catch { return null; } })(), gen3d: { tripo: configured("tripo"), meshy: configured("meshy"), skybox: configured("blockade") }, nvidia: nvReady(), nvUse: nvReady() ? nvCfg().use : null, billing: enabledPayments().length > 0 }
+  providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || !!kieDefault(k) || !!kieAuto(k, { kind: k === "tts" ? "voice" : k }) || (k === "image" && (nvOn("image") || nvOn("edit"))) || (k === "edit" && nvOn("edit")) || (k === "video" && nvOn("video"))])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!rtEngine(), realtimeEngine: rtEngine(), vss: vssServer(), localize: (() => { try { const e = locEngines(); return { nooi: e.nooi, elevenlabs: e.elevenlabs, camb: e.camb, nvidia: e.nvidia, stt: e.stt }; } catch { return null; } })(), gen3d: { tripo: configured("tripo"), meshy: configured("meshy"), skybox: configured("blockade") }, nvidia: nvReady(), nvUse: nvReady() ? nvCfg().use : null, billing: enabledPayments().length > 0 }
 }));
 
 // Uploads (start frames, references, exports, music…)
@@ -194,6 +197,9 @@ registerLearn(app);
 registerVss(app);
 registerLocalize(app);
 registerAgents(app);
+registerMotion(app);
+registerSketch(app);
+registerIngest(app);
 registerExplore(app); registerShowcase(app); registerGifts(app); registerInvoices(app);
 // Low-latency voice preview (ElevenLabs stream, key never leaves the server)
 app.post("/v1/tts/stream", requireUser, async (req, res) => { try { const { planOf } = await import("./lib/plans.js"); const plan = planOf(user(req.user.uid)); if (!["pro", "studio"].includes(plan)) return res.status(402).json({ error: "ElevenLabs voices start from the Pro plan" }); await streamTTS(res, req.body || {}); } catch (e) { if (!res.headersSent) res.status(502).json({ error: e.message }); } });
@@ -239,14 +245,7 @@ app.get("/v1/jobs", requireUser, (req, res) => res.json({ jobs: Object.values(us
 app.get("/v1/assets", requireUser, (req, res) => { const k = req.query.kind; res.json({ assets: Object.values(user(req.user.uid).jobs).filter((j) => j.status === "done" && j.url && (!k || j.kind === k)).sort((a, b) => b.created - a.created).slice(0, 100).map((j) => ({ id: j.id, kind: j.kind, title: j.title, url: j.url })) }); });
 app.post("/v1/assets", requireUser, (req, res) => { const U = user(req.user.uid); const id = uid(); U.jobs[id] = { id, kind: req.body.kind || "3d", status: "done", progress: 1, url: req.body.url, title: req.body.title || "Imported", created: Date.now(), payload: {} }; save(); res.json({ id }); });
 
-// ---- Realtime sketch → image (proxy to your realtime model; throttled per user)
-const lastRT = new Map();
-app.post("/v1/realtime/sketch", requireUser, wrap(async (req, res) => {
-  if (!process.env.REALTIME_API_URL) throw Object.assign(new Error("Realtime model not connected"), { code: 501 });
-  const now = Date.now(); if (now - (lastRT.get(req.user.uid) || 0) < 300) return res.status(429).json({ error: "slow down" }); lastRT.set(req.user.uid, now);
-  const r = await fetch(process.env.REALTIME_API_URL, { method: "POST", headers: { Authorization: "Bearer " + (process.env.REALTIME_API_KEY || ""), "Content-Type": "application/json" }, body: JSON.stringify({ image: req.body.image, prompt: [req.body.prompt, req.body.target, req.body.style].filter(Boolean).join(", "), strength: req.body.strength }) });
-  const d = await r.json().catch(() => ({})); const image = d.image || d.output?.[0] || d.images?.[0]?.url || d.url; if (!image) throw new Error("No image from realtime model"); res.json({ image });
-}));
+// ---- Live AI sketch (realtime engine, credits per rendered frame) → lib/sketch.js
 
 // ---- MCP endpoint (Claude · ChatGPT · Qwen · Cursor …). Auth: Bearer nooi_… or ?token=nooi_…
 app.post("/mcp", async (req, res) => {
