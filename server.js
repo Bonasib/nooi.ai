@@ -35,6 +35,7 @@ import { registerShowcase } from "./lib/showcase.js";
 import { registerScenes } from "./lib/scenes.js";
 import { registerLearn } from "./lib/learn.js";
 import { registerVss, vssServer } from "./lib/vss.js";
+import { registerLocalize, locEngines } from "./lib/localize.js";
 import { nvReady, nvCfg, nvOn } from "./providers/nvidia.js";
 import { cbSig, findJob, pollOne } from "./lib/jobs.js";
 import { registerGifts } from "./lib/gifts.js";
@@ -79,7 +80,7 @@ app.get("/v1/config", (_, res) => res.json({
   firebase: firebaseWebConfig(), localAI: { tfUrl: fs.existsSync(TF_DIR + "/transformers.min.js") ? "/vendor/transformers/transformers.min.js" : null, ortBase: fs.existsSync(ORT_DIR) ? "/vendor/ort/" : null, modelsHost: process.env.MODELS_DIR ? "/models/" : null, models: platform().localModels || {} }, emailCode: canSendSignInLinks() && emailConfigured(), kieRoutes: kieRoutes(),
   llm: llmConfigured() ? { provider: llmInfo().provider, model: llmInfo().model } : null,
   billing: enabledPayments().length > 0, payments: enabledPayments(), modelLogos: platform().modelLogos || {}, worldEngine: !!(process.env.WORLD_API_URL || (platform().providers || {}).world), modelCat: Object.fromEntries(Object.entries(platform().modelCat || {}).map(([k, v]) => [k, { cr: v.cr, verified: !!v.verified, kie: !!v.kieModel }])), features: platform().features, models: platform().models, prices: priceTable(), support: "contact@nooi.ai",
-  providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || !!kieDefault(k) || !!kieAuto(k, { kind: k === "tts" ? "voice" : k }) || (k === "image" && (nvOn("image") || nvOn("edit"))) || (k === "edit" && nvOn("edit")) || (k === "video" && nvOn("video"))])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!process.env.REALTIME_API_URL, vss: vssServer(), gen3d: { tripo: configured("tripo"), meshy: configured("meshy"), skybox: configured("blockade") }, nvidia: nvReady(), nvUse: nvReady() ? nvCfg().use : null, billing: enabledPayments().length > 0 }
+  providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || !!kieDefault(k) || !!kieAuto(k, { kind: k === "tts" ? "voice" : k }) || (k === "image" && (nvOn("image") || nvOn("edit"))) || (k === "edit" && nvOn("edit")) || (k === "video" && nvOn("video"))])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!process.env.REALTIME_API_URL, vss: vssServer(), localize: (() => { try { const e = locEngines(); return { nooi: e.nooi, elevenlabs: e.elevenlabs, camb: e.camb, nvidia: e.nvidia, stt: e.stt }; } catch { return null; } })(), gen3d: { tripo: configured("tripo"), meshy: configured("meshy"), skybox: configured("blockade") }, nvidia: nvReady(), nvUse: nvReady() ? nvCfg().use : null, billing: enabledPayments().length > 0 }
 }));
 
 // Uploads (start frames, references, exports, music…)
@@ -175,7 +176,8 @@ app.get("/v1/billing/catalog", (_, res) => res.json(CATALOG));
 registerAdmin(app, requireUser);
 // admin: engine cost per model → credits charged → margin; costs and margin are editable (prices recompute)
 const PR_NAMES = { seedance: "Seedance 2 Fast", wan27: "WAN 2.7", kling: "Kling", kling26: "Kling 2.6", hailuo: "MiniMax", hailuoh3: "MiniMax H3", pixverse6: "PixVerse 6", grok: "Grok Imagine", wan30: "WAN 3.0", seedance20: "Seedance 2.0", kling30: "Kling 3.0", seedance25: "Seedance 2.5", veo31f: "Veo 3.1 Fast", veo31: "Veo 3.1",
-  nano: "Nano Banana", dotimg: "nooi Image", nanopro: "Nano Banana Pro", img20: "GPT Image 2", img25: "Seedream 4.5", seedream5: "Seedream 5", qwen: "Qwen Image", flux2: "FLUX.2", mj: "Midjourney", imagen4: "Imagen 4", ideogram3: "Ideogram 3", grokimg: "Grok Image", voice: "Voice", music: "Music", sfx: "Sound effect", bg: "Background removal", finish: "Upscale", lipsync: "Lip-sync avatar" };
+  nano: "Nano Banana", dotimg: "nooi Image", nanopro: "Nano Banana Pro", img20: "GPT Image 2", img25: "Seedream 4.5", seedream5: "Seedream 5", qwen: "Qwen Image", flux2: "FLUX.2", mj: "Midjourney", imagen4: "Imagen 4", ideogram3: "Ideogram 3", grokimg: "Grok Image", voice: "Voice", music: "Music", sfx: "Sound effect", bg: "Background removal", finish: "Upscale", lipsync: "Lip-sync avatar",
+  locstt: "Speech-to-text · per min", loctr: "Dubbing translation · per min", loctts: "Natural voices · per min", locel: "ElevenLabs Dubbing · per min", loccamb: "CAMB.AI dubbing · per min", locnv: "NVIDIA Content Localization · per min" };
 const pricingRows = () => Object.entries(ENGINE_COST).flatMap(([g, m]) => Object.keys(m).map((id) => { const cost = engineCost(g, id), credits = basePrice(g, id), rev = credits * CREDIT_FLOOR_USD;
   return { id, group: g, name: PR_NAMES[id] || id, cost: +cost.toFixed(4), credits, override: platform().prices?.[id] != null, margin: cost ? Math.round((rev / cost - 1) * 100) : 0 }; }).sort((a, b) => b.credits - a.credits));   // strongest (most credits) first
 app.get("/v1/admin/pricing", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); res.json({ rows: pricingRows(), factor: priceFactor(), floor: CREDIT_FLOOR_USD }); });
@@ -189,6 +191,7 @@ app.post("/v1/engine/cb/:id/:sig", (req, res) => { if (req.params.sig === cbSig(
 registerScenes(app);
 registerLearn(app);
 registerVss(app);
+registerLocalize(app);
 registerExplore(app); registerShowcase(app); registerGifts(app); registerInvoices(app);
 // Low-latency voice preview (ElevenLabs stream, key never leaves the server)
 app.post("/v1/tts/stream", requireUser, async (req, res) => { try { const { planOf } = await import("./lib/plans.js"); const plan = planOf(user(req.user.uid)); if (!["pro", "studio"].includes(plan)) return res.status(402).json({ error: "ElevenLabs voices start from the Pro plan" }); await streamTTS(res, req.body || {}); } catch (e) { if (!res.headersSent) res.status(502).json({ error: e.message }); } });
