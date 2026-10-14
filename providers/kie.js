@@ -86,9 +86,9 @@ export function kieInput(model, p) {
   if (/^kling-3\.0\/video/.test(m)) return drop({ prompt, image_urls: img ? [img, ...(end ? [end] : [])] : undefined, sound: audio, duration: String(clamp(dur, 3, 15)), aspect_ratio: img ? undefined : snapAR(p.aspect, ["16:9", "9:16", "1:1"]), mode: /4k/i.test(p.meta?.res || "") ? "4K" : /1080|2k/i.test(p.meta?.res || "") || p.meta?.quality === "best" || +p.meta?.fps >= 60 ? "pro" : "std", multi_shots: false, multi_prompt: [], kling_elements: [] });
   if (/^kling-2\.6\/text-to-video/.test(m)) return { prompt, sound: audio, aspect_ratio: snapAR(p.aspect, ["16:9", "9:16", "1:1"]), duration: snapDur(dur, ["5", "10"]) };
   if (/^kling-2\.6\/image-to-video/.test(m)) return { prompt, image_urls: [img], sound: audio, duration: snapDur(dur, ["5", "10"]) };
-  if (/kling/.test(m)) return drop({ prompt, duration: dur >= 10 ? "10" : "5", sound: p.meta?.audio ?? undefined, aspect_ratio: img ? undefined : p.aspect, ...(img ? { image_urls: [img] } : {}) });
+  if (/kling/.test(m)) return drop({ prompt, duration: dur >= 10 ? "10" : "5", sound: p.meta?.audio ?? undefined, aspect_ratio: img ? undefined : snapAR(p.aspect, ["16:9", "9:16", "1:1"]), ...(img ? { image_urls: [img] } : {}) });
   if (/seedance/.test(m)) return drop({ prompt, first_frame_url: img, last_frame_url: end, generate_audio: audio, resolution: pickRes(p, ["480p", "720p", "1080p", "4k"], "720p"), aspect_ratio: img ? "adaptive" : snapAR(p.aspect, ["1:1", "4:3", "3:4", "16:9", "9:16", "21:9"]), duration: clamp(dur, 4, 15), web_search: false });
-  if (/minimax-h3/.test(m)) return drop({ prompt, duration: dur >= 10 ? 10 : 6, first_frame_url: img, last_frame_url: end, aspect_ratio: img ? undefined : p.aspect || "16:9" });
+  if (/minimax-h3/.test(m)) return drop({ prompt, duration: dur >= 10 ? 10 : 6, first_frame_url: img, last_frame_url: end, aspect_ratio: img ? undefined : snapAR(p.aspect, ["16:9", "9:16", "1:1"]) });
   if (/hailuo/.test(m)) return drop({ prompt, duration: dur >= 10 ? "10" : "6", image_url: img });
   if (/^wan\/3-0/.test(m)) return drop({ prompt, first_frame_url: img, last_frame_url: end, resolution: pickRes(p, ["480P", "720P", "1080P"], "720P"), aspect_ratio: img ? "adaptive" : snapAR(p.aspect, ["16:9", "4:3", "1:1", "3:4", "9:16"]), duration: clamp(dur, 2, 15), audio: audio || undefined });
   if (/^wan\/2-7-image-to-video/.test(m)) return drop({ prompt, first_frame_url: img, last_frame_url: end, resolution: pickRes(p, ["720p", "1080p"], "720p"), duration: clamp(dur, 2, 15) });
@@ -137,7 +137,7 @@ export const kie = (model) => {
       if (!mo) throw Object.assign(new Error("Set a Kie AI model id (Admin → AI providers → Kie AI, or Admin → Models)"), { code: 503 });
       if (VEO.has(mo)) {
         const img = startImg(p);
-        const d = await call("/api/v1/veo/generate", { method: "POST", body: JSON.stringify(drop({ prompt: fullPrompt(p), model: mo, aspect_ratio: VEO_RATIOS.has(p.aspect) ? p.aspect : "Auto", imageUrls: img ? [img] : undefined, callBackUrl: p.callbackUrl, ...extraInputs(c, mo) })) });
+        const d = await call("/api/v1/veo/generate", { method: "POST", body: JSON.stringify(drop({ prompt: fullPrompt(p), model: mo, aspect_ratio: VEO_RATIOS.has(p.aspect) ? p.aspect : p.aspect && AR(p.aspect) > 1.5 ? "16:9" : "Auto", imageUrls: img ? [img] : undefined, callBackUrl: p.callbackUrl, ...extraInputs(c, mo) })) });
         return { remoteId: "veo:" + d.taskId };
       }
       if (mo.startsWith("mj:")) {  // Midjourney through Kie: POST /api/v1/mj/generate, GET /api/v1/mj/record-info
@@ -178,6 +178,20 @@ export const kie = (model) => {
   };
 };
 
+// The length each engine model really makes (kieInput sends exactly this): the job is priced for the clip it will get.
+export function kieDur(model, dur) {
+  const m = String(model || "").toLowerCase(), d = Math.round(+dur || 5);
+  if (VEO.has(m)) return 8;
+  if (/^kling-3\.0\/video/.test(m)) return clamp(d, 3, 15);
+  if (/^kling-2\.6\//.test(m)) return +snapDur(d, ["5", "10"]);
+  if (/kling/.test(m)) return d >= 10 ? 10 : 5;
+  if (/seedance/.test(m)) return clamp(d, 4, 15);
+  if (/minimax-h3|hailuo/.test(m)) return d >= 10 ? 10 : 6;
+  if (/^wan\//.test(m)) return clamp(d, 2, 15);
+  if (/grok-imagine/.test(m)) return clamp(d, 6, 30);
+  if (/pixverse/.test(m)) return clamp(d, 1, 15);
+  return d;
+}
 // Built-in Kie model for each studio model, so every model works as soon as the Kie key is saved
 // (an id set in Admin → Models, or the admin's default model, still wins). Image-to-video / edit variants are
 // picked when the job carries a start frame or a reference image.

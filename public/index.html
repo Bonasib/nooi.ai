@@ -2143,7 +2143,7 @@ VIEWS.home=()=>{
 };
 const TOOLDESC={video:["Text or image to video with camera control and keyframes.","نص أو صورة إلى فيديو مع تحكم بالكاميرا وإطارات مفتاحية."],image:["Several images per prompt, pick the best.","عدة صور لكل وصف، واختر الأفضل."],story:["Multi-chapter films that continue from the last frame.","أفلام متعددة الفصول تُكمل من آخر إطار."],board:["Frames, dialogue, sound and transitions on a canvas.","إطارات وحوار وصوت وانتقالات على لوحة."],chars:["Characters with ages, voices and several looks.","شخصيات بأعمار وأصوات وأشكال متعددة."],edit:["Trim, effects, text, and edit frames with a prompt.","قص ومؤثرات ونصوص وتعديل الإطار بالوصف."],bg:["Remove green, blue or any background and replace it.","إزالة الخلفية الخضراء أو الزرقاء أو أي خلفية واستبدالها."],grade:["Match colors from a reference shot or image.","طابق الألوان من لقطة أو صورة مرجعية."],mocap:["Capture motion from a video and apply it to a character.","التقط الحركة من فيديو وطبّقها على شخصية."],voice:["Voices by dialect and age, lip sync, music and SFX.","أصوات حسب اللهجة والعمر، ومزامنة الشفاه، وموسيقى ومؤثرات."],finish:["Upscale, 60fps, extend, reframe, captions, dubbing.","رفع الدقة، 60 إطاراً، تمديد، إعادة تأطير، ترجمة، دبلجة."]};
 function toolGrid(keys){return'<div class="toolgrid">'+keys.map(k=>{const n=ALLNAV.find(x=>x[0]===k);return'<button class="panel tool" data-go="'+k+'"><span class="ico">'+ic(n[1])+"</span><b>"+L(n[2],n[3])+"</b><span>"+L(TOOLDESC[k][0],TOOLDESC[k][1])+"</span></button>"}).join("")+"</div>"}
-VIEWS.tools=()=>'<div class="view"><h1>'+L("Tools","الأدوات")+'</h1><p class="lede">'+L("Everything in the studio.","كل أدوات الاستوديو.")+"</p>"+NAVS.slice(1,3).map(g=>'<h2 class="sec">'+L(g[0][0],g[0][1])+"</h2>"+toolGrid(g[1].map(x=>x[0]))).join("")+'<h2 class="sec">'+L("More","المزيد")+"</h2>"+toolGrid(["explore"].filter(()=>false))+'<div class="row"><button class="btn" data-go="explore">'+ic("explore")+L("Templates","القوالب")+"</button></div></div>";
+
 TOOLDESC.explore=["",""];
 function tplCard(t){return'<button class="panel card tpl" data-act="use-tpl" data-id="'+t.id+'">'+thumb("t:"+t.id,{dur:t.dur,tag:t.aspect})+'<div class="ti">'+esc(L(t.t[0],t.t[1]))+'</div><div class="su">'+lab(TYPES,t.type)+" · "+lab(VSTYLES,t.style)+" · "+lab(CAMS,t.cam)+"</div></button>"}
 let KIND=j=>({video:L("Video","فيديو"),image:L("Image","صورة"),look:L("Character look","شكل شخصية"),sheet:L("Character sheet","ورقة شخصية"),edit:L("Prompt edit","تعديل بالوصف"),bg:L("AI background","خلفية بالذكاء"),mocap:L("Motion capture","التقاط حركة"),voice:L("Voiceover","تعليق صوتي"),lipsync:L("Lip sync","مزامنة شفاه"),music:L("Music","موسيقى"),sfx:L("Sound effect","مؤثر صوتي"),finish:L("Enhance","تحسين"),export:L("Export","تصدير")})[j.kind]||j.kind;
@@ -2862,7 +2862,7 @@ const EDV=["edit","bg","grade","mocap","voice","finish"];
 function fxTabs(){return'<div class="seg fxtabs" role="tablist" style="margin-bottom:18px">'+[["bg","Background & keying","الخلفية والكروما"],["grade","Color grading","تدريج الألوان"],["mocap","Motion capture","التقاط الحركة"]].map(x=>'<button data-go="'+x[0]+'" aria-pressed="'+(S.view===x[0]||(S.view==="fx"&&(S.fxTab||"bg")===x[0]))+'">'+L(x[1],x[2])+"</button>").join("")+"</div>"}
 ["bg","grade","mocap"].forEach(k=>{const f=VIEWS[k];VIEWS[k]=()=>{S.fxTab=k;return f().replace('<div class="view">','<div class="view">'+fxTabs())}});
 Object.assign(TOOLDESC,{fx:["Keying, color grading and motion capture.","الكروما وتدريج الألوان والتقاط الحركة."],plan:["Analyze your website and get a ready content plan.","حلّل موقعك واحصل على خطة محتوى جاهزة."],calendar:["Schedule and publish to every platform.","جدول وانشر على كل المنصات."],library:["Everything you made.","كل ما صنعته."],explore:["Ready-made starting points.","نقاط بداية جاهزة."],connect:["Plug in your APIs and accounts.","اربط واجهاتك البرمجية وحساباتك."],account:["Profile, plan and credits.","الملف والباقة والرصيد."]});
-VIEWS.tools=()=>'<div class="view"><h1>'+L("Studio","الاستوديو")+'</h1><p class="lede">'+L("Every tool, grouped by what you're doing: create, tell the story, edit, then publish.","كل الأدوات مرتبة حسب مرحلة العمل: أنشئ، ثم احكِ القصة، ثم حرّر، ثم انشر.")+"</p>"+NAVS.slice(1).map(g=>'<h2 class="sec">'+L(g[0][0],g[0][1])+"</h2>"+toolGrid(g[1].map(x=>x[0]))).join("")+"</div>";
+
 const _go=go;go=function(v){if(v==="fx")v=S.fxTab||"bg";_go(v)};
 
 /* ---------- API client (server mode when self-hosted) ---------- */
@@ -2878,7 +2878,7 @@ const mediaUrl=o=>o&&(o.resultUrl||EXPORTS[o.id])||"";
 async function serverSubmit(o,kind,payload){
   try{const inputs={};for(const s of SLOTS_FOR[kind]||[]){const m=M[s];if(m&&m.file){const u=await API.upload(m.file,m.name);inputs[s]=u.url}else if(m&&m.remote)inputs[s]=m.remote}
     if(kind==="edit"&&M.capture){const b=await(await fetch(M.capture)).blob();inputs.frame=(await API.upload(b,"frame.jpg")).url}
-    const res=await API.req("/v1/jobs",{json:Object.assign({kind,inputs},payload)});o.remote=res.id;o.status="queued";persist()}
+    const res=await API.req("/v1/jobs",{json:Object.assign({kind,inputs},payload)});o.remote=res.id;o.status="queued";if(res.dur&&+res.dur!==+o.dur){o.durAsked=o.dur;o.dur=+res.dur}if(res.cost>0)o.cost=res.cost;persist()}
   catch(e){o.status="failed";o.error=String(e.message||e);statusChanged()}
 }
 const _addJob=addJob;
@@ -3662,7 +3662,7 @@ function hookBody(){
 }
 function hookApplyBtns(src,i){const c=HK_CTX.ctx;const b=(act,icn,txt)=>'<button class="btn sm'+(act==="hk-use"?" primary":"")+'" data-act="'+act+'" data-src="'+src+'" data-i="'+i+'">'+ic(icn)+txt+"</button>";
   if(c==="video")return b("hk-use","check",L("Use in this video","استخدمه في هذا الفيديو"));if(c==="editor")return b("hk-use","text",L("Add as opening text","أضفه كنص افتتاحي"));if(c==="post")return b("hk-use","check",L("Put at top of caption","ضعه أول النص"));if(c==="plan")return b("hk-use","check",L("Use for this post","استخدمه لهذا المنشور"));
-  return b("hk-to","video",L("New video","فيديو جديد"))+b("hk-toed","text",L("Editor","المحرر"))+b("hk-copy","plus",L("Copy","نسخ"))}
+  return b("hk-to","video",L("New video","فيديو جديد"))+b("hk-toed","text",L("Editor","المحرر"))+b("hk-copy","copy",L("Copy","نسخ"))}
 VIEWS.hooks=()=>{HK_CTX.ctx="none";HK_CTX.id=null;return'<div class="view" style="max-width:1000px"><h1>'+L("Hook lab","مختبر الخطافات")+'</h1><p class="lede">'+L("The first 2 seconds decide whether people keep watching. Get hooks built for your topic, platform and audience — plus a plan to hold attention until the last second.","أول ثانيتين تحددان هل سيكمل الناس المشاهدة. احصل على خطافات مصممة لموضوعك ومنصتك وجمهورك — مع خطة تُبقي الانتباه حتى آخر ثانية.")+'</p><div class="panel pad">'+hookBody()+"</div></div>"};
 function openHooks(ctx,id){HK_CTX.ctx=ctx;HK_CTX.id=id||null;const t=hookTopic(ctx,id);if(t&&t.trim())S.hk.topic=t.trim().slice(0,300);if(ctx==="post"){const p=S.pub.posts.find(x=>x.id===S.pub.sel);if(p&&p.platforms[0])S.hk.platform=p.platforms[0]}if(ctx==="plan"){const it=S.pub.plan.find(x=>x.id===id);if(it)S.hk.platform=it.platform}renderHookSheet()}
 function renderHookSheet(){$("#modalRoot").innerHTML='<div class="modal sheetwrap" data-act="close-sheet"><div class="sheet" role="dialog" aria-modal="true" aria-label="'+L("Hook lab","مختبر الخطافات")+'" data-act="noop"><div class="spread" style="margin-bottom:12px"><h2 style="margin:0">'+ic("hook","width:18px;vertical-align:-3px")+" "+L("Suggested hooks","خطافات مقترحة")+'</h2><button class="btn sm ghost" data-act="close-sheet" aria-label="'+L("Close","إغلاق")+'">'+ic("x")+"</button></div>"+hookBody()+"</div></div>"}
@@ -4694,7 +4694,7 @@ ALLNAV.length=0;NAVS.flatMap(g=>g[1]).forEach(x=>ALLNAV.push(x));
 Object.assign(TOOLDESC,{support:["FAQ, tickets and contact.","الأسئلة الشائعة والتذاكر والتواصل."],admin:["Clients, providers, payments, features and permissions.","العملاء والمزودون والمدفوعات والمزايا والصلاحيات."]});
 renderShell=(o=>function(){o();if(!S.user||!document.querySelectorAll)return;document.querySelectorAll("#side [data-go],#bottomnav [data-go]").forEach(b=>{const v=b.dataset.go;const f=FEATURE_OF_VIEW[v];let hide=f&&!featureOn(f);if(v==="admin")hide=!isAdmin();if(hide)b.style.display="none"});const groups=document.querySelectorAll("#side .sg");groups.forEach(g=>{let n=g.nextElementSibling,any=false;while(n&&!n.classList.contains("sg")&&n.classList.contains("nav")){if(n.style.display!=="none")any=true;n=n.nextElementSibling}if(!any)g.style.display="none"})})(renderShell);
 go=(o=>function(v){const f=FEATURE_OF_VIEW[v==="fx"?(S.fxTab||"bg"):v];if(f&&!featureOn(f)&&S.user){toast(L("This feature is turned off right now.","هذه الميزة متوقفة حالياً."));return}if(v==="admin"&&!isAdmin()){toast(L("Admins only.","للمشرفين فقط."));return}o(v)})(go);
-VIEWS.tools=(o=>()=>o().replace(/<button class="panel tool" data-go="([^"]+)">[\s\S]*?<\/button>/g,(m,v)=>{const f=FEATURE_OF_VIEW[v];return(f&&!featureOn(f))||(v==="admin"&&!isAdmin())?"":m}))(VIEWS.tools);
+
 addJob=(o=>function(j){const map={video:"video",image:"image",look:"chars",sheet:"chars",edit:"edit",bg:"fx",mocap:"fx",voice:"voice",lipsync:"voice",music:"voice",sfx:"voice",finish:"finish",transcribe:"subs",dub:"subs","3d":"studio3d",track3d:"studio3d",view3d:"studio3d",place3d:"studio3d"};const f=j&&map[j.kind];if(f&&!featureOn(f)){toast(L("This feature is turned off right now.","هذه الميزة متوقفة حالياً."));return null}if(j&&j.model&&MODELS[j.model]&&!modelOn(j.model)){j.model="wan22"}return o(j)})(addJob);
 const _vv5=VIEWS.video;VIEWS.video=()=>_vv5().replace(/<button class="model" data-set="draft\.model" data-val="([^"]+)"[\s\S]*?<\/button>/g,(m,k)=>k!=="auto"&&!modelOn(k)?"":m);
 const _vsk2=VIEWS.sketch;VIEWS.sketch=()=>{let h=_vsk2();if(!featureOn("floorplan"))h=h.replace(/<button class="tile" data-act="sk-target" data-v="floorplan"[\s\S]*?<\/button>/,"");return h};
@@ -5297,7 +5297,7 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
   case"dub-clone":{S.dubClone=S.dubClone===X.id?null:X.id;persist();renderView();break}
   }});
 document.addEventListener("change",e=>{if(e.target.dataset&&e.target.dataset.vcup&&e.target.files&&e.target.files[0]){VC.blob=e.target.files[0];VC.url=URL.createObjectURL(VC.blob);renderVC()}});
-function myVoiceTiles(act,cur,addAct){return'<div class="tiles">'+S.voices.map(v=>'<button class="tile" data-act="'+act+'" data-id="'+v.id+'" aria-pressed="'+(cur===v.id)+'"><span class="gl">'+svg(ICONS.mic)+'</span><span class="lb" dir="auto">'+esc(v.name)+"</span></button>").join("")+'<button class="tile" data-act="'+(addAct||"vc-open")+'"><span class="gl">'+ic("plus")+'</span><span class="lb">'+L("Clone a voice","استنسخ صوتاً")+"</span></button></div>"}
+function myVoiceTiles(act,cur,addAct){return'<div class="tiles">'+S.voices.map(v=>'<button class="tile" data-act="'+act+'" data-id="'+v.id+'" aria-pressed="'+(cur===v.id)+'"><span class="gl">'+svg(ICONS.mic)+'</span><span class="lb" dir="auto">'+esc(v.name)+"</span></button>").join("")+'<button class="tile" data-act="'+(addAct||"vc-open")+'"><span class="gl">'+ic("mic")+'</span><span class="lb">'+L("Clone a voice","استنسخ صوتاً")+"</span></button></div>"}
 /* voice page */
 const _vvo=VIEWS.voice;VIEWS.voice=()=>{const h=_vvo(),a='<h2>'+L("Voice library","مكتبة الأصوات")+"</h2>";const mine='<div class="spread"><h2 style="margin:0">'+L("My voices","أصواتي")+'</h2><button class="btn sm primary" data-act="vc-open">'+ic("mic")+L("Clone a voice","استنسخ صوتاً")+'</button></div><p class="small mute">'+L("Speak or upload a sample — then any voiceover, character or dub can use your own voice, in any language.","تحدّث أو ارفع عيّنة — ثم يستخدم أي تعليق صوتي أو شخصية أو دبلجة صوتك أنت، بأي لغة.")+"</p>"+(S.voices.length?'<div class="voices">'+S.voices.map(v=>{const j=S.jobs.find(x=>x.id===v.job);return'<div class="panel voice" role="button" tabindex="0" data-act="vc-use" data-id="'+v.id+'" aria-pressed="'+(S.tools.voice.clone===v.id)+'"><div class="spread"><b style="font-weight:500" dir="auto">'+esc(v.name)+'</b><div class="row" style="flex-wrap:nowrap"><button class="iconbtn" style="color:var(--text);background:none;border-color:var(--line2)" data-act="vc-play" data-id="'+v.id+'" aria-label="'+L("Hear sample","استمع للعيّنة")+'">'+ic("speaker")+'</button><button class="iconbtn" style="color:var(--red);background:none;border-color:var(--line2)" data-act="vc-del" data-id="'+v.id+'" aria-label="'+L("Delete","حذف")+'">'+ic("trash")+'</button></div></div><div class="small mute">'+esc(lab(DIALECTS,v.dialect))+" · "+(j?badge(j.status):"")+"</div></div>"}).join("")+"</div>":myVoiceTiles("vc-use",null))+'<div style="height:14px"></div>';return h.replace(a,mine+a)};
 addJob=(o=>function(j){if(j&&["voice","lipsync","dub"].includes(j.kind)){const vid=j.kind==="dub"?S.dubClone:(S.tools.voice.clone||null);if(vid){const v=S.voices.find(x=>x.id===vid);const vj=v&&S.jobs.find(x=>x.id===v.job);j.meta=Object.assign({},j.meta,{cloneVoice:v?{id:v.id,name:v.name,remote:vj&&vj.remote||vj&&vj.id}:null})}}return o(j)})(addJob);
@@ -5574,7 +5574,7 @@ const _e16=ensureV3;ensureV3=function(){_e16();if(!S.ledger)S.ledger=(S.usage||[
 function ledgerAdd(what,delta,kind){S.ledger.unshift({t:Date.now(),what:String(what).slice(0,70),delta,kind});if(S.ledger.length>500)S.ledger.length=500}
 logUse=(o=>function(what,cr,tier){o(what,cr,tier);if(cr)ledgerAdd(what,-cr,"charge")})(logUse);
 document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="buy"]');if(!a||API.mode==="server")return;const before=S.credits;setTimeout(()=>{const d=S.credits-before;if(d>0){const it=a.dataset.item;ledgerAdd(LIMITS[it]?L("Plan · ","باقة · ")+L(PLANS.find(p=>p.id===it).n[0],PLANS.find(p=>p.id===it).n[1]):L("Top-up","شحن رصيد"),d,LIMITS[it]?"plan":"topup");persist()}},30)},true);
-let SRV_LEDGER=null;async function loadLedger(){if(API.mode!=="server")return;try{const b=await API.req("/v1/billing");SRV_LEDGER=(b.ledger||[]).map(x=>({t:x.t,what:x.reason,delta:x.delta,kind:x.delta>0?(/refund/i.test(x.reason)?"refund":/plan/i.test(x.reason)?"plan":"topup"):"charge"}));if(S.view==="wallet")renderView()}catch(e){}}
+let SRV_LEDGER=null;async function loadLedger(){if(API.mode!=="server")return;try{const b=await API.req("/v1/billing");SRV_LEDGER=(b.ledger||[]).map(x=>({t:x.t,what:x.reason+(x.hold==="held"?L(" · held until it finishes"," · محجوز حتى يكتمل"):x.hold==="released"?L(" · failed — not charged"," · فشل — لم يُخصم"):""),delta:x.delta,kind:x.delta>0?(/refund/i.test(x.reason)?"refund":/plan/i.test(x.reason)?"plan":"topup"):"charge"}));if(S.view==="wallet")renderView()}catch(e){}}
 const KIND_IC={charge:["coin","Charge","خصم"],topup:["plus","Top-up","شحن"],plan:["check","Plan","باقة"],refund:["undo","Refund","استرداد"]};
 function txIcon(x){const w=String(x.what).toLowerCase();if(x.kind!=="charge")return KIND_IC[x.kind][0];return/video|فيديو|chapter|فصل|120/.test(w)?"video":/image|صور/.test(w)?"image":/voice|صوت|dub|دبلج/.test(w)?"voice":/sketch|رسم/.test(w)?"brush":"wand"}
 NAVS.forEach(g=>{const i=g[1].findIndex(x=>x[0]==="account");if(i>=0)g[1].splice(i+1,0,["wallet","wallet","Credits & transactions","الرصيد والمعاملات"])});ALLNAV.length=0;NAVS.flatMap(g=>g[1]).forEach(x=>ALLNAV.push(x));TOOLDESC.wallet=["Balance, spending and every transaction.","الرصيد والإنفاق وكل المعاملات."];
@@ -6173,7 +6173,7 @@ function worldGLB(){if(!WLD.h)genWorld();const N=WLD.N,G=160,step=N/G,pos=new Fl
   dv.setUint32(0,0x46546C67,true);dv.setUint32(4,2,true);dv.setUint32(8,total,true);dv.setUint32(12,js.length+jp,true);dv.setUint32(16,0x4E4F534A,true);out.set(js,20);out.fill(0x20,20+js.length,20+js.length+jp);let o=20+js.length+jp;dv.setUint32(o,bin.length+bp,true);dv.setUint32(o+4,0x004E4942,true);out.set(bin,o+8);return new Blob([out],{type:"model/gltf-binary"})}
 function detectBiome(p){const t=String(p||"").toLowerCase();return[["desert",/(desert|dune|sahara|صحراء|كثبان|رمل)/],["snow",/(snow|ice|arctic|ثلج|جليد)/],["islands",/(island|ocean|sea|beach|جزيرة|جزر|بحر|شاطئ)/],["forest",/(forest|jungle|tree|غابة|أشجار)/],["canyon",/(canyon|valley|rock|وادي|وادٍ|صخر)/],["alien",/(alien|planet|mars|space|فضائي|كوكب|المريخ)/],["mountains",/(mountain|hill|peak|جبل|جبال|قمة)/]].find(x=>x[1].test(t))?.[0]}
 NAVS.forEach(g=>{const i=g[1].findIndex(x=>x[0]==="coloring");if(i>=0)g[1].splice(i,0,["world","world","3D worlds","عوالم ثلاثية الأبعاد",1])});ALLNAV.length=0;NAVS.flatMap(g=>g[1]).forEach(x=>ALLNAV.push(x));TOOLDESC.world=["Build an explorable 3D world and open it in Blender.","ابنِ عالماً ثلاثي الأبعاد قابلاً للاستكشاف وافتحه في Blender."];FEATURE_OF_VIEW.world="world";FEATURES.push(["world","3D worlds","عوالم ثلاثية الأبعاد","world"]);
-VIEWS.world=()=>{const W=S.wld;return tilify('<div class="view"><div class="spread"><h1>'+L("3D worlds","عوالم ثلاثية الأبعاد")+'</h1><span class="badge b-live">'+L("Runs in your browser","يعمل في متصفحك")+'</span></div><p class="lede">'+L("Describe a world or pick a landscape, explore it, then take it to Blender as a 3D model.","صِف عالماً أو اختر تضاريس، استكشفه، ثم انقله إلى Blender كنموذج ثلاثي الأبعاد.")+'</p><div class="two"><div><div class="wview"><canvas id="wldcv" aria-label="'+esc(L("3D world view — drag to look, use the arrows to move","عرض العالم — اسحب للنظر واستخدم الأسهم للتحرك"))+'"></canvas><div class="wpad" aria-label="'+esc(L("Move","تحرك"))+'"><button data-wk="f" aria-label="'+esc(L("Forward","للأمام"))+'">▲</button><button data-wk="l" aria-label="'+esc(L("Turn left","استدر يساراً"))+'">◀</button><button data-wk="b" aria-label="'+esc(L("Back","للخلف"))+'">▼</button><button data-wk="r" aria-label="'+esc(L("Turn right","استدر يميناً"))+'">▶</button></div><div class="walt"><button data-wk="u" aria-label="'+esc(L("Up","أعلى"))+'">＋</button><button data-wk="d" aria-label="'+esc(L("Down","أسفل"))+'">－</button></div></div><div class="row" style="margin-top:10px"><button class="btn primary" data-act="wld-glb">'+ic("download")+L("Download for Blender (.glb)","نزّل لـ Blender (.glb)")+'</button><button class="btn" data-act="wld-shot">'+ic("video")+L("Make a video from this view","اصنع فيديو من هذه اللقطة")+'</button><button class="btn ghost" data-go="integrations">'+ic("cube")+L("Blender add-on","إضافة Blender")+'</button></div><p class="small dim">'+L("In Blender: File → Import → glTF 2.0 (.glb). With the nooi add-on, worlds you save also appear in its library.","في Blender: ملف ← استيراد ← glTF 2.0. ومع إضافة nooi تظهر العوالم المحفوظة في مكتبتها أيضاً.")+'</p></div><div class="panel pad"><label class="lbl" style="margin-top:0">'+L("Describe your world","صِف عالمك")+'</label><div class="row" style="flex-wrap:nowrap"><input type="text" data-bind="wld.prompt" dir="auto" value="'+esc(W.prompt)+'" placeholder="'+esc(L("e.g. golden desert dunes at sunset","مثال: كثبان صحراوية ذهبية وقت الغروب"))+'"><button class="btn" data-act="wld-apply">'+ic("wand")+L("Build","ابنِ")+'</button></div><span class="lbl">'+L("Landscape","التضاريس")+'</span><div class="tiles">'+BIOMES_V33.map(b=>'<button class="tile" data-act="wld-biome" data-v="'+b[0]+'" aria-pressed="'+(W.biome===b[0])+'"><span class="gl"><i class="bswatch" style="background:'+b[3]+'"></i></span><span class="lb">'+L(b[1],b[2])+"</span></button>").join("")+'</div><span class="lbl">'+L("Time of day","وقت اليوم")+'</span><div class="seg">'+TODS.map(t=>'<button data-act="wld-tod" data-v="'+t[0]+'" aria-pressed="'+(W.tod===t[0])+'">'+L(t[1],t[2])+"</button>").join("")+"</div>"+slider("wld.water",L("Sea level","مستوى البحر"),W.water,0,80,1,"%")+slider("wld.rough",L("Roughness","الوعورة"),W.rough,10,100,1,"%")+'<div class="row" style="margin-top:8px"><button class="btn sm" data-act="wld-seed">'+ic("refresh")+L("New variation","تنويع جديد")+'</button></div><div class="wai"><div class="spread"><b>'+L("Photoreal AI world","عالم واقعي بالذكاء")+'</b><span class="small mute">'+L("world-model provider","مزوّد نموذج العوالم")+'</span></div><p class="small mute">'+L("Generate a detailed world with an external world-model provider connected in Admin → AI providers. Result appears in your library.","ولّد عالماً مفصّلاً عبر مزوّد نماذج عوالم خارجي يُربط من الإدارة ← مزودو الذكاء. تظهر النتيجة في مكتبتك.")+'</p><button class="btn sm" data-act="wld-ai">'+ic("spark")+L("Generate with AI · 40 cr","ولّد بالذكاء · 40 رصيد")+"</button></div></div></div></div>")};
+
 renderView=(o=>function(){o();if(S.view==="world")requestAnimationFrame(worldReady)})(renderView);
 let wDrag=null;document.addEventListener("pointerdown",e=>{if(e.target.id!=="wldcv")return;wDrag={x:e.clientX,y:e.clientY,a:WLD.cam.a,hz:WLD.cam.hz};e.target.setPointerCapture&&e.target.setPointerCapture(e.pointerId)});
 document.addEventListener("pointermove",e=>{if(!wDrag)return;WLD.cam.a=wDrag.a+(e.clientX-wDrag.x)*.006;WLD.cam.hz=Math.max(-60,Math.min(300,wDrag.hz+(e.clientY-wDrag.y)*.8))});
@@ -6195,7 +6195,7 @@ AI_PROVIDERS.push(["world","3D world engine","محرك العوالم ثلاثي
 /* world extras carried over: engine choice + fly-through recording */
 const W_ENGINES=[["marble","World Labs · Marble"],["hyworld","HunyuanWorld"],["custom","Custom API"]];
 S.wld.engine=S.wld.engine||"marble";
-VIEWS.world=(o=>()=>o().replace('<button class="btn sm" data-act="wld-ai">','<div class="seg segwrap" style="margin:6px 0 8px">'+W_ENGINES.map(e=>'<button data-set="wld.engine" data-val="'+e[0]+'" aria-pressed="'+(S.wld.engine===e[0])+'">'+e[1]+"</button>").join("")+'</div><button class="btn sm" data-act="wld-ai">').replace('<button class="btn" data-act="wld-shot">','<button class="btn" data-act="wld-rec">'+ic("video")+L("Record a fly-through (8 s)","سجّل جولة طيران (8 ث)")+'</button><button class="btn" data-act="wld-shot">'))(VIEWS.world);
+
 addJob=(o=>function(j){if(j&&j.kind==="world"){j.meta=Object.assign({},j.meta,{engine:S.wld.engine})}return o(j)})(addJob);
 document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="wld-rec"]');if(!a||!WLD.cv||!WLD.cv.captureStream||!window.MediaRecorder){if(a)toast(L("Recording isn't supported in this browser.","التسجيل غير مدعوم في هذا المتصفح."),{type:"warn"});return}
   a.classList.add("busy");const st=WLD.cv.captureStream(30),mime=["video/webm;codecs=vp9","video/webm","video/mp4"].find(t=>MediaRecorder.isTypeSupported(t))||"";const rec=new MediaRecorder(st,mime?{mimeType:mime}:{}),chunks=[];rec.ondataavailable=ev=>ev.data.size&&chunks.push(ev.data);
@@ -7570,7 +7570,7 @@ ICONS.clock=ICONS.clock||'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3
 MODEL_PROV=(o=>id=>(((API.cfg||{}).engineRoutes||{})[id])?"engine":o(id))(MODEL_PROV);
 /* ---------- the create box (Higgsfield start + Dreamina tabs): one prompt for video, image, audio, avatar or the agent ---------- */
 S.hf=Object.assign({tab:"agent",vModel:"auto",iModel:"auto",aspect:"16:9",res:"720P",dur:5,n:4,audio:"voice"},S.hf||{});
-const HF_TABS=[["agent","Agent","الوكيل","wand"],["video","Video","فيديو","video"],["image","Image","صورة","image"],["audio","Audio","صوت","voice"],["avatar","Avatar","أفاتار","char"]];
+const HF_TABS=[["agent","Agent","الوكيل","wand"],["video","Video","فيديو","video"],["image","Image","صورة","image"],["audio","Audio","صوت","wave"],["avatar","Avatar","أفاتار","char"]];
 const HF_RATIOS=["21:9","16:9","4:3","1:1","3:4","9:16"],HF_RES={video:["720P","1080P","2K","4K"],image:["1K","2K","4K"]};
 const HF_PH={agent:[["Create a cinematic trailer for my brand","أنشئ إعلاناً سينمائياً لعلامتي"],["Make a 30-second ad for my coffee shop","اصنع إعلاناً مدته 30 ثانية لمقهاي"],["Turn my story idea into a short film","حوّل فكرة قصتي إلى فيلم قصير"]],
   video:[["A falcon takes off over the desert at sunrise, slow motion","صقر يحلّق فوق الصحراء عند الشروق، حركة بطيئة"],["Product shot: a perfume bottle turns on wet black glass","لقطة منتج: زجاجة عطر تدور على زجاج أسود مبلل"]],
@@ -7597,7 +7597,7 @@ function hfBox(){const H=S.hf,t=H.tab,ref=M.hfRef,ph=(HF_PH[hfPhKey()]||HF_PH.ag
   return'<div class="hfbox" data-tab="'+t+'"><div class="hftabs" role="tablist">'+HF_TABS.map(x=>'<button role="tab" data-act="hf-tab" data-v="'+x[0]+'" aria-selected="'+(t===x[0])+'">'+ic(x[3])+"<span>"+L(x[1],x[2])+"</span></button>").join("")+"</div>"+
     '<div class="hfmain">'+(t!=="agent"&&t!=="audio"?'<label class="hfref'+(ref?" has":"")+'" title="'+L("Reference","مرجع")+'">'+(ref&&ref.url?'<img src="'+esc(ref.url)+'" alt="">':ic("plus")+"<small>"+(t==="avatar"?L("Face","الوجه"):t==="video"?L("Start frame","إطار البداية"):L("Reference","مرجع"))+"</small>")+'<input type="file" accept="image/*" data-hfslot="hfRef" aria-label="'+L("Reference image","صورة مرجعية")+'"></label>':"")+
     '<textarea id="hfq" rows="3" dir="auto" placeholder="'+esc(L(ph[0],ph[1]))+'" aria-label="'+L("Describe what to create","صف ما تريد إنشاءه")+'">'+esc(H.prompt||"")+"</textarea></div>"+
-    '<div class="hfbar"><div class="hfchips">'+chips.join("")+'</div><div class="hfgo">'+(cost!=null?'<span class="hfcost">'+ic("coin")+cost+"</span>":"")+'<button class="hfsend" data-act="hf-send" aria-label="'+L("Create","أنشئ")+'">'+svg('<path d="M12 19V5M5 12l7-7 7 7"/>')+"</button></div></div></div>"}
+    '<div class="hfbar"><div class="hfchips">'+chips.join("")+'</div><div class="hfgo">'+(cost!=null?'<span class="hfcost">'+ic("coin")+cost+"</span>":"")+'<button class="hfsend" data-act="hf-send" aria-label="'+L("Send","إرسال")+'">'+svg('<path d="M12 19V5M5 12l7-7 7 7"/>')+"</button></div></div></div>"}
 /* model sheet · ratio & resolution sheet */
 function hfSheet(title,body){$("#modalRoot").innerHTML='<div class="modal sheetwrap" data-act="close-sheet"><div class="sheet hfsheet" role="dialog" aria-modal="true" aria-label="'+esc(title)+'" data-act="noop"><div class="spread" style="margin-bottom:12px"><h2 style="margin:0">'+esc(title)+'</h2><button class="btn sm ghost" data-act="close-sheet" aria-label="'+L("Close","إغلاق")+'">'+ic("x")+"</button></div>"+body+"</div></div>"}
 function hfModelSheet(){const H=S.hf,t=H.tab,cur=t==="video"?H.vModel:H.iModel,R=(API.cfg&&API.cfg.engineRoutes)||{};
@@ -7639,9 +7639,8 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
 setInterval(()=>{const q=$("#hfq");if(!q||q.value||document.activeElement===q)return;const L0=HF_PH[hfPhKey()]||HF_PH.agent;S._hfi=((S._hfi||0)+1)%L0.length;q.placeholder=L(L0[S._hfi][0],L0[S._hfi][1])},3500);
 
 /* ---------- home: start page, feature cards, what's new, showroom ---------- */
-const HF_CARDS=[["crew","TOP","Film crew","طاقم الفيلم","8 AI bots make a whole film","8 بوتات ذكية تصنع فيلماً كاملاً",0],["chars","NEW","AI Influencer","مؤثر بالذكاء","A consistent face for every post","وجه ثابت لكل منشور",1],["ugcads","POPULAR","UGC ads","إعلانات UGC","Product ads with a presenter","إعلانات منتجات مع مقدّم",2],
-  ["studio3d","NEW","3D from a photo","3D من صورة","Tap it — get a .glb","اضغط عليه واحصل على ‎.glb",3],["edit","NEW","Pro editor","المحرر الاحترافي","Zoom, VFX, captions, slow-mo","تقريب ومؤثرات وترجمة وحركة بطيئة",4],["mocap","","Motion capture","التقاط الحركة","Film yourself, animate anyone","صوّر نفسك وحرّك أي شخصية",5],["sketch","","Live sketch","الرسم الحي","Draw it, watch it come alive","ارسمه وشاهده ينبض بالحياة",0]];
-const HF_NEWS=[["video","Veo 3.1 · Grok Imagine · Kling 2.6","Veo 3.1 · Grok Imagine · Kling 2.6","New video models in the studio","نماذج فيديو جديدة في الاستوديو",1],["edit","Slow motion & speed ramps","الحركة البطيئة ومنحنيات السرعة","Super slow-mo with smooth frames","حركة بطيئة جداً بإطارات ناعمة",3],["studio3d","3D on your device","3D على جهازك","Segment Anything + depth, free","Segment Anything مع العمق، مجاناً",4],["edit","Auto captions","ترجمة تلقائية","Word-by-word, synced to speech","كلمة بكلمة متزامنة مع الكلام",5]];
+
+
 const XP_CATS=[["all","All","الكل"],["films","Films","أفلام"],["marketing","Marketing","تسويق"],["design","Design","تصميم"],["ecommerce","E-commerce","تجارة إلكترونية"],["anime","Cartoons & anime","كرتون وأنمي"],["ugc","UGC","UGC"],["music","Music videos","فيديو موسيقي"]];
 const XP={items:null,loading:false,at:0};
 async function xpLoad(force){if(XP.loading||(!force&&XP.items&&Date.now()-XP.at<60000))return;XP.loading=true;try{if(API.mode==="server"){const q=new URLSearchParams({cat:S.xpCat||"all",type:S.xpType||"all",sort:S.xpSort||"new"});const r=await API.req("/v1/explore?"+q);XP.items=r.items||[]}else XP.items=[];XP.at=Date.now()}catch(e){XP.items=XP.items||[]}finally{XP.loading=false;if(["home","discover"].includes(S.view))renderView()}}
@@ -7651,17 +7650,7 @@ const XP_AR=["4/5","1/1","9/16","16/9","3/4","4/5"];
 function xpCard(x,big){const ar=x.aspect&&/^\d+:\d+$/.test(x.aspect)?x.aspect.replace(":","/"):XP_AR[(x.ex!=null?x.ex:x.id.length)%XP_AR.length],lg=x.model&&logoFor(x.model),media=x.ex!=null?thumb("s:"+x.ex,{}):x.kind==="image"?'<img class="xpm" src="'+esc(x.url)+'" alt="" loading="lazy">':'<video class="xpm" src="'+esc(x.url)+'#t=0.1" muted loop playsinline preload="metadata"></video>';
   return'<div class="xpcard'+(big?" big":"")+'" style="--ar:'+ar+'" data-act="xp-open" data-id="'+esc(x.id)+'" role="button" tabindex="0">'+media+'<div class="xpov"><div class="xpp">'+esc(x.title||x.prompt||"")+'</div><div class="xpmeta">'+(lg?'<img src="'+lg+'" alt="">':"")+"<span>"+esc(x.author||"")+"</span>"+(x.featured?'<em class="xpfeat">'+L("Featured","مميز")+"</em>":"")+(x.likes?'<span class="xplikes">♥ '+x.likes+"</span>":"")+'</div></div><button class="xprec" data-act="xp-recreate" data-id="'+esc(x.id)+'">'+ic("refresh")+L("Recreate","أعد الإنشاء")+"</button></div>"}
 function xpList(){const real=(XP.items||[]).filter(x=>x.url);return real.length?real:xpExamples().filter(x=>!S.xpCat||S.xpCat==="all"||x.cat===S.xpCat)}
-function hfHome(old){const nm=S.user&&S.user.name?String(S.user.name).split(" ")[0]:"";
-  const cards='<div class="hfrail">'+HF_CARDS.map(c=>'<button class="hfcard" data-go="'+c[0]+'">'+thumb("s:"+c[6],{})+(c[1]?'<em class="hfbadge b'+c[1].toLowerCase()+'">'+c[1]+"</em>":"")+'<span class="hfct"><b>'+L(c[2],c[3])+"</b><small>"+L(c[4],c[5])+"</small></span></button>").join("")+"</div>";
-  const news='<div class="hfrail news">'+HF_NEWS.map(n=>'<button class="hfnews" data-go="'+n[0]+'">'+thumb("s:"+n[5],{})+'<span class="hfct"><b>'+L(n[1],n[2])+"</b><small>"+L(n[3],n[4])+"</small></span></button>").join("")+"</div>";
-  const list=xpList().slice(0,6);
-  const show='<div class="spread" style="margin-top:28px"><h2 style="margin:0">'+L("Showroom","المعرض")+'</h2><button class="btn sm ghost" data-go="discover">'+L("See all","عرض الكل")+svg('<path d="M9 6l6 6-6 6"/>')+'</button></div><div class="hfcats">'+XP_CATS.map(c=>'<button data-act="xp-cat" data-v="'+c[0]+'" aria-pressed="'+((S.xpCat||"all")===c[0])+'">'+L(c[1],c[2])+"</button>").join("")+'</div><div class="xpgrid home">'+list.map(x=>xpCard(x)).join("")+"</div>";
-  const adv=S.homeAdv?old.replace(/<h1>/,'<h2 class="hfwelcome">').replace(/<\/h1>/,"</h2>"):old.replace(/<h1>/,'<h2 class="hfwelcome">').replace(/<\/h1>/,"</h2>");
-  return'<div class="view hfhome'+(S.homeAdv?" adv":"")+'"><div class="hfhero"><img class="hfmark" src="brand/nooi-logo-192.png" alt="nooi"><h1>'+L("What do you want to create?","ماذا تريد أن تصنع؟")+"</h1>"+hfBox()+
-    '<button class="hfpill" data-go="integrations">'+ic("plug")+"<span>"+L("nooi inside Claude & ChatGPT","nooi داخل Claude وChatGPT")+"</span><b>"+L("Connect","اربط")+"</b>"+svg('<path d="M9 6l6 6-6 6"/>')+"</button></div>"+
-    cards+'<h2 style="margin:26px 0 10px">'+L("What's new","الجديد")+"</h2>"+news+show+
-    '<div class="hfadvbar"><button class="btn sm" data-act="home-adv" aria-expanded="'+!!S.homeAdv+'">'+ic("grid")+(S.homeAdv?L("Hide advanced studio","إخفاء الاستوديو المتقدم"):L("Advanced studio — every option","الاستوديو المتقدم — كل الخيارات"))+"</button></div>"+
-    '<div class="hfold">'+adv.replace(/^<div class="view">/,"").replace(/<\/div>$/,"")+"</div></div>"}
+
 VIEWS.home=(o=>()=>{if(!XP.items)setTimeout(xpLoad,0);return hfHome(o())})(VIEWS.home);
 /* ---------- Explore: the community feed (Higgsfield "Explore", Dreamina "Showroom") ---------- */
 NAVS[0][1].push(["discover","explore","Explore","استكشف"]);ALLNAV.length=0;NAVS.flatMap(g=>g[1]).forEach(x=>ALLNAV.push(x));
@@ -8036,7 +8025,7 @@ const gfTopTiles=()=>{const list=(GF.cat&&GF.cat.topups)||[200,500,800,1200].map
   '<div class="gfcustom"><label class="lbl" for="gfcustom">'+L("Or type any amount","أو اكتب أي كمية")+'</label><div class="row" style="flex-wrap:nowrap"><input id="gfcustom" type="number" inputmode="numeric" min="50" max="100000" step="10" dir="ltr" placeholder="'+L("e.g. 3000","مثال: 3000")+'" style="flex:1;min-width:0"><span class="gfcp mono" id="gfcp">—</span><button class="btn sm primary" data-act="gf-topc">'+L("Buy","اشترِ")+"</button></div></div>"};
 function gfWallet(){const mine=(GF.mine&&GF.mine.bought)||[],invs=GF.invs||[];
   return'<div class="panel pad gfsec" id="gf-topup"><h2 class="gfh">'+gfStar(20)+L("Top up credits","اشحن الرصيد")+"</h2>"+gfTopTiles()+gfAgree()+"</div>"+
-  '<div class="gf2"><div class="panel pad gfsec gfgift"><h2 class="gfh">🎁 '+L("Gift cards","بطاقات الهدايا")+'</h2><p class="small mute" style="margin:0 0 12px">'+L("Give credits or a plan for 1, 3, 6 or 12 months — with your message and a card to save or email.","أهدِ رصيداً أو باقة لمدة 1 أو 3 أو 6 أو 12 شهراً — مع رسالتك وبطاقة تُحفظ أو تُرسل بالبريد.")+'</p><button class="btn primary" data-act="gf-build">'+ic("plus")+L("Buy a gift card","اشترِ بطاقة هدية")+"</button></div>"+
+  '<div class="gf2"><div class="panel pad gfsec gfgift"><h2 class="gfh">'+ic("gift","width:18px;height:18px;vertical-align:-3px;margin-inline-end:6px")+L("Gift cards","بطاقات الهدايا")+'</h2><p class="small mute" style="margin:0 0 12px">'+L("Give credits or a plan for 1, 3, 6 or 12 months — with your message and a card to save or email.","أهدِ رصيداً أو باقة لمدة 1 أو 3 أو 6 أو 12 شهراً — مع رسالتك وبطاقة تُحفظ أو تُرسل بالبريد.")+'</p><button class="btn primary" data-act="gf-build">'+ic("plus")+L("Buy a gift card","اشترِ بطاقة هدية")+"</button></div>"+
   '<div class="panel pad gfsec"><h2 class="gfh">'+ic("check")+L("Redeem a code","استخدم رمزاً")+'</h2><label class="lbl" for="gfcode">'+L("Gift card code","رمز بطاقة الهدية")+'</label><div class="row" style="flex-wrap:nowrap"><input id="gfcode" dir="ltr" autocomplete="off" spellcheck="false" placeholder="NOOI-XXXX-XXXX-XXXX" value="'+esc(S.gfRedeem||"")+'" style="flex:1;min-width:0;text-transform:uppercase;font-family:var(--mono)"><button class="btn sm primary" data-act="gf-redeem">'+L("Redeem","استخدم")+"</button></div></div></div>"+
   (mine.length?'<div class="panel pad gfsec"><h2 class="gfh">'+L("Gift cards you bought","بطاقات الهدايا التي اشتريتها")+'</h2><div class="gflist">'+mine.map(g=>'<div class="gfrow"><span class="gfsw" style="background:linear-gradient(135deg,'+GIFT_COL[g.design||"aurora"][0]+","+GIFT_COL[g.design||"aurora"][1]+')">'+ic("coin")+'</span><span class="nm"><b>'+esc(gfVal(g))+"</b><small>"+(g.toName?L("For ","إلى ")+esc(g.toName)+" · ":"")+'<span class="mono" dir="ltr">'+esc(g.code)+"</span></small></span>"+badge(g.redeemed?"complete":"queued",g.redeemed?L("Used","مُستخدمة"):L("Not used yet","لم تُستخدم"))+'<button class="btn sm" data-act="gf-view" data-code="'+esc(g.code)+'">'+ic("image")+L("Card","البطاقة")+"</button></div>").join("")+"</div></div>":"")+
   '<div class="panel pad gfsec"><h2 class="gfh">'+ic("card")+L("Invoices","الفواتير")+"</h2>"+(invs.length?'<div class="gflist">'+invs.map(i=>'<div class="gfrow"><span class="nm"><b class="mono" dir="ltr">'+esc(i.no)+"</b><small>"+new Date(i.date).toLocaleDateString(S.lang==="ar"?"ar":"en")+" · "+esc(i.desc)+'</small></span><b class="mono" dir="ltr">'+(i.total/100).toFixed(2)+" "+esc(i.currency)+'</b><button class="btn sm" data-act="gf-inv" data-no="'+esc(i.no)+'">'+L("View","عرض")+"</button></div>").join("")+"</div>":'<p class="small mute" style="margin:0">'+L("Your invoices appear here after each purchase.","تظهر فواتيرك هنا بعد كل عملية شراء.")+"</p>")+"</div>"}
@@ -8051,7 +8040,7 @@ function gbCard(g){const c=GIFT_COL[g.design||"aurora"];return'<div class="gcard
 function gbG(){return{kind:GB.type,credits:GB.type==="plan"?0:(GB.credits==="custom"?Math.round(+GB.custom||0):GB.credits),plan:GB.type==="plan"?GB.plan:null,months:GB.months,design:GB.design,toName:GB.toName,fromName:GB.fromName,message:GB.message}}
 function gfBuild(){if(!GF.cat)gfLoad();const plans=((GF.cat&&GF.cat.giftPlans)||[{plan:"basic"},{plan:"pro"},{plan:"studio"}]),pr=gbPrice();
   const credOpts=[200,500,1200,5000].map(n=>'<button data-act="gb" data-k="credits" data-v="'+n+'" aria-pressed="'+(GB.credits===n)+'">'+n.toLocaleString("en")+"</button>").join("")+'<button data-act="gb" data-k="credits" data-v="custom" aria-pressed="'+(GB.credits==="custom")+'">'+L("Other","أخرى")+"</button>";
-  $("#modalRoot").innerHTML='<div class="modal sheetwrap" data-act="close-sheet"><div class="sheet gbsheet" role="dialog" aria-modal="true" aria-label="'+esc(L("Gift card","بطاقة هدية"))+'" data-act="noop"><div class="spread"><h2 style="margin:0">🎁 '+L("Buy a gift card","اشترِ بطاقة هدية")+'</h2><button class="btn sm ghost" data-act="close-sheet" aria-label="'+esc(L("Close","إغلاق"))+'">'+ic("x")+"</button></div>"+
+  $("#modalRoot").innerHTML='<div class="modal sheetwrap" data-act="close-sheet"><div class="sheet gbsheet" role="dialog" aria-modal="true" aria-label="'+esc(L("Gift card","بطاقة هدية"))+'" data-act="noop"><div class="spread"><h2 style="margin:0">'+ic("gift","width:18px;height:18px;vertical-align:-3px;margin-inline-end:6px")+L("Buy a gift card","اشترِ بطاقة هدية")+'</h2><button class="btn sm ghost" data-act="close-sheet" aria-label="'+esc(L("Close","إغلاق"))+'">'+ic("x")+"</button></div>"+
     '<div id="gbprev">'+gbCard(gbG())+"</div>"+
     '<div class="seg eq" style="margin-top:14px"><button data-act="gb" data-k="type" data-v="credits" aria-pressed="'+(GB.type==="credits")+'">'+L("Credits","رصيد")+'</button><button data-act="gb" data-k="type" data-v="plan" aria-pressed="'+(GB.type==="plan")+'">'+L("Plan","باقة")+"</button></div>"+
     (GB.type==="credits"?'<span class="lbl">'+L("How many credits","كم رصيداً")+'</span><div class="seg wrap">'+credOpts+"</div>"+(GB.credits==="custom"?'<input id="gbcustom" data-gb="custom" type="number" min="50" max="100000" step="10" dir="ltr" inputmode="numeric" placeholder="'+L("e.g. 2500","مثال: 2500")+'" value="'+esc(GB.custom)+'" style="margin-top:8px">':"")
@@ -8121,7 +8110,7 @@ document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.c
 /* admin → Payments: promo gift codes for campaigns and giveaways */
 const GA={list:null,codes:null,kind:"credits",credits:500,plan:"pro",months:1,count:10,note:""};
 function gfAdmin(){if(!GA.list&&!GA._l){GA._l=1;API.req("/v1/admin/gifts").then(r=>{GA.list=r.items||[];renderView()}).catch(()=>{GA.list=[]})}const list=GA.list||[];
-  return'<div class="panel pad gfadm" style="margin-top:14px"><h3 style="margin-top:0">🎁 '+L("Gift cards & promo codes","بطاقات الهدايا ورموز العروض")+'</h3><p class="small mute">'+L("Make codes for campaigns, giveaways or support. Each code works once.","أنشئ رموزاً للحملات أو المسابقات أو الدعم. كل رمز يعمل مرة واحدة.")+'</p>'+
+  return'<div class="panel pad gfadm" style="margin-top:14px"><h3 style="margin-top:0">'+ic("gift","width:18px;height:18px;vertical-align:-3px;margin-inline-end:6px")+L("Gift cards & promo codes","بطاقات الهدايا ورموز العروض")+'</h3><p class="small mute">'+L("Make codes for campaigns, giveaways or support. Each code works once.","أنشئ رموزاً للحملات أو المسابقات أو الدعم. كل رمز يعمل مرة واحدة.")+'</p>'+
     '<div class="seg eq"><button data-act="ga" data-k="kind" data-v="credits" aria-pressed="'+(GA.kind==="credits")+'">'+L("Credits","رصيد")+'</button><button data-act="ga" data-k="kind" data-v="plan" aria-pressed="'+(GA.kind==="plan")+'">'+L("Plan","باقة")+"</button></div>"+
     '<div class="grid2" style="margin-top:8px">'+(GA.kind==="credits"?'<div><label class="lbl" for="gacr">'+L("Credits per code","الرصيد لكل رمز")+'</label><input id="gacr" data-ga="credits" type="number" min="10" dir="ltr" value="'+GA.credits+'"></div>':'<div><label class="lbl" for="gapl">'+L("Plan","الباقة")+'</label><select id="gapl" data-ga="plan">'+["basic","pro","studio"].map(p=>'<option value="'+p+'"'+(GA.plan===p?" selected":"")+">"+p+"</option>").join("")+'</select></div><div><label class="lbl" for="gamo">'+L("Months","الأشهر")+'</label><select id="gamo" data-ga="months">'+[1,3,6,12].map(m=>'<option value="'+m+'"'+(+GA.months===m?" selected":"")+">"+m+"</option>").join("")+"</select></div>")+
     '<div><label class="lbl" for="gacn">'+L("How many codes","عدد الرموز")+'</label><input id="gacn" data-ga="count" type="number" min="1" max="200" dir="ltr" value="'+GA.count+'"></div><div><label class="lbl" for="gant">'+L("Note (campaign)","ملاحظة (الحملة)")+'</label><input id="gant" data-ga="note" dir="auto" value="'+esc(GA.note)+'"></div></div>'+
@@ -8172,9 +8161,9 @@ POSTERS.push(["giftpromo","Gift cards","بطاقات الهدايا","spark"],["
 `;document.head.appendChild(st)})();
 /* ================= v59: redeem a gift from the top of any page (sign up first if needed) · client ID ================= */
 const GF_CONGRATS=()=>L("We're waiting for your talent to amaze the world.","نحن بانتظار موهبتك لتبهر العالم.");
-const gfStrip=()=>'<div class="gfstrip" role="region" aria-label="'+esc(L("Gift cards","بطاقات الهدايا"))+'"><span>🎁 '+L("Have a gift code?","لديك رمز هدية؟")+'</span><button class="btn sm" data-act="gfr-open">'+L("Redeem gift code","استخدم رمز الهدية")+"</button></div>";
+const gfStrip=()=>'<div class="gfstrip" role="region" aria-label="'+esc(L("Gift cards","بطاقات الهدايا"))+'"><span>'+ic("gift","width:18px;height:18px;vertical-align:-3px;margin-inline-end:6px")+L("Have a gift code?","لديك رمز هدية؟")+'</span><button class="btn sm" data-act="gfr-open">'+L("Redeem gift code","استخدم رمز الهدية")+"</button></div>";
 function gfOpen(code){const signed=!!S.user;
-  $("#modalRoot").innerHTML='<div class="modal sheetwrap" data-act="close-sheet"><div class="sheet gfredeem" role="dialog" aria-modal="true" aria-labelledby="gfrh" data-act="noop"><div class="spread"><h2 id="gfrh" style="margin:0">🎁 '+L("Redeem a gift code","استخدم رمز الهدية")+'</h2><button class="btn sm ghost" data-act="close-sheet" aria-label="'+esc(L("Close","إغلاق"))+'">'+ic("x")+"</button></div>"+
+  $("#modalRoot").innerHTML='<div class="modal sheetwrap" data-act="close-sheet"><div class="sheet gfredeem" role="dialog" aria-modal="true" aria-labelledby="gfrh" data-act="noop"><div class="spread"><h2 id="gfrh" style="margin:0">'+ic("gift","width:18px;height:18px;vertical-align:-3px;margin-inline-end:6px")+L("Redeem a gift code","استخدم رمز الهدية")+'</h2><button class="btn sm ghost" data-act="close-sheet" aria-label="'+esc(L("Close","إغلاق"))+'">'+ic("x")+"</button></div>"+
     '<div class="gfrstars">'+STARS("load")+"</div>"+
     '<label class="lbl" for="gfrcode">'+L("Gift card code","رمز بطاقة الهدية")+'</label><input id="gfrcode" dir="ltr" autocomplete="off" spellcheck="false" placeholder="NOOI-XXXX-XXXX-XXXX" value="'+esc(code||S.gfPending||S.gfRedeem||"")+'" style="text-transform:uppercase;font-family:var(--mono)">'+
     (signed?"":'<p class="small mute" style="margin:8px 0 0">'+L("New here? Create your free account — the gift is added right after you sign up.","جديد هنا؟ أنشئ حسابك المجاني — تُضاف الهدية مباشرة بعد التسجيل.")+"</p>")+
@@ -8199,7 +8188,7 @@ setInterval(()=>{if(S.gfPending&&S.user&&API.mode==="server"&&!GF.redeeming&&!AU
 /* top of the page: landing (signed out) and home; a gift button next to the credits */
 vLanding=(o=>function(){const h=o();return h.replace('<header class="lpnav">',gfStrip()+'<header class="lpnav">')})(vLanding);
 VIEWS.home=(o=>()=>{const h=o();return h.replace('<div class="hfhero">',gfStrip()+'<div class="hfhero">')})(VIEWS.home);
-crBtn=(o=>function(){return o()+'<button class="btn ghost sm gfbtn" data-act="gfr-open" aria-label="'+esc(L("Redeem gift code","استخدم رمز الهدية"))+'" title="'+esc(L("Redeem gift code","استخدم رمز الهدية"))+'">🎁</button>'})(crBtn);
+crBtn=(o=>function(){return o()+'<button class="btn ghost sm gfbtn" data-act="gfr-open" aria-label="'+esc(L("Redeem gift code","استخدم رمز الهدية"))+'" title="'+esc(L("Redeem gift code","استخدم رمز الهدية"))+'">'+ic("gift","width:17px;height:17px")+'</button>'})(crBtn);
 /* a redeem link from an email while signed out → open the sheet so they can sign up */
 (()=>{const q=new URLSearchParams(window.BOOT_Q||"");const red=q.get("redeem");if(!red)return;setTimeout(function w(n){if(S.user)return;if(typeof AU!=="undefined"&&!AU.showAuth&&$("#modalRoot")){gfOpen(red)}else if((n||0)<20)setTimeout(()=>w((n||0)+1),400)},1500)})();
 /* the landing page's own demo tiles also show the real showcase media */
@@ -8785,14 +8774,7 @@ VIEWS.home=(o=>function(){let h=o();if(LOGO_SRC.claude&&LOGO_SRC.openai)h=h.repl
 .hfpl2{display:inline-flex}.hfpl2 img{width:20px;height:20px;border-radius:50%;background:#fff;padding:2px;object-fit:contain;box-shadow:0 0 0 2px var(--panel)}.hfpl2 img+img{margin-inline-start:-6px}
 `;document.head.appendChild(st)})();
 /* ================= v69: Claude & ChatGPT pill under the box · tools under the results · no "Recent" · templates described the same way · Dreamina-style length slider · ratio numbers fit ================= */
-/* home order: box → Claude & ChatGPT pill → results → tools → the rest; "Recent" removed */
-VIEWS.home=(o=>function(){let h=o();
-  const pill=h.match(/<button class="hfpill" data-go="integrations">[\s\S]*?<\/button>/);
-  if(pill){h=h.replace(pill[0],"");const p2=pill[0].replace(/<span>[^<]*<\/span>/,"<span>Claude & ChatGPT</span>");h=h.indexOf('<section class="hfres"')>=0?h.replace('<section class="hfres"',p2+'<section class="hfres"'):h.replace('</div><div class="hfrail">',p2+'</div><div class="hfrail">')}
-  const tools=h.match(/<h2 class="sec">(Tools|الأدوات)<\/h2><div class="toolgrid">[\s\S]*?<\/button><\/div>/);
-  if(tools){h=h.replace(tools[0],"");const t2='<div class="hftools">'+tools[0]+"</div>",r=h.indexOf("</section>",h.indexOf('<section class="hfres"'));
-    if(h.indexOf('<section class="hfres"')>=0&&r>0)h=h.slice(0,r+10)+t2+h.slice(r+10);else h=h.replace('<div class="hfrail">',t2+'<div class="hfrail">')}
-  return h})(VIEWS.home);
+
 /* templates: one clear line each, then the same three facts (type · length · format) */
 const TPL_D={t1:["A creator reviews a skincare product to the camera, phone-selfie style.","صانعة محتوى تراجع منتج عناية أمام الكاميرا بأسلوب سيلفي الجوال."],t2:["Hands open a parcel and react to what's inside.","يدان تفتحان طرداً وتتفاعلان مع ما بداخله."],t3:["A fast crash-zoom beat for a cinematic action trailer.","لقطة تقريب خاطفة لإعلان فيلم أكشن سينمائي."],t4:["An anime title shot with a sweeping crane move.","لقطة افتتاحية أنمي بحركة كرين واسعة."],
   t5:["A perfume bottle turning 360° on a dark set.","زجاجة عطر تدور 360 درجة على خلفية داكنة."],t6:["A smooth FPV drone flight through a villa.","جولة درون FPV سلسة داخل فيلا."],t7:["A top-down shot of a kabsa platter being served.","لقطة علوية لطبق كبسة يُقدَّم."],t8:["A singer in a rainy neon alley, tracking shot.","مغنٍّ في زقاق نيون ممطر بلقطة تتبّع."],
@@ -9212,7 +9194,7 @@ SLOTS_FOR.look=["chRef"];SLOTS_FOR.sheet=["chRef"];
 serverSubmit=async function(o,kind,payload){const snap=(SLOTS_FOR[kind]||[]).map(s=>[s,M[s]]).filter(x=>x[1]),cap=kind==="edit"?M.capture:null;
   try{const inputs={};for(const[s,m]of snap){if(m.file){const u=await API.upload(m.file,m.name||s+".png");inputs[s]=u.url}else if(m.remote)inputs[s]=m.remote}
     if(cap){const b=await(await fetch(cap)).blob();inputs.frame=(await API.upload(b,"frame.jpg")).url}
-    const res=await API.req("/v1/jobs",{json:Object.assign({kind,inputs},payload)});o.remote=res.id;o.status="queued";persist()}
+    const res=await API.req("/v1/jobs",{json:Object.assign({kind,inputs},payload)});o.remote=res.id;o.status="queued";if(res.dur&&+res.dur!==+o.dur){o.durAsked=o.dur;o.dur=+res.dur}if(res.cost>0)o.cost=res.cost;persist()}
   catch(e){o.status="failed";o.error=String(e.message||e);statusChanged()}};
 /* run a job with a temporary reference picture, without touching what the user loaded elsewhere */
 function withRef72(slot,file,fn){const keep=M[slot];if(file)M[slot]={type:"image",file,name:(file.name||"ref.png"),url:""};else delete M[slot];try{return fn()}finally{if(keep)M[slot]=keep;else delete M[slot]}}
@@ -9358,12 +9340,7 @@ async function pwMount(){const box=$("#pwview");if(!box||!PW.src)return;if(!awai
 async function pwLoadJob(j){let c=await blobImg72(await jobBlob72(j));if(c&&c.width/c.height<1.6)c=pwPanoFromPhoto(c);if(!c){const s=await blobImg72(await IDB.get("pwsrc_"+(j.meta&&j.meta.pw||"")));if(s)c=pwPanoFromPhoto(s)}if(!c)return false;const first=!PW.src;PW.src=c;S.wld.pw.sel=j.id;persist();if(S.view==="world"){if(first||!$("#pwview"))renderView();else pwMount()}return true}
 setInterval(()=>{const P=S.wld.pw;if(!P||!P.wait)return;const j=S.jobs.find(x=>x.id===P.wait);if(!j){P.wait=null;return}if(j.status==="failed"){P.wait=null;persist();toast(L("The 360° world couldn't be made: ","تعذّر صنع العالم 360°: ")+(j.error||""),{type:"warn"});if(S.view==="world")renderView();return}
   if(j.status==="complete"){P.wait=null;persist();pwLoadJob(j).then(ok=>{if(S.view==="world")renderView();toast(ok?L("Your 3D world is ready — drag to look around, use the arrows to walk","عالمك ثلاثي الأبعاد جاهز — اسحب للنظر حولك واستخدم الأسهم للمشي"):L("The world image didn't arrive.","لم تصل صورة العالم."),{type:ok?"ok":"warn"})})}},1200);
-VIEWS.world=(o=>()=>{let h=o();const P=S.wld.pw,m=bestImg72(),cr=(IMG_MODELS[m]||{cr:2}).cr*2,wj=P.wait&&S.jobs.find(x=>x.id===P.wait),ph=M.pwRef;
-  const card='<div class="panel pad a3card" style="margin:0 0 16px"><h3>'+ic("image")+L("3D world from a photo (AI)","عالم ثلاثي الأبعاد من صورة (ذكاء)")+'</h3><p class="small mute">'+L("Upload a photo of a place (or just describe it). The AI extends it into a full 360° world — it paints what's behind the camera, the sky and the ground — and you can walk inside it, download it as .glb, record a walk-through for the editor or use the view as a scene.","ارفع صورة لمكان (أو صِفه فقط). يمدّها الذكاء إلى عالم كامل 360° — يرسم ما خلف الكاميرا والسماء والأرض — وتستطيع المشي داخله وتنزيله ‎.glb وتسجيل جولة للمحرر أو استخدام المنظر كمشهد.")+'</p>'+
-    '<div class="pwup"><label class="drop">'+ic("upload")+"<div>"+(ph?L("Change the photo","غيّر الصورة"):L("Upload a photo","ارفع صورة"))+'</div><input type="file" accept="image/*" data-pwup="1"></label>'+(ph?'<img src="'+esc(ph.url)+'" alt="">':"")+'</div><input type="text" data-bind="wld.pw.desc" dir="auto" value="'+esc(P.desc||"")+'" placeholder="'+esc(L("Describe the place (optional) — e.g. an old Riyadh souq at sunset","صِف المكان (اختياري) — مثال: سوق قديم في الرياض وقت الغروب"))+'" style="margin-top:8px">'+
-    '<div class="row" style="margin-top:10px"><button class="btn primary" data-act="pw-go" '+(wj?"disabled":"")+">"+ic("spark")+(wj?L("Building the world… ","يُبنى العالم… ")+Math.round((wj.progress||0)*100)+"%":L("Make a 3D world","اصنع عالماً ثلاثي الأبعاد"))+'<span class="cost">'+cr+" cr</span></button></div>"+
-    (PW.src||P.sel?'<div class="pwview" id="pwview" style="margin-top:12px"><div class="pwpad">'+[["f","▲"],["l","◀"],["b","▼"],["r","▶"]].map(x=>'<button data-pwk="'+x[0]+'" aria-label="'+x[0]+'">'+x[1]+"</button>").join("")+'</div><span class="pwhint">'+L("Drag to look · pinch or scroll to zoom · arrows to walk","اسحب للنظر · قرّب بإصبعين أو بالعجلة · الأسهم للمشي")+'</span></div><div class="row" style="margin-top:10px"><button class="btn sm" data-act="pw-glb">'+ic("download")+L("Download .glb","تنزيل ‎.glb")+'</button><button class="btn sm" data-act="pw-ed">'+ic("edit")+L("Walk-through → editor (8 s)","جولة ← المحرر (8 ث)")+'</button><button class="btn sm" data-act="pw-scene">'+ic("video")+L("Use this view in a scene","استخدم هذا المنظر في مشهد")+"</button></div>":"")+"</div>";
-  return h.replace(/(<p class="lede">[\s\S]*?<\/p>)/,"$1"+card)})(VIEWS.world);
+
 const _rt72w=rootFor;rootFor=function(p){if(p==="wld.pw.desc")return[S.wld.pw,["desc"]];return _rt72w(p)};
 renderView=(o=>function(){o();if(S.view==="world"){if(!PW.src&&S.wld.pw.sel){const j=S.jobs.find(x=>x.id===S.wld.pw.sel);if(j&&j.status==="complete")pwLoadJob(j)}else requestAnimationFrame(pwMount)}})(renderView);
 document.addEventListener("change",e=>{const t=e.target;if(t.dataset&&t.dataset.pwup&&t.files&&t.files[0]){loadSlot("pwRef",t.files[0]);setTimeout(renderView,60)}});
@@ -9576,7 +9553,7 @@ NAVS.forEach(g=>{const i=g[1].findIndex(x=>x[0]==="world");if(i>=0&&!g[1].some(x
 TOOLDESC.w3d=["Describe an object or a world — the AI builds it in 3D, you arrange it, light it and export it or turn it into a video.","صِف مجسّماً أو عالماً — يبنيه الذكاء ثلاثي الأبعاد، فترتّبه وتضيئه وتصدّره أو تحوّله إلى فيديو."];
 let W3LOAD=null;function w3Load(){if(window.W3D)return Promise.resolve(true);if(W3LOAD)return W3LOAD;const v="?v=75";
   W3LOAD=new Promise(ok=>{if(!document.getElementById("w3css")){const l=document.createElement("link");l.id="w3css";l.rel="stylesheet";l.href="/world3d/styles.css"+v;document.head.appendChild(l)}const sc=document.createElement("script");sc.src="/world3d/app.js"+v;sc.onload=()=>ok(true);sc.onerror=()=>{W3LOAD=null;ok(false)};document.head.appendChild(sc)});return W3LOAD}
-VIEWS.w3d=()=>{if(window.W3D)return tilify(W3D.view());w3Load().then(ok=>{if(S.view==="w3d")renderView()});return'<div class="view"><h1>'+L("3D World Studio","استوديو العوالم 3D")+'</h1><p class="lede">'+L("Loading…","جارٍ التحميل…")+"</p></div>"};
+
 renderView=(o=>function(){o();if(S.view==="w3d"&&window.W3D)requestAnimationFrame(()=>W3D.mount())})(renderView);
 /* deep link: /world3d/ and /?view=w3d open the studio */
 (function(){const v=new URLSearchParams(location.search).get("view");if(!v||!VIEWS[v])return;let n=0;const t=setInterval(()=>{if(S.user&&!AU.showAuth){clearInterval(t);go(v);history.replaceState(null,"",location.pathname)}else if(++n>40)clearInterval(t)},250)})();
@@ -9595,7 +9572,7 @@ window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('
   if(API.mode==="server"&&((API.cfg.providers.gen3d||{}).skybox)){const j=addJob({kind:"world",prompt:desc,title:L("World · ","عالم · ")+desc.slice(0,30),cost:40,secs:60,art:"scene",aspect:"21:9",meta:{engine:"skybox",biome:W.biome,time:W.tod}});if(j){W.pw.wait=j.id;W.pw.jobs=(W.pw.jobs||[]).concat(j.id).slice(-12);persist();renderView();toast(L("Building your 360° world…","يُبنى عالمك 360°…"),{type:"ok"})}return}
   W.pw.desc=desc;persist();const b=document.querySelector('[data-act="pw-go"]');if(b)b.click();else renderView()},true);
 /* without a world engine the engine chips (World Labs / Hunyuan / Custom) only confused — hide them */
-VIEWS.world=(o=>()=>{let h=o();if(API.cfg&&API.cfg.providers&&API.cfg.providers.world)return h;return h.replace(/<div class="seg segwrap" style="margin:6px 0 8px">[\s\S]*?<\/div>/,"")})(VIEWS.world);
+
 /* a picture that isn't a panorama: a blurred "cover" of the same picture all around, the sharp picture in front, soft edges — no mirrored tiles */
 pwPanoFromPhoto=function(img){const W0=2048,H0=1024,c=document.createElement("canvas");c.width=W0;c.height=H0;const x=c.getContext("2d");const k=Math.max(W0/img.width,H0/img.height);
   x.filter="blur(28px) saturate(1.1)";x.drawImage(img,(W0-img.width*k)/2,(H0-img.height*k)/2,img.width*k,img.height*k);x.filter="none";
@@ -9615,7 +9592,7 @@ AI_PROVIDERS.push(["blockade","Blockade Labs Skybox — 360° worlds","Blockade 
 ICONS.l3d='<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/><path d="M12 7l3 1.7v3.6L12 14l-3-1.7V8.7z"/>';
 NAVS.forEach(g=>{const i=g[1].findIndex(x=>x[0]==="w3d");if(i>=0&&!g[1].some(x=>x[0]==="l3d"))g[1].splice(i+1,0,["l3d","l3d","On-device 3D (free)","3D على جهازك (مجاني)",1])});ALLNAV.length=0;NAVS.flatMap(g=>g[1]).forEach(x=>ALLNAV.push(x));
 TOOLDESC.l3d=["Photo → 3D model made by AI on your own device (WebGPU). Nothing is uploaded and it costs no credits.","صورة ← مجسّم ثلاثي الأبعاد يصنعه الذكاء على جهازك (WebGPU). لا يُرفع شيء ولا يستهلك رصيداً."];
-VIEWS.l3d=()=>{const mh=(API.cfg&&API.cfg.localAI&&API.cfg.localAI.modelsHost)||"";return'<div class="view l3dview"><div class="spread"><h1>'+L("On-device 3D","ثلاثي الأبعاد على جهازك")+'</h1><span class="badge b-complete">'+L("Free · private · WebGPU","مجاني · خاص · WebGPU")+'</span></div><p class="lede">'+L("Turn a photo into a 3D model with AI that runs on this device — nothing is uploaded and no credits are used. Add wind, snow and a live sky, then save it to your library.","حوّل صورة إلى مجسّم ثلاثي الأبعاد بذكاء يعمل على هذا الجهاز — لا يُرفع شيء ولا يُستهلك رصيد. أضف الرياح والثلج والسماء الحية ثم احفظه في مكتبتك.")+'</p><iframe class="l3dframe" title="'+esc(L("On-device 3D","ثلاثي الأبعاد على جهازك"))+'" src="/local3d/?embed=1&lang='+(S.lang==="ar"?"ar":"en")+(mh?"&models="+encodeURIComponent(mh):"")+'" allow="fullscreen; cross-origin-isolated"></iframe></div>'};
+
 (function(){const st=document.createElement("style");st.textContent=".l3dframe{width:100%;height:calc(100vh - 210px);min-height:640px;border:1px solid var(--line);border-radius:16px;background:var(--panel);display:block}@media (max-width:900px){.l3dframe{height:calc(100vh - 180px);min-height:1100px}}";document.head.appendChild(st)})();
 /* the tool hands its model to the app: a local 3D job (library, 3D Studio, 3D World Studio, editor) */
 addEventListener("message",async e=>{if(e.origin!==location.origin||!e.data||e.data.type!=="nooi-local3d-glb")return;const d=e.data,blob=new Blob([d.glb],{type:"model/gltf-binary"});
@@ -9636,7 +9613,7 @@ const X3F={lang:null,force:false,hand:null};
 VIEWS.studio3d=()=>{const q=X3F.q?"&q="+encodeURIComponent(X3F.q):"",b=X3F.biome?"&biome="+encodeURIComponent(X3F.biome):"";X3F.q=X3F.biome=null;X3F.lang=S.lang;
   return'<div class="view x3view"><iframe class="x3frame" data-lang="'+esc(S.lang)+'" title="'+esc(L("3D Studio","استوديو 3D"))+'" src="/studio3d/?embed=1&lang='+encodeURIComponent(S.lang)+q+b+'" allow="fullscreen; xr-spatial-tracking" allowfullscreen></iframe></div>'};
 /* the old pages open the one studio (deep links keep working) */
-["world","w3d","l3d"].forEach(k=>{VIEWS[k]=()=>{S.view="studio3d";if(k==="world"&&S.wld&&S.wld.prompt)X3F.q=S.wld.prompt;return VIEWS.studio3d()}});
+
 afterRender3D=async()=>{};
 (function(){const st=document.createElement("style");st.textContent=".x3view{padding:0!important;max-width:none!important}.x3frame{display:block;width:100%;height:calc(100vh - 96px);min-height:640px;border:0;border-radius:16px;background:var(--panel)}@media (max-width:980px){.x3frame{height:calc(100vh - 120px);min-height:1500px}}";document.head.appendChild(st)})();
 /* keep the frame (and everything in it) across the app's re-renders; rebuild only when the language changes */
@@ -10031,9 +10008,9 @@ function agSkillsHTML(){if(API.mode!=="server")return'<div class="panel pad" sty
   if(!AGD.loaded){if(!AGD.loading)agLoad().then(()=>{if(S.view==="crew")renderView()});return'<div class="panel pad" style="margin-top:14px"><p class="small mute" style="margin:0">'+L("Loading what the agents learned…","جارٍ تحميل ما تعلّمه الوكلاء…")+"</p></div>"}
   const I=AGD.info||{},staff=!!I.sources,list=AGD.agents||[],when=I.learnedAt?new Date(I.learnedAt).toLocaleDateString():"—";
   return'<div class="panel pad" style="margin-top:14px"><div class="spread"><h3 style="margin:0">'+L("What the agents learned","ما تعلّمه الوكلاء")+'</h3><span class="small mute">'+L("Last learned: ","آخر تعلّم: ")+esc(when)+"</span></div>"+
-    '<p class="small mute" style="margin:6px 0 0">'+L("Every week each agent reads trusted pages about its craft and keeps short techniques. Results you approve make a technique stronger; results made again or removed make it weaker.","كل أسبوع يقرأ كل وكيل صفحات موثوقة عن تخصصه ويحتفظ بتقنيات قصيرة. النتائج التي تعتمدها تقوّي التقنية، والتي تُعاد أو تُحذف تضعفها.")+"</p>"+
+    '<p class="small mute" style="margin:6px 0 0">'+L("Each agent starts with nooi's craft notes (camera and light, story, directing, sound, dubbing, art and style) and every week reads trusted pages about its craft. Results you approve make a technique stronger; results made again or removed make it weaker.","يبدأ كل وكيل بملاحظات nooi الحرفية (الكاميرا والإضاءة، القصة، الإخراج، الصوت، الدبلجة، الفن والأسلوب) ويقرأ كل أسبوع صفحات موثوقة عن تخصصه. النتائج التي تعتمدها تقوّي التقنية، والتي تُعاد أو تُحذف تضعفها.")+"</p>"+
     '<div class="agsk">'+list.map(a=>{const b=BOT(a.id);return'<div class="agcard"><div class="hd">'+botSVG(a.id,"idle",36)+"<div><b>"+esc(agName(a.id))+'</b><div class="small mute">'+esc(b?L(b.role[0],b.role[1]):a.role)+"</div></div></div>"+
-      ((a.skills||[]).length?"<ul>"+a.skills.slice(0,staff?12:5).map(s=>'<li class="'+(s.off?"off":"")+'"><b dir="auto">'+esc(s.title)+'</b><small dir="auto">'+esc(s.how)+"</small><small>"+esc((()=>{try{return new URL(s.src).hostname}catch(e){return""}})())+(s.uses?" · "+s.wins+"/"+s.uses+L(" approved"," معتمد"):"")+"</small>"+(staff?'<button class="btn sm ghost" style="margin-top:4px" data-act="ag-skill" data-id="'+esc(s.id)+'" data-off="'+(s.off?0:1)+'">'+(s.off?L("Turn on","فعّل"):L("Turn off","أوقف"))+"</button>":"")+"</li>").join("")+"</ul>":'<p class="small dim" style="margin:8px 0 0">'+L("Nothing learned yet.","لم يتعلم شيئاً بعد.")+"</p>")+"</div>"}).join("")+"</div>"+
+      ((a.skills||[]).length?"<ul>"+a.skills.slice(0,staff?12:5).map(s=>'<li class="'+(s.off?"off":"")+'"><b dir="auto">'+esc(S.lang==="ar"&&s.ar?s.ar:s.title)+'</b><small dir="auto">'+esc(S.lang==="ar"&&s.howAr?s.howAr:s.how)+"</small><small>"+esc(s.own?L("nooi craft notes","ملاحظات nooi الحرفية"):(()=>{try{return new URL(s.src).hostname}catch(e){return""}})())+(s.uses?" · "+s.wins+"/"+s.uses+L(" approved"," معتمد"):"")+"</small>"+(staff?'<button class="btn sm ghost" style="margin-top:4px" data-act="ag-skill" data-id="'+esc(s.id)+'" data-off="'+(s.off?0:1)+'">'+(s.off?L("Turn on","فعّل"):L("Turn off","أوقف"))+"</button>":"")+"</li>").join("")+"</ul>":'<p class="small dim" style="margin:8px 0 0">'+L("Nothing learned yet.","لم يتعلم شيئاً بعد.")+"</p>")+"</div>"}).join("")+"</div>"+
     (staff?'<details class="acc" style="margin-top:12px"><summary>'+L("Sources & learning (admin)","المصادر والتعلّم (للمشرف)")+'</summary><label class="lbl" for="agsrc">'+L("One per line: agent id, then the page (https)","سطر لكل مصدر: معرّف الوكيل ثم الصفحة (https)")+'</label><textarea id="agsrc" class="agsrc" dir="ltr" spellcheck="false">'+esc(Object.entries(I.sources||{}).flatMap(([k,v])=>(v||[]).map(u=>k+" "+u)).join("\n"))+'</textarea><div class="row" style="margin-top:8px"><button class="btn sm" data-act="ag-src">'+ic("check")+L("Save sources","احفظ المصادر")+'</button><button class="btn sm primary" data-act="ag-learn" '+(I.learning||AGD.busy?"disabled":"")+">"+ic("spark")+L("Learn now","تعلّم الآن")+"</button></div>"+
       (AGD.msg?'<p class="small mute" style="margin:8px 0 0">'+esc(AGD.msg)+"</p>":"")+((I.log||[]).length?'<div class="small mute" style="margin-top:8px;display:grid;gap:3px">'+I.log.slice(0,12).map(l=>"<span>"+(l.ok?"✓":"✕")+" "+esc(agName(l.agent))+" · "+esc((()=>{try{return new URL(l.url).hostname}catch(e){return l.url}})())+(l.ok?" · +"+(l.added||0):" · "+esc(l.error||""))+"</span>").join("")+"</div>":"")+"</details>":"")+"</div>"}
 VIEWS.crew=(o=>function(){const h=o(),i=h.lastIndexOf("</div>");return h.slice(0,i)+agSkillsHTML()+h.slice(i)})(VIEWS.crew);
@@ -10995,7 +10972,7 @@ function hubTabsHTML(v){const h=hubOf(v);if(!h||h[4].length<2)return"";const cur
 renderView=(o=>function(){const r=o.apply(this,arguments);const v=document.querySelector("#main .view");if(v){const old=v.querySelector(":scope>.hubtabs"),html=hubTabsHTML(S.view);if(old)old.remove();if(html)v.insertAdjacentHTML("afterbegin",html);
   if(S.view==="sketch"||S.view==="draw"){const h1=v.querySelector("h1"),t=h1&&h1.parentElement&&h1.parentElement.classList.contains("spread")?h1.parentElement:h1;if(t&&!v.querySelector(".skmode80"))t.insertAdjacentHTML("afterend",'<div class="seg skmode80" role="tablist"><button role="tab" data-go="sketch" aria-selected="'+(S.view==="sketch")+'">'+esc(L("Live sketch","رسم حي"))+'</button><button role="tab" data-go="draw" aria-selected="'+(S.view==="draw")+'">'+esc(L("Draw a scene","ارسم مشهداً"))+"</button></div>")}}return r})(renderView);
 // Tools (the Create tab on phones): every tool, grouped by hub
-VIEWS.tools=()=>'<div class="view"><h1>'+L("Create","إنشاء")+'</h1><p class="lede">'+L("Every tool in one place.","كل الأدوات في مكان واحد.")+"</p>"+HUBS.filter(h=>h[0]!=="account").map(h=>'<h2 class="sec">'+L(h[2],h[3])+"</h2>"+toolGrid(h[4].map(t=>t[0]).filter(k=>ALLNAV.some(x=>x[0]===k)&&TOOLDESC[k]))).join("")+"</div>";
+
 (function(){const st=document.createElement("style");st.textContent=`
 .hubtabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 16px;padding:4px;border:1px solid var(--line);border-radius:22px;background:var(--panel2);width:max-content;max-width:100%}
 .hubtabs::-webkit-scrollbar{display:none}
@@ -11200,7 +11177,7 @@ Object.assign(OIP,{"crew.brief.genre|drama":'<path d="M3 4h8v6a4 4 0 0 1-8 0z"/>
   "crew.brief.genre|kids":'<ellipse cx="12" cy="9" rx="5" ry="6"/><path d="M11 15h2l-1 1.5zM12 16.5c0 2-2 2.3-2 4.5"/>',
   "cb.kids|x":'<circle cx="12" cy="8" r="4"/><path d="M10.5 7.5h.01M13.5 7.5h.01M10.6 9.6a2 2 0 0 0 2.8 0"/><path d="M7 21v-3a5 5 0 0 1 10 0v3"/>',
   "cb.size|letter":'<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 15h7M9 18h4"/>',
-  "crew.brief.genre|documentary":'<rect x="3" y="9" width="12" height="10" rx="2"/><path d="M15 12.5l6-3.5v10l-6-3.5"/><circle cx="6.5" cy="5.5" r="2.3"/><circle cx="12" cy="5.5" r="2.3"/>'});
+  "crew.brief.genre|documentary":ICONS.globe});
 function fitWords81(root,sel,min){(root||document).querySelectorAll(sel).forEach(el=>{if(!el.offsetParent)return;el.style.fontSize="";if(el.scrollWidth<=el.clientWidth+1)return;let fs=parseFloat(getComputedStyle(el).fontSize)||11,n=0;while(el.scrollWidth>el.clientWidth+1&&fs>min&&n++<12){fs-=.5;el.style.fontSize=fs+"px"}})}
 renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="crew")requestAnimationFrame(()=>fitWords81($("#main"),".botcard .small",8));return r})(renderView);
 // ---- the avatar speaks in a voice that fits the face: a ready avatar's man / woman goes with the job
@@ -11238,6 +11215,264 @@ setTimeout(()=>{if(API.cfg&&API.cfg.stage&&!document.getElementById("stage81")){
   .stage .cap{display:block!important;white-space:nowrap;text-overflow:ellipsis;font-size:13px!important}}
 .stage:has(.sveil81) .cap{display:none!important}
 #stage81{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:9999;background:#F5C518;color:#1a1400;font:600 12px/1 system-ui,sans-serif;padding:5px 12px;border-radius:0 0 10px 10px;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+`;document.head.appendChild(st)})();
+
+/* ================= v82: one clean system — a still logo, one icon per meaning, one name and one door per tool ================= */
+// ---- the logo: drawn once on the first visit, then always complete and still (it used to redraw on every page and look half-made)
+let nm82Allow=false,nm82Done=false;
+const nm82Seen=()=>{if(nm82Done)return true;try{return sessionStorage.getItem("nm82")==="1"}catch(e){return false}};
+function nmStill82(sv){if(!sv)return;cancelAnimationFrame(sv._nmRaf);if(sv.getAnimations)sv.getAnimations({subtree:true}).forEach(a=>a.cancel());
+  const ln=sv.querySelector(".nm-ln"),dot=sv.querySelector(".nm-dot");if(ln)ln.style.strokeDashoffset="0";if(dot){dot.setAttribute("cx",NM_DOT.x);dot.setAttribute("cy",NM_DOT.y);dot.setAttribute("r",NM_DOT.r)}sv.classList.remove("playing")}
+playMark=(o=>function(sv){if(!nm82Allow){nmStill82(sv);return}nm82Allow=false;return o(sv)})(playMark);
+playNewMarks=function(root){(root||document).querySelectorAll(".nbrand .nmark:not([data-nm])").forEach(sv=>{sv.dataset.nm="1";
+  if(!nm82Seen()&&sv.getBoundingClientRect().width>0){nm82Done=true;try{sessionStorage.setItem("nm82","1")}catch(e){}nm82Allow=true}playMark(sv)})};
+document.querySelectorAll(".nbrand .nmark").forEach(sv=>{if(!sv.classList.contains("playing"))nmStill82(sv)});
+// ---- one icon per meaning: the gift, dubbing and eraser drawings join the set; "Audio" is the sound wave everywhere
+Object.assign(ICONS,{gift:'<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8"/><path d="M12 8c-1.5-3-5-3.5-5-1.2C7 8 9.5 8 12 8zM12 8c1.5-3 5-3.5 5-1.2C17 8 14.5 8 12 8z"/>',
+  dub:'<path d="M4 5h9a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-3 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M17 9h3a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1v3l-3-3h-3a2 2 0 0 1-2-2"/>',
+  eraser:'<path d="M7 21h13"/><path d="M3.5 15.5l9-9a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8L12 19H7.5z"/><path d="M8.5 10.5l5 5"/>'});
+OI.audio=ICONS.wave;
+// the Enhance tools were the only tool cards without an icon
+const FIN82={upscale:OI.upscale,interp:OI.interp,extend:OI.extend,reframe:OI.reframe,captions:ICONS.captions,dub:ICONS.dub,restore:ICONS.denoise,inpaint:ICONS.eraser};
+VIEWS.finish=(o=>function(){return o.apply(this,arguments).replace(/(data-set="tools\.finish\.tool" data-val="(\w+)"[^>]*>)<b>/g,(m,a,id)=>a+(FIN82[id]?'<span class="fin82">'+svg(FIN82[id])+"</span>":"")+"<b>")})(VIEWS.finish);
+// ---- one name and one door per tool. This table is the only place a tool's name, hub and icon are written: the side menu,
+// the phone menu, the tabs on each page, the page titles, the search and the home tools are all built from it.
+//   [hub, view, icon, English, Arabic, (other views that are the same tool)]
+const TOOLS82=[
+ ["home","home","home","Home","الرئيسية"],
+ ["explore","explore","explore","Templates","القوالب"],["explore","discover","grid","Community","المجتمع"],
+ ["image","image","image","Create image","إنشاء صورة"],["image","sketch","draw","Sketch to life","من الرسم إلى الواقع",["draw"]],["image","coloring","cbook","Coloring book","كراسة التلوين"],
+ ["video","video","video","Create video","إنشاء فيديو"],["video","ugcads","megaphone","UGC ads","إعلانات UGC"],["video","crew","crew","nooi Studio","استوديو nooi"],
+ ["video","story","story","Chapter story","قصة الفصول"],["video","board","board","Storyboard","ستوري بورد"],
+ ["chars","chars","char","Characters","الشخصيات"],
+ ["w3ai","w3ai","cube","3D worlds","عوالم 3D"],["w3ai","studio3d","cube","3D Studio","استوديو 3D"],
+ ["edit","edit","edit","Video editor","محرر الفيديو"],["edit","fx","bg","Visual effects","المؤثرات البصرية",["bg","grade","mocap"]],["edit","voice","voice","Voice & audio","الصوت والموسيقى"],
+ ["edit","subs","captions","Subtitles & dubbing","الترجمة والدبلجة"],["edit","finish","finish","Enhance","التحسين"],["edit","vss","eye","Video intelligence","تحليل الفيديو بالذكاء"],
+ ["calendar","calendar","calendar","Schedule & publish","الجدولة والنشر"],["calendar","plan","plan","Content plan","خطة المحتوى"],["calendar","hooks","hook","Hook lab","مختبر الخطافات"],
+ ["library","library","library","My library","مكتبتي"],
+ ["account","account","account","Account & plan","الحساب والباقة"],["account","wallet","coin","Credits","الرصيد"],["account","integrations","mcp","Integrations · MCP","التكاملات · MCP"],
+ ["account","legal","shield","Legal & payments","القانونية والمدفوعات"],["account","support","help","Help & support","المساعدة والدعم"],
+ ["admin","admin","dash","Admin dashboard","لوحة الإدارة"],["admin","connect","plug","Connections & APIs","الربط والواجهات"]];
+const HUB82={home:["home","Home","الرئيسية"],explore:["explore","Explore","استكشف"],image:["image","Image","صورة"],video:["video","Video","فيديو"],chars:["char","Characters","الشخصيات"],
+  w3ai:["cube","3D","ثلاثي الأبعاد"],edit:["edit","Edit","التحرير"],calendar:["calendar","Publish","النشر"],library:["library","My library","مكتبتي"],account:["account","Settings","الإعدادات"],admin:["dash","Admin dashboard","لوحة الإدارة"]};
+const ALIAS82={world:"studio3d",w3d:"studio3d",l3d:"studio3d",tools:"home"};          // old pages (removed) still open the right place
+const STAFF82=new Set(["connect"]);                         // the server's technical settings: owner and admins only (the admin dashboard guards itself)
+const staff82=()=>API.mode!=="server"||(typeof isAdmin==="function"&&isAdmin());
+const tool82=v=>TOOLS82.find(t=>t[1]===v||(t[5]||[]).includes(v));
+const name82=v=>{const t=tool82(v);return t?L(t[3],t[4]):null};
+if(!ICONS.menu)ICONS.menu='<path d="M4 7h16M4 12h16M4 17h16"/>';
+if(!ICONS.help)ICONS.help='<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5V14M12 17h.01"/>';
+if(!ICONS.draw)ICONS.draw='<path d="M4 20c4-1 6-3 8-6s4-6 8-8"/><path d="M14 4l6 6"/><path d="M4 20l2-5 3 3z"/>';
+if(!ICONS.eye)ICONS.eye='<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>';
+(function build82(){
+  HUBS.length=0;Object.keys(HUB82).forEach(h=>{const tabs=TOOLS82.filter(t=>t[0]===h).map(t=>[t[1],t[3],t[4],t[5]]);HUBS.push([h,HUB82[h][0],HUB82[h][1],HUB82[h][2],tabs])});
+  ALLNAV.length=0;TOOLS82.forEach(t=>ALLNAV.push([t[1],t[2],t[3],t[4]]));
+  const hub=k=>[k,HUB82[k][0],HUB82[k][1],HUB82[k][2]];
+  NAVS.length=0;NAVS.push([null,[hub("home"),hub("explore")]],[["Create","إنشاء"],["image","video","chars","w3ai"].map(hub)],[["Edit & publish","التحرير والنشر"],["edit","calendar"].map(hub)],
+    [["Library","المكتبة"],[hub("library")]],[["Account","الحساب"],[hub("account")]],[["Administration","الإدارة"],[hub("admin")]]);
+  Object.assign(TOOLDESC,{fx:["Background & keying, color grading and motion capture.","خلفيات وكروما، تدرّج ألوان، والتقاط الحركة."],subs:["Transcribe, translate and dub with synced captions.","تفريغ وترجمة ودبلجة مع ترجمة متزامنة."],
+    calendar:["Schedule and publish to every platform.","جدول وانشر على كل المنصات."],plan:["Analyze your website and get a ready content plan.","حلّل موقعك واحصل على خطة محتوى جاهزة."],hooks:["Openings that stop the scroll, for any topic.","افتتاحيات توقف التمرير لأي موضوع."]})})();
+// old pages and old links land on the one place for that tool
+go=(o=>function(v,...a){return o(ALIAS82[v]||v,...a)})(go);
+renderView=(o=>function(){if(ALIAS82[S.view])S.view=ALIAS82[S.view];if(STAFF82.has(S.view)&&S.user&&!staff82())S.view="account";return o.apply(this,arguments)})(renderView);
+// tabs on each page: the staff-only tool shows only to staff
+hubTabsHTML=(o=>function(v){const h=o(v);return staff82()?h:h.replace(/<button role="tab" data-go="connect"[^>]*>[\s\S]*?<\/button>/,"")})(hubTabsHTML);
+// every page is titled with its tool's name (the same words as the menu and the tab); pages that had no title get one
+function h1Sync82(){const v=document.querySelector("#main .view");if(!v||S.view==="home")return;const n=name82(S.view);if(!n)return;const h=v.querySelector("h1");
+  if(h){if(!h.children.length&&h.textContent.trim()!==n)h.textContent=n}
+  else{const t=v.querySelector(":scope>.hubtabs"),x='<h1 class="h82" dir="auto">'+esc(n)+"</h1>";if(t)t.insertAdjacentHTML("afterend",x);else v.insertAdjacentHTML("afterbegin",x)}}
+renderView=(o=>function(){const r=o.apply(this,arguments);try{h1Sync82()}catch(e){}return r})(renderView);
+// ---- the same menu on a phone: Home · Image · Video · Edit at the bottom, and "Menu" opens the very same side menu as on a computer
+const BOTTOM82=["home","image","video","edit"];let menu82On=false;
+function menu82(on){menu82On=!!on;document.body.classList.toggle("menu82",menu82On);const b=document.querySelector('#bottomnav [data-act="menu82"]');if(b)b.setAttribute("aria-expanded",String(menu82On));
+  let bg=document.getElementById("menu82bg");if(menu82On&&!bg){bg=document.createElement("div");bg.id="menu82bg";document.body.appendChild(bg)}if(bg)bg.hidden=!menu82On}
+renderShell=(o=>function(){o.apply(this,arguments);const bn=$("#bottomnav");if(!bn||!S.user)return;const h=hubOf(S.view),cur=h?h[0]:S.view;
+  bn.innerHTML=BOTTOM82.filter(k=>{const f=FEATURE_OF_VIEW[k];return!(f&&typeof featureOn==="function"&&!featureOn(f))}).map(k=>'<button data-go="'+k+'"'+(cur===k?' aria-current="page"':"")+">"+ic(HUB82[k][0])+"<span>"+esc(L(HUB82[k][1],HUB82[k][2]))+"</span></button>").join("")+
+    '<button data-act="menu82" aria-controls="side" aria-expanded="'+menu82On+'"'+(!BOTTOM82.includes(cur)?' aria-current="page"':"")+">"+ic("menu")+"<span>"+L("Menu","القائمة")+"</span></button>";
+  if(typeof motionIcons==="function")motionIcons(bn)})(renderShell);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="menu82"]');if(a){e.preventDefault();e.stopImmediatePropagation();menu82(!menu82On);return}
+  if(menu82On&&(e.target.id==="menu82bg"||(e.target.closest&&e.target.closest("#side [data-go]"))))menu82(false)},true);
+addEventListener("keydown",e=>{if(e.key==="Escape"&&menu82On)menu82(false)});
+// ---- home: the prompt, one set of tools, where you left off, templates, and real examples only. The tools are listed once
+// (the "featured" and "what's new" strips repeated them with other names); the advanced studio stays, folded, at the bottom.
+const HOME82=["video","image","crew","ugcads","chars","studio3d","edit","sketch"];
+function hfHome(old){const d=document.createElement("div");d.innerHTML=old;const story=d.querySelector(".hero-story"),uni=d.querySelector(".uni");
+  const real=(XP.items||[]).filter(x=>x.url).slice(0,6);
+  return'<div class="view hfhome v82'+(S.homeAdv?" adv":"")+'"><div class="hfhero"><img class="hfmark" src="brand/nooi-logo-192.png" alt="nooi"><h1>'+L("What do you want to create?","ماذا تريد أن تصنع؟")+"</h1>"+hfBox()+
+    '<button class="hfpill" data-go="integrations">'+ic("plug")+"<span>Claude & ChatGPT</span><b>"+L("Connect","اربط")+"</b>"+svg('<path d="M9 6l6 6-6 6"/>')+"</button></div>"+
+    '<h2 class="sec">'+L("Tools","الأدوات")+"</h2>"+toolGrid(HOME82.filter(k=>{const f=FEATURE_OF_VIEW[k];return ALLNAV.some(x=>x[0]===k)&&!(f&&typeof featureOn==="function"&&!featureOn(f))}))+
+    (story?'<h2 class="sec">'+L("Continue","تابع")+"</h2>"+story.outerHTML:"")+
+    '<div class="spread sec"><h2 style="margin:0">'+L("Start from a template","ابدأ من قالب")+'</h2><button class="btn ghost sm" data-go="explore">'+L("All templates","كل القوالب")+"</button></div>"+
+    '<div class="cards">'+TEMPLATES.slice(0,4).map(tplCard).join("")+"</div>"+
+    (real.length?'<div class="spread sec"><h2 style="margin:0">'+L("From the community","من المجتمع")+'</h2><button class="btn sm ghost" data-go="discover">'+L("See all","عرض الكل")+'</button></div><div class="xpgrid home">'+real.map(x=>xpCard(x)).join("")+"</div>":"")+
+    '<div class="hfadvbar"><button class="btn sm" data-act="home-adv" aria-expanded="'+!!S.homeAdv+'">'+ic("grid")+(S.homeAdv?L("Hide advanced studio","إخفاء الاستوديو المتقدم"):L("Advanced studio — every option","الاستوديو المتقدم — كل الخيارات"))+"</button></div>"+
+    (S.homeAdv&&uni?'<div class="hfold">'+uni.outerHTML+"</div>":"")+"</div>"}
+// full-height workspaces (Chapter story, Storyboard) get the same tabs and title as every other page
+renderView=(o=>function(){const r=o.apply(this,arguments);const f=document.querySelector("#main>.fillwrap");if(f&&!f.querySelector(":scope>.fillhead82")){const tabs=hubTabsHTML(S.view),n=name82(S.view);
+  if(tabs||n)f.insertAdjacentHTML("afterbegin",'<div class="fillhead82">'+tabs+(n?'<h1 class="h82" dir="auto">'+esc(n)+"</h1>":"")+"</div>")}return r})(renderView);
+// ---- the company behind the site: one copy on the server (Admin → Legal & payments → Business details); every visitor's policies,
+// footer and invoices read it. Customers see the policies only — the business form, the payment checklist and the roadmap are for staff.
+const BIZ82=["name","cr","vat","email","phone","address","city","country"];
+function bizApply82(){if(API.mode!=="server"||!API.cfg||!API.cfg.biz)return false;const b=API.cfg.biz;
+  if(staff82()&&!b.name&&S.biz&&S.biz.name){bizSave82(true);return true}                     // details typed earlier in this browser go to the server once
+  BIZ82.forEach(k=>{S.biz[k]=b[k]||(k==="email"?S.biz.email||SUPPORT_EMAIL:"")});return true}
+async function bizSave82(quiet){try{await API.req("/v1/admin/settings",{method:"PUT",json:{biz:Object.fromEntries(BIZ82.map(k=>[k,String(S.biz[k]||"")]))}});const c=await API.req("/v1/config");API.cfg=c;bizApply82();
+  if(!quiet)toast(L("Saved — every policy, the footer and invoices use these details.","حُفظت — كل السياسات والتذييل والفواتير تستخدم هذه البيانات."),{type:"ok"});if(S.view==="legal")renderView()}catch(e){if(!quiet)toast(String(e.message||e),{type:"warn"})}}
+(function wait(n){if(bizApply82()){if(S.view==="legal")renderView();return}if(n<60)setTimeout(()=>wait(n+1),500)})(0);
+legalTabs=(o=>function(doc,owner){return o(doc,owner&&staff82())})(legalTabs);
+VIEWS.legal=(o=>function(){if(!staff82()){bizApply82();if(["business","merchant","roadmap"].includes(S.legalDoc))S.legalDoc="terms"}let h=o.apply(this,arguments);
+  if(S.legalDoc==="business"&&API.mode==="server"&&staff82())h=h.replace("</article>",'<div class="row" style="margin-top:14px"><button class="btn primary" data-act="biz-save82">'+ic("ok")+L("Save for everyone","احفظ للجميع")+'</button><span class="small mute">'+L("Saved on the server: customers' policies and invoices use them.","تُحفظ على الخادم: سياسات العملاء وفواتيرهم تستخدمها.")+"</span></div></article>");return h})(VIEWS.legal);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="biz-save82"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();bizSave82(false)},true);
+if(typeof vLegalPublic==="function")vLegalPublic=(o=>function(){bizApply82();return o.apply(this,arguments)})(vLegalPublic);
+// ---- one request = one job: each request carries its own id (the server turns a repeat of it into the same job), and a
+// "create" button ignores a second tap for a moment
+serverSubmit=(o=>function(obj,kind,payload){return o(obj,kind,Object.assign({cid:obj&&obj.id},payload))})(serverSubmit);
+const GEN82=new Set(["gen-video","gen-images","gen-looks","gen-sheet","voice-gen","music-gen","uni-run","hf-send","ugc-make","render-ch","render-all","run-finish","dub-run","loc-run",
+  "crew-start","crew-render","board-render","frame-render","fp-render","a3-run","s3d-run","w3-make","dw-make","vfxai-gen","xp-recreate","tp-make","ga-make","vc-make","ent-gen","cin-make"]);
+const gen82Last={};
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest("[data-act]");if(!a||!GEN82.has(a.dataset.act))return;const k=a.dataset.act+"|"+(a.dataset.id||a.dataset.v||""),now=Date.now();
+  if(now-(gen82Last[k]||0)<1200){e.preventDefault();e.stopImmediatePropagation();return}gen82Last[k]=now},true);
+// ---- Cinema Studio (Video → Cinema Studio): choose the camera, lens, focal length, aperture, move and light like a film crew.
+// Each choice has a small drawing of its effect and a fixed, tested wording for the engine, so the look is the same every time.
+const fov82=mm=>{const h=Math.atan(18/mm),dx=Math.min(11,Math.tan(h)*17);return'<path d="M12 21L'+(12-dx).toFixed(1)+' 4M12 21L'+(12+dx).toFixed(1)+' 4"/><path d="M'+(12-dx).toFixed(1)+' 4h'+(2*dx).toFixed(1)+'" stroke-dasharray="2 2"/><circle cx="12" cy="21" r="1.4" fill="currentColor"/>'};
+const ap82=r=>'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="'+r+'" fill="currentColor" fill-opacity=".35"/><path d="M12 3v'+(9-r)+'M21 12h-'+(9-r)+'M12 21v-'+(9-r)+'M3 12h'+(9-r)+'" opacity=".5"/>';
+const CIN82={
+ cam:[["cinema","Cinema camera","كاميرا سينمائية","shot on a large-format digital cinema camera, clean highlights, natural skin tones",'<rect x="3" y="8" width="13" height="10" rx="2"/><path d="M16 11l5-3v10l-5-3"/><path d="M6 8V5h6v3"/>'],
+  ["film35","35mm film","فيلم 35 مم","shot on 35mm film stock, fine film grain, soft halation around highlights, rich organic color",'<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 3v18M16 3v18M4 7h4M4 11h4M4 15h4M16 7h4M16 11h4M16 15h4"/>'],
+  ["vintage","Vintage 16mm","فيلم 16 مم قديم","shot on 16mm film, visible grain, slightly faded colors, gentle vignette",'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="6.5" r="1.8"/><circle cx="12" cy="17.5" r="1.8"/><circle cx="6.5" cy="12" r="1.8"/><circle cx="17.5" cy="12" r="1.8"/>'],
+  ["phone","Phone","جوال","shot on a modern smartphone camera, crisp detail, true-to-life color",'<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>'],
+  ["drone","Drone","طائرة درون","aerial footage from a stabilized drone camera",'<circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="5" cy="18" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M7 8l3 3M17 8l-3 3M7 16l3-3M17 16l-3-3"/><rect x="10" y="10" width="4" height="4" rx="1"/>']],
+ lens:[["spherical","Spherical prime","عدسة ثابتة كروية","spherical prime lens, clean round bokeh",'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/>'],
+  ["anamorphic","Anamorphic","أنامورفيك","anamorphic lens, oval bokeh, subtle horizontal lens flares, widescreen feel",'<ellipse cx="12" cy="12" rx="5" ry="8"/><path d="M2 12h20" opacity=".6"/>'],
+  ["macro","Macro","ماكرو","macro lens, extreme close-up detail, tiny textures visible",'<circle cx="11" cy="11" r="6"/><path d="M15.5 15.5L21 21"/><circle cx="11" cy="11" r="2"/>'],
+  ["vintage","Vintage glass","عدسة قديمة","vintage lens with soft edges, warm flares and gentle glow",'<circle cx="12" cy="12" r="8"/><path d="M4 4l4 4M20 4l-4 4" opacity=".6"/><circle cx="12" cy="12" r="3" fill="currentColor" fill-opacity=".25"/>']],
+ focal:[[14,"14 mm","14 مم","ultra-wide 14mm lens, exaggerated perspective, the whole place in view"],[24,"24 mm","24 مم","wide 24mm lens, the subject inside its surroundings"],[35,"35 mm","35 مم","35mm lens, natural documentary perspective"],
+  [50,"50 mm","50 مم","50mm lens, close to how the eye sees"],[85,"85 mm","85 مم","85mm portrait lens, flattering compression"],[135,"135 mm","135 مم","135mm telephoto lens, compressed background, the subject isolated"]].map(x=>x.concat([fov82(x[0])])),
+ ap:[["1.4","f/1.4","f/1.4","aperture f/1.4, very shallow depth of field, creamy background blur",ap82(7)],["2.8","f/2.8","f/2.8","aperture f/2.8, shallow depth of field, soft background",ap82(5)],
+  ["5.6","f/5.6","f/5.6","aperture f/5.6, moderate depth of field, the background still readable",ap82(3.2)],["11","f/11","f/11","aperture f/11, deep focus, sharp from front to back",ap82(1.6)]],
+ move:[["static","Still","ثابتة","locked-off static camera",'<rect x="5" y="7" width="14" height="10" rx="2"/><path d="M12 17v4M8 21h8"/>'],["dolly-in","Dolly in","اقتراب","slow dolly-in toward the subject",'<path d="M4 12h12M12 7l5 5-5 5"/><circle cx="20" cy="12" r="1.5" fill="currentColor"/>'],
+  ["dolly-out","Dolly out","ابتعاد","slow dolly-out revealing the whole scene",'<path d="M20 12H8M12 7l-5 5 5 5"/><circle cx="4" cy="12" r="1.5" fill="currentColor"/>'],["pan","Pan","تحريك أفقي","smooth pan from left to right",'<path d="M4 14a8 8 0 0 1 16 0"/><path d="M17 11l3 3 2-4"/>'],
+  ["tilt","Tilt up","إمالة للأعلى","slow tilt up",'<path d="M12 20V5M7 10l5-5 5 5"/>'],["orbit","Orbit","دوران","smooth 180-degree orbit around the subject",'<ellipse cx="12" cy="13" rx="9" ry="4"/><path d="M18 9l3 3-4 1"/><circle cx="12" cy="10" r="2"/>'],
+  ["crane","Crane up","رافعة","crane shot rising up and over the scene",'<path d="M4 20c2-8 8-14 16-15"/><path d="M16 3l4 2-2 4"/>'],["tracking","Tracking","تتبّع","tracking shot moving alongside the subject",'<path d="M3 8h14M3 16h14M14 5l3 3-3 3M14 13l3 3-3 3"/>'],
+  ["handheld","Handheld","محمولة","handheld camera with natural, subtle shake",'<path d="M3 12c2-3 3 3 5 0s3 3 5 0 3 3 5 0 2 3 3 1"/>'],["crash","Crash zoom","زوم سريع","fast crash zoom onto the subject",'<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3"/>']],
+ light:[["natural","Natural","طبيعي","soft natural daylight",'<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/>'],["golden","Golden hour","الساعة الذهبية","warm golden-hour sunlight, long soft shadows",'<path d="M3 17h18"/><path d="M7 17a5 5 0 0 1 10 0"/><path d="M12 8v2M5 11l1.5 1.5M19 11l-1.5 1.5"/>'],
+  ["blue","Blue hour","الساعة الزرقاء","cool blue-hour twilight, city lights starting to glow",'<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>'],["studio","Soft studio","استوديو ناعم","soft studio lighting, clean background",'<rect x="3" y="4" width="8" height="10" rx="1"/><path d="M7 14v6M4 20h6M14 12h7M14 8h5"/>'],
+  ["neon","Neon night","نيون ليلي","neon-lit night, magenta and cyan reflections on wet streets",'<path d="M5 20V9l7-5 7 5v11"/><path d="M9 20v-6h6v6" opacity=".6"/>'],["noir","Noir","نوار","black-and-white noir, hard light, deep shadows",'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>']]};
+const CINLOOK82=[["blockbuster","Blockbuster","فيلم ضخم",{cam:"cinema",lens:"anamorphic",focal:35,ap:"2.8",move:"dolly-in",light:"golden"}],["documentary","Documentary","وثائقي",{cam:"cinema",lens:"spherical",focal:24,ap:"5.6",move:"handheld",light:"natural"}],
+  ["portrait","Portrait","بورتريه",{cam:"cinema",lens:"spherical",focal:85,ap:"1.4",move:"static",light:"studio"}],["music","Music video","فيديو موسيقي",{cam:"film35",lens:"anamorphic",focal:24,ap:"2.8",move:"orbit",light:"neon"}],
+  ["product","Product hero","منتج بطل",{cam:"cinema",lens:"macro",focal:85,ap:"5.6",move:"orbit",light:"studio"}],["noir","Noir","نوار",{cam:"vintage",lens:"vintage",focal:50,ap:"2.8",move:"tracking",light:"noir"}]];
+const cinState82=()=>(S.cin=Object.assign({prompt:"",cam:"cinema",lens:"spherical",focal:35,ap:"2.8",move:"dolly-in",light:"natural",aspect:"21:9",dur:5,model:"auto",out:"video"},S.cin||{}));
+const cinPick82=(k,v)=>CIN82[k].find(x=>String(x[0])===String(v))||CIN82[k][0];
+function cinPrompt82(){const c=cinState82(),idea=String(c.prompt||"").trim().replace(/[.\s]+$/,"");
+  return(idea?idea+". ":"")+"Shot on "+cinPick82("cam",c.cam)[3].replace(/^shot on /,"")+", "+cinPick82("lens",c.lens)[3]+", "+cinPick82("focal",c.focal)[3]+", "+cinPick82("ap",c.ap)[3]+". Camera: "+cinPick82("move",c.move)[3]+". Lighting: "+cinPick82("light",c.light)[3]+". Cinematic composition, natural motion, no text or watermarks."}
+const cinTiles82=(k,num)=>'<div class="tiles cin82t">'+CIN82[k].map(x=>'<button class="tile" data-set="cin.'+k+'" data-val="'+x[0]+'"'+(num?' data-num="1"':"")+' aria-pressed="'+(String(S.cin[k])===String(x[0]))+'"><span class="gl">'+svg(x[4])+'</span><span class="lb">'+esc(L(x[1],x[2]))+"</span></button>").join("")+"</div>";
+VIEWS.cinema=()=>{const c=cinState82(),vid=c.out!=="still",m=vid?(MODELS[c.model]?c.model:"auto"):bestImg72(),cost=vid?vcost(m,c.dur):(IMG_MODELS[m]||{cr:2}).cr,mine=S.jobs.filter(j=>j.meta&&j.meta.cinema),g=mine[mine.length-1],prev=mine.slice(0,-1).slice(-8).reverse();
+  const look=CINLOOK82.find(l=>Object.entries(l[3]).every(([k,v])=>String(c[k])===String(v)));
+  const form='<div class="panel pad cin82"><label class="lbl" style="margin-top:0">'+L("Your shot","لقطتك")+'</label><textarea data-bind="cin.prompt" dir="auto" style="min-height:84px" placeholder="'+esc(L("e.g. A rider crosses the desert at dawn, dust rising behind the horse","مثال: فارس يعبر الصحراء عند الفجر والغبار يرتفع خلف الحصان"))+'">'+esc(c.prompt)+"</textarea>"+
+    '<span class="lbl">'+L("Ready looks","أساليب جاهزة")+'</span><div class="chips cinlook82">'+CINLOOK82.map(l=>'<button class="chip" data-act="cin-look" data-v="'+l[0]+'" aria-pressed="'+(look===l)+'">'+esc(L(l[1],l[2]))+"</button>").join("")+"</div>"+
+    '<span class="lbl">'+L("Camera","الكاميرا")+"</span>"+cinTiles82("cam")+'<span class="lbl">'+L("Lens","العدسة")+"</span>"+cinTiles82("lens")+
+    '<span class="lbl">'+L("Focal length","البعد البؤري")+"</span>"+cinTiles82("focal",1)+'<span class="lbl">'+L("Aperture","فتحة العدسة")+"</span>"+cinTiles82("ap")+
+    '<span class="lbl">'+L("Camera move","حركة الكاميرا")+"</span>"+cinTiles82("move")+'<span class="lbl">'+L("Light","الإضاءة")+"</span>"+cinTiles82("light")+
+    '<div class="grid2"><div><span class="lbl">'+L("Make","الناتج")+'</span><div class="seg"><button data-set="cin.out" data-val="video" aria-pressed="'+vid+'">'+L("Video","فيديو")+'</button><button data-set="cin.out" data-val="still" aria-pressed="'+!vid+'">'+L("Still","صورة ثابتة")+"</button></div></div>"+
+    '<div><span class="lbl">'+L("Format","الأبعاد")+'</span><div class="seg">'+["21:9","16:9","9:16","1:1"].map(a=>'<button data-set="cin.aspect" data-val="'+a+'" aria-pressed="'+(c.aspect===a)+'">'+a+"</button>").join("")+"</div></div></div>"+
+    (vid?'<div class="grid2"><div><span class="lbl">'+L("Length","المدة")+'</span><div class="seg">'+[5,8,10].map(d=>'<button data-set="cin.dur" data-val="'+d+'" data-num="1" aria-pressed="'+(+c.dur===d)+'">'+d+L("s","ث")+"</button>").join("")+'</div></div><div><span class="lbl">'+L("Engine","المحرك")+'</span><select data-bind="cin.model" data-rerender="1">'+Object.keys(MODELS).filter(k=>typeof modelAllowed!=="function"||modelAllowed(k)).map(k=>'<option value="'+k+'"'+(k===m?" selected":"")+">"+esc(MODELS[k].name)+"</option>").join("")+"</select></div></div>":"")+
+    '<details class="cinp82"><summary>'+L("What the AI receives","ما يصل إلى الذكاء")+'</summary><p dir="ltr">'+esc(cinPrompt82())+"</p></details>"+
+    '<div style="margin-top:16px"><button class="btn primary big" data-act="cin-make">'+ic(vid?"video":"image")+(vid?L("Film it","صوّرها"):L("Make the still","اصنع الصورة"))+'<span class="cost">'+cost+" cr</span></button></div></div>";
+  const out=!g?'<div class="preview-col"><div class="panel pad"><div class="stage" style="aspect-ratio:'+c.aspect.replace(":","/")+';max-height:60vh;margin:0 auto"><div class="empty">'+L("Your shot appears here.","تظهر لقطتك هنا.")+"</div></div></div></div>"
+    :g.kind==="video"?previewCol(g,prev):'<div class="preview-col"><div class="panel pad"><div class="stage" style="aspect-ratio:'+(g.aspect||"16:9").replace(":","/")+';max-height:60vh;margin:0 auto">'+(g.status==="complete"&&mediaUrl(g)?'<img class="frame" style="object-fit:contain;background:#000" src="'+esc(mediaUrl(g))+'" alt="">':'<canvas class="frame live" data-ref="j:'+g.id+'"></canvas>'+sveil81(g))+"</div></div></div>";
+  return'<div class="view"><h1>'+L("Cinema Studio","استوديو السينما")+'</h1><p class="lede">'+L("Direct the shot like a film crew: camera, lens, focal length, aperture, move and light. Each choice is turned into tested wording, so the look stays the same every time.","وجّه اللقطة مثل طاقم فيلم: الكاميرا والعدسة والبعد البؤري وفتحة العدسة والحركة والإضاءة. كل اختيار يتحول إلى صياغة مُختبَرة فيبقى المظهر ثابتاً كل مرة.")+'</p><div class="two two82'+(g?" has":"")+'">'+form+out+"</div></div>"};
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="cin-look"],[data-act="cin-make"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const c=cinState82();
+  if(a.dataset.act==="cin-look"){const l=CINLOOK82.find(x=>x[0]===a.dataset.v);if(l)Object.assign(c,l[3]);persist();renderView();return}
+  if(!String(c.prompt||"").trim()){toast(L("Describe the shot first.","صف اللقطة أولاً."),{type:"warn"});const t=document.querySelector('[data-bind="cin.prompt"]');if(t)t.focus();return}
+  const p=cinPrompt82(),meta={cinema:{cam:c.cam,lens:c.lens,focal:c.focal,ap:c.ap,move:c.move,light:c.light}};let j;
+  if(c.out==="still"){const m=bestImg72();j=addJob({kind:"image",prompt:p,title:c.prompt.slice(0,60),model:m,aspect:c.aspect,cost:(IMG_MODELS[m]||{cr:2}).cr,secs:5,art:"scene",meta})}
+  else{const m=MODELS[c.model]?c.model:"auto";j=addJob({kind:"video",prompt:p,title:c.prompt.slice(0,60),model:m,dur:+c.dur||5,aspect:c.aspect,cost:vcost(m,+c.dur||5),secs:8,art:"scene",meta})}
+  if(j){persist();renderAll();const ph=matchMedia("(max-width:980px)").matches;toast(ph?L("Filming — the result is at the top.","يجري التصوير — النتيجة في الأعلى."):L("Filming — it appears on the right.","يجري التصوير — تظهر النتيجة بجانبك."),{type:"info"});
+    if(ph)setTimeout(()=>{const pv=document.querySelector(".two82 .preview-col");if(pv)pv.scrollIntoView({behavior:"smooth",block:"start"})},80)}},true);
+TOOLS82.splice(TOOLS82.findIndex(t=>t[1]==="ugcads"),0,["video","cinema","camera","Cinema Studio","استوديو السينما"]);
+TOOLDESC.cinema=["Camera, lens, focal length, aperture, move and light — like a film crew.","الكاميرا والعدسة والبعد البؤري والفتحة والحركة والإضاءة — مثل طاقم فيلم."];
+HUBS.forEach(h=>{if(h[0]==="video"&&!h[4].some(t=>t[0]==="cinema"))h[4].splice(1,0,["cinema","Cinema Studio","استوديو السينما"])});
+if(!ALLNAV.some(x=>x[0]==="cinema"))ALLNAV.push(["cinema","camera","Cinema Studio","استوديو السينما"]);
+if(typeof FEATURE_OF_VIEW==="object")FEATURE_OF_VIEW.cinema="video";
+
+// ---- clean empty states: nothing made yet = no made-up progress steps, one "Clone a voice" per screen
+pipeHTML=(o=>function(ref){if(!ref||!objFor(ref))return"";return o(ref)})(pipeHTML);
+myVoiceTiles=(o=>function(act,cur,addAct){const h=o(act,cur,addAct);return S.view==="voice"&&!addAct?h.replace(/<button class="tile" data-act="vc-open">[\s\S]*?<\/button><\/div>$/,"</div>"):h})(myVoiceTiles);
+// ---- customers never see admin directions ("… in Admin → AI providers"): they see that the tool is being set up
+const ADM82=/Admin →|الإدارة ←|server \.env|PUBLIC_BASE_URL/;
+function custCalm82(root){if(staff82()||!root)return;const msg=L("This tool is being set up — please try again soon.","هذه الأداة قيد الإعداد — جرّبها قريباً.");
+  root.querySelectorAll("[title]").forEach(e=>{if(ADM82.test(e.title))e.title=msg});
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),hit=new Set();while(w.nextNode()){const n=w.currentNode;if(ADM82.test(n.textContent)&&n.parentElement&&!n.parentElement.closest("textarea,input,script,style"))hit.add(n.parentElement)}
+  hit.forEach(e=>{e.textContent=msg})}
+// what people type (titles, prompts, scripts) runs in its own direction: an English title on an Arabic page is cut at its end
+function dirAuto82(root){if(root)root.querySelectorAll('input:not([type]):not([dir]),input[type=text]:not([dir]),input[type=search]:not([dir]),textarea:not([dir]),.big.serif:not([dir]),.cap.serif:not([dir])').forEach(e=>e.setAttribute("dir","auto"))}
+renderView=(o=>function(){const r=o.apply(this,arguments);const m=document.getElementById("main");try{custCalm82(m)}catch(e){}try{dirAuto82(m)}catch(e){}return r})(renderView);
+// ---- the example story, its character and its storyboard speak the visitor's language (until the visitor changes them)
+function demoSwap82(){const st=S.story,to=S.lang==="ar"?"ar":"en",from=to==="ar"?"en":"ar";if(!st||st.lang===to||st.lang!==from)return;
+  const ref=seedStory(from),same=st.title===ref.title&&(st.chapters||[]).length===ref.chapters.length&&st.chapters.every((c,i)=>c.title===ref.chapters[i].title&&c.prompt===ref.chapters[i].prompt);
+  if(!same)return;
+  const nst=seedStory(to);nst.baseSeed=st.baseSeed;nst.chapters.forEach((c,i)=>{const o=st.chapters[i];Object.keys(o).forEach(k=>{if(!["title","prompt","narr"].includes(k))c[k]=o[k]})});S.story=nst;
+  const rc=seedChars(from);if(Array.isArray(S.chars)&&S.chars.length===rc.length&&S.chars.every((c,i)=>c.name===rc[i].name&&c.look===rc[i].look)){const nc=seedChars(to);S.chars=S.chars.map((c,i)=>Object.assign({},c,{name:nc[i].name,look:nc[i].look,outfit:nc[i].outfit}))}
+  const rb=seedBoard(ref,rc),fr=S.board&&S.board.frames;if(Array.isArray(fr)&&fr.length===rb.length&&fr.every((f,i)=>f.action===rb[i].action)){const nb=seedBoard(nst,seedChars(to));fr.forEach((f,i)=>{["action","dialogue","sfx","music"].forEach(k=>{f[k]=nb[i][k]})})}
+  try{persist()}catch(e){}}
+renderAll=(o=>function(){try{demoSwap82()}catch(e){}return o.apply(this,arguments)})(renderAll);
+// ---- an Arabic page names the country and city in Arabic (the company details are saved in English)
+const PLACE82={"saudi arabia":"المملكة العربية السعودية","kingdom of saudi arabia":"المملكة العربية السعودية","ksa":"المملكة العربية السعودية","united arab emirates":"الإمارات العربية المتحدة","uae":"الإمارات العربية المتحدة",
+  "kuwait":"الكويت","qatar":"قطر","bahrain":"البحرين","oman":"عُمان","egypt":"مصر","jordan":"الأردن","riyadh":"الرياض","jeddah":"جدة","dammam":"الدمام","khobar":"الخبر","al khobar":"الخبر","mecca":"مكة المكرمة","makkah":"مكة المكرمة",
+  "medina":"المدينة المنورة","madinah":"المدينة المنورة","dubai":"دبي","abu dhabi":"أبوظبي","doha":"الدوحة","manama":"المنامة","muscat":"مسقط","cairo":"القاهرة","amman":"عمّان","kuwait city":"مدينة الكويت"};
+fillBiz=(o=>function(s){if(S.lang!=="ar")return o(s);const B=S.biz||{},keep={city:B.city,country:B.country},ar=v=>v&&PLACE82[String(v).trim().toLowerCase()]||v;
+  S.biz=Object.assign({},B,{city:ar(B.city),country:ar(B.country)});try{return o(s)}finally{S.biz=Object.assign(S.biz,keep)}})(fillBiz);
+// ---- dialects show a short country code (SA, KW, GB…) like the interface languages (EN, FR…), not flag emoji that every
+// system draws differently (or as two plain letters)
+const flag82=f=>{const cp=[...String(f||"")].map(c=>c.codePointAt(0));if(cp.length===2&&cp.every(c=>c>=0x1F1E6&&c<=0x1F1FF))return String.fromCharCode(...cp.map(c=>c-0x1F1E6+65));
+  if(cp[0]===0x1F3F4&&cp.length>2)return cp.filter(c=>c>=0xE0061&&c<=0xE007A).map(c=>String.fromCharCode(c-0xE0061+65)).join("").slice(2)||f;return f};
+Object.values(VARIANTS).forEach(list=>list.forEach(v=>{v[3]=flag82(v[3])}));
+// ---- no logo placeholders and no black boxes: an example without its picture gets a calm colour cover with a sign of what it
+// is (like the templates); a picture or video that fails to load turns into the same cover
+const cov82=(seed,kind)=>{const pal=PALS[Math.abs(hashStr(String(seed||"x")))%PALS.length];return'<div class="frame tplcov cov82" style="--a:'+pal[0]+';--b:'+(pal[3]||pal[1])+'">'+ic(kind==="image"?"image":"play")+"</div>"};
+thumb=(o=>function(ref,opt){const h=o(ref,opt);return h.indexOf('class="frame ph0"')<0?h:h.replace(/<div class="frame ph0">[\s\S]*?<\/div>/,cov82(ref,"video"))})(thumb);
+document.addEventListener("error",e=>{const t=e.target;if(!t||!t.classList||!t.classList.contains("frame")||!/^(IMG|VIDEO)$/.test(t.tagName)||!t.closest(".thumb,.xpcard,.card"))return;
+  const d=document.createElement("div");d.innerHTML=cov82(t.getAttribute("src"),t.tagName==="IMG"?"image":"video");t.replaceWith(d.firstChild)},true);
+// on a phone, after Generate the result (now above the form) comes into view
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest("[data-act]");if(!a||!GEN82.has(a.dataset.act)||!matchMedia("(max-width:980px)").matches)return;
+  setTimeout(()=>{const pv=document.querySelector("#main .two>.preview-col");if(pv&&!pv.querySelector(".stage>.empty")&&pv.getBoundingClientRect().top<0)pv.scrollIntoView({behavior:"smooth",block:"start"})},400)});
+(()=>{const st=document.createElement("style");st.id="v82css";st.textContent=`
+/* the logo is still: no beating dot */
+.nm-dot,.nm-halo{animation:none!important}.nm-halo{opacity:0!important}
+.panel.tool .fin82{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--panel3);color:var(--lime-ink);margin-bottom:8px}
+.panel.tool .fin82 svg{width:18px;height:18px}
+/* the phone menu is the same side menu, sliding in */
+@media (max-width:767px){
+  body.menu82 #side{display:flex!important;position:fixed;top:0;bottom:0;inset-inline-start:0;width:min(84vw,320px);z-index:70;overflow:auto;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 0 40px rgba(0,0,0,.35)}
+  body.menu82 #side.hide{display:none!important}
+  #menu82bg{position:fixed;inset:0;z-index:69;background:rgba(0,0,0,.45)}
+  #bottomnav{grid-template-columns:repeat(5,1fr)!important}
+}
+#menu82bg[hidden]{display:none}
+.h82{margin:0 0 8px}
+.hfhome.v82 .hero-story{margin-top:4px}
+.fillhead82{padding:16px 24px 0;flex:none}
+.fillhead82 .hubtabs{margin-bottom:10px}
+.fillhead82 .h82{font-size:24px;margin:0 0 4px}
+@media (max-width:767px){.fillhead82{padding:12px 16px 0}.fillhead82 .h82{font-size:20px}}
+.cin82t{grid-template-columns:repeat(auto-fill,minmax(92px,1fr))}
+.cinlook82{margin-bottom:4px}
+.cinp82{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--panel2)}
+.cinp82 summary{cursor:pointer;font-size:13px;color:var(--mute)}
+.cinp82 p{margin:8px 0 0;font:12.5px/1.5 var(--mono);color:var(--text);word-break:break-word}
+
+/* nothing made yet: on a phone the form comes first and the empty result waits below it */
+@media (max-width:980px){.two82:not(.has)>.preview-col{order:2}.two82.has>.preview-col{order:-1}}
+
+/* an icon inside a heading is the size of the letters (it was drawn full width on the Voice page) */
+#main :is(h1,h2,h3)>svg:not([width]):not([style]){width:1.05em;height:1.05em;vertical-align:-.16em;margin-inline-end:.3em;flex:none}
+#main .pipe:empty{display:none}
+
+.tile .gl .tx.flag{font-size:12px;font-weight:700;letter-spacing:.04em}
+.flagi{font-size:11px;font-weight:700;letter-spacing:.04em}
+
+/* any page: while nothing is made yet the empty result waits below the form on a phone */
+@media (max-width:980px){.two>.preview-col:has(.stage>.empty){order:2}}
 `;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */

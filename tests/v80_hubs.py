@@ -77,9 +77,9 @@ async def ui(p, w, lang):
     # ---- a few hubs in the menu; each hub page has its tools as tabs
     if not phone:
         r["side"] = await E("()=>[...document.querySelectorAll('#side .nav')].map(b=>b.dataset.go)")
-        ok(r["side"] == ["home", "discover", "image", "video", "chars", "w3ai", "edit", "calendar", "library", "explore", "account", "admin"], f"{tag}: the menu is a few hubs {r['side']}")
+        ok(r["side"] == ["home", "explore", "image", "video", "chars", "w3ai", "edit", "calendar", "library", "account", "admin"], f"{tag}: the menu is a few hubs {r['side']}")   # v82: Templates + Community under Explore
         ok(await E("()=>![...document.querySelectorAll('#side .nav .new')].some(x=>x.offsetParent)"), f"{tag}: no NEW tags in the menu")
-    HUB = {"video": ["video", 5], "ugcads": ["video", 5], "crew": ["video", 5], "image": ["image", 3], "sketch": ["image", 3], "draw": ["image", 3], "w3ai": ["w3ai", 2], "studio3d": ["w3ai", 2], "edit": ["edit", 6], "bg": ["edit", 6], "calendar": ["calendar", 3], "account": ["account", 6]}
+    HUB = {"video": ["video", 6], "ugcads": ["video", 6], "crew": ["video", 6], "cinema": ["video", 6], "image": ["image", 3], "sketch": ["image", 3], "draw": ["image", 3], "w3ai": ["w3ai", 2], "studio3d": ["w3ai", 2], "edit": ["edit", 6], "bg": ["edit", 6], "calendar": ["calendar", 3], "account": ["account", 5]}   # v82: + Cinema Studio in Video; Connections & APIs moved to the admin hub
     for v, (hub, n) in HUB.items():
         await E("(v)=>{go(v);renderAll()}", v); await pg.wait_for_timeout(250)
         x = await E("()=>{const t=[...document.querySelectorAll('#main .hubtabs [role=tab]')];return [t.length,t.filter(b=>b.getAttribute('aria-selected')==='true').map(b=>b.dataset.go)]}")
