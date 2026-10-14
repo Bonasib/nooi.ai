@@ -44,6 +44,7 @@ Most provider & payment keys can also be added from **Admin dashboard → AI pro
 | Live logs · السجلات | `journalctl -u nooi -f` |
 | Restart · إعادة تشغيل | `systemctl restart nooi` |
 | Update to a new package · تحديث | `nooi-update /root/nooi-server.zip` (auto-rollback on failure) |
+| Preview a package before it goes live · معاينة قبل النشر | `bash /opt/nooi/deploy/stage.sh /root/nooi-update.zip` → opens at `https://YOUR-DOMAIN:8443` on a copy of the data (no payments, emails or social posts) · then `… stage.sh promote` to put it live, or `… stage.sh stop` |
 | Backup now · نسخة احتياطية | `nooi-backup` |
 | Restore · استرجاع | `bash /opt/nooi/deploy/restore.sh /var/backups/nooi/<file>.tgz` |
 

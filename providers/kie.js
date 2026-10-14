@@ -40,6 +40,17 @@ const AR = (a) => { const [w, h] = String(a || "16:9").split(":").map(Number); r
 const snapAR = (a, list) => { if (!a) return list[0]; if (list.includes(a)) return a; const r = AR(a); return list.filter((x) => /^\d+:\d+$/.test(x)).reduce((best, x) => (Math.abs(Math.log(AR(x) / r)) < Math.abs(Math.log(AR(best) / r)) ? x : best), list.find((x) => /^\d+:\d+$/.test(x))); };
 const snapDur = (d, list) => list.reduce((b, x) => (Math.abs(+x - d) < Math.abs(+b - d) ? x : b), list[0]);
 const ELEVEN_VOICE = { female: "Sarah", male: "George", girl: "Jessica", boy: "Liam" };   // children: a young-sounding voice (the editor also lifts the pitch a little)
+// The engine's ElevenLabs voices are picked by voice ID: a bare name ("Sarah") makes the engine fail with "Internal Error".
+// Names map to ElevenLabs' standard voices; anything unknown gets the engine's own default voice (always present).
+export const KIE_VOICE_DEFAULT = "EkK5I93UQWFDigLMpZcX";
+const EL_IDS = { rachel: "21m00Tcm4TlvDq8ikWAM", aria: "9BWtsMINqrJLrRacOk9x", roger: "CwhRBWXzGAHq8TQ4Fs17", sarah: "EXAVITQu4vr4xnSDxMaL", laura: "FGY2WhTYpPnrIDTdsKH5",
+  charlie: "IKne3meq5aSn9XLyUdCD", george: "JBFqnCBsd6RMkjVDRZzb", callum: "N2lVS1w4EtoT3dr4eOWO", river: "SAz9YHcvj6GT2YYXdXww", liam: "TX3LPaxmHKxFdv7VOQHJ", charlotte: "XB0fDUnXU5powFXDhCwa",
+  alice: "Xb7hH8MSUJpSbSDYk0k2", matilda: "XrExE9yKIg1WjnnlVkGX", will: "bIHbv24MWmeRgasZH58o", jessica: "cgSgspJ2msm6clMCkdW9", eric: "cjVigY5qzO86Huf0OWal", chris: "iP95p4xoKVk53GoZ742B",
+  brian: "nPczCjzI2devNBz1zQrb", daniel: "onwK4e9ZLuTAKqWW03F9", lily: "pFZP5JQG7iQjIQuC4Bku", bill: "pqHfZKP75CvOlQylNhV4", adam: "pNInz6obpgDQGcFmaJgB", james: KIE_VOICE_DEFAULT };
+export const elVoiceId = (v) => { const s = String(v || "").trim(); return /^[A-Za-z0-9]{18,}$/.test(s) ? s : EL_IDS[s.toLowerCase()] || null; };
+const ttsVoice = (p) => elVoiceId(p.meta?.voiceId) || elVoiceId(p.meta?.age === "child" ? ELEVEN_VOICE[p.meta?.gender === "male" ? "boy" : "girl"] : ELEVEN_VOICE[p.meta?.gender]) || elVoiceId("Sarah");
+// only Turbo / Flash take a language code (multilingual v2 refuses one), and only a two-letter ISO code
+const ttsLang = (m, p) => { const l = String(p.meta?.lang || "").toLowerCase().match(/^([a-z]{2})(?:$|[-_])/); return /turbo|flash/.test(m) && l ? l[1] : undefined; };
 // the resolution the user picked (720P / 1080P / 2K / 4K for video, 1K / 2K / 4K for images) in each model's own spelling
 const pickRes = (p, list, def) => { const r = String(p.meta?.res || "").toLowerCase(); const hit = list.find((x) => x.toLowerCase() === r) || (r === "2k" ? list.find((x) => /1080/.test(x)) : null) || (r === "4k" ? list.find((x) => /1080/.test(x)) : null); return hit || def; };
 const TOOL_SCALE = (p) => (String((p.meta?.opt || {}).scale || "2x").startsWith("4") ? "4" : "2");
@@ -48,7 +59,7 @@ const TOOL_SCALE = (p) => (String((p.meta?.opt || {}).scale || "2x").startsWith(
 // on docs.kie.ai (cross-checked with the @apicity/kie model registry). Exported for tests.
 export function kieInput(model, p) {
   const m = String(model).toLowerCase(), kind = p.kind || "video", inp = p.inputs || {};
-  if (/^elevenlabs\/text-to-speech/.test(m)) return drop({ text: p.prompt, voice: p.meta?.voiceId || (p.meta?.age === "child" ? ELEVEN_VOICE[p.meta?.gender === "male" ? "boy" : "girl"] : null) || ELEVEN_VOICE[p.meta?.gender] || "Sarah", language_code: p.meta?.lang || undefined });
+  if (/^elevenlabs\/text-to-speech/.test(m)) return drop({ text: p.prompt, voice: ttsVoice(p), language_code: ttsLang(m, p) });
   if (/^elevenlabs\/sound-effect/.test(m)) return drop({ text: p.prompt, loop: p.meta?.loop || undefined });
   if (MUSIC_KINDS.has(kind)) return drop({ prompt: p.prompt, custom_mode: false, instrumental: p.meta?.instrumental ?? kind === "sfx" });
   if (/^recraft\/remove-background/.test(m)) return { image: absUrl(inp.bgFg || refImg(p)) };
@@ -185,19 +196,22 @@ async function lipVoice(p, call) {
   const errs = [];
   if (cfg("elevenlabs").apiKey) {
     try { const { speak, polish } = await import("../lib/voice.js"), { saveBuffer } = await import("../lib/media.js"), fs = await import("fs");
-      const sp = await speak(p.prompt, { lang: p.meta?.lang, voice: /^[A-Za-z0-9]{18,}$/.test(p.meta?.voiceId || "") ? { id: p.meta.voiceId, name: p.meta.voiceId } : undefined, emotion: p.meta?.tone });
+      const sp = await speak(p.prompt, { lang: p.meta?.lang, voice: { id: ttsVoice(p), name: p.meta?.voiceId || p.meta?.gender || "voice", gender: p.meta?.gender }, emotion: p.meta?.tone });
       const fin = await polish(sp.file, { ext: ".mp3", room: false }), out = saveBuffer(fs.readFileSync(fin), ".mp3"); fs.unlink(fin, () => {}); if (sp.temp) fs.unlink(sp.file, () => {});
       return out.url; } catch (e) { errs.push("ElevenLabs: " + e.message); }
   }
-  for (const tm of ["elevenlabs/text-to-speech-multilingual-v2", "elevenlabs/text-to-speech-multilingual-v2", "elevenlabs/text-to-speech-turbo-2-5"]) {
+  // the avatar's own voice on multilingual v2, then on turbo 2.5, then the engine's default voice (always on the engine)
+  const own = ttsVoice(p), tries = [["elevenlabs/text-to-speech-multilingual-v2", own], ["elevenlabs/text-to-speech-turbo-2-5", own], ["elevenlabs/text-to-speech-multilingual-v2", KIE_VOICE_DEFAULT]];
+  for (const [tm, vid] of tries) {
     try {
-      const t = await call("/api/v1/jobs/createTask", { method: "POST", body: JSON.stringify({ model: tm, input: kieInput(tm, { ...p, kind: "voice" }) }) });
+      const t = await call("/api/v1/jobs/createTask", { method: "POST", body: JSON.stringify({ model: tm, input: { ...kieInput(tm, { ...p, kind: "voice", meta: { ...(p.meta || {}), voiceId: vid } }), ...extraInputs(cfg("kie"), tm) } }) });
       for (let i = 0; i < 80; i++) { await new Promise((r) => setTimeout(r, i ? 3000 : 1200)); const d = await call("/api/v1/jobs/recordInfo?taskId=" + encodeURIComponent(t.taskId), { method: "GET" }); const st = String(d.state || "").toLowerCase();
         if (st === "success") { const audio = kieResult(d); if (audio) return audio; throw new Error("finished without audio"); } if (st === "fail") throw new Error(d.failMsg || "failed"); }
       throw new Error("took too long");
     } catch (e) { errs.push(tm.split("/")[1] + ": " + String(e.message).slice(0, 120)); await new Promise((r) => setTimeout(r, 2500)); }
   }
-  throw Object.assign(new Error("The voice service is busy — the avatar wasn't charged. Try again in a minute, or add a voice file (" + errs.join(" · ") + ")"), { type: "provider", retryable: false, noFallback: true });
+  throw Object.assign(new Error("The voice service is busy — the avatar wasn't charged (" + errs.join(" · ") + ")"), { type: "provider", retryable: false, noFallback: true,
+    userMsg: "The avatar's voice couldn't be made right now — nothing was charged. Try again in a minute, or add a voice file." });
 }
 export const _lipVoice = lipVoice;   // for tests
 export function kieAuto(cap, body = {}) {

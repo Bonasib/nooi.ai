@@ -49,7 +49,9 @@ const E = (S.E = createEngine($("cv"), { tier, mobile: S.dev.mobile }));
 E.setWorld({ biome: q.get("biome") || "rainforest", size: [8, 8] }); E.setMode("orbit"); E.frame();
 
 // the app (inside nooi): what this account can use, credits, a photo handed over from another tool
-async function loadCfg() { if (!EMBED) { renderCaps(); return; } try { S.cfg = Object.assign({ nooi: true }, await call("cfg", {}, { timeout: 8000 })); } catch (e) { S.cfg = { nooi: true, offline: true }; }
+async function loadCfg() { if (!EMBED) { renderCaps(); return; } // the settings carry the photo, which can take a while on a slow phone: wait up to 30 s and ask once more before working offline
+  let got = null; for (let i = 0; i < 2 && !got; i++) { try { got = await call("cfg", {}, { timeout: 30000 }); } catch (e) {} }
+  S.cfg = got ? Object.assign({ nooi: true }, got) : { nooi: true, offline: true };
   renderCaps(); if (S.cfg.photo && S.cfg.photo.blob) await setPhoto(S.cfg.photo.blob, S.cfg.photo.name || "photo", S.cfg.photo.mode); if (S.cfg.glb && S.cfg.glb.blob) await addGLB(S.cfg.glb.blob, S.cfg.glb.name || "3D", "library"); }
 function renderCaps() { const c = S.cfg; $("credits").hidden = !(c.nooi && c.credits != null); $("credits").textContent = (c.credits ?? "") + " cr"; $("standalone").hidden = !!c.nooi; }
 function cap() { const c = S.cfg, k = c.cap || {}; return Object.assign({ cloudFirst: !!S.lite && !!c.nooi && !!c.signedIn, nooi: !!c.nooi, signedIn: !!c.signedIn, server: !!c.server, cost: c.cost || {}, webgpu: S.dev.webgpu, webgl2: S.dev.webgl2, ai: S.aiOk, photo: !!S.img }, k); }

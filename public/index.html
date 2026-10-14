@@ -6267,7 +6267,7 @@ document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.c
   if(a.dataset.act==="h-maint"){const k=a.dataset.k,on=statusOf(k)!=="maintenance";if(API.mode==="server"){try{await API.req("/v1/admin/providers/"+k+"/maintenance",{method:"PUT",json:{on}});PSTATUS[k]=on?"maintenance":"online"}catch(err){}}else{DEMO_STATUS[k]=on?"maintenance":"online"}renderView()}});
 /* ---- clear messages when something goes wrong ---- */
 const ERR_MSG={auth:L("The AI provider rejected our key — support has been notified. Your credits were refunded.","رفض مزوّد الذكاء مفتاحنا — تم إبلاغ الدعم وأُعيد رصيدك."),rate:L("High demand right now — we retried automatically. Please try again in a minute.","ضغط عالٍ حالياً — أعدنا المحاولة تلقائياً. حاول بعد دقيقة."),provider:L("The AI provider is temporarily unavailable. Your credits were refunded.","مزوّد الذكاء غير متاح مؤقتاً، وأُعيد رصيدك."),network:L("We couldn't reach the AI provider. Your credits were refunded.","تعذّر الوصول لمزوّد الذكاء، وأُعيد رصيدك."),quota:L("The provider account is out of quota — support has been notified.","نفد رصيد حساب المزوّد — تم إبلاغ الدعم."),input:L("The provider couldn't process this request. Try rephrasing or another model.","لم يتمكن المزوّد من معالجة الطلب. أعد الصياغة أو جرّب نموذجاً آخر.")};
-const notified=new Set();setInterval(()=>{S.jobs.forEach(j=>{if(j.status==="failed"&&!notified.has(j.id)&&Date.now()-(j.created||0)<3600e3){notified.add(j.id);toast(((j.errorType&&ERR_MSG[j.errorType])||j.error||ERR_MSG.provider)+(j.detail?"\n"+L("Admin detail: ","تفاصيل للمشرف: ")+j.detail:""),{type:"warn",ms:j.detail?15000:6000})}})},1500);
+const notified=new Set();setInterval(()=>{S.jobs.forEach(j=>{if(j.status==="failed"&&!notified.has(j.id)&&Date.now()-(j.created||0)<3600e3){notified.add(j.id);notifyFail81(j)}})},1500);
 API.req=(orig=>async function(p,o){try{return await orig.call(API,p,o)}catch(e){const st=e.status||+(String(e.message).match(/\b(401|403|429|500|502|503|504)\b/)||[])[1]||0;if(st===429)e.message=ERR_MSG.rate;else if(st>=500)e.message=ERR_MSG.provider;throw e}})(API.req);
 /* ---- not enough credits → clear choice instead of a failed job ---- */
 function creditsSheet(need){$("#modalRoot").innerHTML='<div class="modal sheetwrap" data-act="close-sheet"><div class="sheet" role="dialog" aria-modal="true" data-act="noop" style="max-width:480px"><div class="spread"><h2 style="margin:0">'+ic("coin","width:18px;vertical-align:-3px")+" "+L("Not enough credits","الرصيد لا يكفي")+'</h2><button class="btn sm ghost" data-act="close-sheet" aria-label="'+esc(L("Close","إغلاق"))+'">'+ic("x")+'</button></div><div class="usage" style="margin:12px 0">'+(need?'<div><span>'+L("This needs","هذه العملية تحتاج")+'</span><span></span><b class="mono">'+need+' cr</b></div>':"")+'<div><span>'+L("Your balance","رصيدك")+'</span><span></span><b class="mono">'+S.credits+' cr</b></div></div><div class="row"><button class="btn primary" data-act="see-plans">'+L("Top up or upgrade","اشحن أو رقِّ")+'</button><button class="btn ghost" data-act="close-sheet">'+L("Change settings","غيّر الإعدادات")+"</button></div></div></div>"}
@@ -11150,6 +11150,96 @@ VIEWS.ugcads=(o=>()=>{if(API.mode==="server"&&!AV.items)setTimeout(avLoad,0);let
 `;document.head.appendChild(st)})();
 // the agents' page is "nooi Studio" everywhere (menu, tab and title)
 VIEWS.crew=(o=>function(){return o.apply(this,arguments).replace(/<h1>([^<]*)<\/h1>/,"<h1>"+L("nooi Studio","استوديو nooi")+"</h1>")})(VIEWS.crew);
+/* ================= v81: calm & clear — one short sentence per problem, calm loaders, a tidy crew, the avatar's own voice ================= */
+// ---- the server's English sentences in the user's language; anything else: its first sentence, without the technical tail
+const SRV81={"The AI provider rejected our key — support has been notified. Your credits were refunded.":"auth","High demand right now — we retried automatically. Please try again in a minute.":"rate",
+  "The AI provider is temporarily unavailable. Your credits were refunded.":"provider","We couldn't reach the AI provider. Your credits were refunded.":"network",
+  "The provider account is out of quota — support has been notified. Your credits were refunded.":"quota","The provider couldn't process this request. Try rephrasing or a different model.":"input"};
+const SRVTX81={"The avatar's voice couldn't be made right now — nothing was charged. Try again in a minute, or add a voice file.":"تعذّر إنشاء صوت الأفاتار الآن — لم يُخصم شيء. حاول بعد دقيقة، أو أضف ملفاً صوتياً.",
+  "Type what the avatar should say — that line moves a picture, it isn't speech":"اكتب ما يجب أن يقوله الأفاتار — هذه الجملة تحرّك صورة وليست كلاماً"};
+function errText81(j){const e=String((j&&j.error)||"").trim();
+  if(SRV81[e])return ERR_MSG[SRV81[e]];if(SRVTX81[e])return L(e,SRVTX81[e]);if(j&&j.errorType&&ERR_MSG[j.errorType])return ERR_MSG[j.errorType];if(!e)return ERR_MSG.provider;
+  const one=(e.replace(/\s*\([^()]*(\([^()]*\)[^()]*)*\)\s*$/,"").match(/^[\s\S]*?[.!?؟](?=\s|$)/)||[e])[0].trim();
+  return one.length>170?one.slice(0,160).replace(/\s+\S*$/,"")+"…":one}
+failMsg79=errText81;
+// a job that failed: one short line with "Try again"; the admin's provider detail waits behind "Details"
+function notifyFail81(j){toast(errText81(j),{type:"warn",ms:7000,detail:j.detail||"",action:L("Try again","حاول مجدداً"),onAction:()=>retry79(j.id)})}
+// ---- toasts: three lines at most, a close button, and the technical detail folded away
+toast=(o=>function(m,opt){opt=Object.assign({},opt);let s=String(m==null?"":m);const k=s.search(/\n(Admin detail: |تفاصيل للمشرف: )/);
+  if(k>=0){if(!opt.detail)opt.detail=s.slice(k+1).replace(/^(Admin detail: |تفاصيل للمشرف: )/,"");s=s.slice(0,k)}
+  if(s.length>240)s=s.slice(0,220).replace(/\s+\S*$/,"")+"…";
+  const r=o(s,opt),el=$("#toast");if(!el||!el.classList||!el.classList.contains("show"))return r;
+  el.classList.remove("open81");el.classList.toggle("det81",!!opt.detail);const bar=el.querySelector(".tbar");
+  const h=(opt.detail?'<button class="tdb81" data-act="toast-det" aria-expanded="false">'+L("Details","التفاصيل")+"</button>":"")+'<button class="tx81" data-act="toast-x" aria-label="'+esc(L("Close","إغلاق"))+'">'+ic("x","width:14px;height:14px")+"</button>"+(opt.detail?'<div class="tdet81" dir="ltr">'+esc(String(opt.detail).replace(/<[^>]*>/g," ").replace(/\s+/g," ").slice(0,900))+"</div>":"");
+  if(bar)bar.insertAdjacentHTML("beforebegin",h);else el.insertAdjacentHTML("beforeend",h);return r})(toast);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('#toast [data-act="toast-x"],#toast [data-act="toast-det"]');if(!a)return;e.preventDefault();e.stopPropagation();const el=$("#toast");clearTimeout(toastT);
+  if(a.dataset.act==="toast-x"){el.classList.remove("show","open81");toastAct=null;return}
+  const open=el.classList.toggle("open81");a.setAttribute("aria-expanded",String(open));toastT=setTimeout(()=>{el.classList.remove("show","open81");toastAct=null},open?30000:4000)},true);
+// ---- while something is being made: a calm, softly moving colour field under the stars — no blocky half-made picture
+const HEX81=/^#[0-9a-f]{6}$/i;
+function calmFrame81(cv,it,time){const w=cv.width,h=cv.height,c=cv.getContext("2d");if(!c||!w||!h)return;const P=Array.isArray(it.pal)?it.pal:PALS[0],col=i=>HEX81.test(P[i]||"")?P[i]:["#16202b","#1f2d3a","#3b5468","#6b8299"][i]||"#3b5468",t=(time||0)*.22;
+  const g=c.createLinearGradient(0,0,w,h);g.addColorStop(0,col(0));g.addColorStop(1,col(1));c.fillStyle=g;c.fillRect(0,0,w,h);
+  [[.3+.12*Math.sin(t),.38+.1*Math.cos(t*.8),col(2)],[.72+.1*Math.cos(t*.7),.62+.12*Math.sin(t*.9),col(3)]].forEach(([x,y,k])=>{const r=Math.max(w,h)*.6,rg=c.createRadialGradient(x*w,y*h,0,x*w,y*h,r);rg.addColorStop(0,k+"70");rg.addColorStop(1,k+"00");c.fillStyle=rg;c.fillRect(0,0,w,h)});
+  c.fillStyle="rgba(8,10,12,"+(it.status==="failed"?.6:.3)+")";c.fillRect(0,0,w,h)}
+drawItem=(o=>function(cv,it,time){if(it&&it.status!=="complete"){calmFrame81(cv,it,time);return}return o(cv,it,time)})(drawItem);
+// ---- the steps under the preview say what really happens (no made-up "denoising 60 / 192")
+pipeHTML=(o=>function(ref){const it=ref&&objFor(ref);if(!it||it.status==="failed")return o(ref);
+  const st=it.status,pr=st==="complete"?1:st==="rendering"?(it.progress||0):0,mn=(MODELS[it.model]||IMG_MODELS[it.model]||{}).name;
+  const steps=[[L("Request received","استلمنا الطلب"),st!=="draft"],[mn?L("Creating with "+mn,"يُنشأ بـ "+mn):L("Creating","قيد الإنشاء"),st==="complete"],[L("Checked and saved","فُحص وحُفظ"),st==="complete"]],now=steps.findIndex(s=>!s[1]);
+  return steps.map(([n,done],i)=>'<div class="'+(done?"done":i===now&&st!=="draft"?"now":"")+'">'+esc(n)+(i===1&&i===now&&st==="rendering"?'<span class="n" data-pct="'+ref+'">'+Math.round(pr*100)+"%</span>":"")+"</div>").join("")})(pipeHTML);
+// ---- the big preview while it is made: the stars, the percent and how long it usually takes (no pause button on nothing)
+function sveil81(g){if(!g||!["queued","rendering"].includes(g.status))return"";const ref="j:"+g.id,eta={video:L("Usually 1–3 minutes","عادةً 1–3 دقائق"),image:L("Usually under a minute","عادةً أقل من دقيقة"),lipsync:L("Usually 2–4 minutes","عادةً 2–4 دقائق"),look:L("Usually under a minute","عادةً أقل من دقيقة")}[g.kind]||"";
+  return'<div class="sveil81" aria-live="polite"><span class="star79"></span><b'+(g.status==="rendering"?' data-pct="'+ref+'">'+Math.round((g.progress||0)*100)+"%":">"+esc(stLabel("queued")))+"</b>"+(eta?"<small>"+esc(eta)+"</small>":"")+"</div>"}
+previewCol=(o=>function(g,prev){let h=o(g,prev);const v=sveil81(g);if(v)h=h.replace('<div class="st">',v+'<div class="st">').replace(/<div class="ctl"><button data-act="toggle-play"[\s\S]*?<\/button><\/div>/,"");return h})(previewCol);
+ugcStage79=(o=>function(g){const h=o(g),v=sveil81(g);return v?h.replace('<div class="st">',v+'<div class="st">'):h})(ugcStage79);
+// ---- nooi Studio: a small "New" pill inside the card (no tag hanging over the next bot), whole-word roles, the whole crew in one row on a computer
+VIEWS.crew=(o=>function(){return o.apply(this,arguments).replace(/<span class="newtag">[^<]*<\/span>/g,'<span class="newtag81">'+L("New","جديد")+"</span>")})(VIEWS.crew);
+Object.assign(OIP,{"crew.brief.genre|drama":'<path d="M3 4h8v6a4 4 0 0 1-8 0z"/><path d="M5.5 7h.01M8.5 7h.01M5.5 10.5a1.8 1.8 0 0 0 3 0"/><path d="M13 9h8v6a4 4 0 0 1-8 0z"/><path d="M15.5 12h.01M18.5 12h.01M15.5 16.2a1.8 1.8 0 0 1 3 0"/>',
+  "crew.brief.genre|comedy":'<circle cx="12" cy="12" r="9"/><path d="M7.5 13h9a4.5 4.5 0 0 1-9 0z"/><path d="M8 8.5l2 1.2-2 1.2M16 8.5l-2 1.2 2 1.2"/>',
+  "crew.brief.genre|thriller":'<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><path d="M13 8.5l-2.5 3.5h3.5L11.5 15.5"/>',
+  "crew.brief.genre|kids":'<ellipse cx="12" cy="9" rx="5" ry="6"/><path d="M11 15h2l-1 1.5zM12 16.5c0 2-2 2.3-2 4.5"/>',
+  "cb.kids|x":'<circle cx="12" cy="8" r="4"/><path d="M10.5 7.5h.01M13.5 7.5h.01M10.6 9.6a2 2 0 0 0 2.8 0"/><path d="M7 21v-3a5 5 0 0 1 10 0v3"/>',
+  "cb.size|letter":'<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 15h7M9 18h4"/>',
+  "crew.brief.genre|documentary":'<rect x="3" y="9" width="12" height="10" rx="2"/><path d="M15 12.5l6-3.5v10l-6-3.5"/><circle cx="6.5" cy="5.5" r="2.3"/><circle cx="12" cy="5.5" r="2.3"/>'});
+function fitWords81(root,sel,min){(root||document).querySelectorAll(sel).forEach(el=>{if(!el.offsetParent)return;el.style.fontSize="";if(el.scrollWidth<=el.clientWidth+1)return;let fs=parseFloat(getComputedStyle(el).fontSize)||11,n=0;while(el.scrollWidth>el.clientWidth+1&&fs>min&&n++<12){fs-=.5;el.style.fontSize=fs+"px"}})}
+renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="crew")requestAnimationFrame(()=>fitWords81($("#main"),".botcard .small",8));return r})(renderView);
+// ---- the avatar speaks in a voice that fits the face: a ready avatar's man / woman goes with the job
+addJob=(o=>function(j){if(j&&j.kind==="lipsync"&&!(j.meta&&j.meta.gender)){const f=M.lsV||M.hfRef,a=f&&f.av&&(AV.items||[]).find(x=>x.id===f.av);if(a&&a.gender)j.meta=Object.assign({},j.meta,{gender:a.gender})}return o(j)})(addJob);
+// "Try again" on an avatar that was given the picture-motion line as its words: ask for the words instead of failing again
+retry79=(o=>function(id){const j=S.jobs.find(x=>x.id===id);if(!(j&&j.kind==="lipsync"&&ANIM79.includes(String(j.prompt||"").trim())))return o(id);
+  const f=j.meta&&j.meta.face;if(f)M.hfRef={url:f,remote:f,name:j.meta.faceName||"face.png"};S.jobs.splice(S.jobs.indexOf(j),1);S.hf.tab="avatar";S.hf.prompt="";persist();go("home");renderAll();
+  setTimeout(()=>{const q=$("#hfq");if(q){q.value="";q.focus()}},60);toast(L("Type what the avatar should say, then press create.","اكتب ما يجب أن يقوله الأفاتار ثم اضغط إنشاء."),{type:"info",ms:5000})})(retry79);
+// ---- the "Credits left" number on the page follows the balance from the server (it stayed on the old number until a page change)
+renderShell=(o=>function(){const r=o.apply(this,arguments);$$("#main .panel.stat").forEach(p=>{const k=p.querySelector(".k"),n=p.querySelector(".n");if(k&&n&&/^(Credits left|الرصيد المتبقي)$/.test(k.textContent.trim()))n.textContent=Number(S.credits||0).toLocaleString("en-US")});return r})(renderShell);
+// ---- a preview copy of the site (deploy/stage.sh) says so on every page
+setTimeout(()=>{if(API.cfg&&API.cfg.stage&&!document.getElementById("stage81")){const d=document.createElement("div");d.id="stage81";d.setAttribute("role","note");d.textContent=L("Preview version — not live yet","نسخة معاينة — ليست منشورة بعد");document.body.appendChild(d)}},1500);
+(()=>{const st=document.createElement("style");st.textContent=`
+.toast{text-align:start!important;max-width:min(92vw,460px)!important;flex-wrap:wrap;row-gap:6px;align-items:center;left:0!important;right:0!important;margin-inline:auto!important;width:fit-content!important;transform:none!important;animation:toast81 .25s cubic-bezier(.2,.8,.2,1)!important}
+@keyframes toast81{from{opacity:0;translate:0 8px}to{opacity:1;translate:0 0}}
+.toast .tm{flex:1 1 200px}
+.toast .tm{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;text-align:start}
+.toast .tx81{border:0;background:transparent;color:inherit;opacity:.65;cursor:pointer;padding:5px;display:grid;place-items:center;flex:none;border-radius:6px;min-width:28px;min-height:28px}
+.toast .tx81:hover{opacity:1}
+.toast .tdb81{border:1px solid color-mix(in srgb,currentColor 32%,transparent);background:transparent;color:inherit;border-radius:8px;padding:4px 9px;font-size:12px;cursor:pointer;flex:none}
+.toast .tdet81{display:none;flex-basis:100%;font:11.5px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;opacity:.8;max-height:30vh;overflow:auto;white-space:pre-wrap;word-break:break-word;border-top:1px solid color-mix(in srgb,currentColor 18%,transparent);padding-top:6px}
+.toast.open81 .tdet81{display:block}.toast.open81 .tbar{display:none}
+.sveil81{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;color:#fff;pointer-events:none;text-align:center;padding:12px}
+.sveil81 .star79{width:52px;height:52px;margin:0}
+.sveil81 b{font:600 15px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.02em;text-shadow:0 1px 6px rgba(0,0,0,.4)}
+.sveil81 small{font-size:12px;opacity:.78}
+.stage:has(.sveil81) .st{display:none}
+.botcard{position:relative}
+.botcard.added{border-style:solid}
+.botcard .newtag81{position:absolute;top:6px;inset-inline-end:6px;font-size:9.5px;font-weight:700;line-height:1;padding:3px 6px;border-radius:999px;background:var(--lime);color:#0a1200}
+.botcard .small{display:block;align-self:stretch;width:100%;max-width:100%;text-align:center;overflow-wrap:normal!important;hyphens:manual!important;word-break:normal!important}
+.crewline{align-items:stretch!important}.crewline .baton{align-self:center}.crewline .botcard{min-width:0!important}.botcard .small{min-width:0}
+@media (min-width:1000px){.crewline{grid-template-columns:repeat(7,minmax(0,1fr) 14px) minmax(0,1fr)!important;overflow:visible!important;gap:4px!important}.crewline .baton{display:grid!important;place-items:center}.crewline .baton svg{width:14px;height:14px}.crewline .botcard{min-width:0;padding-inline:4px}}
+@media (max-width:767px){.hubtabs{flex-wrap:nowrap!important;overflow-x:auto!important;overscroll-behavior-x:contain;scrollbar-width:none;max-width:100%}.hubtabs::-webkit-scrollbar{display:none}.hubtabs button{flex:none;white-space:nowrap}
+  .stage .cap{display:block!important;white-space:nowrap;text-overflow:ellipsis;font-size:13px!important}}
+.stage:has(.sveil81) .cap{display:none!important}
+#stage81{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:9999;background:#F5C518;color:#1a1400;font:600 12px/1 system-ui,sans-serif;padding:5px 12px;border-radius:0 0 10px 10px;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

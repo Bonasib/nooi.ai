@@ -57,7 +57,7 @@ i = kieInput("kling-3.0/video", { ...vid(5, false), meta: { res: "4K" } }); ok(i
 i = kieInput("nano-banana-pro", { kind: "image", prompt: "x", aspect: "1:1", inputs: {}, meta: { res: "4K" } }); ok(i.resolution === "4K", "Nano Banana Pro: 4K");
 i = kieInput("wan/2-7-text-to-video", vid(5, false)); ok(i.ratio === "9:16" && !i.aspect_ratio, "WAN 2.7: ratio, not aspect_ratio");
 i = kieInput("wan/2-7-image-to-video", vid(5, true)); ok(i.first_frame_url === "https://i" && !i.image_url, "WAN 2.7 I2V: first_frame_url");
-i = kieInput("elevenlabs/text-to-speech-multilingual-v2", { kind: "voice", prompt: "hello", inputs: {}, meta: { gender: "male" } }); ok(i.text === "hello" && i.voice === "George", "ElevenLabs TTS: text and a voice");
+i = kieInput("elevenlabs/text-to-speech-multilingual-v2", { kind: "voice", prompt: "hello", inputs: {}, meta: { gender: "male" } }); ok(i.text === "hello" && i.voice === "JBFqnCBsd6RMkjVDRZzb" && !("language_code" in i), "ElevenLabs TTS: text and a voice id (George)");
 i = kieInput("recraft/remove-background", { kind: "bg", inputs: { bgFg: "https://img" }, meta: {} }); ok(i.image === "https://img", "Recraft: background removal takes image");
 i = kieInput("topaz/image-upscale", { kind: "finish", inputs: { fin: "https://img" }, meta: { tool: "upscale", opt: { scale: "4x" } } }); ok(i.image_url === "https://img" && i.upscale_factor === "4", "Topaz: image upscale 4×");
 i = kieInput("kling/ai-avatar-standard", { kind: "lipsync", prompt: "", inputs: { lsV: "https://face.png", lsA: "https://v.mp3" }, meta: {} }); ok(i.image_url && i.audio_url && i.prompt === "", "Kling avatar: image, audio, prompt");

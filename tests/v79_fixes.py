@@ -66,7 +66,7 @@ def unit_checks():
     try: v = json.loads(o.splitlines()[-1])
     except Exception: v = {}
     ok(v.get("url") == "https://cdn/x.mp3", f"avatar voice: the third try gives the voice {v} {e}")
-    ok(v.get("made") == ["elevenlabs/text-to-speech-multilingual-v2", "elevenlabs/text-to-speech-multilingual-v2", "elevenlabs/text-to-speech-turbo-2-5"], f"avatar voice: twice, then turbo {v.get('made')}")
+    ok(v.get("made") == ["elevenlabs/text-to-speech-multilingual-v2", "elevenlabs/text-to-speech-turbo-2-5", "elevenlabs/text-to-speech-multilingual-v2"], f"avatar voice: v2, turbo, then the engine's default voice {v.get('made')}")
     ok("voice service is busy" in (v.get("msg") or "") and v.get("noFb") is True and v.get("type") == "provider", f"avatar voice: one clear message, no other avatar model {v}")
     # the world language is cleaned: known kinds only, ≤ 80 entries, ≤ 600 things, numbers clamped, colours checked
     o, e = node(f"""import {{ cleanScene }} from "{ROOT}/lib/worldai.js";
