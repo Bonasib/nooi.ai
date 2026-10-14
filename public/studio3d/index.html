@@ -33,6 +33,8 @@ body.embed header.top{display:none}
 body:not(.embed) .view{height:calc(100vh - 86px)}
 .view canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
 @media (max-width:980px){.app{grid-template-columns:1fr;padding:10px}.stage{position:relative;top:0;order:-1}.view,body:not(.embed) .view{height:62vh;min-height:340px}}
+/* inside nooi on a phone the frame grows with the page, so the 3D view takes about half of the real screen and the page scrolls past it */
+@media (max-width:980px){body.embed .view{height:calc(var(--vph,100vh) * .5);min-height:280px;max-height:560px}}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;min-width:0}
 details.card{padding:0}details.card>summary{list-style:none;cursor:pointer;padding:13px 14px;font-weight:650;display:flex;align-items:center;gap:8px}details.card>summary::-webkit-details-marker{display:none}
 details.card>summary::after{content:"";margin-inline-start:auto;width:8px;height:8px;border-right:2px solid var(--mute);border-bottom:2px solid var(--mute);transform:rotate(45deg);transition:transform .2s}details.card[open]>summary::after{transform:rotate(-135deg)}
@@ -186,5 +188,13 @@ label.sw i::after{content:"";position:absolute;top:2px;inset-inline-start:2px;wi
 </main>
 <div class="toast" id="toast"></div>
 <script type="module" src="./app.js"></script>
+<script>
+/* inside nooi: learn the real screen height from the app, and tell the app how tall the studio is (phones: no scroll trap) */
+(function(){if(window.parent===window)return;
+  addEventListener("message",function(e){if(e.origin!==location.origin||!e.data||e.data.type!=="x3d-vp")return;document.documentElement.style.setProperty("--vph",e.data.h+"px")});
+  var last=0;function tell(){var h=Math.ceil(document.documentElement.scrollHeight);if(Math.abs(h-last)>2){last=h;parent.postMessage({type:"x3d-size",h:h},location.origin)}}
+  if(window.ResizeObserver)new ResizeObserver(tell).observe(document.body);addEventListener("load",tell);setInterval(tell,1500);
+  parent.postMessage({type:"x3d-hello"},location.origin)})();
+</script>
 </body>
 </html>

@@ -162,8 +162,8 @@ async def ui(p, w, lang):
     ok(len(lk) == 4 and all(x["prompt"].startswith("Portrait of ") and "year-old" in x["prompt"] and len(x["prompt"]) > 120 for x in lk), f"{tag}: looks from the whole character {[x['prompt'][:90] for x in lk]}")
     await E("()=>{const L=S.jobs.filter(j=>j.kind==='look').slice(-4);L[0].status='failed';L[0].error='Engine said no';L[1].status='complete';L[1].resultUrl='/media/ai.png';L[2].status='rendering';L[2].progress=.4;L.forEach(j=>delete j.remote);persist();renderView()}")
     await pg.wait_for_timeout(2200)
-    r["looks"] = await E("()=>{const c=S.chars[S.charSel];return [!!c.autoLook79,!(c.looks||[]).includes(c.lookSeed),document.querySelectorAll('.looks .fail79 [data-act=\"job-retry\"]').length,document.querySelectorAll('.looks canvas[data-ref^=\"look:\"]').length,getComputedStyle(document.querySelector('.looks .veil:has([data-pct])>div'),'::before').animationName]}")
-    ok(r["looks"] == [True, True, 1, 0, "star79"], f"{tag}: looks — failed says so with Try again, real look picked, drawn previews hidden, star while rendering {r['looks']}")
+    r["looks"] = await E("()=>{const c=S.chars[S.charSel];return [!!c.autoLook79,!(c.looks||[]).includes(c.lookSeed),document.querySelectorAll('.looks .fail79 [data-act=\"job-retry\"]').length,document.querySelectorAll('.looks canvas[data-ref^=\"look:\"]').length,!!document.querySelector('.looks .veil.v80 .star79')]}")
+    ok(r["looks"] == [True, True, 1, 0, True], f"{tag}: looks — failed says so with Try again, real look picked, drawn previews hidden, star while rendering {r['looks']}")
     # the sketch turns into what was drawn: AI vision reads it, the AI picture fills the output panel
     n0 = len(posted)
     await E("()=>{S.sketch.prompt='';S.sketch.target='vehicle';S.sketch.aiCap=250;go('sketch');renderAll()}"); await pg.wait_for_timeout(500)
@@ -180,7 +180,7 @@ async def ui(p, w, lang):
     ok(await E("()=>SKAI.state===''&&!$('#skout').dataset.ai79"), f"{tag}: drawing more goes back to the live preview")
     # AI 3D world: designed by the text AI, built at phone quality, rendered in the cloud from one small view
     n0 = len(posted)
-    await E("()=>{S.w3.prompt='A desert oasis at sunset';S.w3.scene=null;go('w3ai');renderAll()}"); await pg.wait_for_timeout(400)
+    await E("()=>{S.w3.prompt='A desert oasis at sunset';S.w3.scene=null;S.dw.mode='shapes';go('w3ai');renderAll()}"); await pg.wait_for_timeout(400)
     await E("()=>document.querySelector('[data-act=\"w3-make\"]').click()")
     for _ in range(40):
         await pg.wait_for_timeout(300)

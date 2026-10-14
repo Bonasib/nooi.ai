@@ -7617,7 +7617,7 @@ async function hfSend(){const H=S.hf,q=$("#hfq"),p=((q&&q.value)||H.prompt||"").
     else if(H.audio==="music"){S.tools.music.prompt=p;addJob({kind:"music",prompt:p,dur:S.tools.music.dur,cost:4,secs:6,art:"wave"})}else addJob({kind:"sfx",prompt:p,dur:3,cost:1,secs:2,art:"wave"});persist();renderAll();return}
   if(H.tab==="avatar"){if(!ref){toast(L("Add a face photo first.","أضف صورة وجه أولاً."));return}if(!p&&!M.hfAud){toast(L("Type what they say, or add a voice file.","اكتب ما يقوله أو أضف ملفاً صوتياً."));return}
     M.lsV=ref;if(M.hfAud)M.lsA=M.hfAud;S.tools.voice.lipText=p;go("voice");if(addJob({kind:"lipsync",prompt:p||(M.hfAud&&M.hfAud.name)||"",cost:12,secs:10}))renderAll()}}
-addJob=(o=>function(j){if(j&&j.kind==="video"&&S.draft&&S.draft.res&&!(j.meta&&j.meta.res))j.meta=Object.assign({},j.meta,{res:S.draft.res});if(j&&j.kind==="image"&&S.img&&S.img.res)j.meta=Object.assign({},j.meta,{res:S.img.res});return o(j)})(addJob);
+addJob=(o=>function(j){if(j&&j.kind==="video"&&S.draft&&S.draft.res&&!(j.meta&&j.meta.res))j.meta=Object.assign({},j.meta,{res:S.draft.res});if(j&&j.kind==="image"&&S.img&&S.img.res&&!(j.meta&&j.meta.res))j.meta=Object.assign({},j.meta,{res:S.img.res});return o(j)})(addJob);
 document.addEventListener("input",e=>{if(e.target&&e.target.id==="hfq"){S.hf.prompt=e.target.value;clearTimeout(S._hfp);S._hfp=setTimeout(persist,400)}});
 document.addEventListener("keydown",e=>{if(e.target&&e.target.id==="hfq"&&e.key==="Enter"&&(e.metaKey||e.ctrlKey)){e.preventDefault();hfSend()}});
 document.addEventListener("change",e=>{const t=e.target;if(t&&t.dataset&&t.dataset.hfslot&&t.files&&t.files[0]){loadSlot(t.dataset.hfslot,t.files[0]);setTimeout(()=>renderView(),80)}},true);
@@ -10662,8 +10662,8 @@ function skAiUI(){const el=$("#skai79");if(!el)return;const st=SKAI.state,lab=SK
 lskMakeReal=async function(auto){const K=S.sketch;if(!SK.strokes.length)return null;const m0=auto?lskPauseModel():bestImg72(),c0=(IMG_MODELS[m0]||{cr:3}).cr;
   if(auto&&!crFree()&&typeof S.credits==="number"&&c0>S.credits){lskStopAI(L("Not enough credits for the next picture — “When I pause” is off.","الرصيد لا يكفي للصورة التالية — توقف «عند التوقف»."));return null}LSK.pauseBusy=true;
   try{const sig=lskSig(),seen=K.prompt?"":await skSee79();if(lskSig()!==sig)return null;            // still drawing — the next pause makes it
-    const blob=await new Promise(r=>lskInput(1024).toBlob(r,"image/png")),t=ENT_TYPES.find(x=>x[0]===K.target)||ENT_TYPES[0];
-    const j=withRef72("skImg",new File([blob],"sketch.png",{type:"image/png"}),()=>addJob({kind:"image",prompt:sketchPrompt72(K.prompt||seen||t[1],K.style,K.strength),title:(K.prompt||SKAI.label||seen||L("Sketch","رسمة")).slice(0,40),model:m0,aspect:"1:1",cost:c0,secs:6,art:"scene",meta:{sketch:true,skLive:true,auto:!!auto,strength:K.strength/100,seen:seen||undefined}}));
+    const blob=await new Promise(r=>lskInput(768).toBlob(r,"image/jpeg",.9)),t=ENT_TYPES.find(x=>x[0]===K.target)||ENT_TYPES[0];
+    const j=withRef72("skImg",new File([blob],"sketch.jpg",{type:"image/jpeg"}),()=>addJob({kind:"image",prompt:sketchPrompt72(K.prompt||seen||t[1],K.style,K.strength),title:(K.prompt||SKAI.label||seen||L("Sketch","رسمة")).slice(0,40),model:m0,aspect:"1:1",cost:c0,secs:6,art:"scene",meta:{sketch:true,skLive:true,auto:!!auto,strength:K.strength/100,seen:seen||undefined,res:"1K"}}));
     if(j){SKAI.job=j.id;SKAI.sig=sig;SKAI.state="wait";SKAI.url="";LSK.spent+=c0;lskMeter();skAiUI();if(!auto&&S.view==="sketch")renderView()}return j}finally{LSK.pauseBusy=false}};
 skTick=(o=>async function(now){const out=$("#skout");if(S.view!=="sketch"||S.sketch.target==="floorplan"||!out||!SKAI.job||lskMode()==="live")return o(now);
   const j=S.jobs.find(x=>x.id===SKAI.job),same=lskSig()===SKAI.sig;
@@ -10918,6 +10918,238 @@ document.addEventListener("change",e=>{if(e.target&&e.target.id==="ugcmodel"){S.
 .ugcgo79{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:14px 0 6px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);font-size:13px;line-height:1.4}.ugcgo79>svg{width:18px;height:18px;flex:none}.ugcgo79 span{flex:1 1 200px}
 @media (max-width:980px){.ugctwo:not(.has)>.preview-col{order:2}.ugctwo.has>.preview-col{order:-1}}
 @media (max-width:400px){.ugcmode,.ugcfmts{grid-template-columns:1fr}}`;document.head.appendChild(st)})();
+/* ================= v80: STARS ONLY (each star moves on its own) · nooi AUTO IS ITS OWN CARD · TAP TO VIEW / PAUSE · COMPACT MEDIA GRIDS ================= */
+// loaders: three nooi stars, each one twinkling, growing and turning on its own rhythm — no words ("Rendering", "Queued")
+(function(){const g='<defs><linearGradient id="g" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#6EC046"/><stop offset=".55" stop-color="#9CD245"/><stop offset="1" stop-color="#D2E33C"/></linearGradient></defs>',
+    S3=[[14.6,14.4,9.1,1.6,0],[6.2,7.6,4.3,1.25,.35],[12.4,3.3,2.4,1.9,.7]];
+  const star=([x,y,r,d,b])=>'<g transform="translate('+x+" "+y+')"><g><path d="'+STAR_P(0,0,r)+'" fill="url(#g)"/>'+
+    '<animateTransform attributeName="transform" type="scale" values=".55;1.12;.55" keyTimes="0;.5;1" dur="'+d+'s" begin="'+b+'s" repeatCount="indefinite" calcMode="spline" keySplines=".4 0 .2 1;.4 0 .2 1"/>'+
+    '<animate attributeName="opacity" values=".35;1;.35" dur="'+d+'s" begin="'+b+'s" repeatCount="indefinite"/></g>'+
+    '<animateTransform attributeName="transform" type="rotate" additive="sum" values="0;'+(b?-45:45)+';0" dur="'+(d*1.7).toFixed(2)+'s" begin="'+b+'s" repeatCount="indefinite"/></g>';
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'+g+S3.map(star).join("")+"</svg>";
+  document.documentElement.style.setProperty("--star79",'url("data:image/svg+xml,'+encodeURIComponent(svg)+'")');
+  const st=document.createElement("style");st.textContent=`
+@keyframes star79{from{transform:none}to{transform:none}}
+.badge.b-rendering,.badge.b-queued{font-size:0!important;gap:0!important;padding:2px 6px!important;min-height:18px}
+.badge.b-rendering::before,.badge.b-queued::before{width:16px!important;height:16px!important;border-radius:0!important;background:var(--star79) center/contain no-repeat!important}
+.badge.b-queued::before{opacity:.65}
+.thumb .veil.v80{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:rgba(0,0,0,.42)}
+.thumb .veil.v80 .star79{width:34px;height:34px}.thumb .veil.v80 .pct{font:600 11px var(--mono);color:#fff;opacity:.9}
+.hfrph small{display:none}
+/* tap to view: a small expand button on every finished picture or clip; the viewer pauses / zooms */
+.thumb{position:relative}.zoom80{position:absolute;inset-inline-end:6px;bottom:6px;z-index:3;display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:rgba(0,0,0,.55);color:#fff;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.zoom80 svg{width:16px;height:16px}
+.mv80{position:fixed;inset:0;z-index:9999;background:rgba(6,8,7,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:max(14px,env(safe-area-inset-top)) 12px max(14px,env(safe-area-inset-bottom))}
+.mv80 .mvm{max-width:100%;max-height:calc(100% - 70px);object-fit:contain;border-radius:10px;background:#000;touch-action:pinch-zoom}
+.mv80 .mvb{display:flex;gap:10px;margin-top:12px}.mv80 .mvb .btn{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.25)}
+.mv80 .mvx{position:absolute;top:max(10px,env(safe-area-inset-top));inset-inline-end:12px;width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:#fff;font-size:22px;cursor:pointer}
+/* compact grids: more, smaller cards on phones — nothing fills the whole screen */
+.looks{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))!important;gap:8px!important}
+.tpl .thumb{aspect-ratio:4/5!important;max-height:260px}
+@media (max-width:767px){.looks{grid-template-columns:repeat(3,minmax(0,1fr))!important}.xpgrid{columns:2 140px!important}.imgs{grid-template-columns:repeat(2,minmax(0,1fr))!important}.tpl .thumb{max-height:200px}}
+`;document.head.appendChild(st)})();
+thumb=(o=>function(ref,opt){let h=o(ref,opt);const it=objFor(ref);
+  const k=it&&(it.status==="rendering"||it.status==="queued")?h.indexOf('<div class="veil">'):-1;
+  if(k>=0)h=h.slice(0,k)+'<div class="veil v80" aria-label="'+esc(stLabel(it.status))+'"><span class="star79"></span>'+(it.status==="rendering"?'<span class="pct" data-pct="'+ref+'">'+Math.round((it.progress||0)*100)+"%</span>":"")+"</div></div>";
+  const m=/<(img|video) class="frame[^"]*"[^>]*\ssrc="([^"]+)"/.exec(h);if(m&&!/zoom80/.test(h)&&!/^(cp|cb|look):/.test(ref||"")&&!["edit","story","board"].includes(S.view))h=h.replace(/<\/div>$/,'<span class="zoom80" role="button" tabindex="0" data-act="view-media" data-kind="'+(m[1]==="video"?"video":"image")+'" data-src="'+m[2]+'" aria-label="'+esc(L("View","عرض"))+'">'+ic("expand")+"</span></div>");
+  return h})(thumb);
+ICONS.expand=ICONS.expand||'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>';
+function viewMedia80(src,kind){src=String(src||"").replace(/#t=[\d.]+$/,"");if(!src)return;const v=kind==="video";
+  const d=document.createElement("div");d.className="mv80";d.setAttribute("role","dialog");d.setAttribute("aria-modal","true");
+  d.innerHTML='<button class="mvx" aria-label="'+esc(L("Close","إغلاق"))+'">×</button>'+(v?'<video class="mvm" src="'+esc(src)+'" controls autoplay playsinline></video>':'<img class="mvm" src="'+esc(src)+'" alt="">')+
+    '<div class="mvb"><a class="btn sm" href="'+esc(src)+'" download>'+ic("download")+L("Download","تنزيل")+'</a><button class="btn sm" data-mv="close">'+L("Close","إغلاق")+"</button></div>";
+  const close=()=>{const x=d.querySelector("video");if(x)x.pause();d.remove();removeEventListener("keydown",kd,true)},kd=e=>{if(e.key==="Escape"){e.stopPropagation();close()}};
+  d.addEventListener("click",e=>{if(e.target===d||e.target.closest(".mvx,[data-mv=close]"))close()});addEventListener("keydown",kd,true);document.body.appendChild(d);const b=d.querySelector(".mvx");if(b)b.focus()}
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="view-media"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();viewMedia80(a.dataset.src,a.dataset.kind)},true);
+window.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target&&e.target.dataset&&e.target.dataset.act==="view-media"){e.preventDefault();e.stopImmediatePropagation();viewMedia80(e.target.dataset.src,e.target.dataset.kind)}},true);
+// autoplaying preview clips pause / play with a tap (they used to keep looping)
+document.addEventListener("click",e=>{const v=e.target.closest&&e.target.closest("video.frame.sv");if(!v||e.target.closest("[data-act]"))return;if(v.paused){const p=v.play();if(p&&p.catch)p.catch(()=>{})}else v.pause()},true);
+// nooi Auto is nooi's own picker — its card no longer carries the picked engine's name (Veo, Kling…) or that engine's description
+(function(){const sep=(T,img)=>{const d=Object.getOwnPropertyDescriptor(T,"auto");if(!d||!d.get)return;Object.defineProperty(T,"auto",{enumerable:true,configurable:true,get(){const v=d.get();
+  return Object.assign({},v,{name:"nooi Auto",d:img?v.d:[L("Picks the best engine for each prompt — quality, speed and price.","يختار أفضل محرك لكل وصف — الجودة والسرعة والسعر."),L("Picks the best engine for each prompt — quality, speed and price.","يختار أفضل محرك لكل وصف — الجودة والسرعة والسعر.")]})}})};sep(MODELS);sep(IMG_MODELS,true)})();
+// ---- one clear map (Higgsfield-style): a few hubs in the menu; each hub page has a row of its tools. Duplicates are folded in:
+// Video = create video · UGC ads · nooi Studio (the agents) · story · storyboard; Image = create · sketch (live sketch + draw a
+// scene) · coloring; 3D = 3D worlds · 3D Studio; Edit, Publish and Settings keep their tools as tabs. No "NEW" tags everywhere.
+const HUBS=[
+  ["image","image","Image","صورة",[["image","Create image","إنشاء صورة"],["sketch","Sketch to life","من الرسم إلى الواقع",["draw"]],["coloring","Coloring book","كراسة التلوين"]]],
+  ["video","video","Video","فيديو",[["video","Create video","إنشاء فيديو"],["ugcads","UGC ads","إعلانات UGC"],["crew","nooi Studio","استوديو nooi"],["story","Chapter story","قصة الفصول"],["board","Storyboard","ستوري بورد"]]],
+  ["chars","char","Characters","الشخصيات",[["chars","Characters","الشخصيات"]]],
+  ["w3ai","cube","3D","ثلاثي الأبعاد",[["w3ai","3D worlds","عوالم 3D"],["studio3d","3D Studio","استوديو 3D"]]],
+  ["edit","edit","Edit","التحرير",[["edit","Video editor","محرر الفيديو"],["fx","Visual effects","المؤثرات البصرية",["bg","grade","mocap"]],["voice","Voice & audio","الصوت والموسيقى"],["subs","Subtitles & dubbing","الترجمة والدبلجة"],["finish","Enhance","التحسين"],["vss","Video intelligence","تحليل الفيديو بالذكاء"]]],
+  ["calendar","calendar","Publish","النشر",[["calendar","Schedule & publish","الجدولة والنشر"],["plan","Content plan","خطة المحتوى"],["hooks","Hook lab","مختبر الخطافات"]]],
+  ["account","account","Settings","الإعدادات",[["account","Account & plan","الحساب والباقة"],["wallet","Credits","الرصيد"],["connect","Connections & APIs","الربط والواجهات"],["integrations","Integrations · MCP","التكاملات · MCP"],["legal","Legal & payments","القانونية والمدفوعات"],["support","Help & support","المساعدة والدعم"]]]];
+const hubOf=v=>HUBS.find(h=>h[4].some(t=>t[0]===v||(t[3]||[]).includes(v)));
+const hubTab=v=>{const h=hubOf(v);return h&&h[4].find(t=>t[0]===v||(t[3]||[]).includes(v))};
+(function(){const all=[],seen=new Set();NAVS.flatMap(g=>g[1]).forEach(x=>{if(!seen.has(x[0])){seen.add(x[0]);all.push([x[0],x[1],x[2],x[3]])}});
+  HUBS.forEach(h=>h[4].forEach(t=>{const n=all.find(x=>x[0]===t[0]);if(n){if(["crew","w3ai"].includes(t[0])){n[2]=t[1];n[3]=t[2]}}else{all.push([t[0],h[1],t[1],t[2]]);seen.add(t[0])}}));
+  const hub=k=>{const h=HUBS.find(x=>x[0]===k);return[h[0],h[1],h[2],h[3]]},keep=k=>all.find(x=>x[0]===k);
+  NAVS.length=0;
+  NAVS.push([null,[keep("home"),keep("discover")].filter(Boolean)],[["Create","إنشاء"],["image","video","chars","w3ai"].map(hub)],[["Edit & publish","التحرير والنشر"],["edit","calendar"].map(hub)],
+    [["Library","المكتبة"],[keep("library"),keep("explore")].filter(Boolean)],[["Account","الحساب"],[hub("account")]],[["Administration","الإدارة"],[keep("admin")].filter(Boolean)]);
+  ALLNAV.length=0;all.forEach(x=>ALLNAV.push(x))})();
+// the menu marks the hub of the page you're on
+renderShell=(o=>function(){o.apply(this,arguments);const h=hubOf(S.view);document.querySelectorAll("#side .nav[data-go]").forEach(b=>{const on=b.dataset.go===S.view||(h&&b.dataset.go===h[0]);if(on)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")})})(renderShell);
+// each hub page starts with its tools as tabs
+function hubTabsHTML(v){const h=hubOf(v);if(!h||h[4].length<2)return"";const cur=hubTab(v);
+  return'<nav class="hubtabs" role="tablist" aria-label="'+esc(L(h[2],h[3]))+'">'+h[4].filter(t=>{const f=FEATURE_OF_VIEW[t[0]];return!(f&&typeof featureOn==="function"&&!featureOn(f))}).map(t=>'<button role="tab" data-go="'+t[0]+'" aria-selected="'+(t===cur)+'">'+esc(L(t[1],t[2]))+"</button>").join("")+"</nav>"}
+renderView=(o=>function(){const r=o.apply(this,arguments);const v=document.querySelector("#main .view");if(v){const old=v.querySelector(":scope>.hubtabs"),html=hubTabsHTML(S.view);if(old)old.remove();if(html)v.insertAdjacentHTML("afterbegin",html);
+  if(S.view==="sketch"||S.view==="draw"){const h1=v.querySelector("h1"),t=h1&&h1.parentElement&&h1.parentElement.classList.contains("spread")?h1.parentElement:h1;if(t&&!v.querySelector(".skmode80"))t.insertAdjacentHTML("afterend",'<div class="seg skmode80" role="tablist"><button role="tab" data-go="sketch" aria-selected="'+(S.view==="sketch")+'">'+esc(L("Live sketch","رسم حي"))+'</button><button role="tab" data-go="draw" aria-selected="'+(S.view==="draw")+'">'+esc(L("Draw a scene","ارسم مشهداً"))+"</button></div>")}}return r})(renderView);
+// Tools (the Create tab on phones): every tool, grouped by hub
+VIEWS.tools=()=>'<div class="view"><h1>'+L("Create","إنشاء")+'</h1><p class="lede">'+L("Every tool in one place.","كل الأدوات في مكان واحد.")+"</p>"+HUBS.filter(h=>h[0]!=="account").map(h=>'<h2 class="sec">'+L(h[2],h[3])+"</h2>"+toolGrid(h[4].map(t=>t[0]).filter(k=>ALLNAV.some(x=>x[0]===k)&&TOOLDESC[k]))).join("")+"</div>";
+(function(){const st=document.createElement("style");st.textContent=`
+.hubtabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 16px;padding:4px;border:1px solid var(--line);border-radius:22px;background:var(--panel2);width:max-content;max-width:100%}
+.hubtabs::-webkit-scrollbar{display:none}
+.hubtabs button{flex:none;border:0;background:transparent;color:var(--mute);font:500 13.5px/1 inherit;font-family:inherit;padding:9px 14px;border-radius:999px;white-space:nowrap;cursor:pointer;min-height:36px}
+.hubtabs button[aria-selected="true"]{background:var(--text);color:var(--bg)}
+.hubtabs button:hover:not([aria-selected="true"]){color:var(--text)}
+.skmode80{margin:-4px 0 14px}
+#side .nav .new{display:none}
+.rt79{white-space:nowrap}
+@media (max-width:767px){.hubtabs{width:auto;border-radius:14px;margin:0 -2px 10px;padding:3px;flex-wrap:wrap;overflow:visible}.hubtabs button{padding:7px 12px;min-height:34px;font-size:13px}}
+/* the editor is a full workspace on a phone: its tools are in the menu, the screen goes to the preview and timeline */
+@media (max-width:767px){.view:has(.edstage)>.hubtabs{display:none}}
+`;document.head.appendChild(st)})();
+// ---- faster Sketch to Life: the AI already knows what you drew when you pause (it looks while you draw), the pause is shorter,
+// the drawing goes up small, the picture comes back at 1K, and the result is followed every second instead of every few
+SKAI.pending={};
+skSee79=(o=>async function(src){if(src||API.mode!=="server"||!SK.strokes.length)return o(src);const sig=lskSig();if(SKAI.seen[sig]!=null)return SKAI.seen[sig];
+  if(!SKAI.pending[sig])SKAI.pending[sig]=o().finally(()=>{delete SKAI.pending[sig]});return SKAI.pending[sig]})(skSee79);
+let skPre80=0;document.addEventListener("pointerup",()=>{if(S.view!=="sketch"||API.mode!=="server"||S.sketch.prompt||lskMode()==="off")return;clearTimeout(skPre80);
+  skPre80=setTimeout(()=>{if(SK.strokes.length&&!SK.cur)skSee79().then(s=>{if(s&&!SKAI.state){SKAI.label=SKAI.label||s}}).catch(()=>{})},450)});
+lskPauseTick=function(now){if(!SK.strokes.length||SK.cur||LSK.pauseBusy)return;const sg=lskSig();if(sg!==LSK.cur2){LSK.cur2=sg;LSK.lastMove=now;return}if(sg===LSK.sig||now-LSK.lastMove<850)return;if(lskCapHit())return;LSK.sig=sg;lskMakeReal(true)};
+// follow the sketch picture every second while it is being made
+setInterval(async()=>{if(API.mode!=="server"||!SKAI.job||S.view!=="sketch")return;const j=S.jobs.find(x=>x.id===SKAI.job);if(!j||!j.remote||!["queued","rendering"].includes(j.status)||j._sk80)return;j._sk80=1;
+  try{const r=await API.req("/v1/jobs/"+j.remote);if(r.status==="done"&&r.url){j.status="complete";j.progress=1;j.resultUrl=r.url;persist()}else if(r.status==="failed"){j.status="failed";j.error=r.error||j.error;persist();statusChanged()}else if(r.progress)j.progress=Math.max(j.progress||0,r.progress)}catch(e){}finally{delete j._sk80}},1000);
+// the Video page's "UGC" type is the UGC ads tab now (one place for it)
+VIEWS.video=(o=>()=>o().replace(/<button class="tile"[^>]*data-val="ugc"[^>]*>[\s\S]*?<\/button>/,""))(VIEWS.video);
+if(S.draft&&S.draft.type==="ugc")S.draft.type="ad";
+// 3D Studio on phones: the frame is as tall as the studio (the page scrolls normally) and the studio sizes its 3D view to half the real screen
+(function(){const ph=()=>matchMedia("(max-width:980px)").matches,vp=()=>{const f=document.querySelector("iframe.x3frame");if(f&&f.contentWindow)f.contentWindow.postMessage({type:"x3d-vp",h:innerHeight},location.origin)};
+  addEventListener("message",e=>{if(e.origin!==location.origin||!e.data)return;const f=document.querySelector("iframe.x3frame");if(!f||e.source!==f.contentWindow)return;
+    if(e.data.type==="x3d-hello")vp();if(e.data.type==="x3d-size"&&ph()){f.style.minHeight="0";f.style.height=Math.max(480,Math.min(20000,+e.data.h||0))+"px"}});
+  addEventListener("resize",()=>{vp();const f=document.querySelector("iframe.x3frame");if(f&&!ph()){f.style.height="";f.style.minHeight=""}});
+  renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="studio3d")setTimeout(vp,300);return r})(renderView)})();
+// ---- 3D worlds · the new core tool: PHOTOREAL DEPTH WORLDS. The picture engine paints the place in high quality — a wide
+// photo to walk into or a 360° panorama to look around — a depth model measures every pixel (your depth API, fal.ai Depth Anything,
+// or the picture engine itself), and this device builds ONE light 3D surface from the two pictures: each pixel pushed back to its
+// real distance, torn where something stands in front of something else, with a soft copy of the photo behind the tears. Any phone
+// moves through it at full speed (one draw call, drawn only when the view changes). Real video is made in the cloud from your view.
+S.dw=Object.assign({mode:"photo",kind:"wide",prompt:"",cur:null,list:[]},S.dw||{});
+const DW={T:null,r:null,scene:null,cam:null,cv:null,built:null,yaw:0,pitch:0,pos:[0,0,0],dirty:true,raf:0,tour:0,err:"",loading:false};
+const dwImgModel=()=>bestImg72();
+const dwCost=()=>{const c=(IMG_MODELS[dwImgModel()]||{cr:5}).cr;return API.cfg&&API.cfg.depthEngine?c:c*2};
+const dwWorld=id=>(S.dw.list||[]).find(w=>w.id===(id||S.dw.cur));
+function dwPrompts(p,kind){return kind==="pano"?{img:"A seamless 360-degree equirectangular panorama of "+p+". Photorealistic, eye-level camera standing in the middle of the place, straight horizon exactly across the middle, natural light, rich detail near and far, no people close to the camera, no text, no borders; the left and right edges join seamlessly.",
+    depth:"Turn this exact 360-degree panorama into its depth map: a smooth grayscale image where the nearest surfaces are pure white and the farthest surfaces and the sky are pure black, with continuous gradients along the ground and walls. Keep every object's exact outline, position and size, and keep the panorama layout. No colours, no text, no lighting effects."}:
+  {img:"A photorealistic wide-angle photograph of "+p+". Eye-level camera standing inside the scene with a clear walkable foreground, natural perspective, strong depth from near to far, sharp detail everywhere, natural light, no people close to the camera, no text.",
+    depth:"Turn this exact photo into its depth map: a smooth grayscale image where the nearest surfaces are pure white and the farthest surfaces and the sky are pure black, with continuous gradients along the ground and walls. Keep every object's exact outline, position and size. No colours, no text, no lighting effects."}}
+function dwCreate(){const D=S.dw,p=String(D.prompt||"").trim();if(!p){toast(L("Describe the place first.","صف المكان أولاً."));const q=$("#dwq");if(q)q.focus();return}
+  const P=dwPrompts(p,D.kind),j=addJob({kind:"image",prompt:P.img,title:p.slice(0,40)+" · "+L("3D world","عالم 3D"),model:dwImgModel(),aspect:D.kind==="pano"?"21:9":"16:9",cost:(IMG_MODELS[dwImgModel()]||{cr:5}).cr,secs:8,art:"scene",meta:{dw:1,step:"img",res:"2K"}});
+  if(!j)return;const w={id:uid(),prompt:p,kind:D.kind,img:j.id,depth:null,depthUrl:null,created:Date.now()};D.list=(D.list||[]).concat(w).slice(-12);D.cur=w.id;persist();renderView();
+  toast(L("Painting your world in high quality…","يُرسم عالمك بجودة عالية…"),{type:"ok"})}
+// the depth: a depth engine on the server when there is one, otherwise the picture engine draws the depth map of its own picture
+setInterval(async()=>{for(const w of S.dw.list||[]){if(w.depthUrl||w.depthBusy)continue;const a=S.jobs.find(x=>x.id===w.img);if(!a||a.status!=="complete")continue;const u=mediaUrl(a);if(!u)continue;
+  if(w.depth){const b=S.jobs.find(x=>x.id===w.depth);if(b&&b.status==="complete"&&mediaUrl(b)){w.depthUrl=mediaUrl(b);persist();if(S.view==="w3ai")renderView()}continue}
+  w.depthBusy=1;try{
+    if(API.mode==="server"&&API.cfg&&API.cfg.depthEngine&&!w.depthTried){w.depthTried=1;try{const r=await API.req("/v1/world/depth",{json:{url:u}});if(r&&r.depth){w.depthUrl=r.depth;w.depthBy=r.engine;persist();if(S.view==="w3ai")renderView();continue}}catch(e){}}
+    const P=dwPrompts(w.prompt,w.kind),b=withSlot79("iRef",{type:"image",remote:u,url:u,name:"world.png"},()=>addJob({kind:"image",prompt:P.depth,title:w.prompt.slice(0,30)+" · "+L("depth","العمق"),model:dwImgModel(),aspect:a.aspect||"16:9",cost:(IMG_MODELS[dwImgModel()]||{cr:5}).cr,secs:8,art:"scene",meta:{dw:1,step:"depth",res:"1K"}}));
+    if(b){w.depth=b.id;persist();if(S.view==="w3ai")renderView()}}finally{delete w.depthBusy}}},1500);
+function dwStage(w){if(!w)return'<div class="w3msg"><span class="star79"></span><span>'+L("Describe a place — it appears here as a real 3D world you can look and walk around in.","صف مكاناً — يظهر هنا عالماً ثلاثي الأبعاد حقيقياً تتجول فيه.")+"</span></div>";
+  const a=S.jobs.find(x=>x.id===w.img),b=w.depth&&S.jobs.find(x=>x.id===w.depth),fail=(a&&a.status==="failed")||(b&&b.status==="failed");
+  if(fail)return'<div class="w3msg"><span>⚠ '+esc(((a&&a.status==="failed")?a:b).error||L("The engine couldn't make it.","تعذّر على المحرك صنعه."))+'</span><button class="btn sm" data-act="job-retry" data-id="'+((a&&a.status==="failed")?a:b).id+'">'+ic("refresh")+L("Try again","حاول مجدداً")+"</button></div>";
+  if(w.depthUrl&&DW.built===w.id&&!DW.err)return"";
+  const step=!a||a.status!=="complete"?[1,L("Painting the place in high quality…","رسم المكان بجودة عالية…")]:!w.depthUrl?[2,L("Measuring the depth of every pixel…","قياس عمق كل بكسل…")]:[3,DW.err||L("Building the 3D world on your device…","بناء العالم الثلاثي على جهازك…")];
+  return'<div class="w3msg"><span class="star79"></span><b>'+step[0]+" / 3</b><span>"+esc(step[1])+"</span></div>"}
+function dwView(){const D=S.dw,w=dwWorld(),ready=w&&w.depthUrl;
+  return'<div class="view"><h1>'+L("3D worlds","عوالم 3D")+'</h1><p class="lede">'+L("Describe any place. The AI paints it in high quality, measures how far away everything is, and your phone turns it into a real 3D world you can look and walk around in — light enough for any device. Make a real video of it in the cloud.","صف أي مكان. يرسمه الذكاء بجودة عالية، ويقيس بُعد كل شيء فيه، ويحوّله هاتفك إلى عالم ثلاثي الأبعاد حقيقي تنظر فيه وتتجول — خفيفاً على أي جهاز. واصنع منه فيديو حقيقياً في السحابة.")+"</p>"+
+    '<div class="seg dwmode" role="tablist"><button role="tab" data-act="dw-mode" data-v="photo" aria-selected="'+(D.mode!=="shapes")+'">'+L("Photoreal world","عالم واقعي")+'</button><button role="tab" data-act="dw-mode" data-v="shapes" aria-selected="'+(D.mode==="shapes")+'">'+L("Shape world","عالم من أشكال")+"</button></div>"+
+    '<div class="two w3two'+(w?" has":"")+'"><div class="panel pad"><label class="lbl" for="dwq">'+L("Your place","مكانك")+'</label><textarea id="dwq" data-bind="dw.prompt" dir="auto" placeholder="'+esc(L("A quiet street in old Jeddah at golden hour…","شارع هادئ في جدة القديمة وقت الغروب…"))+'">'+esc(D.prompt)+"</textarea>"+
+    '<div class="w3ideas">'+W3_IDEAS.map((x,i)=>'<button class="chip" data-act="dw-idea" data-v="'+i+'">'+esc(L(x[0],x[1]))+"</button>").join("")+"</div>"+
+    '<span class="lbl">'+L("Kind of world","نوع العالم")+'</span><div class="seg" role="radiogroup"><button role="radio" data-act="dw-kind" data-v="wide" aria-checked="'+(D.kind!=="pano")+'" aria-pressed="'+(D.kind!=="pano")+'">'+L("Walk into it","ادخل وتجوّل")+'</button><button role="radio" data-act="dw-kind" data-v="pano" aria-checked="'+(D.kind==="pano")+'" aria-pressed="'+(D.kind==="pano")+'">'+L("360° all around","‏360° من حولك")+"</button></div>"+
+    '<div style="margin-top:16px"><button class="btn primary big" data-act="dw-make">'+ic("cube")+L("Create the world","اصنع العالم")+'<span class="cost">'+dwCost()+" cr</span></button></div>"+
+    '<p class="small mute" style="margin:8px 0 0">'+L("High-quality picture + depth from the API; the 3D is built on your device in a moment, without heavy work.","صورة عالية الجودة + عمق من الواجهة؛ والـ3D يُبنى على جهازك في لحظة بلا عمل ثقيل.")+"</p>"+
+    (ready?'<span class="lbl">'+L("Real video in the cloud","فيديو حقيقي في السحابة")+'</span><div class="row"><button class="btn" data-act="dw-video">'+ic("video")+L("Make a video of this view","اصنع فيديو من هذا المنظر")+'<span class="cost">'+w3Costs().video+" cr</span></button></div>":"")+
+    ((D.list||[]).length>1?'<span class="lbl">'+L("Your worlds","عوالمك")+'</span><div class="dwlist">'+D.list.slice().reverse().map(x=>'<button class="chip" data-act="dw-open" data-v="'+x.id+'" aria-pressed="'+(x.id===D.cur)+'">'+esc(x.prompt.slice(0,28))+"</button>").join("")+"</div>":"")+
+    '</div><div class="preview-col"><div class="panel pad"><div class="w3stage dwstage" id="dwstage"><canvas id="dwcv" aria-label="'+esc(L("3D world — drag to look around, pinch or scroll to walk","عالم ثلاثي الأبعاد — اسحب للنظر، وقرّب بإصبعين أو مرّر للمشي"))+'"></canvas>'+dwStage(w)+"</div>"+
+    (ready?'<div class="row" style="margin-top:10px"><button class="btn sm" data-act="dw-tour">'+ic("play")+L("Tour","جولة")+'</button><button class="btn sm" data-act="dw-reset">'+ic("refresh")+L("Back to start","العودة للبداية")+'</button><button class="btn sm ghost" data-act="dw-shot">'+ic("download")+L("Save view","احفظ المنظر")+'</button></div><p class="small mute" style="margin:8px 0 0">'+L("Drag to look around · pinch or scroll to walk forward and back.","اسحب للنظر حولك · قرّب بإصبعين أو مرّر للمشي للأمام والخلف.")+"</p>":"")+"</div></div></div></div>"}
+const W3_SHAPES=VIEWS.w3ai;VIEWS.w3ai=()=>{if(S.dw.mode==="shapes"){const h=W3_SHAPES();return h.replace('<div class="view"><h1>'+L("AI 3D world","عالم 3D بالذكاء")+"</h1>",'<div class="view"><h1>'+L("3D worlds","عوالم 3D")+'</h1><div class="seg dwmode" role="tablist"><button role="tab" data-act="dw-mode" data-v="photo" aria-selected="false">'+L("Photoreal world","عالم واقعي")+'</button><button role="tab" data-act="dw-mode" data-v="shapes" aria-selected="true">'+L("Shape world","عالم من أشكال")+"</button></div>")}return dwView()};
+// building the world: photo + depth → one displaced grid (wide) or sphere (360°), torn at depth edges, a soft backdrop behind
+function dwLoadImg(u){return new Promise((ok,no)=>{const im=new Image();try{if(new URL(u,location.href).origin!==location.origin)im.crossOrigin="anonymous"}catch(e){}im.onload=()=>ok(im);im.onerror=()=>no(new Error(L("Couldn't load the world's picture.","تعذّر تحميل صورة العالم.")));im.src=u})}
+function dwDepthGrid(img,gw,gh){const c=document.createElement("canvas");c.width=gw;c.height=gh;const x=c.getContext("2d",{willReadFrequently:true});x.filter="blur(0.6px)";x.drawImage(img,0,0,gw,gh);const d=x.getImageData(0,0,gw,gh).data,v=new Float32Array(gw*gh);
+  for(let i=0;i<gw*gh;i++)v[i]=(d[i*4]*.3+d[i*4+1]*.59+d[i*4+2]*.11)/255;
+  const s=Float32Array.from(v).sort(),lo=s[Math.floor(s.length*.02)],hi=s[Math.floor(s.length*.98)]||1,k=1/Math.max(.05,hi-lo);for(let i=0;i<v.length;i++)v[i]=Math.min(1,Math.max(0,(v[i]-lo)*k));return v}
+function dwBuildMesh(T,photo,depth,kind){const phone=matchMedia("(pointer:coarse)").matches,pano=kind==="pano",gw=pano?(phone?192:256):(phone?144:208),gh=pano?Math.round(gw/2):Math.round(gw*photo.height/photo.width),near=pano?2.4:2.5,far=pano?55:60,sky=.035;
+  const D=dwDepthGrid(depth,gw,gh),pos=new Float32Array(gw*gh*3),uv=new Float32Array(gw*gh*2),dist=new Float32Array(gw*gh),fov=55*Math.PI/180,tY=Math.tan(fov/2),tX=tY*(photo.width/photo.height);
+  for(let j=0;j<gh;j++)for(let i=0;i<gw;i++){const k=j*gw+i,d=D[k],r=d<sky?far*1.15:1/(1/far+d*(1/near-1/far));dist[k]=r;let x,y,z;
+    if(pano){const lon=(i/(gw-1)-.5)*2*Math.PI,lat=(.5-j/(gh-1))*Math.PI;x=Math.sin(lon)*Math.cos(lat)*r;y=Math.sin(lat)*r;z=-Math.cos(lon)*Math.cos(lat)*r}
+    else{const nx=(i/(gw-1))*2-1,ny=1-(j/(gh-1))*2;x=nx*tX*r;y=ny*tY*r;z=-r}
+    pos[k*3]=x;pos[k*3+1]=y;pos[k*3+2]=z;uv[k*2]=i/(gw-1);uv[k*2+1]=1-j/(gh-1)}
+  // tear the surface where one thing stands in front of another (no rubber sheets between a tree and the sky)
+  const idx=[],tear=pano?1.32:1.28;for(let j=0;j<gh-1;j++)for(let i=0;i<gw-1;i++){const a=j*gw+i,b=a+1,c=a+gw,e=c+1,q=[dist[a],dist[b],dist[c],dist[e]],mx=Math.max(...q),mn=Math.min(...q);if(mx/mn>tear)continue;idx.push(a,c,b,b,c,e)}
+  const g=new T.BufferGeometry();g.setAttribute("position",new T.BufferAttribute(pos,3));g.setAttribute("uv",new T.BufferAttribute(uv,2));g.setIndex(idx);
+  const tex=new T.Texture(photo);tex.needsUpdate=true;tex.encoding=T.sRGBEncoding;tex.anisotropy=4;if(pano)tex.wrapS=T.RepeatWrapping;
+  const mesh=new T.Mesh(g,new T.MeshBasicMaterial({map:tex,side:T.DoubleSide}));
+  // behind the tears: a soft copy of the picture far away, so moving around never shows black holes
+  const bc=document.createElement("canvas");bc.width=256;bc.height=Math.round(256*photo.height/photo.width);const bx=bc.getContext("2d");bx.filter="blur(6px)";bx.drawImage(photo,0,0,bc.width,bc.height);
+  const btex=new T.CanvasTexture(bc);btex.encoding=T.sRGBEncoding;let back;
+  if(pano){back=new T.Mesh(new T.SphereGeometry(far*1.3,48,24),new T.MeshBasicMaterial({map:btex,side:T.BackSide}));back.scale.x=-1}
+  else{const z=far*1.25,w=2*tX*z*2.2,h=2*tY*z*1.9;back=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshBasicMaterial({map:btex}));back.position.z=-z}
+  return{mesh,back,stats:{verts:gw*gh,tris:idx.length/3}}}
+async function dwMount(){const cv=$("#dwcv"),w=dwWorld();if(!cv||S.dw.mode==="shapes")return;if(!w||!w.depthUrl){DW.built=null;return}
+  const a=S.jobs.find(x=>x.id===w.img),u=a&&mediaUrl(a);if(!u)return;
+  try{const T=await w3Three();if(!$("#dwcv"))return;const fresh=DW.cv!==cv;DW.cv=cv;
+    if(fresh){if(DW.r)DW.r.dispose();const phone=matchMedia("(pointer:coarse)").matches;DW.r=new T.WebGLRenderer({canvas:cv,antialias:!phone,powerPreference:"low-power",preserveDrawingBuffer:false});DW.r.outputEncoding=T.sRGBEncoding;DW.cam=new T.PerspectiveCamera(55,1.6,.05,400);dwBind(cv);DW.T=T}
+    if(DW.built!==w.id||!DW.scene){if(DW.loading)return;DW.loading=true;DW.err="";try{const[photo,depth]=await Promise.all([dwLoadImg(u),dwLoadImg(w.depthUrl)]);const m=dwBuildMesh(T,photo,depth,w.kind),sc=new T.Scene();sc.add(m.back);sc.add(m.mesh);
+        DW.scene=sc;DW.stats=m.stats;DW.built=w.id;DW.kind=w.kind;dwReset()}finally{DW.loading=false}const ov=document.querySelector("#dwstage .w3msg");if(ov)ov.remove()}
+    dwSize();DW.dirty=true;if(!DW.raf)DW.raf=requestAnimationFrame(dwLoop)}
+  catch(e){DW.err=String(e.message||e);DW.failFor=w.id;const st=$("#dwstage");if(st){const m=st.querySelector(".w3msg");if(m)m.remove();st.insertAdjacentHTML("beforeend",'<div class="w3msg"><span>'+esc(DW.err)+"</span></div>")}}}
+function dwReset(){DW.yaw=0;DW.pitch=0;DW.pos=[0,0,0];DW.tour=0;DW.dirty=true}
+function dwSize(){const cv=DW.cv;if(!cv||!DW.r)return;const w=cv.clientWidth||640,h=cv.clientHeight||400,phone=matchMedia("(pointer:coarse)").matches;DW.r.setPixelRatio(Math.min(devicePixelRatio||1,phone?1.25:1.5));DW.r.setSize(w,h,false);DW.cam.aspect=w/h;DW.cam.updateProjectionMatrix();DW.dirty=true}
+function dwLoop(t){DW.raf=requestAnimationFrame(dwLoop);if(S.view!=="w3ai"||!DW.r||!DW.scene)return;
+  if(DW.tour){const p=((t-DW.tour)/9000)%1,s=Math.sin(p*Math.PI*2);if(DW.kind==="pano"){DW.yaw=p*Math.PI*2;DW.pitch=s*.05}else{DW.pos=[s*.5,Math.sin(p*Math.PI*4)*.05,-Math.sin(p*Math.PI)*1.4];DW.yaw=-s*.14}DW.dirty=true}
+  if(!DW.dirty)return;DW.dirty=false;const c=DW.cam;c.position.set(DW.pos[0],DW.pos[1],DW.pos[2]);c.rotation.set(0,0,0,"YXZ");c.rotation.order="YXZ";c.rotation.y=DW.yaw;c.rotation.x=DW.pitch;DW.r.render(DW.scene,c)}
+function dwBind(cv){const pts=new Map();let pinch=0;const lim=()=>{const pano=DW.kind==="pano";if(!pano)DW.yaw=Math.max(-.32,Math.min(.32,DW.yaw));DW.pitch=Math.max(pano?-.7:-.24,Math.min(pano?.7:.24,DW.pitch));const p=DW.pos;p[0]=Math.max(pano?-1.2:-.8,Math.min(pano?1.2:.8,p[0]));p[2]=Math.max(pano?-1.2:-1.6,Math.min(pano?1.2:.6,p[2]))};
+  const walk=d=>{const y=DW.yaw;DW.pos[0]+=-Math.sin(y)*d;DW.pos[2]+=-Math.cos(y)*d;lim();DW.dirty=true};
+  cv.addEventListener("pointerdown",e=>{cv.setPointerCapture&&cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,[e.clientX,e.clientY]);DW.tour=0});
+  cv.addEventListener("pointermove",e=>{if(!pts.has(e.pointerId))return;const p=pts.get(e.pointerId),dx=e.clientX-p[0],dy=e.clientY-p[1];pts.set(e.pointerId,[e.clientX,e.clientY]);
+    if(pts.size===1){DW.yaw+=dx*.005*(document.dir==="rtl"?-1:1);DW.pitch+=dy*.004;lim();DW.dirty=true}else if(pts.size===2){const v=[...pts.values()],d=Math.hypot(v[0][0]-v[1][0],v[0][1]-v[1][1]);if(pinch)walk((d-pinch)*.012);pinch=d}});
+  const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=0};cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
+  cv.addEventListener("wheel",e=>{e.preventDefault();walk(-Math.sign(e.deltaY)*.25)},{passive:false});
+  cv.addEventListener("keydown",e=>{const k=e.key;if(k==="ArrowUp"||k==="w")walk(.25);else if(k==="ArrowDown"||k==="s")walk(-.25);else if(k==="ArrowLeft"||k==="a"){DW.yaw+=.06;lim();DW.dirty=true}else if(k==="ArrowRight"||k==="d"){DW.yaw-=.06;lim();DW.dirty=true}else return;e.preventDefault()});cv.tabIndex=0}
+renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="w3ai"&&S.dw.mode!=="shapes")requestAnimationFrame(dwMount);return r})(renderView);
+addEventListener("resize",()=>{if(S.view==="w3ai")dwSize()});
+setInterval(()=>{if(S.view==="w3ai"&&S.dw.mode!=="shapes"){const w=dwWorld();if(w&&w.depthUrl&&DW.built!==w.id&&!DW.loading&&DW.failFor!==w.id)renderView()}},2000);
+function dwSnap(width){return new Promise(res=>{if(!DW.r||!DW.scene)return res(null);const cv=DW.cv,h=Math.round(width*cv.clientHeight/Math.max(1,cv.clientWidth));DW.r.setPixelRatio(1);DW.r.setSize(width,h,false);DW.cam.aspect=width/h;DW.cam.updateProjectionMatrix();DW.dirty=true;dwLoop(performance.now());cancelAnimationFrame(DW.raf);DW.raf=requestAnimationFrame(dwLoop);
+  cv.toBlob(b=>{dwSize();res(b)},"image/jpeg",.92)})}
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act^="dw-"]');if(!a||a.disabled)return;const A=a.dataset,D=S.dw;
+  if(A.act==="dw-mode"){D.mode=A.v;persist();renderView();return}
+  if(A.act==="dw-kind"){D.kind=A.v;persist();renderView();return}
+  if(A.act==="dw-idea"){const x=W3_IDEAS[+A.v];if(x){D.prompt=L(x[2],x[3]);persist();renderView()}return}
+  if(A.act==="dw-make"){const q=$("#dwq");if(q)D.prompt=q.value;dwCreate();return}
+  if(A.act==="dw-open"){D.cur=A.v;DW.built=null;persist();renderView();return}
+  if(A.act==="dw-tour"){DW.tour=DW.tour?0:performance.now();if(!DW.tour)DW.dirty=true;return}
+  if(A.act==="dw-reset"){dwReset();return}
+  if(A.act==="dw-shot"){dwSnap(1600).then(b=>b&&saveFile("nooi-3d-world.jpg",b));return}
+  if(A.act==="dw-video"){const w=dwWorld();if(!w)return;dwSnap(1280).then(b=>{if(!b)return;const f=new File([b],"world-view.jpg",{type:"image/jpeg"}),c=w3Costs();
+    const j=withRef72("vStart",f,()=>addJob({kind:"video",prompt:w.prompt+". Start exactly on the reference frame, then a slow cinematic camera "+(w.kind==="pano"?"pan around the place":"move forward into the scene")+", photorealistic, natural light and motion.",title:w.prompt.slice(0,40)+" · "+L("video","فيديو"),model:w3VidModel(),dur:5,aspect:"16:9",cost:c.video,art:"scene",meta:{w3:1,dw:1,start:true}}));
+    if(j){toast(L("Making the video in the cloud — it appears in Cloud renders and your library.","يُصنع الفيديو في السحابة — يظهر في مكتبتك."),{type:"ok"});renderView()}});return}});
+AI_PROVIDERS.push(["depth","Depth · photoreal 3D worlds","العمق · عوالم 3D واقعية","3D worlds",[["baseUrl","API URL"],["apiKey","API key (optional)"]],"https://"]);
+(function(){const st=document.createElement("style");st.textContent=`.dwmode{margin:0 0 14px}.dwlist{display:flex;flex-wrap:wrap;gap:6px}.dwstage{aspect-ratio:16/10}.dwstage canvas:focus{outline:2px solid var(--lime);outline-offset:-2px}
+.w3msg b{font:600 12px var(--mono);opacity:.75}`;document.head.appendChild(st)})();
+// ---- avatars: round, smiling portraits on a soft pink background (made by the engine from Admin → Showcase → Make avatars;
+// fictional people). UGC presenters show their avatar photo (or their initials on the same pink circle until it is made).
+const PRES_AV={"p-najdi-m":"av-faisal","p-sa-f":"av-noura","p-gulf-y":"av-khalid","p-eg-f":"av-lina","p-us-f":"av-maya","p-uk-m":"av-henrik","p-cn-f":"av-mei","p-in-m":"av-arjun"};
+avLoad=(o=>async function(){const had=!!AV.items;await o.apply(this,arguments);if(!had&&AV.items&&AV.items.length&&S.view==="ugcads")renderView()})(avLoad);
+VIEWS.ugcads=(o=>()=>{if(API.mode==="server"&&!AV.items)setTimeout(avLoad,0);let h=o();
+  return h.replace(/(<button class="tile" data-act="ugc-pre" data-v="([^"]+)"[^>]*>)<span class="gl"><span class="tx" style="font-size:20px">[^<]*<\/span><\/span>/g,(m,a,id)=>{const av=(AV.items||[]).find(x=>x.id===PRES_AV[id]),p=PRESENTERS.find(x=>x[0]===id);
+    return a+'<span class="gl avc80">'+(av?'<img src="'+esc(av.url)+'" alt="" loading="lazy">':"<b>"+esc(initials(p?L(p[1],p[2]):id))+"</b>")+"</span>"})})(VIEWS.ugcads);
+(function(){const st=document.createElement("style");st.textContent=`
+.tiles .tile .gl.avc80,.avc80{width:48px!important;height:48px!important;min-width:48px;border-radius:50%!important;overflow:hidden!important;background:#f6cdd5!important;display:grid!important;place-items:center;padding:0!important;border:0!important}
+.tiles .tile .gl.avc80 img,.avc80 img{width:100%!important;height:100%!important;object-fit:cover;display:block;border-radius:50%}.avc80 b{color:#8a3045;font-size:17px;font-weight:600}
+.hfav{width:54px!important;height:54px!important;background:#f6cdd5!important;box-shadow:0 1px 0 rgba(0,0,0,.04)}.hfav.on{border-color:var(--lime)!important}
+`;document.head.appendChild(st)})();
+// the agents' page is "nooi Studio" everywhere (menu, tab and title)
+VIEWS.crew=(o=>function(){return o.apply(this,arguments).replace(/<h1>([^<]*)<\/h1>/,"<h1>"+L("nooi Studio","استوديو nooi")+"</h1>")})(VIEWS.crew);
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
