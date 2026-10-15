@@ -50,7 +50,29 @@ export const blockade = () => { const c = cfg("blockade"), base = (c.baseUrl || 
       if (s === "error" || s === "abort") return { status: "failed", error: "Skybox: " + (r.error_message || s) };
       return { status: s === "pending" ? "queued" : "rendering" }; } }; };
 
-export const GEN3D = { tripo, meshy, blockade };
+// World Labs (Marble) — words or a picture → a whole walkable 3D world: Gaussian splats (light 100k / sharp 500k), a collider
+// mesh to walk on, the 360° picture and a caption. https://api.worldlabs.ai · header WLT-Api-Key · POST /marble/v1/worlds:generate
+// → an operation, polled at GET /marble/v1/operations/{id}. The job's segments keep the files in a fixed order:
+// [splat 100k, splat 500k, collider .glb, panorama, thumbnail] (empty strings where World Labs sent none).
+export const worldlabs = () => { const c = cfg("worldlabs"), base = (c.baseUrl || "https://api.worldlabs.ai").replace(/\/$/, ""), h = { "WLT-Api-Key": c.apiKey, "Content-Type": "application/json" };
+  return { name: "World Labs", configured: configured("worldlabs"),
+    async submit(p) { const img = p.inputs?.wRef; let wp;
+      if (img) { const d = await toDataUrl(img), m = /^data:image\/(\w+);base64,(.+)$/.exec(d || ""); if (!m) throw new Error("World Labs needs a PNG, JPG or WebP picture");
+        wp = { type: "image", image_prompt: { source: "data_base64", data_base64: m[2], extension: m[1] === "jpeg" ? "jpg" : m[1] }, ...(p.prompt ? { text_prompt: String(p.prompt).slice(0, 1000) } : {}) }; }
+      else wp = { type: "text", text_prompt: prompt(p) };
+      const d = await j(await fetch(base + "/marble/v1/worlds:generate", { method: "POST", headers: h, body: JSON.stringify({ display_name: String(p.title || p.prompt || "nooi world").slice(0, 60), world_prompt: wp, ...(c.model ? { model: c.model } : {}) }) }), "World Labs");
+      if (!d.operation_id) throw new Error("World Labs didn't start the world"); return { remoteId: d.operation_id }; },
+    async poll(id) { const d = await j(await fetch(base + "/marble/v1/operations/" + encodeURIComponent(id), { headers: h }), "World Labs");
+      if (!d.done) { const pc = +(d.metadata?.progress_percentage ?? d.metadata?.progress ?? NaN); return { status: "rendering", progress: Number.isFinite(pc) ? Math.min(0.99, pc > 1 ? pc / 100 : pc) : null }; }
+      if (d.error) return { status: "failed", error: "World Labs: " + (d.error.message || d.error.code || "failed") };
+      const a = (d.response && (d.response.assets || (d.response.world && d.response.world.assets))) || {}, spz = a.splats?.spz_urls || {};
+      const lo = spz["100k"] || spz["500k"] || spz.full_res, hi = spz["500k"] || spz.full_res || "";
+      if (!lo) return { status: "failed", error: "World Labs returned no world" };
+      const mir = async (u, ext) => (u ? mirror(u, ext) : "");
+      const segs = [await mir(lo, ".spz"), hi && hi !== lo ? await mir(hi, ".spz") : "", await mir(a.mesh?.collider_mesh_url, ".glb"), await mir(a.imagery?.pano_url, ".jpg"), await mir(a.thumbnail_url, ".jpg")];
+      return { status: "done", url: segs[0], segments: segs }; } }; };
+
+export const GEN3D = { tripo, meshy, blockade, worldlabs };
 // which engine runs a 3D object / world job: the one the user picked, otherwise the first connected one (NVIDIA comes first in adapterFor)
 export function gen3dRoute(cap, body) {
   const e = body.meta?.engine;
@@ -58,6 +80,7 @@ export function gen3dRoute(cap, body) {
     if (e === "tripo" || e === "meshy") return { key: e, a: GEN3D[e]() };
     if (e === "auto" || body.noNv || !e) { for (const k of ["tripo", "meshy"]) if (configured(k)) return { key: k, a: GEN3D[k]() }; }
   }
+  if (body.kind === "world" && (e === "worldlabs" || (e === "auto" && configured("worldlabs")))) return { key: "worldlabs", a: worldlabs() };
   if (body.kind === "world" && (e === "skybox" || (configured("blockade") && !configured("world")))) return { key: "blockade", a: blockade() };
   return null;
 }

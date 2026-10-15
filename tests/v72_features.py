@@ -94,53 +94,32 @@ async def run(p, w):
     ok(r["char"][0] == n0 + 1 and r["char"][1] and r["char"][2], f"{tag}: character from photo {r['char']}")
     await E("()=>document.querySelector('[data-act=gen-looks]').click()")
     ok(await wait_for(E, "()=>S.jobs.filter(j=>j.kind==='look'&&j.meta&&j.meta.photo&&j.remote).length>=4"), f"{tag}: looks from the photo sent")
-    # AI full 3D from a photo — in the one 3D Studio: the photo is handed over, AI views (front/side/back) replace the preview
+    # a photo handed to 3D (the old 3D Studio door) opens the one 3D World with the picture in it; "one thing in it → a 3D object"
+    # sends one 3D job and the core picks the engine
     await E("async()=>{const b=await (await fetch('/media/photo.jpg')).blob();const u=await new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result);r.readAsDataURL(b)});await setS3dFromDataURL(u,'a red box');go('studio3d')}")
-    fr = None
-    for _ in range(80):
-        fr = next((f for f in pg.frames if "/studio3d/" in f.url), None)
-        try:
-            if fr and await fr.evaluate("()=>!!window.X3&&!!X3.S.img"): break
-        except Exception: pass
-        await asyncio.sleep(.25)
-    ok(fr is not None, f"{tag}: 3D Studio with the photo")
-    if fr:
-        await fr.evaluate("""()=>{window.__X3_TEST_MASK=async(img)=>{const w=img.width,h=img.height,a=new Uint8Array(w*h);for(let y=h*.2|0;y<h*.8;y++)for(let x=w*.25|0;x<w*.75;x++)a[y*w+x]=255;return{alpha:a,w,h}};
-          window.__X3_TEST_DEPTH=async(cv)=>{const w=64,h=48,d=new Float32Array(w*h).fill(1);return{depth:d,w,h,ms:1}};document.getElementById('label').value='a red box';X3.S.label='a red box'}""")
-        await fr.evaluate("()=>X3.make3D()"); await fr.evaluate("()=>{X3.cloudUpgrade('views')}")
-        ok(await wait_for(E, "()=>S.a3.length&&S.a3[S.a3.length-1].status!=='wait'", 30), f"{tag}: AI 3D finished")
-        r["a3"] = await E("()=>{const p=S.a3[S.a3.length-1],j=S.jobs.find(x=>x.id===p.res);return [p.status,j&&j.kind,j&&j.local]}")
-        ok(r["a3"][0] == "done" and r["a3"][1] == "3d", f"{tag}: AI 3D result {r['a3']}")
-        ok(await wait_for(fr.evaluate, "()=>X3.E.assets[0].source==='views'&&X3.E.assets[0].cloud.status==='done'", 30), f"{tag}: AI views model replaced the preview in the studio")
+    ok(await wait_for(E, "()=>S.view==='world'&&!!S.world.pic", 20), f"{tag}: the photo is in the 3D World")
+    n3 = await E("()=>S.jobs.length")
+    await E("()=>{const b=document.querySelector('[data-act=nw-obj3d]');b&&b.click()}")
+    ok(await wait_for(E, f"()=>S.jobs.slice({n3}).some(j=>j.kind==='3d'&&j.meta&&j.meta.mode==='objects'&&j.meta.engine==='auto')", 20), f"{tag}: one thing in the photo → a 3D object job (engine auto)")
     r["mesh"] = await E("""async()=>{await ensureThree();const ld=async f=>{const b=await(await fetch('/media/'+f)).blob();return blobImg72(b)};const g=a3Mesh(await ld('front.png'),await ld('side.png'),await ld('back.png'),'object');const s=new THREE.Box3().setFromObject(g).getSize(new THREE.Vector3());return [g.children.length,+s.x.toFixed(2),+s.y.toFixed(2),+(s.z/s.x).toFixed(2)]}""")
     ok(r["mesh"][0] == 2 and 0.35 < r["mesh"][3] < 0.75 and r["mesh"][2] > 1.9, f"{tag}: closed mesh with depth from the side view {r['mesh']}")
-    if fr:  # the scene as an AI video's first frame
-        await fr.evaluate("()=>document.querySelector('[data-x3=still]').click()"); await wait_for(E, "()=>S.view==='video'", 10)
-        r["scene"] = await E("()=>[S.view,!!M.vStart]"); ok(r["scene"] == ["video", True], f"{tag}: use in a scene {r['scene']}")
-    # 3D character
-    await E("()=>{go('chars');renderAll()}"); await pg.wait_for_timeout(500); na = await E("()=>S.a3.length")
+    # 3D character: a full 3D body through the same 3D core
+    await E("()=>{go('chars');renderAll()}"); await pg.wait_for_timeout(500); nb = await E("()=>S.jobs.length")
     r["charBtn"] = await E("()=>[S.view,S.chars.length,S.charSel,!!document.querySelector('[data-act=char-3dbody]'),!!document.querySelector('[data-act=gen-sheet]')]")
     ok(r["charBtn"][3], f"{tag}: 3D character button missing {r['charBtn']}")
     await E("()=>{const b=document.querySelector('[data-act=char-3dbody]');b&&b.click()}")
-    ok(await wait_for(E, f"()=>S.a3.length>{na}&&S.a3[S.a3.length-1].status==='done'", 30), f"{tag}: 3D character built")
-    # 3D world from a photo — the studio's AI 360° sky continuing the place in the photo, then a walk-through video
+    ok(await wait_for(E, f"()=>S.jobs.slice({nb}).some(j=>j.kind==='3d'&&j.meta&&j.meta.mode==='body')", 20), f"{tag}: 3D character job sent (body)")
+    # 3D world from a photo: the picture becomes a world, its view becomes the first frame of a video, and a tour is recorded
     await E("async()=>{const b=await (await fetch('/media/photo.jpg')).blob();const u=await new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result);r.readAsDataURL(b)});await setS3dFromDataURL(u,'harbour');go('studio3d')}")
-    fr = None
-    for _ in range(80):
-        fr = next((f for f in pg.frames if "/studio3d/" in f.url), None)
-        try:
-            if fr and await fr.evaluate("()=>!!window.X3&&!!X3.S.img&&!document.getElementById('skyPhotoRow').hidden"): break
-        except Exception: pass
-        await asyncio.sleep(.25)
-    if fr:
-        await fr.evaluate("()=>{document.getElementById('q').value='a quiet harbour';document.getElementById('skyPhoto').checked=true;X3.cloudSky('pano')}")
-        ok(await wait_for(fr.evaluate, "()=>X3.E.hasPanorama()", 40), f"{tag}: 3D world sky built from the panorama")
-        r["world"] = await E("()=>{const j=S.jobs.filter(x=>x.meta&&x.meta.world360).pop();return [j&&j.aspect,j&&j.status]}")
-        ok(r["world"][0] == "21:9", f"{tag}: world {r['world']}")
-        if not mob:
-            await fr.evaluate("async()=>{await X3.record(3)}"); await fr.evaluate("()=>document.querySelector('[data-x3=toEditor]').click()")
-            ok(await wait_for(E, "()=>S.view==='edit'", 20), f"{tag}: world walk-through sent to the editor")
-    else: ok(False, f"{tag}: studio for the world")
+    ok(await wait_for(E, "()=>S.view==='world'&&!!S.world.pic&&typeof NW!=='undefined'&&!!NW.W&&!NW.busy", 40), f"{tag}: 3D World ready with the photo")
+    await E("()=>{S.world.opts.look='real';persist();const t=document.getElementById('nwprompt');if(t)t.value='a quiet harbour';document.querySelector('[data-act=nw-go]').click()}")
+    ok(await wait_for(E, "()=>!NW.busy&&!!NW.W&&!S.world.pic&&!!S.world.plan", 60), f"{tag}: a world was built from the photo")
+    if not mob:
+        nv = await E("()=>S.jobs.length")
+        await E("()=>{document.querySelector('[data-act=nw-video]').click()}"); await pg.wait_for_timeout(2500); await E("()=>NW.W&&NW.W.player.setMode('walk')")
+        ok(await wait_for(E, f"()=>S.jobs.length>{nv}", 20), f"{tag}: a walk-through video saved to My library")
+    await E("()=>{document.querySelector('[data-act=nw-use]').click()}")
+    ok(await wait_for(E, "()=>S.view==='video'&&!!M.vStart", 20), f"{tag}: the world's view is the first frame of a video")
     # templates ordered by kind
     await E("()=>{S.exploreType='all';go('explore');renderAll()}"); await pg.wait_for_timeout(500)
     r["tpl"] = await E("()=>{const ord=TYPES.map(t=>t[0]),ids=[...document.querySelectorAll('.card.tpl')].map(c=>TEMPLATES.find(t=>t.id===c.dataset.id).type),ix=ids.map(t=>ord.indexOf(t));return [ids.length,ix.every((v,i)=>!i||v>=ix[i-1])]}")
@@ -172,8 +151,8 @@ if __name__ == "__main__":
         ok(lk and "chRef" in lk[-1]["payload"].get("inputs", {}), "character photo not sent with the looks")
         a3 = [j for j in jobs if (j.get("payload") or {}).get("meta", {}).get("a3")]
         ok(len(a3) >= 6 and all("iRef" in j["payload"].get("inputs", {}) for j in a3), "AI 3D views missing the reference photo")
-        pw = [j for j in jobs if (j.get("payload") or {}).get("meta", {}).get("world360")]
-        ok(pw and pw[-1]["payload"].get("aspect") == "21:9" and "iRef" in pw[-1]["payload"].get("inputs", {}), "world panorama job wrong")
+        pw = [j for j in jobs if ((j.get("payload") or {}).get("meta", {}).get("nw") or {}).get("role") == "pano"]
+        ok(pw and pw[-1]["payload"].get("aspect") == "21:9" and "iRef" in pw[-1]["payload"].get("inputs", {}), "world panorama job wrong (Realistic: a 360° sky that continues the photo)")
         print(json.dumps({"fails": fails, "results": out}, ensure_ascii=False, default=str))
     finally:
         srv.terminate(); mk.terminate(); shutil.rmtree(D, ignore_errors=True)

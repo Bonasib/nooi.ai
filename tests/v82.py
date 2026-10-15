@@ -208,7 +208,8 @@ async def main():
         if UPDATE:
             json.dump({"note": "v82 picture of every page (16x16 difference hash). UPDATE_VISUAL=1 python3 tests/v82.py rewrites it after a wanted change.", "pages": cur}, open(BASE, "w"), indent=0, sort_keys=True); out["visual"]["written"] = len(cur)
         else:
-            base = json.load(open(BASE))["pages"]; diff = {k: hamming(cur[k], base[k]) for k in cur if k in base}
+            # the 3D World draws a live 3D scene (it moves and loads in steps): tests/v86.py checks that page instead
+            base = json.load(open(BASE))["pages"]; diff = {k: hamming(cur[k], base[k]) for k in cur if k in base and not k.endswith("_world")}
             out["visual"] = {"pages": len(diff), "max": max(diff.values() or [0]), "changed": {k: d for k, d in diff.items() if d > 40}, "new": [k for k in cur if k not in base], "gone": [k for k in base if k not in cur]}
             ok(not out["visual"]["changed"] and not out["visual"]["gone"], f"pages look as saved (difference > 40 of 256) {out['visual']}")
     finally:

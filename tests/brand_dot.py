@@ -31,7 +31,7 @@ async def main():
         await pg.mouse.move(bb[0],bb[1]); s=await series(pg,"hover",[100,400,900])
         ok(all(complete(x) for x in s), f"hover: still complete {s}")
         await pg.mouse.move(5,600)
-        for v in ("video","account","edit","studio3d","image"):
+        for v in ("video","account","edit","world","image"):
             await pg.evaluate(f"()=>go('{v}')"); s=await series(pg,"page "+v,[60,300,700])
             ok(all(complete(x) for x in s), f"page change to {v}: complete at once {s}")
         await pg.reload(); await pg.evaluate("()=>{S.user={name:'G',method:'google'};S.view='home';renderAll()}"); await pg.wait_for_timeout(300)

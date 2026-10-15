@@ -2,9 +2,9 @@
 # voice (retries + a second voice model, a clear "busy" message, no other avatar model wasting the same voice), failed jobs
 # that say why with "Try again", readable captions, labels that never break inside a word, nooi-star loaders, the avatar
 # script, character looks from the whole character (failed / rendering / real states), the sketch that turns into what was
-# drawn (AI vision reads it — "a car and a snake" — and the AI picture fills the output panel), the AI 3D world (scene
-# language from the text AI, cleaned on the server, built at phone quality, rendered in the cloud), the 3D Studio's cloud
-# mode on phones, the UGC ads page and the Templates page (each template its own picture or a clean cover — never an unrelated clip).
+# drawn (AI vision reads it — "a car and a snake" — and the AI picture fills the output panel), the 3D World (the plan from the
+# text AI, cleaned on the server, charged / refunded, built on the device, a real photo of the view made in the cloud; nothing
+# heavy on a phone), the UGC ads page and the Templates page (each template its own picture or a drawn cover — never an unrelated clip).
 import asyncio, hashlib, json, os, subprocess, sys, tempfile, time, urllib.request
 from playwright.async_api import async_playwright
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); PORT, LPORT = 8094, 8095
@@ -19,10 +19,10 @@ const http=require('http');const P=+process.argv[2];const st={world:[],see:[]};
 http.createServer((q,s)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{const J=(o,c)=>{s.statusCode=c||200;s.setHeader('content-type','application/json');s.end(JSON.stringify(o))};const u=q.url;
  if(u==='/stats')return J(st);
  if(u==='/v1/messages'){const j=JSON.parse(b),c=j.messages[0].content,t=Array.isArray(c)?c.find(x=>x.type==='text').text:c,img=Array.isArray(c)&&c.some(x=>x.type==='image');let o={};
-  if(/You are a 3D world designer/.test(t)){const d=/CLIENT'S DESCRIPTION: (".*")/.exec(t);st.world.push({desc:d?JSON.parse(d[1]):null,lang:/the title in (\w+)/.exec(t)[1]});
-   if(/NOTHING/.test(t))o={title:'x',objects:[{type:'spaceship'}]};
-   else o={title:'Desert oasis',label:'واحة صحراوية',describe:'A desert oasis at sunset with palms and a red car',sky:{top:'#3b2a6b',horizon:'#ff9a5a',sun:'#ffb070',sunElev:6},ground:{kind:'sand',color:'#d9b77a',size:9999},light:{ambient:.8,sun:1.4},camera:{move:'fly',dist:20,height:6,target:[0,1,0]},fx:{rain:0,snow:0},
-    objects:[{type:'palm',at:[-5,0,-4],size:[1,7,1],color:'#3f8f3a',color2:'#8a6a42',count:500,spread:9},{type:'car',at:[2,0,3],size:[4.5,1.4,1.9],color:'#c62828'},{type:'water',at:[-4,0,-3],size:[9,.1,6],color:'not-a-colour'},{type:'<script>',at:[0,0,0]},{type:'rock',at:[1e9,0,0],size:3,color:'#8a8f94',count:6,spread:12}].concat(Array.from({length:120},(_,i)=>({type:'bush',at:[i%10,0,(i/10|0)],size:[1,1,1],color:'#2e6b3a'})))}}
+  if(/You design 3D worlds for a real-time engine|You turn a photo into a 3D world/.test(t)){const d=/CLIENT'S DESCRIPTION: (".*")/.exec(t);st.world.push({desc:d?JSON.parse(d[1]):null,lang:/the title in (\w+)/.exec(t)[1]});
+   if(/NOTHING/.test(t))return J({type:'error',error:{type:'api_error',message:'overloaded'}},500);
+   o={title:'Desert oasis',label:'واحة صحراوية',describe:'A desert oasis at sunset with palms and a red car',place:'oasis',size:99999,time:18.2,weather:{kind:'clear',wind:3},terrain:{shape:'dunes',height:8,ground:'sand',color:'not-a-colour'},water:{kind:'lake'},
+    objects:[{type:'palm',count:500,at:[-5,-4],color:'#3f8f3a'},{type:'car',at:[2,3],color:'#c62828'},{type:'<script>',at:[0,0]},{type:'rock',at:[1e9,0],color:'#8A8A8A'}].concat(Array.from({length:100},()=>({type:'bush',at:[1,1]}))),life:[{type:'camel',count:99}],spawn:{at:[0,28],look:[0,0]}}}
   else if(/hand-drawn sketch/.test(t)){st.see.push({img,lang:/the same subject in (\w+)/.exec(t)[1]});o={subject:'a red sports car next to a coiled green snake',objects:['car','snake'],target:'vehicle',label:'سيارة وثعبان'}}
   return J({content:[{type:'text',text:JSON.stringify(o)}]})}
  J({error:'nf '+u},404)})}).listen(P);
@@ -68,27 +68,30 @@ def unit_checks():
     ok(v.get("url") == "https://cdn/x.mp3", f"avatar voice: the third try gives the voice {v} {e}")
     ok(v.get("made") == ["elevenlabs/text-to-speech-multilingual-v2", "elevenlabs/text-to-speech-turbo-2-5", "elevenlabs/text-to-speech-multilingual-v2"], f"avatar voice: v2, turbo, then the engine's default voice {v.get('made')}")
     ok("voice service is busy" in (v.get("msg") or "") and v.get("noFb") is True and v.get("type") == "provider", f"avatar voice: one clear message, no other avatar model {v}")
-    # the world language is cleaned: known kinds only, ≤ 80 entries, ≤ 600 things, numbers clamped, colours checked
-    o, e = node(f"""import {{ cleanScene }} from "{ROOT}/lib/worldai.js";
-      const s = cleanScene({{ ground: {{ size: 1e6, kind: "lava" }}, sky: {{ top: "red" }}, camera: {{ move: "spin", dist: -5 }}, objects: [{{ type: "tree", count: 5000 }}, {{ type: "eval", at: [0,0,0] }}, ...Array.from({{ length: 200 }}, () => ({{ type: "rock", at: [1e9, 2, 3], color: "#ABCDEF" }}))] }});
-      console.log(JSON.stringify({{ n: s.objects.length, g: s.ground, top: s.sky.top, cam: s.camera, first: s.objects[0], rock: s.objects[1] }})); process.exit(0)""", U)
+    # the world plan is cleaned: known places and kinds only (an unknown thing becomes a labelled box), ≤ 60 entries, counts and
+    # positions clamped to the world, colours checked
+    o, e = node(f"""import {{ cleanPlan }} from "{ROOT}/public/world/plan.js";
+      const p = cleanPlan({{ place: "lava", size: 1e6, time: 99, weather: {{ kind: "acid" }}, terrain: {{ color: "red" }}, objects: [{{ type: "palm", count: 5000 }}, {{ type: "eval", at: [0, 0] }}, ...Array.from({{ length: 200 }}, () => ({{ type: "rock", at: [1e9, 3], color: "#ABCDEF" }}))], life: [{{ type: "dragon" }}, {{ type: "camel", count: 99 }}] }});
+      console.log(JSON.stringify({{ n: p.objects.length, place: p.place, size: p.size, time: p.time, wx: p.weather.kind, tcol: p.terrain.color, first: p.objects[0], unknown: p.objects[1], rock: p.objects[2], life: p.life }})); process.exit(0)""", U)
     try: w = json.loads(o.splitlines()[-1])
     except Exception: w = {}
-    ok(w.get("n") == 79 and w["g"] == {"color": "#6f9a4b", "kind": "grass", "size": 200} and w["top"] == "#4a7bd1" and w["cam"]["move"] == "orbit" and w["cam"]["dist"] == 2
-       and w["first"]["count"] == 40 and w["rock"]["at"] == [200, 2, 3] and w["rock"]["color"] == "#abcdef", f"scene cleaned {w} {e}")
+    ok(w.get("n") == 60 and w.get("place") == "meadow" and w.get("size") == 320 and w.get("time") == 24 and w.get("wx") == "clear" and w.get("tcol") is None
+       and w["first"]["count"] == 60 and w["unknown"]["type"] == "box" and w["unknown"]["label"] == "eval" and w["rock"]["at"] == [159, 3] and w["rock"]["color"] == "#abcdef"
+       and [l["type"] for l in w["life"]] == ["camel"] and w["life"][0]["count"] == 30, f"world plan cleaned {w} {e}")
     out["unit"] = {"voiceMs": v.get("ms")}
 
 def api_checks():
     cfg = api("/v1/config"); ok(cfg.get("freeCredits") is True, f"free period on by default {cfg.get('freeCredits')}")
     b = api("/v1/billing", tok=TOKEN); ok(b.get("free") is True and b["credits"] == 5, f"billing says free {b.get('free')} {b.get('credits')}")
-    # AI world: the client's words are data, in their language; the scene comes back cleaned; free → nothing taken
-    r = api("/v1/world/design", {"prompt": "واحة في الصحراء وقت الغروب", "lang": "ar"}, tok=TOKEN); sc = r.get("scene") or {}; w = stats()["world"]
-    ok(r.get("ready") and sc.get("label") == "واحة صحراوية" and w[-1] == {"desc": "واحة في الصحراء وقت الغروب", "lang": "Arabic"}, f"world designed {r.get('ready')} {w}")
-    kinds = [o["type"] for o in sc.get("objects", [])]
-    ok(len(kinds) <= 80 and "<script>" not in kinds and sum(o["count"] for o in sc["objects"]) <= 600 and sc["ground"]["size"] == 200 and sc["objects"][0]["count"] == 40
-       and sc["objects"][2]["color"] == "#9aa4ad" and sc["objects"][3]["at"][0] == 200 and sc["camera"]["move"] == "fly", f"world cleaned {len(kinds)} {sc.get('ground')} {sc['objects'][:4] if sc.get('objects') else None}")
+    # 3D World: the client's words are data, in their language; the plan comes back cleaned; free → nothing taken
+    r = api("/v1/world/plan", {"prompt": "واحة في الصحراء وقت الغروب", "lang": "ar"}, tok=TOKEN); pl = r.get("plan") or {}; w = stats()["world"]
+    ok(r.get("ai") is True and pl.get("label") == "واحة صحراوية" and w[-1] == {"desc": "واحة في الصحراء وقت الغروب", "lang": "Arabic"}, f"world planned {r.get('ai')} {w}")
+    objs = pl.get("objects", []); kinds = [o["type"] for o in objs]
+    ok(len(objs) <= 60 and "<script>" not in kinds and pl.get("size") == 320 and pl.get("place") == "oasis" and next(o for o in objs if o["type"] == "palm")["count"] == 60
+       and next(o for o in objs if o["type"] == "car")["color"] == "#c62828" and next(o for o in objs if o["type"] == "rock")["at"] == [159, 0] and pl["terrain"].get("color") is None
+       and next(l for l in pl["life"] if l["type"] == "camel")["count"] == 30, f"world cleaned {len(objs)} {pl.get('size')} {objs[:4]}")
     b2 = api("/v1/billing", tok=TOKEN); ok(b2["credits"] == 5 and any(x.get("free") == 1 for x in b2["ledger"]), f"free period: nothing taken {b2['credits']}")
-    ok(api("/v1/world/design", {"prompt": " "}).get("_status") == 400, "empty world refused")
+    ok(api("/v1/world/plan", {"prompt": " "}).get("_status") == 400, "empty world refused")
     # the sketch: AI vision reads the drawing (free)
     s = api("/v1/sketch/see", {"image": SK, "lang": "ar"}, tok=TOKEN); st = stats()["see"]
     ok(s.get("ready") and s.get("subject") == "a red sports car next to a coiled green snake" and s.get("objects") == ["car", "snake"] and s.get("target") == "vehicle" and s.get("label") == "سيارة وثعبان", f"sketch seen {s}")
@@ -102,16 +105,25 @@ def api_checks():
     # the Admin switch: the free period off → charged again; a failed design is refunded
     api("/v1/admin/settings", {"features": {"freePeriod": False}}, "PUT")
     ok(api("/v1/config").get("freeCredits") is False, "free period switched off")
-    r2 = api("/v1/world/design", {"prompt": "a forest"}, tok=TOKEN); b3 = api("/v1/billing", tok=TOKEN)
+    r2 = api("/v1/world/plan", {"prompt": "a forest"}, tok=TOKEN); b3 = api("/v1/billing", tok=TOKEN)
     ok(r2.get("cost") == 1 and b3["credits"] == 4, f"charged again when the free period ends {r2.get('cost')} {b3['credits']}")
-    r3 = api("/v1/world/design", {"prompt": "NOTHING here"}, tok=TOKEN); b4 = api("/v1/billing", tok=TOKEN)
-    ok(r3.get("_status") == 502 and b4["credits"] == 4 and any(l["reason"].startswith("Refund · AI 3D world") for l in b4["ledger"]), f"failed design refunded {r3} {b4['credits']}")
+    r3 = api("/v1/world/plan", {"prompt": "NOTHING here"}, tok=TOKEN); b4 = api("/v1/billing", tok=TOKEN)
+    ok(r3.get("ai") is False and r3.get("cost") == 0 and (r3.get("plan") or {}).get("objects") is not None and b4["credits"] == 4 and any(l["reason"].startswith("Refund · 3D world plan") for l in b4["ledger"]),
+       f"the text AI failed → the world is made from the words and the credit comes back {r3.get('ai')} {r3.get('cost')} {b4['credits']}")
     api("/v1/admin/settings", {"features": {"freePeriod": True}}, "PUT")
     out["api"] = {"world": len(w), "see": len(st)}
 
 SETUP = "()=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.lang='%s';S.user={name:'T',method:'google'};AU.showAuth=false;renderAll()}"
 WORDS = r"""(sel)=>{const bad=[];document.querySelectorAll(sel).forEach(el=>{if(!el.offsetParent)return;const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){const re=/\S+/g;let m;while((m=re.exec(n.data))){const r=document.createRange();r.setStart(n,m.index);r.setEnd(n,m.index+m[0].length);
   const rs=[...r.getClientRects()].filter(x=>x.width>0);const tops=new Set(rs.map(x=>Math.round(x.top)));if(tops.size>1)bad.push(m[0])}}if(el.scrollWidth>el.clientWidth+1)bad.push("overflow:"+el.textContent)});return bad}"""
+async def wait_for(E, js, sec=20):
+    for _ in range(sec * 4):
+        try:
+            if await E(js): return True
+        except Exception: pass
+        await asyncio.sleep(.25)
+    return False
+
 async def ui(p, w, lang):
     tag = f"{w}/{lang}"; r = {}
     b = await p.chromium.launch(args=["--use-gl=swiftshader", "--enable-webgl", "--ignore-gpu-blocklist"])
@@ -178,23 +190,19 @@ async def ui(p, w, lang):
     ok(r["sketch"][0] == "done" and r["sketch"][1] == "/media/ai.png" and ("سيارة وثعبان" in r["sketch"][2]) and r["sketch"][3][0] > 180 and r["sketch"][3][1] < 80, f"{tag}: the AI picture fills the output panel {r['sketch']}")
     await E("()=>{SK.strokes.push({tool:'pen',color:'#000',size:6,pts:[[.1,.1,.6],[.2,.2,.6]]});skRedraw()}"); await pg.wait_for_timeout(500)
     ok(await E("()=>SKAI.state===''&&!$('#skout').dataset.ai79"), f"{tag}: drawing more goes back to the live preview")
-    # AI 3D world: designed by the text AI, built at phone quality, rendered in the cloud from one small view
+    # 3D World: the plan from the text AI, built on the device; a real photo of the view is made in the cloud from one view
     n0 = len(posted)
-    await E("()=>{S.w3.prompt='A desert oasis at sunset';S.w3.scene=null;S.dw.mode='shapes';go('w3ai');renderAll()}"); await pg.wait_for_timeout(400)
-    await E("()=>document.querySelector('[data-act=\"w3-make\"]').click()")
-    for _ in range(40):
-        await pg.wait_for_timeout(300)
-        if await E("()=>!!(W3.scene&&W3.r)"): break
-    await pg.wait_for_timeout(600)
-    r["w3"] = await E("()=>{const c=document.getElementById('w3cv'),x=document.createElement('canvas');x.width=64;x.height=40;W3.dirty=true;w3Cam();W3.r.render(W3.scene,W3.cam);x.getContext('2d').drawImage(c,0,0,64,40);const d=x.getContext('2d').getImageData(0,0,64,40).data,set=new Set();for(let i=0;i<d.length;i+=16)set.add(d[i]>>4<<8|d[i+1]>>4<<4|d[i+2]>>4);return [S.w3.scene.title,S.w3.scene.objects.length,set.size,document.documentElement.scrollWidth<=innerWidth,S.w3.move]}")
-    ok(r["w3"][0] == "Desert oasis" and r["w3"][1] <= 80 and r["w3"][2] > 12 and r["w3"][3] and r["w3"][4] == "fly", f"{tag}: AI 3D world built and drawn {r['w3']}")
-    await E("()=>document.querySelector('[data-act=\"w3-photo\"]').click()"); await pg.wait_for_timeout(2500)
-    await E("()=>document.querySelector('[data-act=\"w3-video\"]').click()"); await pg.wait_for_timeout(2500)
+    await E("()=>go('w3ai')"); ok(await wait_for(E, "()=>S.view==='world'&&typeof NW!=='undefined'&&!!NW.W&&!NW.busy", 40), f"{tag}: the old 3D world page opens the 3D World")
+    await E("()=>{document.getElementById('nwprompt').value='A desert oasis at sunset';document.querySelector('[data-act=nw-go]').click()}")
+    ok(await wait_for(E, "()=>!NW.busy&&!!NW.W&&NW.W.plan.title==='Desert oasis'", 60), f"{tag}: the world the text AI planned was built " + json.dumps(await E("()=>NW.W&&[NW.W.plan.title,NW.busy]")))
+    r["w3"] = await E("()=>{const s=NW.W.stats();return [NW.W.plan.place,NW.W.plan.objects.length<=60,s.calls>0,s.things>12]}")
+    ok(r["w3"] == ["oasis", True, True, True], f"{tag}: 3D World built and drawn {r['w3']}")
+    await E("()=>document.querySelector('[data-act=nw-real]').click()"); await pg.wait_for_timeout(2500)
     rw = [(x.get("kind"), sorted((x.get("inputs") or {}).keys())) for x in posted[n0:]]
-    ok(("image", ["iRef"]) in rw and ("video", ["vStart"]) in rw, f"{tag}: cloud renders from one view {rw}")
+    ok(("image", ["iRef"]) in rw, f"{tag}: a real photo made in the cloud from one view {rw}")
     # Templates: each its own picture or a clean cover — never the logo placeholder or an unrelated clip
     await E("()=>{S.exploreType='all';go('explore');renderAll()}"); await pg.wait_for_timeout(500)
-    r["tpl"] = await E("()=>[document.querySelectorAll('.tpl .frame.tplcov').length,document.querySelectorAll('.tpl .frame.ph0').length,document.querySelectorAll('.tpl video.frame').length,TEMPLATES.length]")
+    r["tpl"] = await E("()=>[document.querySelectorAll('.tpl .frame.tplcov,.tpl .frame.tplart86').length,document.querySelectorAll('.tpl .frame.ph0').length,document.querySelectorAll('.tpl video.frame').length,TEMPLATES.length]")
     ok(r["tpl"][0] == r["tpl"][3] and r["tpl"][1] == 0 and r["tpl"][2] == 0, f"{tag}: templates show their own covers {r['tpl']}")
     await E("()=>{TPLPREV.t1='/media/ai.png';renderView()}"); await pg.wait_for_timeout(200)
     ok(await E("()=>!!document.querySelector('.tpl[data-id=\"t1\"] img.frame[src=\"/media/ai.png\"]')"), f"{tag}: a template's own preview picture is used")
@@ -225,7 +233,7 @@ async def ui(p, w, lang):
     await b.close(); return r
 
 async def studio(p):
-    # 3D Studio on a phone: cloud mode — no AI download, the render is made in the cloud from one view
+    # the 3D World on a phone: a light quality tier, nothing heavy on the device, the real photo is made in the cloud from one view
     b = await p.chromium.launch(args=["--use-gl=swiftshader", "--enable-webgl", "--ignore-gpu-blocklist"])
     ctx = await b.new_context(viewport={"width": 390, "height": 860}, is_mobile=True, has_touch=True, device_scale_factor=2)
     pg = await ctx.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e)[:300])); E = pg.evaluate; posted = []
@@ -235,21 +243,18 @@ async def studio(p):
     async def jstat(route): await route.fulfill(status=200, content_type="application/json", body=json.dumps({"id": route.request.url.split("/")[-1], "status": "done", "progress": 1, "url": "/media/ai.png"}))
     await pg.route("**/v1/jobs", jobs); await pg.route("**/v1/jobs/rx*", jstat)
     await pg.goto(f"http://localhost:{PORT}/"); await pg.wait_for_timeout(1500)
-    await E(SETUP % "en"); await E("()=>{go('studio3d');renderAll()}")
-    fr = None
-    for _ in range(60):
-        await pg.wait_for_timeout(250); fr = next((f for f in pg.frames if "studio3d" in f.url), None)
-        if fr and await fr.evaluate("()=>!!(window.X3&&X3.S.cfg&&X3.S.cfg.nooi&&document.getElementById('liteSw'))"): break
-    r = await fr.evaluate("()=>{const q=document.getElementById('q');q.value='a red car in the desert, record a video';X3.renderPlan();return [X3.S.lite,document.getElementById('liteSw').checked,document.getElementById('aiRow').hidden,X3.S.plan.steps.find(s=>s.id==='capture').choice,X3.S.plan.notes.some(n=>n.k==='lite')]}")
-    ok(r == [True, True, False, "airender", True], f"3D Studio phone: cloud mode {r}")
-    await fr.evaluate("()=>document.querySelector('[data-x3=\"airender\"][data-v=\"photo\"]').click()")
-    for _ in range(60):
+    await E(SETUP % "ar"); await E("()=>go('studio3d')")
+    ok(await wait_for(E, "()=>S.view==='world'&&typeof NW!=='undefined'&&!!NW.E&&!!NW.W&&!NW.busy", 40), "3D World on a phone")
+    r = await E("()=>[NW.E.tier.name,NW.E.stats().pixelRatio<=NW.E.tier.pr[1]+0.01,NW.W.stats().physics]")
+    ok(r[0] in ("low", "mid") and r[1] and r[2], f"3D World phone: a light quality tier, physics on {r}")
+    await E("()=>document.querySelector('[data-act=nw-real]').click()")
+    for _ in range(40):
         await pg.wait_for_timeout(300)
-        if posted and await fr.evaluate("()=>!!document.querySelector('#aiOut img')"): break
-    ok(posted and posted[-1].get("kind") == "image" and "iRef" in (posted[-1].get("inputs") or {}) and await fr.evaluate("()=>!!document.querySelector('#aiOut img')"), f"3D Studio: AI photo made in the cloud {[(x.get('kind'), list((x.get('inputs') or {}).keys())) for x in posted]}")
-    await fr.evaluate("()=>{const s=document.getElementById('liteSw');s.checked=false;s.dispatchEvent(new Event('change'))}")
-    ok(await fr.evaluate("()=>[X3.S.lite,localStorage.getItem('x3lite')]") == [False, "0"], "3D Studio: cloud mode can be switched off (remembered)")
-    ok(not errs, f"3D Studio: page errors {errs}")
+        if posted: break
+    ok(posted and posted[-1].get("kind") == "image" and "iRef" in (posted[-1].get("inputs") or {}), f"3D World: a real photo made in the cloud {[(x.get('kind'), list((x.get('inputs') or {}).keys())) for x in posted]}")
+    await E("()=>go('library')"); await pg.wait_for_timeout(600)
+    ok(await E("()=>!NW.E&&!NW.W"), "3D World: leaving the page on a phone frees the 3D engine")
+    ok(not errs, f"3D World phone: page errors {errs}")
     await b.close()
 
 async def main():

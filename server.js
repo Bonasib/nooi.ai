@@ -40,10 +40,10 @@ import { registerLocalize, locEngines } from "./lib/localize.js";
 import { registerAgents } from "./lib/agents.js";
 import { registerSlideshow } from "./lib/slideshow.js";
 import { registerPhysics } from "./lib/physics.js";
+import "./lib/physicsdirector.js";   // video prompts get what really happens (MuJoCo), see the file
 import { registerMotion } from "./lib/motion.js";
 import { registerSketch, rtEngine } from "./lib/sketch.js";
-import { registerWorldAI } from "./lib/worldai.js";
-import { registerDepthWorld, depthEngine } from "./lib/depthworld.js";
+import { registerWorld } from "./lib/world.js";
 import { registerIngest } from "./lib/ingest.js";
 import { nvReady, nvCfg, nvOn } from "./providers/nvidia.js";
 import { cbSig, findJob, pollOne } from "./lib/jobs.js";
@@ -78,8 +78,20 @@ const ORT_DIR = path.resolve("node_modules/onnxruntime-web/dist");
 const vendorHeaders = (res, f) => { if (f.endsWith(".mjs")) res.setHeader("Content-Type", "text/javascript"); if (f.endsWith(".wasm")) res.setHeader("Content-Type", "application/wasm"); };
 const TF_DIR = path.resolve("node_modules/@huggingface/transformers/dist");
 if (fs.existsSync(TF_DIR)) app.use("/vendor/transformers", express.static(TF_DIR, { maxAge: "30d", immutable: true, setHeaders: vendorHeaders }));
-const THREE_DIR = path.resolve("node_modules/three");
-if (fs.existsSync(THREE_DIR)) { app.use("/vendor/three/build", express.static(THREE_DIR + "/build", { maxAge: "30d", immutable: true })); app.use("/vendor/three/examples/js", express.static(THREE_DIR + "/examples/js", { maxAge: "30d", immutable: true })); app.use("/vendor/three/examples/jsm", express.static(THREE_DIR + "/examples/jsm", { maxAge: "30d", immutable: true })); }
+// the 3D engine (public/world/): three.js r186 (WebGPU + WebGL2), Rapier physics, Spark for Gaussian-splat worlds — each under a
+// path with its version, so a browser that cached an older copy never mixes it with a newer page (index.html's import map points here)
+const pkgVer = (d) => { try { return JSON.parse(fs.readFileSync(path.join(d, "package.json"), "utf8")).version; } catch { return null; } };
+const vendor = (url, dir, opt = {}) => { if (fs.existsSync(dir)) app.use(url, express.static(dir, { maxAge: "30d", immutable: true, setHeaders: vendorHeaders, ...opt })); };
+const THREE_DIR = path.resolve("node_modules/three"), RAPIER_DIR = path.resolve("node_modules/@dimforge/rapier3d-compat"), SPARK_DIR = path.resolve("node_modules/@sparkjsdev/spark/dist");
+export const VENDOR = { three: "/vendor/three-" + pkgVer(THREE_DIR), rapier: "/vendor/rapier-" + pkgVer(RAPIER_DIR), spark: "/vendor/spark-" + pkgVer(path.dirname(SPARK_DIR)) };
+vendor(VENDOR.three + "/build", THREE_DIR + "/build"); vendor(VENDOR.three + "/addons", THREE_DIR + "/examples/jsm");
+vendor(VENDOR.rapier, RAPIER_DIR, { index: false }); vendor(VENDOR.spark, SPARK_DIR);
+// the older viewers (character 3D views, the editor's 3D tab, floor plans before v86, the crew's 3D bots) still use the classic
+// global THREE (r128): it keeps its own copy (npm alias three-r128) at the address those pages have always used
+const THREE_R128 = path.resolve("node_modules/three-r128");
+vendor("/vendor/three/build", THREE_R128 + "/build"); vendor("/vendor/three/examples/js", THREE_R128 + "/examples/js");
+// unversioned names for the page's own modules (short cache: they follow the installed version)
+app.get("/vendor/rapier/rapier.mjs", (_, res) => res.redirect(302, VENDOR.rapier + "/rapier.mjs"));
 app.use("/vendor/ort", express.static(ORT_DIR, { maxAge: "30d", immutable: true, setHeaders: vendorHeaders }));
 if (process.env.MODELS_DIR) app.use("/models", express.static(path.resolve(process.env.MODELS_DIR), { maxAge: "30d" }));
 const wrap = (fn) => (req, res) => fn(req, res).catch((e) => res.status(e.code && e.code >= 400 && e.code < 600 ? e.code : 500).json({ error: e.message }));
@@ -88,7 +100,7 @@ app.get("/v1/health", (_, res) => res.json({ ok: true }));
 app.get("/v1/config", (_, res) => res.json({
   firebase: firebaseWebConfig(), localAI: { tfUrl: fs.existsSync(TF_DIR + "/transformers.min.js") ? "/vendor/transformers/transformers.min.js" : null, ortBase: fs.existsSync(ORT_DIR) ? "/vendor/ort/" : null, modelsHost: process.env.MODELS_DIR ? "/models/" : null, models: platform().localModels || {} }, emailCode: canSendSignInLinks() && emailConfigured(), kieRoutes: kieRoutes(),
   llm: llmConfigured() ? { provider: llmInfo().provider, model: llmInfo().model } : null,
-  billing: enabledPayments().length > 0, freeCredits: freeCredits(), depthEngine: depthEngine(), stage: process.env.NOOI_STAGE === "1", biz: biz(), registry: publicRegistry(), payments: enabledPayments(), modelLogos: platform().modelLogos || {}, worldEngine: !!(process.env.WORLD_API_URL || (platform().providers || {}).world), modelCat: Object.fromEntries(Object.entries(platform().modelCat || {}).map(([k, v]) => [k, { cr: v.cr, verified: !!v.verified, kie: !!v.kieModel }])), features: platform().features, models: platform().models, prices: priceTable(), support: "contact@nooi.ai",
+  billing: enabledPayments().length > 0, freeCredits: freeCredits(), stage: process.env.NOOI_STAGE === "1", biz: biz(), registry: publicRegistry(), payments: enabledPayments(), modelLogos: platform().modelLogos || {}, worldEngine: !!(process.env.WORLD_API_URL || (platform().providers || {}).world), modelCat: Object.fromEntries(Object.entries(platform().modelCat || {}).map(([k, v]) => [k, { cr: v.cr, verified: !!v.verified, kie: !!v.kieModel }])), features: platform().features, models: platform().models, prices: priceTable(), support: "contact@nooi.ai",
   providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || !!kieDefault(k) || !!kieAuto(k, { kind: k === "tts" ? "voice" : k }) || (k === "image" && (nvOn("image") || nvOn("edit"))) || (k === "edit" && nvOn("edit")) || (k === "video" && nvOn("video"))])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!rtEngine(), realtimeEngine: rtEngine(), vss: vssServer(), localize: (() => { try { const e = locEngines(); return { nooi: e.nooi, elevenlabs: e.elevenlabs, camb: e.camb, nvidia: e.nvidia, stt: e.stt }; } catch { return null; } })(), gen3d: { tripo: configured("tripo"), meshy: configured("meshy"), skybox: configured("blockade") }, nvidia: nvReady(), nvUse: nvReady() ? nvCfg().use : null, billing: enabledPayments().length > 0 }
 }));
 
@@ -186,7 +198,7 @@ registerAdmin(app, requireUser);
 registerSlideshow(app, requireUser);
 registerPhysics(app, requireUser);
 // admin: engine cost per model → credits charged → margin; costs and margin are editable (prices recompute)
-const PR_NAMES = { ...modelNames(), voice: "Voice", music: "Music", sfx: "Sound effect", bg: "Background removal", finish: "Upscale", lipsync: "Lip-sync avatar", locstt: "Speech-to-text · per min", loctr: "Dubbing translation · per min", loctts: "Natural voices · per min", locel: "ElevenLabs Dubbing · per min", loccamb: "CAMB.AI dubbing · per min", locnv: "NVIDIA Content Localization · per min" };
+const PR_NAMES = { ...modelNames(), worldlabs: "3D world · World Labs (Marble)", voice: "Voice", music: "Music", sfx: "Sound effect", bg: "Background removal", finish: "Upscale", lipsync: "Lip-sync avatar", locstt: "Speech-to-text · per min", loctr: "Dubbing translation · per min", loctts: "Natural voices · per min", locel: "ElevenLabs Dubbing · per min", loccamb: "CAMB.AI dubbing · per min", locnv: "NVIDIA Content Localization · per min" };
 const pricingRows = () => Object.entries(ENGINE_COST).flatMap(([g, m]) => Object.keys(m).map((id) => { const cost = engineCost(g, id), credits = basePrice(g, id), rev = credits * CREDIT_FLOOR_USD;
   return { id, group: g, name: PR_NAMES[id] || id, cost: +cost.toFixed(4), credits, override: platform().prices?.[id] != null, margin: cost ? Math.round((rev / cost - 1) * 100) : 0 }; }).sort((a, b) => b.credits - a.credits));   // strongest (most credits) first
 app.get("/v1/admin/pricing", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); res.json({ rows: pricingRows(), factor: priceFactor(), floor: CREDIT_FLOOR_USD }); });
@@ -204,8 +216,7 @@ registerLocalize(app);
 registerAgents(app);
 registerMotion(app);
 registerSketch(app);
-registerWorldAI(app);
-registerDepthWorld(app);
+registerWorld(app);
 registerIngest(app);
 registerExplore(app); registerShowcase(app); registerGifts(app); registerInvoices(app);
 // Low-latency voice preview (ElevenLabs stream, key never leaves the server)

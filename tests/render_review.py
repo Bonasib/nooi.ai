@@ -79,27 +79,6 @@ async def run(p, w):
         await E("()=>{S.ed.rcheckAI=false;document.querySelector('[data-act=rc-fix][data-again]').click()}")
     await dl2.value; ok(await wait_for(E, f"()=>S.ed.rc&&S.ed.rc.at>{at0}", 60), f"{tag}: re-checked after the fix")
     r["rc2"] = await E("()=>[S.ed.texts[0].size,S.ed.rc.checks.filter(c=>c.lvl!=='ok').map(c=>c.id)]"); ok(r["rc2"][0] < s0 and "text" not in r["rc2"][1], f"{tag}: text made to fit in one go {s0} → {r['rc2']}")
-    # 3D Studio: the reviewer
-    await E("()=>go('studio3d')"); fr = None
-    for _ in range(80):
-        fr = next((f for f in pg.frames if "/studio3d/" in f.url), None)
-        try:
-            if fr and await fr.evaluate("()=>!!window.X3&&!!X3.S.cfg&&X3.S.cfg.nooi"): break
-        except Exception: pass
-        await asyncio.sleep(.25)
-    ok(fr is not None, f"{tag}: 3D Studio frame")
-    if fr:
-        await fr.evaluate(HOOKS); await fr.evaluate("async()=>{const b=await (await fetch('/media/car.png')).blob();await X3.setPhoto(b,'car.png');document.getElementById('label').value='car';X3.S.label='car';document.getElementById('cat').value='suv';document.getElementById('cat').dispatchEvent(new Event('change'))}")
-        await fr.evaluate("()=>X3.make3D()")
-        r["rv"] = await fr.evaluate("()=>{const a=X3.E.assets[0];return [a.review.checks.filter(c=>c.ok).length,a.review.checks.length,a.review.checks.filter(c=>!c.ok).map(c=>c.id)]}")
-        ok(r["rv"][0] == r["rv"][1] and r["rv"][1] >= 7, f"{tag}: a good car passes the review {r['rv']}")
-        r["broken"] = await fr.evaluate("""()=>{const a=X3.E.assets[0],f=a.object.getObjectByName('front'),re=a.object.getObjectByName('rear');re.material.map=f.material.map;re.material.needsUpdate=true;a.object.position.y+=0.5;
-          const before=X3.review(a,{auto:false}).filter(c=>!c.ok).map(c=>c.id),after=X3.review(a).filter(c=>!c.ok).map(c=>c.id);return [before,after,a.review.fixed.map(x=>x[0])]}""")
-        ok("rear" in r["broken"][0] and "ground" in r["broken"][0] and not r["broken"][1], f"{tag}: copied-front back + floating caught and fixed {r['broken']}")
-        n0 = await E("()=>S.credits")
-        r["ai3d"] = await fr.evaluate("async()=>{const x=await X3.aiReview();return [x.issues.map(i=>i.code),x.fixed.map(f=>f[0])]}")
-        ok(r["ai3d"][0] == ["front_on_back"] and any("real back" in f for f in r["ai3d"][1]), f"{tag}: AI review → repainted the back {r['ai3d']}")
-        ok(await wait_for(E, f"()=>S.credits<{n0}", 5), f"{tag}: the AI review used a credit")
     ok(not errs, f"{tag}: page errors {errs[:4]}")
     await b.close(); return r
 

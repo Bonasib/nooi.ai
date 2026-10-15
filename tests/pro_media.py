@@ -120,15 +120,12 @@ async def ui(p, w):
     await pg.click("#devpanel [data-act=dev-clear]"); await pg.wait_for_timeout(500)
     ok(await E("async()=>!(await caches.has('nooi-media-v1'))"), f"{tag}: cleared")
     r["ovf"] = await E("()=>[document.documentElement.scrollWidth,innerWidth]"); ok(r["ovf"][0] <= r["ovf"][1], f"{tag}: no sideways scroll {r['ovf']}")
-    # 3D Studio: a textured model shows when its textures are on the GPU; quality follows the frame rate
+    # 3D World: one engine for the site with a quality tier per device; the resolution stays inside the tier's range (it follows
+    # the frame time, so a slow device draws fewer pixels instead of freezing)
     if not mob:
-        await pg.goto(f"http://localhost:{PORT}/studio3d/"); ok(await wait_for("()=>!!(window.X3&&X3.E&&X3.E.quality)", 40), "3D Studio ready with adaptive quality")
-        r["q"] = await E("()=>{const Q=X3.E.quality;return [Q.auto,Q.pr>=Q.min&&Q.pr<=Q.cap,Q.min<Q.cap||Q.cap<=1]}")
-        r["drip"] = await E("""async()=>{const T=X3.E.THREE,c=document.createElement('canvas');c.width=c.height=256;c.getContext('2d').fillRect(0,0,128,128);const ms=[];for(let i=0;i<6;i++){const m=new T.Mesh(new T.BoxGeometry(.3,.3,.3),new T.MeshStandardMaterial({map:new T.CanvasTexture(c),roughnessMap:new T.CanvasTexture(c)}));m.position.x=i*.4;ms.push(m)}
-          const g=new T.Group();ms.forEach(m=>g.add(m));X3.E.addAsset(g,{name:'drip test',category:'object',height:.4});const hidden=ms.filter(m=>!m.visible).length;let n=0;while(X3.E.quality.drip&&n<120){await new Promise(r=>requestAnimationFrame(r));n++}return [hidden,ms.every(m=>m.visible),X3.E.quality.drip,n]}""")
-        ok(r["drip"][0] == 6 and r["drip"][1] and r["drip"][2] == 0, f"3D: parts appear when their textures are on the GPU {r['drip']}")
-        r["setq"] = await E("()=>{X3.E.setQuality(false,1);const a=[X3.E.quality.auto,X3.E.quality.pr,+X3.E.renderer.getPixelRatio().toFixed(2)];X3.E.setQuality(true);return a}")
-        ok(r["q"][0] and r["q"][1] and r["setq"][0] is False and r["setq"][2] == r["setq"][1], f"3D quality controls {r['q']} {r['setq']}")
+        await E("()=>go('world')"); ok(await wait_for("()=>typeof NW!=='undefined'&&!!NW.E&&!!NW.W", 40), "3D World ready")
+        r["q"] = await E("()=>{const s=NW.E.stats(),t=NW.E.tier;return [t.name,s.pixelRatio>=t.pr[0]-0.01&&s.pixelRatio<=t.pr[1]+0.01,s.backend,s.calls>0]}")
+        ok(r["q"][0] in ("low", "mid", "high") and r["q"][1] and r["q"][2] in ("webgl", "webgpu") and r["q"][3], f"3D: quality tier, resolution in range, drawing {r['q']}")
     ok(not errs, f"{tag}: page errors {errs}")
     await b.close(); return r
 

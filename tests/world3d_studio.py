@@ -1,8 +1,8 @@
 # 3D World Studio (v75) end to end: a fresh nooi server + mocked Tripo3D, Meshy, Blockade Labs Skybox and NVIDIA TRELLIS.
 # API: Tripo3D picture → upload → task → poll → .glb · Meshy text → .glb · Skybox → 360° picture + depth map (job segments)
 #      · NVIDIA TRELLIS failing → the same 3D job finishes on Tripo3D · 3D jobs pass without a GPU server when an engine is connected.
-# Browser (phone + desktop, WebGL): /world3d/ opens the one 3D Studio inside the app; a handed-over photo → on-device preview →
-#      Tripo3D / NVIDIA TRELLIS (falling back) generate every side and replace it in place; Skybox → sky + image lighting; .glb export.
+# Browser (phone + desktop, WebGL): /world3d/ opens the one 3D World inside the app; a handed-over photo → one thing in it becomes a
+#      real 3D object through the core (NVIDIA TRELLIS down → Tripo3D) and joins the world; the world exports as .glb.
 import asyncio, json, os, shutil, struct, subprocess, sys, tempfile, time, urllib.request
 from playwright.async_api import async_playwright
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); PORT, MPORT = 8072, 8071
@@ -68,16 +68,6 @@ async def wait_for(E, js, sec=20):
 
 HOOKS = """()=>{window.__X3_TEST_MASK=async(img,pts)=>{const w=img.width,h=img.height,a=new Uint8Array(w*h);for(let y=0;y<h;y++)for(let x=0;x<w;x++){const u=x/w,v=y/h;if(u>.25&&u<.75&&v>.3&&v<.8)a[y*w+x]=255}return{alpha:a,w,h}};
  window.__X3_TEST_DEPTH=async(cv)=>{const w=96,h=Math.max(16,Math.round(96*cv.height/cv.width)),d=new Float32Array(w*h);for(let y=0;y<h;y++)for(let x=0;x<w;x++){const dx=(x-w/2)/(w*.45),dy=(y-h/2)/(h*.45);d[y*w+x]=1+Math.max(0,1-dx*dx-dy*dy)*3}return{depth:d,w,h,ms:1}};return true}"""
-async def studio_frame(pg):
-    for _ in range(80):
-        f = next((f for f in pg.frames if "/studio3d/" in f.url), None)
-        if f:
-            try:
-                if await f.evaluate("()=>!!window.X3&&!!X3.S.cfg&&X3.S.cfg.nooi"): return f
-            except Exception: pass
-        await asyncio.sleep(.25)
-    return None
-
 async def run(p, w):
     mob = w < 800; tag = "phone" if mob else "desktop"; r = {}
     b = await p.chromium.launch(args=["--use-gl=swiftshader", "--enable-webgl", "--ignore-gpu-blocklist"])
@@ -86,30 +76,19 @@ async def run(p, w):
     await pg.goto(f"http://localhost:{PORT}/"); await pg.wait_for_timeout(1200); E = pg.evaluate
     sign = "()=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.lang='%s';S.user={name:'T',method:'google'};AU.showAuth=false;S.credits=50000;persist();renderAll()}" % ("ar" if mob else "en")
     await E(sign)
-    # the old /world3d/ address opens the one 3D Studio inside the app
-    await pg.goto(f"http://localhost:{PORT}/world3d/"); await pg.wait_for_url("**/?view=studio3d*", timeout=10000); await pg.wait_for_timeout(900); await E(sign)
-    ok(await wait_for(E, "()=>S.view==='studio3d'&&!!document.querySelector('iframe.x3frame')", 20), f"{tag}: /world3d/ opens the 3D Studio")
-    r["nav"] = await E("()=>[ALLNAV.some(x=>x[0]==='studio3d'),ALLNAV.some(x=>['w3d','world','l3d'].includes(x[0]))]"); ok(r["nav"] == [True, False], f"{tag}: one 3D entry {r['nav']}")
-    # a photo handed over → the studio, with every connected engine offered
+    # the old /world3d/ address opens the one 3D World inside the app
+    await pg.goto(f"http://localhost:{PORT}/world3d/"); await pg.wait_for_url("**/?view=world*", timeout=10000); await pg.wait_for_timeout(900); await E(sign)
+    ok(await wait_for(E, "()=>S.view==='world'&&!!document.getElementById('nwstage')", 20), f"{tag}: /world3d/ opens the 3D World")
+    r["nav"] = await E("()=>[ALLNAV.some(x=>x[0]==='world'),ALLNAV.some(x=>['w3d','studio3d','l3d','w3ai','physics'].includes(x[0]))]"); ok(r["nav"] == [True, False], f"{tag}: one 3D entry {r['nav']}")
+    ok(await wait_for(E, "()=>typeof NW!=='undefined'&&!!NW.W&&!NW.busy", 40), f"{tag}: a world is ready")
+    # a photo handed over → one thing in it becomes a real 3D object (engine auto: NVIDIA TRELLIS is down → Tripo3D) and joins the world
     await E("async()=>{const b=await (await fetch('/media/photo.png')).blob();const u=await new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result);r.readAsDataURL(b)});await setS3dFromDataURL(u,'chair');go('studio3d')}")
-    await pg.wait_for_timeout(600); fr = await studio_frame(pg); ok(fr is not None, f"{tag}: studio frame ready")
-    if not fr: await b.close(); return r
-    ok(await wait_for(fr.evaluate, "()=>!!X3.S.img", 15), f"{tag}: the photo arrived")
-    r["cap"] = await fr.evaluate("()=>{const c=X3.S.cfg.cap;return [c.trellis,c.tripo,c.meshy,c.skybox]}"); ok(r["cap"] == [True, True, True, True], f"{tag}: engines {r['cap']}")
-    r["btns"] = await fr.evaluate("()=>[...document.querySelectorAll('#cloudBtns [data-x3=cloud]')].map(b=>b.dataset.v)"); ok({"trellis", "tripo", "meshy"} <= set(r["btns"]), f"{tag}: AI buttons for the hidden parts {r['btns']}")
-    await fr.evaluate(HOOKS); await fr.evaluate("()=>X3.make3D()"); ok(await fr.evaluate("()=>X3.E.assets.length===1&&X3.E.assets[0].source==='device'"), f"{tag}: on-device preview made")
-    # Tripo3D generates every side → replaces the preview in place
-    await fr.evaluate("()=>{X3.cloudUpgrade('tripo')}")
-    ok(await wait_for(fr.evaluate, "()=>{const a=X3.E.assets[0];return a.source==='tripo'&&a.cloud&&a.cloud.status==='done'}", 40), f"{tag}: Tripo3D model replaced the preview " + json.dumps(await fr.evaluate("()=>X3.E.assets[0].cloud")))
-    r["obj"] = await fr.evaluate("()=>{const a=X3.E.assets[0];return [a.size[1],+a.holder.position.y.toFixed(2),X3.E.assets.length]}"); ok(r["obj"][2] == 1 and r["obj"][1] == 0, f"{tag}: same place, on the ground {r['obj']}")
-    # NVIDIA TRELLIS (down) → the server finishes the same job on Tripo3D
-    await fr.evaluate("()=>{X3.cloudUpgrade('trellis')}")
-    ok(await wait_for(fr.evaluate, "()=>{const a=X3.E.assets[0];return a.source==='trellis'&&a.cloud.status==='done'}", 40), f"{tag}: NVIDIA TRELLIS request finished (fallback)")
-    # a 360° world from Skybox → sky + image lighting
-    await fr.evaluate("()=>{X3.cloudSky('skybox')}")
-    ok(await wait_for(fr.evaluate, "()=>X3.E.hasPanorama()", 40), f"{tag}: Skybox 360° world set as sky + lighting")
-    r["skyJob"] = await E("()=>{const j=S.jobs.filter(x=>x.kind==='world').pop();return j&&[j.kind,(j.segments||[]).length]}"); ok(r["skyJob"] == ["world", 1], f"{tag}: world job with its depth map {r['skyJob']}")
-    r["glb"] = await fr.evaluate("async()=>{const b=await X3.E.exportGLB();return String.fromCharCode(...new Uint8Array(await b.slice(0,4).arrayBuffer()))}"); ok(r["glb"] == "glTF", f"{tag}: scene exported as .glb")
+    ok(await wait_for(E, "()=>S.view==='world'&&!!S.world.pic", 20), f"{tag}: the photo arrived in the 3D World")
+    n0 = await E("()=>S.jobs.length")
+    await E("()=>{const b=document.querySelector('[data-act=nw-obj3d]');b&&b.click()}")
+    ok(await wait_for(E, "()=>{const j=S.jobs.slice(%d).find(x=>x.kind==='3d');return !!j&&j.status==='complete'}" % n0, 60), f"{tag}: the 3D object job finished " + json.dumps(await E("()=>S.jobs.slice(%d).map(j=>[j.kind,j.status,j.error])" % n0)))
+    ok(await wait_for(E, "()=>!!NW.W&&(NW.W.plan.models||[]).length>0", 30), f"{tag}: the AI 3D object joined the world")
+    r["glb"] = await E("async()=>{const b=await NW.W.exportGLB();return String.fromCharCode(...new Uint8Array(await b.slice(0,4).arrayBuffer()))}"); ok(r["glb"] == "glTF", f"{tag}: world exported as .glb")
     await pg.screenshot(path=os.environ.get("W3D_SHOT", "/tmp") + f"/w3d_{w}.png")
     ok(not errs, f"{tag}: page errors {errs}")
     await b.close(); return r

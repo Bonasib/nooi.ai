@@ -18,7 +18,9 @@
     "test:i18n": "python3 tests/i18n.py && python3 tests/langviews.py"
   },
   "dependencies": {
+    "@dimforge/rapier3d-compat": "0.19.3",
     "@mujoco/mujoco": "3.16.0",
+    "@sparkjsdev/spark": "2.2.0",
     "cheerio": "^1.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -28,6 +30,7 @@
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.14",
     "onnxruntime-web": "1.31.0-dev.20260914-8d85527a0",
-    "three": "0.128.0"
+    "three": "0.186.1",
+    "three-r128": "npm:three@0.128.0"
   }
 }

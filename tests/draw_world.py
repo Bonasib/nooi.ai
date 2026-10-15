@@ -36,10 +36,10 @@ async def main():
         await (await pg.query_selector('input[data-drwup]')).set_input_files(str(HERE/'noisy.wav').replace('noisy.wav','sample.png'));await pg.wait_for_timeout(300)
         await pg.evaluate("()=>{S.drw.instr='اجعلها ليلاً مع أضواء المدينة';S.drw.preset='time';drwEdit()}");await pg.wait_for_timeout(300)
         r["editJobs"]=await pg.evaluate("S.jobs.filter(j=>j.meta&&j.meta.instruct).map(j=>j.kind+':'+j.meta.preset).slice(-2)")
-        # 3D world — the old "3D worlds" page now opens the one 3D Studio (its 3D runs in a frame served by nooi; tests/studio3d.py
-        # covers building, walking and .glb export there — this file:// run only checks the hand-over)
-        await pg.evaluate("()=>{S.view='world';renderAll()}");await pg.wait_for_timeout(500)
-        r["worldRender"]=await pg.evaluate("()=>({view:S.view,frame:!!document.querySelector('iframe.x3frame'),menu:ALLNAV.filter(x=>['world','w3d','l3d'].includes(x[0])).length})")
-        r["movedViewChanged"]=r["worldRender"]["view"]=="studio3d" and r["worldRender"]["frame"] and r["worldRender"]["menu"]==0
+        # 3D world — every old 3D page (3D worlds, 3D Studio, Physics) opens the one 3D World (tests/v86.py builds, walks and
+        # exports worlds with a server — this file:// run only checks the door)
+        await pg.evaluate("()=>go('w3ai')");await pg.wait_for_timeout(500)
+        r["worldRender"]=await pg.evaluate("()=>({view:S.view,stage:!!document.getElementById('nwstage'),old:ALLNAV.filter(x=>['w3ai','studio3d','physics','w3d','l3d'].includes(x[0])).length,world:ALLNAV.filter(x=>x[0]==='world').length})")
+        r["movedViewChanged"]=r["worldRender"]["view"]=="world" and r["worldRender"]["stage"] and r["worldRender"]["old"]==0 and r["worldRender"]["world"]==1
         print(json.dumps(r,ensure_ascii=False,indent=1),errs);await b.close()
 asyncio.run(main())

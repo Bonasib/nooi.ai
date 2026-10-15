@@ -1,12 +1,12 @@
-# v85: physics with MuJoCo on our server, and the Physics page (3D → Physics).
+# v85: physics with MuJoCo on our server (since v86 it works inside the site: the 3D World and every video prompt — the old
+# Physics page opens the 3D World; tests/v86_physics.mjs checks the video prompts).
 # Checks the numbers against real physics: fall time √(2h/g) and impact speed √(2gh); the bounce follows the material
 # (rubber > plastic > wood > steel); glass survives a 10 cm drop and breaks from 1 m; in water wood floats high, ice floats
 # low, steel sinks; braking from 90 km/h ≈ 40 m on dry asphalt and much longer on snow; a car off a ramp is in the air;
 # paper falls far slower than a ball (the ball ≈ no air at all); a flag hangs in a calm and flies in a strong wind;
 # a pushed person reacts (hands/hip/back first, never the head), from a height lands on the feet at √(2gh/…) timing,
 # into water at √(2gh). Also: free (no credits), one run at a time, unknown scene refused, numbers clamped, words in both
-# languages. The page: the 3D view draws, "What happened", the one picker (v84) for its choices, the sentence goes into
-# Create video, a clip is saved to the library, a body clip becomes Motion Control's movement; Arabic phone fits.
+# languages. The page: the old Physics address opens the 3D World with its physics on (computer and Arabic phone).
 import asyncio, json, math, os, subprocess, tempfile, threading, time, urllib.request
 from playwright.async_api import async_playwright
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); PORT = 8186
@@ -78,47 +78,25 @@ def physics_checks():
     ok(sorted(1 if "One simulation at a time" in v["text"] else 0 for v in mres2.values()) == [0, 1], f"ChatGPT / Claude: one simulation at a time per person too {[v['text'][:40] for v in mres2.values()]}")
 async def browser_checks():
     SET = "(l)=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.user={name:'Sara',method:'google'};AU.showAuth=false;setUILang(l);document.getElementById('modalRoot').innerHTML='';renderAll()}"
-    RUN = """async(cfg)=>{S.ph85=Object.assign({},cfg);PH85.res=null;document.getElementById('modalRoot').innerHTML='';go('physics');renderAll();await new Promise(r=>setTimeout(r,250));
-      document.querySelector('[data-act=ph85-run]').click();for(let i=0;i<80&&!PH85.res;i++)await new Promise(r=>setTimeout(r,250));await new Promise(r=>setTimeout(r,900));
-      const cv=document.querySelector('#main .ph85cv');let colors=0;if(cv){const c2=document.createElement('canvas');c2.width=64;c2.height=36;const x=c2.getContext('2d');x.drawImage(cv,0,0,64,36);const d=x.getImageData(0,0,64,36).data,set=new Set();for(let i=0;i<d.length;i+=16)set.add(d[i]>>4<<8|d[i+1]>>4<<4|d[i+2]>>4);colors=set.size}
-      return {res:!!PH85.res,colors,what:!!document.querySelector('#main .ph85what'),facts:document.querySelectorAll('#main .ph85fx span').length,chips:[...document.querySelectorAll('#main .pk84c')].map(c=>c.dataset.pk84),
-        tab:!!document.querySelector('.hubtabs [data-go=physics],.hubtabs button[aria-pressed=true]'),h1:(document.querySelector('#main h1')||{}).textContent}}"""
+    async def until(pg, js, sec=40):
+        for _ in range(sec * 4):
+            try:
+                if await pg.evaluate(js): return True
+            except Exception: pass
+            await asyncio.sleep(.25)
+        return False
     async with async_playwright() as p:
         b = await p.chromium.launch()
         for W, lang in ((1280, "en"), (390, "ar")):
             mob = W < 600; pg = await (await b.new_context(viewport={"width": W, "height": 880}, is_mobile=mob, has_touch=mob)).new_page()
             errs = []; pg.on("pageerror", lambda e: errs.append(str(e)[:160]))
             await pg.goto(f"http://localhost:{PORT}/"); await pg.wait_for_timeout(1500); await pg.evaluate(SET, lang)
-            r = await pg.evaluate(RUN, {"scene": "objects", "material": "rubber", "shape": "ball"})
-            ok(r["res"] and r["colors"] >= 4 and r["what"] and r["facts"] >= 3 and {"phmat", "phshape", "phsurf"} <= set(r["chips"]) and r["h1"] in ("Physics", "الفيزياء"), f"{lang} {W}: Physics simulates, the 3D view draws, What happened, the one picker {r}")
+            await pg.evaluate("()=>go('physics')")
+            ok(await until(pg, "()=>S.view==='world'&&typeof NW!=='undefined'&&!!NW.W&&!NW.busy"), f"{lang} {W}: the old Physics page opens the 3D World")
+            r = await pg.evaluate("()=>[!!NW.W.physics,NW.W.stats().physics,!!document.querySelector('.hubtabs [data-go=physics]')]")
+            ok(r == [True, True, False], f"{lang} {W}: physics runs inside the world, no Physics tab {r}")
             g = await pg.evaluate("()=>{const c=AI_PROVIDERS.find(p=>p[0]==='gemma');return {card:!!c&&c[4].map(f=>f[0]).join(','),health:HEALTH_KEYS.some(h=>h[0]==='gemma'),order:AI_PROVIDERS.findIndex(p=>p[0]==='gemma')<AI_PROVIDERS.findIndex(p=>p[0]==='localtext')}}")
             ok(g["card"] == "apiKey,model,thinking,use" and g["health"] and g["order"], f"{lang} {W}: Admin has the Gemma 4 · Google AI Studio card (key, model, thinking, on/off) and its status row {g}")
-            if mob:
-                fit = await pg.evaluate("()=>({wide:document.documentElement.scrollWidth-innerWidth,cols:new Set([...document.querySelectorAll('#main .ph85sc .tile')].slice(0,3).map(t=>Math.round(t.getBoundingClientRect().top))).size,stage:document.querySelector('#main .ph85stage').getBoundingClientRect().width})")
-                ok(fit["wide"] <= 1 and fit["cols"] == 1 and fit["stage"] > 300, f"ar phone: the Physics page fits {fit}")
-                for cfg in ({"scene": "car", "action": "jump", "speed": 80}, {"scene": "water", "it": {"wood": True, "metal": True}}, {"scene": "air", "mode": "flag", "wind": 12}, {"scene": "body", "bodyAction": "trip"}):
-                    q = await pg.evaluate(RUN, cfg); ok(q["res"] and q["colors"] >= 4, f"ar phone: {cfg['scene']} draws {q}")
-            else:
-                w = await pg.evaluate("async()=>{const en=PH85.res.words.en;S.draft.prompt='A kid in a park';persist();document.querySelector('[data-act=ph85-use][data-to=video]').click();await new Promise(r=>setTimeout(r,400));return {view:S.view,prompt:S.draft.prompt,en}}")
-                ok(w["view"] == "video" and w["prompt"].startswith("A kid in a park ") and w["en"] in w["prompt"], f"the physics sentence goes into Create video {w}")
-                await pg.evaluate(RUN, {"scene": "objects", "material": "wood", "shape": "box", "height": 0.5})
-                n0 = await pg.evaluate("()=>S.jobs.length")
-                await pg.click('#main [data-act="ph85-rec"]'); await pg.wait_for_timeout(500)
-                for _ in range(40):
-                    if await pg.evaluate("(n)=>S.jobs.length>n",n0): break
-                    await pg.wait_for_timeout(250)
-                for _ in range(40):   # (shown at once from the device; the server copy follows a moment later)
-                    if await pg.evaluate("()=>!!S.jobs[S.jobs.length-1].resultUrl"): break
-                    await pg.wait_for_timeout(250)
-                j = await pg.evaluate("()=>{const j=S.jobs[S.jobs.length-1];return {kind:j.kind,phys:!!(j.meta&&j.meta.physics),url:j.resultUrl||null,local:!!EXPORTS[j.id]}}")
-                ok(j["kind"] == "export" and j["phys"] and j["local"] and j["url"] and "/media/" in j["url"], f"the clip is saved to the library (and the server) {j}")
-                await pg.evaluate(RUN, {"scene": "body", "bodyAction": "push", "from": "front"})
-                await pg.click('#main [data-act="ph85-mc"]')
-                for _ in range(60):
-                    if await pg.evaluate("()=>S.view==='motion'"): break
-                    await pg.wait_for_timeout(250)
-                m = await pg.evaluate("()=>({view:S.view,move:!!(M.mcMove&&M.mcMove.file),type:M.mcMove&&M.mcMove.type})")
-                ok(m == {"view": "motion", "move": True, "type": "video"}, f"a body clip becomes Motion Control's movement {m}")
             ok(not errs, f"{lang}: page errors {errs[:3]}")
         await b.close()
 srv = subprocess.Popen(["node", SERVER], cwd=D, env=dict({k: v for k, v in os.environ.items() if not k.startswith(("LLM_", "ANTHROPIC_", "NVIDIA_", "ELEVENLABS_", "OPENAI_", "KIE_", "FAL_", "LOCAL_LLM", "PIPER"))},

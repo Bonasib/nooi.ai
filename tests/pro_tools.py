@@ -1,4 +1,4 @@
-# Pro tools: open every editor tab, the 3D studio, motion capture and the AI-providers admin page,
+# Pro tools: open every editor tab, the 3D World, motion capture and the AI-providers admin page,
 # click every control in them (on-device AI mocked), and report any page error. errors must be [].
 import asyncio, json, os, subprocess, time, sys
 from playwright.async_api import async_playwright
@@ -14,7 +14,8 @@ MOCK = """()=>{laiCall=async(msg,onp)=>{if(onp)onp({status:'running'});const t=m
  if(t==='asr')return{text:'hello world',chunks:[{start:0,end:.5,text:'hello'},{start:.5,end:1,text:'world'}]};
  if(t==='bg'){return new Promise(r=>{const c=document.createElement('canvas');c.width=c.height=32;c.toBlob(b=>r({blob:b}),'image/png')})}
  throw new Error('unmocked '+t)};S.localAI=true}"""
-SKIP = {"sc-gen", "sc-av", "sc-one", "sc-retry", "hf-send", "xp-dl", "ed-export", "ed-publish", "s3d-turntable", "eng-try", "edx-aishot", "logout", "signout", "adm-send", "adm-test"}
+SKIP = {"sc-gen", "sc-av", "sc-one", "sc-retry", "hf-send", "xp-dl", "ed-export", "ed-publish", "s3d-turntable", "eng-try", "edx-aishot", "logout", "signout", "adm-send", "adm-test",
+        "nw-go", "nw-video", "nw-glb", "nw-real", "nw-use", "nw-full", "nw-del"}   # the 3D World: no paid jobs, downloads or full screen in a click test
 
 CLICK_JS = """async ([sel, cap, skip]) => { let n = 0;
   for (let i = 0; i < cap; i++) {
@@ -65,22 +66,18 @@ async def main():
                     await E("()=>{ED.playing=false;if(!S.ed.clips.length)S.ed.clips.push({id:uid(),src:{k:'demo',kind:'scene',seed:11},in:0,out:5,speed:1,trans:'cut',vol:100})}")
                 # play through every clip with all effects on
                 await E("()=>{const c=S.ed.clips[0];if(c){c.vfx={shake:1,pulse:1,rgb:1,glow:1,radial:1,pixel:1,mirror:1,strobe:1,invert:1,comic:1,vhs:1,leak:1};c.cg={look:'teal',exp:10,temp:30};c.trans='glitch';c.mo={kf:[{t:0,s:1,x:0,y:0,r:0},{t:1,s:1.5,x:.1,y:0,r:10}],ease:'smooth'}}S.ed.tab='clip';renderView();for(let t=0;t<edTotal();t+=.25){ED.t=t;edTick(performance.now())}}")
-                # 3D studio (one tool, in a frame): a photo handed over, every control clicked, a 3D object made
+                # 3D World: a photo handed over from another tool (the old 3D Studio door), every control clicked
                 await E("async()=>{const c=document.createElement('canvas');c.width=1280;c.height=720;drawGreen(c.getContext('2d'),1280,720,1.2);await setS3dFromDataURL(c.toDataURL('image/jpeg',.92),'photo');go('studio3d')}"); await pg.wait_for_timeout(500)
-                fr = None
-                for _ in range(80):
-                    fr = next((f for f in pg.frames if "/studio3d/" in f.url), None)
+                ok3d = False
+                for _ in range(120):
                     try:
-                        if fr and await fr.evaluate("()=>!!window.X3&&!!X3.S.img"): break
+                        if await E("()=>S.view==='world'&&typeof NW!=='undefined'&&!!NW.W&&!NW.busy"): ok3d = True; break
                     except Exception: pass
                     await asyncio.sleep(.25)
-                if fr:
-                    await fr.evaluate("()=>{window.__x3err=[];addEventListener('error',e=>__x3err.push(String(e.message)));addEventListener('unhandledrejection',e=>__x3err.push(String(e.reason&&e.reason.message||e.reason)));document.querySelectorAll('details').forEach(d=>d.open=true);window.__X3_TEST_DEPTH=async(cv)=>({depth:new Float32Array(64*48).fill(1).map((v,i)=>1+((i%64)/64)),w:64,h:48,ms:1})}")
-                    out["clicks"] += await fr.evaluate(CLICK_JS, ["main", 80, sorted(SKIP | {"rec", "dlVid", "toEditor", "still", "glb", "glbObj", "usdz", "lib", "libOpen", "shot", "full", "cloud", "sky", "realSize", "find"})])
-                    await fr.evaluate("async()=>{try{await X3.make3D()}catch(e){__x3err.push(e.message)}}")
-                    out["checks"][f"{w}:3d"] = await fr.evaluate("()=>X3.E.assets.length?'complete':'none'")
-                    for m in await fr.evaluate("()=>__x3err"): errs.append(f"{w}:studio3d: {m}")
-                else: errs.append(f"{w}:studio3d: frame didn't load")
+                out["checks"][f"{w}:3d"] = "complete" if ok3d else "none"
+                out["checks"][f"{w}:3dpic"] = await E("()=>!!S.world.pic")
+                if ok3d: out["clicks"] += await click_all(pg, "#nwui", errs, f"{w}:world", 40)
+                else: errs.append(f"{w}:world: the 3D World didn't open")
                 # motion capture
                 await E("()=>go('mocap')"); await pg.wait_for_timeout(300)
                 out["clicks"] += await click_all(pg, "#main", errs, f"{w}:mocap", 40)

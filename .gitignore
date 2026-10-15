@@ -4,3 +4,4 @@ media/
 .env
 *.log
 __pycache__/
+tests/_world.glb

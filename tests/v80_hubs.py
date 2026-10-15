@@ -1,7 +1,7 @@
 # v80: the site in a few hubs with tool tabs (Higgsfield-style; duplicates folded in), nooi Auto as its own card, loaders that are
 # only the nooi stars (each star moving on its own), tap-to-view for pictures and clips, compact grids, a faster Sketch to Life,
-# photoreal 3D worlds (Kie picture + depth from the API or the picture engine → one light 3D surface on the device), the 3D
-# Studio sized for phones, and round pink avatars.
+# the 3D hub as one 3D World (old 3D pages open it; "Realistic" adds a 360° sky from the picture engine; sized for phones), and
+# round pink avatars.
 import asyncio, json, os, subprocess, sys, tempfile, time, urllib.request
 from playwright.async_api import async_playwright
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); PORT, LPORT = 8096, 8097
@@ -43,17 +43,26 @@ def api(p, body=None, method=None):
 def stats(): return json.loads(urllib.request.urlopen(f"http://localhost:{LPORT}/stats").read())
 
 def api_checks():
-    cfg = api("/v1/config"); ok(cfg.get("depthEngine") == "custom", f"depth engine announced {cfg.get('depthEngine')}")
-    r = api("/v1/world/depth", {"url": "/media/photo.png"}); st = stats()["depth"]
-    ok(r.get("depth") == "/media/depth.png" and r.get("engine") == "custom" and st and st[-1]["image"] == f"http://localhost:{PORT}/media/photo.png" and st[-1]["auth"] == "Bearer dk", f"depth from the API {r} {st}")
-    ok(api("/v1/world/depth", {"url": "javascript:alert(1)"}).get("_status") == 400, "depth: bad URL refused")
+    cfg = api("/v1/config"); ok("depthEngine" not in cfg, f"no depth-photo engine any more {cfg.get('depthEngine')}")
+    try: urllib.request.urlopen(urllib.request.Request(f"http://localhost:{PORT}/v1/world/depth", data=b'{"url":"/media/photo.png"}', headers={"content-type": "application/json"}), timeout=10); gone = False
+    except urllib.error.HTTPError as e: gone = e.code in (404, 405)
+    ok(gone, "the depth-photo world is gone (one 3D World)")
+    caps = api("/v1/world/caps"); ok(caps.get("pano") is True and "worldlabs" in caps and (caps.get("cost") or {}).get("plan") == 1, f"3D World caps {caps}")
     av = [x for x in json.loads(urllib.request.urlopen(f"http://localhost:{PORT}/v1/admin/showcase").read())["items"] if x["cat"] == "avatar"]
     ok(len(av) == 15, f"15 avatars {len(av)}")
     src = open(ROOT + "/lib/showcase.js", encoding="utf-8").read()
     ok("pastel-pink studio background" in src and 'aspect: "1:1"' in src and "crops cleanly into a circle" in src, "avatars: round pink portraits")
-    out["api"] = {"depthCalls": len(st)}
+    out["api"] = {"caps": caps}
 
 SETUP = "()=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.lang='%s';S.user={name:'T',method:'google'};AU.showAuth=false;renderAll()}"
+async def wait_for(E, js, sec=20):
+    for _ in range(sec * 4):
+        try:
+            if await E(js): return True
+        except Exception: pass
+        await asyncio.sleep(.25)
+    return False
+
 async def ui(p, w, lang):
     tag = f"{w}/{lang}"; r = {}; phone = w < 600
     b = await p.chromium.launch(args=["--use-gl=swiftshader", "--enable-webgl", "--ignore-gpu-blocklist"])
@@ -77,9 +86,9 @@ async def ui(p, w, lang):
     # ---- a few hubs in the menu; each hub page has its tools as tabs
     if not phone:
         r["side"] = await E("()=>[...document.querySelectorAll('#side .nav')].map(b=>b.dataset.go)")
-        ok(r["side"] == ["home", "explore", "image", "video", "chars", "w3ai", "edit", "calendar", "library", "account", "admin"], f"{tag}: the menu is a few hubs {r['side']}")   # v82: Templates + Community under Explore
+        ok(r["side"] == ["home", "explore", "image", "video", "chars", "world", "edit", "calendar", "library", "account", "admin"], f"{tag}: the menu is a few hubs {r['side']}")   # v82: Templates + Community under Explore
         ok(await E("()=>![...document.querySelectorAll('#side .nav .new')].some(x=>x.offsetParent)"), f"{tag}: no NEW tags in the menu")
-    HUB = {"video": ["video", 7], "ugcads": ["video", 7], "crew": ["video", 7], "cinema": ["video", 7], "motion": ["video", 7], "image": ["image", 3], "sketch": ["image", 3], "draw": ["image", 3], "w3ai": ["w3ai", 3], "studio3d": ["w3ai", 3], "physics": ["w3ai", 3], "edit": ["edit", 7], "bg": ["edit", 7], "slideshow": ["edit", 7], "calendar": ["calendar", 3], "account": ["account", 5]}   # v82: + Cinema Studio in Video; Connections & APIs moved to the admin hub · v83: + Motion Control (Video), Video from pictures (Edit)
+    HUB = {"video": ["video", 7], "ugcads": ["video", 7], "crew": ["video", 7], "cinema": ["video", 7], "motion": ["video", 7], "image": ["image", 3], "sketch": ["image", 3], "draw": ["image", 3], "edit": ["edit", 7], "bg": ["edit", 7], "slideshow": ["edit", 7], "calendar": ["calendar", 3], "account": ["account", 5]}   # v82: + Cinema Studio in Video; Connections & APIs moved to the admin hub · v83: + Motion Control (Video), Video from pictures (Edit)
     for v, (hub, n) in HUB.items():
         await E("(v)=>{go(v);renderAll()}", v); await pg.wait_for_timeout(250)
         x = await E("()=>{const t=[...document.querySelectorAll('#main .hubtabs [role=tab]')];return [t.length,t.filter(b=>b.getAttribute('aria-selected')==='true').map(b=>b.dataset.go)]}")
@@ -122,30 +131,23 @@ async def ui(p, w, lang):
         if [x for x in posted[n0:] if x.get("kind") == "image"]: break
     dt = time.time() - t0; sk = [x for x in posted[n0:] if x.get("kind") == "image"]
     ok(sk and dt < 2.6 and "a red car" in sk[0]["prompt"] and sk[0]["meta"].get("res") == "1K" and "skImg" in (sk[0].get("inputs") or {}) and len(sees) == 1, f"{tag}: Sketch to Life starts fast ({dt:.1f}s, see calls {len(sees)}) {[x.get('meta') for x in sk]}")
-    # ---- photoreal 3D world: picture → depth (from the API) → one light surface; walk; video from the view
+    # ---- the 3D hub is one 3D World: the old 3D pages open it; "Realistic" asks the picture engine for a 360° sky that joins the world
+    for v in ("w3ai", "studio3d", "physics"):
+        await E("(v)=>go(v)", v); await pg.wait_for_timeout(200)
+        ok(await E("()=>S.view==='world'"), f"{tag}: {v} opens the 3D World")
+    ok(await wait_for(E, "()=>typeof NW!=='undefined'&&!!NW.W&&!NW.busy", 40), f"{tag}: a world is ready")
     n0 = len(posted)
-    await E("()=>{S.dw={mode:'photo',kind:'wide',prompt:'A mountain valley with a house, a tree and a red car',cur:null,list:[]};DW.built=null;go('w3ai');renderAll()}"); await pg.wait_for_timeout(400)
-    await E("()=>document.querySelector('[data-act=\"dw-make\"]').click()")
-    for _ in range(60):
-        await pg.wait_for_timeout(400)
-        if await E("()=>!!(DW.scene&&DW.built)"): break
-    r["dw"] = await E("()=>[!!DW.built,DW.stats,S.dw.list[0].depthBy||'job',document.documentElement.scrollWidth<=innerWidth]")
-    dwj = posted[n0:]
-    ok(r["dw"][0] and r["dw"][1]["verts"] > 5000 and r["dw"][1]["tris"] < r["dw"][1]["verts"] * 2 and r["dw"][2] == "custom" and r["dw"][3], f"{tag}: photoreal world built from the picture + API depth {r['dw']}")
-    ok(len(dwj) == 1 and dwj[0]["kind"] == "image" and dwj[0]["aspect"] == "16:9" and "photorealistic" in dwj[0]["prompt"].lower(), f"{tag}: one high-quality picture, depth from the API (no extra picture) {[(x.get('kind'), x.get('prompt','')[:50]) for x in dwj]}")
-    await E("()=>{const c=$('#dwcv');for(let i=0;i<5;i++)c.dispatchEvent(new WheelEvent('wheel',{deltaY:-100,bubbles:true,cancelable:true}))}"); await pg.wait_for_timeout(200)
-    ok(await E("()=>DW.pos[2]<-0.5&&DW.pos[2]>=-1.6"), f"{tag}: walk into the world (kept inside it)")
-    n0 = len(posted); await E("()=>document.querySelector('[data-act=\"dw-video\"]').click()"); await pg.wait_for_timeout(2500)
-    ok([(x.get("kind"), sorted((x.get("inputs") or {}).keys())) for x in posted[n0:]] == [("video", ["vStart"])], f"{tag}: real video in the cloud from the view")
-    # without a depth API the picture engine draws the depth map
-    n0 = len(posted)
-    await E("()=>{API.cfg.depthEngine=null;S.dw.kind='pano';S.dw.prompt='A souq at night';DW.built=null;renderView()}"); await pg.wait_for_timeout(200)
-    await E("()=>document.querySelector('[data-act=\"dw-make\"]').click()")
-    for _ in range(60):
-        await pg.wait_for_timeout(400)
-        if await E("()=>{const w=dwWorld();return !!(DW.scene&&DW.built===w.id)}"): break
-    dwj = posted[n0:]
-    ok(len(dwj) == 2 and dwj[0]["aspect"] == "21:9" and "360-degree" in dwj[0]["prompt"] and "depth map" in dwj[1]["prompt"] and "iRef" in (dwj[1].get("inputs") or {}) and await E("()=>DW.kind==='pano'"), f"{tag}: 360° world, depth from the picture engine {[(x.get('aspect'), x.get('prompt','')[:40]) for x in dwj]}")
+    await E("()=>{S.world.opts.look='real';persist();document.getElementById('nwprompt').value='A mountain valley with a house, a tree and a red car';document.querySelector('[data-act=nw-go]').click()}")
+    ok(await wait_for(E, "()=>!NW.busy&&!!NW.W&&!!S.world.plan&&/valley|mountain/i.test(S.world.plan.prompt||'')", 60), f"{tag}: the world from the words was built")
+    for _ in range(40):
+        await pg.wait_for_timeout(250)
+        if [x for x in posted[n0:] if x.get("kind") == "image"]: break
+    pj = [x for x in posted[n0:] if x.get("kind") == "image"]
+    ok(pj and pj[0]["aspect"] == "21:9" and "360-degree" in pj[0]["prompt"] and (pj[0].get("meta") or {}).get("nw", {}).get("role") == "pano", f"{tag}: Realistic asks for a 360° sky {[(x.get('kind'), x.get('aspect'), x.get('prompt','')[:40]) for x in posted[n0:]]}")
+    ok(await wait_for(E, "()=>!!(NW.W&&NW.W.plan.pano)", 30), f"{tag}: the 360° sky joined the world")
+    await E("()=>{S.world.opts.look='fast';persist()}")
+    await E("()=>document.querySelector('[data-act=nw-use]').click()")
+    ok(await wait_for(E, "()=>S.view==='video'&&!!M.vStart", 20), f"{tag}: the view becomes the first frame of a video")
     # ---- round pink avatars for UGC presenters
     await E("()=>{S.draft.ugc.mode='presenter';go('ugcads');renderAll()}"); await pg.wait_for_timeout(900)
     r["av"] = await E("()=>{const a=[...document.querySelectorAll('[data-act=\"ugc-pre\"] .avc80')];const s=a[0]&&getComputedStyle(a[0]);return [a.length,a.filter(x=>x.querySelector('img')).length,s&&s.borderRadius,s&&s.backgroundColor]}")
@@ -157,14 +159,14 @@ async def studio(p):
     b = await p.chromium.launch(args=["--use-gl=swiftshader", "--enable-webgl", "--ignore-gpu-blocklist"])
     pg = await (await b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)).new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e)[:300]))
     await pg.goto(f"http://localhost:{PORT}/"); await pg.wait_for_timeout(1500)
-    await pg.evaluate(SETUP % "en"); await pg.evaluate("()=>{go('studio3d');renderAll()}")
+    await pg.evaluate(SETUP % "en"); await pg.evaluate("()=>go('studio3d')")
     r = None
-    for _ in range(40):
+    for _ in range(60):
         await pg.wait_for_timeout(300)
-        r = await pg.evaluate("()=>{const f=document.querySelector('iframe.x3frame');const d=f&&f.contentDocument;const v=d&&d.querySelector('.view');return f&&v?[Math.round(f.getBoundingClientRect().height),Math.round(v.getBoundingClientRect().height),Math.round(d.documentElement.scrollHeight),innerHeight]:null}")
-        if r and abs(r[1] - r[3] * .5) < 30 and abs(r[0] - r[2]) < 30: break
-    ok(r and abs(r[1] - r[3] * .5) < 30 and abs(r[0] - r[2]) < 30, f"3D Studio on a phone: half-screen 3D view, the page scrolls past it {r}")
-    ok(not errs, f"3D Studio: page errors {errs}")
+        r = await pg.evaluate("()=>{const s=document.getElementById('nwstage'),u=document.getElementById('nwui');return s&&u&&typeof NW!=='undefined'&&NW.W?[Math.round(s.getBoundingClientRect().height),innerHeight,[document.documentElement,document.body,document.getElementById('main')].some(e=>e&&e.scrollHeight>e.clientHeight+20)||u.getBoundingClientRect().bottom>innerHeight,document.documentElement.scrollWidth<=innerWidth]:null}")
+        if r: break
+    ok(r and 0.5 * r[1] <= r[0] <= 0.8 * r[1] and r[2] and r[3], f"3D World on a phone: the 3D view takes most of the screen, the page scrolls to the options, nothing sideways {r}")
+    ok(not errs, f"3D World phone: page errors {errs}")
     await b.close()
 
 async def main():
@@ -176,7 +178,7 @@ if __name__ == "__main__":
     mk = subprocess.Popen(["node", D + "/mock.js", str(LPORT)], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     env = {k: v for k, v in os.environ.items() if not k.startswith(("LLM_", "ANTHROPIC_", "NVIDIA_", "ELEVENLABS_", "OPENAI_", "KIE_", "FAL_", "REALTIME_", "DEPTH_"))}
     srv = subprocess.Popen(["node", ROOT + "/server.js"], cwd=D, env=dict(env, PORT=str(PORT), SECRET_KEY="w" * 40, FIREBASE_PROJECT_ID="", PUBLIC_BASE_URL=f"http://localhost:{PORT}", AGENTS_AUTO_LEARN="false",
-        DEPTH_API_URL=f"http://localhost:{LPORT}/depth", DEPTH_API_KEY="dk", MIRROR_MEDIA="false"), stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        MIRROR_MEDIA="false"), stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     try:
         for _ in range(80):
             try: urllib.request.urlopen(f"http://localhost:{PORT}/v1/config", timeout=1); break

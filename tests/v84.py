@@ -39,7 +39,7 @@ STATE = """(sel)=>{const vis=[...document.querySelectorAll(sel)].filter(b=>b.off
 SHEET = """async(f)=>{const c=document.querySelector('#main .pk84c[data-pk84="'+f+'"]');if(!c)return null;c.click();await new Promise(r=>setTimeout(r,250));
   const s=document.querySelector('#modalRoot .pk84s');if(!s)return {open:false};const emo=/[\\u2600-\\u27bf]|[\\ud83c-\\udbff][\\udc00-\\udfff]/;
   const tiles=[...s.querySelectorAll('.pk84o')].map(b=>({v:b.dataset.val||b.dataset.v||(b.dataset.toggle||'').split('.').pop(),name:(b.querySelector('b')||{}).textContent||'',desc:(b.querySelector('small')||{}).textContent||'',
-    icon:!!b.querySelector('.pk84oi>*'),emoji:emo.test(b.textContent),on:b.getAttribute('aria-pressed')==='true'}));
+    icon:!!b.querySelector('.pk84oi>*,.pk86art>svg'),emoji:emo.test(b.textContent),on:b.getAttribute('aria-pressed')==='true'}));
   return {open:true,title:(s.querySelector('h2')||{}).textContent,heads:[...s.querySelectorAll('.pk84h')].map(h=>h.textContent),done:!!s.querySelector('.pk84done'),tiles}}"""
 async def main():
     for _ in range(60):
