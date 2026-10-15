@@ -11373,9 +11373,10 @@ VIEWS.cinema=()=>{const c=cinState82(),vid=c.out!=="still",m=vid?(MODELS[c.model
     '<span class="lbl">'+L("Camera","الكاميرا")+"</span>"+cinTiles82("cam")+'<span class="lbl">'+L("Lens","العدسة")+"</span>"+cinTiles82("lens")+
     '<span class="lbl">'+L("Focal length","البعد البؤري")+"</span>"+cinTiles82("focal",1)+'<span class="lbl">'+L("Aperture","فتحة العدسة")+"</span>"+cinTiles82("ap")+
     '<span class="lbl">'+L("Camera move","حركة الكاميرا")+"</span>"+cinTiles82("move")+'<span class="lbl">'+L("Light","الإضاءة")+"</span>"+cinTiles82("light")+
+    '<span class="lbl">'+L("Format","الأبعاد")+'</span><div class="seg">'+["21:9","16:9","9:16","1:1"].map(a=>'<button data-set="cin.aspect" data-val="'+a+'" aria-pressed="'+(c.aspect===a)+'">'+a+"</button>").join("")+"</div>"+
     '<div class="grid2"><div><span class="lbl">'+L("Make","الناتج")+'</span><div class="seg"><button data-set="cin.out" data-val="video" aria-pressed="'+vid+'">'+L("Video","فيديو")+'</button><button data-set="cin.out" data-val="still" aria-pressed="'+!vid+'">'+L("Still","صورة ثابتة")+"</button></div></div>"+
-    '<div><span class="lbl">'+L("Format","الأبعاد")+'</span><div class="seg">'+["21:9","16:9","9:16","1:1"].map(a=>'<button data-set="cin.aspect" data-val="'+a+'" aria-pressed="'+(c.aspect===a)+'">'+a+"</button>").join("")+"</div></div></div>"+
-    (vid?'<div class="grid2"><div><span class="lbl">'+L("Length","المدة")+'</span><div class="seg">'+[5,8,10].map(d=>'<button data-set="cin.dur" data-val="'+d+'" data-num="1" aria-pressed="'+(+c.dur===d)+'">'+d+L("s","ث")+"</button>").join("")+'</div></div><div><span class="lbl">'+L("Engine","المحرك")+'</span><select data-bind="cin.model" data-rerender="1">'+Object.keys(MODELS).filter(k=>typeof modelAllowed!=="function"||modelAllowed(k)).map(k=>'<option value="'+k+'"'+(k===m?" selected":"")+">"+esc(MODELS[k].name)+"</option>").join("")+"</select></div></div>":"")+
+    (vid?'<div><span class="lbl">'+L("Length","المدة")+'</span><div class="seg">'+[5,8,10].map(d=>'<button data-set="cin.dur" data-val="'+d+'" data-num="1" aria-pressed="'+(+c.dur===d)+'">'+d+L("s","ث")+"</button>").join("")+"</div></div>":"")+"</div>"+
+    (vid?'<span class="lbl">'+L("Engine","المحرك")+'</span><select data-bind="cin.model" data-rerender="1">'+Object.keys(MODELS).filter(k=>typeof modelAllowed!=="function"||modelAllowed(k)).map(k=>'<option value="'+k+'"'+(k===m?" selected":"")+">"+esc(MODELS[k].name)+"</option>").join("")+"</select>":"")+
     '<details class="cinp82"><summary>'+L("What the AI receives","ما يصل إلى الذكاء")+'</summary><p dir="ltr">'+esc(cinPrompt82())+"</p></details>"+
     '<div style="margin-top:16px"><button class="btn primary big" data-act="cin-make">'+ic(vid?"video":"image")+(vid?L("Film it","صوّرها"):L("Make the still","اصنع الصورة"))+'<span class="cost">'+cost+" cr</span></button></div></div>";
   const out=!g?'<div class="preview-col"><div class="panel pad"><div class="stage" style="aspect-ratio:'+c.aspect.replace(":","/")+';max-height:60vh;margin:0 auto"><div class="empty">'+L("Your shot appears here.","تظهر لقطتك هنا.")+"</div></div></div></div>"
@@ -11775,6 +11776,262 @@ html[dir="rtl"] .rcs83 em{display:inline-block;transform:scaleX(-1)}
 .pend83{margin:14px 0;border-color:color-mix(in srgb,var(--lime) 45%,var(--line))}
 .pi83{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line)}
 .pi83>div:first-child{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 240px}.pi83 b{font-weight:500;word-break:break-word}
+`;document.head.appendChild(st)})();
+
+/* ================= v84: one picker for every field — format, camera, lens, move, light, style, look, effects, transitions ================= */
+// The same field is chosen the same way on every page (the idea of a prompt bar with chips; our own drawings and words):
+// a chip shows the choice, and tapping it opens one sheet of icon tiles, each saying what it does. The page keeps its own
+// buttons (hidden) and handlers: the sheet's tiles carry the same data-* attributes, so every page still sets the same state.
+const PIC84={
+ rain:'<path d="M7 13a4 4 0 1 1 .6-7.9A5 5 0 0 1 17 7a3 3 0 0 1 0 6z"/><path d="M8 16l-1 3M12 16l-1 3M16 16l-1 3"/>',
+ storm:'<path d="M7 13a4 4 0 1 1 .6-7.9A5 5 0 0 1 17 7a3 3 0 0 1 0 6z"/><path d="M12.5 13l-2 4h3l-2 4"/>',
+ lightning:'<path d="M13 2L5 14h6l-1 8 8-12h-6z"/>',
+ snow:'<path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"/><path d="M10 4.5l2 2 2-2M10 19.5l2-2 2 2"/>',
+ fog:'<path d="M4 8h12M7 12h13M4 16h11M9 20h8"/>',
+ embers:'<path d="M12 21c-4 0-6.5-2.8-6.5-6 0-4 4-6 4-10 3 2 4.5 4.3 4.5 6.5 1-1 1.8-2.2 1.8-3.8 2 2 3.7 4.7 3.7 7.6 0 3-3 5.7-7.5 5.7z"/>',
+ confetti:'<path d="M4 20l5-12 7 7z"/><path d="M14 4l1 2M19.5 5l-2 1M18.5 10.5l2 .5M11 3l.5 2"/>',
+ bokeh:'<circle cx="8" cy="9" r="4"/><circle cx="16" cy="14.5" r="5"/><circle cx="17.5" cy="5" r="2"/>',
+ leak:'<path d="M3 21L21 3"/><path d="M3 14L14 3M10 21L21 10" opacity=".55"/>',
+ glitch:'<path d="M3 6h10M7 10h14M3 14h12M9 18h12"/>',
+ dust:'<circle cx="6" cy="7" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="18" cy="9" r="1"/><circle cx="9" cy="13" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="7" cy="19" r="1"/><circle cx="18" cy="19.5" r="1"/>',
+ rays:'<circle cx="5" cy="5" r="2"/><path d="M7.5 7.5l12 12M8.5 5.5l12.5 5.5M5.5 8.5l5.5 12.5"/>',
+ camflash:'<rect x="3" y="7" width="18" height="13" rx="2"/><circle cx="12" cy="13.5" r="3.5"/><path d="M8 7l1.5-3h5L16 7"/>',
+ hearts:'<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+ cut:'<rect x="2" y="6" width="9" height="12" rx="1.5"/><rect x="13" y="6" width="9" height="12" rx="1.5"/>',
+ fade:'<rect x="2" y="6" width="12" height="12" rx="1.5"/><rect x="10" y="6" width="12" height="12" rx="1.5" fill="currentColor" fill-opacity=".18"/>',
+ dip:'<rect x="2" y="6" width="7.5" height="12" rx="1.5"/><rect x="14.5" y="6" width="7.5" height="12" rx="1.5"/><rect x="10.5" y="8" width="3" height="8" rx=".5" fill="currentColor"/>',
+ slide:'<rect x="2" y="6" width="12" height="12" rx="1.5"/><path d="M16 12h6M19 9l3 3-3 3"/>',
+ wipe:'<rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M14 5l-4 14"/>',
+ whip:'<path d="M3 9h12M3 13h16M3 17h10"/><path d="M17 6l4 3-4 3"/>',
+ match:'<circle cx="7" cy="12" r="4"/><circle cx="17" cy="12" r="4"/><path d="M11 12h2"/>',
+ zoomthru:'<rect x="3" y="5" width="18" height="14" rx="1.5"/><rect x="8.5" y="9.5" width="7" height="5" rx="1"/><path d="M3 5l5.5 4.5M21 5l-5.5 4.5M3 19l5.5-4.5M21 19l-5.5-4.5"/>',
+ spin:'<path d="M20 12a8 8 0 1 1-3-6.2"/><path d="M17 2v4h4"/>',
+ burst:'<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2 2M16.4 16.4l2 2M18.4 5.6l-2 2M7.6 16.4l-2 2"/>',
+ blurx:'<circle cx="12" cy="12" r="8" stroke-dasharray="2 2.4"/><circle cx="12" cy="12" r="3"/>',
+ none:'<circle cx="12" cy="12" r="8"/><path d="M6.5 17.5l11-11"/>',
+ zoomin:'<circle cx="11" cy="11" r="6"/><path d="M15.5 15.5L20 20M11 8.5v5M8.5 11h5"/>',
+ flyover:'<path d="M3 18c4-1 6-6 9-6s5 5 9 6"/><path d="M8 6l4-2 4 2-4 2z"/>',
+ fx:'<rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 15l3-6 2 4 1.5-2L17 15z"/>',
+ look:'<circle cx="9" cy="10" r="5"/><circle cx="15" cy="10" r="5"/><circle cx="12" cy="15" r="5"/>',
+ text:'<path d="M5 6V4h14v2M12 4v16M9 20h6"/>',
+ grain:'<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r=".8" fill="currentColor"/><circle cx="13" cy="7" r=".8" fill="currentColor"/><circle cx="16" cy="11" r=".8" fill="currentColor"/><circle cx="9" cy="13" r=".8" fill="currentColor"/><circle cx="14" cy="16" r=".8" fill="currentColor"/><circle cx="7" cy="17" r=".8" fill="currentColor"/>',
+ vig:'<rect x="3" y="4" width="18" height="16" rx="3"/><ellipse cx="12" cy="12" rx="6" ry="4.5" fill="currentColor" fill-opacity=".15"/>',
+ vhs:'<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="8.5" cy="12" r="2"/><circle cx="15.5" cy="12" r="2"/><path d="M10.5 12h3"/>',
+ box:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 8h18M3 16h18"/>',
+ bw:'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>',
+ shake:'<rect x="7" y="6" width="10" height="12" rx="1.5"/><path d="M3 9l2 3-2 3M21 9l-2 3 2 3"/>',
+ rgb:'<circle cx="10" cy="10" r="5.5"/><circle cx="14" cy="14" r="5.5" fill="currentColor" fill-opacity=".18"/>',
+ glow:'<circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="8.5" stroke-dasharray="1.5 2.5"/>',
+ radial:'<circle cx="12" cy="12" r="2"/><path d="M12 2.5v5M12 16.5v5M2.5 12h5M16.5 12h5M5.3 5.3l3.5 3.5M15.2 15.2l3.5 3.5M18.7 5.3l-3.5 3.5M8.8 15.2l-3.5 3.5"/>',
+ strobe:'<rect x="3.5" y="4" width="7.5" height="16" rx="1.5" fill="currentColor" fill-opacity=".28"/><rect x="13" y="4" width="7.5" height="16" rx="1.5"/>',
+ invert:'<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3.5 20.5L20.5 3.5V18a2.5 2.5 0 0 1-2.5 2.5z" fill="currentColor"/>',
+ comic:'<path d="M4 5h16v11H9.5L5 20z"/><circle cx="9" cy="10.5" r=".9" fill="currentColor"/><circle cx="12" cy="10.5" r=".9" fill="currentColor"/><circle cx="15" cy="10.5" r=".9" fill="currentColor"/>',
+ mirror:'<path d="M12 3v18" stroke-dasharray="2 2"/><path d="M9.5 7L4 17h5.5zM14.5 7l5.5 10h-5.5z"/>'};
+const fmtIc84=r=>{const p=String(r).split(":").map(Number),w=p[0]||1,h=p[1]||1,s=18/Math.max(w,h),W=w*s,H=h*s;return'<rect x="'+((24-W)/2).toFixed(1)+'" y="'+((24-H)/2).toFixed(1)+'" width="'+W.toFixed(1)+'" height="'+H.toFixed(1)+'" rx="2.2"/>'};
+const nk84=v=>String(v==null?"":v).toLowerCase().replace(/[\s_-]/g,"");
+// what each choice does — [English name, Arabic name, what it does (English), (Arabic), icon]; an empty name keeps the page's own
+const PKV84={
+ format:{"21:9":["Cinema wide","سينما عريضة","The film look — wide shots and trailers.","مظهر الأفلام — اللقطات العريضة والإعلانات التشويقية."],
+  "16:9":["Landscape","أفقي","YouTube, TV and websites.","يوتيوب والتلفاز والمواقع."],
+  "4:3":["Classic","كلاسيكي","The old TV look, presentations.","مظهر التلفاز القديم والعروض التقديمية."],
+  "1:1":["Square","مربع","Feed posts and profile pictures.","منشورات الصفحة وصور الحساب."],
+  "4:5":["Portrait","طولي","Instagram and Facebook feed — fills more of the phone.","صفحة إنستغرام وفيسبوك — تملأ شاشة الجوال أكثر."],
+  "3:4":["Poster","ملصق","Posters, Pinterest and print.","الملصقات وبنترست والطباعة."],
+  "9:16":["Vertical","عمودي","TikTok, Reels, Shorts and Stories.","تيك توك وريلز وشورتس والستوري."]},
+ camera:{cinema:["","","Clean digital cinema — natural skin, smooth highlights.","سينما رقمية نظيفة — بشرة طبيعية وإضاءة ناعمة."],
+  film35:["","","Film grain and rich color — the classic movie look.","حبيبات الفيلم وألوان غنية — مظهر الأفلام الكلاسيكية."],
+  vintage:["","","Grainy, faded home-movie feeling.","إحساس الفيديو المنزلي القديم بحبيبات وألوان باهتة."],
+  phone:["","","Crisp and real — feels like social media.","واضحة وواقعية — مثل محتوى التواصل الاجتماعي."],
+  drone:["","","From the air — cities, deserts and coastlines.","من الجو — المدن والصحاري والسواحل."]},
+ lenstype:{spherical:["","","Clean and sharp with a round, natural background blur — the everyday film lens.","حادة ونظيفة مع ضبابية خلفية دائرية طبيعية — عدسة الأفلام اليومية."],
+  anamorphic:["","","The wide cinema look: oval blur and horizontal light streaks.","مظهر السينما العريض: ضبابية بيضاوية وخطوط ضوء أفقية."],
+  macro:["","","Very close detail — products, food, jewelry and textures.","تفاصيل قريبة جداً — المنتجات والطعام والمجوهرات والملمس."],
+  vintage:["","","Soft, warm and dreamy with a gentle glow — old-film feeling.","ناعمة ودافئة وحالمة بتوهج خفيف — إحساس الأفلام القديمة."]},
+ focal:{"14":["","","Ultra-wide: big places and a dramatic perspective.","عريضة جداً: الأماكن الكبيرة ومنظور درامي."],
+  "24":["","","Wide: the person inside their place.","عريضة: الشخص داخل مكانه."],
+  "35":["","","Natural storytelling — documentaries and street scenes.","سرد طبيعي — الوثائقيات ومشاهد الشارع."],
+  "50":["","","Close to how the eye sees — honest and simple.","قريبة مما تراه العين — صادقة وبسيطة."],
+  "85":["","","Portraits: flattering faces and a soft background.","البورتريه: وجوه أجمل وخلفية ناعمة."],
+  "135":["","","Telephoto: isolates the subject and pulls the background closer.","تيليفوتو: تعزل الشخص وتقرّب الخلفية."]},
+ ap:{"1.4":["","","Very blurry background — dreamy portraits and night scenes.","خلفية ضبابية جداً — بورتريه حالم ومشاهد ليلية."],
+  "2.8":["","","Soft background — the subject stands out.","خلفية ناعمة — يبرز الشخص."],
+  "5.6":["","","Balanced — the subject and the place are both clear.","متوازنة — الشخص والمكان واضحان."],
+  "11":["","","Everything sharp — landscapes, buildings and groups.","كل شيء حاد — الطبيعة والمباني والمجموعات."]},
+ move:{static:["","","The camera stays still — calm, the action speaks.","الكاميرا ثابتة — هدوء ويتكلم الحدث."],
+  pan:["","","Turns from side to side — shows a wide place.","تدور من جانب لآخر — تكشف مكاناً واسعاً."],
+  tilt:["","","Tilts up or down — reveals height.","تميل للأعلى أو الأسفل — تكشف الارتفاع."],
+  dollyin:["","","Moves toward the subject — builds focus and tension.","تقترب من الشخص — تزيد التركيز والتوتر."],
+  dollyout:["","","Moves away — reveals the whole scene.","تبتعد — تكشف المشهد كاملاً."],
+  zoomin:["","","Slowly gets closer — a gentle movement.","تقترب ببطء — حركة هادئة.",PIC84.zoomin],
+  crashzoom:["","","A fast zoom — surprise and energy.","تقريب سريع — مفاجأة وطاقة."],
+  dollyzoom:["","","The background stretches — the dizzy, vertigo feeling.","تتمدد الخلفية — إحساس الدوار."],
+  orbit:["","","Circles around the subject — heroes and products.","تدور حول الشخص — للأبطال والمنتجات."],
+  crane:["","","Rises up and over — grand openings and endings.","ترتفع فوق المشهد — افتتاحيات وخواتيم كبيرة."],
+  aerial:["","","High above — big landscapes.","من الأعلى — المناظر الواسعة."],
+  fpv:["","","A fast drone flying through spaces — thrilling.","درون سريع يطير عبر الأماكن — مثير."],
+  bullet:["","","Time freezes while the camera moves — action peaks.","يتجمد الزمن والكاميرا تتحرك — ذروة الأكشن."],
+  tracking:["","","Moves alongside the subject — follows the action.","تتحرك بجانب الشخص — تتبع الحدث."],
+  handheld:["","","Natural shake — real, documentary feeling.","اهتزاز طبيعي — إحساس واقعي ووثائقي."],
+  flyover:["","","Flies over the place.","تطير فوق المكان.",PIC84.flyover]},
+ light:{natural:["","","Soft daylight — true colors.","ضوء نهار ناعم — ألوان حقيقية."],
+  golden:["","","Warm low sun and long soft shadows — hopeful, romantic.","شمس دافئة منخفضة وظلال طويلة — متفائل ورومانسي."],
+  blue:["","","Cool twilight as city lights begin — calm, mysterious.","شفق بارد مع بداية أضواء المدينة — هادئ وغامض."],
+  studio:["","","Clean, even light — products and interviews.","ضوء نظيف ومتساوٍ — المنتجات والمقابلات."],
+  neon:["","","Magenta and cyan at night — music videos, city nights.","وردي وسماوي ليلاً — الفيديو الموسيقي وليالي المدينة."],
+  noir:["","","Black and white with hard shadows — mystery.","أبيض وأسود بظلال قوية — غموض."]},
+ style:{realistic:["","","Looks like a real camera filmed it.","كأنها صُوّرت بكاميرا حقيقية."],photo:["","","Looks like a real photograph.","كأنها صورة فوتوغرافية حقيقية."],
+  cinematic:["","","Film lighting and color, like a movie frame.","إضاءة وألوان الأفلام، كلقطة من فيلم."],still:["","","A frame from a film — moody light and color.","لقطة من فيلم — إضاءة وألوان معبّرة."],
+  anime:["","","Japanese animation: clean lines and bright colors.","أنمي ياباني: خطوط نظيفة وألوان زاهية."],
+  anim3d:["","","Smooth 3D, like animated films.","ثلاثي الأبعاد ناعم مثل أفلام الأنيميشن."],render3d:["","","A clean 3D render — characters and products.","ريندر ثلاثي الأبعاد نظيف — للشخصيات والمنتجات."],
+  anim2d:["","","A flat, hand-drawn cartoon.","رسوم كرتونية مسطحة مرسومة باليد."],clay:["","","Handmade clay figures, stop-motion feel.","مجسمات صلصال يدوية بإحساس التحريك بالإيقاف."],
+  comic:["","","Bold ink lines and printed dots.","خطوط حبر جريئة ونقاط طباعة.",PIC84.comic],watercolor:["","","Soft painted washes on paper.","ألوان مائية ناعمة على الورق."],
+  vintage:["","","Old film: grain and faded color.","فيلم قديم: حبيبات وألوان باهتة."],cyberpunk:["","","A neon future city at night.","مدينة مستقبلية بأضواء النيون ليلاً."],
+  illustration:["","","A drawn illustration for books and posts.","رسم توضيحي للكتب والمنشورات."],productshot:["","","A clean studio product photo.","صورة منتج نظيفة في الاستوديو."],
+  concept:["","","Painterly concept art for worlds and ideas.","فن مفاهيمي مرسوم للعوالم والأفكار."],portrait:["","","A flattering portrait of a face.","بورتريه جميل للوجه."]},
+ look:{none:["","","No color change.","بدون تغيير الألوان.",PIC84.none],teal:["","","Blockbuster: teal shadows, warm skin.","أفلام ضخمة: ظلال زرقاء مخضرة وبشرة دافئة."],
+  bleach:["","","Low color, high contrast — gritty.","ألوان قليلة وتباين عالٍ — قاسٍ."],warm:["","","Warm, cozy film tones.","ألوان فيلم دافئة ومريحة."],
+  noir:["","","Black and white, deep shadows.","أبيض وأسود وظلال عميقة."],moon:["","","A cool blue night.","ليل أزرق بارد."],golden:["","","Golden sunset warmth.","دفء الغروب الذهبي."],
+  matrix:["","","A green digital tint.","صبغة خضراء رقمية."],desert:["","","Sandy, sun-baked tones.","ألوان رملية مشمسة."],film:["","","Soft film colors.","ألوان فيلم ناعمة."],
+  cool:["","","Cool, clean blue tones.","ألوان زرقاء باردة ونظيفة."],vintage:["","","Faded, old-photo colors.","ألوان باهتة كالصور القديمة."],
+  vivid:["","","Bright, punchy colors.","ألوان زاهية وقوية."],fade:["","","Matte: lifted blacks, soft.","مطفي: أسود مرفوع وناعم."],cyber:["","","Neon magenta and cyan.","وردي وسماوي نيون."]},
+ effects:{grain:["","","The texture of real film.","ملمس الأفلام الحقيقية.",PIC84.grain],vig:["","","Darker edges draw the eye to the center.","أطراف أغمق تجذب العين للوسط.",PIC84.vig],
+  vhs:["","","Old video tape: soft, color bleed and lines.","شريط فيديو قديم: نعومة وتداخل ألوان وخطوط.",PIC84.vhs],glitch:["","","Digital breakup — tech and music moments.","تشويش رقمي — لحظات التقنية والموسيقى.",PIC84.glitch],
+  leak:["","","Warm light leaking in — dreamy, nostalgic.","ضوء دافئ يتسرّب — حالم وحنين.",PIC84.leak],box:["","","Black bars top and bottom — a cinema frame.","أشرطة سوداء أعلى وأسفل — إطار سينمائي.",PIC84.box],
+  bw:["","","Black and white — timeless and serious.","أبيض وأسود — خالد وجاد.",PIC84.bw],shake:["","","Camera shake — impact and energy.","اهتزاز الكاميرا — قوة وطاقة.",PIC84.shake],
+  pulse:["","","Zooms on the beat — music edits.","تقريب مع الإيقاع — مونتاج الموسيقى."],rgb:["","","The colors split apart — modern, glitchy.","انفصال الألوان — حديث ومشوّش.",PIC84.rgb],
+  glow:["","","A soft glow on bright parts — dreamy.","توهج ناعم على الأجزاء المضيئة — حالم.",PIC84.glow],radial:["","","Blur from the center out — speed and focus.","ضبابية من المركز للخارج — سرعة وتركيز.",PIC84.radial],
+  pixel:["","","Big pixels — hide something, or a retro game look.","بكسلات كبيرة — لإخفاء شيء أو مظهر الألعاب القديمة."],mirror:["","","Mirrors the picture — symmetry.","يعكس الصورة — تماثل.",PIC84.mirror],
+  strobe:["","","Fast flashing — party energy (use with care).","وميض سريع — طاقة الحفلات (استخدمه بحذر).",PIC84.strobe],invert:["","","Reverses the colors — surreal moments.","يعكس الألوان — لحظات سريالية.",PIC84.invert],
+  comic:["","","Comic-book ink and dots.","حبر ونقاط القصص المصوّرة."]},
+ overlay:{rain:["","","Falling rain over the clip.","مطر يتساقط فوق المقطع.",PIC84.rain],storm:["","","Rain with lightning flashes.","مطر مع ومضات برق.",PIC84.storm],
+  lightning:["","","Lightning flashes.","ومضات برق.",PIC84.lightning],snow:["","","Gentle snowfall.","ثلج يتساقط بهدوء.",PIC84.snow],fog:["","","Soft fog drifting by.","ضباب ناعم يتحرك.",PIC84.fog],
+  embers:["","","Fire sparks rising.","شرر نار يتصاعد.",PIC84.embers],confetti:["","","Celebration confetti.","قصاصات احتفال.",PIC84.confetti],bokeh:["","","Soft out-of-focus lights.","أضواء ناعمة خارج التركيز.",PIC84.bokeh],
+  leak:["","","A warm light leak.","تسرّب ضوء دافئ.",PIC84.leak],glitch:["","","Digital glitch bursts.","ومضات تشويش رقمي.",PIC84.glitch],dust:["","","Dust floating in the light.","غبار يطفو في الضوء.",PIC84.dust],
+  rays:["","","Sun rays across the frame.","أشعة شمس عبر الإطار.",PIC84.rays],flash:["","","A camera flash.","وميض كاميرا.",PIC84.camflash],hearts:["","","Floating hearts.","قلوب تطفو.",PIC84.hearts]},
+ transition:{cut:["","","Straight to the next shot — fast and clean.","مباشرة إلى اللقطة التالية — سريع ونظيف.",PIC84.cut],fade:["","","One shot melts into the next — smooth.","لقطة تذوب في التالية — سلس.",PIC84.fade],
+  dip:["","","Fades to black, then back — time passes.","يختفي للأسود ثم يعود — مرور الوقت.",PIC84.dip],slide:["","","The next picture slides in.","الصورة التالية تنزلق للداخل.",PIC84.slide],
+  wipe:["","","A line wipes to the next shot.","خط يمسح نحو اللقطة التالية.",PIC84.wipe],whip:["","","A fast blurred swipe — energy.","مسحة سريعة ضبابية — طاقة.",PIC84.whip],
+  match:["","","Matches a shape or a move between shots.","يطابق شكلاً أو حركة بين اللقطتين.",PIC84.match],zoom:["","","Zooms through into the next shot.","يقرّب عبوراً إلى اللقطة التالية.",PIC84.zoomthru],
+  spin:["","","Spins into the next shot.","يدور إلى اللقطة التالية.",PIC84.spin],flash:["","","A white flash between shots.","وميض أبيض بين اللقطتين.",PIC84.burst],
+  glitch:["","","A digital glitch between shots.","تشويش رقمي بين اللقطتين.",PIC84.glitch],blurx:["","","Blurs out, then sharp again.","يضبّب ثم يتضح.",PIC84.blurx]},
+ textfx:{none:["","","Plain text.","نص عادي."],neon:["","","A glowing neon sign.","لافتة نيون مضيئة."],outline:["","","Hollow letters with an outline.","حروف مفرّغة بإطار."],
+  gradient:["","","A color gradient fill.","تعبئة بتدرّج لوني."],extrude:["","","3D letters with depth.","حروف ثلاثية الأبعاد بعمق."],glow:["","","A soft glow around the letters.","توهج ناعم حول الحروف."],
+  marker:["","","A highlighter behind the words.","قلم تحديد خلف الكلمات."]}};
+const PKA84={move:{still:"static",dolly:"dollyin",crash:"crashzoom",zoom:"zoomin",fly:"flyover",orbit360:"orbit"},style:{"3d":"render3d"},transition:{none:"cut"}};
+// the fields and where they are on the pages (the same field on every page uses the same sheet)
+const PKF84=[
+ ["format",["Format","الأبعاد"],['[data-set="draft.aspect"]','[data-set="img.aspect"]','[data-set="story.aspect"]','[data-set="cin.aspect"]','[data-set="crew.brief.aspect"]','[data-set="rec83.aspect"]','[data-set="ss83.aspect"]','[data-act="drw-ar"]','[data-act="ugc-fmt"]','[data-act="uni-ar"]']],
+ ["camera",["Camera","الكاميرا"],['[data-set="cin.cam"]']],
+ ["lens",["Lens","العدسة"],null,[[["Lens type","نوع العدسة"],'[data-set="cin.lens"]',"lenstype"],[["Focal length","البعد البؤري"],'[data-set="cin.focal"]',"focal"],[["Aperture","فتحة العدسة"],'[data-set="cin.ap"]',"ap"]]],
+ ["move",["Camera move","حركة الكاميرا"],['[data-set="draft.camera"]','[data-set="chapter.camera"]','[data-set="cin.move"]','[data-set="ss83.motion"]','[data-act="w3-move"]']],
+ ["light",["Light","الإضاءة"],['[data-set="cin.light"]']],
+ ["style",["Style","الأسلوب"],['[data-set="draft.style"]','[data-set="img.style"]','[data-set="story.style"]','[data-set="char.art"]','[data-set="drw.style"]','[data-set="sketch.style"]']],
+ ["look",["Look","المظهر اللوني"],['[data-set="tools.grade.preset"]','[data-act="edx-look"]']],
+ ["effects",["Effects","المؤثرات"],['[data-toggle^="tools.edit.fx."]','[data-act="edx-vfx"]'],null,{multi:1}],
+ ["overlay",["Weather & light","الطقس والضوء"],['[data-act="edv-add"]'],null,{add:1}],
+ ["transition",["Transition","الانتقال"],['[data-set="ss83.tr"]','[data-set="edclip.trans"]']],
+ ["textfx",["Text effect","تأثير النص"],['[data-act="edx-tfx"]']]];
+const PKBOX84=".tiles,.seg,.chips,.toggles,.vfxgrid,.ugcfmts,.hfratios";
+const box84=b=>b.closest(PKBOX84)||b.parentElement;
+const val84=b=>{const d=b.dataset;return d.val!=null?d.val:d.v!=null?d.v:d.toggle?d.toggle.split(".").pop():d.n!=null?d.n:""};
+const reg84=(sub,v)=>{const R=PKV84[sub]||{},k=nk84(v),a=(PKA84[sub]||{})[k];return R[k]||R[String(v)]||(a&&R[a])||null};
+const lab84=b=>((b.querySelector(".lb")||b).textContent||"").replace(/[\u2600-\u27bf\ufe0f]|[\ud83c-\udbff][\udc00-\udfff]/g,"").replace(/\s+/g," ").trim();
+const on84=b=>b.getAttribute("aria-pressed")==="true"||b.getAttribute("aria-checked")==="true";
+function opt84(b,sub){const v=val84(b),R=reg84(sub,v),g=b.querySelector(".gl"),s=b.querySelector("svg");
+  const name=sub==="format"?v+(R?" · "+L(R[0],R[1]):""):(R&&R[0]?L(R[0],R[1]):lab84(b));
+  const icon=sub==="format"?svg(fmtIc84(v)):R&&R[4]?svg(R[4]):g&&!/[\u2600-\u27bf\ud83c-\udbff]/.test(g.textContent||"")?g.innerHTML:s?s.outerHTML:svg('<circle cx="12" cy="12" r="3.5"/>');
+  return{b,v,name,short:sub==="format"?v:name,icon,desc:R?L(R[2],R[3]):"",on:on84(b)}}
+function lbl84(bx){let p=bx.previousElementSibling;return p&&p.matches(".lbl,.side-h,h2.sec,h3.sec,label.lbl")?p:null}
+// the chip that replaces a field's buttons on a page
+function chip84(E){const parts=E.parts.map(p=>p.opts.filter(o=>o.on));let val,icon;
+  if(E.o.add){val=L("Add","أضف");icon=svg(PIC84.fx)}
+  else if(E.o.multi){const on=parts[0];val=!on.length?L("None","بدون"):on.length<3?on.map(o=>o.short).join(" · "):on.length+L(" on"," مفعّلة");icon=on[0]?on[0].icon:svg(PIC84.fx)}
+  else{val=parts.map((on,k)=>(on[0]||E.parts[k].opts[0]||{short:""}).short).join(" · ");icon=(parts[0][0]||E.parts[0].opts[0]||{}).icon||svg(PIC84.fx)}
+  return'<button type="button" class="pk84c" data-pk84="'+E.f+'" data-key="'+esc(E.key)+'" aria-haspopup="dialog" aria-label="'+esc(L(E.t[0],E.t[1])+": "+val)+'"><span class="pk84ci">'+icon+'</span><span class="pk84k">'+esc(L(E.t[0],E.t[1]))+'</span><span class="pk84v">'+esc(val)+"</span>"+svg('<path d="M6 9l6 6 6-6"/>')+"</button>"}
+function pk84apply(root){root=root||document.getElementById("main");if(!root)return;
+  PKF84.forEach(([f,t,qs,parts,o])=>{const P=parts||[[t,qs.join(","),f]];
+    const firsts=[...new Set([...root.querySelectorAll(P[0][1])].filter(b=>!b.closest(".pk84src,.pk84s,.modal")).map(box84))];
+    firsts.forEach(bx=>{if(!bx||!bx.isConnected||bx.closest(".pk84src"))return;const scope=bx.closest(".panel,.view,.fillwrap")||root;
+      const boxes=[bx].concat(P.slice(1).map(p=>{const b=[...scope.querySelectorAll(p[1])].find(x=>!x.closest(".pk84src"));return b?box84(b):null}));
+      const E={f,t,o:o||{},parts:[]};P.forEach((p,k)=>{const B=boxes[k];if(!B)return;E.parts.push({t:p[0],sub:p[2]||f,box:B,opts:[...B.querySelectorAll(p[1])].map(b=>opt84(b,p[2]||f))})});
+      if(!E.parts.length||!E.parts[0].opts.length)return;
+      const b0=E.parts[0].opts[0].b;E.key=f+"|"+(b0.dataset.set||b0.dataset.act||b0.dataset.toggle||"");
+      const tmp=document.createElement("div");tmp.innerHTML=chip84(E);const chip=tmp.firstChild;chip.__pk=E;
+      const src=document.createElement("div");src.className="pk84src";src.hidden=true;const labs=E.parts.map(p=>lbl84(p.box));
+      bx.parentNode.insertBefore(chip,bx);chip.after(src);
+      E.parts.forEach((p,k)=>{if(labs[k])src.appendChild(labs[k]);src.appendChild(p.box)})})});
+  // the chips of one form share one bar, where the first of them was (like a prompt bar)
+  // (only inside one form panel; elsewhere — the chapter story's columns — a chip stays where its choice was)
+  const forms=new Map();root.querySelectorAll(".pk84c").forEach(c=>{const f=c.closest(".panel");
+    if(!f){if(!c.parentNode.classList.contains("pk84row")){const row=document.createElement("div");row.className="pk84row";c.parentNode.insertBefore(row,c);
+      let n=c;while(n&&n.classList&&(n.classList.contains("pk84c")||n.classList.contains("pk84src"))){const nx=n.nextElementSibling;row.appendChild(n);n=nx}}return}
+    if(!forms.has(f))forms.set(f,[]);forms.get(f).push(c)});
+  forms.forEach((cs,f)=>{let row=[...f.querySelectorAll(".pk84row")].find(r=>r.closest(".panel")===f);
+    if(!row){row=document.createElement("div");row.className="pk84row";let host=cs[0];while(host.parentNode&&host.parentNode!==f)host=host.parentNode;host.parentNode.insertBefore(row,host)}
+    cs.forEach(c=>{if(c.parentNode===row)return;const src=c.nextElementSibling&&c.nextElementSibling.classList.contains("pk84src")?c.nextElementSibling:null;let up=c.parentNode;row.appendChild(c);if(src)row.appendChild(src);
+      while(up&&up!==f&&up!==row&&!up.children.length&&!(up.textContent||"").trim()){const nx=up.parentNode;up.remove();up=nx}})});
+  if(PK84.open)pk84sheet(PK84.open,true)}
+const PK84={open:null};
+function pk84find(key){const c=[...document.querySelectorAll("#main .pk84c")].find(x=>x.dataset.key===key);return c&&c.__pk}
+function pk84sheet(key,refresh){const E=pk84find(key);const root=$("#modalRoot");
+  if(!E){if(refresh&&root.querySelector(".pk84s"))root.innerHTML="";PK84.open=null;return}
+  if(refresh&&!root.querySelector('.pk84s[data-key="'+CSS.escape(key)+'"]')){PK84.open=null;return}
+  const keep=refresh?(root.querySelector(".pk84s")||{}).scrollTop:0;
+  const body=E.parts.map(p=>(E.parts.length>1?'<div class="pk84h">'+esc(L(p.t[0],p.t[1]))+"</div>":"")+'<div class="pk84g'+(p.sub==="format"?" pk84fmt":"")+'" role="group" aria-label="'+esc(L(p.t[0],p.t[1]))+'">'+p.opts.map(o=>{
+      const at=[...o.b.attributes].filter(a=>a.name.startsWith("data-")&&!a.name.startsWith("data-pk84")).map(a=>a.name+'="'+esc(a.value)+'"').join(" ");
+      return'<button type="button" class="pk84o" '+at+' aria-pressed="'+o.on+'"><span class="pk84oi">'+o.icon+"</span><b>"+esc(o.name)+"</b>"+(o.desc?"<small>"+esc(o.desc)+"</small>":"")+(o.on?'<span class="pk84ok">'+ic("check")+"</span>":"")+"</button>"}).join("")+"</div>").join("")+
+    (E.parts.length>1||E.o.multi?'<div class="pk84done"><button class="btn primary" data-act="close-sheet">'+L("Done","تم")+"</button></div>":"");
+  hfSheet(L(E.t[0],E.t[1]),'<div class="pk84body">'+body+"</div>");const s=root.querySelector(".sheet");if(s){s.classList.add("pk84s");s.dataset.key=key;s.dataset.f=E.f}
+  PK84.open=key;if(refresh){if(s&&keep)s.scrollTop=keep}else{const f=root.querySelector('.pk84o[aria-pressed="true"]')||root.querySelector(".pk84o");if(f)f.focus({preventScroll:false})}}
+window.addEventListener("click",e=>{const t=e.target;if(!t||!t.closest)return;
+  const c=t.closest(".pk84c");if(c){e.preventDefault();e.stopImmediatePropagation();pk84sheet(c.dataset.key);return}
+  const o=t.closest(".pk84o");if(o){const s=o.closest(".pk84s"),key=s&&s.dataset.key,E=key&&pk84find(key),one=!E||(E.parts.length<2&&!E.o.multi);
+    if(one)PK84.open=null;   // one choice: the sheet closes; several (lens, effects): it stays open and shows the new state
+    setTimeout(()=>{if(one){if($("#modalRoot .pk84s"))$("#modalRoot").innerHTML=""}else pk84sheet(key,true)},0);return}
+  if(t.closest('[data-act="close-sheet"]')||t.matches(".sheetwrap"))PK84.open=null},true);
+renderView=(o=>function(){const r=o.apply(this,arguments);try{pk84apply()}catch(err){console.warn("pk84",err)}return r})(renderView);
+// parts of a page that redraw themselves (the editor's side panel) get the same chips
+(()=>{let q=false;const run=()=>{q=false;try{pk84apply()}catch(err){}};const mo=new MutationObserver(ms=>{if(q)return;if(ms.some(m=>[...m.addedNodes].some(n=>n.nodeType===1&&(n.matches&&(n.matches(PKBOX84)||n.querySelector&&n.querySelector(PKBOX84))))))
+  {q=true;queueMicrotask(run)}});const go84=()=>{const m=document.getElementById("main");if(m)mo.observe(m,{childList:true,subtree:true});else setTimeout(go84,200)};go84()})();
+// the home prompt bar's format sheet uses the same tiles
+if(typeof hfRatioSheet==="function")hfRatioSheet=(o=>function(){o.apply(this,arguments);const g=$("#modalRoot .hfratios");if(!g)return;
+  g.className="pk84g pk84fmt";g.innerHTML=[...g.querySelectorAll("button")].map(b=>{const x=opt84(b,"format");const at=[...b.attributes].filter(a=>a.name.startsWith("data-")).map(a=>a.name+'="'+esc(a.value)+'"').join(" ");
+    return'<button type="button" class="pk84o" '+at+' aria-pressed="'+x.on+'"><span class="pk84oi">'+x.icon+"</span><b>"+esc(x.name)+"</b><small>"+esc(x.desc)+"</small>"+(x.on?'<span class="pk84ok">'+ic("check")+"</span>":"")+"</button>"}).join("");
+  const s=$("#modalRoot .sheet");if(s)s.classList.add("pk84s")})(hfRatioSheet);
+(()=>{const st=document.createElement("style");st.id="v84css";st.textContent=`
+.pk84row{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 6px;min-width:0}
+.pk84c{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:3px 11px 3px 4px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:inherit;font-size:13px;max-width:100%;min-width:0;cursor:pointer;text-align:start;transition:border-color .15s,background .15s}
+.pk84c:hover{border-color:color-mix(in srgb,var(--lime) 55%,var(--line))}
+.pk84c:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+.pk84c .pk84ci{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--panel);border:1px solid var(--line);flex:none}
+.pk84c .pk84ci svg,.pk84c .pk84ci .dotc{width:17px;height:17px}
+.pk84c .pk84k{color:var(--mute);font-size:12px;white-space:nowrap;flex:none}
+.pk84c .pk84v{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pk84c>svg:last-child{width:14px;height:14px;opacity:.55;flex:none}
+.pk84src{display:none!important}
+.sheet.pk84s{width:min(820px,100%)}
+.pk84s .pk84h{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin:16px 0 8px}
+.pk84s .pk84h:first-child{margin-top:2px}
+.pk84g{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:8px}
+.pk84o{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:12px 12px 13px;border:1px solid var(--line);border-radius:14px;background:var(--panel2);color:var(--text);font:inherit;text-align:start;cursor:pointer;min-width:0;transition:border-color .15s,background .15s}
+.pk84o:hover{border-color:color-mix(in srgb,var(--lime) 50%,var(--line))}
+.pk84o:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+.pk84o .pk84oi{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:var(--panel);border:1px solid var(--line)}
+.pk84o .pk84oi svg{width:23px;height:23px}
+.pk84o .pk84oi .dotc{width:22px;height:22px}
+.pk84o b{font-size:14px;font-weight:600;line-height:1.25}
+.pk84o small{font-size:12px;line-height:1.45;color:var(--mute)}
+.pk84o[aria-pressed="true"]{border-color:var(--lime);background:color-mix(in srgb,var(--lime) 13%,var(--panel2))}
+.pk84o[aria-pressed="true"] .pk84oi{border-color:color-mix(in srgb,var(--lime) 60%,var(--line));color:var(--lime-ink)}
+.pk84ok{position:absolute;top:10px;inset-inline-end:10px;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--lime);color:#10130e}
+.pk84ok svg{width:12px;height:12px}
+.pk84g.pk84fmt .pk84oi svg{width:26px;height:26px}
+.pk84done{position:sticky;bottom:-18px;display:flex;justify-content:flex-end;margin:14px -18px -18px;padding:12px 18px;background:var(--panel);border-top:1px solid var(--line)}
+@media (max-width:600px){.pk84g{grid-template-columns:repeat(2,minmax(0,1fr))}.pk84o{padding:10px}.pk84o .pk84oi{width:38px;height:38px}.pk84c{min-height:40px}
+  .pk84done{bottom:calc(-18px - env(safe-area-inset-bottom,0px));padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}}
+@media (max-width:600px){.pk84row{gap:6px}.pk84c{gap:6px;padding:3px 10px 3px 4px;font-size:12.5px}.pk84c .pk84ci{width:28px;height:28px}.pk84c .pk84ci svg{width:15px;height:15px}.pk84c .pk84k{font-size:11.5px}}
+.pk84oi .gsw,.pk84ci .gsw{display:block;width:24px;height:24px;border-radius:50%}
+.pk84ci .gsw{width:18px;height:18px}
 `;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
