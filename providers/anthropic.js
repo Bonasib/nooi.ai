@@ -4,13 +4,14 @@
 //   LLM_API_KEY=<your key>   LLM_MODEL=<model name from your Qwen console>
 import { cfg } from "../lib/settings.js";
 import { nvOn, nvChat, nvCfg } from "./nvidia.js";
+import { localOn, localChat, localInfo } from "./localtext.js";
 let PREF = null;
 const TXT = () => { if (PREF === "claude") { const c = cfg("claude"); if (c.apiKey) return { base: "https://api.anthropic.com", key: c.apiKey, model: c.model, provider: "anthropic" }; } const q = cfg("qwentext"); if (q.apiKey) return { base: q.baseUrl || "https://token-plan.maas.qwencloudapi.com/apps/anthropic", key: q.apiKey, model: q.model, provider: "qwen" }; const c = cfg("claude"); if (c.apiKey) return { base: "https://api.anthropic.com", key: c.apiKey, model: c.model, provider: "anthropic" }; return null; };
 const BASE = () => TXT()?.base || (process.env.LLM_BASE_URL || "https://api.anthropic.com").replace(/\/+$/, "").replace(/\/v1\/messages$/, "");
 const KEY = () => TXT()?.key || process.env.LLM_API_KEY || process.env.ANTHROPIC_API_KEY || "";
 const claudeOrQwen = () => !!KEY() && (!!TXT()?.model || !process.env.LLM_BASE_URL || !!process.env.LLM_MODEL || TXT()?.provider === "anthropic");
-export const llmConfigured = () => nvOn("text") || claudeOrQwen();
-export const llmInfo = () => nvOn("text") ? { provider: "nvidia", model: nvCfg().text, base: nvCfg().chat } : ({
+export const llmConfigured = () => localOn() || nvOn("text") || claudeOrQwen();
+export const llmInfo = () => localOn() ? localInfo() : nvOn("text") ? { provider: "nvidia", model: nvCfg().text, base: nvCfg().chat } : ({
   provider: TXT()?.provider || process.env.LLM_PROVIDER || (process.env.LLM_BASE_URL ? (/qwen/i.test(process.env.LLM_BASE_URL) ? "qwen" : "custom") : "anthropic"),
   model: TXT()?.model || process.env.LLM_MODEL || "claude-sonnet-5",
   base: BASE()
@@ -18,6 +19,10 @@ export const llmInfo = () => nvOn("text") ? { provider: "nvidia", model: nvCfg()
 // Model per tier — cheap for small jobs, strongest for hard ones (story, storyboard, rare languages, site analysis)
 export const modelFor = (tier) => TXT()?.model && !process.env.LLM_MODEL_FAST && !process.env.LLM_MODEL_STRONG ? TXT().model : tier === "quick" ? (process.env.LLM_MODEL_FAST || process.env.LLM_MODEL) : tier === "complex" ? (process.env.LLM_MODEL_STRONG || process.env.LLM_MODEL) : process.env.LLM_MODEL;
 export async function llm(prompt, opts = {}) {
+  // your own text AI (Gemma …) first when it is set; the others take over if it fails
+  if (localOn() && !opts.noLocal && !(opts.provider === "claude" || opts.provider === "qwen") && !(opts.images?.length && !cfg("localtext").vision)) {
+    try { return await localChat(prompt, { system: opts.system, maxTokens: Math.min(opts.maxTokens || 4000, 16000), timeoutMs: opts.timeoutMs || 120000, images: opts.images }); }
+    catch (e) { if (!nvOn("text") && !claudeOrQwen()) throw e; console.warn("Local text AI failed → the next text AI:", e.message.slice(0, 160)); } }
   // NVIDIA AI runs the site's text & vision when it's switched on; Claude / Qwen take over if NVIDIA fails
   if (nvOn(opts.images?.length ? "vision" : "text") && !(opts.provider === "claude" || opts.provider === "qwen")) {
     try { return await nvChat(prompt, { images: opts.images, system: opts.system, maxTokens: Math.min(opts.maxTokens || 4000, 16000), timeoutMs: opts.timeoutMs || 120000 }); }

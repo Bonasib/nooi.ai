@@ -27,7 +27,7 @@ import { LIMITS, planOf } from "./lib/plans.js";
 import { refillPlans, priceTable, ENGINE_COST, engineCost, basePrice, CREDIT_FLOOR_USD, priceFactor } from "./lib/billing.js";
 import { S as platform, featureOn, configured, biz } from "./lib/settings.js";
 import { modelNames, publicRegistry } from "./lib/models.js";
-import { createToken, listTokens, revokeToken, userFromToken } from "./lib/tokens.js";
+import { createToken, listTokens, revokeToken, userFromToken, updateToken, tokenRules, tokenFor, tokenCtx } from "./lib/tokens.js";
 import { handleMcp } from "./lib/mcp.js";
 import { verify, canSendSignInLinks, signInLink, customTokenForEmail } from "./lib/auth.js";
 import { newCode, checkCode } from "./lib/otp.js";
@@ -38,6 +38,7 @@ import { registerLearn } from "./lib/learn.js";
 import { registerVss, vssServer } from "./lib/vss.js";
 import { registerLocalize, locEngines } from "./lib/localize.js";
 import { registerAgents } from "./lib/agents.js";
+import { registerSlideshow } from "./lib/slideshow.js";
 import { registerMotion } from "./lib/motion.js";
 import { registerSketch, rtEngine } from "./lib/sketch.js";
 import { registerWorldAI } from "./lib/worldai.js";
@@ -181,6 +182,7 @@ app.post("/v1/billing/webhook/:provider", wrap(async (req, res) => {
 app.get("/v1/billing/catalog", (_, res) => res.json(CATALOG));
 
 registerAdmin(app, requireUser);
+registerSlideshow(app, requireUser);
 // admin: engine cost per model → credits charged → margin; costs and margin are editable (prices recompute)
 const PR_NAMES = { ...modelNames(), voice: "Voice", music: "Music", sfx: "Sound effect", bg: "Background removal", finish: "Upscale", lipsync: "Lip-sync avatar", locstt: "Speech-to-text · per min", loctr: "Dubbing translation · per min", loctts: "Natural voices · per min", locel: "ElevenLabs Dubbing · per min", loccamb: "CAMB.AI dubbing · per min", locnv: "NVIDIA Content Localization · per min" };
 const pricingRows = () => Object.entries(ENGINE_COST).flatMap(([g, m]) => Object.keys(m).map((id) => { const cost = engineCost(g, id), credits = basePrice(g, id), rev = credits * CREDIT_FLOOR_USD;
@@ -241,6 +243,8 @@ setInterval(() => testAll().catch(() => {}), 15 * 60e3);
 // ---- API tokens (MCP, Blender, Unity)
 app.get("/v1/tokens", requireUser, (req, res) => res.json({ tokens: listTokens(req.user.uid) }));
 app.post("/v1/tokens", requireUser, (req, res) => { if (req.user.viaToken) return res.status(403).json({ error: "Create tokens from the app" }); if (!LIMITS[planOf(user(req.user.uid))].api) return res.status(402).json({ error: "API & MCP access is part of the Studio plan" }); res.json({ token: createToken(req.user.uid, req.body.name) }); });
+// a connection's rules (read-only, daily limit, approve its posts) — changed from the app only, never by a connection itself
+app.put("/v1/tokens/:id", requireUser, (req, res) => { if (req.user.viaToken) return res.status(403).json({ error: "Change connections from the app" }); const k = updateToken(req.user.uid, req.params.id, req.body || {}); k ? res.json({ ok: true, token: listTokens(req.user.uid).find((t) => t.id === k.id) }) : res.status(404).json({ error: "Not found" }); });
 app.delete("/v1/tokens/:id", requireUser, (req, res) => { revokeToken(req.user.uid, req.params.id); res.json({ ok: true }); });
 
 // ---- Assets & jobs list (library sync, Blender/Unity)
@@ -255,20 +259,25 @@ app.post("/mcp", async (req, res) => {
   const h = req.headers.authorization || ""; const t = h.startsWith("Bearer ") ? h.slice(7) : req.query.token;
   const u = userFromToken(t) || (String(t || "").startsWith("nooi_") ? null : await verify(t)); if (!u) return res.status(401).set("WWW-Authenticate", "Bearer").json({ jsonrpc: "2.0", id: null, error: { code: -32001, message: "Invalid or missing nooi.ai token" } });
   const body = req.body; const msgs = Array.isArray(body) ? body : [body];
-  const out = (await Promise.all(msgs.map((m) => handleMcp(u.uid, m)))).filter(Boolean);
+  const all = () => Promise.all(msgs.map((m) => handleMcp(u.uid, m, u)));   // a connection's charges count toward its daily limit
+  const out = (await (u.viaToken ? tokenCtx.run(u, all) : all())).filter(Boolean);
   if (!out.length) return res.status(202).end();
   res.json(Array.isArray(body) ? out : out[0]);
 });
 app.get("/mcp", (_, res) => res.status(405).set("Allow", "POST").end());
 
 // Posts & scheduling
-app.get("/v1/posts", requireUser, (req, res) => res.json({ posts: Object.values(user(req.user.uid).posts).map((p) => ({ id: p.id, clientId: p.clientId, status: p.status, error: p.error || "", at: p.at })) }));
+app.get("/v1/posts", requireUser, (req, res) => res.json({ posts: Object.values(user(req.user.uid).posts).map((p) => ({ id: p.id, clientId: p.clientId, status: p.status, error: p.error || "", at: p.at, ...(p.status === "awaiting" ? { caption: p.caption, platforms: p.platforms, mediaUrl: p.mediaUrl, via: p.via || "api" } : {}) })) }));
+// posts a connection (MCP / API token) scheduled wait for the owner: approve → scheduled, reject → removed. A connection can't approve.
+app.post("/v1/posts/:id/:op(approve|reject)", requireUser, (req, res) => { if (req.user.viaToken) return res.status(403).json({ error: "Only you can approve posts, from the app" }); const U = user(req.user.uid), p = U.posts[req.params.id];
+  if (!p || p.status !== "awaiting") return res.status(404).json({ error: "Not waiting for approval" }); if (req.params.op === "reject") delete U.posts[p.id]; else { p.status = "scheduled"; p.approved = Date.now(); if (!p.at) p.at = new Date().toISOString(); } save(); res.json({ ok: true, status: req.params.op === "reject" ? "removed" : "scheduled" }); });
 app.post("/v1/posts", requireUser, wrap(async (req, res) => {
   const u = user(req.user.uid), b = req.body;
   let post = Object.values(u.posts).find((p) => p.clientId === b.id);
   if (!post) { post = { id: uid(), clientId: b.id }; u.posts[post.id] = post; }
-  Object.assign(post, { title: b.title || "", caption: b.caption || "", hashtags: b.hashtags || "", platforms: b.platforms || [], format: b.format || "post", mediaUrl: b.mediaUrl || null, at: b.at || null, status: b.publishNow ? "publishing" : b.status === "draft" ? "draft" : "scheduled", error: "" });
-  save(); if (b.publishNow) runPost(u, post).catch(() => {});
+  const wait = req.user.viaToken && tokenRules(tokenFor(req.user)).approvePosts && b.status !== "draft";   // a connection's post waits for the owner
+  Object.assign(post, { title: b.title || "", caption: b.caption || "", hashtags: b.hashtags || "", platforms: b.platforms || [], format: b.format || "post", mediaUrl: b.mediaUrl || null, at: b.at || null, status: wait ? "awaiting" : b.publishNow ? "publishing" : b.status === "draft" ? "draft" : "scheduled", ...(wait ? { via: "api" } : {}), error: "" });
+  save(); if (b.publishNow && !wait) runPost(u, post).catch(() => {});
   res.json({ id: post.id, status: post.status });
 }));
 app.delete("/v1/posts/:id", requireUser, (req, res) => { delete user(req.user.uid).posts[req.params.id]; save(); res.json({ ok: true }); });

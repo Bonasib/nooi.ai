@@ -24,6 +24,13 @@ const fullPrompt = (p) => [p.prompt, p.character && `Main character: ${p.charact
 const startImg = (p) => p.inputs?.startImage || p.inputs?.vStart || (p.meta?.refs || []).find((r) => r.url)?.url || undefined;
 const refImg = (p) => p.inputs?.iRef || p.inputs?.skImg || p.inputs?.chRef || p.inputs?.dmIn || p.inputs?.eRef || undefined;
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+// what the engine received, for the person who made it: the words and the settings (never keys or file addresses)
+const URLK = /^(image_urls|input_urls|image_input|reference_image_urls|reference_image|video_urls|reference_video_urls|video_list|imageUrls|fileUrls|first_frame_url|last_frame_url|image_url|video_url|audio_url|image)$/;
+export function sentView(input) { const o = {}; let pics = 0, vids = 0;
+  for (const [k, v] of Object.entries(input || {})) { if (v == null || v === "") continue;
+    if (URLK.test(k)) { const n = Array.isArray(v) ? v.length : 1; if (/video/.test(k)) vids += n; else pics += n; continue; }
+    if (/^(prompt|text)$/.test(k)) o.prompt = String(v).slice(0, 4000); else if (/^(duration|aspect_ratio|ratio|image_size|aspectRatio|resolution|mode|quality|character_orientation|sound|generate_audio|negative_prompt|generationType|background_source)$/.test(k)) o[k] = typeof v === "object" ? JSON.stringify(v).slice(0, 80) : v; }
+  if (pics) o.pictures = pics; if (vids) o.videos = vids; return o; }
 const drop = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && v !== ""));
 
 // Admin-supplied per-model input overrides: JSON object keyed by model id, e.g. {"kling-3.0/video":{"mode":"pro"}}
@@ -70,6 +77,9 @@ export function kieInput(model, p) {
   if (IMAGE_KINDS.has(kind)) {
     const ref = refImg(p) ? absUrl(refImg(p)) : undefined, prompt = fullPrompt(p);
     const more = ["iRef2", "iRef3", "iRef4"].map((k) => inp[k]).filter(Boolean).map(absUrl);   // extra angles of the same face (avatars)
+    if (/^nano-banana-2-lite/.test(m)) return drop({ prompt, image_urls: ref ? [ref, ...more] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "16:9", "9:16", "4:3", "3:4", "4:5", "5:4", "2:3", "3:2", "21:9"]) });
+    if (/^z-image/.test(m)) return { prompt: prompt.slice(0, 1000), aspect_ratio: snapAR(p.aspect, ["1:1", "4:3", "3:4", "16:9", "9:16"]), nsfw_checker: true };
+    if (/^seedream\/5-lite/.test(m)) return drop({ prompt, image_urls: ref ? [ref] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "4:3", "3:4", "16:9", "9:16", "2:3", "3:2", "21:9"]), quality: /4k/i.test(p.meta?.res || "") ? "high" : "basic" });
     if (/nano-banana-(2|pro)/.test(m)) return drop({ prompt, image_input: ref ? [ref, ...more] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"]), resolution: pickRes(p, ["1K", "2K", "4K"], "2K") });
     if (/nano-banana-edit/.test(m)) return drop({ prompt, image_urls: ref ? [ref] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"]) });
     if (/^gpt-image-2/.test(m)) return drop({ prompt, input_urls: /image-to-image/.test(m) && ref ? [ref] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "3:2", "2:3", "4:3", "3:4", "5:4", "4:5", "9:16", "16:9"]), resolution: pickRes(p, ["1K", "2K", "4K"], "2K") });
@@ -83,11 +93,20 @@ export function kieInput(model, p) {
   }
   // video (and chapter / extend)
   const img0 = startImg(p), img = img0 ? absUrl(img0) : undefined, end = inp.vEnd ? absUrl(inp.vEnd) : undefined, dur = Math.round(+p.dur || 5), prompt = fullPrompt(p), audio = !!(p.meta?.audio);
+  // Motion Control: the character in the photo performs the movement of the video (orientation: follow the video or the photo)
+  if (/motion-control/.test(m)) return drop({ prompt: p.prompt || "", input_urls: [absUrl(inp.mcChar || img0)], video_urls: [absUrl(inp.mcMove)], mode: pickRes(p, ["720p", "1080p"], "720p"),
+    character_orientation: (p.meta?.orient || (/kling-2\.6/.test(m) ? "image" : "video")) === "image" ? "image" : "video", ...(/kling-3\.0/.test(m) ? { background_source: "input_video" } : {}) });
+  if (/^kling\/v3-turbo/.test(m)) return img ? { prompt, image_urls: [img], duration: String(clamp(dur, 3, 15)), resolution: pickRes(p, ["720p", "1080p"], "720p") }
+    : { prompt, aspect_ratio: snapAR(p.aspect, ["16:9", "9:16", "1:1"]), duration: String(clamp(dur, 3, 15)), resolution: pickRes(p, ["720p", "1080p"], "720p") };
+  if (/^gemini-omni-video/.test(m)) return drop({ prompt, image_urls: img ? [img] : undefined, duration: snapDur(dur, ["4", "6", "8", "10"]), aspect_ratio: snapAR(p.aspect, ["16:9", "9:16"]), resolution: pickRes(p, ["720p", "1080p", "4k"], "720p") });
+  if (/grok-imagine-video-1-5/.test(m)) return drop({ prompt: prompt || undefined, image_urls: img ? [img] : undefined, duration: clamp(dur, 1, 15), aspect_ratio: snapAR(p.aspect, ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"]), resolution: pickRes(p, ["480p", "720p"], "720p") });
+  if (/^happyhorse\//.test(m)) return img ? drop({ prompt: prompt || undefined, image_urls: [img], duration: clamp(dur, 3, 15) })
+    : drop({ prompt, aspect_ratio: snapAR(p.aspect, ["16:9", "9:16", "1:1", "4:3", "3:4"]), duration: clamp(dur, 3, 15), resolution: pickRes(p, ["720p", "1080p"], "1080p") });
   if (/^kling-3\.0\/video/.test(m)) return drop({ prompt, image_urls: img ? [img, ...(end ? [end] : [])] : undefined, sound: audio, duration: String(clamp(dur, 3, 15)), aspect_ratio: img ? undefined : snapAR(p.aspect, ["16:9", "9:16", "1:1"]), mode: /4k/i.test(p.meta?.res || "") ? "4K" : /1080|2k/i.test(p.meta?.res || "") || p.meta?.quality === "best" || +p.meta?.fps >= 60 ? "pro" : "std", multi_shots: false, multi_prompt: [], kling_elements: [] });
   if (/^kling-2\.6\/text-to-video/.test(m)) return { prompt, sound: audio, aspect_ratio: snapAR(p.aspect, ["16:9", "9:16", "1:1"]), duration: snapDur(dur, ["5", "10"]) };
   if (/^kling-2\.6\/image-to-video/.test(m)) return { prompt, image_urls: [img], sound: audio, duration: snapDur(dur, ["5", "10"]) };
   if (/kling/.test(m)) return drop({ prompt, duration: dur >= 10 ? "10" : "5", sound: p.meta?.audio ?? undefined, aspect_ratio: img ? undefined : snapAR(p.aspect, ["16:9", "9:16", "1:1"]), ...(img ? { image_urls: [img] } : {}) });
-  if (/seedance/.test(m)) return drop({ prompt, first_frame_url: img, last_frame_url: end, generate_audio: audio, resolution: pickRes(p, ["480p", "720p", "1080p", "4k"], "720p"), aspect_ratio: img ? "adaptive" : snapAR(p.aspect, ["1:1", "4:3", "3:4", "16:9", "9:16", "21:9"]), duration: clamp(dur, 4, 15), web_search: false });
+  if (/seedance/.test(m)) return drop({ prompt, first_frame_url: img, last_frame_url: end, generate_audio: audio, resolution: pickRes(p, /mini/.test(m) ? ["480p", "720p"] : ["480p", "720p", "1080p", "4k"], "720p"), aspect_ratio: img ? "adaptive" : snapAR(p.aspect, ["1:1", "4:3", "3:4", "16:9", "9:16", "21:9"]), duration: clamp(dur, 4, 15), web_search: false });
   if (/minimax-h3/.test(m)) return drop({ prompt, duration: dur >= 10 ? 10 : 6, first_frame_url: img, last_frame_url: end, aspect_ratio: img ? undefined : snapAR(p.aspect, ["16:9", "9:16", "1:1"]) });
   if (/hailuo/.test(m)) return drop({ prompt, duration: dur >= 10 ? "10" : "6", image_url: img });
   if (/^wan\/3-0/.test(m)) return drop({ prompt, first_frame_url: img, last_frame_url: end, resolution: pickRes(p, ["480P", "720P", "1080P"], "720P"), aspect_ratio: img ? "adaptive" : snapAR(p.aspect, ["16:9", "4:3", "1:1", "3:4", "9:16"]), duration: clamp(dur, 2, 15), audio: audio || undefined });
@@ -138,12 +157,12 @@ export const kie = (model) => {
       if (VEO.has(mo)) {
         const img = startImg(p);
         const d = await call("/api/v1/veo/generate", { method: "POST", body: JSON.stringify(drop({ prompt: fullPrompt(p), model: mo, aspect_ratio: VEO_RATIOS.has(p.aspect) ? p.aspect : p.aspect && AR(p.aspect) > 1.5 ? "16:9" : "Auto", imageUrls: img ? [img] : undefined, callBackUrl: p.callbackUrl, ...extraInputs(c, mo) })) });
-        return { remoteId: "veo:" + d.taskId };
+        return { remoteId: "veo:" + d.taskId, sent: sentView({ prompt: fullPrompt(p), aspect_ratio: VEO_RATIOS.has(p.aspect) ? p.aspect : "Auto", imageUrls: img ? [img] : undefined }) };
       }
       if (mo.startsWith("mj:")) {  // Midjourney through Kie: POST /api/v1/mj/generate, GET /api/v1/mj/record-info
         const ref = refImg(p), ar = p.aspect && /^\d+:\d+$/.test(p.aspect) ? p.aspect : "1:1";
         const d = await call("/api/v1/mj/generate", { method: "POST", body: JSON.stringify(drop({ taskType: ref ? "mj_img2img" : "mj_txt2img", prompt: fullPrompt(p), speed: "fast", aspectRatio: ar, version: mo.slice(3) || "7", fileUrls: ref ? [ref] : undefined, callBackUrl: p.callbackUrl, ...extraInputs(c, mo) })) });
-        return { remoteId: "mj:" + d.taskId };
+        return { remoteId: "mj:" + d.taskId, sent: sentView({ prompt: fullPrompt(p), aspect_ratio: ar, image: ref }) };
       }
       // lip-sync from a typed script: make the voice with ElevenLabs on Kie first, then animate the face with it
       if (/^(kling\/ai-avatar|infinitalk\/|volcengine\/video-to-video-lip-sync)/.test(mo) && !(p.inputs || {}).lsA && p.prompt) {
@@ -153,7 +172,7 @@ export const kie = (model) => {
       const apiModel = suno ? "ai-music-api/generate" : mo;
       const input = { ...kieInput(apiModel, p), ...(suno ? { model: mo.slice(5) || "V5" } : {}), ...extraInputs(c, mo) };
       const d = await call("/api/v1/jobs/createTask", { method: "POST", body: JSON.stringify(drop({ model: apiModel, callBackUrl: p.callbackUrl, input })) });
-      return { remoteId: "m:" + d.taskId };
+      return { remoteId: "m:" + d.taskId, sent: sentView(input) };
     },
     async poll(rid) {
       const [type, id] = String(rid).split(/:(.+)/);
@@ -182,6 +201,11 @@ export const kie = (model) => {
 export function kieDur(model, dur) {
   const m = String(model || "").toLowerCase(), d = Math.round(+dur || 5);
   if (VEO.has(m)) return 8;
+  if (/motion-control/.test(m)) return clamp(d, 3, 30);                   // as long as the movement video (up to 30 s)
+  if (/^kling\/v3-turbo/.test(m)) return clamp(d, 3, 15);
+  if (/^gemini-omni-video/.test(m)) return +snapDur(d, ["4", "6", "8", "10"]);
+  if (/grok-imagine-video-1-5/.test(m)) return clamp(d, 1, 15);
+  if (/^happyhorse\//.test(m)) return clamp(d, 3, 15);
   if (/^kling-3\.0\/video/.test(m)) return clamp(d, 3, 15);
   if (/^kling-2\.6\//.test(m)) return +snapDur(d, ["5", "10"]);
   if (/kling/.test(m)) return d >= 10 ? 10 : 5;
@@ -198,11 +222,15 @@ export function kieDur(model, dur) {
 export const KIE_BUILTIN = {
   video: { kling40: "kling-3.0/video", kling30: "kling-3.0/video", kling: "kling-2.6/text-to-video", seedance25: "bytedance/seedance-2-5", seedance20: "bytedance/seedance-2",
     seedance: "bytedance/seedance-2-fast", hailuoh3: "minimax-h3/text-to-video", hailuo: "minimax-h3/text-to-video", wan30: "wan/3-0-video", wan22: "wan/2-7-text-to-video",
-    qwenwan: "wan/2-7-text-to-video", hunyuan: "wan/2-7-text-to-video", ltx23: "veo3_fast", ltxfast: "bytedance/seedance-2-fast", veo: "veo3", veofast: "veo3_fast", veo31: "veo3", veo31f: "veo3_fast", grok: "grok-imagine/text-to-video", pixverse6: "pixverse-v6/text-to-video", kling26: "kling-2.6/text-to-video", wan27: "wan/2-7-text-to-video", auto: "bytedance/seedance-2-fast" },
+    qwenwan: "wan/2-7-text-to-video", hunyuan: "wan/2-7-text-to-video", ltx23: "veo3_fast", ltxfast: "bytedance/seedance-2-fast", veo: "veo3", veofast: "veo3_fast", veo31: "veo3", veo31f: "veo3_fast", grok: "grok-imagine/text-to-video", pixverse6: "pixverse-v6/text-to-video", kling26: "kling-2.6/text-to-video", wan27: "wan/2-7-text-to-video", auto: "bytedance/seedance-2-fast",
+    kling30t: "kling/v3-turbo-text-to-video", seedance2mini: "bytedance/seedance-2-mini", gemomni: "gemini-omni-video", grok15: "grok-imagine-video-1-5-preview", happyhorse: "happyhorse/text-to-video",
+    mc26: "kling-2.6/motion-control", mc30: "kling-3.0/motion-control" },
   image: { nano: "nano-banana-2", nanopro: "nano-banana-pro", img20: "gpt-image-2-text-to-image", img25: "seedream/4.5-text-to-image", qwen: "qwen3/text-to-image", qwen2: "qwen3/text-to-image",
-    flux: "flux-2/pro-text-to-image", sdxl: "seedream/4.5-text-to-image", dotimg: "nano-banana-2", mj: "mj:7", seedream5: "seedream/5-pro-text-to-image", imagen4: "google/imagen4-ultra", ideogram3: "ideogram/v3-text-to-image", grokimg: "grok-imagine/text-to-image", flux2: "flux-2/pro-text-to-image", auto: "nano-banana-2" },
+    flux: "flux-2/pro-text-to-image", sdxl: "seedream/4.5-text-to-image", dotimg: "nano-banana-2", mj: "mj:7", seedream5: "seedream/5-pro-text-to-image", imagen4: "google/imagen4-ultra", ideogram3: "ideogram/v3-text-to-image", grokimg: "grok-imagine/text-to-image", flux2: "flux-2/pro-text-to-image", auto: "nano-banana-2",
+    nano2lite: "nano-banana-2-lite", seedream5lite: "seedream/5-lite-text-to-image", zimage: "z-image" },
 };
-const I2V = { "kling-2.6/text-to-video": "kling-2.6/image-to-video", "wan/2-7-text-to-video": "wan/2-7-image-to-video", "minimax-h3/text-to-video": "minimax-h3/image-to-video", "grok-imagine/text-to-video": "grok-imagine/image-to-video", "pixverse-v6/text-to-video": "pixverse-v6/image-to-video" };
+const I2V = { "kling-2.6/text-to-video": "kling-2.6/image-to-video", "wan/2-7-text-to-video": "wan/2-7-image-to-video", "minimax-h3/text-to-video": "minimax-h3/image-to-video", "grok-imagine/text-to-video": "grok-imagine/image-to-video", "pixverse-v6/text-to-video": "pixverse-v6/image-to-video",
+  "kling/v3-turbo-text-to-video": "kling/v3-turbo-image-to-video", "happyhorse/text-to-video": "happyhorse/image-to-video" };
 const EDIT = { "gpt-image-2-text-to-image": "gpt-image-2-image-to-image", "flux-2/pro-text-to-image": "flux-2/pro-image-to-image", "seedream/4.5-text-to-image": "seedream/4.5-edit", "qwen3/text-to-image": "qwen3/image-to-image", "seedream/5-pro-text-to-image": "seedream/5-pro-image-to-image", "grok-imagine/text-to-image": "grok-imagine/image-to-image" };
 // the voice an avatar speaks with: the site's own ElevenLabs key first (natural voice, saved in /media), then the engine's
 // ElevenLabs voices — each tried twice, multilingual v2 then turbo 2.5 — so one busy voice service doesn't fail the avatar
@@ -224,6 +252,8 @@ async function lipVoice(p, call) {
       throw new Error("took too long");
     } catch (e) { errs.push(tm.split("/")[1] + ": " + String(e.message).slice(0, 120)); await new Promise((r) => setTimeout(r, 2500)); }
   }
+  // the backup voice on our own server (free), so the avatar still speaks
+  try { const { piperOn, backupVoiceFile } = await import("./piper.js"); if (piperOn()) return await backupVoiceFile(p.prompt, p.meta?.lang); } catch (e) { errs.push("backup voice: " + String(e.message).slice(0, 120)); }
   throw Object.assign(new Error("The voice service is busy — the avatar wasn't charged (" + errs.join(" · ") + ")"), { type: "provider", retryable: false, noFallback: true,
     userMsg: "The avatar's voice couldn't be made right now — nothing was charged. Try again in a minute, or add a voice file." });
 }

@@ -11475,6 +11475,308 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
 @media (max-width:980px){.two>.preview-col:has(.stage>.empty){order:2}}
 `;document.head.appendChild(st)})();
 
+/* ================= v83: new engines · Motion Control · Recipes · what the AI received ================= */
+// ---- faster / cheaper engines. Names come from the server's model list; credits from the server's price table
+// (the numbers here are only for the offline demo and the first paint).
+const NEW83V=[["kling30t","Kling 3.0 Turbo","Kuaishou",83,45,15,["Fast Kling · 720p / 1080p · up to 15 s","Kling السريع · 720p / 1080p · حتى 15 ث"]],
+ ["seedance2mini","Seedance 2.0 Mini","ByteDance",19,35,15,["Cheapest drafts · sound · up to 15 s","أرخص مسودات · صوت · حتى 15 ث"]],
+ ["gemomni","Gemini Omni Video","Google",118,90,10,["Pictures as references · 4–10 s · 4K","صور كمراجع · 4–10 ث · 4K"]],
+ ["grok15","Grok Imagine 1.5","xAI",36,40,15,["Starts from a picture · fast · up to 15 s","يبدأ من صورة · سريع · حتى 15 ث"]],
+ ["happyhorse","HappyHorse","Alibaba",71,60,15,["1080p · people and places · up to 15 s","1080p · أشخاص وأماكن · حتى 15 ث"]]];
+NEW83V.forEach(([id,name,maker,cr,sec,max,d])=>{MODELS[id]=Object.assign(MODELS[id]||{},{name,cr,sec,maxDur:max,d:[maker+" · "+d[0],maker+" · "+d[1]]});MFEAT[id]=d;ENG_MAX[id]=max;if(PRICE_TABLE.video[id]==null)PRICE_TABLE.video[id]=cr});
+const NEW83I=[["nano2lite","Nano Banana 2 Lite",9,["Fastest Google pictures · edits","أسرع صور جوجل · تعديل"]],["seedream5lite","Seedream 5 Lite",9,["2K / 4K posters · good value","ملصقات 2K / 4K · قيمة جيدة"]],["zimage","Z-Image",3,["Very low cost · quick ideas","تكلفة منخفضة جداً · أفكار سريعة"]]];
+NEW83I.forEach(([id,name,cr,d])=>{IMG_MODELS[id]={name,cr};MFEAT[id]=d;if(PRICE_TABLE.image[id]==null)PRICE_TABLE.image[id]=cr});
+Object.assign(MODEL_LOGO,{kling30t:"kling",mc26:"kling",mc30:"kling",seedance2mini:"seedance",happyhorse:"wan"});
+[["P_FREE",["seedance2mini"]],["P_BASIC",["seedance2mini","grok15","happyhorse"]],["P_PRO",["seedance2mini","grok15","happyhorse","kling30t","mc26"]]].forEach(([k,ids])=>{const a={P_FREE,P_BASIC,P_PRO}[k];ids.forEach(i=>{if(!a.includes(i))a.push(i)})});
+if(!BASIC_MODELS.includes("seedance2mini"))BASIC_MODELS.push("seedance2mini");
+applyPrices(API.cfg&&API.cfg.prices&&API.cfg.prices.video?API.cfg.prices:undefined);
+const PDUR83=d=>({3:.6,5:1,8:1.6,10:2,15:3})[d]||(d||5)/5;
+const vprice83=(id,d,k)=>Math.round(((API.cfg&&API.cfg.prices&&API.cfg.prices.video&&API.cfg.prices.video[id])||PRICE_TABLE.video[id]||20)*PDUR83(d)*(k||1));
+// ---- icons
+Object.assign(ICONS,{motion83:'<circle cx="13" cy="4.5" r="2"/><path d="M8.5 21l2.5-6 3 2.5V21M11 15l1.2-5 3.8 2.2 3-.8M12.2 10L8.5 11.8 6.5 15"/><path d="M2.5 9h3M2 12.5h3" opacity=".6"/>',
+  recipe83:'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/><path d="M10 6.5h4a3 3 0 0 1 3 3V14"/><path d="M15 12l2 2 2-2"/>'});
+
+// ---- the new tools in the one list of tools (Video → Motion Control · Explore → Recipes)
+TOOLS82.splice(TOOLS82.findIndex(t=>t[1]==="cinema")+1,0,["video","motion","motion83","Motion Control","التحكم بالحركة"]);
+TOOLS82.splice(TOOLS82.findIndex(t=>t[1]==="discover")+1,0,["explore","recipes","recipe83","Recipes","الوصفات"]);
+HUBS.forEach(h=>{const t=h[4];if(h[0]==="video"&&!t.some(x=>x[0]==="motion"))t.splice(t.findIndex(x=>x[0]==="cinema")+1,0,["motion","Motion Control","التحكم بالحركة"]);
+  if(h[0]==="explore"&&!t.some(x=>x[0]==="recipes"))t.push(["recipes","Recipes","الوصفات"])});
+[["motion","motion83","Motion Control","التحكم بالحركة"],["recipes","recipe83","Recipes","الوصفات"]].forEach(n=>{if(!ALLNAV.some(x=>x[0]===n[0]))ALLNAV.push(n)});
+Object.assign(TOOLDESC,{motion:["A character performs the movement of any video.","شخصية تؤدي حركة أي فيديو."],recipes:["Ready steps in a row: picture → video → sharper copy.","خطوات جاهزة متتالية: صورة ← فيديو ← نسخة أوضح."]});
+if(typeof FEATURE_OF_VIEW==="object"){FEATURE_OF_VIEW.motion="video";FEATURE_OF_VIEW.recipes="video"}
+
+// ---- a small "what the AI received" fold under a result: the words and settings the engine was given (loaded when opened)
+const SENTL83={duration:["Length","المدة"],aspect_ratio:["Format","الأبعاد"],ratio:["Format","الأبعاد"],image_size:["Size","المقاس"],aspectRatio:["Format","الأبعاد"],resolution:["Quality","الجودة"],mode:["Quality","الجودة"],quality:["Quality","الجودة"],
+  character_orientation:["Follows","يتبع"],sound:["Sound","الصوت"],generate_audio:["Sound","الصوت"],negative_prompt:["Avoid","تجنّب"],pictures:["Pictures sent","صور مُرسلة"],videos:["Videos sent","فيديوهات مُرسلة"],generationType:["Type","النوع"],background_source:["Background","الخلفية"]};
+function sentHTML83(s){if(!s)return'<p class="small mute" style="margin:6px 0 0">'+L("Not available for this one.","غير متاح لهذا العمل.")+"</p>";
+  const rows=Object.entries(s).filter(([k])=>k!=="prompt").map(([k,v])=>{const l=SENTL83[k]||[k,k];const val=k==="duration"?v+L(" s"," ث"):v===true?L("On","مفعّل"):v===false?L("Off","متوقف"):k==="character_orientation"?(v==="image"?L("the photo","الصورة"):L("the video","الفيديو")):String(v);return"<span><b>"+esc(L(l[0],l[1]))+"</b> "+esc(val)+"</span>"}).join("");
+  return(s.prompt?'<p class="sentp83" dir="auto">'+esc(s.prompt)+"</p>":"")+(rows?'<div class="sentk83">'+rows+"</div>":"")}
+previewCol=(o=>function(g,prev){let h=o(g,prev);if(!g||!g.remote||API.mode!=="server")return h;
+  return h.replace('<div class="pipe" id="pipe"','<details class="sent83" data-sent83="'+g.id+'"><summary>'+L("What the AI received","ما وصل إلى الذكاء")+'</summary><div class="sent83b">'+(g.sent?sentHTML83(g.sent):'<p class="small mute" style="margin:6px 0 0">'+L("Loading…","جارٍ التحميل…")+"</p>")+'</div></details><div class="pipe" id="pipe"')})(previewCol);
+document.addEventListener("toggle",async e=>{const d=e.target;if(!d||!d.matches||!d.matches("details.sent83")||!d.open)return;const j=S.jobs.find(x=>x.id===d.dataset.sent83);if(!j||!j.remote||j.sent)return;
+  try{const r=await API.req("/v1/jobs/"+j.remote);j.sent=r.sent||null;persist()}catch(err){}const b=d.querySelector(".sent83b");if(b)b.innerHTML=sentHTML83(j.sent)},true);
+
+// ---- Motion Control (Video → Motion Control): the character in a photo performs the movement of a video
+const MC83=()=>(S.mc83=Object.assign({model:"mc26",res:"720p",orient:"video",prompt:"",consent:false},S.mc83||{}));
+const mcDur83=()=>{const m=M.mcMove;if(m&&m.libDur)return m.libDur;const v=m&&m.el;return v&&isFinite(v.duration)&&v.duration>0?Math.round(v.duration):0};
+const mcLib83=(kinds,slot)=>{const list=S.jobs.filter(j=>j.status==="complete"&&kinds.includes(j.kind)&&mediaUrl(j)).slice(-30).reverse();if(!list.length)return"";
+  return'<select class="mclib83" data-mclib="'+slot+'" aria-label="'+L("From my library","من مكتبتي")+'"><option value="">'+L("+ From my library…","+ من مكتبتي…")+"</option>"+list.map(j=>'<option value="'+j.id+'">'+esc(KIND(j)+" · "+(j.title||j.prompt||"").slice(0,40))+"</option>").join("")+"</select>"};
+VIEWS.motion=()=>{const c=MC83(),d=mcDur83(),k=c.res==="1080p"?1.5:1,cost=d?vprice83(c.model,Math.min(30,Math.max(3,d)),k):vprice83(c.model,5,k),mine=S.jobs.filter(j=>j.meta&&j.meta.motion83),g=mine[mine.length-1],prev=mine.slice(0,-1).slice(-8).reverse(),
+  ok26=modelAllowed("mc26"),ok30=modelAllowed("mc30"),tooLong=d>30,tooShort=d>0&&d<3;
+  const eng=[["mc26","Motion Control 2.6",ok26],["mc30","Motion Control 3.0",ok30]].map(x=>'<button data-set="mc83.model" data-val="'+x[0]+'" aria-pressed="'+(c.model===x[0])+'"'+(x[2]?"":' data-locked="1"')+">"+(x[2]?"":ic("lock","width:13px;height:13px"))+esc(x[1])+"</button>").join("");
+  const form='<div class="panel pad mc83">'+
+    '<span class="lbl" style="margin-top:0">1 · '+L("The movement","الحركة")+'</span><p class="small mute mc83h">'+L("A video of the movement: a dance, a gesture, a walk (3–30 s, one person).","فيديو للحركة: رقصة أو إشارة أو مشي (3–30 ث، شخص واحد).")+"</p>"+mediaSlot("mcMove","video/*",L("Upload the movement video","ارفع فيديو الحركة"))+mcLib83(["video","edit","export","finish","lipsync"],"mcMove")+
+    (tooLong?'<p class="small warn83">'+L("This video is "+d+" s — the engine takes up to 30 s. Trim it in the editor first.","هذا الفيديو "+d+" ث — المحرك يقبل حتى 30 ث. قصّه في المحرر أولاً.")+"</p>":tooShort?'<p class="small warn83">'+L("This video is shorter than 3 s.","هذا الفيديو أقصر من 3 ث.")+"</p>":d?'<p class="small mute">'+L("Length: "+d+" s","المدة: "+d+" ث")+"</p>":"")+
+    '<span class="lbl">2 · '+L("The character","الشخصية")+'</span><p class="small mute mc83h">'+L("A clear photo of the whole body, facing the camera, like the person in the video.","صورة واضحة للجسم كاملاً مواجهة للكاميرا، مثل الشخص في الفيديو.")+"</p>"+mediaSlot("mcChar","image/*",L("Upload the character photo","ارفع صورة الشخصية"))+mcLib83(["image","look","sheet"],"mcChar")+
+    '<span class="lbl">3 · '+L("Anything to add (optional)","إضافة (اختياري)")+'</span><textarea data-bind="mc83.prompt" dir="auto" style="min-height:64px" placeholder="'+esc(L("e.g. on a sunny street in Riyadh, wearing a white thobe","مثال: في شارع مشمس بالرياض، يرتدي ثوباً أبيض"))+'">'+esc(c.prompt)+"</textarea>"+
+    '<span class="lbl">'+L("Engine","المحرك")+'</span><div class="seg">'+eng+"</div>"+
+    '<div class="grid2"><div><span class="lbl">'+L("Quality","الجودة")+'</span><div class="seg">'+["720p","1080p"].map(r=>'<button data-set="mc83.res" data-val="'+r+'" aria-pressed="'+(c.res===r)+'">'+r+"</button>").join("")+"</div></div>"+
+    '<div><span class="lbl">'+L("Framing","الكادر")+'</span><div class="seg"><button data-set="mc83.orient" data-val="video" aria-pressed="'+(c.orient==="video")+'">'+L("Like the video","مثل الفيديو")+'</button><button data-set="mc83.orient" data-val="image" aria-pressed="'+(c.orient==="image")+'">'+L("Like the photo","مثل الصورة")+"</button></div></div></div>"+
+    '<label class="check83"><input type="checkbox" data-mc83consent="1"'+(c.consent?" checked":"")+"> <span>"+L("I have the right to use this photo and this video, and the person in them agreed.","لدي حق استخدام هذه الصورة وهذا الفيديو، والشخص الظاهر فيهما موافق.")+"</span></label>"+
+    '<div style="margin-top:14px"><button class="btn primary big" data-act="mc-make">'+ic("motion83")+L("Make it move","حرّكها")+'<span class="cost">'+cost+" cr"+(d?"":" / 5"+L(" s"," ث"))+"</span></button></div></div>";
+  const out=!g?'<div class="preview-col"><div class="panel pad"><div class="stage" style="aspect-ratio:9/16;max-height:60vh;margin:0 auto"><div class="empty">'+L("The character moves here.","تتحرك الشخصية هنا.")+"</div></div></div></div>":previewCol(g,prev);
+  return'<div class="view"><h1>'+L("Motion Control","التحكم بالحركة")+'</h1><p class="lede">'+L("Give a character any movement: add a video of the movement and a photo of the character. The character performs the same movement, step by step.","امنح أي شخصية أي حركة: أضف فيديو الحركة وصورة الشخصية، فتؤدي الشخصية نفس الحركة خطوة بخطوة.")+'</p><div class="two two82'+(g?" has":"")+'">'+form+out+"</div></div>"};
+document.addEventListener("change",e=>{const t=e.target;if(t&&t.dataset&&t.dataset.mc83consent){MC83().consent=t.checked;persist();return}
+  if(t&&t.dataset&&t.dataset.mclib&&t.value){const j=S.jobs.find(x=>x.id===t.value),u=j&&mediaUrl(j);if(!u)return;const slot=t.dataset.mclib,isV=slot==="mcMove";
+    M[slot]={type:isV?"video":"image",url:u,remote:u,name:(j.title||j.prompt||KIND(j)).slice(0,40),libDur:isV?Math.round(+j.dur||0):0};persist();renderView()}},true);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="mc-make"],[data-set="mc83.model"][data-locked]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const c=MC83();
+  if(a.dataset.locked){toast(L("This engine is part of a bigger plan.","هذا المحرك ضمن باقة أعلى."),{type:"warn"});go("account");return}
+  if(!modelAllowed(c.model)){toast(L("Motion Control is part of the Pro plan.","التحكم بالحركة ضمن باقة Pro."),{type:"warn"});return}
+  if(!M.mcMove){toast(L("Add the video with the movement first.","أضف فيديو الحركة أولاً."),{type:"warn"});return}
+  if(!M.mcChar){toast(L("Add a photo of the character first.","أضف صورة الشخصية أولاً."),{type:"warn"});return}
+  const d=mcDur83();if(d>30){toast(L("The movement video must be 30 s or shorter.","فيديو الحركة يجب أن يكون 30 ث أو أقل."),{type:"warn"});return}
+  if(!c.consent){toast(L("Confirm that you have the right to use this photo and video.","أكّد أن لديك حق استخدام الصورة والفيديو."),{type:"warn"});const x=document.querySelector("[data-mc83consent]");if(x)x.focus();return}
+  const dur=Math.min(30,Math.max(3,d||5)),cost=vprice83(c.model,dur,c.res==="1080p"?1.5:1),meta={motion83:true,res:c.res,orient:c.orient,consent:true};
+  let inputs={};if(API.mode==="server"){a.disabled=true;try{for(const s of["mcMove","mcChar"]){const m=M[s];inputs[s]=m.file?(await API.upload(m.file,m.name)).url:m.remote}}catch(err){a.disabled=false;toast(L("Couldn't upload the files — try again.","تعذّر رفع الملفات — حاول مجدداً."),{type:"warn"});return}a.disabled=false}
+  const j=addJob({kind:"video",model:c.model,prompt:String(c.prompt||"").trim(),title:L("Motion · ","حركة · ")+(String(c.prompt||"").trim()||M.mcChar.name||"").slice(0,40),dur,aspect:"9:16",cost,secs:12,art:"scene",meta,inputsUrl:{},inputs83:inputs});
+  if(j){persist();renderAll();toast(L("Making it move — usually 2–5 minutes.","جارٍ التحريك — عادةً 2–5 دقائق."),{type:"info"})}},true);
+// the files go with the job as they are (already uploaded), nothing else from the page's upload slots
+serverSubmit=(o=>function(obj,kind,payload){if(obj&&obj.inputs83)payload=Object.assign({},payload,{inputs:obj.inputs83});return o.call(this,obj,kind,payload)})(serverSubmit);
+
+// ---- Recipes (Explore → Recipes): ready steps in a row. The first step carries the next ones; the server starts each
+// step from the result of the one before (held, charged when made, given back if it fails).
+const STEP83={image:["image","Picture","صورة"],video:["video","Video from it","فيديو منها"],finish:["finish","Sharper copy","نسخة أوضح"],voice:["mic","Voiceover","تعليق صوتي"]};
+const RECIPES83=[
+ {id:"product",name:["Product ad","إعلان منتج"],desc:["A clean product picture, a slow orbit video, then a sharper copy.","صورة منتج نظيفة، ثم فيديو بدوران بطيء، ثم نسخة أوضح."],aspect:"9:16",
+  steps:[{kind:"image",prompt:"{idea}. Product hero shot on a clean studio set, soft key light, gentle reflections, room for text on one side, no text or logos."},{kind:"video",dur:5,prompt:"Slow orbit around the product, soft light sweeps across it, premium commercial feel, no text."},{kind:"finish",meta:{tool:"upscale"}}]},
+ {id:"intro",name:["Character intro","تقديم شخصية"],desc:["A cinematic portrait, then the character turns and smiles.","بورتريه سينمائي، ثم تلتفت الشخصية وتبتسم."],aspect:"9:16",
+  steps:[{kind:"image",prompt:"{idea}. Cinematic portrait, 85mm lens, soft window light from the left, shallow depth of field, natural skin."},{kind:"video",dur:5,prompt:"The character slowly turns to the camera and smiles, slow dolly-in, natural motion."}]},
+ {id:"poster",name:["Poster that moves","ملصق يتحرك"],desc:["A bold poster, then gentle motion — the lowest cost.","ملصق جريء، ثم حركة هادئة — أقل تكلفة."],aspect:"9:16",video:"seedance2mini",
+  steps:[{kind:"image",model:"zimage",prompt:"{idea}. Bold poster composition, strong shapes, three-colour palette, room for a title at the top, no text."},{kind:"video",dur:5,prompt:"Subtle parallax motion, light particles drifting, the scene breathes, camera locked."}]},
+ {id:"place",name:["Place tour","جولة في مكان"],desc:["A wide golden-hour picture, then a slow drone flight.","صورة واسعة في الساعة الذهبية، ثم طيران درون بطيء."],aspect:"16:9",
+  steps:[{kind:"image",prompt:"{idea}. Wide establishing shot, golden hour, long soft shadows, foreground detail, no text."},{kind:"video",dur:8,prompt:"Slow drone flight forward over the place, steady and smooth, golden light."}]},
+ {id:"moment",name:["Moment with a voice","لحظة بصوت"],desc:["A picture, a video from it, and a voiceover with your words.","صورة، ثم فيديو منها، ثم تعليق صوتي بكلماتك."],aspect:"16:9",voice:true,
+  steps:[{kind:"image",prompt:"{idea}. Cinematic still, natural light, emotional moment, no text."},{kind:"video",dur:5,prompt:"Gentle camera push-in, subtle natural motion, emotional and calm."},{kind:"voice",prompt:"{voice}"}]}];
+const R83=()=>(S.rec83=Object.assign({sel:"product",idea:"",voice:"",aspect:"",video:"auto",runs:[],mine:[]},S.rec83||{}));
+const recAll83=()=>RECIPES83.concat(R83().mine);
+const recStepCost83=(s,r)=>s.kind==="image"?((IMG_MODELS[s.model||"nano"]||{cr:5}).cr):s.kind==="video"?vprice83(r.video||R83().video||"auto",s.dur||5):s.kind==="finish"?(PRICE_TABLE.fixed.finish||17):s.kind==="voice"?(PRICE_TABLE.fixed.voice||8):5;
+function recSteps83(r){const R=R83(),idea=String(R.idea||"").trim(),vm=r.video||(R.video!=="auto"&&modelAllowed(R.video)?R.video:"auto");
+  return r.steps.filter(s=>s.kind!=="voice"||String(R.voice||"").trim()).map(s=>Object.assign({},s,{prompt:String(s.prompt||"").replace("{idea}",idea).replace("{voice}",String(R.voice||"").trim()),model:s.kind==="video"?vm:s.model}))}
+const recCost83=r=>recSteps83(r).reduce((n,s)=>n+recStepCost83(s,r),0);
+VIEWS.recipes=()=>{const R=R83(),list=recAll83(),r=list.find(x=>x.id===R.sel)||list[0],aspect=R.aspect||r.aspect,steps=recSteps83(r),cost=recCost83(r),runs=R.runs.slice(-6).reverse();
+  const card=x=>'<button class="panel rc83" data-act="rec-pick" data-v="'+esc(x.id)+'" aria-pressed="'+(x.id===r.id)+'"><b dir="auto">'+esc(Array.isArray(x.name)?L(x.name[0],x.name[1]):x.name)+'</b><span class="small mute" dir="auto">'+esc(Array.isArray(x.desc)?L(x.desc[0],x.desc[1]):(x.desc||""))+'</span><span class="rcs83">'+x.steps.map(s=>'<i title="'+esc(L(STEP83[s.kind][1],STEP83[s.kind][2]))+'">'+ic(STEP83[s.kind][0])+"</i>").join('<em aria-hidden="true">›</em>')+"</span></button>";
+  const vids=["auto"].concat(Object.keys(MODELS).filter(k=>k!=="auto"&&modelAllowed(k)));
+  const form='<div class="panel pad">'+
+    '<label class="lbl" style="margin-top:0" for="rec83idea">'+L("Your idea","فكرتك")+'</label><textarea id="rec83idea" data-bind="rec83.idea" dir="auto" style="min-height:76px" placeholder="'+esc(L("e.g. a glass bottle of oud perfume on black marble","مثال: زجاجة عطر عود على رخام أسود"))+'">'+esc(R.idea)+"</textarea>"+
+    (r.voice?'<label class="lbl" for="rec83voice">'+L("Voiceover words","كلمات التعليق الصوتي")+'</label><textarea id="rec83voice" data-bind="rec83.voice" dir="auto" style="min-height:56px" placeholder="'+esc(L("What the voice says (leave empty to skip the voice)","ما يقوله الصوت (اتركه فارغاً لتخطّي الصوت)"))+'">'+esc(R.voice)+"</textarea>":"")+
+    '<div class="grid2"><div><span class="lbl">'+L("Format","الأبعاد")+'</span><div class="seg">'+["9:16","16:9","1:1"].map(a=>'<button data-set="rec83.aspect" data-val="'+a+'" aria-pressed="'+(aspect===a)+'">'+a+"</button>").join("")+"</div></div>"+
+    (r.video?"":'<div><label class="lbl" for="rec83vid">'+L("Video engine","محرك الفيديو")+'</label><select id="rec83vid" data-bind="rec83.video" data-rerender="1">'+vids.map(k=>'<option value="'+k+'"'+(k===R.video?" selected":"")+">"+esc(k==="auto"?"nooi Auto":(MODELS[k]||{}).name||k)+"</option>").join("")+"</select></div>")+"</div>"+
+    '<span class="lbl">'+L("The steps","الخطوات")+'</span><ol class="rsteps83">'+steps.map((s,i)=>'<li><span class="rsi83">'+ic(STEP83[s.kind][0])+'</span><div><b>'+esc(L(STEP83[s.kind][1],STEP83[s.kind][2]))+(s.kind==="video"?" · "+s.dur+L(" s"," ث"):"")+'</b><small class="mute">'+recStepCost83(s,r)+" cr</small>"+(s.prompt&&s.kind!=="finish"?'<details><summary>'+L("What this step asks","ما تطلبه هذه الخطوة")+'</summary><p dir="auto">'+esc(s.prompt)+"</p></details>":"")+"</div></li>").join("")+"</ol>"+
+    '<p class="small mute" style="margin:8px 0 0">'+L("Each step is charged when it starts and given back if it fails. If a step fails, the steps after it don't run.","كل خطوة تُخصم عند بدئها وتُسترجع إذا فشلت، وإذا فشلت خطوة لا تعمل الخطوات بعدها.")+"</p>"+
+    '<div class="row" style="margin-top:14px"><button class="btn primary big" data-act="rec-run">'+ic("play")+L("Run the recipe","شغّل الوصفة")+'<span class="cost">'+cost+' cr</span></button><button class="btn" data-act="rec-save">'+ic("plus")+L("Save as my recipe","احفظها كوصفتي")+"</button></div></div>";
+  const runHTML=run=>{const js=run.jobs.map(id=>S.jobs.find(x=>x.id===id)).filter(Boolean),st=run.status;
+    return'<div class="panel pad run83"><div class="spread"><b dir="auto">'+esc(run.title)+'</b><span class="badge st83" data-st="'+st+'">'+esc(st==="done"?L("Done","تم"):st==="running"?L("Running","يعمل")+" · "+Math.min(js.length,run.total)+"/"+run.total:L("Stopped","توقف"))+"</span></div>"+
+      '<div class="strip">'+js.map(j=>'<div data-open-job="'+j.id+'" role="button" tabindex="0">'+thumb("j:"+j.id,{dur:j.kind==="image"?null:j.dur,tag:L(STEP83[j.kind]?STEP83[j.kind][1]:KIND(j),STEP83[j.kind]?STEP83[j.kind][2]:KIND(j))})+"</div>").join("")+"</div>"+(run.msg?'<p class="small warn83" style="margin:8px 0 0">'+esc(run.msg)+"</p>":"")+"</div>"};
+  return'<div class="view"><h1>'+L("Recipes","الوصفات")+'</h1><p class="lede">'+L("Ready steps in a row: write your idea once and the studio makes the picture, the video from it and the finishing steps, one after another.","خطوات جاهزة متتالية: اكتب فكرتك مرة واحدة ويصنع الاستوديو الصورة ثم الفيديو منها ثم خطوات التشطيب واحدة بعد الأخرى.")+"</p>"+
+    '<div class="rcards83">'+list.map(card).join("")+"</div>"+'<div class="two82 rtwo83">'+form+'<div class="runs83">'+(runs.length?runs.map(runHTML).join(""):'<div class="panel pad"><div class="empty" style="min-height:160px">'+L("Your recipe runs appear here.","تظهر هنا الوصفات التي شغّلتها.")+"</div></div>")+"</div></div></div>"};
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="rec-pick"],[data-act="rec-run"],[data-act="rec-save"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const R=R83();
+  if(a.dataset.act==="rec-pick"){R.sel=a.dataset.v;R.aspect="";persist();renderView();return}
+  const r=recAll83().find(x=>x.id===R.sel)||RECIPES83[0];
+  if(a.dataset.act==="rec-save"){const nm=String(R.idea||"").trim().slice(0,32)||L("My recipe","وصفتي");const id="my"+uid();
+    R.mine.push({id,name:nm,desc:L("Saved from ","محفوظة من ")+(Array.isArray(r.name)?L(r.name[0],r.name[1]):r.name),aspect:R.aspect||r.aspect,video:r.video||(R.video!=="auto"?R.video:undefined),voice:r.voice,steps:recSteps83(r).map(s=>Object.assign({},s,{prompt:s.kind==="voice"?"{voice}":s.prompt}))});
+    R.mine=R.mine.slice(-12);R.sel=id;persist();renderView();toast(L("Saved — it's in the list as \""+nm+"\".","حُفظت — تجدها في القائمة باسم «"+nm+"».")); return}
+  if(!String(R.idea||"").trim()&&r.steps.some(s=>/\{idea\}/.test(s.prompt||""))){toast(L("Write your idea first.","اكتب فكرتك أولاً."),{type:"warn"});const t=document.getElementById("rec83idea");if(t)t.focus();return}
+  const steps=recSteps83(r),total=recCost83(r);if(!crFree()&&S.credits<total){toast(L("This recipe needs "+total+" credits.","هذه الوصفة تحتاج "+total+" رصيداً."),{type:"warn"});return}
+  const first=steps[0],rest=steps.slice(1),runId="r"+uid(),title=(Array.isArray(r.name)?L(r.name[0],r.name[1]):r.name)+" · "+String(R.idea||R.voice||"").trim().slice(0,40),aspect=R.aspect||r.aspect;
+  const meta={recipe:runId,step:0,chain:rest.map(s=>({kind:s.kind,model:s.model,prompt:s.prompt,dur:s.dur,meta:s.meta}))};
+  const base={kind:first.kind,prompt:first.prompt,title,aspect,meta,secs:first.kind==="image"?5:10,art:"scene"};
+  const j=first.kind==="image"?addJob(Object.assign(base,{model:first.model||(modelAllowed("nano")?"nano":"auto"),cost:recStepCost83(first,r)})):addJob(Object.assign(base,{model:first.model,dur:first.dur||5,cost:recStepCost83(first,r)}));
+  if(!j)return;R.runs.push({id:runId,title,jobs:[j.id],steps:steps.map(s=>({kind:s.kind,model:s.model,prompt:s.prompt,dur:s.dur,cost:recStepCost83(s,r)})),total:steps.length,status:"running",aspect});R.runs=R.runs.slice(-20);
+  persist();renderView();toast(L("Recipe started — each step appears on the right.","بدأت الوصفة — تظهر كل خطوة بجانبك."),{type:"info"})},true);
+// follow the runs: when a step is made the server has already started the next one; bring it into the page
+let recBusy83=false;
+setInterval(async()=>{const R=S.rec83;if(!R||recBusy83||!(R.runs||[]).some(r=>r.status==="running"))return;recBusy83=true;let ch=false;
+  try{for(const run of R.runs.filter(r=>r.status==="running")){const last=S.jobs.find(x=>x.id===run.jobs[run.jobs.length-1]);if(!last)continue;const i=run.jobs.length-1;
+    if(last.status==="failed"){run.status="stopped";run.msg=L("A step failed, so the next steps didn't run. Its credits were given back.","فشلت خطوة فلم تعمل الخطوات التالية، واسترجعت رصيدها.");ch=true;continue}
+    if(last.status!=="complete")continue;
+    if(i+1>=run.total){run.status="done";ch=true;continue}
+    const s=run.steps[i+1];
+    if(API.mode!=="server"){const src=last;const j=addJob({kind:s.kind,model:s.model,prompt:s.prompt,dur:s.dur||5,aspect:run.aspect,cost:s.cost,title:run.title,meta:{recipe:run.id,step:i+1,srcJob:src.id},secs:8,art:"scene"});if(j){run.jobs.push(j.id);ch=true}else{run.status="stopped";run.msg=L("Not enough credits for the next step.","الرصيد لا يكفي للخطوة التالية.");ch=true}continue}
+    if(!last.remote||(last._recAt83&&Date.now()-last._recAt83<2500))continue;last._recAt83=Date.now();
+    const r=await API.req("/v1/jobs/"+last.remote).catch(()=>null);if(!r)continue;
+    if(r.chainError){run.status="stopped";run.msg=/credit/i.test(r.chainError)?L("Not enough credits for the next step — what was made is kept.","الرصيد لا يكفي للخطوة التالية — ما صُنع محفوظ."):String(r.chainError);ch=true;continue}
+    if(r.next){const j={id:uid(),remote:r.next,kind:s.kind,model:s.model,prompt:s.prompt,dur:s.dur||5,aspect:run.aspect,status:"queued",progress:0,created:Date.now(),title:run.title,cost:s.cost,meta:{recipe:run.id,step:i+1},pal:PALS[Math.floor(Math.random()*PALS.length)],seed:Math.floor(Math.random()*1e9),art:"scene"};
+      S.jobs.push(j);run.jobs.push(j.id);if(!crFree())S.credits=Math.max(0,(S.credits||0)-(s.cost||0));ch=true}
+    else if(Date.now()-(last._recDone83||(last._recDone83=Date.now()))>120e3){run.status="stopped";run.msg=L("The next step didn't start. Open the recipe again to retry.","لم تبدأ الخطوة التالية. افتح الوصفة لإعادة المحاولة.");ch=true}}}
+  finally{recBusy83=false;if(ch){persist();if(S.view==="recipes")renderView();else if(typeof renderShell==="function")renderShell()}}},3000);
+
+// ---- Admin → AI providers: your own text AI (Gemma …), the backup voice, and "Compare text AIs" on nooi's own tasks
+if(typeof AI_PROVIDERS!=="undefined"&&!AI_PROVIDERS.some(p=>p[0]==="localtext"))AI_PROVIDERS.push(
+ ["localtext","Your own text AI (Gemma … · OpenAI-compatible)","ذكاء نصي خاص بك (Gemma …)","text",[["baseUrl","API URL (e.g. http://127.0.0.1:11434/v1)"],["model","Model (e.g. gemma4:e4b)"],["apiKey","API key (only if it needs one)"]],"http://127.0.0.1:11434/v1"],
+ ["piper","Backup voice (on your server)","صوت احتياطي على خادمك","voice",[["baseUrl","Voice servers (en=http://127.0.0.1:5310, ar=…)"]],""]);
+const LLMC83={busy:false,res:null,err:""};
+function llmCheck83(){const R=LLMC83.res,col=(x,t)=>!x?"":x.error?'<div class="lc83c"><b>'+esc(t)+'</b><p class="small warn83">'+esc(x.error)+"</p></div>":
+    '<div class="lc83c"><b>'+esc(t)+'</b><span class="small mute" dir="ltr">'+esc((x.model||x.provider||"")+"")+'</span><div class="lc83s">'+x.score+" / "+x.of+'</div><span class="small mute">'+L("Total time ","الوقت الكلي ")+Math.round((x.ms||0)/1000)+L(" s"," ث")+"</span>"+
+    '<ul class="lc83l">'+(x.results||[]).map(r=>'<li class="'+(r.ok?"ok":"no")+'">'+ic(r.ok?"check":"x")+"<span>"+esc(r.name)+'<small class="mute"> · '+Math.round(r.ms/100)/10+L(" s"," ث")+(r.note?" · "+esc(r.note):"")+"</small></span></li>").join("")+"</ul></div>";
+  return'<div class="panel pad lc83" style="margin-bottom:14px"><h3 style="margin:0 0 6px">'+ic("spark","width:18px;height:18px")+" "+L("Compare text AIs","قارن الذكاء النصي")+'</h3><p class="small mute" style="margin:0 0 10px">'+L("Runs five of nooi's own small text tasks (craft notes, an Arabic brief, dubbing lines that fit, a storyboard, and a page that tries to give orders) on your own text AI and on the current one. Use it before you rely on Gemma or any other model.","يشغّل خمس مهام نصية صغيرة من مهام nooi (ملاحظات الحرفة، ملخص عربي، جمل دبلجة بطول مناسب، ستوري بورد، وصفحة تحاول إعطاء أوامر) على ذكائك النصي الخاص وعلى الحالي. استخدمه قبل الاعتماد على Gemma أو أي نموذج آخر.")+"</p>"+
+    '<button class="btn sm primary" data-act="llm-check83" '+(LLMC83.busy?"disabled":"")+">"+ic("play")+(LLMC83.busy?L("Running… (up to 2 minutes)","يعمل… (حتى دقيقتين)"):L("Run the comparison","شغّل المقارنة"))+"</button>"+
+    (LLMC83.err?'<p class="small warn83">'+esc(LLMC83.err)+"</p>":"")+(R?'<div class="lc83g">'+col(R.local,L("Your own text AI","ذكاؤك النصي الخاص"))+col(R.site,L("Current text AI","الذكاء النصي الحالي"))+"</div>":"")+"</div>"}
+if(typeof engQuick==="function")engQuick=(o=>function(){return o()+llmCheck83()})(engQuick);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="llm-check83"]');if(!a)return;e.stopImmediatePropagation();LLMC83.busy=true;LLMC83.err="";renderView();
+  try{LLMC83.res=await API.req("/v1/admin/llm-check",{json:{}});if(!LLMC83.res.local)LLMC83.err=L("Your own text AI isn't set yet — add its API URL and model above.","لم يُضبط ذكاؤك النصي الخاص بعد — أضف عنوانه واسم النموذج في الأعلى.")}catch(err){LLMC83.err=String(err.message||err)}
+  LLMC83.busy=false;renderView()},true);
+
+// ---- Video from pictures (Edit → Video from pictures): made on our own server with ffmpeg — no engine, no credits.
+// The page draws each caption (so Arabic letters join correctly); the server moves the pictures, joins them and adds the music.
+ICONS.up83='<path d="M6 15l6-6 6 6"/>';
+ICONS.slides83='<rect x="3" y="5" width="13" height="10" rx="2"/><path d="M8 19h11a2 2 0 0 0 2-2V9"/><path d="M6 12l2.5-2.5L11 12l1.5-1.5L14 12"/>';
+TOOLS82.splice(TOOLS82.findIndex(t=>t[1]==="edit")+1,0,["edit","slideshow","slides83","Video from pictures","فيديو من الصور"]);
+HUBS.forEach(h=>{if(h[0]==="edit"&&!h[4].some(x=>x[0]==="slideshow"))h[4].splice(1,0,["slideshow","Video from pictures","فيديو من الصور"])});
+if(!ALLNAV.some(x=>x[0]==="slideshow"))ALLNAV.push(["slideshow","slides83","Video from pictures","فيديو من الصور"]);
+TOOLDESC.slideshow=["Your pictures become a video with gentle motion, captions and music — free.","صورك تصبح فيديو بحركة هادئة وتعليقات وموسيقى — مجاناً."];
+if(typeof FEATURE_OF_VIEW==="object")FEATURE_OF_VIEW.slideshow="edit";
+KIND=(o=>j=>j&&j.kind==="slideshow"?L("Video from pictures","فيديو من الصور"):o(j))(KIND);
+const SS83=()=>(S.ss83=Object.assign({pics:[],secs:3,motion:"zoom",tr:"fade",aspect:"9:16",music:""},S.ss83||{}));
+const SSIZE83={"9:16":[720,1280],"16:9":[1280,720],"1:1":[960,960]};
+function capPNG83(text,W,H){const t=String(text||"").trim();if(!t)return null;const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d"),fs=Math.round(Math.min(W,H)*.058),ar=/[؀-ۿ]/.test(t);
+  x.font="700 "+fs+'px "IBM Plex Sans Arabic","Noto Sans Arabic",system-ui,sans-serif';x.direction=ar?"rtl":"ltr";x.textAlign="center";x.textBaseline="middle";
+  const words=t.split(/\s+/),lines=[];let cur="";words.forEach(w=>{const n=cur?cur+" "+w:w;if(x.measureText(n).width>W*.84&&cur){lines.push(cur);cur=w}else cur=n});if(cur)lines.push(cur);
+  const L3=lines.slice(0,3),lh=fs*1.35,bh=L3.length*lh+fs*.9,by=H*.86-bh,bw=Math.min(W*.92,Math.max(...L3.map(l=>x.measureText(l).width))+fs*1.6);
+  x.fillStyle="rgba(10,12,10,.62)";const r=fs*.5,bx=(W-bw)/2;x.beginPath();x.moveTo(bx+r,by);x.arcTo(bx+bw,by,bx+bw,by+bh,r);x.arcTo(bx+bw,by+bh,bx,by+bh,r);x.arcTo(bx,by+bh,bx,by,r);x.arcTo(bx,by,bx+bw,by,r);x.fill();
+  x.fillStyle="#fff";L3.forEach((l,i)=>x.fillText(l,W/2,by+fs*.45+lh*(i+.5)));return c.toDataURL("image/png")}
+VIEWS.slideshow=()=>{const c=SS83(),srv=API.mode==="server",lib=S.jobs.filter(j=>j.status==="complete"&&["image","look","sheet"].includes(j.kind)&&mediaUrl(j)).slice(-24).reverse(),
+  music=S.jobs.filter(j=>j.status==="complete"&&j.kind==="music"&&mediaUrl(j)).slice(-12).reverse(),mine=S.jobs.filter(j=>j.kind==="slideshow"),g=mine[mine.length-1],
+  total=c.pics.length>1?(c.pics.length*c.secs-(c.tr==="none"?0:(c.pics.length-1)*.6)).toFixed(1):0,seg=(k,opts)=>'<div class="seg">'+opts.map(o=>'<button data-set="ss83.'+k+'" data-val="'+o[0]+'"'+(typeof o[0]==="number"?' data-num="1"':"")+' aria-pressed="'+(c[k]===o[0])+'">'+esc(o[1])+"</button>").join("")+"</div>";
+  const picked=c.pics.length?'<ol class="ss83l">'+c.pics.map((p,i)=>'<li><img src="'+esc(p.url)+'" alt=""><input type="text" dir="auto" data-ss83cap="'+i+'" value="'+esc(p.cap||"")+'" placeholder="'+esc(L("Caption (optional)","تعليق (اختياري)"))+'" aria-label="'+esc(L("Caption for picture ","تعليق الصورة ")+(i+1))+'"><button class="iconbtn" data-act="ss83-up" data-i="'+i+'" aria-label="'+L("Move up","للأعلى")+'"'+(i?"":" disabled")+">"+ic("up83")+'</button><button class="iconbtn" data-act="ss83-rm" data-i="'+i+'" aria-label="'+L("Remove","إزالة")+'">'+ic("x")+"</button></li>").join("")+"</ol>":'<p class="small mute" style="margin:6px 0 0">'+L("No pictures yet — pick some below or upload them.","لا صور بعد — اختر من الأسفل أو ارفعها.")+"</p>";
+  const form='<div class="panel pad ss83">'+(srv?"":'<p class="small warn83" style="margin-top:0">'+L("Videos from pictures are made on the server — sign in on the live site to use this.","فيديو الصور يُصنع على الخادم — سجّل الدخول في الموقع لاستخدامه.")+"</p>")+
+    '<span class="lbl" style="margin-top:0">'+L("Your pictures","صورك")+" · "+c.pics.length+" / 12</span>"+picked+
+    '<label class="drop" style="margin-top:10px">'+ic("upload")+"<div>"+L("Upload pictures","ارفع صوراً")+'</div><input type="file" accept="image/*" multiple data-ss83up="1"></label>'+
+    (lib.length?'<span class="lbl">'+L("From my library","من مكتبتي")+'</span><div class="ss83g">'+lib.map(j=>{const u=mediaUrl(j),k=c.pics.findIndex(p=>p.url===u);return'<button class="ss83t" data-act="ss83-pick" data-u="'+esc(u)+'" aria-pressed="'+(k>=0)+'"><img src="'+esc(u)+'" alt="" loading="lazy">'+(k>=0?"<b>"+(k+1)+"</b>":"")+"</button>"}).join("")+"</div>":"")+
+    '<div class="grid2"><div><span class="lbl">'+L("Seconds per picture","ثوانٍ لكل صورة")+"</span>"+seg("secs",[[2,"2"],[3,"3"],[4,"4"],[5,"5"]])+'</div><div><span class="lbl">'+L("Format","الأبعاد")+"</span>"+seg("aspect",[["9:16","9:16"],["16:9","16:9"],["1:1","1:1"]])+"</div></div>"+
+    '<div class="grid2"><div><span class="lbl">'+L("Motion","الحركة")+"</span>"+seg("motion",[["zoom",L("Zoom in","تقريب")],["pan",L("Slow pan","تحريك بطيء")],["still",L("Still","ثابتة")]])+'</div><div><span class="lbl">'+L("Between pictures","بين الصور")+"</span>"+seg("tr",[["fade",L("Fade","تلاشي")],["slide",L("Slide","انزلاق")],["none",L("Cut","قطع")]])+"</div></div>"+
+    '<label class="lbl" for="ss83m">'+L("Music","الموسيقى")+'</label><select id="ss83m" data-bind="ss83.music"><option value="">'+L("No music","بلا موسيقى")+"</option>"+music.map(j=>'<option value="'+esc(mediaUrl(j))+'"'+(c.music===mediaUrl(j)?" selected":"")+">"+esc((j.title||j.prompt||"").slice(0,50))+"</option>").join("")+"</select>"+
+    (music.length?"":'<p class="small mute" style="margin:6px 0 0">'+L("Make music in Edit → Voice & audio to add it here.","اصنع موسيقى من التحرير ← الصوت والموسيقى لتظهر هنا.")+"</p>")+
+    '<div style="margin-top:14px"><button class="btn primary big" data-act="ss83-make"'+(srv?"":" disabled")+">"+ic("slides83")+L("Make the video · free","اصنع الفيديو · مجاناً")+"</button>"+(total?'<p class="small mute" style="margin:8px 0 0">'+L("Length: "+total+" s","المدة: "+total+" ث")+"</p>":"")+"</div></div>";
+  const out='<div class="preview-col"><div class="panel pad"><div class="stage" style="aspect-ratio:'+((g&&g.aspect)||c.aspect).replace(":","/")+';max-height:62vh;margin:0 auto">'+(!g?'<div class="empty">'+L("Your video appears here.","يظهر الفيديو هنا.")+"</div>":g.status==="complete"&&mediaUrl(g)?'<video class="frame" src="'+esc(mediaUrl(g))+'" controls playsinline style="object-fit:contain;background:#000"></video>':g.status==="failed"?'<div class="empty">'+esc(g.error||L("It couldn't be made — try other pictures.","تعذّر صنعه — جرّب صوراً أخرى."))+"</div>":'<canvas class="frame live" data-ref="j:'+g.id+'"></canvas>'+sveil81(Object.assign({},g,{kind:"image"})))+"</div>"+
+    (g&&g.status==="complete"?'<div class="row" style="margin-top:12px"><button class="btn sm" data-act="send-edit" data-id="'+g.id+'">'+ic("edit")+L("Open in editor","افتح في المحرر")+"</button></div>":"")+"</div></div>";
+  return'<div class="view"><h1>'+L("Video from pictures","فيديو من الصور")+'</h1><p class="lede">'+L("Pick up to 12 pictures, add a caption to any of them, choose the motion and the music. The video is made on our server — free, no engine credits.","اختر حتى 12 صورة، وأضف تعليقاً لأي منها، واختر الحركة والموسيقى. يُصنع الفيديو على خادمنا — مجاناً بلا رصيد محرك.")+'</p><div class="two two82'+(g?" has":"")+'">'+form+out+"</div></div>"};
+document.addEventListener("input",e=>{const t=e.target;if(t&&t.dataset&&t.dataset.ss83cap!=null){const p=SS83().pics[+t.dataset.ss83cap];if(p){p.cap=t.value.slice(0,120);persist()}}},true);
+document.addEventListener("change",async e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.ss83up||!t.files)return;const c=SS83(),files=[...t.files].slice(0,12-c.pics.length);if(!files.length)return;
+  if(API.mode!=="server"){files.forEach(f=>c.pics.push({url:URL.createObjectURL(f),name:f.name,local:true}));renderView();return}
+  toast(L("Uploading "+files.length+" picture(s)…","جارٍ رفع "+files.length+" صورة…"),{type:"info"});
+  for(const f of files){try{const r=await API.upload(f,f.name);c.pics.push({url:r.url,name:f.name})}catch(err){toast(L("A picture couldn't be uploaded.","تعذّر رفع صورة."),{type:"warn"})}}persist();renderView()},true);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="ss83-pick"],[data-act="ss83-rm"],[data-act="ss83-up"],[data-act="ss83-make"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const c=SS83(),act=a.dataset.act;
+  if(act==="ss83-pick"){const k=c.pics.findIndex(p=>p.url===a.dataset.u);if(k>=0)c.pics.splice(k,1);else if(c.pics.length<12)c.pics.push({url:a.dataset.u});else toast(L("12 pictures at most.","12 صورة كحد أقصى."),{type:"warn"});persist();renderView();return}
+  if(act==="ss83-rm"){c.pics.splice(+a.dataset.i,1);persist();renderView();return}
+  if(act==="ss83-up"){const i=+a.dataset.i;if(i>0){const t=c.pics[i];c.pics[i]=c.pics[i-1];c.pics[i-1]=t;persist();renderView()}return}
+  if(c.pics.length<2){toast(L("Pick at least two pictures.","اختر صورتين على الأقل."),{type:"warn"});return}
+  if(API.mode!=="server"||a.disabled)return;const [W,H]=SSIZE83[c.aspect]||SSIZE83["9:16"];a.disabled=true;
+  try{const r=await API.req("/v1/render/slideshow",{json:{pictures:c.pics.map(p=>({url:p.url,caption:capPNG83(p.cap,W,H)})),secs:c.secs,motion:c.motion,transition:c.tr,aspect:c.aspect,music:c.music||undefined,title:(c.pics.find(p=>p.cap)||{}).cap||L("Video from pictures","فيديو من الصور")}});
+    S.jobs.push({id:uid(),remote:r.id,kind:"slideshow",status:"rendering",progress:.1,created:Date.now(),dur:r.dur,aspect:c.aspect,title:L("Video from pictures","فيديو من الصور"),prompt:"",cost:0,pal:PALS[0],seed:1,art:"scene"});persist();renderView();toast(L("Making your video — usually under a minute.","جارٍ صنع الفيديو — عادةً أقل من دقيقة."),{type:"info"})}
+  catch(err){toast(String(err.message||err),{type:"warn"})}finally{a.disabled=false}},true);
+
+// ---- connections (Integrations → API tokens): each one has its own rules. Read-only connections only look; a daily
+// credit limit; posts it schedules wait for your approval (here and on Schedule & publish). Only you approve, from the app.
+const PEND83={list:[],at:0,busy:false};
+async function pendLoad83(force){if(API.mode!=="server"||PEND83.busy||(!force&&Date.now()-PEND83.at<20000))return;PEND83.busy=true;
+  try{PEND83.list=((await API.req("/v1/posts")).posts||[]).filter(p=>p.status==="awaiting");PEND83.at=Date.now();if(["integrations","calendar"].includes(S.view))renderView()}catch(e){}finally{PEND83.busy=false}}
+function pendHTML83(){if(API.mode!=="server")return"";pendLoad83();if(!PEND83.list.length)return"";
+  return'<div class="panel pad pend83"><div class="spread"><h3 style="margin:0">'+ic("bell","width:18px;height:18px")+" "+L("Waiting for your approval","بانتظار موافقتك")+" · "+PEND83.list.length+'</h3></div><p class="small mute" style="margin:6px 0 10px">'+L("An AI assistant connected to your account asked to post these. Nothing goes out until you approve it.","طلب مساعد ذكاء مرتبط بحسابك نشر هذه المنشورات، ولن يُنشر شيء حتى توافق.")+"</p>"+
+    PEND83.list.map(p=>'<div class="pi83"><div><b dir="auto">'+esc(String(p.caption||"").slice(0,140)||L("(no caption)","(بلا نص)"))+'</b><small class="mute">'+esc((p.platforms||[]).join(" · "))+(p.at?" · "+esc(new Date(p.at).toLocaleString()):"")+" · "+esc(p.via==="mcp"?"MCP":"API")+"</small>"+(p.mediaUrl?'<small class="mute" dir="ltr">'+esc(String(p.mediaUrl).slice(0,80))+"</small>":"")+'</div><div class="row"><button class="btn sm primary" data-act="pend83" data-op="approve" data-id="'+esc(p.id)+'">'+ic("check")+L("Approve","وافق")+'</button><button class="btn sm ghost" data-act="pend83" data-op="reject" data-id="'+esc(p.id)+'">'+ic("x")+L("Remove","احذف")+"</button></div></div>").join("")+"</div>"}
+function tokRows83(){return TOKENS.list.map(t=>'<div class="tk83"><div class="tk83h"><span class="mono">…'+esc(t.last4)+'</span><b dir="auto">'+esc(t.name||"")+'</b><button class="btn sm ghost danger" data-act="tok-del" data-id="'+t.id+'" aria-label="'+L("Delete this connection","احذف هذا الربط")+'">'+ic("trash")+"</button></div>"+
+  '<div class="tk83r"><label>'+L("Can","يستطيع")+' <select data-tok83="access" data-id="'+t.id+'"><option value="full"'+(t.access!=="read"?" selected":"")+">"+L("make & post","الإنشاء والنشر")+'</option><option value="read"'+(t.access==="read"?" selected":"")+">"+L("only look (read-only)","المشاهدة فقط")+"</option></select></label>"+
+  '<label>'+L("Daily limit","الحد اليومي")+' <input type="number" min="0" step="10" dir="ltr" data-tok83="dailyCap" data-id="'+t.id+'" value="'+(t.dailyCap??500)+'"'+(t.access==="read"?" disabled":"")+"> "+L("credits","رصيد")+"</label>"+
+  '<label class="ck83"><input type="checkbox" data-tok83="approvePosts" data-id="'+t.id+'"'+(t.approvePosts!==false?" checked":"")+(t.access==="read"?" disabled":"")+"> "+L("Ask me before posting","اسألني قبل النشر")+"</label>"+
+  '<span class="small mute">'+L("Spent today: ","صُرف اليوم: ")+(t.spentToday||0)+"</span></div></div>").join("")}
+renderView=(o=>function(){const r=o.apply(this,arguments);try{
+  if(S.view==="integrations"){const u=document.querySelector("#main .usage");if(u&&TOKENS.list.length){u.classList.add("tk83w");u.innerHTML=tokRows83()}
+    const s=document.querySelector("#main .panel.set");if(s&&!document.querySelector("#main .pend83"))s.insertAdjacentHTML("afterend",pendHTML83())}
+  if(S.view==="calendar"){const v=document.querySelector("#main .view");if(v&&!v.querySelector(".pend83")){const h=v.querySelector("h1")||v.querySelector(".hubtabs");const x=pendHTML83();if(x){const p=v.querySelector(".lede");(p||h).insertAdjacentHTML("afterend",x)}}}
+}catch(e){}return r})(renderView);
+document.addEventListener("change",async e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.tok83)return;const k=t.dataset.tok83,id=t.dataset.id,v=k==="approvePosts"?t.checked:k==="dailyCap"?Math.max(0,Math.round(+t.value||0)):t.value;
+  try{const r=await API.req("/v1/tokens/"+id,{method:"PUT",json:{[k]:v}});const i=TOKENS.list.findIndex(x=>x.id===id);if(i>=0&&r.token)TOKENS.list[i]=r.token;toast(L("Saved","تم الحفظ"),{type:"ok"});renderView()}catch(err){toast(String(err.message||err),{type:"warn"})}},true);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="pend83"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
+  try{await API.req("/v1/posts/"+a.dataset.id+"/"+a.dataset.op,{json:{}});PEND83.list=PEND83.list.filter(p=>p.id!==a.dataset.id);toast(a.dataset.op==="approve"?L("Approved — it will post at its time.","تمت الموافقة — سيُنشر في وقته."):L("Removed","تم الحذف"),{type:"ok"});renderView()}catch(err){toast(String(err.message||err),{type:"warn"})}},true);
+(()=>{const st=document.createElement("style");st.id="v83css";st.textContent=`
+/* Motion Control */
+.mc83 .mc83h{margin:2px 0 8px}
+.mc83 .mclib83{margin-top:8px;width:100%}
+.warn83{color:var(--warn,#b45309);margin:6px 0 0}
+.check83{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:13.5px;line-height:1.45;cursor:pointer}
+.check83 input{margin-top:3px;flex:none;width:18px;height:18px;accent-color:var(--lime)}
+.seg [data-locked]{opacity:.6}
+/* what the AI received */
+.sent83{margin-top:12px;border:1px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--panel2)}
+.sent83 summary{cursor:pointer;font-size:13px;font-weight:600}
+.sentp83{margin:8px 0 0;font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.sentk83{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12.5px;color:var(--mute)}
+.sentk83 b{color:var(--text);font-weight:600}
+/* Recipes */
+.rcards83{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr));gap:12px;margin:6px 0 18px}
+.rc83{display:flex;flex-direction:column;gap:6px;text-align:start;padding:14px;cursor:pointer;min-width:0}
+.rc83[aria-pressed="true"]{border-color:var(--lime);box-shadow:0 0 0 2px color-mix(in srgb,var(--lime) 35%,transparent)}
+.rc83 b{font-size:15px}
+.rcs83{display:flex;align-items:center;gap:4px;margin-top:4px;color:var(--mute)}
+.rcs83 i{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--panel2);color:var(--lime-ink)}
+.rcs83 i svg{width:15px;height:15px}.rcs83 em{font-style:normal;opacity:.6}
+.rtwo83{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:980px){.rtwo83{grid-template-columns:1fr}}
+.rsteps83{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.rsteps83 li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:start;padding:8px 10px;border-radius:12px;background:var(--panel2)}
+.rsteps83 li b{display:block;font-size:13.5px}.rsteps83 li small{font-size:12px}
+.rsteps83 details{margin-top:4px;font-size:12.5px}.rsteps83 details p{margin:4px 0 0;line-height:1.5;word-break:break-word}
+.rsi83{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--panel3,var(--panel));color:var(--lime-ink)}
+.rsi83 svg{width:17px;height:17px}
+.runs83{display:flex;flex-direction:column;gap:12px;min-width:0}
+.run83 .strip{margin-top:10px}
+.st83[data-st="done"]{background:color-mix(in srgb,var(--lime) 22%,transparent);color:var(--lime-ink)}
+.st83[data-st="running"]{background:var(--panel2);color:var(--text)}
+.st83[data-st="stopped"]{background:color-mix(in srgb,#f59e0b 20%,transparent);color:var(--warn,#b45309)}
+
+html[dir="rtl"] .rcs83 em{display:inline-block;transform:scaleX(-1)}
+/* Compare text AIs */
+.lc83g{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:12px;margin-top:12px}
+.lc83c{display:flex;flex-direction:column;gap:4px;padding:12px;border-radius:12px;background:var(--panel2);min-width:0}
+.lc83s{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums}
+.lc83l{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.lc83l li{display:flex;gap:8px;align-items:flex-start;font-size:13px}.lc83l li svg{width:15px;height:15px;flex:none;margin-top:2px}
+.lc83l li.ok svg{color:var(--lime-ink)}.lc83l li.no svg{color:var(--warn,#b45309)}
+/* Video from pictures */
+.ss83l{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.ss83l li{display:grid;grid-template-columns:52px minmax(0,1fr) auto auto;gap:8px;align-items:center}
+.ss83l img{width:52px;height:52px;object-fit:cover;border-radius:10px;background:var(--panel2)}
+.ss83l input{min-width:0}
+.ss83g{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:8px}
+.ss83t{position:relative;padding:0;border:2px solid transparent;border-radius:12px;overflow:hidden;aspect-ratio:1;background:var(--panel2);cursor:pointer}
+.ss83t img{width:100%;height:100%;object-fit:cover;display:block}
+.ss83t[aria-pressed="true"]{border-color:var(--lime)}
+.ss83t b{position:absolute;top:4px;inset-inline-start:4px;min-width:22px;height:22px;border-radius:11px;background:var(--lime);color:#14200a;font-size:12px;display:grid;place-items:center}
+/* connections and posts waiting for approval */
+.tk83w{display:flex!important;flex-direction:column;gap:10px}
+.usage.tk83w>.tk83{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;align-items:stretch;gap:8px;background:var(--panel2)}
+.tk83h{display:flex;align-items:center;gap:10px;min-width:0}.tk83h .mono{flex:none;color:var(--mute)}.tk83h b{flex:1;min-width:0;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk83r{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;font-size:13px}
+.tk83r label{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.tk83w .tk83r select,.tk83w .tk83r input[type=number]{width:auto;min-width:0;height:32px;padding:3px 8px;font-size:13px;border-radius:8px}.tk83w .tk83r input[type=number]{width:84px}
+.tk83w .tk83r input[type=checkbox]{width:16px;height:16px;accent-color:var(--lime)}
+.tk83r .spent83{color:var(--mute)}
+@media(max-width:600px){.tk83w .tk83r select,.tk83w .tk83r input[type=number]{font-size:16px;height:36px}}
+.ck83{display:inline-flex;align-items:center;gap:6px}
+.pend83{margin:14px 0;border-color:color-mix(in srgb,var(--lime) 45%,var(--line))}
+.pi83{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line)}
+.pi83>div:first-child{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 240px}.pi83 b{font-weight:500;word-break:break-word}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
