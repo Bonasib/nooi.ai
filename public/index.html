@@ -12035,6 +12035,207 @@ if(typeof hfRatioSheet==="function")hfRatioSheet=(o=>function(){o.apply(this,arg
 .pk84ci .gsw{width:18px;height:18px}
 `;document.head.appendChild(st)})();
 
+/* ================= v85: Physics — real weight, water, air, cars and bodies (MuJoCo on our server) ================= */
+// 3D → Physics. Pick what happens; our server computes it with MuJoCo (lib/physics-scenes.js) and the page plays the real motion
+// in 3D (slow motion, scrub, camera). "What happened" lists the measured numbers, and one sentence carries them into Create video,
+// Cinema Studio and the AI bots; the clip itself can be saved to the library or used as the movement for Motion Control — so the
+// same physics runs through the whole site. Free (no engine, no credits).
+const ICP85={phys85:'<circle cx="8" cy="7" r="3"/><path d="M8 10v1M5 21h14"/><path d="M14 9c2 1 3 3 3 6" stroke-dasharray="1.5 2"/><circle cx="17" cy="18" r="2.6"/>',
+ objects:'<rect x="4" y="12" width="7" height="7" rx="1"/><circle cx="16.5" cy="8" r="3.5"/><path d="M16.5 13v2M16.5 17v1" stroke-dasharray="1 1.5"/><path d="M3 21h18"/>',
+ water:'<path d="M3 15c2 0 2-1.5 4.5-1.5S10 15 12 15s2.5-1.5 4.5-1.5S19 15 21 15M3 19c2 0 2-1.5 4.5-1.5S10 19 12 19s2.5-1.5 4.5-1.5S19 19 21 19"/><rect x="9" y="5" width="6" height="6" rx="1"/>',
+ air:'<path d="M5 4v17"/><path d="M5 5c4-1 6 2 10 1s4 1 4 1v7s-1-2-4-1-6-2-10-1"/>',
+ car:'<path d="M3 15l2-5h11l3 5"/><rect x="2" y="15" width="20" height="3" rx="1"/><circle cx="7" cy="18.5" r="2"/><circle cx="17" cy="18.5" r="2"/>',
+ body:'<circle cx="12" cy="4.5" r="2"/><path d="M12 7v7M8 10l4-2 4 2M9 21l3-7 3 7"/>',
+ wood:'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M6 10c3-1 6 1 12 0M6 14c4 1 8-1 12 0"/>', metal:'<path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z"/><circle cx="12" cy="12" r="3"/>',
+ rubber:'<circle cx="12" cy="12" r="8"/><path d="M4.5 9.5c5 2 10 2 15 0M4.5 14.5c5-2 10-2 15 0"/>', glass:'<path d="M7 3h10l-1 9a4 4 0 0 1-8 0z"/><path d="M12 16v5M8.5 21h7M9.5 6l-.6 5"/>',
+ stone:'<path d="M4 15l3-7 6-3 6 4 1 7-5 4H8z"/>', foam:'<rect x="3" y="6" width="18" height="12" rx="3"/><circle cx="8" cy="10" r="1.2"/><circle cx="13" cy="13" r="1.5"/><circle cx="17" cy="9.5" r="1"/><circle cx="9" cy="15" r=".8"/>',
+ plastic:'<path d="M10 2h4v3l2 3v12a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V8l2-3z"/><path d="M8 12h8"/>', ice:'<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" opacity=".6"/><path d="M7 9.5l2 1.2"/>',
+ concrete:'<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 12h18M9 5v7M15 12v7"/>', asphalt:'<path d="M7 21L10 3M17 21L14 3"/><path d="M12 6v2M12 11v2M12 16v2"/>',
+ wet:'<path d="M7 21L10 3M17 21L14 3"/><path d="M12 9c1.5 2 1.5 3.5 0 4.5-1.5-1-1.5-2.5 0-4.5z"/>', gravel:'<circle cx="6" cy="16" r="2"/><circle cx="12" cy="17" r="2.5"/><circle cx="18" cy="16" r="2"/><circle cx="9" cy="11.5" r="1.5"/><circle cx="15" cy="11.5" r="1.5"/>',
+ grass:'<path d="M3 20h18M6 20c0-4-1-6-2-8M9 20c0-5 1-8 2-10M13 20c0-4 1-7 3-9M17 20c0-3 1-5 2-6"/>', sand:'<path d="M2 17c3-3 6-3 9 0s6 3 11 0M2 21c4-2 7-2 10 0s6 2 10 0"/><circle cx="17" cy="7" r="3"/>',
+ snow:'<path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"/>', woodfloor:'<path d="M3 6h18M3 12h18M3 18h18M8 6v6M15 12v6M11 18v3M17 3v3"/>', iceroad:'<path d="M3 18c4-3 14-3 18 0"/><path d="M6 12l3-1M12 10l3 1M17 13l2 1"/>',
+ brake:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M5 7l3 2"/>', accelerate:'<path d="M3 12h11M10 7l5 5-5 5M17 7l5 5-5 5"/>',
+ turn:'<path d="M5 20V12a6 6 0 0 1 6-6h6"/><path d="M14 3l3 3-3 3"/>', jump:'<path d="M2 20h7l5-5"/><path d="M14 13c2-5 5-6 8-3" stroke-dasharray="1.5 2"/>', crash:'<rect x="15" y="5" width="6" height="6"/><rect x="15" y="13" width="6" height="6"/><path d="M3 15h7l2-3"/><path d="M12 8l1-3M13 11h-3"/>',
+ push:'<circle cx="15" cy="5" r="2"/><path d="M15 7l-1 7 2 7M14 10l3 2M3 11h6M6 8l3 3-3 3"/>', trip:'<path d="M2 20h20"/><rect x="11" y="17" width="3" height="3"/><circle cx="16" cy="5" r="2"/><path d="M15 7l-4 6 4 4M13 10l4 1"/>',
+ fall:'<rect x="2" y="9" width="7" height="12"/><circle cx="15" cy="4" r="2"/><path d="M15 6v6M12 9l3 1 3-1M13 16l2-4 2 4"/><path d="M20 12v6M18 16l2 2 2-2"/>',
+ hit:'<circle cx="7" cy="9" r="3"/><path d="M10 9h2M16 5v0"/><circle cx="17" cy="4.5" r="2"/><path d="M17 7v7l-2 6M17 14l2 6M14 10l3-1 3 1"/>', intowater:'<circle cx="12" cy="3.5" r="1.8"/><path d="M12 5.5v6M10 8h4"/><path d="M3 16c2 0 2-1.5 4.5-1.5S10 16 12 16s2.5-1.5 4.5-1.5S19 16 21 16M5 20h14"/>',
+ front:'<path d="M12 20V5M6 11l6-6 6 6"/>', back:'<path d="M12 4v15M6 13l6 6 6-6"/>', left:'<path d="M20 12H5M11 6l-6 6 6 6"/>', right:'<path d="M4 12h15M13 6l6 6-6 6"/>',
+ tense:'<path d="M3 12l3-5 3 10 3-10 3 10 3-10 3 5"/>', normal:'<path d="M3 12c3-4 6-4 9 0s6 4 9 0"/>', limp:'<path d="M3 9c4 0 4 8 9 8s5-8 9-8"/>',
+ flag:'<path d="M5 3v18"/><path d="M5 4c4-2 7 2 11 0v8c-4 2-7-2-11 0"/>', paper:'<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><circle cx="20" cy="17" r="2"/>',
+ ball:'<circle cx="12" cy="12" r="8"/>', box:'<rect x="5" y="5" width="14" height="14" rx="1.5"/>', cylinder:'<ellipse cx="12" cy="6" rx="7" ry="2.5"/><path d="M5 6v12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V6"/>'};
+Object.entries(ICP85).forEach(([k,v])=>{if(!ICONS["ph_"+k])ICONS["ph_"+k]=v});ICONS.phys85=ICP85.phys85;
+// what each choice is and does (shown in the one picker from v84)
+const PHM85={wood:["Wood","خشب","Light and warm — floats in water, knocks with a hollow sound.","خفيف ودافئ — يطفو على الماء ويُحدث صوتاً أجوف."],metal:["Steel","فولاذ","Very heavy and hard — barely bounces, sinks at once.","ثقيل جداً وصلب — بالكاد يرتد ويغوص فوراً."],
+ rubber:["Rubber","مطاط","Bouncy and grippy — a hollow ball bounces again and again.","مرن ومتماسك — الكرة المجوفة ترتد مرة بعد مرة."],glass:["Glass","زجاج","Hard and brittle — breaks when it hits hard (from about 25 cm).","صلب وهش — ينكسر عند صدمة قوية (من نحو 25 سم)."],
+ stone:["Stone","حجر","Heavy and dull — lands with a thud and stays.","ثقيل ومكتوم — يسقط بصوت مكتوم ويستقر."],foam:["Foam","إسفنج","Almost weightless — slows in the air, soft landing.","شبه عديم الوزن — يتباطأ في الهواء ويهبط بنعومة."],
+ plastic:["Plastic","بلاستيك","Light and springy — bounces a little, floats low.","خفيف ومرن — يرتد قليلاً ويطفو منخفضاً."],ice:["Ice","جليد","Slippery and brittle — slides far, cracks on a hard hit, floats mostly under.","زلق وهش — ينزلق بعيداً ويتشقق بالصدمة القوية ويطفو وأغلبه تحت الماء."]};
+const PHS85={concrete:["Concrete","خرسانة","Hard and grippy — things stop fast.","صلبة ومتماسكة — الأشياء تتوقف بسرعة.","concrete"],wood:["Wooden floor","أرضية خشبية","Smooth — things slide a bit before they stop.","ناعمة — الأشياء تنزلق قليلاً قبل أن تتوقف.","woodfloor"],
+ grass:["Grass","عشب","Soft — absorbs the hit, short bounces.","ناعم — يمتص الصدمة والارتداد قصير.","grass"],sand:["Sand","رمل","Soft and grabby — things sink in and stop dead.","ناعم ويمسك — الأشياء تغوص قليلاً وتتوقف.","sand"],
+ ice:["Ice","جليد","Almost no grip — things slide a long way.","بلا تماسك تقريباً — الأشياء تنزلق مسافة طويلة.","iceroad"],asphalt:["Dry asphalt","أسفلت جاف","Best grip — shortest braking.","أفضل تماسك — أقصر مسافة كبح.","asphalt"],
+ wet:["Wet asphalt","أسفلت مبلل","Less grip — braking takes about half again as long.","تماسك أقل — الكبح يحتاج نحو مرة ونصف المسافة.","wet"],gravel:["Gravel","حصى","Loose — the car slides and kicks up stones.","مفكك — السيارة تنزلق وتتطاير الحصى.","gravel"],
+ snow:["Snow","ثلج","Little grip — about three times the braking distance.","تماسك قليل — نحو ثلاثة أضعاف مسافة الكبح.","snow"]};
+const PHCAR85={brake:["Hard brake","كبح قوي","Full brakes at speed: the nose dips, the tyres squeal or slide.","كبح كامل بسرعة: تنخفض المقدمة وتصرّ الإطارات أو تنزلق."],accelerate:["Launch","انطلاق","Full throttle from a stop: the rear squats, the tyres fight for grip.","أقصى تسارع من التوقف: تنخفض المؤخرة وتصارع الإطارات للتماسك."],
+ turn:["Fast turn","انعطاف سريع","Steering at speed: the body leans out, the rear may slide.","انعطاف بسرعة: يميل الجسم للخارج وقد تنزلق المؤخرة."],jump:["Ramp jump","قفزة من منحدر","Off a ramp: real air time, the nose drops, a hard landing.","من منحدر: وقت طيران حقيقي، تنخفض المقدمة، وهبوط قوي."],
+ crash:["Into boxes","اصطدام بالصناديق","Through a wall of cardboard boxes: they burst and tumble.","عبر جدار من الصناديق الكرتونية: تتطاير وتتدحرج."]};
+const PHB85={push:["Pushed","دفعة","A shove: a stumble, lost balance, a natural fall.","دفعة: تعثّر وفقدان توازن وسقوط طبيعي.","push"],trip:["Trips","يتعثّر","Walking into a curb: the body keeps going, hands go out.","يصطدم بحافة الرصيف أثناء المشي: يواصل الجسم والأيدي تمتد.","trip"],
+ fall:["Drops from a height","يسقط من ارتفاع","Steps off a ledge: feet first, the legs give way.","يخطو من حافة: يهبط على قدميه وتنثني ساقاه.","fall"],hit:["Hit by a ball","تصيبه كرة","A football to the chest: the body snaps back.","كرة قدم في الصدر: يرتد الجسم للخلف.","hit"],
+ water:["Into water","يسقط في الماء","A drop into deep water: splash, under, back up.","سقوط في ماء عميق: رذاذ، ثم غوص، ثم صعود.","intowater"]};
+const PHF85={front:["From the front","من الأمام","They fall backwards — sit down, hands behind.","يسقط للخلف — يجلس ويداه خلفه."],back:["From behind","من الخلف","They fall forwards — hands out in front.","يسقط للأمام — يداه أمامه."],
+ left:["From the left","من اليسار","They fall to the right — that arm goes out.","يسقط لليمين — تمتد ذراعه."],right:["From the right","من اليمين","They fall to the left — that arm goes out.","يسقط لليسار — تمتد ذراعه."]};
+const PHT85={tense:["Braced","متأهب","Stiff and ready — a short, controlled fall.","متصلب ومستعد — سقوط قصير ومُسيطر عليه."],normal:["Natural","طبيعي","Like most people — reacts, then lets go.","مثل أغلب الناس — يتفاعل ثم يرتخي."],limp:["Limp","مرتخٍ","No resistance — falls like a sack (asleep, knocked out).","بلا مقاومة — يسقط ككيس (نائم أو فاقد الوعي)."]};
+const PHA85={flag:["Flag in the wind","علم في الرياح","Cloth on a pole: ripples, snaps in the gusts.","قماش على سارية: يتموج ويرفرف مع الهبات.","flag"],paper:["Paper vs ball","ورقة وكرة","Dropped together: the ball falls straight, the paper glides and flutters.","يسقطان معاً: الكرة مباشرة، والورقة تنزلق وتتأرجح.","paper"]};
+const PHSH85={ball:["Ball","كرة","Rolls after it lands.","تتدحرج بعد الهبوط.","ball"],box:["Block","كتلة","Lands flat and stays (glass and ice blocks can break).","تهبط وتستقر (كتل الزجاج والجليد قد تنكسر).","box"],cylinder:["Cylinder","أسطوانة","Rolls on its side, wobbles on its end.","تتدحرج على جانبها وتتمايل على طرفها.","cylinder"]};
+const pkReg85=(R,ic)=>Object.fromEntries(Object.entries(R).map(([k,v])=>[k,[v[0],v[1],v[2],v[3],ICP85[v[4]||(ic?ic(k):k)]]]));
+if(typeof PKF84!=="undefined"){PKV84.phmat=pkReg85(PHM85);PKV84.phitems=PKV84.phmat;PKV84.phsurf=pkReg85(PHS85);PKV84.phcar=pkReg85(PHCAR85);PKV84.phbody=pkReg85(PHB85);PKV84.phfrom=pkReg85(PHF85);PKV84.phtone=pkReg85(PHT85);PKV84.phair=pkReg85(PHA85);PKV84.phshape=pkReg85(PHSH85);
+  PKF84.push(["phmat",["Material","المادة"],['[data-set="ph85.material"]']],["phitems",["What falls in","ما يسقط في الماء"],['[data-toggle^="ph85.it."]'],null,{multi:1}],["phshape",["Shape","الشكل"],['[data-set="ph85.shape"]']],
+   ["phsurf",["Surface","السطح"],['[data-set="ph85.surface"]','[data-set="ph85.road"]','[data-set="ph85.bsurface"]']],["phcar",["The car","السيارة"],['[data-set="ph85.action"]']],["phbody",["What happens","ماذا يحدث"],['[data-set="ph85.bodyAction"]']],
+   ["phfrom",["Pushed","الدفع"],['[data-set="ph85.from"]']],["phtone",["Muscles","العضلات"],['[data-set="ph85.tone"]']],["phair",["In the air","في الهواء"],['[data-set="ph85.mode"]']])}
+const ph85=()=>(S.ph85=Object.assign({scene:"objects",material:"rubber",shape:"ball",height:2,throw:0,count:1,surface:"concrete",it:{wood:true,ice:true,metal:true},wheight:2,mode:"flag",wind:9,action:"brake",speed:80,road:"asphalt",bodyAction:"push",from:"front",strength:"medium",tone:"normal",bheight:3,bsurface:"concrete"},S.ph85||{}));
+const PH85={res:null,busy:false,t:0,play:true,slow:false,cam:"auto",raf:0,last:0,rec:false};
+const PHSC85=[["objects","Objects","أشياء","Weight, bounce, breaking"],["water","Water","ماء","Splash, float or sink"],["air","Air & cloth","الهواء والقماش","Wind and air drag"],["car","Car","سيارة","Grip, weight, speed"],["body","Body","الجسم","Balance and falls"]];
+const tl85=(key,R,cur)=>'<div class="tiles">'+Object.entries(R).map(([k,v])=>'<button class="tile" data-set="ph85.'+key+'" data-val="'+k+'" aria-pressed="'+(String(cur)===k)+'"><span class="gl">'+svg(ICP85[v[4]||k]||ICP85.objects)+'</span><span class="lb">'+esc(L(v[0],v[1]))+"</span></button>").join("")+"</div>";
+const sg85=(key,list,cur,num)=>'<div class="seg">'+list.map(([v,en,ar])=>'<button data-set="ph85.'+key+'" data-val="'+v+'"'+(num?' data-num="1"':"")+' aria-pressed="'+(String(cur)===String(v))+'">'+esc(L(en,ar))+"</button>").join("")+"</div>";
+const lb85=(en,ar)=>'<span class="lbl">'+L(en,ar)+"</span>";
+function ph85opts(c){
+  if(c.scene==="objects")return lb85("Material","المادة")+tl85("material",PHM85,c.material)+lb85("Shape","الشكل")+tl85("shape",PHSH85,c.shape)+lb85("Surface","السطح")+tl85("surface",Object.fromEntries(["concrete","wood","grass","sand","ice"].map(k=>[k,PHS85[k]])),c.surface)+
+    '<div class="grid2"><div>'+lb85("Height","الارتفاع")+sg85("height",[[0.5,"0.5 m","0.5 م"],[2,"2 m","2 م"],[5,"5 m","5 م"]],c.height,1)+"</div><div>"+lb85("How many","العدد")+sg85("count",[[1,"1","1"],[3,"3","3"],[6,"6","6"]],c.count,1)+"</div></div>"+
+    lb85("Throw","الرمي")+sg85("throw",[[0,"Just drop","إسقاط فقط"],[4,"Toss","رمية خفيفة"],[10,"Hard throw","رمية قوية"]],c.throw,1);
+  if(c.scene==="water")return lb85("What falls in","ما يسقط في الماء")+'<div class="toggles">'+Object.keys(PHM85).map(k=>'<button class="chip" data-toggle="ph85.it.'+k+'" aria-pressed="'+!!(c.it||{})[k]+'">'+esc(L(PHM85[k][0],PHM85[k][1]))+"</button>").join("")+"</div>"+
+    lb85("Dropped from","يسقط من")+sg85("wheight",[[0.5,"0.5 m","0.5 م"],[2,"2 m","2 م"],[6,"6 m","6 م"]],c.wheight,1);
+  if(c.scene==="air")return lb85("In the air","في الهواء")+tl85("mode",PHA85,c.mode)+lb85("Wind","الرياح")+sg85("wind",[[2,"Calm","هادئة"],[6,"Breeze","نسيم"],[12,"Strong","قوية"],[20,"Storm","عاصفة"]],c.wind,1);
+  if(c.scene==="car")return lb85("The car","السيارة")+tl85("action",PHCAR85,c.action)+lb85("Road","الطريق")+tl85("road",Object.fromEntries(["asphalt","wet","gravel","snow","ice"].map(k=>[k,PHS85[k]])),c.road)+
+    (c.action!=="accelerate"?lb85("Speed","السرعة")+sg85("speed",[[40,"40 km/h","40 كم/س"],[80,"80 km/h","80 كم/س"],[120,"120 km/h","120 كم/س"]],c.speed,1):"");
+  return lb85("What happens","ماذا يحدث")+tl85("bodyAction",PHB85,c.bodyAction)+
+    (c.bodyAction==="push"?lb85("Pushed","الدفع")+tl85("from",PHF85,c.from)+lb85("How hard","القوة")+sg85("strength",[["light","Light","خفيفة"],["medium","Medium","متوسطة"],["strong","Strong","قوية"]],c.strength):"")+
+    (c.bodyAction==="fall"||c.bodyAction==="water"?lb85("Height","الارتفاع")+sg85("bheight",[[1.2,"1.2 m","1.2 م"],[3,"3 m","3 م"],[6,"6 m","6 م"]],c.bheight,1):"")+
+    lb85("Muscles","العضلات")+tl85("tone",PHT85,c.tone)+(c.bodyAction!=="water"?lb85("Ground","الأرض")+tl85("bsurface",Object.fromEntries(["concrete","wood","grass","sand"].map(k=>[k,PHS85[k]])),c.bsurface):"")}
+function ph85body(c){const o={objects:{material:c.material,shape:c.shape,height:c.height,count:c.count,throw:c.throw,surface:c.surface},water:{items:Object.keys(c.it||{}).filter(k=>c.it[k]).slice(0,4),height:c.wheight},air:{mode:c.mode,wind:c.wind},
+  car:{action:c.action,speed:c.speed,surface:c.road},body:{action:c.bodyAction,from:c.from,strength:c.strength,tone:c.tone,height:c.bheight,surface:c.bsurface}}[c.scene];return{scene:c.scene,opts:o}}
+const EVW85={impact:["hits at {v} m/s","اصطدام بسرعة {v} م/ث"],bounce:["bounces ({v} m/s)","ارتداد ({v} م/ث)"],break:["breaks into pieces","انكسار إلى قطع"],splash:["splashes in at {v} m/s","دخول الماء بسرعة {v} م/ث"],
+  airborne:["takes off","انطلاق في الهواء"],land:["lands{at}","هبوط{at}"],stop:["stops","توقف تام"]};
+const PART85={hand:["hands","اليدان"],head:["head","الرأس"],back:["back","الظهر"],hip:["hip","الورك"],arm:["arm","الذراع"],leg:["leg","الساق"],foot:["feet","القدمان"],feet:["feet","القدمان"],car:["the car","السيارة"],body:["the person","الشخص"]};
+function ph85what(R){const W=PHM85;const name=e=>{const w=String(e.what||"");if(PART85[w])return L(PART85[w][0],PART85[w][1]);if(/^w\d/.test(w)&&R.facts.items){const it=R.facts.items[+w.slice(1)];return it?L(W[it.material][0],W[it.material][1]):""}return""};
+  const evs=(R.events||[]),ev=(evs.length>7?evs.slice(0,5).concat([evs[evs.length-1]]):evs).map(e=>{const w=EVW85[e.type]||[e.type,e.type];const tx=L(w[0],w[1]).replace("{v}",e.speed!=null?e.speed:"").replace("{at}",e.speed?L(" at "+e.speed+" m/s"," بسرعة "+e.speed+" م/ث"):"");
+    return'<li><span class="mono">'+(+e.t).toFixed(2)+L(" s"," ث")+"</span>"+(name(e)?"<b>"+esc(name(e))+"</b> "+L("","· "):"")+esc(tx)+"</li>"}).join("");
+  const F=R.facts,fx=[];const add=(en,ar,v)=>{if(v!=null&&v!==""&&v!==false)fx.push('<span><b>'+esc(String(v))+"</b> "+esc(L(en,ar))+"</span>")};
+  if(R.scene==="objects"){add("s to fall","ث للسقوط",F.fallTime);add("m/s at impact","م/ث عند الاصطدام",F.impact);add("bounces","ارتدادات",F.bounces);if(F.bounces)add("cm first bounce","سم أول ارتداد",Math.round(F.bounceHeight*100));if(F.broke)fx.push("<span><b>"+L("Broke","انكسر")+"</b></span>")}
+  if(R.scene==="water")(F.items||[]).forEach(x=>fx.push("<span><b>"+esc(L(W[x.material][0],W[x.material][1]))+"</b> "+(x.floats?L("floats · "+x.under+"% under","يطفو · "+x.under+"٪ تحت الماء"):L("sinks","يغوص"))+"</span>"));
+  if(R.scene==="air"){if(F.mode==="flag"){add("km/h wind","كم/س رياح",F.kmh)}else{add("s ball","ث للكرة",F.ball);add("s paper","ث للورقة",F.paper);add("s with no air","ث بلا هواء",F.vacuum)}}
+  if(R.scene==="car"){add("m to stop","م للتوقف",F.stopDist||null);add("s to stop","ث للتوقف",F.stopTime);add("g braking","g كبح",F.decel);add("° nose dip","° انخفاض المقدمة",F.action==="brake"?F.noseDip:null);add("s to 100 km/h","ث إلى 100 كم/س",F.t100);add("° body lean","° ميل الجسم",F.action==="turn"?F.roll:null);add("s in the air","ث في الهواء",F.airTime||null);add("m jump","م قفزة",F.jumpLen||null);add("km/h impact","كم/س اصطدام",F.hitSpeed)}
+  if(R.scene==="body"){add("s to the ground","ث حتى الأرض",F.ground);if(F.first&&PART85[F.first])fx.push("<span><b>"+esc(L(PART85[F.first][0],PART85[F.first][1]))+"</b> "+L("touch first","تلمس أولاً")+"</span>");add("m/s landing","م/ث هبوط",F.landSpeed);add("m/s into water","م/ث في الماء",F.splash)}
+  return'<div class="ph85what"><h3>'+L("What happened","ماذا حدث")+'</h3><div class="ph85fx">'+fx.join("")+'</div><ol class="ph85ev">'+ev+'</ol><div class="ph85words"><span class="lbl" style="margin-top:0">'+L("In words, for a video","بالكلمات، لفيديو")+'</span><p dir="auto">'+esc(L(R.words.en,R.words.ar))+'</p></div>'+
+    '<div class="row ph85act"><button class="btn primary" data-act="ph85-rec">'+ic("video")+L("Make a video of it","اصنع فيديو منها")+'</button><button class="btn" data-act="ph85-use" data-to="video">'+ic("video")+L("Use in Create video","استخدمها في إنشاء فيديو")+'</button><button class="btn" data-act="ph85-use" data-to="cinema">'+ic("camera")+L("Use in Cinema Studio","استخدمها في استوديو السينما")+"</button>"+
+    (R.scene==="body"?'<button class="btn" data-act="ph85-mc">'+ic("motion83")+L("Character does this (Motion Control)","شخصيتك تؤدي هذا (التحكم بالحركة)")+"</button>":"")+"</div></div>"}
+function ph85bar(){const R=PH85.res;return'<div class="ph85bar"><button class="btn sm" data-act="ph85-play" aria-label="'+L("Play or pause","تشغيل أو إيقاف")+'">'+ic(PH85.play?"pause":"play")+'</button><input type="range" min="0" max="'+R.dur+'" step="0.01" value="'+PH85.t+'" data-ph85seek aria-label="'+L("Time","الوقت")+'"><span class="mono ph85time">'+PH85.t.toFixed(2)+L(" s"," ث")+'</span><button class="btn sm'+(PH85.slow?" on":"")+'" data-act="ph85-slow" aria-pressed="'+PH85.slow+'">'+L("Slow ×¼","بطيء ×¼")+'</button><select class="ph85cam" data-ph85cam aria-label="'+L("Camera","الكاميرا")+'">'+[["auto","Follow","متابعة"],["side","Side","جانبية"],["top","From above","من الأعلى"]].map(x=>'<option value="'+x[0]+'"'+(PH85.cam===x[0]?" selected":"")+">"+L(x[1],x[2])+"</option>").join("")+"</select></div>"}
+VIEWS.physics=()=>{const c=ph85(),R=PH85.res&&PH85.res.scene===c.scene?PH85.res:null;
+  const form='<div class="panel pad ph85f"><span class="lbl" style="margin-top:0">'+L("What happens","ماذا يحدث")+'</span><div class="tiles ph85sc">'+PHSC85.map(s=>'<button class="tile" data-set="ph85.scene" data-val="'+s[0]+'" aria-pressed="'+(c.scene===s[0])+'"><span class="gl">'+svg(ICP85[s[0]])+'</span><span class="lb">'+esc(L(s[1],s[2]))+"</span></button>").join("")+"</div>"+ph85opts(c)+
+    '<div style="margin-top:16px"><button class="btn primary big" data-act="ph85-run"'+(PH85.busy?" disabled":"")+">"+(PH85.busy?'<span class="ph85spin"></span>'+L("Computing…","جارٍ الحساب…"):ic("play")+L("Simulate","شغّل المحاكاة"))+'<span class="cost">'+L("free","مجاناً")+'</span></button></div><p class="small mute" style="margin:10px 0 0">'+L("Computed with real physics (MuJoCo) on our server: weight, friction, bounce, water and air.","تُحسب بفيزياء حقيقية (MuJoCo) على خادمنا: الوزن والاحتكاك والارتداد والماء والهواء.")+"</p></div>";
+  const out='<div class="preview-col"><div class="panel pad ph85p"><div class="ph85stage">'+(R?"":'<div class="empty">'+L("Pick what happens and press Simulate.","اختر ما يحدث ثم اضغط «شغّل المحاكاة».")+"</div>")+"</div>"+(R?ph85bar()+ph85what(R):"")+"</div></div>";
+  return'<div class="view"><h1>'+L("Physics","الفيزياء")+'</h1><p class="lede">'+L("See what really happens — how things fall, bounce, break, float, fly in the wind, how a car grips and how a body loses balance — then carry it into your videos.","شاهد ما يحدث فعلاً — كيف تسقط الأشياء وترتد وتنكسر وتطفو وتطير مع الرياح، وكيف تتماسك السيارة وكيف يفقد الجسم توازنه — ثم انقله إلى فيديوهاتك.")+'</p><div class="two two82'+(R?" has":"")+'">'+form+out+"</div></div>"};
+// ---- the 3D player (three.js; the server's frames, Z up)
+async function ph85mount(){if(S.view!=="physics"||!PH85.res)return;let T;try{T=await w3Three()}catch(e){T=null}if(!T)return;PH85.T=T;
+  if(!PH85.r){PH85.canvas=document.createElement("canvas");PH85.canvas.className="ph85cv";const r=new T.WebGLRenderer({canvas:PH85.canvas,antialias:true,preserveDrawingBuffer:true});r.setPixelRatio(Math.min(2,window.devicePixelRatio||1));r.outputEncoding=T.sRGBEncoding;
+    r.shadowMap.enabled=!matchMedia("(max-width:600px)").matches;r.shadowMap.type=T.PCFSoftShadowMap;PH85.r=r;PH85.cam3=new T.PerspectiveCamera(40,16/9,0.05,600);
+    PH85.canvas.addEventListener("pointerdown",e=>{PH85.drag={x:e.clientX,y:e.clientY,yaw:PH85.yaw||0,pitch:PH85.pitch||0};PH85.canvas.setPointerCapture(e.pointerId)});
+    PH85.canvas.addEventListener("pointermove",e=>{const d=PH85.drag;if(!d)return;PH85.yaw=d.yaw+(e.clientX-d.x)*0.008;PH85.pitch=Math.max(-0.2,Math.min(1.2,d.pitch-(e.clientY-d.y)*0.006))});
+    PH85.canvas.addEventListener("pointerup",()=>{PH85.drag=null});PH85.canvas.addEventListener("wheel",e=>{e.preventDefault();PH85.zoom=Math.max(0.4,Math.min(3,(PH85.zoom||1)*(e.deltaY>0?1.1:0.9)))},{passive:false})}
+  const st=document.querySelector("#main .ph85stage");if(!st)return;if(PH85.canvas.parentNode!==st)st.appendChild(PH85.canvas);
+  const w=st.clientWidth||640,h=st.clientHeight||360;PH85.r.setSize(w,h,false);PH85.cam3.aspect=w/h;PH85.cam3.updateProjectionMatrix();
+  if(PH85.built!==PH85.res)ph85build(T);if(!PH85.raf){PH85.last=performance.now();PH85.raf=requestAnimationFrame(ph85tick)}}
+function ph85mat(T,col){const glass=col==="#bfe3ea",ice=col==="#dff3fb",metal=col==="#9aa3ab";return new T.MeshStandardMaterial({color:new T.Color(col),roughness:glass||ice?0.08:metal?0.35:0.65,metalness:metal?0.8:0,transparent:glass||ice,opacity:glass?0.55:ice?0.8:1})}
+function ph85build(T){const R=PH85.res,sc=new T.Scene();const dark=document.documentElement.dataset.theme==="dark"||(!document.documentElement.dataset.theme&&matchMedia("(prefers-color-scheme: dark)").matches);
+  sc.background=new T.Color(dark?0x1b2229:0xdfe9f0);sc.fog=new T.Fog(sc.background,40,140);
+  const root=new T.Group();root.rotation.x=-Math.PI/2;sc.add(root);sc.add(new T.HemisphereLight(0xffffff,0x4a5560,0.75));
+  const sun=new T.DirectionalLight(0xffffff,0.85);sun.position.set(6,14,8);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);const sh=sun.shadow.camera;sh.left=sh.bottom=-14;sh.right=sh.top=14;sh.far=60;sc.add(sun);sc.add(sun.target);PH85.sun=sun;
+  if(R.ground){const cv=document.createElement("canvas");cv.width=cv.height=128;const x=cv.getContext("2d");x.fillStyle=R.ground.color;x.fillRect(0,0,128,128);x.strokeStyle="rgba(0,0,0,.16)";x.lineWidth=2;x.strokeRect(0,0,128,128);
+    const tx=new T.CanvasTexture(cv);tx.wrapS=tx.wrapT=T.RepeatWrapping;tx.repeat.set(200,200);tx.encoding=T.sRGBEncoding;const g=new T.Mesh(new T.PlaneGeometry(200,200),new T.MeshStandardMaterial({map:tx,roughness:0.95}));g.receiveShadow=true;root.add(g)}
+  if(R.water){const deep=new T.Mesh(new T.PlaneGeometry(200,200),new T.MeshStandardMaterial({color:0x123447,roughness:1}));deep.position.z=R.water.floor;root.add(deep);
+    const wt=new T.Mesh(new T.PlaneGeometry(200,200),new T.MeshPhongMaterial({color:0x2f7fb0,transparent:true,opacity:0.62,shininess:90,specular:0x99ccee,depthWrite:false}));wt.position.z=R.water.level;wt.renderOrder=2;root.add(wt);
+    PH85.splash=(R.events||[]).filter(e=>e.type==="splash").map(e=>{const ring=new T.Mesh(new T.RingGeometry(0.85,1,48),new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,depthWrite:false}));ring.position.set(e.x,e.y,R.water.level+0.01);root.add(ring);
+      const n=70,pos=new Float32Array(n*3),vel=[];for(let i=0;i<n;i++){const a=(i/n)*Math.PI*2+Math.random()*0.3,sp=(0.25+Math.random()*0.55)*Math.min(9,e.speed);vel.push([Math.cos(a)*sp*0.35,Math.sin(a)*sp*0.35,sp*(0.6+Math.random()*0.6)])}
+      const gm=new T.BufferGeometry();gm.setAttribute("position",new T.BufferAttribute(pos,3));const pts=new T.Points(gm,new T.PointsMaterial({color:0xe8f6ff,size:0.06+0.02*e.size,transparent:true,opacity:0.9,depthWrite:false}));root.add(pts);return{e,ring,pts,vel}})}else PH85.splash=[];
+  const meshes=[];R.shapes.forEach(s=>{let o;const m=ph85mat(T,s.color),[a,b,c]=s.size;
+    if(s.kind==="box")o=new T.Mesh(new T.BoxGeometry(2*a,2*b,2*c),m);else if(s.kind==="sphere")o=new T.Mesh(new T.SphereGeometry(a,28,18),m);
+    else if(s.kind==="cylinder"){const g=new T.CylinderGeometry(a,a,2*b,28);g.rotateX(Math.PI/2);o=new T.Mesh(g,m)}
+    else if(s.kind==="capsule"){o=new T.Group();const g=new T.CylinderGeometry(a,a,2*b,16);g.rotateX(Math.PI/2);o.add(new T.Mesh(g,m));const e1=new T.Mesh(new T.SphereGeometry(a,16,12),m);e1.position.z=b;const e2=e1.clone();e2.position.z=-b;o.add(e1,e2)}else return;
+    o.traverse(x=>{if(x.isMesh){x.castShadow=true;x.receiveShadow=true}});if(s.i<0){o.position.set(...s.pos);o.quaternion.set(s.quat[1],s.quat[2],s.quat[3],s.quat[0])}root.add(o);meshes.push({s,o})});
+  if(R.cloth){const C=R.cloth,nx=C.nx,ny=C.ny,g=new T.BufferGeometry(),pos=new Float32Array(nx*ny*3),idx=[];for(let i=0;i<nx-1;i++)for(let j=0;j<ny-1;j++){const a=i*ny+j;idx.push(a,a+ny,a+1,a+1,a+ny,a+ny+1)}
+    g.setAttribute("position",new T.BufferAttribute(pos,3));g.setIndex(idx);const cm=new T.Mesh(g,new T.MeshStandardMaterial({color:new T.Color(C.color),roughness:0.85,side:T.DoubleSide}));cm.castShadow=true;root.add(cm);PH85.clothMesh=cm}else PH85.clothMesh=null;
+  // the camera looks at everything that moves (a car is followed)
+  const F=R.frames,mv=meshes.filter(x=>x.s.i>=0);let lo=[1e9,1e9,1e9],hi=[-1e9,-1e9,-1e9];F.forEach((f,k)=>{if(k%3)return;mv.forEach(({s})=>{for(let q=0;q<3;q++){const v=f[s.i*7+q];if(v<lo[q])lo[q]=v;if(v>hi[q])hi[q]=v}})});
+  if(R.cloth){R.cloth.frames[0].forEach((v,k)=>{const q=k%3;if(v<lo[q])lo[q]=v;if(v>hi[q])hi[q]=v})}
+  PH85.box={lo,hi};PH85.carI=R.scene==="car"?(meshes.find(x=>x.s.part==="body")||{s:{i:-1}}).s.i:-1;PH85.scene=sc;PH85.root=root;PH85.meshes=meshes;PH85.built=R;PH85.yaw=PH85.yaw||0;PH85.pitch=PH85.pitch==null?0.35:PH85.pitch;ph85apply(PH85.t)}
+const lerp85=(a,b,t)=>a+(b-a)*t;
+function ph85apply(t){const R=PH85.res,T=PH85.T;if(!R||!T||!PH85.meshes)return;const F=R.frames,n=F.length,x=Math.max(0,Math.min(n-1,t*R.fps)),i=Math.floor(x),j=Math.min(n-1,i+1),u=x-i,A=F[i],B=F[j];
+  const qa=new T.Quaternion(),qb=new T.Quaternion();PH85.meshes.forEach(({s,o})=>{if(s.i<0)return;const k=s.i*7;o.position.set(lerp85(A[k],B[k],u),lerp85(A[k+1],B[k+1],u),lerp85(A[k+2],B[k+2],u));qa.set(A[k+4],A[k+5],A[k+6],A[k+3]);qb.set(B[k+4],B[k+5],B[k+6],B[k+3]);o.quaternion.copy(qa).slerp(qb,u)});
+  if(PH85.clothMesh){const C=R.cloth.frames,ca=C[Math.min(C.length-1,i)],cb=C[Math.min(C.length-1,j)],p=PH85.clothMesh.geometry.attributes.position;for(let k=0;k<ca.length;k++)p.array[k]=lerp85(ca[k],cb[k],u);p.needsUpdate=true;PH85.clothMesh.geometry.computeVertexNormals();PH85.clothMesh.geometry.computeBoundingSphere()}
+  (PH85.splash||[]).forEach(({e,ring,pts,vel})=>{const dt=t-e.t;if(dt<0||dt>3){ring.material.opacity=0;pts.visible=false;return}const s=0.3+dt*(1.2+0.15*e.speed);ring.scale.set(s,s,1);ring.material.opacity=Math.max(0,0.75*(1-dt/3));
+    const P=pts.geometry.attributes.position;pts.visible=dt<1.6;vel.forEach((v,q)=>{const z=v[2]*dt-4.9*dt*dt;P.array[q*3]=e.x+v[0]*dt;P.array[q*3+1]=e.y+v[1]*dt;P.array[q*3+2]=Math.max(-0.05,z)});P.needsUpdate=true});
+  // camera
+  const {lo,hi}=PH85.box,cam=PH85.cam3;let cx=(lo[0]+hi[0])/2,cy=(lo[1]+hi[1])/2,cz=Math.max(0.6,(lo[2]+hi[2])/2),size=Math.max(2.2,Math.hypot(hi[0]-lo[0],hi[1]-lo[1],Math.max(0,hi[2]-Math.max(lo[2],-1))));
+  if(PH85.carI>=0&&PH85.cam!=="top"){const k=PH85.carI*7;cx=lerp85(A[k],B[k],u);cy=lerp85(A[k+1],B[k+1],u);cz=0.8;size=9}
+  size*=PH85.zoom||1;const yaw=PH85.yaw+(PH85.cam==="side"?0:-0.6),pitch=PH85.cam==="top"?1.2:PH85.pitch,d=size*1.25;
+  const tx=cx,ty=cy,tz=cz,ex=tx-Math.cos(yaw)*Math.cos(pitch)*d,ey=ty-Math.sin(yaw)*Math.cos(pitch)*d-(PH85.cam==="side"?0:0),ez=tz+Math.sin(pitch)*d+0.3;
+  cam.position.set(ex,ez,-ey);cam.lookAt(tx,tz,-ty);if(PH85.sun){PH85.sun.position.set(tx+6,14,-ty+8);PH85.sun.target.position.set(tx,0,-ty);PH85.sun.target.updateMatrixWorld()}
+  PH85.r.render(PH85.scene,cam);const tl=document.querySelector("#main .ph85time");if(tl)tl.textContent=t.toFixed(2)+L(" s"," ث");const sk=document.querySelector("#main [data-ph85seek]");if(sk&&document.activeElement!==sk)sk.value=t}
+function ph85tick(now){PH85.raf=0;if(S.view!=="physics"||!PH85.res||!document.body.contains(PH85.canvas))return;const dt=Math.min(0.1,(now-PH85.last)/1000);PH85.last=now;
+  if(PH85.play){PH85.t+=dt*(PH85.slow?0.25:1);if(PH85.t>PH85.res.dur){if(PH85.rec)PH85.t=PH85.res.dur;else PH85.t=0}}ph85apply(PH85.t);PH85.raf=requestAnimationFrame(ph85tick)}
+renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="physics")requestAnimationFrame(ph85mount);return r})(renderView);
+document.addEventListener("input",e=>{const t=e.target;if(t&&t.matches&&t.matches("[data-ph85seek]")){PH85.t=+t.value;PH85.play=false;ph85apply(PH85.t);const b=document.querySelector('#main [data-act="ph85-play"]');if(b)b.innerHTML=ic("play")}});
+document.addEventListener("change",e=>{const t=e.target;if(t&&t.matches&&t.matches("[data-ph85cam]")){PH85.cam=t.value;PH85.yaw=0;PH85.pitch=0.35}});
+// record the clip (real time) — the same frames, so the video keeps the real timing
+async function ph85record(){const cv=PH85.canvas,R=PH85.res;if(!cv||!cv.captureStream||!window.MediaRecorder){toast(L("Video recording isn't supported in this browser.","تسجيل الفيديو غير مدعوم في هذا المتصفح."),{type:"warn"});return null}
+  const mime=["video/mp4;codecs=avc1","video/webm;codecs=vp9","video/webm","video/mp4"].find(t=>MediaRecorder.isTypeSupported(t));const rec=new MediaRecorder(cv.captureStream(30),{mimeType:mime,videoBitsPerSecond:6e6}),ch=[];rec.ondataavailable=ev=>{if(ev.data.size)ch.push(ev.data)};const done=new Promise(r=>rec.onstop=r);
+  PH85.rec=true;PH85.t=0;PH85.play=true;PH85.slow=false;rec.start(250);await new Promise(r=>setTimeout(r,R.dur*1000+350));rec.stop();await done;PH85.rec=false;
+  const ext=mime.includes("mp4")?"mp4":"webm",blob=new Blob(ch,{type:mime.split(";")[0]}),c=ph85();
+  const j={id:uid(),kind:"export",status:"complete",progress:1,created:Date.now(),title:L("Physics · ","فيزياء · ")+L(PHSC85.find(s=>s[0]===R.scene)[1],PHSC85.find(s=>s[0]===R.scene)[2]),prompt:R.words.en,dur:Math.round(R.dur),aspect:"16:9",seed:1,pal:PALS[0],art:"scene",meta:{physics:{scene:R.scene,facts:R.facts}}};
+  EXPORTS[j.id]=URL.createObjectURL(blob);S.jobs.push(j);if(API.mode==="server"){try{j.resultUrl=(await API.upload(blob,"physics."+ext)).url}catch(err){}}persist();return{blob,ext,j}}
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act^="ph85-"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const act=a.dataset.act,c=ph85();
+  if(act==="ph85-run"){if(API.mode!=="server"){toast(L("Physics runs on the nooi server — sign in to use it.","تعمل الفيزياء على خادم nooi — سجّل الدخول لاستخدامها."),{type:"warn"});return}if(PH85.busy)return;
+    if(c.scene==="water"&&!Object.values(c.it||{}).some(Boolean)){toast(L("Pick at least one thing to drop in.","اختر شيئاً واحداً على الأقل."),{type:"warn"});return}
+    PH85.busy=true;renderView();try{const r=await API.req("/v1/physics/simulate",{json:ph85body(c)});PH85.res=r;PH85.t=0;PH85.play=true;PH85.built=null;PH85.yaw=0;PH85.pitch=0.35;PH85.zoom=1}
+    catch(err){toast(String(err.message||err),{type:"warn"})}finally{PH85.busy=false;renderView();if(matchMedia("(max-width:980px)").matches&&PH85.res)setTimeout(()=>{const p=document.querySelector("#main .ph85p");if(p)p.scrollIntoView({behavior:"smooth",block:"start"})},120)}return}
+  if(act==="ph85-play"){PH85.play=!PH85.play;a.innerHTML=ic(PH85.play?"pause":"play");if(PH85.play&&PH85.t>=PH85.res.dur)PH85.t=0;return}
+  if(act==="ph85-slow"){PH85.slow=!PH85.slow;a.classList.toggle("on",PH85.slow);a.setAttribute("aria-pressed",PH85.slow);return}
+  if(act==="ph85-rec"||act==="ph85-mc"){if(PH85.rec)return;const lab=a.innerHTML;a.disabled=true;a.innerHTML='<span class="ph85spin"></span>'+L("Recording…","جارٍ التسجيل…");const r=await ph85record();a.disabled=false;a.innerHTML=lab;if(!r)return;
+    if(act==="ph85-mc"){loadSlot("mcMove",new File([r.blob],"physics-move."+r.ext,{type:r.blob.type}));S.mc83=Object.assign(S.mc83||{},{orient:"video"});persist();toast(L("The movement is in Motion Control — add your character's photo.","الحركة الآن في التحكم بالحركة — أضف صورة شخصيتك."),{type:"ok"});go("motion");renderAll()}
+    else{toast(L("Saved to your library — open it in the editor or use it anywhere.","حُفظت في مكتبتك — افتحها في المحرر أو استخدمها في أي مكان."),{type:"ok"});renderView()}return}
+  if(act==="ph85-use"){const w=PH85.res.words.en,to=a.dataset.to;if(to==="cinema"){const cc=cinState82();cc.prompt=(String(cc.prompt||"").trim()?cc.prompt.trim()+" ":"")+w}else{S.draft.prompt=(String(S.draft.prompt||"").trim()?S.draft.prompt.trim()+" ":"")+w}
+    persist();toast(L("Added the real physics to the description (in English — engines follow it best).","أُضيفت الفيزياء الحقيقية إلى الوصف (بالإنجليزية — المحركات تتبعها بدقة أكبر)."),{type:"ok"});go(to);renderAll()}},true);
+TOOLS82.splice(TOOLS82.findIndex(t=>t[1]==="studio3d")+1,0,["w3ai","physics","phys85","Physics","الفيزياء"]);
+HUBS.forEach(h=>{if(h[0]==="w3ai"&&!h[4].some(x=>x[0]==="physics"))h[4].push(["physics","Physics","الفيزياء"])});
+if(!ALLNAV.some(x=>x[0]==="physics"))ALLNAV.push(["physics","phys85","Physics","الفيزياء"]);
+TOOLDESC.physics=["Real weight, water, air, cars and bodies — see it, then put it in your videos.","وزن حقيقي وماء وهواء وسيارات وأجسام — شاهدها ثم ضعها في فيديوهاتك."];
+if(typeof FEATURE_OF_VIEW==="object")FEATURE_OF_VIEW.physics="w3ai";
+(()=>{const st=document.createElement("style");st.id="v85css";st.textContent=`
+.ph85sc{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width:600px){.ph85sc{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.ph85stage{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:var(--panel2);border:1px solid var(--line);touch-action:none}
+.ph85stage .empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:16px;color:var(--mute);font-size:14px}
+.ph85cv{display:block;width:100%;height:100%;cursor:grab}
+.ph85cv:active{cursor:grabbing}
+.ph85bar{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.ph85bar input[type=range]{flex:1 1 140px;min-width:100px;accent-color:var(--lime)}
+.ph85bar select.ph85cam{width:auto!important;flex:0 0 auto;padding:4px 28px 4px 10px;height:34px;font-size:13px}
+.ph85bar .btn.on{border-color:var(--lime);background:color-mix(in srgb,var(--lime) 15%,var(--panel2))}
+.ph85time{font-size:12.5px;color:var(--mute);min-width:52px}
+.ph85what{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+.ph85what h3{margin:0;font-size:16px}
+.ph85fx{display:flex;flex-wrap:wrap;gap:6px}
+.ph85fx span{font-size:12.5px;padding:5px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);color:var(--mute)}
+.ph85fx b{color:var(--text);font-weight:700}
+.ph85ev{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;font-size:13px}
+.ph85ev li{display:flex;gap:8px;align-items:baseline}
+.ph85ev .mono{color:var(--mute);font-size:12px;min-width:52px}
+.ph85words{border-inline-start:3px solid var(--lime);padding-inline-start:10px}
+.ph85words p{margin:4px 0 0;font-size:13.5px;line-height:1.55}
+.ph85act{flex-wrap:wrap;gap:8px}
+.ph85act .btn{flex:0 1 auto}
+.ph85spin{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:ph85spin .8s linear infinite;vertical-align:-2px;margin-inline-end:6px}
+@keyframes ph85spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.ph85spin{animation-duration:2.4s}}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

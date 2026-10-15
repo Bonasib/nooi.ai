@@ -39,6 +39,7 @@ import { registerVss, vssServer } from "./lib/vss.js";
 import { registerLocalize, locEngines } from "./lib/localize.js";
 import { registerAgents } from "./lib/agents.js";
 import { registerSlideshow } from "./lib/slideshow.js";
+import { registerPhysics } from "./lib/physics.js";
 import { registerMotion } from "./lib/motion.js";
 import { registerSketch, rtEngine } from "./lib/sketch.js";
 import { registerWorldAI } from "./lib/worldai.js";
@@ -183,6 +184,7 @@ app.get("/v1/billing/catalog", (_, res) => res.json(CATALOG));
 
 registerAdmin(app, requireUser);
 registerSlideshow(app, requireUser);
+registerPhysics(app, requireUser);
 // admin: engine cost per model → credits charged → margin; costs and margin are editable (prices recompute)
 const PR_NAMES = { ...modelNames(), voice: "Voice", music: "Music", sfx: "Sound effect", bg: "Background removal", finish: "Upscale", lipsync: "Lip-sync avatar", locstt: "Speech-to-text · per min", loctr: "Dubbing translation · per min", loctts: "Natural voices · per min", locel: "ElevenLabs Dubbing · per min", loccamb: "CAMB.AI dubbing · per min", locnv: "NVIDIA Content Localization · per min" };
 const pricingRows = () => Object.entries(ENGINE_COST).flatMap(([g, m]) => Object.keys(m).map((id) => { const cost = engineCost(g, id), credits = basePrice(g, id), rev = credits * CREDIT_FLOOR_USD;
