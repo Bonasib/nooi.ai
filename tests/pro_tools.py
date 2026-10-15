@@ -71,7 +71,7 @@ async def main():
                 ok3d = False
                 for _ in range(120):
                     try:
-                        if await E("()=>S.view==='world'&&typeof NW!=='undefined'&&!!NW.W&&!NW.busy"): ok3d = True; break
+                        if await E("()=>S.view==='world'&&typeof NW!=='undefined'&&!!NW.E&&(!!NW.W||!!NW.empty87)&&!NW.busy"): ok3d = True; break
                     except Exception: pass
                     await asyncio.sleep(.25)
                 out["checks"][f"{w}:3d"] = "complete" if ok3d else "none"

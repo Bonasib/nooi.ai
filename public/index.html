@@ -4579,7 +4579,7 @@ async function readPlan(btn){if(!SK.imp&&!SK.strokes.length){toast(L("Import or 
     persist();renderView();toast(F.rooms.length+L(" rooms and "," غرفة و")+F.items.length+L(" items placed in 3D"," قطعة وُضعت في 3D"))}
   catch(e){const s2=$("#fpread");if(s2){s2.className="status err";s2.textContent=e&&e.code==="na"?noAI():aiErr(e)}const b=document.querySelector('[data-act="fp-read"]');if(b)b.disabled=false}}
 /* ---- view ---- */
-function targetTiles(){const K=S.sketch;return'<div class="tiles">'+ENT_TYPES.map(t=>'<button class="tile" data-act="sk-target" data-v="'+t[0]+'" aria-pressed="'+(K.target===t[0])+'"><span class="gl">'+svg(t[3])+'</span><span class="lb">'+L(t[1],t[2])+"</span></button>").join("")+'<button class="tile" data-act="sk-target" data-v="floorplan" aria-pressed="'+(K.target==="floorplan")+'"><span class="gl">'+svg(ICONS.plan)+'</span><span class="lb">'+L("Floor plan → 3D scene","مخطط أرضي ← مشهد 3D")+"</span></button></div>"}
+function targetTiles(){const K=S.sketch;return'<div class="tiles tgt87">'+ENT_TYPES.map(t=>'<button class="tile" data-act="sk-target" data-v="'+t[0]+'" aria-pressed="'+(K.target===t[0])+'"><span class="gl">'+svg(t[3])+'</span><span class="lb">'+L(t[1],t[2])+"</span></button>").join("")+'<button class="tile" data-act="sk-target" data-v="floorplan" aria-pressed="'+(K.target==="floorplan")+'"><span class="gl">'+svg(ICONS.plan)+'</span><span class="lb">'+L("Floor plan → 3D scene","مخطط أرضي ← مشهد 3D")+"</span></button></div>"}
 function vFloor(){const F=S.fp,K=S.sketch;return'<div class="view"><div class="spread"><h1>'+L("Live Sketch","الرسم الحي")+'</h1><span class="badge b-live">'+L("Live 3D","3D مباشر")+'</span></div><p class="lede">'+L("Import a floor plan — a drawing, a photo of a paper plan or an architect's image — or draw walls yourself. It becomes a 3D scene as you draw. “Read details” uses the room names, dimensions, doors, windows and furniture written on the plan.","استورد مخططاً أرضياً — رسمة أو صورة لمخطط ورقي أو مخطط معماري — أو ارسم الجدران بنفسك. يتحول إلى مشهد 3D أثناء الرسم. و«اقرأ التفاصيل» يستخدم أسماء الغرف والأبعاد والأبواب والنوافذ والأثاث المكتوبة على المخطط.")+'</p><span class="lbl" style="margin-top:0">'+L("What are you drawing?","ماذا ترسم؟")+"</span>"+targetTiles()+
   '<div class="edgrid" style="margin-top:14px"><div class="panel pad"><div class="skpaper"><canvas id="skcv"></canvas></div><div class="hbar">'+
   hTile(svg(ICONS.upload),L("Import plan","استورد مخططاً"),'style="position:relative"',"label").replace("</label>",'<input type="file" accept="image/*" data-skimp="plan"></label>')+hTile(svg(ICONS.camera),L("Photo of plan","صوّر المخطط"),'style="position:relative"',"label").replace("</label>",'<input type="file" accept="image/*" capture="environment" data-skimp="plan"></label>')+
@@ -4664,7 +4664,7 @@ const ROLE_DEF={owner:[["Owner","المالك"],ALLP],admin:[["Admin","مشرف 
 const AI_PROVIDERS=[
  ["seedance","Seedance (ByteDance)","سيدانس (بايت دانس)","video",[["apiKey","API key (BytePlus ModelArk)"],["model","Model id"],["baseUrl","Base URL"]],"https://ark.ap-southeast.bytepluses.com/api/v3"],
  ["kling","Kling AI","كلينغ","video",[["accessKey","Access key"],["secretKey","Secret key"],["baseUrl","Base URL"]],"https://api.klingai.com"],
- ["qwen","Qwen · DashScope (Alibaba)","كوين · علي بابا","video · image · text",[["apiKey","DashScope API key"],["videoModel","Video model"],["imageModel","Image model"],["baseUrl","Base URL"]],"https://dashscope-intl.aliyuncs.com/api/v1"],
+ ["qwen","Qwen · DashScope (Alibaba)","كوين · علي بابا","video · image · text · 3D",[["apiKey","DashScope API key"],["videoModel","Video model"],["imageModel","Image model"],["baseUrl","Base URL"],["model3d","3D model (Model Studio · empty = Tripo/Tripo-P1.0 · off = not used)"],["url3d","3D API URL (empty = Base URL; another region)"]],"https://dashscope-intl.aliyuncs.com/api/v1"],
  ["qwentext","Qwen text (Anthropic-compatible)","كوين للنصوص","text",[["apiKey","API key"],["model","Model"],["baseUrl","Base URL"]],"https://token-plan.maas.qwencloudapi.com/apps/anthropic"],
  ["wan","WAN 3.0","WAN 3.0","video",[["apiKey","API key"],["baseUrl","API URL"]],""],
  ["claude","Claude (Anthropic)","Claude","text",[["apiKey","API key"],["model","Model"]],"https://api.anthropic.com"],
@@ -11723,7 +11723,7 @@ if(typeof hfRatioSheet==="function")hfRatioSheet=(o=>function(){o.apply(this,arg
 .pk84c .pk84ci{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--panel);border:1px solid var(--line);flex:none}
 .pk84c .pk84ci svg,.pk84c .pk84ci .dotc{width:17px;height:17px}
 .pk84c .pk84k{color:var(--mute);font-size:12px;white-space:nowrap;flex:none}
-.pk84c .pk84v{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pk84c .pk84v{font-weight:600;min-width:0;overflow-wrap:anywhere}   /* the whole choice, on a second line when the chip is narrow (v87: was cut with …) */
 .pk84c>svg:last-child{width:14px;height:14px;opacity:.55;flex:none}
 .pk84src{display:none!important}
 .sheet.pk84s{width:min(820px,100%)}
@@ -11870,7 +11870,7 @@ async function nwGo(){const W=S.world,ta=document.getElementById("nwprompt");if(
   NW.busy=true;nwSay(W.pic?L("Reading the picture…","قراءة الصورة…"):NW.W?L("Changing the world…","تغيير العالم…"):L("Designing the world…","تصميم العالم…"));nwRefresh();nwHud();
   let plan=null;const change=!!NW.W&&!W.pic&&!!p&&M.isEdit(p,W.plan);
   try{if(API.mode==="server"){if(change){const r=await API.req("/v1/world/edit",{json:{plan:W.plan,text:p,lang:S.lang}});plan=r.plan;if(r.cost&&!crFree())S.credits=Math.max(0,(S.credits||0)-r.cost)}
-      else{const r=await API.req("/v1/world/plan",{json:{prompt:p,image:W.pic||undefined,lang:S.lang,time,weather}});plan=r.plan;if(r.cost&&!crFree())S.credits=Math.max(0,(S.credits||0)-r.cost)}}}
+      else{const r=await API.req("/v1/world/plan",{json:{prompt:p,image:W.pic||undefined,lang:S.lang,time:time??undefined,weather:weather||undefined}});plan=r.plan;if(r.cost&&!crFree())S.credits=Math.max(0,(S.credits||0)-r.cost)}}}
   catch(e){if(change&&/try words|another way/i.test(String(e.message))){NW.busy=false;nwSay("");nwRefresh();toast(String(e.message));return}}
   if(!plan)plan=change?(M.editPlan(W.plan,p)||W.plan):M.localPlan(p,{time,weather});
   if(!change&&W.pic)plan.fromPicture=1;
@@ -12324,6 +12324,445 @@ renderView=(o=>function(){const r=o.apply(this,arguments);if(NW.fp&&!(S.view==="
 @media (pointer:coarse){.nw-del{opacity:1}}
 @media (max-width:760px){.nw-stage{height:62vh;min-height:360px;border-radius:14px}.nw-row{flex-wrap:wrap}.nw-go{flex:1 1 100%;min-height:44px}.nw-row textarea{flex:1 1 calc(100% - 66px);min-width:0}.nw-opts{gap:10px}.nw-actions .btn{flex:1 1 calc(50% - 8px);justify-content:center}}
 `;document.head.appendChild(st)})();
+
+/* ================= v87: REAL CHARACTERS — one real face per character, used everywhere (UGC ads, prompts, videos, 3D World) ================= */
+// Every character has ONE real face: the photo it was made from, a real portrait the picture engine made for it, or (for the
+// ready-made presenters) the presenter's portrait. That face goes with every job that names the character, as the identity
+// reference, so the engine shows that person and never a random one. The old drawn previews (the "virtual characters") are gone:
+// a character without a real face shows an empty frame with "Make it real".
+const FACE87=()=>IMG_MODELS.nanopro&&imgOK("nanopro")?"nanopro":"nano";
+const faceCost87=()=>(IMG_MODELS[FACE87()]||{cr:4}).cr;
+// looks and sheets made FROM a face or a photo: Nano Banana keeps the face from the reference well and is quick (the face itself is Pro)
+const LOOK87=()=>IMG_MODELS.nano?"nano":FACE87(),lookCost87=()=>(IMG_MODELS[LOOK87()]||{cr:4}).cr,sheetCost87=()=>Math.max(lookCost87(),6);
+const avById87=id=>(AV.items||[]).find(x=>x.id===id);
+const PRES_ALL87=()=>(AV.items||[]).filter(a=>a&&a.url);
+// the real face of a character (an address the engines can read), "" when it has none yet
+function face87(c){if(!c)return"";if(c.face)return c.face;
+  const av=c.av87||PRES_AV[c.id];if(av){const a=avById87(av);if(a&&a.url)return a.url}
+  const js=S.jobs.filter(j=>j.kind==="look"&&j.meta&&j.meta.char===c.id&&j.status==="complete"&&mediaUrl(j));
+  const j=js.find(x=>x.seed===c.lookSeed)||js[js.length-1];return j?mediaUrl(j):""}
+const faceShow87=c=>face87(c)||(c&&c.photo)||"";
+const hasFace87=c=>!!faceShow87(c);
+// the face as a job slot (a server address, or the 1024 px photo the character was made from)
+async function faceSlot87(c){const u=face87(c);if(u)return{type:"image",remote:u,url:u,name:"face.jpg"};
+  const b=c&&c.photo?await charPhotoBlob(c):null;return b?{type:"image",file:new File([b],"face.jpg",{type:b.type||"image/jpeg"}),name:"face.jpg",url:""}:null}
+// run fn with the given slots filled for this one job (slots are read the moment the job is sent)
+function withSlots87(map,fn){const keep={};for(const k in map){keep[k]=M[k];if(map[k])M[k]=map[k];else delete M[k]}
+  try{return fn()}finally{for(const k in keep){if(keep[k])M[k]=keep[k];else delete M[k]}}}
+// a finished real portrait becomes the character's face (once; the client can pick another look later)
+setInterval(()=>{let ch=false;for(const c of S.chars||[]){if(c.face)continue;const j=S.jobs.find(x=>x.kind==="look"&&x.meta&&x.meta.char===c.id&&x.status==="complete"&&mediaUrl(x)&&(x.meta.real87||x.seed===c.lookSeed));
+  if(j){c.face=mediaUrl(j);c.lookSeed=j.seed;c.autoLook79=1;ch=true}}if(ch){persist();if(["chars","ugcads","home","video","image","world"].includes(S.view))renderView()}},1500);
+// picking a look also picks the face
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="pick-look"][data-job]');if(!a)return;const c=S.chars[S.charSel],j=S.jobs.find(x=>x.id===a.dataset.job);if(c&&j&&j.status==="complete"&&mediaUrl(j)){c.face=mediaUrl(j);persist()}});
+// looks are real photos of a real-looking (fictional) person — never a caption, a meme or a drawing — unless the character is drawn on purpose
+addJob=(o=>function(j){if(j&&(j.kind==="look"||j.kind==="sheet")&&j.meta&&j.meta.char&&!j.meta.lp79){const c=charById(j.meta.char);if(c){const art=normChar(c).art,real=!art||art==="realistic"||art==="cinematic";
+    const keep=/same person as the reference photo/.test(j.prompt||"")?" The same person as the reference photo: keep the exact face, hair and identity.":"",d=String(charPrompt(c,"en")||c.name).replace(/\s+/g," ").trim().replace(/\.$/,"");
+    j.prompt=(j.kind==="look"?"Portrait of "+d+". Waist-up, facing the camera, natural expression, plain soft studio background, sharp focus, the same identity in every picture.":"Character reference sheet of "+d+". Front, side and back views plus four facial expressions on a plain white background, the same design and colours in every view.")+keep+
+      (real?" Photorealistic photograph of a real-looking person (a fictional person, not any real individual): natural skin texture, real hair, real fabric, soft natural light, 85mm lens, sharp focus. No text, no caption, no logo, no watermark, no frame, not a drawing.":"");
+    j.meta=Object.assign({},j.meta,{lp79:1});if(real&&(!j.model||!IMG_MODELS[j.model]||["auto","dotimg","sdxl","flux"].includes(j.model)))j.model=M.chRef?LOOK87():FACE87()}}return o(j)})(addJob);
+// make the character real: one portrait from its description (and from its photo, when it was made from one)
+async function makeReal87(c,quiet){if(!c)return null;const slot=c.photo?await faceSlot87(c):null,m=FACE87();
+  const j=withSlots87({chRef:slot},()=>addJob({kind:"look",model:m,prompt:c.name+" · "+(c.look||"")+(slot?" — the same person as the reference photo: keep the exact face, hair and identity":""),title:c.name,cost:faceCost87(),secs:8,art:"portrait",aspect:"3:4",opt:charOpt(c),meta:{char:c.id,real87:1,photo:!!slot}}));
+  if(j&&!quiet){persist();renderAll();toast(L("Making "+c.name+" real — the face appears in a few seconds.","يتم جعل "+c.name+" حقيقية — يظهر الوجه خلال ثوانٍ."),{type:"ok"})}return j}
+const realBusy87=c=>S.jobs.some(j=>j.kind==="look"&&j.meta&&j.meta.char===c.id&&j.meta.real87&&["queued","rendering"].includes(j.status));
+// pictures of characters: the real face, or a clean empty frame (no drawn person)
+const SIL87='<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="24" r="11" fill="currentColor" opacity=".22"/><path d="M12 58c1.5-12 9.5-19 20-19s18.5 7 20 19z" fill="currentColor" opacity=".22"/></svg>';
+thumb=(o=>function(ref,opt){const m=/^(cp|cb|look):([^:]+)/.exec(ref||"");if(!m)return o(ref,opt);const c=charById(m[2]);if(!c)return o(ref,opt);
+  const u=faceShow87(c),ar=opt&&opt.ar?' style="aspect-ratio:'+opt.ar+'"':"",at=opt&&opt.attrs?" "+opt.attrs:"";
+  if(m[1]==="look"&&T87.inChars)return"";                                       // the drawn looks are gone from the Characters page (real looks are job pictures)
+  if(u)return'<div class="thumb face87"'+ar+at+'><img class="frame" src="'+esc(u)+'" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover"></div>';
+  return'<div class="thumb face87 none"'+ar+at+'><span class="sil87">'+SIL87+"</span>"+(realBusy87(c)?'<i class="star79"></i>':"")+"</div>"})(thumb);
+// ---- the Characters page: the real face big, real looks only, "Make it real" when there is no face yet
+const T87={inChars:0};
+VIEWS.chars=(o=>()=>{let h;T87.inChars=1;try{h=o()}finally{T87.inChars=0}const c=S.chars[S.charSel];if(!c)return h;
+  h=h.replace(/<div class="cpv">[\s\S]*?<\/div><div class="autodesc">/,()=>{const u=faceShow87(c),busy=realBusy87(c);
+    return'<div class="cpv87">'+(u?'<img src="'+esc(u)+'" alt="">':'<div class="nf87"><span class="face-ph87">'+SIL87+"</span>"+(busy?'<i class="star79"></i><b>'+esc(L("Making the real face…","يُصنع الوجه الحقيقي…"))+"</b>":"<b>"+esc(L("No real face yet","لا يوجد وجه حقيقي بعد"))+'</b><button class="btn primary" data-act="real87" data-id="'+c.id+'">'+ic("spark")+esc(L("Make it real","اجعلها حقيقية"))+' <span class="mono">'+faceCost87()+"cr</span></button>")+"</div>")+
+      (c.body3d?'<span class="b3d87">'+ic("cube")+esc(L("3D ready","جاهزة ثلاثياً"))+"</span>":"")+'</div><div class="autodesc">'});
+  h=h.replace(/(<h2>[^<]*<\/h2><div class="looks">)([\s\S]*?)(<\/div><div class="row" style="margin-top:12px"><button class="chip" data-toggle="char.locked")/,(m0,a,b,z)=>a+(b.trim()?b:'<p class="small mute" style="grid-column:1/-1;margin:0">'+esc(L("Real looks you make appear here — tap one to make it the face.","الأشكال الحقيقية التي تصنعها تظهر هنا — اضغط واحداً ليصبح الوجه."))+"</p>")+z);
+  const ref=!!(c.photo||face87(c));   // with a face (or a photo): looks of THAT person · none yet: 4 candidate real faces, the first becomes the face
+  h=h.replace(/(data-act="gen-looks" data-n="4">)[\s\S]*?(<\/button>)/,"$1"+ic("wand")+esc(L("4 real looks","4 أشكال حقيقية"))+' <span class="mono">'+4*(ref?lookCost87():faceCost87())+"cr</span>$2");
+  h=h.replace(/(data-act="gen-sheet">[\s\S]*?<span class="mono[^"]*">)\d+cr(<\/span>)/,"$1"+(ref?sheetCost87():Math.max(faceCost87(),6))+"cr$2");
+  const none=S.chars.filter(x=>!hasFace87(x)&&!realBusy87(x));
+  if(none.length>1)h=h.replace(/(<p class="lede">[\s\S]*?<\/p>)/,"$1"+'<div class="real87 panel pad"><div><b>'+esc(L(none.length+" characters have no real face yet","لدى "+none.length+" شخصيات وجه غير حقيقي بعد"))+'</b><span class="small mute">'+esc(L("Make them real once — every video, ad and 3D world then shows the same real person.","اجعلها حقيقية مرة واحدة — ثم يُظهر كل فيديو وإعلان وعالم 3D الشخص الحقيقي نفسه."))+'</span></div><button class="btn primary" data-act="real87-all">'+ic("spark")+esc(L("Make all real","اجعلها كلها حقيقية"))+' <span class="mono">'+(none.length*faceCost87())+"cr</span></button></div>");
+  return h})(VIEWS.chars);
+// the old procedural looks (seeds) are never offered as a face any more
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest("[data-act]");if(!a)return;const A=a.dataset;
+  if(A.act==="real87"){const c=charById(A.id)||S.chars[S.charSel];if(c&&!realBusy87(c))makeReal87(c)}
+  if(A.act==="real87-all"){let n=0;for(const c of S.chars){if(hasFace87(c)||realBusy87(c))continue;if(makeReal87(c,true))n++}persist();renderAll();if(n)toast(L(n+" characters are being made real.","يتم جعل "+n+" شخصيات حقيقية."),{type:"ok"})}});
+// "4 real looks" / "Character sheet" of a character that has a real face (and no photo — the photo path above runs first): every
+// look is made FROM that face, so it is the same person each time. With no face yet, the 4 looks are candidate faces (Pro) and
+// the first one that finishes becomes the face — tap another to make it the face.
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="gen-looks"],[data-act="gen-sheet"]');if(!a||S.view!=="chars")return;const c=S.chars[S.charSel];if(!c||c.photo)return;
+  const u=face87(c),art=normChar(c).art;if(!u||(art&&art!=="realistic"&&art!=="cinematic"))return;e.stopImmediatePropagation();e.preventDefault();
+  const sheet=a.dataset.act==="gen-sheet",n=sheet?1:(+a.dataset.n||4),m=LOOK87(),keep=" — the same person as the reference photo: keep the exact face, hair and identity";
+  if(!crFree()&&S.credits<(sheet?sheetCost87():n*lookCost87())){toast(L("Not enough credits for this.","الرصيد لا يكفي لهذه العملية."));return}
+  withSlots87({chRef:{type:"image",remote:u,url:u,name:"face.jpg"}},()=>{for(let i=0;i<n;i++)addJob(sheet?{kind:"sheet",model:m,prompt:c.name+" · "+L("front, side, back, expressions","أمام، جانب، خلف، تعابير")+keep,title:c.name,cost:sheetCost87(),secs:7,art:"portrait",opt:charOpt(c),seed:c.lookSeed||c.looks[0],meta:{char:c.id,face87:1}}
+    :{kind:"look",model:m,prompt:c.name+" · "+(c.look||"")+keep,title:c.name,cost:lookCost87(),secs:6,art:"portrait",aspect:"3:4",opt:charOpt(c),meta:{char:c.id,face87:1}})});renderAll()},true);
+// a new character: its builder opens with "Make it real" (nothing is drawn for it any more)
+(function(){const st=document.createElement("style");st.textContent=`
+.thumb.face87{position:relative;overflow:hidden;background:var(--panel2);display:grid;place-items:center}
+.thumb.face87.none .sil87{display:grid;place-items:center;width:100%;height:100%;color:var(--mute)}.thumb.face87.none svg{width:62%;height:62%}
+.thumb.face87.none .star79{position:absolute;width:26px;height:26px;inset:auto auto 8px 8px}
+.cpv87{position:relative;display:grid;place-items:center;aspect-ratio:3/4;max-height:420px;margin:0 auto 12px;border-radius:16px;overflow:hidden;background:var(--panel2)}
+.cpv87 img{width:100%;height:100%;object-fit:cover;display:block}
+.cpv87 .nf87{display:grid;justify-items:center;gap:10px;padding:18px;text-align:center;color:var(--mute)}.cpv87 .nf87 .face-ph87{display:grid;place-items:center}.cpv87 .nf87 .face-ph87 svg{width:120px;height:120px}
+.cpv87 .nf87 b{color:var(--text);font-weight:500}.cpv87 .nf87 .star79{width:34px;height:34px}
+.cpv87 .b3d87{position:absolute;inset:auto auto 10px 10px;display:inline-flex;gap:6px;align-items:center;padding:5px 10px;border-radius:999px;background:rgba(10,12,14,.66);color:#fff;font-size:12px}.cpv87 .b3d87 svg{width:14px;height:14px}
+.real87{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 14px}.real87>div{display:grid;gap:3px}
+.charrow .pic .thumb{aspect-ratio:1/1}
+.tiles.tgt87{grid-template-columns:repeat(auto-fill,minmax(84px,1fr))}   /* "Environments" fits on one line in every width */
+`;document.head.appendChild(st)})();
+// ---- ready-made presenters: real people's portraits made once for the whole site (fictional people, made by the engine).
+// The customer sees only the ones that exist; the owner sees "Make the presenters' photos" while some are missing.
+async function avLoad87(force){if(API.mode!=="server")return;if(AV.items&&!force&&AV.total!=null)return;
+  try{const r=await API.req("/v1/avatars");AV.items=r.items||[];AV.total=r.total||AV.items.length;AV.making=r.making||0}catch(e){AV.items=AV.items||[]}
+  if(["ugcads","chars","home","world"].includes(S.view))renderView()}
+setInterval(()=>{if(AV.making&&["ugcads","chars"].includes(S.view))avLoad87(true)},8000);
+function avChar87(id){const a=avById87(id);if(!a)return null;const cid="av87-"+id;let c=charById(cid);
+  if(!c){c=normChar({id:cid,name:L(a.name[0],a.name[1]),age:30,gender:a.gender||"female",look:a.who||"",outfit:"",persona:L("Presenter","مقدّم"),voice:{dialect:S.lang==="ar"?"najdi":"enUS",gender:a.gender||"female",age:"adult",tone:"warm"},looks:[1,2,3,4],lookSeed:null,locked:true,av87:id,face:a.url});S.chars.push(c)}
+  else{c.face=a.url;c.av87=id}return c}
+function presOwnerCard87(){if(!staff82()||API.mode!=="server"||AV.total==null)return"";const have=(AV.items||[]).length,miss=AV.total-have;if(miss<=0)return"";
+  return'<div class="avmk87"><span class="small">'+(AV.making?'<i class="star79"></i>'+esc(L("Making the presenters' photos — they appear here when ready.","تُصنع صور المقدّمين — تظهر هنا عند جاهزيتها.")):esc(L(miss+" ready-made presenters have no photo yet. Make them once for the whole site (owner only).","لدى "+miss+" من المقدّمين الجاهزين بلا صورة. اصنعها مرة واحدة للموقع كله (للمالك فقط).")))+"</span>"+
+    (AV.making?"":'<button class="btn sm primary" data-act="av87-make">'+ic("spark")+esc(L("Make the presenters' photos","اصنع صور المقدّمين"))+"</button>")+"</div>"}
+function presTile87(act,v,on,img,name,busy){return'<button class="pt87" data-act="'+act+'" data-v="'+esc(v)+'" aria-pressed="'+on+'"><span class="ph">'+(img?'<img src="'+esc(img)+'" alt="" loading="lazy">':'<span class="sil87">'+SIL87+"</span>")+(busy?'<i class="star79"></i>':"")+'</span><span class="nm">'+esc(name)+"</span></button>"}
+function presPicker87(){const mine=S.chars.filter(c=>!c.av87),cur=S.draft.charId;
+  const own=mine.map(c=>presTile87("ugc-char",c.id,cur===c.id,faceShow87(c),c.name,realBusy87(c))).join("")+'<button class="pt87 add" data-go="chars"><span class="ph"><span class="sil87">'+ic("plus")+'</span></span><span class="nm">'+esc(L("Create your own","اصنع شخصيتك"))+"</span></button>";
+  const ready=PRES_ALL87().map(a=>presTile87("ugc-av87",a.id,cur==="av87-"+a.id,a.url,L(a.name[0],a.name[1]))).join("");
+  const c=charById(cur),warn=c&&!hasFace87(c)&&!realBusy87(c)?'<p class="ugcnote">'+ic("info")+esc(L(c.name+" has no real face yet — the ad first makes one (+"+faceCost87()+" cr), so the same real person appears in every ad.",c.name+" بلا وجه حقيقي بعد — يصنع الإعلان وجهاً أولاً (+"+faceCost87()+" رصيد) ليظهر الشخص الحقيقي نفسه في كل إعلان."))+"</p>":"";
+  return'<div class="pres87"><span class="lbl">'+esc(L("Your characters","شخصياتك"))+'</span><div class="presrow87">'+own+"</div>"+(ready?'<span class="lbl">'+esc(L("Ready presenters","مقدّمون جاهزون"))+'</span><div class="presrow87">'+ready+"</div>":"")+presOwnerCard87()+warn+"</div>"}
+VIEWS.ugcads=(o=>()=>{if(API.mode==="server"&&AV.total==null)setTimeout(()=>avLoad87(true),0);let h=o();
+  return h.replace(/(<span>(?:Who presents it|من يقدّم المنتج)<\/span><\/div>)<div class="tiles">[\s\S]*?(?=<div class="ugcstep">)/,(m,a)=>a+presPicker87())})(VIEWS.ugcads);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest("[data-act]");if(!a)return;const A=a.dataset;
+  if(A.act==="ugc-av87"){const c=avChar87(A.v);if(c){S.draft.charId=S.draft.charId===c.id?"":c.id;persist();renderView()}}
+  if(A.act==="av87-make"){a.disabled=true;try{await API.req("/v1/admin/showcase",{method:"POST",json:{group:"avatars"}});AV.making=1;toast(L("Making the presenters' photos — about a minute.","تُصنع صور المقدّمين — نحو دقيقة."),{type:"ok"})}catch(err){toast(String(err.message||err),{type:"warn"})}avLoad87(true)}});
+// ---- the ad itself: the chosen presenter's real face goes with every step, so the engine shows THAT person
+// (step 0, only when the character has no real face yet: its face · step 1: a photo of that person holding your product ·
+//  step 2: the video starts from that photo)
+function ugcFaceLine87(photo){return" The presenter is exactly the person in the "+(photo?"second":"")+" reference picture: the same face, hair, skin tone, age and build — the same real person, not a lookalike."}
+ugcVidModel79=(o=>function(){const G=S.ugc79,U=S.draft.ugc,av=ugcVidModels79();if(G.model==="auto"&&U.mode==="presenter"&&av.includes("kling30t"))return"kling30t";return o()})(ugcVidModel79);
+ugcCost79=(o=>function(){const U=S.draft.ugc;if(U.mode!=="presenter")return o();const c=charById(S.draft.charId),m=ugcVidModel79();
+  return faceCost87()+vcost(m,S.ugc79.dur)+(c&&!hasFace87(c)?faceCost87():0)})(ugcCost79);
+ugcMake79=(o=>async function(){const U=S.draft.ugc,G=S.ugc79,mode=U.mode||"presenter";if(mode!=="presenter")return o();
+  const photo=M.ugcP||null;if(!String(U.name||"").trim()&&!String(U.desc||"").trim()&&!photo){toast(L("Add your product first — a photo or its name.","أضف منتجك أولاً — صورة أو اسمه."),{type:"warn"});return}
+  const c=charById(S.draft.charId);
+  if(c&&!hasFace87(c)){const j0=realBusy87(c)?S.jobs.find(j=>j.kind==="look"&&j.meta&&j.meta.char===c.id&&j.meta.real87&&["queued","rendering"].includes(j.status)):await makeReal87(c,true);if(!j0)return;
+    j0.meta=Object.assign({},j0.meta,{ugc87:{product:!!photo}});G.last=j0.id;G.wait87=j0.id;persist();renderView();
+    toast(L("Step 1 of 3: "+c.name+"'s real face — then the photo with your product, then the video.","الخطوة 1 من 3: وجه "+c.name+" الحقيقي — ثم الصورة مع منتجك، ثم الفيديو."),{type:"ok"});return}
+  return ugcStep1_87(c,photo)})(ugcMake79);
+async function ugcStep1_87(c,photo){const U=S.draft.ugc,G=S.ugc79,P=ugcPrompts79(),m=ugcVidModel79();ugcDur79(m);const dur=G.dur,ar=G.fmt,vc=vcost(m,dur),md=UGC_MODES[0],fm=FACE87();
+  const title=(String(U.name||"").trim()||L("Product","منتج"))+" · "+L(md[1],md[2]),meta={type:"ugc",ugc:Object.assign({},U,{presenter:S.draft.charId||null,photos:["ugcP","ugcX1","ugcX2","ugcX3"].filter(k=>M[k]).length})};
+  const face=c?await faceSlot87(c):null,slots=photo?{iRef:photo,iRef2:face}:{iRef:face,iRef2:null};
+  const still=P.still+(face?ugcFaceLine87(!!photo):""),next=P.presenter+(face?" Keep the presenter exactly as in the first frame — the same real person.":"");
+  const j=withSlots87(slots,()=>addJob({kind:"image",prompt:still,title:title+" · "+L("photo","صورة"),model:fm,aspect:ar,cost:(IMG_MODELS[fm]||{cr:4}).cr,secs:8,art:"portrait",meta:Object.assign({},meta,{ugcStep:1,face87:!!face,ugcNext:{prompt:next,model:m,dur,aspect:ar,cost:vc,title}})}));
+  if(!j)return;G.last=j.id;G.wait87=null;persist();renderView();
+  if(matchMedia("(max-width:980px)").matches)setTimeout(()=>{const pv=document.querySelector(".ugc79 .preview-col");if(pv)pv.scrollIntoView({behavior:"smooth",block:"start"})},80);
+  toast(L("The photo of "+(c?c.name:"the presenter")+" with your product comes first — the video starts from it.","تأتي أولاً صورة "+(c?c.name:"المقدّم")+" مع منتجك — ويبدأ الفيديو منها."),{type:"ok"})}
+// step 0 finished (the presenter's real face) → step 1 with that face
+setInterval(()=>{const G=S.ugc79;if(!G||!G.wait87)return;const j=S.jobs.find(x=>x.id===G.wait87);if(!j)return;if(j.status==="failed"){G.wait87=null;persist();return}
+  if(j.status!=="complete"||!mediaUrl(j))return;const c=charById(j.meta&&j.meta.char);if(!c)return;c.face=c.face||mediaUrl(j);G.wait87=null;
+  const photo=j.meta.ugc87&&j.meta.ugc87.product?M.ugcP||null:null;persist();ugcStep1_87(c,photo)},1500);
+(function(){const st=document.createElement("style");st.textContent=`
+.pres87{display:grid;gap:8px}.presrow87{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:thin}
+.pt87{flex:0 0 auto;display:grid;justify-items:center;gap:6px;width:86px;padding:8px 6px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--text);cursor:pointer;font:inherit}
+.pt87[aria-pressed=true]{border-color:var(--lime);box-shadow:0 0 0 2px color-mix(in srgb,var(--lime) 40%,transparent)}
+.pt87 .ph{position:relative;width:62px;height:62px;border-radius:50%;overflow:hidden;background:#f6cdd5;display:grid;place-items:center}
+.pt87 .ph img{width:100%!important;height:100%!important;max-width:none!important;object-fit:cover;display:block;margin:0!important}.pt87 .ph .sil87{display:grid;place-items:center;width:100%;height:100%;color:#8a3045}.pt87 .ph svg{width:70%;height:70%}
+.pt87.add .ph{background:var(--panel2)}.pt87.add .ph .sil87{color:var(--mute)}.pt87.add .ph svg{width:40%;height:40%}
+.pt87 .ph .star79{position:absolute;width:22px;height:22px}
+.pt87 .nm{font-size:12px;line-height:1.25;text-align:center;max-width:80px;white-space:normal;overflow-wrap:anywhere}   /* whole names, on two lines when needed */
+.avmk87{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:10px 12px;border-radius:12px;background:var(--panel2)}
+.avmk87 .star79{width:18px;height:18px;vertical-align:-4px;margin-inline-end:6px}
+`;document.head.appendChild(st)})();
+// ---- your characters in any prompt: type "@" (or tap "Characters" in the home box and the 3D World; Video and Images also have
+// their own character list, which now works the same way) and pick one. A job that names @Someone carries that
+// person's real face: a picture uses it as the identity reference; a video first makes a picture of the scene with that
+// person, then the video starts from it (video engines only keep a face they see in the first frame). A character with no
+// real face yet gets one first. Works in the home box, Video, Image and the 3D World.
+const PROMPTS87=["hfq","dprompt","iprompt","nwprompt"];
+const reEsc87=s=>String(s).replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+function charsIn87(text){const t=String(text||""),out=[];for(const c of S.chars||[]){const n=String(c.name||"").trim();if(n.length<2)continue;
+  if(new RegExp("(^|[^\\p{L}\\p{N}_])@"+reEsc87(n)+"(?=$|[^\\p{L}\\p{N}_])","iu").test(t)&&!out.includes(c))out.push(c)}return out.slice(0,3)}
+const plain87=(text,cs)=>cs.reduce((t,c)=>t.replace(new RegExp("@("+reEsc87(String(c.name).trim())+")","giu"),"$1"),String(text||""));
+// photos the characters were made from also live on the server (so every engine can read the face at once)
+async function upFace87(c){if(!c||c.face||!c.photo||c._up87||API.mode!=="server")return;c._up87=1;try{const b=await charPhotoBlob(c);if(b){const r=await API.upload(b,"face-"+c.id+".jpg");if(r&&r.url&&!c.face){c.face=r.url;persist()}}}catch(e){}finally{delete c._up87}}
+setInterval(()=>{if(S.user)for(const c of S.chars||[])if(c.photo&&!c.face)upFace87(c)},4000);
+// the flows waiting for a step (a face, or the first picture of a video)
+S.flow87=Array.isArray(S.flow87)?S.flow87.filter(f=>f&&Date.now()-(f.at||0)<36e5):[];
+let NO87=0;   // jobs made by this block itself are not looked at again
+addJob=(o=>function(j){if(NO87||!j||!["image","video"].includes(j.kind)||(j.meta&&(j.meta.ugc||j.meta.face87||j.meta.chars87||j.meta.a3||j.meta.nw||j.meta.sketch||j.meta.ent||j.meta.showcase)))return o(j);
+  // the characters named with @ — and the one picked in the page's own character list (Video, Images: "@ Name"), which used to
+  // reach the engine as a bare id it ignored
+  const cs=charsIn87(j.prompt),pk=j.meta&&j.meta.char?charById(j.meta.char):null;if(pk&&!cs.includes(pk))cs.push(pk);cs.splice(3);if(!cs.length)return o(j);
+  const none=cs.filter(c=>!face87(c));
+  if(none.length){                                                    // make the missing faces first, then this job
+    const waits=[];for(const c of none){const busy=S.jobs.find(x=>x.kind==="look"&&x.meta&&x.meta.char===c.id&&x.meta.real87&&["queued","rendering"].includes(x.status));let w=busy;if(!w){NO87++;try{w=withSlots87({chRef:null},()=>addJob({kind:"look",model:FACE87(),prompt:c.name+" · "+(c.look||""),title:c.name,cost:faceCost87(),secs:8,art:"portrait",aspect:"3:4",opt:charOpt(c),meta:{char:c.id,real87:1}}))}finally{NO87--}}if(w)waits.push(w.id)}
+    if(!waits.length)return null;const job=Object.assign({},j);delete job.id;S.flow87.push({id:uid(),at:Date.now(),wait:waits,then:job,grab:!!HF_GRAB});persist();
+    toast(L("Making "+none.map(c=>c.name).join(", ")+" real first — then your "+(j.kind==="video"?"video":"picture")+" starts with that face.","يتم جعل "+none.map(c=>c.name).join("، ")+" حقيقية أولاً — ثم يبدأ "+(j.kind==="video"?"الفيديو":"الصورة")+" بذلك الوجه."),{type:"ok"});
+    const r=S.jobs.find(x=>x.id===waits[0]);return r||null}
+  const faces=cs.map(face87),who=cs.map((c,i)=>"@"+c.name+" = the person in reference picture "+(i+1+(j.kind==="image"&&M.iRef?1:0))+": the exact same face, hair, skin tone and build (the same real person).").join(" ");
+  j.prompt=plain87(j.prompt,cs)+"\n"+who.replace(/@/g,"");j.meta=Object.assign({},j.meta,{chars87:cs.map(c=>({id:c.id,name:c.name}))});
+  if(j.kind==="image"){const free=["iRef","iRef2","iRef3","iRef4"].filter(k=>!M[k]),map={};faces.forEach((u,i)=>{if(free[i])map[free[i]]={type:"image",remote:u,url:u,name:"face"+(i+1)+".jpg"}});
+    if(!IMG_MODELS[j.model]||["auto","dotimg","sdxl","flux","zimage"].includes(j.model))j.model=FACE87();return withSlots87(map,()=>o(j))}
+  // video: a start picture of this scene with these people → the video from it (unless the user gave a first frame)
+  if(M.vStart||M.startImage||(j.meta&&j.meta.start)){j.prompt+=" Keep these people exactly as they appear in the first frame.";return o(j)}
+  const map={};faces.forEach((u,i)=>{map[["iRef","iRef2","iRef3"][i]]={type:"image",remote:u,url:u,name:"face"+(i+1)+".jpg"}});const fm=FACE87();
+  const pic=withSlots87(map,()=>{NO87++;try{return o({kind:"image",model:fm,prompt:"The first frame of a video: "+plain87(j.prompt,cs)+" Photorealistic, cinematic, natural light.",title:(j.title||String(j.prompt).slice(0,40))+" · "+L("first frame","الإطار الأول"),aspect:j.aspect||"16:9",cost:(IMG_MODELS[fm]||{cr:4}).cr,secs:8,art:"scene",meta:{chars87:j.meta.chars87,face87:1,frame87:1}})}finally{NO87--}});
+  if(!pic)return null;const job=Object.assign({},j,{prompt:j.prompt+" Keep these people exactly as they appear in the first frame."});delete job.id;
+  S.flow87.push({id:uid(),at:Date.now(),wait:[pic.id],then:job,start:pic.id,grab:!!HF_GRAB});persist();
+  toast(L("First a picture of "+cs.map(c=>c.name).join(" and ")+" in your scene — the video starts from it.","أولاً صورة لـ "+cs.map(c=>c.name).join(" و")+" في مشهدك — ثم يبدأ الفيديو منها."),{type:"ok"});return pic})(addJob);
+// a waited-for step finished → run the next one
+setInterval(()=>{if(!S.flow87.length)return;let ch=false;
+  for(const f of S.flow87.slice()){const js=f.wait.map(id=>S.jobs.find(x=>x.id===id));if(js.some(x=>!x||x.status==="failed")){S.flow87=S.flow87.filter(x=>x!==f);ch=true;toast(L("A step failed — nothing more was made.","فشلت خطوة — لم يُصنع شيء آخر."),{type:"warn"});continue}
+    if(!js.every(x=>x.status==="complete"&&mediaUrl(x)))continue;S.flow87=S.flow87.filter(x=>x!==f);ch=true;
+    for(const x of js)if(x.kind==="look"&&x.meta&&x.meta.char){const c=charById(x.meta.char);if(c&&!c.face)c.face=mediaUrl(x)}
+    let r=null;if(f.start){const u=mediaUrl(js[0]);r=withSlots87({vStart:{type:"image",remote:u,url:u,name:"first-frame.png"}},()=>{NO87++;try{return addJob(Object.assign({},f.then,{meta:Object.assign({},f.then.meta,{start:true,from87:f.start})}))}finally{NO87--}})}
+    else r=addJob(Object.assign({},f.then));
+    if(r&&S.hf&&Array.isArray(S.hf.out)&&f.wait.some(id=>S.hf.out.includes(id))){S.hf.out=[r.id].concat(S.hf.out.filter(id=>id!==r.id)).slice(0,12)}}
+  if(ch){persist();renderAll()}},1500);
+// ---- the "Characters" chip and the "@" list
+function chip87(forId){const cs=(S.chars||[]).filter(hasFace87).slice(-3);return'<button type="button" class="ch87b" data-act="ch87-open" data-for="'+forId+'" title="'+esc(L("Put one of your characters in this","ضع إحدى شخصياتك في هذا"))+'">'+(cs.length?'<span class="fc87">'+cs.map(c=>'<img src="'+esc(faceShow87(c))+'" alt="">').join("")+"</span>":ic("char"))+"<span>"+esc(L("Characters","الشخصيات"))+'</span><b class="mono">@</b></button>'}
+function sheet87(forId){const list=(S.chars||[]).map(c=>{const u=faceShow87(c);return'<button class="chpick87" data-act="ch87-put" data-for="'+forId+'" data-id="'+c.id+'"><span class="ph">'+(u?'<img src="'+esc(u)+'" alt="">':'<span class="sil87">'+SIL87+"</span>")+"</span><b>"+esc(c.name)+"</b>"+(u?"":'<small>'+esc(L("gets a real face first","يُصنع وجهه أولاً"))+"</small>")+"</button>"}).join("");
+  hfSheet(L("Your characters","شخصياتك"),'<p class="small mute" style="margin:0 0 12px">'+esc(L("Tap one to put it in your prompt as @name — the same real face is used in the picture, the video or the 3D world.","اضغط واحدة لتضعها في وصفك بصيغة @الاسم — يُستخدم الوجه الحقيقي نفسه في الصورة أو الفيديو أو العالم ثلاثي الأبعاد."))+"</p>"+
+    (list?'<div class="chpicks87">'+list+"</div>":'<p class="small">'+esc(L("You have no characters yet.","ليس لديك شخصيات بعد."))+"</p>")+'<div class="row" style="margin-top:14px"><button class="btn sm" data-go="chars" data-act="close-sheet">'+ic("plus")+esc(L("Create a character","أنشئ شخصية"))+"</button></div>")}
+function put87(ta,c,replaceAt){if(!ta||!c)return;const v=ta.value,pos=ta.selectionStart==null?v.length:ta.selectionStart;let a=pos,b=pos;
+  if(replaceAt!=null){a=replaceAt;b=pos}const ins="@"+c.name+" ",pre=v.slice(0,a),sep=pre&&!/\s$/.test(pre)?" ":"";ta.value=pre+sep+ins+v.slice(b);const np=(pre+sep+ins).length;
+  ta.focus();try{ta.setSelectionRange(np,np)}catch(e){}ta.dispatchEvent(new Event("input",{bubbles:true}))}
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="ch87-open"],[data-act="ch87-put"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
+  if(a.dataset.act==="ch87-open"){sheet87(a.dataset.for);return}
+  const c=charById(a.dataset.id),ta=document.getElementById(a.dataset.for);$("#modalRoot").innerHTML="";put87(ta,c)},true);
+const AT87={el:null,ta:null,at:-1,list:[],i:0};
+function at87Close(){if(AT87.el)AT87.el.remove();AT87.el=null;AT87.ta=null}
+function at87Show(ta,at,q){const ql=q.toLowerCase(),list=(S.chars||[]).filter(c=>String(c.name||"").toLowerCase().includes(ql)).slice(0,6);if(!list.length){at87Close();return}
+  AT87.ta=ta;AT87.at=at;AT87.list=list;AT87.i=Math.min(AT87.i,list.length-1);if(!AT87.el){AT87.el=document.createElement("div");AT87.el.className="at87";AT87.el.setAttribute("role","listbox");document.body.appendChild(AT87.el)}
+  AT87.el.innerHTML=list.map((c,i)=>{const u=faceShow87(c);return'<button type="button" role="option" aria-selected="'+(i===AT87.i)+'" data-i="'+i+'"><span class="ph">'+(u?'<img src="'+esc(u)+'" alt="">':'<span class="sil87">'+SIL87+"</span>")+"</span><b>"+esc(c.name)+"</b></button>"}).join("");
+  const r=ta.getBoundingClientRect(),w=Math.min(300,innerWidth-24);AT87.el.style.width=w+"px";AT87.el.style.left=Math.max(12,Math.min(innerWidth-w-12,r.left+(document.dir==="rtl"?r.width-w:0)))+"px";
+  const below=r.bottom+6,h=Math.min(list.length*46+8,290);AT87.el.style.top=(below+h>innerHeight-8?Math.max(8,r.top-h-6):below)+"px"}
+document.addEventListener("input",e=>{const ta=e.target;if(!ta||!PROMPTS87.includes(ta.id)){return}const v=ta.value.slice(0,ta.selectionStart==null?ta.value.length:ta.selectionStart),m=/(^|\s)@([^\s@]{0,20})$/u.exec(v);
+  if(!m||!(S.chars||[]).length){at87Close();return}at87Show(ta,v.length-m[2].length-1,m[2])},true);
+document.addEventListener("keydown",e=>{if(!AT87.el||e.target!==AT87.ta)return;if(e.key==="Escape"){at87Close();return}
+  if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();AT87.i=(AT87.i+(e.key==="ArrowDown"?1:-1)+AT87.list.length)%AT87.list.length;at87Show(AT87.ta,AT87.at,AT87.ta.value.slice(AT87.at+1,AT87.ta.selectionStart))}
+  else if(e.key==="Enter"||e.key==="Tab"){e.preventDefault();e.stopImmediatePropagation();const c=AT87.list[AT87.i],ta=AT87.ta,at=AT87.at;at87Close();put87(ta,c,at)}},true);
+document.addEventListener("mousedown",e=>{const b=e.target.closest&&e.target.closest(".at87 button");if(!b){if(AT87.el&&!e.target.closest(".at87"))at87Close();return}e.preventDefault();const c=AT87.list[+b.dataset.i],ta=AT87.ta,at=AT87.at;at87Close();put87(ta,c,at)},true);
+document.addEventListener("touchstart",e=>{const b=e.target.closest&&e.target.closest(".at87 button");if(!b)return;e.preventDefault();const c=AT87.list[+b.dataset.i],ta=AT87.ta,at=AT87.at;at87Close();put87(ta,c,at)},{capture:true,passive:false});
+addEventListener("scroll",()=>{if(AT87.el)at87Close()},true);
+// the chip under each prompt box
+hfBox=(o=>function(){const h=o();return S.hf.tab==="audio"?h:h.replace(/(<textarea id="hfq"[\s\S]*?<\/textarea>)/,"$1"+chip87("hfq"))})(hfBox);
+(function(){const st=document.createElement("style");st.textContent=`
+.ch87b{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 10px 0 6px;margin:6px 0 2px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--text);font:inherit;font-size:13px;cursor:pointer}
+.ch87b svg{width:16px;height:16px;margin-inline-start:4px}.ch87b b{opacity:.55;font-weight:600}
+.ch87b .fc87{display:inline-flex;flex:0 0 auto}.ch87b .fc87 img{flex:0 0 22px;width:22px!important;height:22px!important;max-width:none!important;border-radius:50%!important;object-fit:cover;border:2px solid var(--panel);margin:0 0 0 -7px!important;padding:0!important}.ch87b .fc87 img:first-child{margin:0!important}
+.chpicks87{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.chpick87{display:grid;justify-items:center;gap:6px;padding:10px 6px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--text);font:inherit;cursor:pointer}
+.chpick87 .ph,.at87 .ph{width:58px;height:58px;border-radius:50%;overflow:hidden;background:var(--panel2);display:grid;place-items:center}
+.chpick87 .ph img,.at87 .ph img{width:100%!important;height:100%!important;max-width:none!important;object-fit:cover;margin:0!important}.chpick87 .sil87,.at87 .sil87{color:var(--mute);display:grid;place-items:center;width:100%;height:100%}.chpick87 svg{width:70%;height:70%}
+.chpick87 b{font-weight:500;font-size:13px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chpick87 small{font-size:11px;color:var(--mute);text-align:center}
+.at87{position:fixed;z-index:10050;display:grid;gap:2px;padding:4px;border-radius:14px;background:var(--panel);border:1px solid var(--line);box-shadow:0 12px 32px rgba(0,0,0,.28);max-height:290px;overflow:auto}
+.at87 button{display:flex;align-items:center;gap:10px;padding:6px 8px;border:0;border-radius:10px;background:none;color:var(--text);font:inherit;text-align:start;cursor:pointer}
+.at87 button[aria-selected=true],.at87 button:hover{background:var(--panel2)}.at87 .ph{width:32px;height:32px}.at87 svg{width:70%;height:70%}.at87 b{font-weight:500;font-size:14px}
+`;document.head.appendChild(st)})();
+// ---- one video player for the whole site: play/pause, a seek bar with the time, sound, full screen — always reachable by
+// touch (a tap shows the bar, it hides itself while playing). Only one video plays at a time, and the viewer covers the page
+// completely (the page's own videos stop and hide behind it, so two videos are never on top of each other).
+const fmt87=t=>{t=Math.max(0,Math.floor(+t||0));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0")};
+const VPI87={play:'<path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/>',pause:'<path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor" stroke="none"/>',
+  vol:'<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" stroke="none"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.8 7.8 0 0 1 0 11"/>',mute:'<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" stroke="none"/><path d="M16 9.5l5 5M21 9.5l-5 5"/>',
+  full:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',exit:'<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>'};
+const vpSvg87=k=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+VPI87[k]+"</svg>";
+function vpUpgrade87(v){if(!v||v.dataset.vp87||v.closest(".vp87")||v.closest(".ed,.edstage,#edwrap,.nw-stage,.mediahost")||!v.hasAttribute("controls"))return;v.dataset.vp87="1";
+  const fill=v.classList.contains("frame"),w=document.createElement("div");w.className="vp87"+(fill?" fill":"");v.parentNode.insertBefore(w,v);w.appendChild(v);v.removeAttribute("controls");v.setAttribute("playsinline","");
+  w.insertAdjacentHTML("beforeend",'<button type="button" class="vpbig" aria-label="'+esc(L("Play","تشغيل"))+'">'+vpSvg87("play")+'</button><div class="vpbar" dir="ltr"><button type="button" class="vpp" aria-label="'+esc(L("Play","تشغيل"))+'">'+vpSvg87("play")+'</button><span class="vpt">0:00</span><input class="vps" type="range" min="0" max="1000" value="0" step="1" aria-label="'+esc(L("Seek","التقديم"))+'"><span class="vpd">0:00</span><button type="button" class="vpm" aria-label="'+esc(L("Sound","الصوت"))+'">'+vpSvg87("vol")+'</button><button type="button" class="vpf" aria-label="'+esc(L("Full screen","ملء الشاشة"))+'">'+vpSvg87("full")+"</button></div>");
+  const $q=s=>w.querySelector(s),bar=$q(".vpbar"),big=$q(".vpbig"),pp=$q(".vpp"),seek=$q(".vps"),tm=$q(".vpt"),du=$q(".vpd"),mu=$q(".vpm"),fs=$q(".vpf");let hideT=0,drag=false;
+  const sync=()=>{const p=!v.paused&&!v.ended;w.classList.toggle("playing",p);pp.innerHTML=vpSvg87(p?"pause":"play");pp.setAttribute("aria-label",p?L("Pause","إيقاف مؤقت"):L("Play","تشغيل"));big.innerHTML=vpSvg87(p?"pause":"play");
+    mu.innerHTML=vpSvg87(v.muted||!v.volume?"mute":"vol");mu.setAttribute("aria-pressed",String(!v.muted));if(!drag&&isFinite(v.duration)&&v.duration>0){seek.value=Math.round(v.currentTime/v.duration*1000);seek.style.setProperty("--p",(v.currentTime/v.duration*100)+"%")}
+    tm.textContent=fmt87(v.currentTime);du.textContent=isFinite(v.duration)?fmt87(v.duration):"0:00"};
+  const show=()=>{w.classList.add("show");clearTimeout(hideT);if(!v.paused)hideT=setTimeout(()=>w.classList.remove("show"),2600)};
+  const toggle=()=>{if(v.paused||v.ended){const p=v.play();if(p&&p.catch)p.catch(()=>{})}else v.pause();show()};
+  ["play","pause","ended","timeupdate","durationchange","loadedmetadata","volumechange"].forEach(ev=>v.addEventListener(ev,sync));
+  v.addEventListener("play",show);v.addEventListener("pause",()=>{w.classList.add("show");clearTimeout(hideT)});
+  big.addEventListener("click",e=>{e.stopPropagation();toggle()});pp.addEventListener("click",e=>{e.stopPropagation();toggle()});
+  v.addEventListener("click",e=>{e.stopPropagation();e.preventDefault();if(w.classList.contains("show")||v.paused)toggle();else show()});
+  w.addEventListener("pointermove",e=>{if(e.pointerType==="mouse")show()});
+  seek.addEventListener("input",()=>{drag=true;if(isFinite(v.duration)){v.currentTime=seek.value/1000*v.duration;seek.style.setProperty("--p",seek.value/10+"%");tm.textContent=fmt87(v.currentTime)}show()});
+  seek.addEventListener("change",()=>{drag=false;sync()});["pointerdown","click"].forEach(ev=>seek.addEventListener(ev,e=>e.stopPropagation()));
+  mu.addEventListener("click",e=>{e.stopPropagation();v.muted=!v.muted;if(!v.muted&&!v.volume)v.volume=1;show();sync()});
+  fs.addEventListener("click",e=>{e.stopPropagation();const d=document;if(d.fullscreenElement||d.webkitFullscreenElement){(d.exitFullscreen||d.webkitExitFullscreen).call(d)}else if(w.requestFullscreen)w.requestFullscreen().catch(()=>{});else if(v.webkitEnterFullscreen)v.webkitEnterFullscreen()});
+  w.addEventListener("fullscreenchange",()=>{fs.innerHTML=vpSvg87(document.fullscreenElement===w?"exit":"full")});
+  w.tabIndex=-1;w.addEventListener("keydown",e=>{if(e.target.closest("input"))return;if(e.key===" "||e.key==="k"){e.preventDefault();toggle()}else if(e.key==="ArrowRight"){v.currentTime=Math.min(v.duration||0,v.currentTime+5);show()}else if(e.key==="ArrowLeft"){v.currentTime=Math.max(0,v.currentTime-5);show()}else if(e.key==="m"){v.muted=!v.muted}else if(e.key==="f")fs.click()});
+  sync();w.classList.add("show");if(!v.paused)show()}
+// every video with controls becomes this player (results, previews in panels, the viewer)
+new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes){if(n.nodeType!==1)continue;if(n.tagName==="VIDEO")vpUpgrade87(n);else if(n.querySelectorAll)n.querySelectorAll("video[controls]").forEach(vpUpgrade87)}}).observe(document.documentElement,{childList:true,subtree:true});
+document.querySelectorAll("video[controls]").forEach(vpUpgrade87);
+// only one video plays (silent looping previews in grids may keep moving, but never next to a playing video with sound)
+const quiet87=v=>v.muted&&v.loop&&!v.closest(".vp87");
+document.addEventListener("play",e=>{const v=e.target;if(!(v instanceof HTMLVideoElement))return;const viewer=v.closest(".mv80");
+  if(!viewer&&document.body.classList.contains("mv87")){v.pause();return}   // nothing plays behind the viewer (a page redrawn under it starts its previews again)
+  if(quiet87(v)&&!viewer)return;
+  for(const o of document.querySelectorAll("video")){if(o===v||o.paused)continue;if(viewer||!quiet87(o))o.pause()}},true);
+// the viewer: our player, an opaque backdrop, every other video stopped and hidden behind it
+viewMedia80=(o=>function(src,kind){document.querySelectorAll("video").forEach(x=>{if(!x.paused)x.pause()});document.body.classList.add("mv87");
+  o(src,kind);const d=document.querySelector(".mv80:last-of-type");if(!d)return;const v=d.querySelector("video.mvm");if(v){v.muted=false;vpUpgrade87(v);const w=v.closest(".vp87");if(w)w.classList.add("mvp")}
+  const done=()=>{if(!document.querySelector(".mv80"))document.body.classList.remove("mv87")};new MutationObserver((ms,ob)=>{if(!d.isConnected){ob.disconnect();done()}}).observe(document.body,{childList:true})})(viewMedia80);
+// ---- no percentage numbers anywhere (the stars and the time it usually takes are enough)
+const noPct87=s=>String(s).replace(/\s*[·\-–]?\s*\d{1,3}\s?%/g,"");
+if(typeof vssRuns==="function")vssRuns=(o=>function(){return noPct87(o.apply(this,arguments))})(vssRuns);
+if(typeof vssSumTab==="function")vssSumTab=(o=>function(){return noPct87(o.apply(this,arguments))})(vssSumTab);
+if(typeof locOutState==="function")locOutState=(o=>function(){return noPct87(o.apply(this,arguments))})(locOutState);
+if(typeof uiPill==="function")uiPill=(o=>function(t,...r){return o.call(this,typeof t==="string"?noPct87(t):t,...r)})(uiPill);
+// ---- pictures and videos at a sensible size on a phone (the result never fills the whole screen; tap it to see it big)
+function fitStage87(h){return String(h).replace(/<div class="stage" style="aspect-ratio:(\d+)\/(\d+);max-height:(\d+)vh;margin:0 auto">/g,(m,a,b)=>'<div class="stage st87" style="aspect-ratio:'+a+"/"+b+";--w87:"+(a/b).toFixed(4)+';margin:0 auto">')}
+ugcStage79=(o=>function(g){return fitStage87(o(g))})(ugcStage79);
+ugcPreview79=(o=>function(){return fitStage87(o())})(ugcPreview79);
+(function(){const st=document.createElement("style");st.textContent=`
+[data-pct],.thumb .veil.v80 .pct{display:none!important}
+.vp87{position:relative;display:block;background:#000;overflow:hidden;outline:none}.vp87.fill{position:absolute;inset:0}.vp87 video{display:block;width:100%;height:100%}
+.vp87 .vpbig{position:absolute;left:50%;top:50%;width:62px;height:62px;margin:-31px 0 0 -31px;border-radius:50%;border:0;background:rgba(10,12,14,.55);color:#fff;display:grid;place-items:center;cursor:pointer;opacity:0;transition:opacity .2s;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.vp87 .vpbig svg{width:28px;height:28px}.vp87:not(.playing) .vpbig,.vp87.show .vpbig{opacity:1}.vp87.playing:not(.show) .vpbig{pointer-events:none}
+.vp87 .vpbar{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:8px;padding:22px 10px 8px;background:linear-gradient(transparent,rgba(0,0,0,.72));color:#fff;opacity:0;transition:opacity .2s;font:500 12px var(--mono,ui-monospace)}
+.vp87.show .vpbar,.vp87:not(.playing) .vpbar,.vp87:focus-within .vpbar{opacity:1}
+.vp87 .vpbar button{flex:0 0 auto;width:34px;height:34px;border:0;border-radius:10px;background:none;color:#fff;display:grid;place-items:center;cursor:pointer;padding:0}
+.vp87 .vpbar button:hover{background:rgba(255,255,255,.14)}.vp87 .vpbar svg{width:20px;height:20px}
+.vp87 .vps{flex:1;min-width:40px;height:22px;margin:0;background:none;-webkit-appearance:none;appearance:none;cursor:pointer;--p:0%}
+.vp87 .vps::-webkit-slider-runnable-track{height:4px;border-radius:4px;background:linear-gradient(90deg,#fff var(--p),rgba(255,255,255,.3) var(--p))}
+.vp87 .vps::-moz-range-track{height:4px;border-radius:4px;background:rgba(255,255,255,.3)}.vp87 .vps::-moz-range-progress{height:4px;border-radius:4px;background:#fff}
+.vp87 .vps::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;margin-top:-5px;border-radius:50%;background:#fff;border:0}
+.vp87 .vps::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:0}
+.vp87 .vpt,.vp87 .vpd{flex:0 0 auto;min-width:32px;text-align:center;opacity:.92}
+.vp87:fullscreen{width:100%;height:100%}.vp87:fullscreen video{object-fit:contain}
+.stage .vp87~.cap{transition:opacity .2s}.stage .vp87.show~.cap,.stage .vp87:not(.playing)~.cap{opacity:0;pointer-events:none}
+.mv80{background:#000!important}body.mv87 .app video{visibility:hidden}
+.mv80 .vp87.mvp{width:auto;max-width:100%;max-height:calc(100% - 70px);border-radius:10px;display:inline-block}.mv80 .vp87.mvp video{width:auto;height:auto;max-width:100%;max-height:calc(100dvh - 120px);margin:0 auto}
+.stage.st87{width:min(100%,calc(66vh * var(--w87)))}
+@media (max-width:767px){.stage.st87{width:min(100%,calc(48vh * var(--w87)))}.vp87 .vpbar{gap:4px;padding:18px 6px 6px}.vp87 .vpbar button{width:32px;height:32px}
+  .hfres .hfrm video,.hfres .hfrm img{max-height:46vh;object-fit:contain}.preview-col .stage{max-height:52vh}.imgs img{max-height:42vh}}
+`;document.head.appendChild(st)})();
+
+// ---- the 3D World starts EMPTY: nothing is built until you write something (or add a picture). Then the world is made and comes
+// to life (the land rises, things grow in, life starts moving) and real-looking people walk in: the site's own people (made once by
+// the owner) and your characters as themselves (their real face → a full-body photo → a 3D model that walks, sits, waves, talks).
+// Faster: the AI's plan gets 12 seconds; if it's slower, the world is built from your words at once and the AI's richer version is
+// offered when it arrives.
+const NW87={cast:null,castAt:0,better:null};
+async function nwCast87(force){if(API.mode!=="server")return NW87.cast={items:[],total:0,making:0};if(NW87.cast&&!force&&Date.now()-NW87.castAt<60000)return NW87.cast;
+  try{NW87.cast=await API.req("/v1/world/cast");NW87.castAt=Date.now()}catch(e){NW87.cast=NW87.cast||{items:[],total:0,making:0}}return NW87.cast}
+// which of the site's people fits "a man in a white thobe", "a girl", "an elderly woman"…
+function castPick87(e,i){const L0=(NW87.cast&&NW87.cast.items)||[];if(!L0.length)return null;const lk=String(e.look||"").toLowerCase(),age=+e.age||30,g=e.gender;
+  const pref=/thobe|shemagh|ghutra|dishdasha/.test(lk)?["man-thobe","old-man"]:/abaya|hijab/.test(lk)?["woman-abaya"]:age<13?(g==="female"?["girl"]:g==="male"?["boy"]:["boy","girl"]):age>=60?["old-man"]:g==="female"?["woman-casual","woman-abaya"]:g==="male"?["man-casual","young-man","man-thobe"]:["man-casual","woman-casual","young-man","woman-abaya","man-thobe"];
+  const ok=pref.map(id=>L0.find(x=>x.id===id)).filter(Boolean),any=ok.length?ok:L0.filter(x=>(!g||x.gender===g)&&(age<13)===(x.age<13));const list=any.length?any:L0;return list[i%list.length].url}
+// the people of the world being made: the site's people, and your characters when their 3D is ready
+async function nwPeople87(){const W=NW.W;if(!W||!W.plan||!Array.isArray(W.plan.people)||!W.plan.people.length)return;await nwCast87();let k=0;
+  for(const e of W.plan.people){if(NW.W!==W)return;const n=e.char?1:Math.max(1,Math.min(e.count||1,8));
+    for(let i=0;i<n;i++){const c=e.char&&charById(e.char),url=c?c.body3d:castPick87(e,k++);if(!url)continue;W.addPerson(Object.assign({},e,c?{height:(c.height||172)/100,gender:c.gender,age:c.age}:{}),url).catch(err=>console.warn("person",err))}}
+  nwRefresh()}
+// ---- a character in 3D: its real face → a full-body photo of that person → a 3D model (charged to the client)
+S.b87=S.b87&&typeof S.b87==="object"?S.b87:{};
+const body3dCost87=()=>faceCost87()+((typeof S3D_COST==="object"&&S3D_COST.body)||15);
+const make3dBusy87=c=>!!(c&&S.b87[c.id]);
+async function make3d87(c){if(!c)return null;if(make3dBusy87(c))return null;
+  if(!face87(c)&&!c.photo){const f=await makeReal87(c,true);if(!f)return null;S.b87[c.id]={wait:f.id,at:Date.now()};persist();toast(L("Making "+c.name+" real first, then the 3D body.","يتم جعل "+c.name+" حقيقية أولاً، ثم الجسم ثلاثي الأبعاد."),{type:"ok"});return f}
+  const face=await faceSlot87(c),m=FACE87(),d=String(charPrompt(c,"en")||c.name).replace(/\s+/g," ").trim().replace(/\.$/,"");
+  const j=withSlots87({iRef:face},()=>{NO87++;try{return addJob({kind:"image",model:m,aspect:"9:16",prompt:"Full-body photo of the same person as the reference photo (the exact same face, hair, skin tone and build): "+d+". Standing straight in a relaxed A-pose with the arms held a little away from the body and the palms towards the legs, facing the camera, the whole body from the top of the head to the feet in the frame, plain light-grey studio background, soft even light, photorealistic, sharp. No text, no logo, no frame.",title:c.name+" · "+L("full body","الجسم كاملاً"),cost:faceCost87(),secs:12,art:"portrait",meta:{body87:c.id,face87:1}})}finally{NO87--}});
+  if(!j){toast(L("Not enough credits for the 3D body.","الرصيد لا يكفي للجسم ثلاثي الأبعاد."),{type:"warn"});return null}
+  S.b87[c.id]={img:j.id,at:Date.now()};persist();renderAll();toast(L(c.name+" is being made in 3D — first a full-body photo, then the 3D body (about two minutes).","يُصنع "+c.name+" ثلاثي الأبعاد — أولاً صورة للجسم كاملاً ثم الجسم ثلاثي الأبعاد (نحو دقيقتين)."),{type:"ok"});return j}
+setInterval(()=>{let ch=false;for(const id of Object.keys(S.b87)){const st=S.b87[id],c=charById(id);if(!c||Date.now()-(st.at||0)>3*36e5){delete S.b87[id];ch=true;continue}
+    const look=(jid)=>S.jobs.find(x=>x.id===jid);
+    if(st.wait){const f=look(st.wait);if(!f||f.status==="failed"){delete S.b87[id];ch=true;continue}if(f.status==="complete"&&mediaUrl(f)){if(!c.face)c.face=mediaUrl(f);delete S.b87[id];ch=true;make3d87(c)}continue}
+    if(st.img&&!st.m3){const j=look(st.img);if(!j||j.status==="failed"){delete S.b87[id];ch=true;toast(L("The full-body photo failed — nothing more was charged.","فشلت صورة الجسم — لم يُخصم شيء آخر."),{type:"warn"});continue}
+      if(j.status==="complete"&&mediaUrl(j)){const u=mediaUrl(j);const m3=withSlots87({s3dImg:{type:"image",remote:u,url:u,name:"body.png"}},()=>{NO87++;try{return addJob({kind:"3d",prompt:c.name+": "+(c.look||""),title:c.name+" · 3D",cost:(typeof S3D_COST==="object"&&S3D_COST.body)||15,secs:90,art:"scene",aspect:"1:1",meta:{mode:"body",engine:"auto",body87:c.id}})}finally{NO87--}});
+        if(m3){st.m3=m3.id;st.photo=u}else delete S.b87[id];ch=true}continue}
+    if(st.m3){const m=look(st.m3);if(!m||m.status==="failed"){delete S.b87[id];ch=true;toast(L("The 3D body failed — try again later.","فشل الجسم ثلاثي الأبعاد — حاول لاحقاً."),{type:"warn"});continue}
+      if(m.status==="complete"&&mediaUrl(m)){c.body3d=mediaUrl(m);c.body3dPhoto=st.photo||null;delete S.b87[id];ch=true;toast(L(c.name+" is ready in 3D — write @"+c.name+" in the 3D World.",c.name+" جاهزة ثلاثياً — اكتب @"+c.name+" في عالم 3D."),{type:"ok"});
+        if(NW.W&&NW.W.plan&&(NW.W.plan.people||[]).some(e=>e.char===c.id)){const e=NW.W.plan.people.find(x=>x.char===c.id);NW.W.addPerson(Object.assign({},e,{height:(c.height||172)/100,gender:c.gender,age:c.age}),c.body3d).catch(()=>{})}}}}
+  if(ch){persist();if(["chars","world"].includes(S.view))renderView()}},2000);
+// the Characters page: "Make 3D" makes the real 3D body (no drawn figure any more)
+VIEWS.chars=(o=>()=>{let h=o();const c=S.chars[S.charSel];if(!c)return h;const busy=make3dBusy87(c);
+  return h.replace(/<button class="btn" data-act="char-3dbody">[\s\S]*?<\/button>/,'<button class="btn" data-act="b87-make" data-id="'+c.id+'"'+(busy?" disabled":"")+">"+(busy?'<i class="star79"></i>'+esc(L("Making 3D…","يُصنع ثلاثياً…")):ic("cube")+esc(c.body3d?L("Make 3D again","اصنع 3D من جديد"):L("Make 3D · walks in your worlds","اصنع 3D · يمشي في عوالمك"))+' <span class="mono dim">'+body3dCost87()+"cr</span>")+"</button>")})(VIEWS.chars);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="b87-make"]');if(!a)return;e.preventDefault();const c=charById(a.dataset.id);if(c){if(c.body3d&&!a.dataset.again){a.dataset.again="1"}make3d87(c)}});
+// ---- the page: an empty stage first; nothing old is rebuilt (a world made in this visit comes back when you return to it)
+nwMount=async function(){const st=nwStage();if(!st||st.dataset.on)return;st.dataset.on="1";NW.leaving=0;
+  if(location.protocol==="file:"){st.innerHTML='<div class="nw-msg">'+esc(L("The 3D world runs on the live site.","يعمل العالم ثلاثي الأبعاد على الموقع المباشر."))+"</div>";return}
+  nwOverlay(st);nwCaps().then(()=>nwRefresh());nwCast87().then(()=>nwRefresh());
+  try{const M=await nwMods();
+    if(!NW.E){nwSay(L("Starting 3D…","تشغيل ثلاثي الأبعاد…"));NW.E=await M.createEngine({onStatus:(s)=>{if(s==="lost"||s==="recovering")nwSay(L("The graphics restarted — one moment…","أعيد تشغيل الرسوميات — لحظة…"));if(s==="restored")nwSay("")}});
+      NW.E.onSlow=()=>{if(NW.slowed)return;NW.slowed=1;toast(L("This device is busy — the view is lighter now.","الجهاز مشغول — أصبح العرض أخف الآن."))}}
+    if(!nwStage())return;NW.E.attach(nwStage());if(NW.W)NW.W.player.rehost(nwStage());NW.lang=S.lang;nwSay("");
+    if(!NW.W){if(NW.session87)await nwBuild(NW.session87);else nwEmpty87(M)}
+    NW.E.start();nwHud()}
+  catch(e){console.error(e);NW.err=String(e&&e.message||e);const s=nwStage();if(s)s.querySelector(".nw-say").textContent=L("3D can't start in this browser. Try a newer browser, or turn on hardware acceleration.","لا يمكن تشغيل ثلاثي الأبعاد في هذا المتصفح. جرّب متصفحاً أحدث أو فعّل تسريع الرسوميات.");NW.busy=false}};
+function nwEmpty87(M){if(NW.empty87)return;try{NW.empty87=M.createEmpty(NW.E)}catch(e){console.warn("empty stage",e)}const st=nwStage();if(st)st.classList.add("nw-empty87");nwRefresh()}
+function nwEmptyOff87(){if(NW.empty87){try{NW.empty87.dispose()}catch(e){}NW.empty87=null}const st=nwStage();if(st)st.classList.remove("nw-empty87")}
+nwLeave=(o=>function(){o();setTimeout(()=>{if(S.view==="world")return;if(!NW.E||!NW.E.running){nwEmptyOff87()}},300)})(nwLeave);
+nwBuild=(o=>async function(plan,opt){nwEmptyOff87();const st=nwStage();if(st)st.classList.add("nw-life87");nwSay(L("Bringing your world to life…","يُبعث عالمك إلى الحياة…"));
+  await o(plan,opt);if(st)setTimeout(()=>st.classList.remove("nw-life87"),2600);if(NW.W){NW.session87=NW.W.plan;nwPeople87()}})(nwBuild);
+// the words become a plan: the AI gets 12 seconds; slower → the world from the words now, the AI's version offered later
+nwGo=async function(){const W=S.world,ta=document.getElementById("nwprompt");if(ta)W.prompt=ta.value;const raw=(W.prompt||"").trim();
+  if(!raw&&!W.pic){toast(L("Describe a world, or add a picture of a place.","صف عالماً، أو أضف صورة مكان."));return}
+  if(NW.busy)return;const M=await nwMods().catch(()=>null);if(!M){toast(L("3D can't start here.","لا يعمل ثلاثي الأبعاد هنا."));return}
+  const cs=charsIn87(raw),p=plain87(raw,cs),time=NW_TIME[W.opts.time]??null,weather=W.opts.weather==="auto"?null:W.opts.weather;
+  NW.busy=true;nwSay(W.pic?L("Reading the picture…","قراءة الصورة…"):NW.W?L("Changing the world…","تغيير العالم…"):L("Designing your world…","تصميم عالمك…"));nwRefresh();nwHud();
+  let plan=null,ai=false;const change=!!NW.W&&!W.pic&&!!p&&M.isEdit(p,W.plan);NW87.better=null;
+  if(API.mode==="server"){const req=change?API.req("/v1/world/edit",{json:{plan:W.plan,text:p,lang:S.lang}}):API.req("/v1/world/plan",{json:{prompt:p,image:W.pic||undefined,lang:S.lang,time:time??undefined,weather:weather||undefined}});
+    const timer=new Promise(r=>setTimeout(()=>r("slow"),W.pic?25000:12000));
+    const r=await Promise.race([req.then(x=>({x}),err=>({err})),timer]);
+    if(r==="slow"){const seed=Date.now();req.then(x=>{if(x&&x.plan&&x.ai){if(x.cost&&!crFree())S.credits=Math.max(0,(S.credits||0)-x.cost);NW87.better={plan:x.plan,cs,seed};nwRefresh();toast(L("The AI's more detailed version of this world is ready.","نسخة الذكاء الأكثر تفصيلاً من هذا العالم جاهزة."),{type:"ok"})}}).catch(()=>{})}
+    else if(r.x){plan=r.x.plan;ai=!!r.x.ai;if(r.x.cost&&!crFree())S.credits=Math.max(0,(S.credits||0)-r.x.cost)}
+    else if(change&&r.err&&/try words|another way/i.test(String(r.err.message))){NW.busy=false;nwSay("");nwRefresh();toast(String(r.err.message));return}}
+  if(!plan)plan=change?(M.editPlan(W.plan,p)||W.plan):M.localPlan(p,{time,weather});
+  if(!change&&W.pic)plan.fromPicture=1;
+  nwAddChars87(plan,cs,raw,M);NW.busy=false;const pic=W.pic;W.prompt="";await nwBuild(plan,{keepPos:change});
+  if(!change&&W.opts.look==="real")nwRealistic(pic);if(!change)W.pic=null;persist();nwRefresh()};
+// your characters named with @ join the plan as themselves (what they do: the words after their name)
+function nwAddChars87(plan,cs,raw,M){if(!cs.length)return;plan.people=(plan.people||[]).filter(e=>!e.char);
+  for(const c of cs){const i=raw.toLowerCase().indexOf("@"+String(c.name).toLowerCase()),after=i>=0?raw.slice(i+c.name.length+1,i+c.name.length+90):"",q=(M.localPeople?M.localPeople("a person "+after):[])[0]||{};
+    plan.people.push({char:c.id,name:c.name,look:String(charPrompt(c,"en")||c.name).slice(0,150),gender:c.gender,age:c.age,count:1,act:q.act||"stand",target:q.target})}}
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="nw87-better"],[data-act="nw87-cast"],[data-act="nw87-3d"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
+  if(a.dataset.act==="nw87-better"&&NW87.better){const b=NW87.better;NW87.better=null;const M=await nwMods();nwAddChars87(b.plan,b.cs,"",M);await nwBuild(b.plan,{keepPos:true});return}
+  if(a.dataset.act==="nw87-cast"){a.disabled=true;try{await API.req("/v1/admin/world/cast",{method:"POST",json:{}});toast(L("Making the world's people — a few minutes; they walk in by themselves.","تُصنع شخصيات العالم — بضع دقائق؛ وتدخل العالم بنفسها."),{type:"ok"})}catch(err){toast(String(err.message||err),{type:"warn"})}await nwCast87(true);nwRefresh();return}
+  if(a.dataset.act==="nw87-3d"){const c=charById(a.dataset.id);if(c)make3d87(c);nwRefresh()}},true);
+setInterval(async()=>{if(S.view!=="world"||!NW87.cast||!NW87.cast.making)return;const had=(NW87.cast.items||[]).length;await nwCast87(true);if((NW87.cast.items||[]).length>had){nwRefresh();if(NW.W)nwPeople87()}},15000);
+// the panel: the "@" chip under the words; who is coming; the owner's card for the site's people; the AI's richer version
+nwUI=(o=>function(){let h=o();h=h.replace(/(<textarea id="nwprompt"[\s\S]*?<\/textarea>)/,"$1"+chip87("nwprompt"));
+  const W=NW.W,ppl=W&&W.plan&&W.plan.people||[],cast=NW87.cast||{},parts=[];
+  if(NW87.better)parts.push('<div class="nw87card"><span>'+esc(L("The AI's more detailed version of this world is ready.","نسخة الذكاء الأكثر تفصيلاً من هذا العالم جاهزة."))+'</span><button class="btn sm primary" data-act="nw87-better">'+ic("spark")+esc(L("Show it","اعرضها"))+"</button></div>");
+  for(const e of ppl.filter(x=>x.char)){const c=charById(e.char);if(!c||c.body3d)continue;const busy=make3dBusy87(c);
+    parts.push('<div class="nw87card"><span>'+(faceShow87(c)?'<img src="'+esc(faceShow87(c))+'" alt="">':"")+esc(busy?L(c.name+" is being made in 3D — they walk in when ready.","يُصنع "+c.name+" ثلاثياً — يدخل العالم عند جاهزيته."):L(c.name+" isn't in 3D yet.",c.name+" ليس ثلاثياً بعد."))+"</span>"+(busy?'<i class="star79"></i>':'<button class="btn sm primary" data-act="nw87-3d" data-id="'+c.id+'">'+ic("cube")+esc(L("Make "+c.name+" 3D","اصنع "+c.name+" ثلاثياً"))+' <span class="mono">'+body3dCost87()+"</span></button>")+"</div>")}
+  const generic=ppl.filter(x=>!x.char).length,have=(cast.items||[]).length;
+  if(generic&&!have&&staff82()&&API.mode==="server"&&(NW.caps||{}).objects3d)parts.push('<div class="nw87card"><span>'+esc(cast.making?L("The world's people are being made — they walk in when ready.","تُصنع شخصيات العالم — تدخل عند جاهزيتها."):L("Make the world's real-looking people once (8 people, for every world on the site — owner only).","اصنع شخصيات العالم الواقعية مرة واحدة (8 أشخاص لكل عوالم الموقع — للمالك فقط)."))+"</span>"+(cast.making?'<i class="star79"></i>':'<button class="btn sm primary" data-act="nw87-cast">'+ic("spark")+esc(L("Make the people","اصنع الشخصيات"))+"</button>")+"</div>");
+  if(parts.length)h=h.replace('<div class="nw-opts">','<div class="nw87cards">'+parts.join("")+'</div><div class="nw-opts">');
+  if(!W)h=h.replace(/<div class="nw-actions">[\s\S]*?<\/div>(?=<h2|$)/,"");
+  return h})(nwUI);
+// a 3D object made from a picture (or a 3D model handed over from another tool) needs a world to stand in: when the stage is still
+// empty, an open park is made for it first
+nwObj3d=(o=>async function(){if(!NW.W&&NW.E&&!NW.busy){const M=await nwMods();await nwBuild(M.localPlan(L("an open green park on a sunny day","حديقة خضراء مفتوحة في يوم مشمس")))}return o.apply(this,arguments)})(nwObj3d);
+setInterval(async()=>{if(NW.pendingModel&&!NW.W&&NW.E&&!NW.busy&&S.view==="world"){const M=await nwMods();await nwBuild(M.localPlan(L("an open green park on a sunny day","حديقة خضراء مفتوحة في يوم مشمس")))}},900);
+// "New world": back to the empty stage (window capture: before the older handler that built an example world)
+window.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="nw-new"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
+  const W=S.world;W.plan=null;W.prompt="";W.pic=null;NW.session87=null;NW87.better=null;if(NW.W){NW.W.dispose();NW.W=null}persist();const M=await nwMods();nwEmpty87(M);nwRefresh();const ta=document.getElementById("nwprompt");if(ta)ta.focus()},true);
+(function(){const st=document.createElement("style");st.textContent=`
+.nw-stage.nw-empty87::after{content:attr(data-empty);position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);max-width:min(520px,86%);text-align:center;font-size:clamp(17px,2.4vw,24px);line-height:1.35;font-weight:500;color:var(--text);opacity:.82;pointer-events:none;text-shadow:0 1px 0 rgba(255,255,255,.4)}
+.nw-stage.nw-life87 .nw-say{opacity:1}
+.nw87cards{display:grid;gap:8px;margin:10px 0 2px}
+.nw87card{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:9px 12px;border-radius:12px;background:var(--panel2);font-size:13px}
+.nw87card span{display:inline-flex;align-items:center;gap:8px}.nw87card img{width:28px;height:28px;border-radius:50%;object-fit:cover}.nw87card .star79{width:20px;height:20px}
+`;document.head.appendChild(st)})();
+// the empty stage says what to do (in the visitor's language)
+renderView=(o=>function(){const r=o.apply(this,arguments);const s=nwStage();if(s)s.dataset.empty=L("Write what you want — it comes to life here","اكتب ما تريد — ويُبعث هنا حيّاً");return r})(renderView);
+// a redraw never stops the video you are watching: when the page redraws (a job started or finished, a setting changed), a
+// video that was playing is carried into the new page in place of its fresh copy (same view, same address) — it keeps playing
+// from where it was, with its own controls, instead of restarting or stopping
+// (only videos in the site's player — the editor and the 3D World keep their own videos)
+renderView=(o=>function(){const view=S.view,keep=[...document.querySelectorAll("#main .vp87>video")].filter(v=>!v.paused&&!v.ended&&v.getAttribute("src"));
+  const r=o.apply(this,arguments);if(!keep.length||S.view!==view)return r;const used=new Set();
+  for(const v of keep){if(v.isConnected)continue;const src=v.getAttribute("src"),n=[...document.querySelectorAll("#main video[controls]")].find(x=>!used.has(x)&&!x.dataset.vp87&&x.getAttribute("src")===src);if(!n)continue;
+    used.add(n);n.replaceWith(v.parentNode)}
+  return r})(renderView);
+// the UGC ads presenter and the Video page's character are two separate choices (both pages used to share S.draft.charId, so a
+// presenter picked for an ad showed up in an unrelated video): moving between the two pages swaps in that page's own choice
+let lastView87=S.view;
+renderView=(o=>function(){const to=S.view,from=lastView87,D=S.draft;lastView87=to;
+  if(D&&from!==to&&(from==="ugcads"||to==="ugcads")){if(from==="ugcads"){D.ugcChar87=D.charId||"";D.charId=D.vidChar87||""}else{D.vidChar87=D.charId||"";D.charId=D.ugcChar87||""}persist()}
+  return o.apply(this,arguments)})(renderView);
+// an ad step that runs later (its presenter's face just finished) uses ITS presenter, whatever page is open now
+ugcStep1_87=(o=>function(c,photo){const k=S.draft.charId;if(c)S.draft.charId=c.id;try{return o(c,photo)}finally{S.draft.charId=k}})(ugcStep1_87);
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

@@ -1,4 +1,4 @@
-// Life: people, animals, birds, fish, cars and boats that move by themselves and notice you — a dog follows you, people stop
+// Life: animals, birds, fish, cars and boats that move by themselves and notice you (people are real 3D people: human.js) — a dog follows you, people stop
 // and turn to you, deer and birds run off when you run at them, cars brake when you step in front of them (stopping distance
 // from the road surface, the same friction table as the physics). Every species is a handful of instanced parts, so 40 people
 // are still ~6 draw calls; each part swings from its own joint (legs, arms, wings, tails) every frame.
@@ -77,12 +77,14 @@ export function buildLife(T, K, mats, plan, terrain, water, tier, rnd, { roads =
   const wet = (x, z) => under || terrain.isWater(x, z);
   const findSpot = (cx, cz, r, ok, tries = 40) => { for (let i = 0; i < tries; i++) { const a = rnd() * 6.283, d = Math.sqrt(rnd()) * r, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d; if (ok(x, z)) return [x, z]; } return null; };
   const want = [];
-  for (const l of plan.life) want.push({ type: l.type, count: Math.max(1, Math.ceil(l.count * Math.max(0.8, tier.life) - 0.01)), at: l.at, spread: l.spread });   // what was asked for stays (almost) all there
+  // people are never drawn here any more: they are real-looking 3D people (human.js), added by the page as their models arrive
+  const HUMAN = new Set(["person", "child", "robe"]);
+  for (const l of plan.life) if (!HUMAN.has(l.type)) want.push({ type: l.type, count: Math.max(1, Math.ceil(l.count * Math.max(0.8, tier.life) - 0.01)), at: l.at, spread: l.spread });   // what was asked for stays (almost) all there
   // a little life the place always has (birds in the sky, fish in a lake) unless the plan already asked for it
   const PL = { meadow: [["bird", 5], ["butterfly", 5]], park: [["person", 6], ["dog", 1], ["bird", 5]], forest: [["bird", 6], ["deer", 2]], rainforest: [["bird", 8], ["butterfly", 6]], mountain: [["eagle", 2]], snow: [["bird", 2]],
     desert: [["camel", 3], ["eagle", 1]], oasis: [["camel", 3], ["bird", 4]], beach: [["seagull", 5], ["person", 3]], island: [["seagull", 5]], lake: [["duck", 4], ["bird", 5]], canyon: [["eagle", 2]], city: [["person", 12], ["car", 6], ["bird", 2]],
     village: [["person", 8], ["goat", 3], ["bird", 3]], farm: [["cow", 4], ["sheep", 5], ["bird", 4]], underwater: [["fish", 24]] }[plan.place] || [];
-  if (plan.dress > 0) for (const [t, n] of PL) if (!want.some((w) => w.type === t) && !(plan.exclude || []).includes(t)) want.push({ type: t, count: Math.max(1, Math.round(n * tier.life * plan.dress)) });
+  if (plan.dress > 0) for (const [t, n] of PL) if (!HUMAN.has(t) && !want.some((w) => w.type === t) && !(plan.exclude || []).includes(t)) want.push({ type: t, count: Math.max(1, Math.round(n * tier.life * plan.dress)) });
   if (["lake", "pond", "oasis", "river", "sea"].includes(plan.water.kind) && !want.some((w) => w.type === "fish") && plan.place !== "underwater") want.push({ type: "fish", count: Math.round(8 * tier.life) });
   const vgroups = [];
   const robeShare = ["village", "desert", "oasis", "city"].includes(plan.place) ? 0.6 : 0.2;

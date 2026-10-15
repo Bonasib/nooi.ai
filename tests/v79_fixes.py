@@ -192,7 +192,7 @@ async def ui(p, w, lang):
     ok(await E("()=>SKAI.state===''&&!$('#skout').dataset.ai79"), f"{tag}: drawing more goes back to the live preview")
     # 3D World: the plan from the text AI, built on the device; a real photo of the view is made in the cloud from one view
     n0 = len(posted)
-    await E("()=>go('w3ai')"); ok(await wait_for(E, "()=>S.view==='world'&&typeof NW!=='undefined'&&!!NW.W&&!NW.busy", 40), f"{tag}: the old 3D world page opens the 3D World")
+    await E("()=>go('w3ai')"); ok(await wait_for(E, "()=>S.view==='world'&&typeof NW!=='undefined'&&!!NW.E&&(!!NW.W||!!NW.empty87)&&!NW.busy", 40), f"{tag}: the old 3D world page opens the 3D World")
     await E("()=>{document.getElementById('nwprompt').value='A desert oasis at sunset';document.querySelector('[data-act=nw-go]').click()}")
     ok(await wait_for(E, "()=>!NW.busy&&!!NW.W&&NW.W.plan.title==='Desert oasis'", 60), f"{tag}: the world the text AI planned was built " + json.dumps(await E("()=>NW.W&&[NW.W.plan.title,NW.busy]")))
     r["w3"] = await E("()=>{const s=NW.W.stats();return [NW.W.plan.place,NW.W.plan.objects.length<=60,s.calls>0,s.things>12]}")
@@ -213,14 +213,17 @@ async def ui(p, w, lang):
     r["ugcpage"] = await E("()=>[S.view,document.querySelectorAll('.ugcstep').length,[...document.querySelectorAll('#main .lbl')].map(l=>l.textContent).filter(t=>/Camera|الكاميرا|Frame rate|First & end|Video type|نوع الفيديو/.test(t)),document.documentElement.scrollWidth<=innerWidth]")
     ok(r["ugcpage"][0] == "ugcads" and r["ugcpage"][1] == 4 and not r["ugcpage"][2] and r["ugcpage"][3], f"{tag}: UGC ads is its own page {r['ugcpage']}")
     await pg.set_input_files('input[data-ugc="ugcP"]', D + "/media/ai.png"); await pg.wait_for_timeout(700)
-    await E("()=>document.querySelector('[data-act=\"ugc-pre\"][data-v=\"p-sa-f\"]').click()"); await pg.wait_for_timeout(300)
+    # v87: the presenters are real portraits made once for the site (here one is ready); picking one gives the ad that face
+    await E("()=>{AV.items=[{id:'av-noura',name:['Noura','نورة'],gender:'female',who:'a Saudi woman',url:'/media/photo.png'}];AV.total=8;AV.making=0;renderView()}"); await pg.wait_for_timeout(300)
+    await E("()=>document.querySelector('[data-act=\"ugc-av87\"][data-v=\"av-noura\"]').click()"); await pg.wait_for_timeout(300)
+    r["ugcdbg"] = await E("()=>{const c=charById(S.draft.charId);return [!!M.ugcP,S.draft.charId,!!c,c?hasFace87(c):null,c?face87(c):null,(AV.items||[]).length,S.draft.ugc.mode]}")
     await E("()=>document.querySelector('[data-act=\"ugc-make\"]').click()")
     for _ in range(40):
         await pg.wait_for_timeout(400)
         if len(posted) - n0 >= 2: break
     u = posted[n0:n0 + 2]
     ok(len(u) == 2 and u[0].get("kind") == "image" and "iRef" in (u[0].get("inputs") or {}) and "Rose serum" in u[0]["prompt"] and "exactly the one in the reference photo" in u[0]["prompt"]
-       and u[1].get("kind") == "video" and "vStart" in (u[1].get("inputs") or {}) and u[1].get("aspect") == "9:16" and "Rose serum" in u[1]["prompt"], f"{tag}: presenter ad in two steps from the product photo {[(x.get('kind'), sorted((x.get('inputs') or {}).keys()), x.get('prompt','')[:70]) for x in u]}")
+       and "iRef2" in (u[0].get("inputs") or {}) and u[1].get("kind") == "video" and "vStart" in (u[1].get("inputs") or {}) and u[1].get("aspect") == "9:16" and "Rose serum" in u[1]["prompt"], f"{tag}: presenter ad in two steps from the product photo + the presenter's face {r.get('ugcdbg')} {[(x.get('kind'), sorted((x.get('inputs') or {}).keys()), x.get('prompt','')[:70]) for x in u]}")
     await pg.wait_for_timeout(600)
     ok(await E("()=>{const j=S.jobs.find(x=>x.id===S.ugc79.last);return !!j&&j.kind==='video'&&j.meta.ugcStep===2}"), f"{tag}: the UGC page follows the video step")
     n0 = len(posted)
@@ -244,7 +247,8 @@ async def studio(p):
     await pg.route("**/v1/jobs", jobs); await pg.route("**/v1/jobs/rx*", jstat)
     await pg.goto(f"http://localhost:{PORT}/"); await pg.wait_for_timeout(1500)
     await E(SETUP % "ar"); await E("()=>go('studio3d')")
-    ok(await wait_for(E, "()=>S.view==='world'&&typeof NW!=='undefined'&&!!NW.E&&!!NW.W&&!NW.busy", 40), "3D World on a phone")
+    ok(await wait_for(E, "()=>S.view==='world'&&typeof NW!=='undefined'&&!!NW.E&&!!NW.empty87", 40), "3D World on a phone (opens empty)")
+    await E("async()=>{const M=await nwMods();await nwBuild(M.localPlan('a sunny park with trees and a pond'))}"); ok(await wait_for(E, "()=>!!NW.W&&!NW.busy", 40), "3D World on a phone: a world from words")
     r = await E("()=>[NW.E.tier.name,NW.E.stats().pixelRatio<=NW.E.tier.pr[1]+0.01,NW.W.stats().physics]")
     ok(r[0] in ("low", "mid") and r[1] and r[2], f"3D World phone: a light quality tier, physics on {r}")
     await E("()=>document.querySelector('[data-act=nw-real]').click()")

@@ -26,7 +26,11 @@ ACTS = {"legal": "opens Terms / Privacy", "dictate": "types what you say (microp
         "xp-open": "opens the post", "xp-recreate": "makes one like it", "gfr-open": "redeems a gift code", "hf-send": "creates from the prompt", "hf-tab": "chooses what to make",
         "nw-opt": "sets the time of day, the weather or the look (Fast · free / Realistic)", "hf-ratio": "chooses the format (16:9, 9:16, 1:1…)",
         "home-adv": "opens the full studio with every option", "to-continue": "continues the last chapter story", "admin-login": "admin sign-in",
-        "ed-addtext": "adds a text layer", "char-3dbody": "makes a full 3D character (AI)", "sk-3d": "turns the drawing into 3D", "ui-set": "changes an interface setting"}
+        "ed-addtext": "adds a text layer", "char-3dbody": "makes a full 3D character (AI)", "sk-3d": "turns the drawing into 3D", "ui-set": "changes an interface setting",
+        "real87": "makes this character real (one photoreal face from its description or photo)", "real87-all": "makes every character without a face real",
+        "ugc-char": "chooses who presents the product", "ugc-av87": "chooses a ready presenter (a real photo)", "av87-make": "owner: makes the missing presenters' photos once",
+        "ch87-open": "opens your characters to put one in the prompt (@name)", "ch87-put": "puts this character in the prompt", "b87-make": "makes this character's 3D body (it walks in your worlds)",
+        "nw87-better": "shows the AI's more detailed version of the world", "nw87-cast": "owner: makes the world's real-looking people once", "nw87-3d": "makes this character 3D so it walks into the world"}
 def does(c, titles):
     if c["go"]: return "opens **" + titles.get(c["go"], c["go"]) + "**"
     if c["act"]: return ACTS.get(c["act"], "action `" + c["act"] + "`")

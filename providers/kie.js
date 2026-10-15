@@ -22,7 +22,7 @@ const MUSIC_KINDS = new Set(["music", "sfx"]);
 
 const fullPrompt = (p) => [p.prompt, p.character && `Main character: ${p.character.description}`, ...(p.meta?.refs || []).map((r) => `${r.type}: ${r.description}`), p.camera && `Camera: ${p.camera}`].filter(Boolean).join("\n");
 const startImg = (p) => p.inputs?.startImage || p.inputs?.vStart || (p.meta?.refs || []).find((r) => r.url)?.url || undefined;
-const refImg = (p) => p.inputs?.iRef || p.inputs?.skImg || p.inputs?.chRef || p.inputs?.dmIn || p.inputs?.eRef || undefined;
+const refImg = (p) => p.inputs?.iRef || p.inputs?.skImg || p.inputs?.chRef || p.inputs?.dmIn || p.inputs?.eRef || p.inputs?.iRef2 || undefined;
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 // what the engine received, for the person who made it: the words and the settings (never keys or file addresses)
 const URLK = /^(image_urls|input_urls|image_input|reference_image_urls|reference_image|video_urls|reference_video_urls|video_list|imageUrls|fileUrls|first_frame_url|last_frame_url|image_url|video_url|audio_url|image)$/;
@@ -76,20 +76,20 @@ export function kieInput(model, p) {
   if (/^volcengine\/video-to-video-lip-sync/.test(m)) return { mode: "basic", video_url: absUrl(inp.lsV), audio_url: absUrl(inp.lsA) };
   if (IMAGE_KINDS.has(kind)) {
     const ref = refImg(p) ? absUrl(refImg(p)) : undefined, prompt = fullPrompt(p);
-    const more = ["iRef2", "iRef3", "iRef4"].map((k) => inp[k]).filter(Boolean).map(absUrl);   // extra angles of the same face (avatars)
+    const more = ["iRef2", "iRef3", "iRef4"].map((k) => inp[k]).filter((u) => u && u !== refImg(p)).map(absUrl);   // extra angles of the same face (avatars) · the faces of the characters in the picture
     if (/^nano-banana-2-lite/.test(m)) return drop({ prompt, image_urls: ref ? [ref, ...more] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "16:9", "9:16", "4:3", "3:4", "4:5", "5:4", "2:3", "3:2", "21:9"]) });
     if (/^z-image/.test(m)) return { prompt: prompt.slice(0, 1000), aspect_ratio: snapAR(p.aspect, ["1:1", "4:3", "3:4", "16:9", "9:16"]), nsfw_checker: true };
-    if (/^seedream\/5-lite/.test(m)) return drop({ prompt, image_urls: ref ? [ref] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "4:3", "3:4", "16:9", "9:16", "2:3", "3:2", "21:9"]), quality: /4k/i.test(p.meta?.res || "") ? "high" : "basic" });
+    if (/^seedream\/5-lite/.test(m)) return drop({ prompt, image_urls: ref ? [ref, ...more] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "4:3", "3:4", "16:9", "9:16", "2:3", "3:2", "21:9"]), quality: /4k/i.test(p.meta?.res || "") ? "high" : "basic" });
     if (/nano-banana-(2|pro)/.test(m)) return drop({ prompt, image_input: ref ? [ref, ...more] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"]), resolution: pickRes(p, ["1K", "2K", "4K"], "2K") });
-    if (/nano-banana-edit/.test(m)) return drop({ prompt, image_urls: ref ? [ref] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"]) });
-    if (/^gpt-image-2/.test(m)) return drop({ prompt, input_urls: /image-to-image/.test(m) && ref ? [ref] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "3:2", "2:3", "4:3", "3:4", "5:4", "4:5", "9:16", "16:9"]), resolution: pickRes(p, ["1K", "2K", "4K"], "2K") });
-    if (/^flux-2\//.test(m)) return drop({ prompt, input_urls: /image-to-image/.test(m) && ref ? [ref] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3"]), resolution: pickRes(p, ["1K", "2K"], "2K") });
-    if (/^seedream\//.test(m)) return drop({ prompt, image_urls: /edit|image-to-image/.test(m) && ref ? [ref] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "4:3", "3:4", "16:9", "9:16", "2:3", "3:2", "21:9"]), quality: "high" });
+    if (/nano-banana-edit/.test(m)) return drop({ prompt, image_urls: ref ? [ref, ...more] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"]) });
+    if (/^gpt-image-2/.test(m)) return drop({ prompt, input_urls: /image-to-image/.test(m) && ref ? [ref, ...more] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "3:2", "2:3", "4:3", "3:4", "5:4", "4:5", "9:16", "16:9"]), resolution: pickRes(p, ["1K", "2K", "4K"], "2K") });
+    if (/^flux-2\//.test(m)) return drop({ prompt, input_urls: /image-to-image/.test(m) && ref ? [ref, ...more] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3"]), resolution: pickRes(p, ["1K", "2K"], "2K") });
+    if (/^seedream\//.test(m)) return drop({ prompt, image_urls: /edit|image-to-image/.test(m) && ref ? [ref, ...more] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "4:3", "3:4", "16:9", "9:16", "2:3", "3:2", "21:9"]), quality: "high" });
     if (/^qwen3\//.test(m)) return drop({ prompt, image_urls: /image-to-image/.test(m) && ref ? [ref] : undefined, image_size: snapAR(p.aspect, ["1:1", "3:2", "2:3", "4:3", "3:4", "16:9", "9:16", "21:9"]) });
     if (/^ideogram\//.test(m)) return drop({ prompt, image_size: { "1:1": "square_hd", "16:9": "landscape_16_9", "9:16": "portrait_16_9", "4:3": "landscape_4_3", "3:4": "portrait_4_3" }[snapAR(p.aspect, ["1:1", "16:9", "9:16", "4:3", "3:4"])] });
     if (/^google\/imagen/.test(m)) return drop({ prompt, aspect_ratio: snapAR(p.aspect, ["1:1", "16:9", "9:16", "3:4", "4:3"]) });
     if (/^grok-imagine/.test(m)) return drop({ prompt, image_urls: /image-to-image/.test(m) && ref ? [ref] : undefined, aspect_ratio: snapAR(p.aspect, ["2:3", "3:2", "1:1", "16:9", "9:16"]) });
-    return drop({ prompt, aspect_ratio: p.aspect || undefined, ...(ref ? { image_urls: [ref] } : {}) });
+    return drop({ prompt, aspect_ratio: p.aspect || undefined, ...(ref ? { image_urls: [ref, ...more] } : {}) });
   }
   // video (and chapter / extend)
   const img0 = startImg(p), img = img0 ? absUrl(img0) : undefined, end = inp.vEnd ? absUrl(inp.vEnd) : undefined, dur = Math.round(+p.dur || 5), prompt = fullPrompt(p), audio = !!(p.meta?.audio);

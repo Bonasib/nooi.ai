@@ -1,4 +1,4 @@
-# nooi — product map and roadmap (v86)
+# nooi — product map and roadmap (v87)
 
 The map of what every page is for, the rules every new button has to follow, what was merged or removed and why, and what
 comes next. Every button on every page, with what it does, is in **docs/UI_MAP.md** (made by `python3 tools/uimap.py`).
@@ -65,7 +65,10 @@ picker for both; the editor's "3D" tab should hand a paused frame to the 3D Worl
 
 ## 4. The 3D World (public/world/*, lib/world.js, providers/gen3d.js)
 
-**What you do:** write a world ("a desert oasis at sunset with camels") or add a picture of a place, press Create, walk in it.
+**What you do:** the page opens on an empty stage (nothing is made until you write). Write a world ("a desert oasis at sunset
+with camels, a man walks to the tent and two children run") or add a picture of a place, press Create — the world comes to
+life in front of you (the land rises, things grow in, life starts moving) and real-looking people do what the words say.
+Name your own characters with @ ("@Faisal sits on the bench") and they walk in as themselves. Walk in it.
 Write a change ("make it night", "add three horses", "remove the cars") in the same box. Simple options only: time of day,
 weather, and the look — **Fast · free** (built on your device from the plan) or **Realistic** (photoreal, paid, made on the server).
 
@@ -88,7 +91,13 @@ again exactly as they were.
   failing WebGPU frame → the same scene goes on in WebGL2 (and that browser starts in WebGL2 for a week).
 - *Build* (world.js, assets.js, terrain.js, sky.js, water.js): 80+ low-poly models with vertex colours, instanced per material
   in 48 m chunks (culled), terrain shapes, rivers and lakes, sky by the hour, rain / snow / sandstorm, lights at night.
-- *Life* (life.js): people, animals, birds, fish, cars on the roads (they brake for you), boats.
+- *Life* (life.js): animals, birds, fish, cars on the roads (they brake for you), boats — no box people any more.
+- *People* (human.js, v87): real-looking 3D people — a character's real face → a full-body photo of that person → a 3D model
+  (Model Studio 3D / Tripo / Meshy / NVIDIA); the site's own 8 people are made once by the owner and are free in every world.
+  A skeleton is fitted to each model in the browser and the people walk (hip sway, knee bend, arm swing), run, stand and
+  breathe, wave, talk, sit on benches and chairs, dance and point; they walk to what the words name, meet who they talk to,
+  avoid each other and turn to look at you. Plans carry `people` (who, how many, what they do, what to) from the AI or from
+  the words (English and Arabic, Arabic duals included).
 - *Physics* (physics.js, Rapier): the same material table as the server (materials.js) — a rubber ball bounces and rolls to a
   stop, glass shatters above its breaking speed, wood floats, stone sinks, wind pushes light things; you walk, climb steps,
   swim and jump with a character controller.
@@ -106,7 +115,8 @@ the resolution drops before the frame rate does. Phones destroy the engine when 
 | text / plans / vision | Gemma 4 on Google → your own text server → NVIDIA → Claude / Qwen |
 | pictures | the picture engine chosen by nooi Auto (Kie market models, NVIDIA FLUX, OpenAI…) |
 | video | nooi Auto (best engine for the prompt, length and plan), with the physics line added (§6) |
-| 3D objects / characters | NVIDIA TRELLIS → SAM 3D → Tripo → Meshy (engine "auto") |
+| 3D objects / characters / people | NVIDIA TRELLIS (when switched on) → Model Studio 3D (Tripo P1.0 on DashScope, the Qwen key; never named to clients) → Tripo → Meshy (engine "auto"; a Model Studio failure moves the job once) |
+| a character in any job | its one real face goes with the job: pictures use it as the identity reference; a video first makes a picture of the scene with that person (@Name in the prompt, or the UGC presenter) |
 | 3D worlds (Realistic) | World Labs (Marble) → 360° panorama from the picture engine + AI 3D objects |
 
 ## 6. Physics in the work
@@ -120,10 +130,25 @@ the resolution drops before the frame rate does. Phones destroy the engine when 
 - **For ChatGPT / Claude:** the physics tool (MCP) with the same limits.
 - **For the AI bots:** physics craft notes (lib/skills/physics.md).
 
-## 7. Next
+## 7. v87 — real characters, one player, the World comes alive
+
+- **Characters are real.** One face per character (its photo, a real look, or a ready presenter's portrait); no drawn previews —
+  an empty frame says "Make it real". The face goes with every job that names the character (`@Name` in the home box, Video,
+  Image and the 3D World, or the character picked in the Video / Image page's list; the UGC presenter at every step), so the engine shows that person, never a random one.
+  Looks of a character that has a face are made from that face (the same person each time); with no face yet, "4 real
+  looks" are 4 candidate faces and the first one becomes the face. Each is charged what its picture engine costs.
+- **UGC ads:** ready presenters are real photos (the owner makes the missing ones once); face → photo with the product →
+  video from that photo, on Kling 3.0 Turbo (faster).
+- **One video player** everywhere: play/pause, seek with the time, sound, full screen; one video at a time; the viewer covers
+  the page. Results are compact on phones; no percentage numbers.
+- **3D World:** empty start, faster plans (12 s for the AI, else the words at once and the AI's richer version offered),
+  the world comes to life, real-looking people do what the words say. "Auto" time is daytime again (it was midnight).
+
+## 8. Next
 
 1. One feeling picker on Voice & audio (tone + dialogue feeling), the editor's 3D tab → hand-over to the 3D World.
-2. In the World: open doors, sit, drive a car, carry things between saved worlds; a short "what happened" film from the tour.
+2. In the World: open doors, drive a car, carry things between saved worlds; a short "what happened" film from the tour;
+   people that talk with your character's voice; animal and car models from the 3D engines like the people.
 3. Template covers made from real results (one look per template family) and the remaining icon pass.
 4. Picture → world: more model types (the closest one is used today), and "keep this object" to turn any photo object into its
    own AI 3D model in one tap.

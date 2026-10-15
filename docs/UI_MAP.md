@@ -16,6 +16,7 @@ option groups are folded into one line (“choose …”). Shared parts (top bar
 | Audio | chooses what to make |
 | Avatar | chooses what to make |
 | Describe what to create | field |
+| Characters @ | opens your characters to put one in the prompt (@name) |
 | 16:9 | chooses the format (16:9, 9:16, 1:1…) |
 | Send | creates from the prompt |
 | Claude & ChatGPT Connect | opens **Integrations · MCP** |
@@ -375,15 +376,7 @@ _Market a product with a presenter, product shots, an image or motion graphics._
 | Product only Close-ups and a slow turn of your product in st | action `ugc-mode` |
 | Still image ad One scroll-stopping picture with room for you | action `ugc-mode` |
 | Motion graphics Animated text, your product and the price. | action `ugc-mode` |
-| The Keeper | action `ugc-char` |
-| S Saudi man | action `ugc-pre` |
-| S Saudi woman | action `ugc-pre` |
-| G Gulf young man | action `ugc-pre` |
-| E Egyptian woman | action `ugc-pre` |
-| A American woman | action `ugc-pre` |
-| B British man | action `ugc-pre` |
-| C Chinese woman | action `ugc-pre` |
-| I Indian man | action `ugc-pre` |
+| The Keeper | chooses who presents the product |
 | Create your own | opens **Characters** |
 | I've tried a lot of serums — this is the first one that actually works | field |
 | e.g. Order now — free delivery | field |
@@ -392,9 +385,9 @@ _Market a product with a presenter, product shots, an image or motion graphics._
 | 8 s | action `ugc-dur` |
 | 10 s | action `ugc-dur` |
 | 15 s | action `ugc-dur` |
-| Smart pick · Kling 3.0 Seedance · 30 cr WAN 2.7 · 77 cr Klin | field |
-| Smart pick · Kling 3.0 | — |
-| Make the ad 133 | action `ugc-make` |
+| Smart pick · Kling 3.0 Turbo Seedance · 30 cr WAN 2.7 · 77 c | field |
+| Smart pick · Kling 3.0 Turbo | — |
+| Make the ad 155 | action `ugc-make` |
 | contact@nooi.ai | link → mailto:contact@nooi.ai |
 | Help & support | opens **Help & support** |
 | Admin login | admin sign-in |
@@ -527,10 +520,10 @@ _Characters with ages, voices and several looks._
 | Add a photo to this character | field (file) |
 | The Keeper 72 · 172cm · Male Story | action `pick-char` |
 | New character | action `new-char` |
-| Generate 4 looks 8 | action `gen-looks` |
-| Full 3D character (AI) 66 | makes a full 3D character (AI) |
-| Character sheet 6 | action `gen-sheet` |
-| (no label) | action `pick-look` |
+| Make it real 22 | makes this character real (one photoreal face from its description or photo) |
+| 4 real looks 88 | action `gen-looks` |
+| Make 3D · walks in your worlds 37 | makes this character's 3D body (it walks in your worlds) |
+| Character sheet 22 | action `gen-sheet` |
 | Lock identity across shots | — |
 | Use as main character | action `char-to-story` |
 | Delete | action `del-char` |
@@ -571,6 +564,7 @@ _Write what you want — or add a picture — and walk around inside it: a livin
 | control | what it does |
 |---|---|
 | Describe a world: a desert oasis at sunset with camels… | field |
+| Characters @ | opens your characters to put one in the prompt (@name) |
 | Create world | creates the world from your words / picture (or changes it) |
 | Auto | sets the time of day, the weather or the look (Fast · free / Realistic) |
 | Day | sets the time of day, the weather or the look (Fast · free / Realistic) |
@@ -688,6 +682,7 @@ _Background & keying, color grading and motion capture._
 | Audio | chooses what to make |
 | Avatar | chooses what to make |
 | Describe what to create | field |
+| Characters @ | opens your characters to put one in the prompt (@name) |
 | 16:9 | chooses the format (16:9, 9:16, 1:1…) |
 | Send | creates from the prompt |
 | Claude & ChatGPT Connect | opens **Integrations · MCP** |
@@ -1258,4 +1253,4 @@ _Plug in your APIs and accounts._
 | Admin login | admin sign-in |
 
 
-_1401 controls on 34 pages_
+_1393 controls on 34 pages_

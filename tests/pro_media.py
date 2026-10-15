@@ -123,7 +123,8 @@ async def ui(p, w):
     # 3D World: one engine for the site with a quality tier per device; the resolution stays inside the tier's range (it follows
     # the frame time, so a slow device draws fewer pixels instead of freezing)
     if not mob:
-        await E("()=>go('world')"); ok(await wait_for("()=>typeof NW!=='undefined'&&!!NW.E&&!!NW.W", 40), "3D World ready")
+        await E("()=>go('world')"); ok(await wait_for("()=>typeof NW!=='undefined'&&!!NW.E&&!!NW.empty87", 40), "3D World opens (empty)")
+        await E("async()=>{const M=await nwMods();await nwBuild(M.localPlan('a sunny park with trees and a pond'))}"); ok(await wait_for("()=>!!NW.W&&!NW.busy", 40), "3D World ready")
         r["q"] = await E("()=>{const s=NW.E.stats(),t=NW.E.tier;return [t.name,s.pixelRatio>=t.pr[0]-0.01&&s.pixelRatio<=t.pr[1]+0.01,s.backend,s.calls>0]}")
         ok(r["q"][0] in ("low", "mid", "high") and r["q"][1] and r["q"][2] in ("webgl", "webgpu") and r["q"][3], f"3D: quality tier, resolution in range, drawing {r['q']}")
     ok(not errs, f"{tag}: page errors {errs}")

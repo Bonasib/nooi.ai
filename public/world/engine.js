@@ -8,9 +8,9 @@
 //  · if the GPU is lost (driver reset, memory pressure) the engine starts again by itself — on WebGL2 if WebGPU was the problem
 // It knows nothing about worlds: public/world/world.js builds them, the page (index.html, v86) drives it.
 export const TIERS = {
-  low:  { name: "low", pr: [0.55, 1], aa: false, shadows: 0, terrain: 88, far: 260, inst: 3200, particles: 650, life: 0.45, clouds: 7, stars: 800, lights: 2, tex: 512, fps: 30, grass: 0 },
-  mid:  { name: "mid", pr: [0.7, 1.5], aa: false, shadows: 1024, terrain: 128, far: 380, inst: 8000, particles: 1300, life: 0.8, clouds: 12, stars: 1500, lights: 3, tex: 1024, fps: 45, grass: 0.6 },
-  high: { name: "high", pr: [0.85, 2], aa: true, shadows: 2048, terrain: 176, far: 520, inst: 16000, particles: 2400, life: 1, clouds: 18, stars: 2400, lights: 4, tex: 2048, fps: 60, grass: 1 }
+  low:  { name: "low", pr: [0.7, 1.25], aa: false, shadows: 0, terrain: 88, far: 260, inst: 3200, particles: 650, life: 0.45, clouds: 7, stars: 800, lights: 2, tex: 512, fps: 30, grass: 0 },
+  mid:  { name: "mid", pr: [0.85, 1.75], aa: true, shadows: 1024, terrain: 128, far: 380, inst: 8000, particles: 1300, life: 0.8, clouds: 12, stars: 1500, lights: 3, tex: 1024, fps: 45, grass: 0.6 },
+  high: { name: "high", pr: [1, 2], aa: true, shadows: 2048, terrain: 176, far: 520, inst: 16000, particles: 2400, life: 1, clouds: 18, stars: 2400, lights: 4, tex: 2048, fps: 60, grass: 1 }
 };
 const ls = { get: (k) => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} } };
 

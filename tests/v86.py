@@ -1,6 +1,6 @@
 # v86: one 3D World instead of 3D worlds + 3D Studio + Physics — in a real browser with a real nooi server (no AI keys: plans are
 # made from the words, free). Desktop (English) and Arabic phone:
-#  · the page opens with a world (one engine, quality tier, draw budget), nothing sideways, no page errors
+#  · the page opens empty (v87) and the first words make a world (one engine, quality tier, draw budget), nothing sideways, no page errors
 #  · words → a world; a change in the same box ("make it rain and add three horses") keeps the seed; save → new → open again;
 #    photo to the library; leave and come back (phones free the 3D engine when you leave)
 #  · real physics in the world: pick up and throw a ball, kick a crate, a glass vase shatters when thrown down (desktop)
@@ -71,7 +71,11 @@ async def page_run(p, W, lang):
     pg = await ctx.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e)[:240]))
     await pg.goto(f"http://localhost:{PORT}/"); await pg.wait_for_timeout(1500); await pg.evaluate(SET, lang)
     E = pg.evaluate
-    await E("()=>go('world')"); ok(await until(pg, READY, 60), f"{tag}: the 3D World opens with a world")
+    # v87: the World opens EMPTY (nothing is built until you write) — the first words make the first world
+    await E("()=>go('world')"); ok(await until(pg, "()=>S.view==='world'&&typeof NW!=='undefined'&&!!NW.E&&!!NW.empty87&&!NW.W", 60), f"{tag}: the 3D World opens empty, waiting for words")
+    first = "a quiet park with trees, a pond and a bench" if lang == "en" else "حديقة هادئة فيها أشجار وبركة ومقعد"
+    await E("(t)=>{const a=document.getElementById('nwprompt');a.value=t;document.querySelector('[data-act=nw-go]').click()}", first)
+    ok(await until(pg, READY, 60), f"{tag}: the first words make the first world")
     r["first"] = await E("()=>{const s=NW.W.stats();return {tier:s.tier,backend:s.backend,calls:s.calls,tris:s.triangles,things:s.things,life:s.life,physics:s.physics,wide:document.documentElement.scrollWidth-innerWidth,h1:(document.querySelector('#main h1')||{}).textContent}}")
     f = r["first"]; ok(f["tier"] in ("low", "mid", "high") and f["calls"] > 0 and f["calls"] < 160 and f["tris"] < 120000 and f["physics"] and f["life"] > 0 and f["wide"] <= 1, f"{tag}: one engine, a draw budget, life and physics, nothing sideways {f}")
     ok(f["h1"] in ("3D World", "عالم 3D"), f"{tag}: the page title {f['h1']}")
@@ -144,8 +148,10 @@ async def webgpu_run(p):
     pg = await (await b.new_context(viewport={"width": 1100, "height": 760})).new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e)[:240]))
     await pg.goto(f"http://localhost:{PORT}/"); await pg.wait_for_timeout(1200)
     await pg.evaluate("()=>{try{localStorage.setItem('nooiWorldPrefer','webgpu');localStorage.removeItem('nooiWorldBackend')}catch(e){}}"); await pg.evaluate(SET, "en")
-    await pg.evaluate("()=>go('world')"); ok(await until(pg, READY, 60), "WebGPU: the world opens")
+    await pg.evaluate("()=>go('world')"); ok(await until(pg, "()=>S.view==='world'&&!!NW.E&&!!NW.empty87", 60), "WebGPU: the 3D view opens (empty)")
     first = await pg.evaluate("()=>NW.E.backend")
+    await pg.evaluate("async()=>{const M=await nwMods();await nwBuild(M.localPlan('a sunny park with trees and a pond'))}")
+    ok(await until(pg, READY, 60), "WebGPU: the world opens")
     await pg.wait_for_timeout(8000)
     r = await pg.evaluate("()=>{const s=NW.E.stats();return {first:'%s',now:s.backend,calls:s.calls,fps:s.fps,remember:(()=>{try{return localStorage.getItem('nooiWorldBackend')}catch(e){return null}})()}}" % first)
     ok(r["first"] == "webgpu", f"WebGPU: used when asked for {r}")

@@ -66,6 +66,8 @@ export const TYPES = {
   box: { c: "shape", s: [1, 1, 1], m: "plastic", dyn: 1 }, sphere: { c: "shape", s: [1, 1, 1], m: "plastic", dyn: 1 }, cylinder: { c: "shape", s: [1, 1.5, 1], m: "plastic" },
   ring: { c: "shape", s: [2, 2, 0.4], m: "metal" }, arch: { c: "structure", s: [4, 4, 1], m: "stone" }
 };
+// what people can do (human.js moves them)
+export const ACTS = ["walk", "stand", "wave", "talk", "sit", "run", "dance", "look", "wander", "point"];
 // what moves by itself
 export const LIFE = { person: "walk", child: "walk", dog: "follow", cat: "wander", camel: "wander", horse: "wander", cow: "graze", sheep: "graze", goat: "graze", deer: "wander",
   bird: "fly", seagull: "fly", eagle: "soar", duck: "float", fish: "swim", butterfly: "flutter", car: "drive", bus: "drive", boat: "sail", plane: "flyby" };
@@ -93,7 +95,13 @@ export function cleanPlan(j) {
       dyn: o.dyn === undefined ? !!T.dyn : !!o.dyn, hero: !!o.hero, name: txt(o.name, 40) || undefined,
       box: Array.isArray(o.box) && o.box.length === 4 && o.box.every((v) => Number.isFinite(+v)) ? o.box.map((v) => num(v, 0, 1, 0)) : undefined };   // where it is in the picture (for its 3D model)
   }).filter(Boolean);
-  const life = (Array.isArray(j.life) ? j.life : []).slice(0, 12).map((l) => (l && LIFE[l.type] ? { type: l.type, count: Math.round(num(l.count, 1, 30, 3)), at: xz(l.at, lim), spread: num(l.spread, 0, lim, lim * 0.6) } : null)).filter(Boolean);
+  let life = (Array.isArray(j.life) ? j.life : []).slice(0, 12).map((l) => (l && LIFE[l.type] ? { type: l.type, count: Math.round(num(l.count, 1, 30, 3)), at: xz(l.at, lim), spread: num(l.spread, 0, lim, lim * 0.6) } : null)).filter(Boolean);
+  // people: real-looking 3D people (human.js) — who they are, how many, what they do and what they go to
+  const people = (Array.isArray(j.people) ? j.people : []).slice(0, 12).map((q) => (q && typeof q === "object" ? { look: txt(q.look || q.who || q.description, 160), gender: pick(q.gender, ["male", "female"], undefined), age: Math.round(num(q.age, 3, 95, 30)),
+    count: Math.round(num(q.count, 1, 12, 1)), act: pick(q.act, ACTS, "stand"), target: txt(q.target, 40) || undefined, task: txt(q.task, 140) || undefined, at: xz(q.at, lim) || undefined,
+    char: typeof q.char === "string" && /^[\w-]{1,40}$/.test(q.char) ? q.char : undefined, name: txt(q.name, 40) || undefined } : null)).filter(Boolean);
+  for (const l of life) if (l.type === "person" || l.type === "child") { if (!people.some((q) => q.fromLife === l.type)) people.push({ look: "", age: l.type === "child" ? 9 : 30, count: Math.min(12, l.count), act: "walk", fromLife: l.type }); }
+  life = life.filter((l) => l.type !== "person" && l.type !== "child");
   const roads = (Array.isArray(j.roads) ? j.roads : []).slice(0, 10).map((r) => { const a = xz(r && r.from, lim), b = xz(r && r.to, lim); return a && b ? { from: a, to: b, width: num(r.width, 1.5, 14, 6), kind: pick(r.kind, ["road", "path", "street"], "road") } : null; }).filter(Boolean);
   return {
     v: PLAN_VERSION, seed: Math.round(num(j.seed, 1, 2 ** 31 - 2, 1 + Math.floor(Math.random() * 1e9))),
@@ -107,7 +115,7 @@ export function cleanPlan(j) {
     gravity: num(j.gravity, 1, 15, P.gravity || 9.81),
     exclude: (Array.isArray(j.exclude) ? j.exclude : []).filter((x) => TYPES[x]).slice(0, 20),
     dress: num(j.dress, 0, 2, 1),
-    objects, life, roads,
+    objects, life, people, roads,
     spawn: { at: xz(j.spawn && j.spawn.at, lim) || [0, P.indoor ? size * 0.3 : Math.min(28, lim * 0.35)], look: xz(j.spawn && j.spawn.look, lim) || [0, 0] },
     // AI-made parts (filled in by the page when they arrive)
     pano: typeof j.pano === "string" && /^(\/media\/|https?:\/\/)/.test(j.pano) ? j.pano.slice(0, 500) : undefined,
@@ -167,7 +175,7 @@ const THING_WORDS = [
   ["ruins", W("ruins|columns|ancient", "اطلال|اثار|اعمده")], ["dome", W("domes?", "قبه|قباب")],
   ["bridge", W("bridges?", "جسر|جسور|كوبري")], ["wall", W("walls?", "سور|جدار|اسوار")], ["gate", W("gates?|arch(es)?", "بوابه|قوس|باب كبير")], ["fence", W("fences?", "سياج|اسوار خشبيه")],
   ["well", W("wells?", "بئر|ابار")], ["fountain", W("fountains?", "نافوره")], ["pier", W("piers?|dock|jetty", "رصيف بحري|مرسي")], ["statue", W("statues?|sculptures?", "تمثال|منحوته")],
-  ["lamp", W("street ?lights?|lamp ?posts?|lamps?", "عمود انارة|اعمده انارة|اناره|مصباح|مصابيح")], ["bench", W("benches?", "مقعد|مقاعد|كنبه حديقه")], ["stall", W("stalls?|market|souq|bazaar", "بسطه|سوق|بسطات")],
+  ["lamp", W("street ?lights?|lamp ?posts?|lamps?", "عمود انارة|اعمده انارة|اناره|مصباح|مصابيح")], ["bench", W("bench(es)?", "مقعد|مقاعد|كنبه حديقه")], ["stall", W("stalls?|market|souq|bazaar", "بسطه|سوق|بسطات")],
   ["umbrella", W("umbrellas?|parasols?", "مظله|مظلات|شمسيه")], ["flag", W("flags?", "علم|اعلام|رايه")], ["sign", W("signs?|billboards?", "لوحه اعلان|لافته")],
   ["campfire", W("campfire|bonfire|fire pit|fire", "نار المخيم|شبه نار|موقد نار|نار")], ["torch", W("torch(es)?", "مشعل|مشاعل")], ["lantern", W("lanterns?", "فانوس|فوانيس")],
   ["suv", W("suvs?|jeeps?|4x4|land ?cruiser", "جيب|دفع رباعي|لاندكروزر")], ["truck", W("trucks?|pickup", "شاحنه|ونيت|تريله")], ["bus", W("bus(es)?", "باص|حافله")],
@@ -229,7 +237,8 @@ export function localPlan(prompt, opts = {}) {
     const T = TYPES[type], pl = plural(m), n = countNear(t, m.index) || (T.c === "plant" ? (pl ? 8 : 1) : T.c === "building" ? (place === "city" || place === "village" ? 6 : pl ? 4 : 1) : pl ? 4 : 1);
     objects.push({ type, count: n, color: near(t, m, COLORS), mat: near(t, m, MATS) || undefined, scale: /\b(huge|giant|enormous)\b|ضخم|عملاق/.test(t.slice(Math.max(0, m.index - 14), m.index + 4)) ? 2.2 : /\b(big|large|tall)\b|كبير|طويل/.test(t.slice(Math.max(0, m.index - 14), m.index + 4)) ? 1.5 : /\b(small|little|tiny)\b|صغير/.test(t.slice(Math.max(0, m.index - 14), m.index + 4)) ? 0.6 : 1, hero: objects.length === 0 && T.c !== "plant" });
   }
-  for (const [type, re] of LIFE_WORDS) { const m = re.exec(t); if (!m || life.some((l) => l.type === type)) continue; if (type === "car" && seen.has("car")) continue; life.push({ type, count: countNear(t, m.index) || (type === "fish" ? 20 : type === "person" ? 8 : plural(m) ? 4 : 1) }); }
+  for (const [type, re] of LIFE_WORDS) { const m = re.exec(t); if (!m || life.some((l) => l.type === type)) continue; if (type === "car" && seen.has("car")) continue; if (type === "person" || type === "child") continue; life.push({ type, count: countNear(t, m.index) || (type === "fish" ? 20 : plural(m) ? 4 : 1) }); }
+  const people = localPeople(raw);
   // a car "driving" / "on the road" moves; a parked one stays
   if (seen.has("car") && /\b(driving|traffic|moving|racing)\b|تسير|تمشي|زحمه|سباق|مسرعه/.test(t)) { const i = objects.findIndex((o) => o.type === "car"); if (i >= 0) { life.push({ type: "car", count: objects[i].count }); objects.splice(i, 1); } }
   let room; if (P.indoor) { room = "living"; for (const [r, re] of ROOM_WORDS) if (re.test(t)) { room = r; break; } }
@@ -237,11 +246,48 @@ export function localPlan(prompt, opts = {}) {
   if (water === "sea" && !shape) shape = "coast";
   // a village or houses named next to another place ("a snowy mountain village")
   if (place !== "village" && place !== "city" && hits.includes("village") && !objects.some((o) => TYPES[o.type].c === "building")) objects.push({ type: ground === "snow" || place === "snow" || place === "mountain" || place === "forest" ? "cabin" : place === "desert" || place === "oasis" ? "najdi" : "house", count: 5 });
-  const p = cleanPlan({ prompt: raw, place, room, time, weather: { kind, wind }, terrain: { ground, shape }, water: { kind: water }, objects, life, title: raw.slice(0, 60) || P.en, label: raw.slice(0, 60) });
+  const p = cleanPlan({ prompt: raw, place, room, time, weather: { kind, wind }, terrain: { ground, shape }, water: { kind: water }, objects, life, people, title: raw.slice(0, 60) || P.en, label: raw.slice(0, 60) });
   p.describe = describePlan(p);
   return p;
 }
 
+// ---- people in the words: who (a man in a thobe, two girls, a family…), how many, what they do (walk, sit, wave, talk, dance,
+// run…) and what to (the nearest thing named after the verb: "walks to the car", "يجلس على الكرسي")
+const WHO = [
+  [{ gender: "male", age: 70 }, W("old m[ae]n|grandfathers?|elderly m[ae]n", "شيخ كبير|رجل كبير|رجل مسن|جد|عجوز")], [{ gender: "female", age: 68 }, W("old wom[ae]n|grandmothers?|elderly wom[ae]n", "عجوز|جده|امراه مسنه")],
+  [{ gender: "male", age: 9 }, W("boys?|sons?", "ولد|اولاد|صبي|صبيان")], [{ gender: "female", age: 9 }, W("girls?|daughters?", "بنت|بنات|طفله")], [{ age: 8 }, W("kids?|children|child", "طفل|اطفال|صغار")],
+  [{ gender: "male", age: 24 }, W("young m[ae]n|guys?|teens?|teenagers?", "شاب|شباب")], [{ gender: "female", age: 24 }, W("young wom[ae]n|ladies", "فتاه|فتيات|شابه")],
+  [{ gender: "male", age: 34 }, W("m[ae]n|fathers?|dads?|husbands?|guards?|policem[ae]n|chefs?|workers?|sellers?|merchants?|fishermen|fisherman", "رجل|رجال|والد|زوج|حارس|شرطي|طباخ|عامل|عمال|بائع|تاجر|صياد")],
+  [{ gender: "female", age: 32 }, W("wom[ae]n|mothers?|moms?|wives|wife", "امراه|نساء|سيده|سيدات|والده|زوجه")],
+  [{ count: 2 }, W("couples?", "زوجين|ثنائي")], [{ count: 4 }, W("famil(y|ies)", "عائله|اسره")], [{ count: 7 }, W("people|persons?|crowd|visitors|tourists|walkers|shoppers|friends", "ناس|اشخاص|شخص|زوار|سياح|جمهور|مشاه|متسوقين|اصدقاء|اصحاب")]];
+const ACT_WORDS = [["sit", W("sits?|sitting|seated|sat", "يجلس|يجلسون|جالس|جالسين|جالسه|تجلس|قاعد|قاعدين")], ["wave", W("waves?|waving", "يلوح|يلوحون|تلوح|يأشر|يؤشر")],
+  ["talk", W("talks?|talking|chats?|chatting|speaks?|speaking|conversation", "يتحدث|يتحدثون|تتحدث|يتكلم|يتكلمون|يسولف|يسولفون|يدردش|حوار")], ["dance", W("dances?|dancing", "يرقص|يرقصون|ترقص|رقص|العرضه")],
+  ["run", W("runs?|running|jogs?|jogging|sprints?", "يركض|يركضون|يجري|يجرون|تركض|تجري")], ["walk", W("walks?|walking|strolls?|strolling|goes|going|heads?|approach(es)?", "يمشي|يمشون|تمشي|يتمشي|يتمشون|يسير|يسيرون|تسير|يذهب|يتجه|يقترب")],
+  ["look", W("looks?|looking|watch(es|ing)?|stares?", "ينظر|ينظرون|تنظر|يشاهد|يتأمل|يراقب")], ["point", W("points?|pointing", "يشير|تشير")], ["stand", W("stands?|standing", "يقف|يقفون|واقف|واقفين|تقف")]];
+const DRESS = [["in a white thobe and shemagh", W("thobes?|dishdasha|kandura", "ثوب|ثياب|دشداشه|كندوره|شماغ|غتره")], ["in a black abaya", W("abayas?|hijabs?|niqab", "عبايه|عباءه|حجاب|نقاب")],
+  ["in a suit", W("suits?|business", "بدله|رسمي")], ["in sportswear", W("sportswear|tracksuit|runner|athletes?", "رياضي|رياضيه")], ["in a chef's jacket", W("chefs?", "طباخ|شيف")]];
+export function localPeople(raw) {
+  const t = norm(String(raw || "").slice(0, 600)), out = [];
+  for (const [who, re] of WHO) {
+    const g = new RegExp(re.source, "gi"); let m;
+    while ((m = g.exec(t)) && out.length < 6) {
+      if (out.some((o) => Math.abs(o.at - m.index) < 4)) continue;
+      // what they do: the words after them, up to the next person or the end of the sentence
+      let after = t.slice(m.index + m[0].length, m.index + m[0].length + 70); const cut = after.search(/[.;!?؛،]/); if (cut >= 0) after = after.slice(0, cut);
+      for (const [, r2] of WHO) { const x = r2.exec(after); if (x && x.index > 2) after = after.slice(0, x.index); }
+      const around = t.slice(Math.max(0, m.index - 30), m.index + m[0].length + 60);
+      let act = "stand", k = 1e9; for (const [a, ar] of ACT_WORDS) { const x = ar.exec(after); if (x && x.index < k) { k = x.index; act = a; } }
+      const rest = k < 1e9 ? after.slice(k) : after; let target, tk = 41; for (const [type, tr] of THING_WORDS) { const x = tr.exec(rest); if (x && x.index < tk) { tk = x.index; target = type; } }
+      const word = (t.slice(m.index).match(/^[^\s,.;،]*\s*[\u0600-\u06FF]+/) || [""])[0].trim(), dual = /[\u0600-\u06FF]/.test(word) && /(?:ان|ين|تان|تين)$/.test(word) && !/^(?:[وفبلك])?(?:ال)?(?:صبيان|شبان|اولاد|بنات|نساء|رجال|زوار|سياح)$/.test(word);
+      const dress = (DRESS.find(([, d]) => d.test(around)) || [""])[0], n = countNear(t, m.index) || (dual ? 2 : 0) || who.count || (plural(m) ? 3 : 1);
+      const gender = who.gender || (/\b(she|her)\b|هي|ت(مشي|جلس|لوح|رقص)/.test(after) ? "female" : undefined);
+      const look = [who.age && who.age < 13 ? (gender === "female" ? "a girl" : gender === "male" ? "a boy" : "a child") : who.age >= 60 ? (gender === "female" ? "an elderly woman" : "an elderly man") : gender === "female" ? "a woman" : gender === "male" ? "a man" : "a person", dress].filter(Boolean).join(" ");
+      out.push({ look, gender, age: who.age || 30, count: Math.min(8, n), act: act === "stand" && target ? "walk" : act, target, at: m.index });
+      break;
+    }
+  }
+  return out.map(({ at, ...q }) => q);
+}
 const NAMES = { najdi: "mud-brick house", ghaf: "ghaf tree", palm: "palm tree", pine: "pine tree", shrub: "desert shrub", crops: "crop field", stall: "market stall", campfire: "campfire", tv: "TV", cushions: "floor cushions", person: "person", child: "child", seagull: "seagull" };
 const PLURALS = { person: "people", child: "children", fish: "fish", sheep: "sheep", deer: "deer", cushions: "floor cushions", flowers: "flowers", crops: "crop fields", reeds: "reeds", bus: "buses" };
 // one English sentence for a photographer / a video engine

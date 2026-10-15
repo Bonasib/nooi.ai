@@ -72,13 +72,37 @@ export const worldlabs = () => { const c = cfg("worldlabs"), base = (c.baseUrl |
       const segs = [await mir(lo, ".spz"), hi && hi !== lo ? await mir(hi, ".spz") : "", await mir(a.mesh?.collider_mesh_url, ".glb"), await mir(a.imagery?.pano_url, ".jpg"), await mir(a.thumbnail_url, ".jpg")];
       return { status: "done", url: segs[0], segments: segs }; } }; };
 
-export const GEN3D = { tripo, meshy, blockade, worldlabs };
+// Alibaba Cloud Model Studio — 3D generation (the Tripo models it hosts) with the same DashScope key as the site's Qwen models:
+// words or a picture → a textured PBR .glb. POST {base}/services/aigc/video-generation/3d-generation (X-DashScope-Async: enable)
+// { model, input: { prompt } | { image }, parameters: { texture_quality } } → output.task_id; GET {base}/tasks/{id} → output.task_status
+// (PENDING / RUNNING / SUCCEEDED / FAILED / CANCELED / UNKNOWN) and output.results[0].pbr_model_url (a .glb kept for 2 hours — mirrored
+// at once). Admin → AI providers → Qwen: "3D model" (empty = Tripo/Tripo-P1.0, "off" = not used) and "3D API URL" (another region).
+// The customer never sees the engine's name: the page only says "3D".
+export const ms3dOn = () => configured("qwen") && String(cfg("qwen").model3d || "").trim().toLowerCase() !== "off";
+const pubUrl = (u) => (/^\/media\//.test(u || "") ? (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "") + u : u);
+export const ms3d = () => { const c = cfg("qwen"), base = (c.url3d || c.baseUrl || "https://dashscope-intl.aliyuncs.com/api/v1").replace(/\/$/, ""),
+  h = { Authorization: "Bearer " + c.apiKey, "Content-Type": "application/json", "X-DashScope-Async": "enable" };
+  return { name: "Model Studio 3D", configured: ms3dOn(),
+    async submit(p) { const img = pic(p);
+      const input = img ? { image: /^\/media\//.test(img) && !/^https?:\/\//.test(process.env.PUBLIC_BASE_URL || "") ? await toDataUrl(img) : pubUrl(img) } : { prompt: prompt(p) };
+      const d = await j(await fetch(base + "/services/aigc/video-generation/3d-generation", { method: "POST", headers: h,
+        body: JSON.stringify({ model: String(c.model3d || "").trim() || "Tripo/Tripo-P1.0", input, parameters: { texture_quality: p.meta?.draft ? "standard" : "detailed" } }) }), "Model Studio 3D");
+      if (!d.output?.task_id) throw new Error("Model Studio 3D didn't start" + (d.message ? ": " + d.message : ""));
+      return { remoteId: d.output.task_id }; },
+    async poll(id) { const d = await j(await fetch(base + "/tasks/" + encodeURIComponent(id), { headers: { Authorization: h.Authorization } }), "Model Studio 3D"), o = d.output || {}, s = String(o.task_status || "").toUpperCase();
+      if (s === "SUCCEEDED") { const r = (Array.isArray(o.results) && o.results[0]) || o.result || o, u = r.pbr_model_url || r.model_url || r.base_model_url;
+        return u ? { status: "done", url: await mirror(u, ".glb") } : { status: "failed", error: "Model Studio 3D returned no model" }; }
+      if (["FAILED", "CANCELED", "UNKNOWN"].includes(s)) return { status: "failed", error: "Model Studio 3D: " + (o.message || o.code || d.message || s) };
+      return { status: s === "PENDING" ? "queued" : "rendering" }; } }; };
+
+export const GEN3D = { tripo, meshy, blockade, worldlabs, ms3d };
 // which engine runs a 3D object / world job: the one the user picked, otherwise the first connected one (NVIDIA comes first in adapterFor)
 export function gen3dRoute(cap, body) {
   const e = body.meta?.engine;
   if (body.kind === "3d" && body.meta?.mode !== "scene") {
     if (e === "tripo" || e === "meshy") return { key: e, a: GEN3D[e]() };
-    if (e === "auto" || body.noNv || !e) { for (const k of ["tripo", "meshy"]) if (configured(k)) return { key: k, a: GEN3D[k]() }; }
+    if (e === "ms3d" && ms3dOn()) return { key: "ms3d", a: ms3d() };
+    if (e === "auto" || body.noNv || !e) { if (ms3dOn() && !body.noMs3d) return { key: "ms3d", a: ms3d() }; for (const k of ["tripo", "meshy"]) if (configured(k)) return { key: k, a: GEN3D[k]() }; }
   }
   if (body.kind === "world" && (e === "worldlabs" || (e === "auto" && configured("worldlabs")))) return { key: "worldlabs", a: worldlabs() };
   if (body.kind === "world" && (e === "skybox" || (configured("blockade") && !configured("world")))) return { key: "blockade", a: blockade() };

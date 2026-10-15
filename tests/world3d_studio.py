@@ -80,7 +80,7 @@ async def run(p, w):
     await pg.goto(f"http://localhost:{PORT}/world3d/"); await pg.wait_for_url("**/?view=world*", timeout=10000); await pg.wait_for_timeout(900); await E(sign)
     ok(await wait_for(E, "()=>S.view==='world'&&!!document.getElementById('nwstage')", 20), f"{tag}: /world3d/ opens the 3D World")
     r["nav"] = await E("()=>[ALLNAV.some(x=>x[0]==='world'),ALLNAV.some(x=>['w3d','studio3d','l3d','w3ai','physics'].includes(x[0]))]"); ok(r["nav"] == [True, False], f"{tag}: one 3D entry {r['nav']}")
-    ok(await wait_for(E, "()=>typeof NW!=='undefined'&&!!NW.W&&!NW.busy", 40), f"{tag}: a world is ready")
+    ok(await wait_for(E, "()=>typeof NW!=='undefined'&&!!NW.E&&(!!NW.W||!!NW.empty87)&&!NW.busy", 40), f"{tag}: the 3D World is ready (empty until words)")
     # a photo handed over → one thing in it becomes a real 3D object (engine auto: NVIDIA TRELLIS is down → Tripo3D) and joins the world
     await E("async()=>{const b=await (await fetch('/media/photo.png')).blob();const u=await new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result);r.readAsDataURL(b)});await setS3dFromDataURL(u,'chair');go('studio3d')}")
     ok(await wait_for(E, "()=>S.view==='world'&&!!S.world.pic", 20), f"{tag}: the photo arrived in the 3D World")

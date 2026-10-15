@@ -11,6 +11,7 @@ import { createPhysics } from "./physics.js";
 import { createPlayer } from "./player.js";
 import { disposeTree } from "./engine.js";
 import { loadSplat, terrainFromCollider } from "./splat.js";
+import { createPeople } from "./human.js";
 const BUILD = new Set(["building"]), SWAY = { tree: 1, pine: 0.6, palm: 1, ghaf: 0.5, bush: 0.4, reeds: 0.8, crops: 0.5, fern: 0.4, seaweed: 1.2 };
 const ROOMSET = {
   living: [["sofa", [0, -3.6], 0], ["tv", [0, 3.9], Math.PI], ["rug", [0, 0], 0], ["table", [0, -1.2], 0], ["plant", [4, -4], 0], ["shelf", [-5.2, 0], Math.PI / 2], ["lantern", [3.2, 3.4], 0], ["painting", [0, -4.85], 0], ["chair", [2.6, -1.6], -0.6], ["chair", [-2.6, -1.6], 0.6]],
@@ -200,10 +201,12 @@ export async function createWorld(engine, planIn, opts = {}) {
     const cam = player.camera, pos = player.pos;
     if (player.mode !== "walk" && physics) physics.step(dt, {});
     const lifeEv = life ? life.update(dt, t, player.mode === "walk" ? pos : null) : [];
+    if (people) people.update(dt, t, player.mode === "walk" || player.mode === "fly" ? pos : null);
+    if (!revealed) reveal();
     sky.update(dt, cam, w); weather.update(dt, cam, w, terrain.heightAt(cam.position.x, cam.position.z)); water.update(dt, t, w);
     mats.win.emissiveIntensity = sky.night * 1.25 + (indoor ? 0.2 : 0);
     // trees and grass bend with the wind (only the ones near you)
-    if (t - lt > (low ? 0.08 : 0.04)) { lt = t; const r2 = (low ? 30 : 48) ** 2, k = 0.012 * (1 + plan.weather.wind * 0.25);
+    if (revealed && t - lt > (low ? 0.08 : 0.04)) { lt = t; const r2 = (low ? 30 : 48) ** 2, k = 0.012 * (1 + plan.weather.wind * 0.25);
       for (const im of chunks) { const sw = im.userData.sway; if (!sw) continue; const L = im.userData.list; let dirty = false;
         for (let i = 0; i < L.length; i++) { const r = L[i], dx = r.x - cam.position.x, dz = r.z - cam.position.z; if (dx * dx + dz * dz > r2) continue; const a = Math.sin(t * 1.7 + r.x * 0.31 + r.z * 0.17) * k * sw * (1 + gust);
           m4.compose(pv.set(r.x, r.y, r.z), q.setFromEuler(e.set(a * (w.z / (wind.length() || 1)), r.ry, -a * (w.x / (wind.length() || 1)))), sv.set(r.s, r.s, r.s)); im.setMatrixAt(i, m4); dirty = true; }
@@ -223,6 +226,28 @@ export async function createWorld(engine, planIn, opts = {}) {
   });
   const life = buildLife(T, K, mats, plan, terrain, water, tier, rnd, { roads, blocked: (x, z) => { const k = ci(x, z); return k >= 0 && occ[k] === 2; }, avoid });
   scene.add(life.group);
+  // the people (real-looking 3D people the page adds as their models arrive: see human.js) and what they can walk to
+  const SEAT = { bench: 0.45, chair: 0.46, sofa: 0.42, cushions: 0.24, bed: 0.5 };
+  const seats = info.filter((r) => SEAT[r.type]).map((r) => ({ x: r.x, z: r.z, yaw: r.ry, h: SEAT[r.type] * r.s }));
+  const norm = (v) => String(v || "").toLowerCase().trim();
+  function findTarget(name) { const n = norm(name); if (!n) return null;
+    const all = info.concat(movers.map((m) => m.userData.rec)), hit = all.find((r) => norm(r.type) === n || norm(r.name) === n) || all.find((r) => norm(r.name).includes(n) || n.includes(norm(r.type)));
+    return hit ? { x: hit.x, z: hit.z, r: Math.max(hit.md.size[0], hit.md.size[2]) * hit.s / 2, type: hit.type } : null; }
+  const people = createPeople(T, { root, terrain, plan, tier, rnd: rng(plan.seed + 77), blocked: (x, z) => { const k = ci(x, z); return k >= 0 && occ[k] === 2; }, avoid, findTarget, seats });
+  // coming to life: the land rises and every thing grows in, from where you stand outwards (about two seconds)
+  let revealed = !!opts.noReveal; const born = performance.now(), sp0 = plan.spawn.at;
+  const ease = (k) => { const c = 1.70158; return k <= 0 ? 0 : k >= 1 ? 1 : 1 + (c + 1) * (k - 1) ** 3 + c * (k - 1) ** 2; };
+  if (!revealed) { if (ground) ground.scale.y = 0.02; life.group.visible = false; for (const g of movers) g.scale.setScalar(0.001); }
+  function reveal() {
+    const e = (performance.now() - born) / 1000, done = e > 2.6;
+    if (ground) ground.scale.y = done ? 1 : 0.02 + 0.98 * Math.min(1, (e / 0.7) ** 0.6);
+    for (const im of chunks) { const L = im.userData.list; for (let i = 0; i < L.length; i++) { const r = L[i], d = Math.min(1.5, Math.hypot(r.x - sp0[0], r.z - sp0[1]) / Math.max(40, S * 0.55) * 1.5), k = done ? 1 : ease((e - 0.35 - d) / 0.55);
+        m4.compose(pv.set(r.x, r.y, r.z), q.setFromEuler(e3.set(0, r.ry, 0)), sv.setScalar(Math.max(0.0001, r.s * k))); im.setMatrixAt(i, m4); } im.instanceMatrix.needsUpdate = true; }
+    for (const g of movers) { const r = g.userData.rec, d = Math.min(1.5, Math.hypot(r.x - sp0[0], r.z - sp0[1]) / Math.max(40, S * 0.55) * 1.5); g.scale.setScalar(Math.max(0.001, r.s * (done ? 1 : ease((e - 0.4 - d) / 0.55)))); }
+    if (e > 1.4) life.group.visible = true;
+    if (done) revealed = true;
+  }
+  const e3 = new T.Euler();
   const splashes = [];
   function handle(ev) {
     if (ev.type === "splash" && water.level > -900) { const m = new T.Mesh(new T.RingGeometry(0.3, 0.45, 24), new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7, side: T.DoubleSide, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.set(ev.x, water.level + 0.03, ev.z); root.add(m); splashes.push({ m, t: 0 }); }
@@ -260,8 +285,11 @@ export async function createWorld(engine, planIn, opts = {}) {
   }
   // ---- what the page can do with the world ----
   const api = {
-    plan, scene, root, terrain, water, sky, physics, physicsErr, player, life, info, act,
-    stats() { return { ...engine.stats(), things: info.length + movers.length, movers: movers.length, life: life.count, physics: !!physics, chunks: chunks.length, place: plan.place }; },
+    plan, scene, root, terrain, water, sky, physics, physicsErr, player, life, info, act, people, findTarget,
+    get revealed() { return revealed; },
+    // a real-looking person joins the world (entry: what the plan says about them; url: their 3D model)
+    addPerson(entry, url) { return people.add(entry || {}, url); },
+    stats() { return { ...engine.stats(), things: info.length + movers.length, movers: movers.length, life: life.count, people: people.count, physics: !!physics, chunks: chunks.length, place: plan.place }; },
     setTime(h) { plan.time = h; sky.setTime(h); tintWater(); }, setWeather(k) { plan.weather.kind = k; sky.setWeather(k); tintWater(); },
     async setPanorama(url) { const tex = await new T.TextureLoader().loadAsync(url); sky.setPanorama(tex); plan.pano = url; },
     // an AI-made 3D object (a .glb) takes the place of the built one it stands for
@@ -280,10 +308,38 @@ export async function createWorld(engine, planIn, opts = {}) {
     async exportGLB() { const { GLTFExporter } = await import("three/addons/exporters/GLTFExporter.js"); const out = await new GLTFExporter().parseAsync(root, { binary: true, onlyVisible: true }); return new Blob([out], { type: "model/gltf-binary" }); },
     tour(secs = 12) { player.setMode("tour"); if (player.mode === "tour") { /* the tour length follows the request */ } return secs; },
     splat: splatWorld,
-    dispose() { off(); if (splatObj) splatObj.dispose(); player.dispose(); life.dispose(); if (physics) physics.dispose(); sky.dispose(); disposeTree(root); disposeTree(sky.group); disposeTree(weather.group); disposeTree(life.group); pool.forEach((l) => scene.remove(l)); for (const k in mats) mats[k].dispose(); fireTex.dispose(); tmpl.forEach((md) => { for (const k in md.parts) md.parts[k].dispose(); }); engine.scene = null; }
+    dispose() { off(); if (splatObj) splatObj.dispose(); player.dispose(); life.dispose(); people.dispose(); if (physics) physics.dispose(); sky.dispose(); disposeTree(root); disposeTree(sky.group); disposeTree(weather.group); disposeTree(life.group); pool.forEach((l) => scene.remove(l)); for (const k in mats) mats[k].dispose(); fireTex.dispose(); tmpl.forEach((md) => { for (const k in md.parts) md.parts[k].dispose(); }); engine.scene = null; }
   };
   // AI parts that were made before (a saved world): the 360° sky and the 3D objects
   if (plan.pano) api.setPanorama(plan.pano).catch((e) => console.warn("panorama", e));
   for (const m of plan.models || []) api.addModel(m.url, m).catch((e) => console.warn("model", e));
   return api;
+}
+
+// ---- before anything is written: an empty, calm stage (no world is made until the words or a picture arrive) — a soft sky,
+// a quiet floor with light rings and a few floating lights, the camera slowly turning. Light on any phone.
+export function createEmpty(engine) {
+  const T = engine.T, scene = new T.Scene(), root = new T.Group(); engine.scene = scene; scene.add(root);
+  const night = (() => { const h = new Date().getHours(); return h < 6 || h >= 19; })();
+  const top = new T.Color(night ? "#0b1220" : "#bcd6ee"), mid = new T.Color(night ? "#1c2a3f" : "#e9eef2"), low = new T.Color(night ? "#22324a" : "#f4efe6");
+  const sg = new T.SphereGeometry(400, 32, 16), cols = new Float32Array(sg.attributes.position.count * 3), c = new T.Color();
+  for (let i = 0; i < sg.attributes.position.count; i++) { const y = sg.attributes.position.getY(i) / 400; if (y > 0) c.copy(mid).lerp(top, Math.min(1, y * 1.6)); else c.copy(mid).lerp(low, Math.min(1, -y * 3)); cols.set([c.r, c.g, c.b], i * 3); }
+  sg.setAttribute("color", new T.BufferAttribute(cols, 3)); root.add(new T.Mesh(sg, new T.MeshBasicMaterial({ vertexColors: true, side: T.BackSide, depthWrite: false })));
+  const tex = (() => { const cv = document.createElement("canvas"); cv.width = cv.height = 512; const x = cv.getContext("2d"), g = x.createRadialGradient(256, 256, 0, 256, 256, 256);
+    g.addColorStop(0, night ? "rgba(120,170,220,.38)" : "rgba(255,255,255,.95)"); g.addColorStop(0.55, night ? "rgba(70,110,160,.16)" : "rgba(255,255,255,.55)"); g.addColorStop(1, "rgba(255,255,255,0)"); x.fillStyle = g; x.fillRect(0, 0, 512, 512);
+    x.strokeStyle = night ? "rgba(160,200,240,.22)" : "rgba(120,140,150,.2)"; x.lineWidth = 1.2; for (let r = 40; r < 256; r += 36) { x.beginPath(); x.arc(256, 256, r, 0, Math.PI * 2); x.stroke(); }
+    const t = new T.CanvasTexture(cv); t.colorSpace = T.SRGBColorSpace; return t; })();
+  const floor = new T.Mesh(new T.CircleGeometry(36, 64), new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false })); floor.rotation.x = -Math.PI / 2; root.add(floor);
+  const ringM = new T.MeshBasicMaterial({ color: night ? 0x9cc8ff : 0x8fd14f, transparent: true, opacity: 0.55 }), rings = [];
+  for (let i = 0; i < 3; i++) { const r = new T.Mesh(new T.TorusGeometry(3 + i * 2.2, 0.025, 6, 96), ringM.clone()); r.rotation.x = -Math.PI / 2; r.position.y = 0.02 + i * 0.01; root.add(r); rings.push(r); }
+  const N = 46, dots = new T.InstancedMesh(new T.SphereGeometry(0.07, 8, 6), new T.MeshBasicMaterial({ color: night ? 0xcfe6ff : 0xffffff, transparent: true, opacity: 0.85 }), N), seeds = [];
+  for (let i = 0; i < N; i++) seeds.push([Math.random() * 6.283, 2 + Math.random() * 9, Math.random() * 4, 0.2 + Math.random() * 0.5]); root.add(dots);
+  const cam = new T.PerspectiveCamera(50, 1, 0.1, 900); engine.camera = cam; const m4 = new T.Matrix4();
+  const off = engine.onFrame((dt, t) => {
+    const a = t * 0.06; cam.position.set(Math.sin(a) * 15, 5.2 + Math.sin(t * 0.21) * 0.4, Math.cos(a) * 15); cam.lookAt(0, 1.2, 0);
+    rings.forEach((r, i) => { const k = (t * 0.25 + i / 3) % 1; r.scale.setScalar(0.6 + k * 1.6); r.material.opacity = 0.5 * (1 - k); });
+    for (let i = 0; i < N; i++) { const [ph, rad, h, sp] = seeds[i], y = (h + t * sp) % 6; m4.makeTranslation(Math.cos(ph + t * 0.05) * rad, 0.3 + y, Math.sin(ph + t * 0.05) * rad); dots.setMatrixAt(i, m4); }
+    dots.instanceMatrix.needsUpdate = true;
+  });
+  return { empty: true, scene, dispose() { off(); disposeTree(root); tex.dispose(); } };
 }

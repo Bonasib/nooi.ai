@@ -103,15 +103,17 @@ async def run(p, w):
     ok(await wait_for(E, f"()=>S.jobs.slice({n3}).some(j=>j.kind==='3d'&&j.meta&&j.meta.mode==='objects'&&j.meta.engine==='auto')", 20), f"{tag}: one thing in the photo → a 3D object job (engine auto)")
     r["mesh"] = await E("""async()=>{await ensureThree();const ld=async f=>{const b=await(await fetch('/media/'+f)).blob();return blobImg72(b)};const g=a3Mesh(await ld('front.png'),await ld('side.png'),await ld('back.png'),'object');const s=new THREE.Box3().setFromObject(g).getSize(new THREE.Vector3());return [g.children.length,+s.x.toFixed(2),+s.y.toFixed(2),+(s.z/s.x).toFixed(2)]}""")
     ok(r["mesh"][0] == 2 and 0.35 < r["mesh"][3] < 0.75 and r["mesh"][2] > 1.9, f"{tag}: closed mesh with depth from the side view {r['mesh']}")
+    # the AI 3D views (front · side · back of the user's photo, the fallback 3D path) carry that photo (checked on the server below)
+    await E("async()=>{const b=await (await fetch('/media/photo.jpg')).blob();await a3Start('object',b,'red box','a red box')}"); await pg.wait_for_timeout(600)
     # 3D character: a full 3D body through the same 3D core
     await E("()=>{go('chars');renderAll()}"); await pg.wait_for_timeout(500); nb = await E("()=>S.jobs.length")
-    r["charBtn"] = await E("()=>[S.view,S.chars.length,S.charSel,!!document.querySelector('[data-act=char-3dbody]'),!!document.querySelector('[data-act=gen-sheet]')]")
+    r["charBtn"] = await E("()=>[S.view,S.chars.length,S.charSel,!!document.querySelector('[data-act=b87-make]'),!!document.querySelector('[data-act=gen-sheet]')]")
     ok(r["charBtn"][3], f"{tag}: 3D character button missing {r['charBtn']}")
-    await E("()=>{const b=document.querySelector('[data-act=char-3dbody]');b&&b.click()}")
-    ok(await wait_for(E, f"()=>S.jobs.slice({nb}).some(j=>j.kind==='3d'&&j.meta&&j.meta.mode==='body')", 20), f"{tag}: 3D character job sent (body)")
+    await E("()=>{const c=S.chars[S.charSel];if(c&&!c.face)c.face='/media/photo.jpg';const b=document.querySelector('[data-act=b87-make]');b&&b.click()}")
+    ok(await wait_for(E, f"()=>S.jobs.slice({nb}).some(j=>j.kind==='image'&&j.meta&&j.meta.body87)", 20), f"{tag}: 3D character: a full-body photo of that same person comes first (v87), then its 3D body")
     # 3D world from a photo: the picture becomes a world, its view becomes the first frame of a video, and a tour is recorded
     await E("async()=>{const b=await (await fetch('/media/photo.jpg')).blob();const u=await new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result);r.readAsDataURL(b)});await setS3dFromDataURL(u,'harbour');go('studio3d')}")
-    ok(await wait_for(E, "()=>S.view==='world'&&!!S.world.pic&&typeof NW!=='undefined'&&!!NW.W&&!NW.busy", 40), f"{tag}: 3D World ready with the photo")
+    ok(await wait_for(E, "()=>S.view==='world'&&!!S.world.pic&&typeof NW!=='undefined'&&!!NW.E&&(!!NW.W||!!NW.empty87)&&!NW.busy", 40), f"{tag}: 3D World ready with the photo")
     await E("()=>{S.world.opts.look='real';persist();const t=document.getElementById('nwprompt');if(t)t.value='a quiet harbour';document.querySelector('[data-act=nw-go]').click()}")
     ok(await wait_for(E, "()=>!NW.busy&&!!NW.W&&!S.world.pic&&!!S.world.plan", 60), f"{tag}: a world was built from the photo")
     if not mob:
@@ -150,7 +152,9 @@ if __name__ == "__main__":
         lk = [j for j in jobs if j.get("kind") == "look" and (j.get("payload") or {}).get("meta", {}).get("photo")]
         ok(lk and "chRef" in lk[-1]["payload"].get("inputs", {}), "character photo not sent with the looks")
         a3 = [j for j in jobs if (j.get("payload") or {}).get("meta", {}).get("a3")]
-        ok(len(a3) >= 6 and all("iRef" in j["payload"].get("inputs", {}) for j in a3), "AI 3D views missing the reference photo")
+        ok(len(a3) >= 3 and all("iRef" in j["payload"].get("inputs", {}) for j in a3), "AI 3D views missing the reference photo")
+        b87 = [j for j in jobs if (j.get("payload") or {}).get("meta", {}).get("body87")]
+        ok(b87 and "iRef" in b87[-1]["payload"].get("inputs", {}), "a character's 3D body starts from a full-body photo made from its real face (v87)")
         pw = [j for j in jobs if ((j.get("payload") or {}).get("meta", {}).get("nw") or {}).get("role") == "pano"]
         ok(pw and pw[-1]["payload"].get("aspect") == "21:9" and "iRef" in pw[-1]["payload"].get("inputs", {}), "world panorama job wrong (Realistic: a 360° sky that continues the photo)")
         print(json.dumps({"fails": fails, "results": out}, ensure_ascii=False, default=str))

@@ -120,7 +120,8 @@ async def ui(p, w, lang):
     await pg.keyboard.press("Escape"); await pg.wait_for_timeout(150)
     ok(await E("()=>!document.querySelector('.mv80')"), f"{tag}: the viewer closes with Escape")
     await E("()=>viewMedia80('/media/clip.mp4','video')"); await pg.wait_for_timeout(150)
-    ok(await E("()=>{const v=document.querySelector('.mv80 video');const x=!!v&&v.controls;document.querySelector('.mv80 .mvx').click();return x}"), f"{tag}: clips open with controls (pause)")
+    # v87: one player of our own (play/pause, time, seek, sound, full screen) instead of the browser's bare controls
+    ok(await E("()=>{const w=document.querySelector('.mv80 .vp87'),v=w&&w.querySelector('video');const x=!!v&&['.vpp','.vps','.vpt','.vpm','.vpf'].every(q=>!!w.querySelector(q));document.querySelector('.mv80 .mvx').click();return x}"), f"{tag}: clips open with the full player (play/pause, seek, sound)")
     # ---- faster Sketch to Life: recognised while drawing (once), 1K picture from a small JPEG, started soon after the pause
     n0 = len(posted)
     await E("()=>{S.sketch.prompt='';S.sketch.ai='pause';S.sketch.aiCap=250;go('sketch');renderAll()}"); await pg.wait_for_timeout(400)
@@ -135,7 +136,7 @@ async def ui(p, w, lang):
     for v in ("w3ai", "studio3d", "physics"):
         await E("(v)=>go(v)", v); await pg.wait_for_timeout(200)
         ok(await E("()=>S.view==='world'"), f"{tag}: {v} opens the 3D World")
-    ok(await wait_for(E, "()=>typeof NW!=='undefined'&&!!NW.W&&!NW.busy", 40), f"{tag}: a world is ready")
+    ok(await wait_for(E, "()=>typeof NW!=='undefined'&&!!NW.E&&(!!NW.W||!!NW.empty87)&&!NW.busy", 40), f"{tag}: the 3D World is ready (empty until words)")
     n0 = len(posted)
     await E("()=>{S.world.opts.look='real';persist();document.getElementById('nwprompt').value='A mountain valley with a house, a tree and a red car';document.querySelector('[data-act=nw-go]').click()}")
     ok(await wait_for(E, "()=>!NW.busy&&!!NW.W&&!!S.world.plan&&/valley|mountain/i.test(S.world.plan.prompt||'')", 60), f"{tag}: the world from the words was built")
@@ -149,9 +150,10 @@ async def ui(p, w, lang):
     await E("()=>document.querySelector('[data-act=nw-use]').click()")
     ok(await wait_for(E, "()=>S.view==='video'&&!!M.vStart", 20), f"{tag}: the view becomes the first frame of a video")
     # ---- round pink avatars for UGC presenters
-    await E("()=>{S.draft.ugc.mode='presenter';go('ugcads');renderAll()}"); await pg.wait_for_timeout(900)
-    r["av"] = await E("()=>{const a=[...document.querySelectorAll('[data-act=\"ugc-pre\"] .avc80')];const s=a[0]&&getComputedStyle(a[0]);return [a.length,a.filter(x=>x.querySelector('img')).length,s&&s.borderRadius,s&&s.backgroundColor]}")
-    ok(r["av"][0] >= 7 and r["av"][1] == 1 and r["av"][2] == "50%" and r["av"][3] == "rgb(246, 205, 213)", f"{tag}: presenters are round pink avatars {r['av']}")
+    # v87: only real portraits (made once for the site) — no letter tiles, no random faces; here one is ready
+    await E("()=>{AV.items=[{id:'av-noura',name:['Noura','نورة'],gender:'female',who:'a Saudi woman',url:'/media/photo.png'}];AV.total=8;AV.making=0;S.draft.ugc.mode='presenter';go('ugcads');renderAll()}"); await pg.wait_for_timeout(900)
+    r["av"] = await E("()=>{const a=[...document.querySelectorAll('.pres87 .pt87:not(.add) .ph')];const s=a[0]&&getComputedStyle(a[0]);return [a.length,document.querySelectorAll('.pres87 [data-act=\"ugc-av87\"] img').length,s&&s.borderRadius,s&&s.backgroundColor,document.querySelectorAll('.pres87 .ph b,[data-act=\"ugc-pre\"]').length]}")
+    ok(r["av"][0] >= 1 and r["av"][1] == 1 and r["av"][2] == "50%" and r["av"][3] == "rgb(246, 205, 213)" and r["av"][4] == 0, f"{tag}: presenters are round pink portraits, real photos only {r['av']}")
     ok(not errs, f"{tag}: page errors {errs}")
     await b.close(); return r
 
@@ -163,7 +165,7 @@ async def studio(p):
     r = None
     for _ in range(60):
         await pg.wait_for_timeout(300)
-        r = await pg.evaluate("()=>{const s=document.getElementById('nwstage'),u=document.getElementById('nwui');return s&&u&&typeof NW!=='undefined'&&NW.W?[Math.round(s.getBoundingClientRect().height),innerHeight,[document.documentElement,document.body,document.getElementById('main')].some(e=>e&&e.scrollHeight>e.clientHeight+20)||u.getBoundingClientRect().bottom>innerHeight,document.documentElement.scrollWidth<=innerWidth]:null}")
+        r = await pg.evaluate("()=>{const s=document.getElementById('nwstage'),u=document.getElementById('nwui');return s&&u&&typeof NW!=='undefined'&&(NW.W||NW.empty87)?[Math.round(s.getBoundingClientRect().height),innerHeight,[document.documentElement,document.body,document.getElementById('main')].some(e=>e&&e.scrollHeight>e.clientHeight+20)||u.getBoundingClientRect().bottom>innerHeight,document.documentElement.scrollWidth<=innerWidth]:null}")
         if r: break
     ok(r and 0.5 * r[1] <= r[0] <= 0.8 * r[1] and r[2] and r[3], f"3D World on a phone: the 3D view takes most of the screen, the page scrolls to the options, nothing sideways {r}")
     ok(not errs, f"3D World phone: page errors {errs}")
