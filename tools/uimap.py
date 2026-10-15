@@ -28,6 +28,7 @@ ACTS = {"legal": "opens Terms / Privacy", "dictate": "types what you say (microp
         "home-adv": "opens the full studio with every option", "to-continue": "continues the last chapter story", "admin-login": "admin sign-in",
         "ed-addtext": "adds a text layer", "char-3dbody": "makes a full 3D character (AI)", "sk-3d": "turns the drawing into 3D", "ui-set": "changes an interface setting",
         "real87": "makes this character real (one photoreal face from its description or photo)", "real87-all": "makes every character without a face real",
+        "del88": "deletes this video / picture (asks first)", "del88c": "deletes this character (asks first)", "del88-yes": "confirms deleting the result", "del88c-yes": "confirms deleting the character",
         "ugc-char": "chooses who presents the product", "ugc-av87": "chooses a ready presenter (a real photo)", "av87-make": "owner: makes the missing presenters' photos once",
         "ch87-open": "opens your characters to put one in the prompt (@name)", "ch87-put": "puts this character in the prompt", "b87-make": "makes this character's 3D body (it walks in your worlds)",
         "nw87-better": "shows the AI's more detailed version of the world", "nw87-cast": "owner: makes the world's real-looking people once", "nw87-3d": "makes this character 3D so it walks into the world"}

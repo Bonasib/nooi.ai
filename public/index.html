@@ -12764,6 +12764,192 @@ renderView=(o=>function(){const to=S.view,from=lastView87,D=S.draft;lastView87=t
 // an ad step that runs later (its presenter's face just finished) uses ITS presenter, whatever page is open now
 ugcStep1_87=(o=>function(c,photo){const k=S.draft.charId;if(c)S.draft.charId=c.id;try{return o(c,photo)}finally{S.draft.charId=k}})(ugcStep1_87);
 
+/* ================= v88: making things works on phones · clean prompt boxes · pictures in every list · delete · photo worlds ================= */
+// ---- files picked on a phone: read into memory at once (a gallery file can't always be read again minutes later — the upload
+// then fails with "Failed to fetch"), photos as 2048 px JPEG (quick on mobile data, plenty for every engine), sent to the server
+// straight away in the background; pressing Make just uses the address. Uploads and new jobs are tried again on a dropped
+// connection (the server answers the same request with the same job), and a dropped connection says so in plain words.
+const UP88=new WeakMap();
+const netErr88=e=>!!e&&/Failed to fetch|NetworkError|Load failed|network error|network connection was lost|Network request failed|ERR_(NETWORK|INTERNET|CONNECTION|NAME_NOT_RESOLVED|TIMED_OUT)/i.test(String(e.message||""))&&!/^HTTP \d/.test(String(e.message||""));
+const NET88=()=>L("Connection problem — your request didn't reach nooi. Check your internet and try again.","مشكلة في الاتصال — لم يصل طلبك إلى nooi. تحقّق من الإنترنت وحاول مجدداً.");
+API.req=(o=>async function(p,opt){const method=String((opt&&opt.method)||(opt&&opt.json?"POST":"GET")).toUpperCase(),again=method==="POST"&&/^\/v1\/(uploads|jobs)$/.test(p);
+  for(let i=0;;i++){try{return await o.call(this,p,opt?Object.assign({},opt,{headers:Object.assign({},opt.headers||{})}):opt)}
+    catch(e){if(!netErr88(e))throw e;if(!again||i>=2)throw new Error(NET88());await new Promise(r=>setTimeout(r,i?4000:1500))}}})(API.req);
+API.upload=(o=>function(blob,name){if(!blob||typeof blob!=="object")return o.call(this,blob,name);const hit=UP88.get(blob);if(hit)return hit;
+  const p=o.call(this,blob,name).catch(e=>{UP88.delete(blob);throw e});UP88.set(blob,p);return p})(API.upload);
+async function prep88(file,slot){const t=file.type||"";
+  if(/^image\/(jpe?g|png|webp|heic|heif|avif|bmp)/i.test(t)||(!t&&/\.(jpe?g|png|webp|heic)$/i.test(file.name||""))){try{
+    const bm=await createImageBitmap(file),k=Math.min(1,2048/Math.max(bm.width,bm.height)),alpha=/png|webp/i.test(t)&&/logo/i.test(slot);
+    if(k>=1&&file.size<1.5e6&&/jpe?g|png|webp/i.test(t)){bm.close&&bm.close();return new File([await file.arrayBuffer()],file.name||"photo",{type:t})}
+    const c=document.createElement("canvas");c.width=Math.max(1,Math.round(bm.width*k));c.height=Math.max(1,Math.round(bm.height*k));const x=c.getContext("2d");
+    if(!alpha){x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height)}x.drawImage(bm,0,0,c.width,c.height);bm.close&&bm.close();
+    const b=await new Promise(r=>c.toBlob(r,alpha?"image/png":"image/jpeg",.9));if(b)return new File([b],String(file.name||"photo").replace(/\.[a-z0-9]+$/i,"")+(alpha?".png":".jpg"),{type:b.type})}catch(e){}}
+  if(file.size<=300e6){try{return new File([await file.arrayBuffer()],file.name||"file",{type:t})}catch(e){}}
+  return file}
+loadSlot=(o=>function(slot,file){o(slot,file);const m=M[slot];if(!m||!(file instanceof Blob))return;
+  m.prep88=prep88(file,slot).then(f=>{if(M[slot]!==m)return;if(f&&f!==file)m.file=f;
+    if(API.mode==="server"&&S.user)API.upload(m.file,m.file.name||m.name).catch(()=>{})}).catch(()=>{})})(loadSlot);
+
+// ---- prompt boxes: no microphone, no resize corner (the box grows with what you write), only your own words — the site's
+// instructions to the engines never show up in a box — and after a start the box is empty for the next idea
+addMics=function(){};document.querySelectorAll(".micbtn").forEach(b=>b.remove());
+document.addEventListener("input",e=>{const t=e.target;if(!t||t.tagName!=="TEXTAREA"||!t.closest("#main")||t.closest(".ed,#edwrap,.edstage"))return;t.style.height="auto";t.style.height=Math.min(t.scrollHeight+2,420)+"px"});
+// only the site's own wording (a client's words that start the same way — "UGC style ad …", "Full-body photo of …" — stay)
+const INTERNAL88=[/^Turn this rough hand-drawn sketch into /,/^Vertical UGC selfie photo for a social ad:/,/^UGC-style vertical ad: /,/^UGC social ad, handheld selfie video: /,/^The first frame of a video: [\s\S]*Photorealistic, cinematic, natural light\./,/^Portrait of [\s\S]{0,600}\. Waist-up, facing the camera, natural expression/,/^Character reference sheet of [\s\S]{0,600}\. Front, side and back views plus four facial expressions/,/^Full-body photo of the same person as the reference photo/,/^Full-body character turnaround reference of the same character/,/^Studio product reference of exactly the same /,/^A seamless 360-degree equirectangular panorama/];
+// lines the site adds after the client's words (who is who, keep the faces, the photoreal look): cut off, the words stay
+const TAIL88=[/\n?[^\n]*= the person in reference picture \d[\s\S]*$/,/\s*Keep these people exactly as they appear[\s\S]*$/,/\s*Photorealistic photograph of a real-looking person[\s\S]*$/];
+function words88(t){t=String(t||"");if(INTERNAL88.some(r=>r.test(t))){const m=/Subject: ([^.]{1,200})\./.exec(t);return m?m[1].trim():""}
+  let u=t;for(const r of TAIL88)u=u.replace(r,"");return u===t?t:u.trim()}
+const shown88=j=>j?(words88(j.prompt)||String(j.title||"")):"";
+function tidyPrompts88(){let n=0;const fix=(o,k)=>{if(o&&typeof o[k]==="string"){const w=words88(o[k]);if(w!==o[k]){o[k]=w;n++}}};
+  fix(S.img,"prompt");fix(S.draft,"prompt");fix(S.sketch,"prompt");fix(S.hf,"prompt");fix(S.mc83,"prompt");if(S.uni)fix(S.uni,"prompt");
+  // a picture set as a video's first frame: its picture prompt isn't the video's — the box waits for the motion
+  const sj=S.draft&&S.draft.startJob&&S.jobs.find(j=>j.id===S.draft.startJob);if(sj&&S.draft.prompt&&S.draft.prompt===sj.prompt){S.draft.prompt="";n++}
+  if(n)persist()}
+renderView=(o=>function(){try{tidyPrompts88()}catch(e){}return o.apply(this,arguments)})(renderView);
+hfrCard=(o=>function(j){const p=j&&j.prompt;if(!j)return o(j);try{j.prompt=shown88(j);return o(j)}finally{j.prompt=p}})(hfrCard);
+const after88=(fn,clear)=>(o=>function(){const n=S.jobs.length,r=o.apply(this,arguments),go=()=>{if(S.jobs.length>n){clear();persist();if(["video","image","home","motion"].includes(S.view))renderView()}};
+  if(r&&typeof r.then==="function")return r.then(x=>{go();return x});go();return r})(fn);
+makeVideo=after88(makeVideo,()=>{S.draft.prompt=""});
+makeImages=(o=>function(p){const page=p==null,n=S.jobs.length,r=o.apply(this,arguments);if(page&&S.jobs.length>n){S.img.prompt="";persist();renderView()}return r})(makeImages);
+hfSend=after88(hfSend,()=>{S.hf.prompt="";const q=document.getElementById("hfq");if(q)q.value=""});
+addJob=(o=>function(j){const r=o(j);if(r&&j&&j.meta&&j.meta.motion83){setTimeout(()=>{MC83().prompt="";persist();if(S.view==="motion")renderView()},0)}return r})(addJob);
+
+// ---- pictures in every list: character lists show faces, engine lists show the engine's logo, "From my library" shows the
+// picture (the lists on phones are the site's own sheet, so this is one place for all of them)
+function pic88(s){const b=s.dataset.bind||"",id=s.id||"";
+  if(/charId$|^char$/.test(b)||s.dataset.char88)return v=>{if(!v)return{none:1};const c=charById(v);return c?{img:faceShow87(c)||"",sil:1}:{none:1}};
+  if(id==="ugcmodel"||/(^|\.)(model|vModel|iModel)$/.test(b))return v=>({img:logoFor(v)||logoFor("auto")||"",logo:1});
+  if(s.dataset.mclib)return v=>{const j=v&&S.jobs.find(x=>x.id===v),u=j&&mediaUrl(j);return u?{img:/video|edit|export|finish|lipsync/.test(j.kind)?poster88(u)||"":u}:{none:1}};
+  return null}
+const picHTML88=x=>'<span class="sp88'+(x&&x.logo?" lg":"")+'">'+(x&&x.img?'<img src="'+esc(x.img)+'" alt="" loading="lazy">':x&&x.sil?'<span class="sil87">'+SIL87+"</span>":ic("x"))+"</span>";
+openSel=(o=>function(b){o(b);const s=b&&b._sel,root=document.getElementById("selRoot");if(!s||!root)return;const f=pic88(s);if(!f)return;const sh=root.querySelector(".selsheet");if(sh)sh.classList.add("pics88");
+  root.querySelectorAll(".selopt").forEach(r=>{const x=f(r.dataset.v);r.insertAdjacentHTML("afterbegin",x&&x.none?'<span class="sp88 none">'+ic("x")+"</span>":picHTML88(x))})})(openSel);
+function selPics88(root){(root||document).querySelectorAll(".selbtn").forEach(b=>{const s=b._sel;if(!s)return;const f=pic88(s);if(!f)return;const x=f(s.value),key=s.value+"|"+(x&&x.img||"");
+  if(b.dataset.p88===key)return;b.dataset.p88=key;b.classList.add("pic88");const h=x&&x.none?'<span class="sp88 none">'+ic("x")+"</span>":picHTML88(x),cur=b.querySelector(".sp88");if(cur)cur.outerHTML=h;else b.insertAdjacentHTML("afterbegin",h)})}
+document.addEventListener("change",e=>{if(e.target&&e.target.tagName==="SELECT")setTimeout(()=>selPics88(),0)},true);
+// one clear frame for every video on this server (its middle), so the outside of a video shows what it is
+const poster88=u=>{const m=/\/media\/([^?#\/]+\.(mp4|webm|mov|m4v))(?:[?#]|$)/i.exec(String(u||""));return m&&API.mode==="server"?"/v1/poster/"+encodeURIComponent(m[1]):""};
+function posters88(root){(root||document).querySelectorAll("video:not([data-p88])").forEach(v=>{v.dataset.p88="1";const p=poster88(v.getAttribute("src")||"");if(!p)return;if(!v.getAttribute("poster"))v.setAttribute("poster",p);if(v.closest(".thumb,.strip,.looks")&&!v.autoplay&&!v.closest(".vp87"))v.preload="none"})}
+let pq88=0;const pics88=()=>{pq88=0;posters88();selPics88()};   // at most every 50 ms (the editor and the World change the page every frame)
+new MutationObserver(()=>{if(!pq88)pq88=setTimeout(pics88,50)}).observe(document.body,{childList:true,subtree:true});setTimeout(pics88,0);
+
+// ---- delete with a confirmation: × on every finished or failed result (videos, pictures, looks) and on every character
+const DEL_KINDS88=new Set(["video","image","look","sheet","lipsync","voice","music","sfx","edit","finish","bg","3d","world","chapter"]);
+thumb=(o=>function(ref,opt){let h=o(ref,opt);const m=/^j:(.+)$/.exec(String(ref||"")),j=m&&S.jobs.find(x=>x.id===m[1]);
+  if(j&&(j.status==="complete"||j.status==="failed")&&DEL_KINDS88.has(j.kind)&&!["edit","fx"].includes(S.view)&&!(opt&&opt.noDel88)){const k=h.lastIndexOf("</div>");
+    // (a span: some thumbnails sit inside a card that is itself a button)
+    if(k>0)h=h.slice(0,k)+'<span role="button" tabindex="0" class="del88" data-act="del88" data-id="'+esc(j.id)+'" aria-label="'+esc(L("Delete","حذف"))+'" title="'+esc(L("Delete","حذف"))+'">'+ic("x")+"</span>"+h.slice(k)}return h})(thumb);
+document.addEventListener("keydown",e=>{const t=e.target;if((e.key==="Enter"||e.key===" ")&&t&&t.classList&&t.classList.contains("del88")&&t.tagName==="SPAN"){e.preventDefault();t.click()}},true);
+VIEWS.chars=(o=>function(){const h=o.apply(this,arguments);
+  return h.replace(/<button class="charrow" data-act="pick-char" data-i="(\d+)"[\s\S]*?<\/button>/g,(row,i)=>'<div class="crw88">'+row+'<button type="button" class="del88 c" data-act="del88c" data-i="'+i+'" aria-label="'+esc(L("Delete this character","احذف هذه الشخصية"))+'">'+ic("x")+"</button></div>")})(VIEWS.chars);
+function confirm88(title,line,yes){hfSheet(title,'<p class="small" style="margin:0 0 16px;color:var(--mute)">'+esc(line)+'</p><div class="row del88row"><button class="btn danger" data-act="'+yes.act+'" '+yes.attrs+">"+ic("trash")+esc(L("Delete","حذف"))+'</button><button class="btn" data-act="close-sheet">'+esc(L("Cancel","إلغاء"))+"</button></div>")}
+function dropJob88(id){const j=S.jobs.find(x=>x.id===id);if(!j)return;S.jobs=S.jobs.filter(x=>x.id!==id);
+  if(S.hf&&Array.isArray(S.hf.out))S.hf.out=S.hf.out.filter(x=>x!==id);if(S.lastVideo===id)S.lastVideo=null;if(S.img&&S.img.sel===id)S.img.sel=null;if(S.ugc79&&S.ugc79.last===id)S.ugc79.last=null;if(S.draft&&S.draft.startJob===id)S.draft.startJob=null;
+  for(const c of S.chars||[])if(c.face&&c.face===mediaUrl(j))delete c.face;
+  if(API.mode==="server"&&j.remote)API.req("/v1/jobs/"+encodeURIComponent(j.remote),{method:"DELETE"}).catch(()=>{});persist()}
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="del88"],[data-act="del88c"],[data-act="hfr-x"],[data-act="del88-yes"],[data-act="del88c-yes"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const A=a.dataset;
+  if(A.act==="del88"||A.act==="hfr-x"){const j=S.jobs.find(x=>x.id===A.id);if(!j)return;const what=j.kind==="video"?L("video","الفيديو"):["image","look","sheet"].includes(j.kind)?L("picture","الصورة"):L("result","النتيجة");
+    confirm88(L("Delete this "+what+"?","حذف "+what+"؟"),L("It will be removed from your account. This can't be undone.","سيُحذف من حسابك ولا يمكن التراجع."),{act:"del88-yes",attrs:'data-id="'+esc(j.id)+'"'});return}
+  if(A.act==="del88c"){const c=S.chars[+A.i];if(!c)return;confirm88(L("Delete "+c.name+"?","حذف "+c.name+"؟"),L("The character and its face are removed. Videos already made stay.","تُحذف الشخصية ووجهها. الفيديوهات المصنوعة تبقى."),{act:"del88c-yes",attrs:'data-id="'+esc(c.id)+'"'});return}
+  if(A.act==="del88-yes"){dropJob88(A.id);$("#modalRoot").innerHTML="";renderAll();toast(L("Deleted.","تم الحذف."),{type:"ok"});return}
+  if(A.act==="del88c-yes"){const i=S.chars.findIndex(c=>c.id===A.id);if(i>=0){const c=S.chars[i];S.chars.splice(i,1);if(S.story&&S.story.charId===c.id)S.story.charId="";if(S.board)S.board.frames.forEach(f=>{if(f.speaker===c.id)f.speaker="narrator"});
+      for(const o of [S.draft,S.img])if(o&&o.charId===c.id)o.charId="";if(S.draft&&S.draft.ugcChar87===c.id)S.draft.ugcChar87="";if(S.draft&&S.draft.vidChar87===c.id)S.draft.vidChar87="";S.charSel=Math.max(0,Math.min(S.charSel,S.chars.length-1));persist()}
+    $("#modalRoot").innerHTML="";renderAll();toast(L("Character deleted.","تم حذف الشخصية."),{type:"ok"})}},true);
+
+// ---- marked for removal: the "Powered by NVIDIA AI" badge, Motion Control 2.6 (3.0 only, with its logo), the UGC fields that
+// broke the ad's words (name · price · "what makes it special" → one optional line about the product), and the Images page's
+// floating Generate bar (it sat on top of the options while you scrolled — now it stays in its place under them)
+nvBadge=function(){return""};
+if(typeof P_PRO!=="undefined"&&!P_PRO.includes("mc30"))P_PRO.push("mc30");   // Motion Control 3.0 on Pro too
+VIEWS.motion=(o=>function(){const c=MC83();if(c.model!=="mc30")c.model="mc30";const h=o.apply(this,arguments),lg=logoFor("mc30");
+  return h.replace(/<button data-set="mc83\.model" data-val="mc26"[\s\S]*?<\/button>/,"").replace(/(<button data-set="mc83\.model" data-val="mc30"[^>]*>)/,"$1"+(lg?'<img class="lg88" src="'+esc(lg)+'" alt="">':""))})(VIEWS.motion);
+VIEWS.ugcads=(o=>function(){const U=S.draft.ugc,nm=String(U.name||"").trim(),ds=String(U.desc||"").trim();if(nm)U.desc=ds.toLowerCase().includes(nm.toLowerCase())?ds:[nm,ds].filter(Boolean).join(" — ");U.name="";U.price="";const h=o.apply(this,arguments);
+  return h.replace(/<div class="grid2"><div><label class="lbl">[^<]*<\/label><input type="text" data-bind="draft\.ugc\.name"[\s\S]*?data-bind="draft\.ugc\.desc"[^>]*>/,
+    '<label class="lbl" for="ugcabout88">'+esc(L("About your product (optional)","عن منتجك (اختياري)"))+'</label><textarea id="ugcabout88" data-bind="draft.ugc.desc" dir="auto" rows="2" placeholder="'+esc(L("e.g. a rose face serum that brightens the skin","مثال: سيروم ورد للوجه يفتّح البشرة"))+'">'+esc(U.desc||"")+"</textarea>")})(VIEWS.ugcads);
+
+// ---- "a 3D world" from the home box opens the 3D World (with the photo you added), instead of making a picture
+const WORLDW88=/(\bworlds?\b|عالم|العالم)/i,WALK88=/(\b3d\b|\bwalk|\bexplore|ثلاثي|أتجو?ّ?ل|اتجو?ّ?ل|تجو?ّ?ل|نتجول|يتجول)/i;
+// a world word AND a walk / 3D word, or "… from this photo" with a photo ("put my product in a space world" stays a picture)
+const FROMPIC88=/\b(from|of|out of|into) (this|my|the) (photo|picture|image|pic)\b|(من|ل|في) ?(هذه|هذي|هاذي|هذا) ?ال?(صور[ةه]?|لقط[ةه])/i;
+const wantsWorld88=(p,tab,pic)=>WORLDW88.test(p)&&(WALK88.test(p)||(!!pic&&FROMPIC88.test(p)));
+async function picData88(m){try{const b=m.file||(m.url?await (await fetch(m.url)).blob():null);if(!b)return null;const bm=await createImageBitmap(b),k=Math.min(1,1600/Math.max(bm.width,bm.height)),c=document.createElement("canvas");
+  c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);c.getContext("2d").drawImage(bm,0,0,c.width,c.height);return c.toDataURL("image/jpeg",.9)}catch(e){return null}}
+// what is left of a request once the asking words are gone ("I want a 3D world from this photo to walk in" → nothing; "… a quiet
+// park with a fountain" → "a quiet park with a fountain"); hamza and alef forms are the same word
+const ASK88=new Set("i want would like please make me create build give generate a an the 3d three dimensional world worlds from of this that photo picture image pic to walk walking around in inside it explore can where with my اريد ابي ابغى بدي اصنع انشئ سوي سو لي عالم العالم عوالم ثلاثي ثلاثيه ثلاثية الابعاد ابعاد بعد من هذه هذا هذي الصوره الصورة صوره صورة اتجول تجول يتجول نتجول التجول فيه فيها داخل داخله بها به في على اجعل اجعله حول حولها حوله".split(" "));
+const norm88=w=>w.toLowerCase().replace(/[أإآ]/g,"ا").replace(/ة\b/g,"ه").replace(/[ًٌٍَُِّْـ]/g,"").replace(/[^\p{L}\p{N}]/gu,"");
+const rest88=p=>{const ws=String(p||"").split(/\s+/).filter(Boolean),keep=ws.filter(w=>{const n=norm88(w);return n&&!ASK88.has(n)&&!ASK88.has(n.replace(/^(و|ف|ب|ل|ال)/,""))});return keep.length>=2?keep.join(" "):""};
+async function toWorld88(p,ref){const W=S.world;if(ref){const d=await picData88(ref);if(d){W.pic=d;W.picName=ref.name||""}}
+  const words=rest88(p);
+  W.prompt=W.pic&&words.length<4?"":words;persist();go("world");
+  for(let i=0;i<120;i++){await new Promise(r=>setTimeout(r,150));if(typeof NW!=="undefined"&&NW.E&&!NW.busy&&document.getElementById("nwprompt"))break}
+  const ta=document.getElementById("nwprompt");if(ta)ta.value=W.prompt||"";if(typeof NW!=="undefined"&&NW.E)nwGo()}
+hfSend=(o=>async function(){const H=S.hf,q=document.getElementById("hfq"),p=((q&&q.value)||H.prompt||"").trim();
+  if(p&&["agent","image","video"].includes(H.tab)&&wantsWorld88(p,H.tab,!!M.hfRef)){H.prompt="";if(q)q.value="";const ref=M.hfRef?Object.assign({},M.hfRef):null;persist();await toWorld88(p,ref);return}
+  return o.apply(this,arguments)})(hfSend);
+uniRun=(o=>async function(){const U=S.uni||{},p=String(U.prompt||"").trim();if(p&&wantsWorld88(p,"agent",false)){U.prompt="";persist();return toWorld88(p,M.uniRef||null)}return o.apply(this,arguments)})(uniRun);
+
+// ---- a photo becomes a world you walk in, at once: the place is read from the photo (the AI reads it when it can; if not,
+// its sky, ground and light decide the place), the photo itself wraps around you as the surroundings, and the ground takes
+// its colour — never an empty meadow and never just a picture
+function photoLook88(img){const c=document.createElement("canvas"),n=48;c.width=n;c.height=n;const x=c.getContext("2d",{willReadFrequently:true});x.drawImage(img,0,0,n,n);const d=x.getImageData(0,0,n,n).data;
+  const band=(y0,y1)=>{let r=0,g=0,b=0,k=0;for(let y=y0;y<y1;y++)for(let i=0;i<n;i++){const q=(y*n+i)*4;r+=d[q];g+=d[q+1];b+=d[q+2];k++}return{r:r/k,g:g/k,b:b/k}};
+  const top=band(0,Math.round(n*.28)),bot=band(Math.round(n*.72),n),lum=c=>(c.r*.3+c.g*.59+c.b*.11)/255,sat=c=>{const mx=Math.max(c.r,c.g,c.b),mn=Math.min(c.r,c.g,c.b);return mx?(mx-mn)/mx:0};
+  const sky=(top.b>top.r+6&&top.b>=top.g-6&&lum(top)>.42)||(lum(top)>.74&&sat(top)<.14);
+  let words,indoor=false;
+  if(!sky){words="an open square";indoor=true}
+  else if(lum(bot)>.78&&sat(bot)<.12)words="a snowy place";
+  else if(bot.g>bot.r*1.04&&bot.g>bot.b*1.08)words="a park";
+  else if(bot.r>bot.g&&bot.g>bot.b&&sat(bot)>.22&&lum(bot)>.45)words="a desert";
+  else if(sat(bot)<.16)words="a city street";
+  else words="a meadow";
+  const hex=v=>"#"+[v.r,v.g,v.b].map(z=>Math.round(z).toString(16).padStart(2,"0")).join("");
+  return{words,indoor,ground:hex(bot),sky:hex(top),top,bot}}
+async function photoSurround88(pic){const W=NW.W;if(!W||!pic)return;const img=await new Promise((ok,bad)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=bad;i.src=pic});
+  const Wd=2048,Ht=1024,c=document.createElement("canvas");c.width=Wd;c.height=Ht;const x=c.getContext("2d"),look=photoLook88(img);
+  const g=x.createLinearGradient(0,0,0,Ht);g.addColorStop(0,look.sky);g.addColorStop(.5,look.sky);g.addColorStop(.5,look.ground);g.addColorStop(1,look.ground);x.fillStyle=g;x.fillRect(0,0,Wd,Ht);
+  const band=Ht*.56,w=Math.min(Wd/2,band*img.width/img.height),y=(Ht-band)/2,x0=(Wd-w)/2;           // the photo in front of you, mirrored copies all the way round
+  x.drawImage(img,x0,y,w,band);for(let k=1;k*w<Wd;k++){for(const s of[-1,1]){x.save();const px=x0+s*k*w;x.translate(k%2?px+w:px,y);x.scale(k%2?-1:1,1);x.drawImage(img,0,0,w,band);x.restore()}}
+  const fade=(y0,y1,col)=>{const f=x.createLinearGradient(0,y0,0,y1);f.addColorStop(0,col);f.addColorStop(1,"rgba(0,0,0,0)");x.fillStyle=f;x.fillRect(0,y0,Wd,y1-y0)};
+  fade(y-2,y+band*.12,look.sky);const f2=x.createLinearGradient(0,y+band*.88,0,y+band+2);f2.addColorStop(0,"rgba(0,0,0,0)");f2.addColorStop(1,look.ground);x.fillStyle=f2;x.fillRect(0,y+band*.88,Wd,band*.12+2);
+  const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",.88));if(!blob)return;let url="",keep=false;
+  if(API.mode==="server"&&S.user){try{url=(await API.upload(new File([blob],"photo-world.jpg",{type:"image/jpeg"}),"photo-world.jpg")).url;keep=true}catch(e){}}
+  if(!url)url=URL.createObjectURL(blob);if(NW.W!==W)return;await W.setPanorama(url);if(!keep)delete W.plan.pano;W.plan.photo88=1;if(S.world.plan&&S.world.plan.seed===W.plan.seed){if(keep)S.world.plan.pano=url;S.world.plan.photo88=1}persist()}
+nwGo=(o=>async function(){const W=S.world,ta=document.getElementById("nwprompt"),raw=((ta&&ta.value)||W.prompt||"").trim(),pic=W.pic;
+  if(!pic)return o.apply(this,arguments);
+  if(raw){const r=await o.apply(this,arguments);try{await photoSurround88(pic)}catch(e){}return r}
+  if(NW.busy)return;const M=await nwMods().catch(()=>null);if(!M){toast(L("3D can't start here.","لا يعمل ثلاثي الأبعاد هنا."));return}
+  NW.busy=true;nwSay(L("Reading the picture…","قراءة الصورة…"));nwRefresh();nwHud();
+  let look=null,plan=null;try{try{const im=await new Promise((ok,bad)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=bad;i.src=pic});look=photoLook88(im)}catch(e){}
+  if(API.mode==="server"){const req=API.req("/v1/world/plan",{json:{prompt:"",image:pic,lang:S.lang}}).catch(()=>null);
+    const r=await Promise.race([req,new Promise(ok=>setTimeout(()=>ok("slow"),20000))]);
+    if(r==="slow")req.then(x=>{if(x&&x.plan&&x.ai){if(x.cost&&!crFree())S.credits=Math.max(0,(S.credits||0)-x.cost);NW87.better={plan:x.plan,cs:[],seed:Date.now()};nwRefresh();toast(L("The AI's more detailed version of this world is ready.","نسخة الذكاء الأكثر تفصيلاً من هذا العالم جاهزة."),{type:"ok"})}}).catch(()=>{});
+    else if(r&&r.plan&&r.ai){plan=r.plan;if(r.cost&&!crFree())S.credits=Math.max(0,(S.credits||0)-r.cost)}}
+  if(!plan){plan=M.localPlan((look&&look.words)||"a meadow");if(look&&look.indoor){plan.place="meadow";plan.terrain=Object.assign({},plan.terrain||{},{ground:"floor"})}}
+  if(look)plan.terrain=Object.assign({},plan.terrain||{},{color:look.ground});
+  plan.fromPicture=1}finally{NW.busy=false;nwSay("")}W.prompt="";await nwBuild(plan);
+  try{await photoSurround88(pic)}catch(e){}
+  if(W.opts.look==="real")nwRealistic(pic);W.pic=null;persist();nwRefresh()})(nwGo);
+
+(function(){const st=document.createElement("style");st.textContent=`
+.micbtn{display:none!important}.micwrap>textarea,.micwrap>input{padding-inline-end:12px!important}html[dir] .micwrap>input{padding-left:12px!important;padding-right:12px!important}
+#main textarea{resize:none}
+.ipage .igen{position:static!important;bottom:auto!important}
+.thumb>.del88,.del88{position:absolute;top:6px;inset-inline-end:6px;z-index:4;width:28px;height:28px;padding:0;border-radius:50%;border:0;display:grid;place-items:center;background:rgba(10,12,14,.62);color:#fff;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.del88 svg{width:14px;height:14px}.del88:hover{background:var(--red,#e5484d)}
+.crw88{position:relative}.crw88>.del88.c{top:50%;transform:translateY(-50%);inset-inline-end:8px;background:var(--panel2);color:var(--mute);border:1px solid var(--line)}.crw88>.charrow{padding-inline-end:44px}
+.crw88>.del88.c:hover{background:var(--red,#e5484d);color:#fff;border-color:transparent}
+.del88row{gap:10px;justify-content:flex-end}.btn.danger{background:var(--red,#e5484d);color:#fff;border-color:transparent}
+.selopt .sp88,.selbtn .sp88{flex:0 0 auto;width:34px;height:34px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#f6cdd5;color:#8a3045}
+.selopt .sp88.lg,.selbtn .sp88.lg{border-radius:9px;background:#fff}.selopt .sp88.none,.selbtn .sp88.none{background:var(--panel2);color:var(--mute)}
+.selopt .sp88 img,.selbtn .sp88 img{width:100%;height:100%;object-fit:cover;display:block}.selopt .sp88.lg img,.selbtn .sp88.lg img{object-fit:contain;padding:3px}
+.selopt .sp88 svg,.selbtn .sp88 svg{width:60%;height:60%}.selopt .sp88 .sil87,.selbtn .sp88 .sil87{display:grid;place-items:center;width:100%;height:100%}
+.selsheet.pics88 .selopt{display:flex;align-items:center;gap:12px}.selbtn.pic88{display:flex;align-items:center;gap:10px}.selbtn.pic88 .sp88{width:26px;height:26px}
+.lg88{width:18px;height:18px;border-radius:5px;vertical-align:-4px;margin-inline-end:6px;background:#fff;object-fit:contain}
+#ugcabout88{min-height:64px}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

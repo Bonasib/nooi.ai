@@ -1,4 +1,4 @@
-# nooi — product map and roadmap (v87)
+# nooi — product map and roadmap (v88)
 
 The map of what every page is for, the rules every new button has to follow, what was merged or removed and why, and what
 comes next. Every button on every page, with what it does, is in **docs/UI_MAP.md** (made by `python3 tools/uimap.py`).
@@ -144,7 +144,21 @@ the resolution drops before the frame rate does. Phones destroy the engine when 
 - **3D World:** empty start, faster plans (12 s for the AI, else the words at once and the AI's richer version offered),
   the world comes to life, real-looking people do what the words say. "Auto" time is daytime again (it was midnight).
 
-## 8. Next
+## 8. v88 — creating works on phones, clean boxes, pictures in every list
+
+- **Creating works on phones.** A photo is read the moment it is picked and made a 2048 px JPEG, uploaded in the background and
+  reused by the job; a dropped connection is tried again; a plain message instead of "Failed to fetch". The server no longer
+  restarts on a stray error. Motion Control always sends the engine a prompt.
+- **Clean prompt boxes:** no microphone, no resize grip, none of the site's own instructions, empty after a start. The engines get
+  the words in English (quoted words kept as written) and videos never show their prompt as text unless the words ask for text.
+- **Pictures in every list:** engine logos, character faces (an empty frame when there is none), a clear poster frame for every video.
+- **Delete with a confirmation:** × on videos, pictures and characters.
+- **Removed:** "Powered by NVIDIA AI", Motion Control 2.6 (3.0 is on Pro too), the UGC name / price / special fields (one line
+  about the product). The Images page's Generate bar stays in place.
+- **A photo → a World you walk in** from the home box or the World page: the place read from the photo, the photo around you,
+  an open floor for an indoor photo.
+
+## 9. Next
 
 1. One feeling picker on Voice & audio (tone + dialogue feeling), the editor's 3D tab → hand-over to the 3D World.
 2. In the World: open doors, drive a car, carry things between saved worlds; a short "what happened" film from the tour;

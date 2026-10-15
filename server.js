@@ -38,6 +38,11 @@ import { registerLearn } from "./lib/learn.js";
 import { registerVss, vssServer } from "./lib/vss.js";
 import { registerLocalize, locEngines } from "./lib/localize.js";
 import { registerAgents } from "./lib/agents.js";
+import { registerV88 } from "./lib/v88.js";   // v88: prompts in English for the engines, poster frames, deleting results
+// a stray error in some background task is logged — it never takes the whole site down (every request in flight would fail
+// with "Failed to fetch" while the service restarts)
+process.on("unhandledRejection", (e) => console.error("unhandled rejection:", (e && (e.stack || e.message)) || e));
+process.on("uncaughtException", (e) => console.error("uncaught exception:", (e && (e.stack || e.message)) || e));
 import { registerSlideshow } from "./lib/slideshow.js";
 import { registerPhysics } from "./lib/physics.js";
 import "./lib/physicsdirector.js";   // video prompts get what really happens (MuJoCo), see the file
@@ -217,6 +222,7 @@ registerAgents(app);
 registerMotion(app);
 registerSketch(app);
 registerWorld(app);
+registerV88(app, requireUser);
 registerIngest(app);
 registerExplore(app); registerShowcase(app); registerGifts(app); registerInvoices(app);
 // Low-latency voice preview (ElevenLabs stream, key never leaves the server)

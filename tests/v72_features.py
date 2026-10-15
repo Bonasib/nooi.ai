@@ -81,7 +81,7 @@ async def run(p, w):
     await pg.wait_for_timeout(500); r["skBox"] = await E("()=>!!document.querySelector('.sklive72')"); ok(r["skBox"], f"{tag}: real pictures shown under the live sketch")
     # draw & create keeps the user's own reference
     await E("()=>{S.drw.mode='draw';S.drw.scene='a red car on a beach';S.drw.style='realistic';S.drw.n=1;go('draw');renderAll()}"); await pg.wait_for_timeout(600)
-    bx = await pg.locator('#drwcv').bounding_box()
+    await pg.locator('#drwcv').wait_for(state="visible", timeout=10000); bx = await pg.locator('#drwcv').bounding_box()   # (a busy machine draws the page later)
     await pg.mouse.move(bx['x'] + 40, bx['y'] + 40); await pg.mouse.down(); await pg.mouse.move(bx['x'] + 180, bx['y'] + 120, steps=8); await pg.mouse.up()
     await E("()=>{M.iRef={type:'image',file:new Blob(['x'],{type:'image/png'}),name:'mine.png',url:''};document.querySelector('[data-act=drw-go]').click()}")
     sent = await wait_for(E, "()=>S.jobs.some(j=>j.batch===S.drw.batch&&j.remote)")

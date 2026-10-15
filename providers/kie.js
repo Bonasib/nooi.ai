@@ -94,7 +94,8 @@ export function kieInput(model, p) {
   // video (and chapter / extend)
   const img0 = startImg(p), img = img0 ? absUrl(img0) : undefined, end = inp.vEnd ? absUrl(inp.vEnd) : undefined, dur = Math.round(+p.dur || 5), prompt = fullPrompt(p), audio = !!(p.meta?.audio);
   // Motion Control: the character in the photo performs the movement of the video (orientation: follow the video or the photo)
-  if (/motion-control/.test(m)) return drop({ prompt: p.prompt || "", input_urls: [absUrl(inp.mcChar || img0)], video_urls: [absUrl(inp.mcMove)], mode: pickRes(p, ["720p", "1080p"], "720p"),
+  // the engine needs a prompt: the client's words (if any) plus what Motion Control is for
+  if (/motion-control/.test(m)) return drop({ prompt: (String(p.prompt || "").trim() ? String(p.prompt).trim().replace(/[.\s]*$/, ". ") : "") + "The person in the picture performs exactly the same movements as the person in the video, natural and smooth.", input_urls: [absUrl(inp.mcChar || img0)], video_urls: [absUrl(inp.mcMove)], mode: pickRes(p, ["720p", "1080p"], "720p"),
     character_orientation: (p.meta?.orient || (/kling-2\.6/.test(m) ? "image" : "video")) === "image" ? "image" : "video", ...(/kling-3\.0/.test(m) ? { background_source: "input_video" } : {}) });
   if (/^kling\/v3-turbo/.test(m)) return img ? { prompt, image_urls: [img], duration: String(clamp(dur, 3, 15)), resolution: pickRes(p, ["720p", "1080p"], "720p") }
     : { prompt, aspect_ratio: snapAR(p.aspect, ["16:9", "9:16", "1:1"]), duration: String(clamp(dur, 3, 15)), resolution: pickRes(p, ["720p", "1080p"], "720p") };

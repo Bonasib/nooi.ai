@@ -173,7 +173,7 @@ async def browser_checks(p):
             await pg.click('[data-act="mc-make"]'); await pg.wait_for_timeout(5000)
             r = await pg.evaluate("()=>{const j=S.jobs.filter(j=>j.meta&&j.meta.motion83).pop();return j&&{status:j.status,dur:j.dur,model:j.model,remote:!!j.remote}}")
             t = stats()["tasks"][n0:]
-            ok(r and r["remote"] and r["dur"] == 4 and r["model"] == "mc26" and any(x.get("model") == "kling-2.6/motion-control" for x in t), f"{tag}: Motion Control from the page reaches the engine {r} {t[-1:] if t else t}")
+            ok(r and r["remote"] and r["dur"] == 4 and r["model"] == "mc30" and any(x.get("model") == "kling-3.0/motion-control" for x in t), f"{tag}: Motion Control from the page reaches the engine {r} {t[-1:] if t else t}")
             ok(await pg.evaluate("()=>!!document.querySelector('details.sent83')"), f"{tag}: the result has 'What the AI received'")
             await pg.evaluate("()=>{const d=document.querySelector('details.sent83');d.open=true}"); await pg.wait_for_timeout(1500)
             st = await pg.evaluate("()=>document.querySelector('details.sent83 .sent83b').innerText")

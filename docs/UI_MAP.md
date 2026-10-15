@@ -146,7 +146,6 @@ _Several images per prompt, pick the best._
 | Sketch to life | opens **Sketch to life** |
 | Coloring book | opens **Coloring book** |
 | Prompt | field |
-| Speak instead of typing | types what you say (microphone) |
 | Style or subject reference | field (file) |
 | Enhance | action `enhance` |
 | @ No character @ The Keeper | field |
@@ -208,7 +207,6 @@ _Draw and watch it become a character, asset or place in real time._
 | Record the session | action `lsk-rec` |
 | Keep this frame | action `lsk-keep` |
 | e.g. a red vintage car, a falcon with golden wings | field |
-| Speak instead of typing | types what you say (microphone) |
 | Style Realistic | — |
 | 65 | field (range) |
 | Save to cast | action `sk-save` |
@@ -268,7 +266,6 @@ _Text or image to video with camera control and keyframes._
 | Format 16:9 | — |
 | Camera move Dolly in | — |
 | Describe the shot: subject, action, place, light. | field |
-| Speak instead of typing | types what you say (microphone) |
 | Enhance | action `enhance` |
 | Suggest a hook | action `hooks` |
 | Random | action `random` |
@@ -344,7 +341,7 @@ _A character performs the movement of any video._
 | Upload the movement video | field (file) |
 | Upload the character photo | field (file) |
 | e.g. on a sunny street in Riyadh, wearing a white thobe | field |
-| choose: Motion Control 2.6 · Motion Control 3.0 | sets `mc83.model` |
+| choose: Motion Control 3.0 | sets `mc83.model` |
 | choose: 720p · 1080p | sets `mc83.res` |
 | choose: Like the video · Like the photo | sets `mc83.orient` |
 | on | field (checkbox) |
@@ -370,8 +367,7 @@ _Market a product with a presenter, product shots, an image or motion graphics._
 | Angle 2 | field (file) |
 | Angle 3 | field (file) |
 | In use | field (file) |
-| (no label) | field |
-| Speak instead of typing | types what you say (microphone) |
+| e.g. a rose face serum that brightens the skin | field |
 | Person presents it A real-looking person holds your product  | action `ugc-mode` |
 | Product only Close-ups and a slow turn of your product in st | action `ugc-mode` |
 | Still image ad One scroll-stopping picture with room for you | action `ugc-mode` |
@@ -442,7 +438,6 @@ _Multi-chapter films that continue from the last frame._
 | Play/pause | action `toggle-play` |
 | Lights the great lamp | field |
 | At the top, he lights the great lamp as a storm approaches f | field |
-| Speak instead of typing | types what you say (microphone) |
 | Enhance | action `enhance` |
 | Narration / dialogue | field |
 | choose: 00:05 seconds · 00:08 seconds · 00:10 seconds | sets `chapter.dur` |
@@ -519,6 +514,7 @@ _Characters with ages, voices and several looks._
 | Upload a photo → new character | field (file) |
 | Add a photo to this character | field (file) |
 | The Keeper 72 · 172cm · Male Story | action `pick-char` |
+| Delete this character | deletes this character (asks first) |
 | New character | action `new-char` |
 | Make it real 22 | makes this character real (one photoreal face from its description or photo) |
 | 4 real looks 88 | action `gen-looks` |
@@ -985,7 +981,6 @@ _Openings that stop the scroll, for any topic._
 | Content plan | opens **Content plan** |
 | Hook lab | opens **Hook lab** |
 | (no label) | field |
-| Speak instead of typing | types what you say (microphone) |
 | e.g. young travelers in the Gulf | field |
 | ع العربية | action `hk-lang` |
 | EN English | action `hk-lang` |
@@ -1208,7 +1203,6 @@ _FAQ, tickets and contact._
 | Help & support | opens **Help & support** |
 | contact@nooi.ai | link → mailto:contact@nooi.ai |
 | e.g. my credits didn't arrive after paying | field |
-| Speak instead of typing | types what you say (microphone) |
 | Answer | action `sup-ask` |
 | choose: Billing & credits · Technical problem · Account · Content & safety · Other | sets `supCat` |
 | (no label) | field |
@@ -1253,4 +1247,4 @@ _Plug in your APIs and accounts._
 | Admin login | admin sign-in |
 
 
-_1393 controls on 34 pages_
+_1379 controls on 34 pages_
