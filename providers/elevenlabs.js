@@ -26,8 +26,3 @@ export async function streamTTS(res, { text, voice, model }) {
   res.setHeader("Content-Type", "audio/mpeg"); res.setHeader("Cache-Control", "no-store");
   const reader = r.body.getReader(); for (;;) { const { done, value } = await reader.read(); if (done) break; res.write(Buffer.from(value)); } res.end();
 }
-export async function elClone(name, audioBuf, filename) {
-  const c = cfg("elevenlabs"); const fd = new FormData(); fd.append("name", name || "nooi voice"); fd.append("files", new Blob([audioBuf]), filename || "sample.webm");
-  const r = await fetch(`${base()}/v1/voices/add`, { method: "POST", headers: { "xi-api-key": c.apiKey }, body: fd }); if (!r.ok) throw providerError("ElevenLabs", r.status, await r.text());
-  return (await r.json()).voice_id;
-}

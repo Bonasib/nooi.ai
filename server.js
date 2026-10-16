@@ -31,7 +31,7 @@ import { createToken, listTokens, revokeToken, userFromToken, updateToken, token
 import { handleMcp } from "./lib/mcp.js";
 import { verify, canSendSignInLinks, signInLink, customTokenForEmail } from "./lib/auth.js";
 import { newCode, checkCode } from "./lib/otp.js";
-import { isStaff } from "./lib/admin.js";
+import { isStaff, requireAdmin } from "./lib/admin.js";
 import { registerShowcase } from "./lib/showcase.js";
 import { registerScenes } from "./lib/scenes.js";
 import { registerLearn } from "./lib/learn.js";
@@ -39,6 +39,7 @@ import { registerVss, vssServer } from "./lib/vss.js";
 import { registerLocalize, locEngines } from "./lib/localize.js";
 import { registerAgents } from "./lib/agents.js";
 import { registerV88 } from "./lib/v88.js";   // v88: prompts in English for the engines, poster frames, deleting results
+import { startKeepMedia } from "./lib/v89.js";   // v89: results that still point at an engine's (expiring) link are kept here
 // a stray error in some background task is logged — it never takes the whole site down (every request in flight would fail
 // with "Failed to fetch" while the service restarts)
 process.on("unhandledRejection", (e) => console.error("unhandled rejection:", (e && (e.stack || e.message)) || e));
@@ -104,7 +105,7 @@ const wrap = (fn) => (req, res) => fn(req, res).catch((e) => res.status(e.code &
 app.get("/v1/health", (_, res) => res.json({ ok: true }));
 app.get("/v1/config", (_, res) => res.json({
   firebase: firebaseWebConfig(), localAI: { tfUrl: fs.existsSync(TF_DIR + "/transformers.min.js") ? "/vendor/transformers/transformers.min.js" : null, ortBase: fs.existsSync(ORT_DIR) ? "/vendor/ort/" : null, modelsHost: process.env.MODELS_DIR ? "/models/" : null, models: platform().localModels || {} }, emailCode: canSendSignInLinks() && emailConfigured(), kieRoutes: kieRoutes(),
-  llm: llmConfigured() ? { provider: llmInfo().provider, model: llmInfo().model } : null,
+  llm: llmConfigured() ? { on: true } : null,   // (which provider and model: the owner's "Test connection" only — this reply is public)
   billing: enabledPayments().length > 0, freeCredits: freeCredits(), stage: process.env.NOOI_STAGE === "1", biz: biz(), registry: publicRegistry(), payments: enabledPayments(), modelLogos: platform().modelLogos || {}, worldEngine: !!(process.env.WORLD_API_URL || (platform().providers || {}).world), modelCat: Object.fromEntries(Object.entries(platform().modelCat || {}).map(([k, v]) => [k, { cr: v.cr, verified: !!v.verified, kie: !!v.kieModel }])), features: platform().features, models: platform().models, prices: priceTable(), support: "contact@nooi.ai",
   providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || !!kieDefault(k) || !!kieAuto(k, { kind: k === "tts" ? "voice" : k }) || (k === "image" && (nvOn("image") || nvOn("edit"))) || (k === "edit" && nvOn("edit")) || (k === "video" && nvOn("video"))])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!rtEngine(), realtimeEngine: rtEngine(), vss: vssServer(), localize: (() => { try { const e = locEngines(); return { nooi: e.nooi, elevenlabs: e.elevenlabs, camb: e.camb, nvidia: e.nvidia, stt: e.stt }; } catch { return null; } })(), gen3d: { tripo: configured("tripo"), meshy: configured("meshy"), skybox: configured("blockade") }, nvidia: nvReady(), nvUse: nvReady() ? nvCfg().use : null, billing: enabledPayments().length > 0 }
 }));
@@ -135,8 +136,9 @@ app.post("/v1/ui-t/:lang", wrap(async (req, res) => {
   res.json({ t: await uiTranslate(l, req.body && req.body.strings) });
 }));
 
-app.get("/v1/llm/test", requireUser, wrap(async (req, res) => {
-  if (!llmConfigured()) throw Object.assign(new Error("Set LLM_API_KEY (and LLM_BASE_URL + LLM_MODEL for Qwen) in .env"), { code: 501 });
+// the text AI test (which provider and model answer) is for the owner only — customers never see provider names
+app.get("/v1/llm/test", requireUser, requireAdmin("providers.manage"), wrap(async (req, res) => {
+  if (!llmConfigured()) throw Object.assign(new Error("The text AI isn't connected yet — add it in Admin → Connections."), { code: 501 });
   const t0 = Date.now(); const reply = await llm("Reply with exactly: OK", { maxTokens: 20, timeoutMs: 30000 });
   res.json({ ok: true, reply: reply.trim(), ms: Date.now() - t0, ...llmInfo() });
 }));
@@ -222,7 +224,7 @@ registerAgents(app);
 registerMotion(app);
 registerSketch(app);
 registerWorld(app);
-registerV88(app, requireUser);
+registerV88(app, requireUser); startKeepMedia();
 registerIngest(app);
 registerExplore(app); registerShowcase(app); registerGifts(app); registerInvoices(app);
 // Low-latency voice preview (ElevenLabs stream, key never leaves the server)

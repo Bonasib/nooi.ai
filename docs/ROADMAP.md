@@ -1,4 +1,4 @@
-# nooi — product map and roadmap (v88)
+# nooi — product map and roadmap (v89)
 
 The map of what every page is for, the rules every new button has to follow, what was merged or removed and why, and what
 comes next. Every button on every page, with what it does, is in **docs/UI_MAP.md** (made by `python3 tools/uimap.py`).
@@ -158,7 +158,20 @@ the resolution drops before the frame rate does. Phones destroy the engine when 
 - **A photo → a World you walk in** from the home box or the World page: the place read from the photo, the photo around you,
   an open floor for an indoor photo.
 
-## 9. Next
+## 9. v89 — stars instead of numbers, every model in the home box, a tidier codebase
+
+- **Icons never show a number.** Loaders are the stars only; a count shows that many stars and the label says the number;
+  the strongest models get a star, a busy crew member a star.
+- **The home box lists every model** the Video and Image pages offer, each with its logo (Seedance 2.0 Mini and the others
+  added since v83).
+- **Failures read clearly:** no play button on a failed preview, the client's own words as its caption, a dropped connection
+  in plain words. A result deleted on another device stops showing as "being made".
+- **Videos keep showing:** the length sits top left; results still on an engine's expiring link are copied to the server.
+- **Privacy:** the public config and the text AI test no longer reveal which provider runs the site.
+- **Dead code removed** (≈141 KB of the page): versions of functions that could never run, unused helpers, logos set twice,
+  unused CSS and animations.
+
+## 10. Next
 
 1. One feeling picker on Voice & audio (tone + dialogue feeling), the editor's 3D tab → hand-over to the 3D World.
 2. In the World: open doors, drive a car, carry things between saved worlds; a short "what happened" film from the tour;

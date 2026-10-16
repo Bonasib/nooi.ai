@@ -46,7 +46,8 @@ try {
   await api("/v1/admin/providers/nvidia", { imageUrl: `http://localhost:${MPORT}/nv/genai/flux`, image2Url: `http://localhost:${MPORT}/nv/genai/sd35`, editUrl: `http://localhost:${MPORT}/nv/genai/kontext`, trellisUrl: `http://localhost:${MPORT}/nv/genai/trellis`, videoUrl: `http://localhost:${MPORT}/nv/cosmos` }, "PUT");
   const cfg = (await api("/v1/config")).d;
   ok(cfg.providers.nvidia === true && cfg.providers.nvUse.image === true && cfg.providers.nvUse.video === false, "config: NVIDIA connected, pictures on, video opt-in");
-  ok(cfg.llm && cfg.llm.provider === "nvidia" && cfg.llm.model === "nvidia/nemotron-3-super-120b-a12b", "the site's text AI is NVIDIA Nemotron");
+  ok(cfg.llm && cfg.llm.on === true && !cfg.llm.provider && !cfg.llm.model, "the public config says the text AI is on, never which provider or model (v89)");
+  const lt = (await api("/v1/llm/test")).d; ok(lt && lt.provider === "nvidia" && lt.model === "nvidia/nemotron-3-super-120b-a12b", "the owner's test: the site's text AI is NVIDIA Nemotron (" + JSON.stringify(lt).slice(0, 120) + ")");
   const t = await api("/v1/llm/json", { task: "test", tier: "quick", prompt: "say ok" }); ok(t.d.ok === true && t.d.by === "nvidia/nemotron-3-super-120b-a12b", "text AI request → Nemotron chat (" + JSON.stringify(t.d) + ")");
   const v = await api("/v1/llm/json", { task: "vision", tier: "quick", prompt: "describe", images: ["data:image/png;base64," + PNG.toString("base64")] });
   ok(v.d.img === true && v.d.by === "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning", "pictures → Nemotron Omni (reasoning budget, <think> removed)");

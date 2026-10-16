@@ -146,17 +146,17 @@ async def ui(p, w, lang):
     g = [x for x in posted if x.get("kind") == "lipsync"]
     r["gender"] = (g[-1].get("meta") or {}).get("gender") if g else r["gender"]
     ok(r["gender"] == "male", f"{tag}: a ready avatar's gender goes with the job {r['gender']}")
-    # ---- something being made: calm colours + stars + percent + time, honest steps, no pause button, no long caption
+    # ---- something being made: calm colours + the stars only (v89: no percent, no time), honest steps, no pause button, no long caption
     await E(JOBS, P); await E("()=>{go('video');renderAll()}"); await pg.wait_for_timeout(900)
     r["stage"] = await E("""()=>{const s=document.querySelector('.preview-col .stage');const v=s&&s.querySelector('.sveil81'),cap=s&&s.querySelector('.cap');
       const cv=s&&s.querySelector('canvas.frame.live');let blocky=null;if(cv&&cv.width>40){const x=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data,W=cv.width;let jumps=0,n=0;
         for(let y=8;y<cv.height-8;y+=7)for(let i=8;i<W-9;i++){const a=(y*W+i)*4,b=a+4;const d=Math.abs(x[a]-x[b])+Math.abs(x[a+1]-x[b+1])+Math.abs(x[a+2]-x[b+2]);if(d>24)jumps++;n++}blocky=jumps/n}
-      return {veil:!!v,star:!!(v&&v.querySelector('.star79')),pct:v&&v.querySelector('b').textContent,eta:v&&(v.querySelector('small')||{}).textContent,ctl:!!s.querySelector('.ctl'),cap:cap?getComputedStyle(cap).display:null,blocky,
+      return {veil:!!v,star:!!(v&&v.querySelector('.star79')),txt:v&&v.innerText.trim(),ctl:!!s.querySelector('.ctl'),cap:cap?getComputedStyle(cap).display:null,blocky,
         pipe:[...document.querySelectorAll('#pipe>div')].map(d=>d.className+':'+d.textContent)}}""")
     S_ = r["stage"]
-    ok(S_["veil"] and S_["star"] and S_["pct"] == "39%" and S_["eta"] in ("Usually 1–3 minutes", "عادةً 1–3 دقائق") and not S_["ctl"] and S_["cap"] == "none", f"{tag}: calm stage while making {S_}")
+    ok(S_["veil"] and S_["star"] and S_["txt"] == "" and not S_["ctl"] and S_["cap"] == "none", f"{tag}: calm stage while making — the stars only {S_}")
     ok(S_["blocky"] is not None and S_["blocky"] < .01, f"{tag}: no blocky half-made picture (sharp jumps {S_['blocky']})")
-    ok(len(S_["pipe"]) == 3 and S_["pipe"][0].startswith("done:") and S_["pipe"][1].startswith("now:") and "39%" in S_["pipe"][1] and not any("192" in x or "Denois" in x for x in S_["pipe"]), f"{tag}: honest steps {S_['pipe']}")
+    ok(len(S_["pipe"]) == 3 and S_["pipe"][0].startswith("done:") and S_["pipe"][1].startswith("now:") and "%" not in S_["pipe"][1] and not any("192" in x or "Denois" in x for x in S_["pipe"]), f"{tag}: honest steps {S_['pipe']}")
     await E("()=>{const j=S.jobs.find(x=>x.id==='rv1');j.status='complete';j.progress=1;j.resultUrl='/media/out.mp4';renderAll()}"); await pg.wait_for_timeout(300)
     r["capDone"] = await E("()=>{const c=document.querySelector('.preview-col .stage .cap');if(!c)return null;const cs=getComputedStyle(c);return {d:cs.display,h:Math.round(c.getBoundingClientRect().height),lh:parseFloat(cs.lineHeight)||20}}")
     C = r["capDone"]

@@ -152,7 +152,7 @@ _Several images per prompt, pick the best._
 | @ No character | — |
 | Format 1:1 | — |
 | Style Photoreal | — |
-| choose: 1 images · 2 images · 4 images · 8 images | sets `img.count` |
+| choose: 1 image · 2 images · 4 images · 8 images | sets `img.count` |
 | choose: nooi Auto · 5 · nooi Image · 5 · Qwen Image · 5 · Nano Banana · 5 · Nano Banana Pro · 22 · Seedream 4.5 · 6 · GPT Image 2.0 · 12 · Midjourney · 12 | sets `img.model` |
 | All models (19) | action `img-allmodels` |
 | Default | action `f-open` |
@@ -240,7 +240,7 @@ _Turn your film, story or post into printable coloring pages._
 | The Last Lighthouse Keeper | field |
 | Simple for kids | — |
 | Story text under pages | — |
-| choose: A4 A4 · Letter · Post 4:5 | sets `cb.size` |
+| choose: A4 · Letter · Post 4:5 | sets `cb.size` |
 | Make coloring pages | action `cb-build` |
 | contact@nooi.ai | link → mailto:contact@nooi.ai |
 | Help & support | opens **Help & support** |
@@ -281,7 +281,7 @@ _Text or image to video with camera control and keyframes._
 | choose: 24 · 30 · 60 · 120 ✦ | sets `draft.fps` |
 | 50 | field (range) |
 | choose: nooi Auto 30 Picks the best engine for each prompt — quality · WAN 3.0 114 Alibaba · Text rendered in video · Seedance 30 ByteDance · smooth motion & multi-shot · Kling 107 Kuaishou · top realism & physics · MiniMax Hailuo 48 Video model · Kling 3.0 133 Kuaishou · Realistic people · Seedance 2.5 162 ByteDance · Multi-shot storytelling · Seedance 2.0 109 ByteDance · Multi-shot scenes · MiniMax H3 94 MiniMax · Realistic physics · Veo 3.1 302 Google · cinematic, native audio · Veo 3.1 Fast 77 Google · fast, native audio · Grok Imagine 43 xAI · bold, playful motion · PixVerse V6 77 Effects, transitions, audio · Kling 2.6 107 Kuaishou · sound & motion … | sets `draft.model` |
-| choose: 1 takes · 2 takes · 3 takes · 4 takes | sets `draft.variations` |
+| choose: 1 take · 2 takes · 3 takes · 4 takes | sets `draft.variations` |
 | Native audio & ambience | — |
 | Voiceover line (optional) | field |
 | Abu Fahad · Saudi · Najdi · Middle-aged (45–60) Noura · Saud | field |
@@ -440,7 +440,7 @@ _Multi-chapter films that continue from the last frame._
 | At the top, he lights the great lamp as a storm approaches f | field |
 | Enhance | action `enhance` |
 | Narration / dialogue | field |
-| choose: 00:05 seconds · 00:08 seconds · 00:10 seconds | sets `chapter.dur` |
+| choose: 00:05 · 00:08 · 00:10 | sets `chapter.dur` |
 | nooi Auto WAN 3.0 Seedance Kling MiniMax Hailuo Kling 3.0 Se | field |
 | nooi Auto | — |
 | Camera move Dolly in | — |
@@ -771,7 +771,7 @@ _Voices by dialect and age, lip sync, music and SFX._
 | Describe the music: “slow oud and strings, rising tension” | field |
 | choose: Orchestral · Arabic / oud · Electronic · Lo-fi · Hip-hop · Ambient | sets `tools.music.genre` |
 | choose: Melancholic · Epic · Happy · Tense · Calm | sets `tools.music.mood` |
-| choose: 15s length · 30s length · 60s length · 2m length | sets `tools.music.dur` |
+| choose: 15s · 30s · 60s · 2m | sets `tools.music.dur` |
 | Generate music 4 | action `music-gen` |
 | Thunder | action `sfx` |
 | Waves | action `sfx` |
@@ -964,7 +964,7 @@ _Analyze your website and get a ready content plan._
 | ZA South African | action `dia-set` |
 | IN Indian | action `dia-set` |
 | NG Nigerian | action `dia-set` |
-| choose: 1 weeks · 2 weeks · 4 weeks | sets `pub.weeks` |
+| choose: 1 week · 2 weeks · 4 weeks | sets `pub.weeks` |
 | choose: 3 per week · 5 per week · 7 per week | sets `pub.perWeek` |
 | Analyze & build plan | action `analyze` |
 | contact@nooi.ai | link → mailto:contact@nooi.ai |
