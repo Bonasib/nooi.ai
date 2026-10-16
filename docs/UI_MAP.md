@@ -23,12 +23,12 @@ option groups are folded into one line (“choose …”). Shared parts (top bar
 | All tools | opens **All tools** |
 | Create video Text or image to video with camera control and  | opens **Create video** |
 | Create image Several images per prompt, pick the best. | opens **Create image** |
-| nooi Studio Eight AI agents write, design, direct, shoot, sc | opens **nooi Studio** |
+| nooi Studio Nine AI agents write, design, direct, shoot, voi | opens **nooi Studio** |
 | UGC ads Market a product with a presenter, product shots, an | opens **UGC ads** |
 | Characters Characters with ages, voices and several looks. | opens **Characters** |
 | 3D World Write what you want — or add a picture — and walk a | opens **3D World** |
 | Video editor Trim, effects, text, and edit frames with a pro | opens **Video editor** |
-| Sketch to life Draw and watch it become a character, asset o | opens **Sketch to life** |
+| Sketch to life Draw, say what it is, and preview it with AI  | opens **Sketch to life** |
 | Continue the next chapter | continues the last chapter story |
 | Storyboard | opens **Storyboard** |
 | All templates | opens **Templates** |
@@ -148,13 +148,13 @@ _Every tool in one place, by section._
 | Community Videos and images made by the community — recreate | opens **Community** |
 | Recipes Ready steps in a row: picture → video → sharper copy | opens **Recipes** |
 | Create image Several images per prompt, pick the best. | opens **Create image** |
-| Sketch to life Draw and watch it become a character, asset o | opens **Sketch to life** |
+| Sketch to life Draw, say what it is, and preview it with AI  | opens **Sketch to life** |
 | Coloring book Turn your film, story or post into printable c | opens **Coloring book** |
 | Create video Text or image to video with camera control and  | opens **Create video** |
 | Cinema Studio Camera, lens, focal length, aperture, move and | opens **Cinema Studio** |
 | Motion Control A character performs the movement of any vide | opens **Motion Control** |
 | UGC ads Market a product with a presenter, product shots, an | opens **UGC ads** |
-| nooi Studio Eight AI agents write, design, direct, shoot, sc | opens **nooi Studio** |
+| nooi Studio Nine AI agents write, design, direct, shoot, voi | opens **nooi Studio** |
 | Chapter story Multi-chapter films that continue from the las | opens **Chapter story** |
 | Storyboard Frames, dialogue, sound and transitions on a canv | opens **Storyboard** |
 | Voice & audio Voices by dialect and age, lip sync, music and | opens **Voice & audio** |
@@ -202,21 +202,13 @@ _Several images per prompt, pick the best._
 
 ### Sketch to life  `sketch`
 
-_Draw and watch it become a character, asset or place in real time._
+_Draw, say what it is, and preview it with AI — one picture or up to ten different looks._
 
 | control | what it does |
 |---|---|
 | Create image | opens **Create image** |
 | Sketch to life | opens **Sketch to life** |
 | Coloring book | opens **Coloring book** |
-| Live sketch | opens **Sketch to life** |
-| Draw a scene | opens **draw** |
-| Characters | action `sk-target` |
-| Vehicles | action `sk-target` |
-| Environments | action `sk-target` |
-| Animals | action `sk-target` |
-| Assets & props | action `sk-target` |
-| Floor plan → 3D scene | action `sk-target` |
 | Pencil | action `sk-tool` |
 | Marker | action `sk-tool` |
 | Brush | action `sk-tool` |
@@ -224,8 +216,6 @@ _Draw and watch it become a character, asset or place in real time._
 | Undo | action `sk-undo` |
 | Redo | action `sk-redo` |
 | Clear | action `sk-clear` |
-| Import drawing | field (file) |
-| Trace a photo | field (file) |
 | #1b1b1b | action `sk-color` |
 | #ffffff | action `sk-color` |
 | #8a8f98 | action `sk-color` |
@@ -238,20 +228,13 @@ _Draw and watch it become a character, asset or place in real time._
 | #6d4c41 | action `sk-color` |
 | #f1c27d | action `sk-color` |
 | 6 | field (range) |
-| Preview · free | action `lsk-mode` |
-| Live AI · 1 / 4 frames | action `lsk-mode` |
-| When I pause · 5 | action `lsk-mode` |
-| Camera | action `lsk-cam` |
-| Screen | action `lsk-cam` |
-| Record the session | action `lsk-rec` |
-| Keep this frame | action `lsk-keep` |
-| e.g. a red vintage car, a falcon with golden wings | field |
-| Style Realistic | — |
-| 65 | field (range) |
-| Save to cast | action `sk-save` |
-| Make it real · 22 | action `sk-hd` |
-| Make 3D | turns the drawing into 3D |
-| Download | action `sk-dl` |
+| e.g. a red vintage car on a coast road | field |
+| 1 | action `sk91-n` |
+| 4 | action `sk91-n` |
+| 6 | action `sk91-n` |
+| 8 | action `sk91-n` |
+| 10 | action `sk91-n` |
+| Preview with AI 22 | action `sk91-go` |
 | contact@nooi.ai | link → mailto:contact@nooi.ai |
 | Help & support | opens **Help & support** |
 | Admin login | admin sign-in |
@@ -429,7 +412,7 @@ _Market a product with a presenter, product shots, an image or motion graphics._
 
 ### nooi Studio  `crew`
 
-_Eight AI agents write, design, direct, shoot, score, edit, produce and check your film._
+_Nine AI agents write, design, direct, shoot, voice, score, edit, produce and check your film._
 
 | control | what it does |
 |---|---|
@@ -446,7 +429,7 @@ _Eight AI agents write, design, direct, shoot, score, edit, produce and check yo
 | Format 16:9 | — |
 | French Arabic English Japanese Chinese Hindi Spanish Korean  | field |
 | English | — |
-| Start the crew ~ 11 | action `crew-start` |
+| Start the crew ~ 12 | action `crew-start` |
 | contact@nooi.ai | link → mailto:contact@nooi.ai |
 | Help & support | opens **Help & support** |
 | Admin login | admin sign-in |
@@ -687,6 +670,8 @@ _Characters with ages, voices and several looks._
 | choose: (no label) | sets `char.voice.age` |
 | choose: (no label) | sets `char.voice.gender` |
 | choose: (no label) | sets `char.voice.tone` |
+| (no label) | action `vp91-pick` |
+| (no label) | action `vp91-all` |
 | (no label) | action `speak-char` |
 | contact@nooi.ai | link → mailto:contact@nooi.ai |
 | Help & support | opens **Help & support** |
@@ -713,7 +698,7 @@ _Write what you want — or add a picture — and walk around inside it: a livin
 | Fog | sets the time of day, the weather or the look (Fast · free / Realistic) |
 | Storm | sets the time of day, the weather or the look (Fast · free / Realistic) |
 | Fast · free | sets the time of day, the weather or the look (Fast · free / Realistic) |
-| Realistic · AI 22 | sets the time of day, the weather or the look (Fast · free / Realistic) |
+| Realistic · AI 42 | sets the time of day, the weather or the look (Fast · free / Realistic) |
 | A desert oasis at sunset with camels and palm trees | fills the box with an example |
 | An old Najdi village in the afternoon with a market | fills the box with an example |
 | A snowy mountain village at night with a campfire | fills the box with an example |
@@ -743,10 +728,13 @@ _Trim, effects, text, and edit frames with a prompt._
 | Export video | action `ed-out` |
 | Add or change with a prompt | field |
 | Go | action `edcmd-go` |
-| Add a drone shot of the city at sunset | action `edcmd-ex` |
+| Fade transitions between all clips | action `edcmd-ex` |
+| Make it vertical | action `edcmd-ex` |
+| Slow motion | action `edcmd-ex` |
+| Captions on | action `edcmd-ex` |
+| Music quieter | action `edcmd-ex` |
+| Extend the selected shot | action `edcmd-ex` |
 | Add calm oud music | action `edcmd-ex` |
-| Add a thunder sound | action `edcmd-ex` |
-| Add the title: “Grand opening” | action `edcmd-ex` |
 | Make the selected clip night | action `edcmd-ex` |
 | Text | adds a text layer |
 | Music / audio | field (file) |
@@ -761,6 +749,7 @@ _Trim, effects, text, and edit frames with a prompt._
 | Earlier | action `ed-move` |
 | Split | action `ed-split` |
 | Duplicate | action `ed-dup` |
+| Extend | action `ed-extend91` |
 | Later | action `ed-move` |
 | Delete | action `ed-del` |
 | Text | — |
@@ -820,12 +809,12 @@ _Background & keying, color grading and motion capture._
 | All tools | opens **All tools** |
 | Create video Text or image to video with camera control and  | opens **Create video** |
 | Create image Several images per prompt, pick the best. | opens **Create image** |
-| nooi Studio Eight AI agents write, design, direct, shoot, sc | opens **nooi Studio** |
+| nooi Studio Nine AI agents write, design, direct, shoot, voi | opens **nooi Studio** |
 | UGC ads Market a product with a presenter, product shots, an | opens **UGC ads** |
 | Characters Characters with ages, voices and several looks. | opens **Characters** |
 | 3D World Write what you want — or add a picture — and walk a | opens **3D World** |
 | Video editor Trim, effects, text, and edit frames with a pro | opens **Video editor** |
-| Sketch to life Draw and watch it become a character, asset o | opens **Sketch to life** |
+| Sketch to life Draw, say what it is, and preview it with AI  | opens **Sketch to life** |
 | Continue the next chapter | continues the last chapter story |
 | Storyboard | opens **Storyboard** |
 | All templates | opens **Templates** |
@@ -1270,4 +1259,4 @@ _Plug in your APIs and accounts._
 | Admin login | admin sign-in |
 
 
-_1392 controls on 35 pages_
+_1393 controls on 35 pages_

@@ -174,7 +174,7 @@
 174|+ professional voice cloning
 175|languages for subtitles, dubbing & voice
 176|YOUR AI FILM CREW
-177|Eight specialists.
+177|Nine specialists.
 178|One film.
 179|Every project is handled by a crew of AI agents — from the first line of the script to the final quality check.
 180|Turns your idea into a script: scenes, dialogue and narration.

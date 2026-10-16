@@ -134,9 +134,9 @@ async def run(b, lang, w, theme):
     ok(not k["overflow"], f"{tag}: All tools fits the screen")
     g = await pg.evaluate(AGENTS); out[tag]["agents"] = {x: g[x] for x in ("bots", "strip", "plan", "planWho", "jobs", "info", "note", "inOrder")}
     ok(not g["bots"], f"{tag}: the agents are never called bots {g['bots'][:4]}")
-    ok(all(g["inOrder"].values()) and len(g["strip"]) == 8 and len(g["line"]) == 8, f"{tag}: one order everywhere (story → characters → shots → light → sound → cut → models → check) {g['inOrder']} {g['strip']}")
-    ok(len(g["roles"]) == 8 and all(r[1] for r in g["roles"]), f"{tag}: nooi Studio lists who does what — name, role, job — for all eight {g['roles']}")
-    ok(g["jobs"] == 8 and not g["info"], f"{tag}: one job line per agent (hover cards say the same) {g['info']}")
+    ok(all(g["inOrder"].values()) and len(g["strip"]) == 9 and len(g["line"]) == 9, f"{tag}: one order everywhere (story → characters → shots → light → voices → sound → cut → models → check) {g['inOrder']} {g['strip']}")
+    ok(len(g["roles"]) == 9 and all(r[1] for r in g["roles"]), f"{tag}: nooi Studio lists who does what — name, role, job — for all nine {g['roles']}")
+    ok(g["jobs"] == 9 and not g["info"], f"{tag}: one job line per agent (hover cards say the same) {g['info']}")
     ok(g["planWho"] == ["cine"], f"{tag}: in the home box's plan the Cinematographer writes the prompts, as its role says {g['planWho']}")
     ok(g["note"] == 0, f"{tag}: the QA agent is called by its name (Iris), not an old one")
     ok(not errs, f"{tag}: page errors {errs[:3]}")

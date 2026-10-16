@@ -5,9 +5,9 @@
 #      charged on the server, a failed frame refunded, out of credits → 402, bad frames refused.
 # UI (desktop English + phone Arabic, fake camera): Voice page shows the dialogue tool first → speakers from the script →
 #      voice + feeling → the mixed dialogue in the library and the editor · the editor's AI voice-over speaks naturally at
-#      the playhead · Live sketch: Preview never calls the paid model · Live AI renders and counts frames/credits · the
-#      spending limit stops it · out of credits stops it · "When I pause" makes one real picture per pause · camera as input
-#      · record the session to a video · keep a frame.
+#      the playhead · Sketch (v91): drawing never calls the paid model or makes pictures by itself; one AI button makes
+#      1–10 versions of the same drawing, each in a different look. (The live-AI modes, camera, recording and keep-frame
+#      left the Sketch page in v91; the realtime endpoint is still checked through the API above.)
 import asyncio, hashlib, json, os, subprocess, sys, tempfile, time, urllib.request
 from playwright.async_api import async_playwright
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); PORT, LPORT = 8070, 8071
@@ -120,46 +120,20 @@ async def ui(p, w):
     ok(await wait_for("()=>S.ed.sfx.length===2", 30), f"{tag}: natural voice-over placed " + str(await E("()=>[S.ed.sfx.length,window.__t.slice(-2)]")))
     r["vo"] = await E("()=>{const x=S.ed.sfx[S.ed.sfx.length-1];return [x.t,S.jobs.filter(j=>j.meta&&j.meta.natural).length]}")
     ok(abs(r["vo"][0] - 2) < .01 and r["vo"][1] == 2 and len(stats()["tts"]) == n1 + 1, f"{tag}: at the playhead, natural job {r['vo']}")
-    # ---- Live AI sketch, as the client with a few credits
-    await E("()=>{API.token=async()=>'%s';S.sketch.ai='off';S.sketch.aiCap=25;S.sketch.target='vehicle';S.sketch.prompt='a red car';LSK.info=null;LSK.frames=0;LSK.spent=0;go('sketch');renderAll()}" % TOKEN)
-    ok(await wait_for("()=>!!LSK.info&&!!document.querySelector('.lskbar')&&!document.querySelector('[data-act=lsk-mode][data-v=live]').disabled", 15), f"{tag}: live AI modes shown and ready")
-    setbal(4)
-    rt0 = len(stats()["rt"])
-    await E("()=>{SK.strokes=[{tool:'pen',color:'#111',size:6,pts:[[.2,.5,.6],[.5,.3,.6],[.8,.5,.6]]}];skRedraw();SK.dirty=true}"); await pg.wait_for_timeout(1500)
-    ok(len(stats()["rt"]) == rt0, f"{tag}: the free preview never calls the paid model")
-    await pg.click("[data-act=lsk-mode][data-v=live]")
-    for i in range(6):
-        await E("i=>{SK.strokes[0].pts.push([.3+i*.05,.6,.6]);skRedraw()}", i); await pg.wait_for_timeout(450)
-    ok(await wait_for("()=>LSK.frames>=4", 15), f"{tag}: live frames " + str(await E("()=>[LSK.frames,LSK.spent,S.sketch.ai,window.__t.slice(-2)]")))
-    r["live"] = await E("()=>[LSK.frames,LSK.spent,document.querySelector('#lskfr').textContent,document.querySelector('#sklive').textContent]")
-    ok(r["live"][1] >= 2 and r["live"][2] == str(r["live"][0]) and ("LIVE" in r["live"][3] or "مباشر" in r["live"][3]), f"{tag}: frames & credits counted {r['live']}")
-    # the client runs out of credits → Live AI stops by itself
-    for i in range(12):
-        if await E("()=>S.sketch.ai==='off'"): break
-        await E("i=>{SK.strokes[0].pts.push([.5,.2+i*.03,.6]);skRedraw()}", i); await pg.wait_for_timeout(450)
-    r["broke"] = await E("()=>[S.sketch.ai,window.__t.slice(-1)[0]]")
-    ok(r["broke"][0] == "off" and ("credit" in r["broke"][1].lower() or "رصيد" in r["broke"][1]), f"{tag}: out of credits stops Live AI {r['broke']}")
-    # the spending limit stops it too
-    setbal(30)
-    await E("()=>{S.sketch.aiCap=10;LSK.spent=10;S.sketch.ai='live';renderView();SK.dirty=true}"); await pg.wait_for_timeout(900)
-    r["cap"] = await E("()=>[S.sketch.ai,window.__t.slice(-1)[0]]")
-    ok(r["cap"][0] == "off" and ("limit" in r["cap"][1] or "حد" in r["cap"][1]), f"{tag}: spending limit {r['cap']}")
-    # "When I pause": one real picture per pause
-    await E("async()=>{await syncServer();LSK.spent=0;S.sketch.aiCap=25;S.sketch.ai='pause';LSK.sig='';renderView()}"); n2 = await E("()=>S.jobs.filter(j=>j.meta&&j.meta.skLive&&j.meta.auto).length")
-    await E("()=>{SK.strokes[0].pts.push([.9,.9,.6]);skRedraw()}")
-    ok(await wait_for("()=>S.jobs.filter(j=>j.meta&&j.meta.skLive&&j.meta.auto).length===%d" % (n2 + 1), 10), f"{tag}: a picture when I pause")
-    await pg.wait_for_timeout(2500); r["pauses"] = await E("()=>S.jobs.filter(j=>j.meta&&j.meta.skLive&&j.meta.auto).length")
-    ok(r["pauses"] == n2 + 1, f"{tag}: only one picture while nothing changes {r['pauses']}")
-    # camera as input, recording, keep a frame
-    await E("()=>{S.sketch.ai='off';renderView()}"); await pg.click("[data-act=lsk-cam][data-v=camera]")
-    ok(await wait_for("()=>LSK.src==='camera'&&LSK.video&&LSK.video.readyState>=2", 10), f"{tag}: camera on " + str(await E("()=>window.__t.slice(-1)")))
-    r["camin"] = await E("()=>{const c=lskInput(64),d=c.getContext('2d').getImageData(0,0,64,64).data;let n=0;for(let i=0;i<d.length;i+=4)if(!(d[i]>245&&d[i+1]>245&&d[i+2]>245))n++;return n}")
-    ok(r["camin"] > 1500, f"{tag}: the AI sees the camera picture {r['camin']}")
-    await pg.click("[data-act=lsk-rec]"); await pg.wait_for_timeout(1800); await pg.click("[data-act=lsk-rec]")
-    ok(await wait_for("()=>S.jobs.some(j=>j.meta&&j.meta.sketchRec)", 15), f"{tag}: session recorded " + str(await E("()=>window.__t.slice(-2)")))
-    await pg.click("[data-act=lsk-cam][data-v=camera]"); r["camoff"] = await E("()=>[LSK.src,!!LSK.stream]")
-    await pg.click("[data-act=lsk-keep]")
-    ok(await wait_for("()=>S.jobs.some(j=>j.meta&&j.meta.kept)", 10) and r["camoff"] == ["", False], f"{tag}: frame kept, camera off {r['camoff']}")
+    # ---- the Sketch page (v91): only the drawing, what it is and one AI button — drawing never calls the paid live model and
+    # never makes pictures by itself (the live-AI modes, camera, recording and keep-frame left the page); 4 versions in 4 looks
+    await E("()=>{API.token=async()=>'%s';S.sketch.ai='live';S.sketch.prompt='a red car';S.sketch.n91=4;go('sketch');renderAll()}" % TOKEN); await pg.wait_for_timeout(600)
+    ok(await E("()=>!document.querySelector('.lskbar,[data-act^=lsk-]')&&S.sketch.ai==='off'&&!!document.querySelector('[data-act=sk91-go]')"), f"{tag}: no live-AI controls; one AI button")
+    rt0 = len(stats()["rt"]); n2 = await E("()=>S.jobs.length")
+    for i in range(4):
+        await E("i=>{SK.strokes=[{tool:'pen',color:'#111',size:6,pts:[[.2,.5,.6],[.5,.3+i*.05,.6],[.8,.5,.6]]}];skRedraw();SK.dirty=true}", i); await pg.wait_for_timeout(400)
+    await pg.wait_for_timeout(1200)
+    ok(len(stats()["rt"]) == rt0 and await E("()=>S.jobs.length") == n2, f"{tag}: drawing never calls the paid model or makes pictures")
+    setbal(200); await E("async()=>{try{await syncServer()}catch(e){}}"); await pg.wait_for_timeout(300)
+    await pg.click("[data-act=sk91-go]")
+    ok(await wait_for("()=>S.jobs.filter(j=>j.meta&&j.meta.sk91).length===4", 15), f"{tag}: four versions sent " + str(await E("()=>window.__t.slice(-2)")))
+    r["looks4"] = await E("()=>{const js=S.jobs.filter(j=>j.meta&&j.meta.sk91);return [new Set(js.map(j=>j.meta.style)).size,new Set(js.map(j=>j.batch)).size,SK.strokes.length]}")
+    ok(r["looks4"] == [4, 1, 1], f"{tag}: four different looks of the same drawing, the drawing kept {r['looks4']}")
     r["overflow"] = await E("()=>[document.documentElement.scrollWidth,innerWidth]"); ok(r["overflow"][0] <= r["overflow"][1], f"{tag}: no sideways scroll {r['overflow']}")
     await E("()=>{go('voice');renderAll()}"); await pg.wait_for_timeout(300)
     r["vovf"] = await E("()=>[document.documentElement.scrollWidth,innerWidth]"); ok(r["vovf"][0] <= r["vovf"][1], f"{tag}: Voice page fits {r['vovf']}")

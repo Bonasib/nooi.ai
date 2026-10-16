@@ -95,7 +95,7 @@ async def ui(p, w, lang):
         sel = {"draw": "sketch", "bg": "fx"}.get(v, v)
         ok(x[0] == n and x[1] == [sel], f"{tag}: {v} shows its hub's tabs {x}")
     await E("()=>{go('draw');renderAll()}"); await pg.wait_for_timeout(250)
-    ok(await E("()=>!!document.querySelector('.skmode80 [data-go=\"sketch\"]')&&!!document.querySelector('.skmode80 [data-go=\"draw\"][aria-selected=\"true\"]')"), f"{tag}: Sketch and Draw a scene are one place")
+    ok(await E("()=>S.view==='sketch'&&!document.querySelector('.skmode80')&&!!document.querySelector('#skcv')"), f"{tag}: Sketch and Draw a scene are one page (v91: one drawing, no second mode)")
     await E("()=>document.querySelector('.hubtabs [data-go=\"crew\"]').click()") if await E("()=>!!document.querySelector('.hubtabs [data-go=\"crew\"]')") else None
     await E("()=>{go('crew');renderAll()}"); await pg.wait_for_timeout(250)
     ok(await E("()=>document.querySelector('#main h1').textContent") == ("استوديو nooi" if lang == "ar" else "nooi Studio"), f"{tag}: the agents' page is nooi Studio")
@@ -122,11 +122,12 @@ async def ui(p, w, lang):
     await E("()=>viewMedia80('/media/clip.mp4','video')"); await pg.wait_for_timeout(150)
     # v87: one player of our own (play/pause, time, seek, sound, full screen) instead of the browser's bare controls
     ok(await E("()=>{const w=document.querySelector('.mv80 .vp87'),v=w&&w.querySelector('video');const x=!!v&&['.vpp','.vps','.vpt','.vpm','.vpf'].every(q=>!!w.querySelector(q));document.querySelector('.mv80 .mvx').click();return x}"), f"{tag}: clips open with the full player (play/pause, seek, sound)")
-    # ---- faster Sketch to Life: recognised while drawing (once), 1K picture from a small JPEG, started soon after the pause
+    # ---- fast Sketch to Life (v91): drawing makes no pictures; "Preview with AI" reads the drawing once and sends a 1K picture from a small JPEG at once
     n0 = len(posted)
-    await E("()=>{S.sketch.prompt='';S.sketch.ai='pause';S.sketch.aiCap=250;go('sketch');renderAll()}"); await pg.wait_for_timeout(400)
+    await E("()=>{S.sketch.prompt='';S.sketch.n91=1;go('sketch');renderAll()}"); await pg.wait_for_timeout(400)
     await E("()=>{SK.strokes=[{tool:'pen',color:'#000',size:6,pts:[[.2,.6,.6],[.5,.5,.6],[.8,.6,.6]]}];skRedraw();document.dispatchEvent(new PointerEvent('pointerup'))}")
-    t0 = time.time()
+    await pg.wait_for_timeout(1200); ok(not [x for x in posted[n0:] if x.get("kind") == "image"], f"{tag}: drawing alone makes no pictures")
+    t0 = time.time(); await E("()=>document.querySelector('[data-act=sk91-go]').click()")
     for _ in range(40):
         await pg.wait_for_timeout(100)
         if [x for x in posted[n0:] if x.get("kind") == "image"]: break

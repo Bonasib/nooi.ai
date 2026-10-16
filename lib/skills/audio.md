@@ -1,19 +1,6 @@
-# Sound
+# Sound design
 agent: sound
-tags: voice, music
-
-## A voice that fits the person
-ar: صوت يناسب الشخص
-how: Choose the voice by age, gender and energy of the character on screen, and keep the same voice for that character in every clip.
-how_ar: اختر الصوت حسب عمر الشخصية وجنسها وطاقتها على الشاشة، وثبّت الصوت نفسه للشخصية في كل مقطع.
-when: voiceovers, avatars and dialogue
-
-## Write for the ear
-ar: اكتب للأذن
-how: Short sentences, numbers written the way they are said and punctuation where a breath should be. A voice engine reads commas and full stops as pauses.
-how_ar: جمل قصيرة، وأرقام مكتوبة كما تُنطق، وعلامات ترقيم حيث يجب التنفس. محرك الصوت يقرأ الفاصلة والنقطة كوقفات.
-when: any script that will be spoken
-tags: voice, story
+tags: music, voice
 
 ## Voice first in the mix
 ar: الصوت البشري أولاً في المزج
@@ -56,3 +43,32 @@ how: A short moment of silence just before the important image or line makes it 
 how_ar: لحظة صمت قصيرة قبل الصورة أو الجملة المهمة تجعل أثرها أقوى من أي صوت.
 when: reveals, endings and ads
 tags: music, edit, story
+
+## Layer every sound
+ar: طبقات لكل صوت
+how: A real sound is several layers: a door is the handle, the hinge, the swing and the thud. Build each effect from two or three parts instead of one sample, and it stops sounding like a library clip.
+how_ar: الصوت الحقيقي طبقات: الباب هو المقبض والمفصّلة والحركة والارتطام. ابنِ كل مؤثر من جزأين أو ثلاثة بدل عيّنة واحدة، فيتوقف عن أن يبدو مقطعاً جاهزاً.
+when: effects for films, shorts and ads
+tags: music, edit
+
+## The sound sits where the camera is
+ar: الصوت حيث تقف الكاميرا
+how: Match the sound to the shot: close-ups sound close and dry, wide shots sound far with more of the place around them. A distant car should not sound like it is in the room.
+how_ar: طابق الصوت مع اللقطة: اللقطات القريبة صوتها قريب وجاف، والواسعة صوتها بعيد ومعه المزيد من المكان. السيارة البعيدة لا يجب أن تبدو كأنها داخل الغرفة.
+when: any scene with a camera change
+tags: edit, video
+
+## Name the source, not the feeling
+ar: سمِّ المصدر لا الإحساس
+how: Ask for what makes the sound and what it touches — "leather boots on wet gravel, slow steps" — not "scary footsteps". The sound engine follows sources and materials far better than moods.
+how_ar: اطلب ما يصدر الصوت وما يلامسه — «حذاء جلدي على حصى مبلل، خطوات بطيئة» — لا «خطوات مخيفة». محرك الأصوات يتبع المصادر والمواد أفضل بكثير من المشاعر.
+when: writing sound-effect prompts
+tags: music
+
+## Foley for the body
+ar: أصوات الجسد والحركة
+how: Clothes rustle, a cup touches a table, a chair creaks when someone sits: these small sounds of people moving make a scene feel recorded, not generated. Add them under every close-up of action.
+how_ar: حفيف الملابس، فنجان يلامس الطاولة، كرسي يصرّ حين يجلس أحد: هذه الأصوات الصغيرة لحركة الناس تجعل المشهد يبدو مسجّلاً لا مولّداً. أضفها تحت كل لقطة قريبة لحركة.
+when: scenes with people
+tags: edit, voice
+

@@ -211,7 +211,50 @@ The home box's plan had listed them Director first and the Character Designer af
 different job lines; one note still used an old name (Daqiq). Now one list, one job line each, and nooi Studio shows
 "Who does what — in the order they work".
 
-## 11. Next — from a look at how Higgsfield is organised
+## 11. v91 — an editor that works on a phone, a one-button Sketch, nine agents, voices you can hear, a World that looks real
+
+**Video editor.** Keyframes now animate: after "Add keyframe", changing Scale, Position or Rotation at another moment adds a
+keyframe there (before, every change overwrote the one keyframe and nothing moved). The keyframe bar has big touch targets,
+jumps to the previous / next keyframe and seeks where you tap; keyframes show on the clip in the timeline. Split and Duplicate
+make real copies (both pieces shared one set of keyframes and colours). **AI commands** like InVideo AI, in English and Arabic —
+the ones the editor can do itself run at once, free, with undo ("delete clip 2", "make it vertical", "slow motion", "fade
+transitions between all clips", "music quieter", "black and white", "delete clip 2 and make it square"); new pictures, video,
+music, voice and sound go to the AI with their price on the Go button first. **Extend shot**: the clip's last frame starts the
+next 5 seconds, placed right after it. On a phone the page header is compact.
+
+**Sketch.** One page (Draw a scene opens it): the drawing, its tools, "What are you drawing?", how many versions (1 · 4 · 6 · 8 ·
+10, each in a different look) and one "Preview with AI" button with its price. Nothing happens by itself while you draw (no live
+AI, no pictures when you pause, no camera or recording); the drawing is never replaced, undo / erase / redo work on it, and it is
+kept after a reload. Drawing is incremental — a pen move costs under a millisecond on a 400-line drawing.
+
+**The agents — nine**, in the order the work runs:
+
+| # | agent | role | job |
+|---|---|---|---|
+| 1 | Quill | Story Writer | turns your idea into the story: scenes, characters and dialogue |
+| 2 | Nova | Character Designer | gives every character one fixed face, outfit and voice |
+| 3 | Max | Director | splits the story into shots: framing, action, camera move and length |
+| 4 | Lumi | Cinematographer | sets light, lens and colour, and writes each shot's final prompt |
+| 5 | **Lyra** (new) | Dialogue & Voice Director | casts a real voice for every character and directs each line — feeling, pace, breaths — for films, shorts, songs and presenter videos |
+| 6 | Echo | **Sound Designer** | realistic sound for every shot: effects and foley on the frame, the ambience of each place, music under the voices |
+| 7 | Remy | Editor | joins the shots into one film: order, timing and transitions |
+| 8 | Duke | Producer | picks the AI model for each shot and keeps the film within your credits |
+| 9 | Iris | Proofreader & QA | checks everything, then approves it or sends it back to be fixed |
+
+Lyra has her own icon (a microphone with sound waves) and colour. In nooi Studio she casts one voice per speaker and writes the
+lines shot by shot; "Voices, sound & music" makes one dialogue track in those voices plus a realistic effect per shot and the score.
+
+**Character voices.** Every character can have its own real voice from the voice library — chosen on the character page, heard
+first (a free sample, or one made once for 1 credit and free for everyone after) — and keeps it in dialogue, storyboards and
+films. What makes it sound real: one steady voice per character, a feeling per line, lines rewritten for the ear with breaths and
+pauses, the line before and after as context, a real room and even loudness.
+
+**3D World.** Realistic is real now, with only the picture engine connected: a 360° picture of the surroundings that also lights
+the world, a seamless photo of the ground, and photo cut-outs of the trees, palms, bushes and cacti in place of the built ones.
+It is the default once pictures can be made, with the price on the Create button. Real 3D objects and World Labs still join on top
+when they are connected.
+
+## 12. Next — from a look at how Higgsfield is organised
 
 Higgsfield's site could not be opened from the build machine, so this comes from its public help pages and reviews (structure
 and feature names only). Nothing of theirs is copied — no icons, pictures, templates, words or code; every page stays nooi's own.
@@ -227,7 +270,7 @@ and feature names only). Nothing of theirs is copied — no icons, pictures, tem
 | Product ads from a link | UGC ads (from photos) · Content plan (from a website) | **Product link → ad**: name, photos and price read from the product page |
 | Apps (one-tap tools) | All tools (v90): 25 tools | one-tap tools in the same page template: lip-sync studio, new angle of a picture, outfit change, product placement, portrait pack from selfies |
 | Canvas (chain models) | Recipes (saved chains of steps) | a canvas view of a recipe (steps as boxes you connect) |
-| Agent that plans a whole project | the Agent tab · nooi Studio's eight bots | — |
+| Agent that plans a whole project | the Agent tab · nooi Studio's nine agents | — |
 | Assets library | My library | — |
 | MCP / CLI for AI agents | Integrations · MCP | — |
 

@@ -84,10 +84,12 @@ export function buildTerrain(T, plan, tier, rnd) {
       if (d < pad) { const k = j * res + i; heights[k] = lerp(target, heights[k], smooth(0, pad, d)); } }
     return target;
   }
-  function mesh(roads = []) {
+  // o.plain: the base is white so a photo texture shows its own colours (roads, wet edges, rock and snow still paint over it)
+  function mesh(roads = [], o = {}) {
     const g = new T.PlaneGeometry(S, S, res - 1, res - 1); g.rotateX(-Math.PI / 2);
     const pos = g.attributes.position, col = new Float32Array(pos.count * 3), c = new T.Color(), pal = (GROUND[ground] || GROUND.grass).map((h) => new T.Color(h)), rock = new T.Color(ROCK), wet = new T.Color(WET), snow = new T.Color(SNOWCAP);
     if (plan.terrain.color) pal[0].set(plan.terrain.color); if (plan.terrain.color2) pal[1].set(plan.terrain.color2);
+    if (o.plain) { pal[0].set("#ffffff"); pal[1].set("#f2f2f2"); pal[2].set("#e6e6e6"); }
     const peak = Math.max(1, ...heights), road = new T.Color(ground === "asphalt" ? "#3b3e42" : ground === "sand" ? "#c9b07c" : "#a48f6e");
     for (let k = 0; k < pos.count; k++) {
       const x = pos.getX(k), z = pos.getZ(k), i = Math.round((x + S / 2) / step), j = Math.round((z + S / 2) / step), h = heights[j * res + i]; pos.setY(k, h);

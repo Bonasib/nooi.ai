@@ -174,7 +174,7 @@
 174|+ kunakili sauti kitaalamu
 175|lugha za manukuu, uigizaji sauti na sauti
 176|TIMU YAKO YA FILAMU YA AI
-177|Wataalamu wanane.
+177|Wataalamu tisa.
 178|Filamu moja.
 179|Kila mradi unashughulikiwa na timu ya mawakala wa AI — kuanzia mstari wa kwanza wa hati hadi ukaguzi wa mwisho wa ubora.
 180|Hugeuza wazo lako kuwa hati: matukio, mazungumzo na usimulizi.

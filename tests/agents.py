@@ -1,4 +1,4 @@
-# The 8 agents (v78c) on a fresh server with its own data + media, a mocked text AI (Anthropic Messages format), mocked web
+# The 9 agents (v78c; Lyra, the Dialogue & Voice Director, joined in v91) on a fresh server with its own data + media, a mocked text AI (Anthropic Messages format), mocked web
 # pages for the agents to learn from, a mocked video engine (generic WAN adapter) and a mocked ElevenLabs voice.
 # API: sources (admin) → learn (pages → skill cards; redirects checked; private hops refused; no duplicates on a second run)
 #      → plan (brief understanding, every agent's decision, the skills injected, shots + bible) → storyboard (scenes +
@@ -55,7 +55,7 @@ def stats(): return json.loads(urllib.request.urlopen(f"http://localhost:{LPORT}
 M = f"http://localhost:{LPORT}"
 
 def api_checks():
-    g = api("/v1/agents"); ok(len(g.get("agents", [])) == 8 and g["agents"][0]["name"] == "Quill" and "sources" in g, f"agents list {[a.get('name') for a in g.get('agents', [])]}")
+    g = api("/v1/agents"); ok(len(g.get("agents", [])) == 9 and g["agents"][0]["name"] == "Quill" and any(a["name"] == "Lyra" and a["role"] == "Dialogue & Voice Director" for a in g["agents"]) and "sources" in g, f"agents list {[a.get('name') for a in g.get('agents', [])]}")
     s = api("/v1/agents/sources", {"writer": [M + "/page/writer", "http://evil.example/x", "ftp://x"], "sound": M + "/page/sound", "cine": [M + "/redirect"], "proof": [M + "/private", M + "/binary"]}, "PUT")
     ok(s.get("sources", {}).get("writer") == [M + "/page/writer"] and s["sources"]["cine"] == [M + "/redirect"] and s["sources"]["casting"] == [], f"sources saved & filtered {s}")
     r = api("/v1/agents/learn", {}); log = r.get("log", [])
@@ -67,7 +67,7 @@ def api_checks():
     n1 = sum(len(a["skills"]) for a in g["agents"]); api("/v1/agents/learn", {}); n2 = sum(len(a["skills"]) for a in api("/v1/agents")["agents"]); ok(n1 == n2, f"no duplicates on a second run {n1}→{n2}")
     # plan: brief, every agent's decision, skills used, shots
     p = api("/v1/agents/plan", {"prompt": "A 20 second ad for my coffee shop", "task": "video", "dur": 20, "aspect": "9:16", "lang": "ar"})
-    ok(p.get("by") == "ai" and len(p.get("agents", {})) == 8 and p["brief"]["audience"] == "young adults" and len(p.get("shots", [])) == 2 and p["prompt"].startswith("Cinematic") and p.get("skills"), f"plan {p}")
+    ok(p.get("by") == "ai" and len(p.get("agents", {})) == 9 and p["brief"]["audience"] == "young adults" and len(p.get("shots", [])) == 2 and p["prompt"].startswith("Cinematic") and p.get("skills"), f"plan {p}")
     pl = stats()["plans"]; ok(pl and pl[-1]["n"] == 2 and pl[-1]["skills"] and pl[-1]["seed"] and pl[-1]["lang"] == "Arabic", f"plan prompt carries the skills {pl[-1:]}")
     p = api("/v1/agents/plan", {"prompt": "a red fox", "task": "image"}); ok(p.get("cost") == 0 and set(p.get("agents", {}).keys()) == {"writer", "casting", "cine", "producer", "proof"}, f"image plan {p.get('cost')} {list(p.get('agents', {}))}")
     ok(api("/v1/agents/plan", {"prompt": ""}).get("_status") == 400, "empty brief refused")
@@ -104,10 +104,10 @@ async def ui(p, w):
     ok(await wait_for("()=>document.querySelectorAll('#agstrip .agb').length===1&&AG.cur==='writer'", 5), f"{tag}: typing shows Quill")
     # sending: the icons appear one at a time
     await E("()=>{window.__seen=[];const iv=setInterval(()=>{const n=document.querySelectorAll('#agstrip .agb').length;if(window.__seen[window.__seen.length-1]!==n)window.__seen.push(n)},60);window.__iv=iv;document.querySelector('.hfsend').click()}")
-    ok(await wait_for("()=>AG.shown.length===8&&AG.shown[7]==='proof'", 40), f"{tag}: all 8 agents appeared")
+    ok(await wait_for("()=>AG.shown.length===9&&AG.shown[8]==='proof'", 40), f"{tag}: all 9 agents appeared")
     r["seen"] = await E("()=>{clearInterval(window.__iv);return window.__seen}")
-    ok(r["seen"] == sorted(r["seen"]) and len(r["seen"]) >= 5 and r["seen"][-1] == 8, f"{tag}: icons appear one at a time {r['seen']}")
-    r["order"] = await E("()=>AG.shown.join(',')"); ok(r["order"] == "writer,casting,director,cine,sound,editor,producer,proof", f"{tag}: order {r['order']}")
+    ok(r["seen"] == sorted(r["seen"]) and len(r["seen"]) >= 5 and r["seen"][-1] == 9, f"{tag}: icons appear one at a time {r['seen']}")
+    r["order"] = await E("()=>AG.shown.join(',')"); ok(r["order"] == "writer,casting,director,cine,voice,sound,editor,producer,proof", f"{tag}: order {r['order']}")
     r["notes"] = await E("()=>[AG.note.director,AG.note.producer]"); ok(r["notes"][0] == "decision of director" and r["notes"][1], f"{tag}: decisions shown {r['notes']}")
     r["job"] = await E("()=>{const j=S.jobs.find(x=>x.kind==='video'&&x.meta&&x.meta.agents);return j&&[j.prompt.slice(0,10),j.title,(j.meta.skills||[]).length>0,j.meta.neg]}")
     ok(r["job"] and r["job"][0] == "Cinematic " and r["job"][1] == "A 20 second ad for my coffee shop" and r["job"][2] and r["job"][3] == "blurry, text artifacts", f"{tag}: job uses the agents' plan {r['job']}")
@@ -128,7 +128,7 @@ async def ui(p, w):
     r["vid"] = await E("()=>{const j=S.jobs.filter(x=>x.kind==='video'&&x.meta&&x.meta.storyboard).pop();return j&&[j.meta.parts,j.meta.partImages.length,j.meta.shots.length,j.dur]}")
     ok(r["vid"] == [4, 4, 4, 20], f"{tag}: video from the storyboard {r['vid']}")
     # Film crew: what the agents learned
-    await E("()=>{AGD.loaded=false;go('crew')}"); ok(await wait_for("()=>document.querySelectorAll('.agcard').length===8", 15), f"{tag}: agents' skills on the Film crew page")
+    await E("()=>{AGD.loaded=false;go('crew')}"); ok(await wait_for("()=>document.querySelectorAll('.agcard').length===9", 15), f"{tag}: agents' skills on the Film crew page")
     r["crew"] = await E("()=>[document.querySelectorAll('.agcard li').length,!!document.querySelector('#agsrc'),!!document.querySelector('[data-act=ag-learn]')]"); ok(r["crew"][0] >= 4 and r["crew"][1] and r["crew"][2], f"{tag}: cards + admin sources {r['crew']}")
     ok(not errs, f"{tag}: page errors {errs}")
     await b.close(); return r

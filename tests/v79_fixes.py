@@ -176,20 +176,20 @@ async def ui(p, w, lang):
     await pg.wait_for_timeout(2200)
     r["looks"] = await E("()=>{const c=S.chars[S.charSel];return [!!c.autoLook79,!(c.looks||[]).includes(c.lookSeed),document.querySelectorAll('.looks .fail79 [data-act=\"job-retry\"]').length,document.querySelectorAll('.looks canvas[data-ref^=\"look:\"]').length,!!document.querySelector('.looks .veil.v80 .star79')]}")
     ok(r["looks"] == [True, True, 1, 0, True], f"{tag}: looks — failed says so with Try again, real look picked, drawn previews hidden, star while rendering {r['looks']}")
-    # the sketch turns into what was drawn: AI vision reads it, the AI picture fills the output panel
+    # the sketch (v91): nothing happens while you draw; "Preview with AI" — AI vision reads the drawing (free), writes what it is in
+    # the box, and the picture is made from what it saw; the drawing itself never changes
     n0 = len(posted)
-    await E("()=>{S.sketch.prompt='';S.sketch.target='vehicle';S.sketch.aiCap=250;go('sketch');renderAll()}"); await pg.wait_for_timeout(500)
-    r["skmode"] = await E("()=>lskMode()"); ok(r["skmode"] == "pause", f"{tag}: the sketch makes real pictures by default {r['skmode']}")
+    await E("()=>{S.sketch.prompt='';S.sketch.n91=1;go('sketch');renderAll()}"); await pg.wait_for_timeout(500)
     await E("()=>{SK.strokes=[{tool:'pen',color:'#000',size:6,pts:[[.2,.6,.6],[.5,.5,.6],[.8,.6,.6]]},{tool:'pen',color:'#000',size:6,pts:[[.3,.8,.6],[.4,.7,.6],[.6,.8,.6]]}];skRedraw()}")
+    await pg.wait_for_timeout(1500); ok(not [x for x in posted[n0:] if x.get("kind") == "image"], f"{tag}: drawing alone makes no pictures (no credits spent)")
+    await E("()=>document.querySelector('[data-act=sk91-go]').click()")
     for _ in range(40):
         await pg.wait_for_timeout(300)
-        if await E("()=>SKAI.state==='done'"): break
+        if [x for x in posted[n0:] if x.get("kind") == "image"]: break
     sk = [x for x in posted[n0:] if x.get("kind") == "image"]
-    r["sketch"] = await E("()=>{const c=$('#skout'),d=c.getContext('2d').getImageData(c.width/2|0,c.height/2|0,1,1).data;return [SKAI.state,c.dataset.ai79,($('#skai79')||{}).textContent,[d[0],d[1],d[2]]]}")
+    r["sketch"] = await E("()=>[S.sketch.prompt,($('#skwhat91')||{}).value,SK.strokes.length,!!document.querySelector('#sk91res .dfig')]")
     ok(len(sk) == 1 and "a red sports car next to a coiled green snake" in sk[0]["prompt"] and "skImg" in (sk[0].get("inputs") or {}), f"{tag}: the picture is made from what the AI saw {[x.get('prompt','')[:60] for x in sk]}")
-    ok(r["sketch"][0] == "done" and r["sketch"][1] == "/media/ai.png" and ("سيارة وثعبان" in r["sketch"][2]) and r["sketch"][3][0] > 180 and r["sketch"][3][1] < 80, f"{tag}: the AI picture fills the output panel {r['sketch']}")
-    await E("()=>{SK.strokes.push({tool:'pen',color:'#000',size:6,pts:[[.1,.1,.6],[.2,.2,.6]]});skRedraw()}"); await pg.wait_for_timeout(500)
-    ok(await E("()=>SKAI.state===''&&!$('#skout').dataset.ai79"), f"{tag}: drawing more goes back to the live preview")
+    ok("سيارة وثعبان" in (r["sketch"][0] or "") and "سيارة وثعبان" in (r["sketch"][1] or "") and r["sketch"][2] == 2 and r["sketch"][3], f"{tag}: what the AI saw is written in the box, the drawing stays, the preview is listed {r['sketch']}")
     # 3D World: the plan from the text AI, built on the device; a real photo of the view is made in the cloud from one view
     n0 = len(posted)
     await E("()=>go('w3ai')"); ok(await wait_for(E, "()=>S.view==='world'&&typeof NW!=='undefined'&&!!NW.E&&(!!NW.W||!!NW.empty87)&&!NW.busy", 40), f"{tag}: the old 3D world page opens the 3D World")

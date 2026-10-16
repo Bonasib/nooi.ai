@@ -171,7 +171,7 @@ async def ui(p, w, lang):
       const genre=[...document.querySelectorAll('[data-set="crew.brief.genre"] svg')].map(s=>/^<circle cx="12" cy="12" r="3"/.test(s.innerHTML.trim()));
       return {old:!!document.querySelector('.newtag'),tags,roles,rows:Object.values(rows).map(a=>Math.max(...a)-Math.min(...a)),out,genre,dashed:cards.some(c=>getComputedStyle(c).borderStyle==='dashed')}}""")
     K = r["crew"]
-    ok(not K["old"] and len(K["tags"]) == 2 and all(K["tags"]), f"{tag}: the New pill sits inside its card {K}")
+    ok(not K["old"] and len(K["tags"]) == 3 and all(K["tags"]), f"{tag}: the New pill sits inside its card {K}")
     ok(all(K["roles"]) and all(x <= 2 for x in K["rows"]) and not K["dashed"], f"{tag}: whole-word roles, equal cards in a row {K}")
     ok(K["out"] == 0 or phone, f"{tag}: the whole crew fits in one row on a computer {K}")
     ok(K["genre"] and not any(K["genre"]), f"{tag}: every genre has its own icon {K['genre']}")

@@ -119,6 +119,8 @@ export function cleanPlan(j) {
     spawn: { at: xz(j.spawn && j.spawn.at, lim) || [0, P.indoor ? size * 0.3 : Math.min(28, lim * 0.35)], look: xz(j.spawn && j.spawn.look, lim) || [0, 0] },
     // AI-made parts (filled in by the page when they arrive)
     pano: typeof j.pano === "string" && /^(\/media\/|https?:\/\/)/.test(j.pano) ? j.pano.slice(0, 500) : undefined,
+    groundTex: typeof j.groundTex === "string" && /^(\/media\/|https?:\/\/)/.test(j.groundTex) ? j.groundTex.slice(0, 500) : undefined,
+    billboards: j.billboards && typeof j.billboards === "object" ? Object.fromEntries(Object.entries(j.billboards).filter(([k, v]) => TYPES[k] && typeof v === "string" && /^(\/media\/|https?:\/\/)/.test(v)).slice(0, 6).map(([k, v]) => [k, v.slice(0, 500)])) : undefined,
     models: (Array.isArray(j.models) ? j.models : []).slice(0, 8).filter((m) => m && typeof m.url === "string" && /^(\/media\/|https?:\/\/|blob:)/.test(m.url)).map((m) => ({ url: m.url.slice(0, 500), i: Math.round(num(m.i, 0, 59, 0)), name: txt(m.name, 40) })),
     splat: j.splat && typeof j.splat === "object" ? { lo: /^(\/media\/|https?:\/\/)/.test(j.splat.lo || "") ? String(j.splat.lo).slice(0, 500) : undefined, hi: /^(\/media\/|https?:\/\/)/.test(j.splat.hi || "") ? String(j.splat.hi).slice(0, 500) : undefined, collider: /^(\/media\/|https?:\/\/)/.test(j.splat.collider || "") ? String(j.splat.collider).slice(0, 500) : undefined } : undefined
   };

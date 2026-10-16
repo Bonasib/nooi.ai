@@ -30,9 +30,10 @@ SEL = {"format": '[data-set="draft.aspect"],[data-set="img.aspect"],[data-set="s
   "style": '[data-set="draft.style"],[data-set="img.style"],[data-set="story.style"],[data-set="char.art"],[data-set="drw.style"],[data-set="sketch.style"]',
   "look": '[data-set="tools.grade.preset"],[data-act="edx-look"]', "effects": '[data-toggle^="tools.edit.fx."],[data-act="edx-vfx"]',
   "overlay": '[data-act="edv-add"]', "transition": '[data-set="ss83.tr"],[data-set="edclip.trans"]', "textfx": '[data-act="edx-tfx"]'}
+# v91: the Sketch page is only the drawing, what it is and one AI button (no style or format pickers; Draw a scene opens it)
 PAGES = [("video", ["style", "format", "move"]), ("image", ["style", "format"]), ("story", ["format", "style", "move"]), ("cinema", ["camera", "lens", "move", "light", "format"]),
-  ("crew", ["format"]), ("draw", ["style", "format"]), ("recipes", ["format"]), ("slideshow", ["format", "move", "transition"]), ("ugcads", ["format"]),
-  ("chars", ["style"]), ("sketch", ["style"]), ("grade", ["look"]), ("edit:color", ["look", "effects"]), ("edit:vfx", ["overlay"]), ("edit:look", ["effects"]), ("edit:clip", ["transition"])]
+  ("crew", ["format"]), ("recipes", ["format"]), ("slideshow", ["format", "move", "transition"]), ("ugcads", ["format"]),
+  ("chars", ["style"]), ("grade", ["look"]), ("edit:color", ["look", "effects"]), ("edit:vfx", ["overlay"]), ("edit:look", ["effects"]), ("edit:clip", ["transition"])]
 STATE = """(sel)=>{const vis=[...document.querySelectorAll(sel)].filter(b=>b.offsetParent!==null&&!b.closest('#modalRoot'));
   const chips=[...document.querySelectorAll('#main .pk84c')].map(c=>({f:c.dataset.pk84,v:c.querySelector('.pk84v').textContent,pop:c.getAttribute('aria-haspopup'),al:c.getAttribute('aria-label'),row:c.parentElement.className}));
   return {vis:vis.length,chips}}"""

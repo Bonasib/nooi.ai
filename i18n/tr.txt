@@ -174,7 +174,7 @@
 174|+ profesyonel ses klonlama
 175|altyazı, seslendirme ve ses dili
 176|YAPAY ZEKÂ FİLM EKİBİNİZ
-177|Sekiz uzman.
+177|Dokuz uzman.
 178|Tek film.
 179|Her projeyi bir yapay zekâ ajan ekibi yürütür — senaryonun ilk satırından son kalite kontrolüne kadar.
 180|Fikrinizi senaryoya dönüştürür: sahneler, diyaloglar ve anlatım.

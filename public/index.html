@@ -9281,6 +9281,10 @@ edExport=(o=>async function(){if(recording)return o();const coURL=URL.createObje
   try{const checks=await vrCheck(master,exp,want),r={checks,at:Date.now(),deliv:""};
     if(S.ed.lastDeliverable&&API.mode==="server"){try{const pr=await API.req("/v1/media/probe",{json:{url:S.ed.lastDeliverable.url}}),vv=pr.video,want2={prores:"prores",dnxhr:"dnxhd",hevc:"hevc",mp4:"h264",webm:"vp9",gif:"gif"}[want];
       r.deliv=(vv?(vv.codec+(vv.profile?" "+vv.profile:"")+" · "+vv.width+"×"+vv.height+" · "+vv.fps+" fps"):"")+(pr.audio?" · "+pr.audio.codec+" "+pr.audio.rate/1000+" kHz":"")+" · "+pr.duration.toFixed(1)+" s";
+      // the length that counts is the delivered file's (measured by the server); the browser's estimate of its own recording
+      // drifts by up to a second and warned about correct videos
+      const dc=checks.find(c=>c.id==="duration");if(dc&&isFinite(pr.duration)&&pr.duration>0){const dd=Math.abs(pr.duration-exp.secs),good=dd<=Math.max(.6,exp.secs*.05);
+        dc.lvl=good?"ok":"bad";dc.en=`Length ${pr.duration.toFixed(1)} s (timeline ${exp.secs.toFixed(1)} s)`;dc.ar=`المدة ${pr.duration.toFixed(1)} ث (الخط الزمني ${exp.secs.toFixed(1)} ث)`;dc.fix=good?null:"reexport"}
       if(want2&&vv)checks.push({id:"file",lvl:vv.codec===want2&&(want==="gif"||vv.width===exp.w&&vv.height===exp.h)?"ok":"bad",en:"Delivered file: "+r.deliv,ar:"الملف المسلَّم: "+r.deliv,fix:vv.codec===want2?null:"reexport"});
       if(want==="wav")checks.push({id:"file",lvl:pr.audio&&pr.audio.codec.startsWith("pcm")?"ok":"bad",en:"Delivered file: "+r.deliv,ar:"الملف المسلَّم: "+r.deliv})}catch(e){}}
     r.sheet=await vrContact(checks.frames);
@@ -12641,6 +12645,510 @@ hfStudioPlanHTML=function(){const H=S.hf,t=H.tab;if(t!=="video"&&t!=="image")ret
 [dir="rtl"] .hubtabs.fs90{-webkit-mask-image:linear-gradient(to left,transparent,#000 28px);mask-image:linear-gradient(to left,transparent,#000 28px)}
 [dir="rtl"] .hubtabs.fs90.fe90{-webkit-mask-image:linear-gradient(to left,transparent,#000 28px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to left,transparent,#000 28px,#000 calc(100% - 28px),transparent)}
 `;document.head.appendChild(st)})();
+
+/* ================= v91: VIDEO EDITOR — keyframes that animate, split/duplicate keep their own settings, AI commands (the free ones run at once, the paid ones show their price first), extend a shot ================= */
+ICONS.extend91='<path d="M3 12h12"/><path d="M11 7l5 5-5 5"/><path d="M20 5v14"/>';
+/* keyframes: after "Add keyframe", changing Scale, Position or Rotation at another moment adds a keyframe there (before, the
+   second change overwrote the first keyframe and nothing moved). Until then the sliders set the whole clip. */
+edxSetKf=function(c,key,val){c.mo=c.mo||{kf:[],ease:"smooth"};const kf=c.mo.kf,tl=+edxLocal(c).toFixed(2);
+  if(!c.mo.anim&&kf.length<2){if(!kf.length)kf.push({t:tl,s:1,x:0,y:0,r:0});kf.forEach(k=>k[key]=val);return}
+  let k=kf.find(q=>Math.abs(q.t-tl)<.06);if(!k){k=Object.assign({t:tl},edxMo(c,tl));kf.push(k);kf.sort((a,b)=>a.t-b.t)}k[key]=val};
+edxZoomPreset=(o=>function(c,p){o(c,p);c.mo.kf.sort((a,b)=>a.t-b.t);c.mo.anim=c.mo.kf.length>1})(edxZoomPreset);
+const kfPct91=(t,d)=>(clamp(t/Math.max(.01,d),0,1)*100).toFixed(2)+"%";
+function kfBar91(c){const d=clipDur(c),tl=edxLocal(c),kf=(c.mo&&c.mo.kf)||[];
+  return'<div class="kfbar kf91" dir="ltr" data-act="kf91-seek" title="'+esc(L("Tap to move the playhead","اضغط لتحريك المؤشر"))+'">'+kf.map(k=>'<button class="kfd'+(Math.abs(k.t-tl)<.06?" on":"")+'" data-act="edx-kf-go" data-v="'+k.t+'" style="left:'+kfPct91(k.t,d)+'" aria-label="'+esc(L("Keyframe at ","إطار مفتاحي عند ")+k.t.toFixed(2)+L("s","ث"))+'"></button>').join("")+'<i style="left:'+kfPct91(tl,d)+'"></i></div>'}
+function kfRow91(c){const kf=(c.mo&&c.mo.kf)||[],tl=edxLocal(c),near=kf.some(k=>Math.abs(k.t-tl)<.06),anim=!!(c.mo&&(c.mo.anim||kf.length>1));
+  return'<div class="row kfrow91" dir="ltr" style="margin-top:8px"><button class="btn sm ghost" data-act="kf91-nav" data-v="-1" '+(kf.some(k=>k.t<tl-.06)?"":"disabled")+' aria-label="'+esc(L("Previous keyframe","الإطار المفتاحي السابق"))+'">'+ic("prev")+'</button><button class="btn sm" data-act="edx-kf-add" '+(near&&anim?"disabled":"")+">"+ic("kf")+L("Add keyframe","أضف إطاراً مفتاحياً")+'</button><button class="btn sm ghost" data-act="edx-kf-del" '+(near?"":"disabled")+">"+ic("trash")+L("Delete","احذف")+'</button><button class="btn sm ghost" data-act="kf91-nav" data-v="1" '+(kf.some(k=>k.t>tl+.06)?"":"disabled")+' aria-label="'+esc(L("Next keyframe","الإطار المفتاحي التالي"))+'">'+ic("next")+"</button></div>"+
+    '<p class="small dim" id="kfhint91" style="margin:6px 0 0">'+(anim?L("Move the playhead, then change Scale, Position or Rotation — a keyframe is added there by itself.","حرّك المؤشر ثم غيّر الحجم أو الموضع أو الدوران — يُضاف إطار مفتاحي هناك تلقائياً."):L("The sliders change the whole clip. Tap Add keyframe to animate it.","المنزلقات تغيّر المقطع كله. اضغط «أضف إطاراً مفتاحياً» لتحريكه."))+"</p>"}
+edxMotionPanel=(o=>function(){let h=o();const c=edxPick();if(!c)return h;const kf=(c.mo&&c.mo.kf)||[];
+  h=h.replace(/<span class="lbl">[^<]*<\/span><div class="kfbar" dir="ltr">[\s\S]*?<\/div>/,'<span class="lbl" id="kfn91">'+L("Keyframes","الإطارات المفتاحية")+" · "+kf.length+"</span>"+kfBar91(c));
+  return h.replace(/<div class="row" style="margin-top:8px"><button class="btn sm" data-act="edx-kf-add">[\s\S]*?<\/div>/,kfRow91(c))})(edxMotionPanel);
+EDX_PANELS.motion=edxMotionPanel;
+function kfRefresh91(){const c=edxSel();if(!c)return;const b=document.querySelector(".edxpanel .kfbar");if(b)b.outerHTML=kfBar91(c);const r=document.querySelector(".kfrow91");if(r){const h=$("#kfhint91");if(h)h.remove();r.outerHTML=kfRow91(c)}
+  const n=$("#kfn91");if(n)n.textContent=L("Keyframes","الإطارات المفتاحية")+" · "+((c.mo&&c.mo.kf)||[]).length}
+document.addEventListener("input",e=>{const t=e.target;if(S.view==="edit"&&t&&t.dataset&&/^mo\./.test(t.dataset.edx||""))kfRefresh91()});
+window.addEventListener("click",e=>{if(S.view!=="edit"||!e.target.closest)return;const a=e.target.closest('[data-act="edx-kf-add"],[data-act="kf91-nav"],[data-act="kf91-seek"]');if(!a)return;const c=edxSel();if(!c)return;const E=S.ed,st=edStarts()[E.clips.indexOf(c)]||0,d=clipDur(c);
+  if(a.dataset.act==="edx-kf-add"){c.mo=c.mo||{kf:[],ease:"smooth"};c.mo.anim=true;return}
+  e.stopImmediatePropagation();ED.playing=false;const kf=(c.mo&&c.mo.kf)||[],tl=edxLocal(c);
+  if(a.dataset.act==="kf91-nav"){const k=+a.dataset.v<0?[...kf].reverse().find(q=>q.t<tl-.06):kf.find(q=>q.t>tl+.06);if(k)ED.t=st+Math.min(k.t,d-.01)}
+  else{const r=a.getBoundingClientRect();ED.t=st+clamp((e.clientX-r.left)/Math.max(1,r.width),0,1)*(d-.01)}
+  renderView()},true);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="edx-kf-del"]');if(!a)return;const c=edxSel();if(c&&c.mo&&!c.mo.kf.length&&c.mo.anim){c.mo.anim=false;renderView()}});
+/* the playhead line on the keyframe bar follows playback */
+(function kfLoop91(){requestAnimationFrame(kfLoop91);if(S.view!=="edit"||!S.ed||S.ed.tab!=="motion")return;const b=document.querySelector(".edxpanel .kfbar>i");if(!b)return;const c=edxSel();if(c)b.style.left=kfPct91(edxLocal(c),clipDur(c))})();
+/* split and duplicate: each piece gets its own copy of keyframes, colour and effects (before, both pieces shared them, so
+   editing one changed the other), keyframes are cut at the split point, and an uploaded clip's file is kept for the new piece */
+function edCopyMedia91(c,b){const m=M["c_"+c.id];if(!m||c.src.k!=="upload")return;M["c_"+b.id]=m.type==="video"?cloneVideo(m):m;
+  if(m.file&&S.mediaKeys&&S.mediaKeys["c_"+c.id]){S.mediaKeys["c_"+b.id]=Object.assign({},S.mediaKeys["c_"+c.id]);IDB.put("c_"+b.id,m.file)}}
+function edSplit91(c,tAbs){const E=S.ed,i=E.clips.indexOf(c);if(i<0)return false;const ts=tAbs-edStarts()[i],lt=c.in+ts*(c.speed||1);if(lt<=c.in+.1||lt>=c.out-.1)return false;
+  const b=JSON.parse(JSON.stringify(c));b.id=uid();b.in=lt;c.out=lt;b.trans=c.trans;c.trans="cut";
+  const kf=c.mo&&c.mo.kf;if(kf&&kf.length){const mid=edxMo(c,ts),anim=kf.length>1||c.mo.anim;
+    if(anim){c.mo.kf=kf.filter(k=>k.t<ts-.01).concat([Object.assign({t:+ts.toFixed(2)},mid)]);b.mo.kf=[Object.assign({t:0},mid)].concat(b.mo.kf.filter(k=>k.t>ts+.01).map(k=>Object.assign(k,{t:+(k.t-ts).toFixed(2)})))}
+    else{c.mo.kf=[Object.assign({t:0},mid)];b.mo.kf=[Object.assign({t:0},mid)]}}
+  E.clips.splice(i+1,0,b);edCopyMedia91(c,b);return b}
+function edDup91(c){const E=S.ed,i=E.clips.indexOf(c);if(i<0)return false;const b=JSON.parse(JSON.stringify(c));b.id=uid();E.clips.splice(i+1,0,b);edCopyMedia91(c,b);return b}
+window.addEventListener("click",e=>{if(S.view!=="edit"||!e.target.closest)return;const a=e.target.closest('[data-act="ed-split"],[data-act="ed-dup"]');if(!a||a.disabled)return;const E=S.ed,c=E.clips.find(x=>x.id===E.sel);if(!c)return;
+  e.stopImmediatePropagation();e.preventDefault();ED.playing=false;
+  if(a.dataset.act==="ed-dup"){const b=edDup91(c);if(b)E.sel=b.id}else if(!edSplit91(c,ED.t)){toast(L("Move the playhead inside the selected clip.","حرّك المؤشر داخل المقطع المحدد."));return}
+  persist();renderView()},true);
+/* keyframe marks on the clip in the timeline, and a moving stripe while a shot is being extended */
+const EXT91={};   // job id → the clip being extended
+VIEWS.edit=(o=>function(){let h=o();const E=S.ed;if(!E||!Array.isArray(E.clips))return h;const pps=E.zoom,busy={};
+  for(const id of Object.keys(EXT91)){const j=S.jobs.find(x=>x.id===id);if(j&&j.status!=="complete"&&j.status!=="failed")busy[EXT91[id]]=1;else if(!j||j.status==="failed")delete EXT91[id]}
+  E.clips.forEach(c=>{const kf=c.mo&&c.mo.kf,on=kf&&(kf.length>1||c.mo.anim);if(!on&&!busy[c.id])return;
+    const add=(on?kf.map(k=>'<i class="kfm91" style="left:'+(k.t*pps).toFixed(1)+'px"></i>').join(""):"")+(busy[c.id]?'<b class="ext91p">+5'+L("s","ث")+"</b>":"");
+    h=h.replace(new RegExp('(data-clip="'+String(c.id).replace(/[^\w-]/g,"")+'"[^>]*>)'),"$1"+add)});
+  return h})(VIEWS.edit);
+
+/* ---- extend a shot: the clip's last frame becomes the first frame of a new 5-second shot that continues it, placed right after ---- */
+function edAspect91(kind){const f=fmt(),r=f[2]/f[3];return r<.7?"9:16":r<1.15?(kind==="image"&&r<.9?"4:5":"1:1"):"16:9"}
+function edExtModel91(c){const b=c&&c.src&&c.src.k==="job"?S.jobs.find(x=>x.id===c.src.job):null;return b&&b.kind==="video"&&MODELS[b.model]&&engMax(b.model)>=5?b.model:(hfStudio("continue the shot",5)||{shots:[{m:"seedance"}]}).shots[0].m}
+const edExtCost91=c=>vcost(edExtModel91(c),5);
+async function edExtend91(c){if(!c){toast(L("Add a clip first.","أضف مقطعاً أولاً."));return false}
+  if(Object.values(EXT91).includes(c.id)){toast(L("This shot is already being extended.","هذه اللقطة قيد المدّ بالفعل."));return false}
+  const E=S.ed,i=E.clips.indexOf(c),mdl=edExtModel91(c),m=clipMedia(c);ED.playing=false;ED.t=edStarts()[i]+Math.max(0,clipDur(c)-.05);edSetPick("clip",c.id);
+  await new Promise(r=>setTimeout(r,90));if(m&&m.el&&m.el.seeking)await new Promise(r=>{const t=setTimeout(r,1500);m.el.addEventListener("seeked",()=>{clearTimeout(t);r()},{once:true})});
+  const f=await edFrameFile();if(!f){toast(L("Couldn't read the clip's last frame.","تعذّرت قراءة آخر إطار من المقطع."),{type:"warn"});return false}
+  const keep=M.vStart;M.vStart={type:"image",file:f,url:URL.createObjectURL(f),name:"last-frame.jpg"};
+  const base=c.src.k==="job"?S.jobs.find(x=>x.id===c.src.job):null,prompt=(base&&base.prompt?base.prompt+". ":"")+"Continue this shot from this exact frame: the same people, place, light and camera movement, with no cut — what happens next, naturally.";
+  const j=addJob({kind:"video",prompt,title:L("Extended: ","امتداد: ")+String(clipName(c)).slice(0,50),model:mdl,dur:5,aspect:edAspect91("video"),cost:vcost(mdl,5),meta:{cat:hfCat(prompt),start:true,edCmd:"extend"}});setTimeout(()=>{M.vStart=keep},60e3);
+  if(!j)return false;EXT91[j.id]=c.id;EDP[j.id]={it:"extend",after:c.id,t:ED.t};S.edCmd="";persist();renderView();
+  toast(L("Extending the shot — the next 5 seconds land right after it.","تُمدّ اللقطة — ستُضاف الثواني الخمس التالية بعدها مباشرة."),{type:"info",ms:4500});return true}
+edUseJob=(o=>async function(j,opt){const r=await o(j,opt),x=j&&EXT91[j.id];if(x){delete EXT91[j.id];const c=S.ed.clips.find(q=>q.id===x);if(r&&c){c.trans="cut";persist();if(S.view==="edit")renderView()}}return r})(edUseJob);
+edToolbar=(o=>function(){const h=o(),c=S.ed.clips.find(x=>x.id===S.ed.sel);
+  return h.replace(/(<button class="tb" data-act="ed-move" data-d="1")/,tb("ed-extend91",ICONS.extend91,L("Extend","مدّ")+(c?" · "+edExtCost91(c)+" cr":""),(c?"":"disabled ")+'data-paid="1"')+"$1")})(edToolbar);
+VIEWS.edit=(o=>function(){let h=o();const E=S.ed;if(E.tab!=="clip")return h;const c=E.clips.find(x=>x.id===E.sel);if(!c)return h;
+  const card='<span class="lbl">'+L("Extend with AI","المدّ بالذكاء الاصطناعي")+'</span><div class="ext91"><p class="small dim" style="margin:0">'+L("Continues this shot from its last frame — same people, place and light — and puts the next 5 seconds right after it.","يكمل هذه اللقطة من آخر إطار فيها — الأشخاص والمكان والضوء نفسها — ويضع الثواني الخمس التالية بعدها مباشرة.")+'</p><button class="btn sm primary" data-act="ed-extend91">'+ic("extend91")+L("Extend shot · 5s","مدّ اللقطة · 5ث")+'<span class="cost">'+edExtCost91(c)+" cr</span></button></div>";
+  return h.replace('<span class="lbl">'+L("Precision edit","تحرير دقيق")+"</span>",card+"$&")})(VIEWS.edit);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="ed-extend91"]');if(!a||a.disabled)return;e.stopImmediatePropagation();const E=S.ed;edExtend91(E.clips.find(x=>x.id===E.sel)||edSelClip())},true);
+
+/* ---- AI commands, InVideo-style: say what to change. Edits the editor can do itself run at once, free, with undo
+   ("delete clip 2", "make it vertical", "slow motion", "fade transitions between all clips", "music quieter",
+   "captions on", "black and white", "extend this shot"); new pictures, video, music, voice and sound go to the AI and
+   the Go button shows the price before you press it. ---- */
+const NUM91={one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,first:1,second:2,third:3,fourth:4,fifth:5,sixth:6,last:-1,
+  "الأول":1,"الاول":1,"الأولى":1,"الاولى":1,"الثاني":2,"الثانية":2,"الثالث":3,"الثالثة":3,"الرابع":4,"الرابعة":4,"الخامس":5,"الخامسة":5,"السادس":6,"السادسة":6,"الأخير":-1,"الاخير":-1,"الأخيرة":-1,"الاخيرة":-1};
+const edNorm91=p=>String(p||"").toLowerCase().replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[ً-ْـ]/g,"").replace(/[«»"“”]/g,"").replace(/[.!?؟،,؛;]+\s*$/,"").replace(/\s+/g," ").trim()
+  .replace(/^(please|pls|من فضلك|لو سمحت|رجاء)\s+/,"").replace(/\s+(please|من فضلك|لو سمحت)$/,"");
+/* finds "clip 2", "the second shot", "the last clip", "this clip", "المقطع 2", "اللقطة الأخيرة"… → {r: the rest, n: number, -1 = last, 0 = the selected one} */
+function edRef91(s){let n=0,m=s.match(/(?:^|\s)(?:(first|second|third|fourth|fifth|sixth|last|selected|current) )?(?:clip|shot|scene)(?: (?:number |no\.? |#)?(\d+|one|two|three|four|five|six|seven|eight|nine|ten))?(?=\s|$)/);
+  if(m){n=m[2]?(+m[2]||NUM91[m[2]]):m[1]&&NUM91[m[1]]!=null?NUM91[m[1]]:0}
+  else{m=s.match(/(?:^|\s)(?:هذا |هذه )?(?:المقطع|اللقطة|المشهد|مقطع|لقطة|مشهد)(?: (?:رقم )?(\d+))?(?: (الأولى|الاولى|الأول|الاول|الثانية|الثاني|الثالثة|الثالث|الرابعة|الرابع|الخامسة|الخامس|السادسة|السادس|الأخيرة|الاخيرة|الأخير|الاخير|المحددة|المحدد|الحالية|الحالي))?(?=\s|$)/);if(m)n=m[1]?+m[1]:m[2]&&NUM91[m[2]]!=null?NUM91[m[2]]:0}
+  const r=(m?s.replace(m[0]," "):s).replace(/(^|\s)(the|a|an|it|this|that|one|to|for|of|at|إلى|الى|على|في|لـ)(?=\s|$)/g," ").replace(/\s+/g," ").trim();return{r,n,has:!!m}}
+function edClip91(n){const C=S.ed.clips;if(!C.length)throw[L("Add a clip first.","أضف مقطعاً أولاً.")];if(!n)return edSelClip();const i=n<0?C.length-1:n-1;
+  if(!C[i])throw[L("There's no clip "+n+" — the timeline has "+C.length+".","لا يوجد مقطع "+n+" — في الخط الزمني "+C.length+".")];return C[i]}
+const LOOK91=[[/^(black (and|&) white|b ?& ?w|b\/w|gr[ae]yscale|noir|أبيض وأسود|ابيض واسود|أبيض واسود|ابيض وأسود|أبيض_أسود)$/,"noir"],[/^(warm|warmer|دافئ[ةا]?|أدفأ|ادفأ)$/,"warm"],[/^(cool|cooler|cold|بارد[ةا]?|أبرد|ابرد)$/,"cool"],
+  [/^(film|cinematic|movie|سينمائي[ةا]?)$/,"film"],[/^(vintage|retro|old|كلاسيكي[ةا]?|قديم[ةا]?|عتيق[ةا]?)$/,"vintage"],[/^(teal (and|&) orange|تيل وبرتقالي)$/,"teal"],[/^(no filter|original colou?rs?|natural|بدون فلتر|ألوان أصلية|الوان اصلية|طبيعي[ةا]?)$/,"none"]];
+const TRW91={fade:"fade",crossfade:"fade","cross fade":"fade",smooth:"fade",soft:"fade",dip:"dip","dip black":"dip",black:"dip",slide:"slide",zoom:"zoom",whip:"whip",spin:"spin",flash:"flash",glitch:"glitch",wipe:"wipe",blur:"blurx",
+  "تلاشي":"fade","ناعم":"fade","ناعمة":"fade","للأسود":"dip","انزلاق":"slide","تقريب":"zoom","خاطف":"whip","دوران":"spin","وميض":"flash","تشويش":"glitch","مسح":"wipe","ضبابي":"blurx"};
+const ZOOM91=[[/^(slow zoom in|zoom in slowly|ken burns|zoom in|تقريب بطيء|قرب ببطء|تقريب)$/,"kenin"],[/^(slow zoom out|zoom out slowly|zoom out|إبعاد بطيء|ابعاد بطيء|أبعد ببطء|ابعد ببطء|إبعاد|ابعاد)$/,"kenout"],
+  [/^(punch[- ]?in|punch zoom|تقريب مفاجئ)$/,"punch"],[/^(snap zoom|crash zoom|تقريب خاطف)$/,"snap"],[/^(pan left|تحريك لليسار)$/,"panl"],[/^(pan right|تحريك لليمين)$/,"panr"],[/^(tilt up|إمالة لأعلى|امالة لاعلى)$/,"panu"],[/^(dutch roll|dutch angle|ميلان سينمائي|ميلان)$/,"roll"],
+  [/^(remove motion|no motion|reset motion|remove zoom|أزل الحركة|ازل الحركة|بدون حركة)$/,"reset"]];
+const SPEEDS91=[.25,.5,1,1.5,2,4];
+/* one command → {d:[en,ar] what it will do, run(): [en,ar] what it did, cost} or null when it isn't one the editor can do itself */
+function edCmd91(raw){const s=edNorm91(raw);if(!s)return null;const all=/(^|\s)(all|every|everything|whole|video|كل|كله|كلها|جميع|الفيديو)(\s|$)/.test(s);const{r,n,has}=edRef91(s);
+  const one=(d,run)=>({d,cost:0,run}),C=()=>edClip91(n),E=S.ed,nm=c=>L("clip ","المقطع ")+(E.clips.indexOf(c)+1);let m;
+  if(/^(undo|undo that|تراجع|تراجع عن ذلك|ارجع)$/.test(r)&&!has)return one([L("Undo the last change","التراجع عن آخر تغيير")],()=>{histGo(-1);return[L("Undone","تم التراجع")]});
+  if(/^(delete|remove|cut out|drop|احذف|احذفه|احذفها|امسح|امسحه|امسحها|أزل|ازل|أزله|ازله|أزلها|ازلها)$/.test(r)&&(has||/(it|this)\b|ه$|ها$/.test(s)||S.ed.clips.some(x=>x.id===S.ed.sel))){const c=C();return one([L("Delete ","احذف ")+nm(c)],()=>{const k=nm(c);E.clips=E.clips.filter(x=>x!==c);if(E.sel===c.id)E.sel=null;return[k+L(" deleted"," حُذف")]})}
+  if(/^(duplicate|copy|repeat|كرر|كرره|كررها|انسخ|انسخه|انسخها|ضاعف)$/.test(r)){const c=C();return one([L("Duplicate ","كرّر ")+nm(c)],()=>{const b=edDup91(c);if(b)E.sel=b.id;return[nm(c)+L(" duplicated"," تكرر")]})}
+  if(/^(split|cut|split here|cut here|split playhead|cut playhead|قسم|اقسم|قسمه|قسمها|قص هنا|قسم هنا|اقسم هنا|قص عند المؤشر|قسم عند المؤشر)$/.test(r)){
+    return one([L("Split at the playhead","قسّم عند المؤشر")],()=>{const c=has?C():E.clips[edAt(Math.min(ED.t,edTotal()-.001)).i];if(!c||!edSplit91(c,ED.t))throw[L("Move the playhead inside the clip first.","حرّك المؤشر داخل المقطع أولاً.")];E.sel=c.id;return[L("Split at ","قُسّم عند ")+mmss(ED.t)]})}
+  if((m=r.match(/^(?:make|trim|cut|set|shorten|lengthen|اجعل|اجعله|اجعلها|قص|قصه|قصها|قصر|قصره|قصرها)? ?(?:to |ل)?(\d+(?:\.\d+)?) ?(?:s|sec|secs|second|seconds|ث|ثانية|ثوان|ثواني|ثوانى)(?: long| طويل| فقط)?$/))){const want=+m[1];if(!(want>=.3&&want<=120))return null;const c=C();
+    return one([L("Make ","اجعل ")+nm(c)+" "+want+L("s","ث")],()=>{const md=clipMedia(c),sp=c.speed||1,max=md&&md.type==="video"?Math.max(.2,srcDur(md)||c.out):1e9,o=Math.min(max,c.in+want*sp);c.out=+o.toFixed(2);const got=clipDur(c);
+      return[nm(c)+L(" is now "," صار ")+got.toFixed(1)+L("s","ث")+(got<want-.2?L(" — that's all the video it has."," — هذا كل ما في الفيديو."):"")]})}
+  const sp=v=>{const c=C();return one([L("Speed of ","سرعة ")+nm(c)+" → "+v+"×"],()=>{c.speed=v;return[nm(c)+L(" plays at "," بسرعة ")+v+"×"]})};
+  if(/^(speed up|faster|make faster|go faster|سرع|اسرع|أسرع|سرعه|سرعها|اجعله أسرع|اجعلها أسرع|اجعله اسرع|اجعلها اسرع)$/.test(r)){const c=C();return sp(SPEEDS91.find(v=>v>(c.speed||1))||4)}
+  if(/^(slow motion|slow-mo|slowmo|slow mo|حركة بطيئة|تصوير بطيء)$/.test(r))return sp(.5);
+  if(/^(slow down|slower|make slower|أبطئ|ابطئ|أبطأ|ابطأ|اجعله أبطأ|اجعلها أبطأ|اجعله ابطأ|اجعلها ابطأ|بطيء|بطئ)$/.test(r)){const c=C();return sp([...SPEEDS91].reverse().find(v=>v<(c.speed||1))||.25)}
+  if(/^(normal speed|reset speed|real ?time|سرعة عادية|السرعة العادية|سرعة طبيعية)$/.test(r))return sp(1);
+  if((m=r.match(/^(?:set )?(?:speed|السرعة|سرعة) ?(\d+(?:\.\d+)?) ?(?:x|×)?$/)||r.match(/^(\d+(?:\.\d+)?) ?(?:x|×)(?: speed)?$/))){const v=clamp(+m[1],.25,4);return sp(v)}
+  if(/^(mute all|mute all clips|mute everything|اكتم الكل|كتم الكل|اكتم كل المقاطع|كتم كل المقاطع)$/.test(s))return one([L("Mute every clip","اكتم كل المقاطع")],()=>{E.clips.forEach(c=>c.vol=0);return[L("All clips muted","كُتمت كل المقاطع")]});
+  if(/^(mute|silence|mute sound|اكتم|اكتمه|اكتمها|كتم|كتم الصوت|اكتم الصوت|اسكت)$/.test(r)){const c=C();return one([L("Mute ","اكتم ")+nm(c)],()=>{c.vol=0;return[nm(c)+L(" muted"," مكتوم")]})}
+  if(/^(unmute|sound on|turn sound on|ألغ الكتم|الغ الكتم|شغل الصوت|أعد الصوت|اعد الصوت)$/.test(r)){const c=C();return one([L("Unmute ","ألغِ كتم ")+nm(c)],()=>{c.vol=100;return[nm(c)+L(" has sound again"," عاد صوته")]})}
+  if(/^(add |turn on |show |generate |auto |make )?(auto[- ]?)?(captions|subtitles|subs)( on)?$|^(أضف |اضف |أظهر |اظهر |شغل )?(ال)?(ترجمة|كابشن|ترجمات|الترجمة|الكابشن)( تلقائية| التلقائية)?$/.test(r))
+    return one([L("Captions on (made on your device)","تشغيل الترجمة (تُصنع على جهازك)")],()=>{E.caps.on=true;if(!E.caps.words.length){E.tab="words";setTimeout(()=>edxAutoCaps(),60);return[L("Making captions from the speech…","تُصنع الترجمة من الكلام…")]}return[L("Captions on","الترجمة ظاهرة")]});
+  if(/^(hide|remove|turn off|no|delete) (captions|subtitles|subs)$|^(أخف|اخف|احذف|أوقف|اوقف|أزل|ازل) (ال)?(ترجمة|كابشن|ترجمات)$/.test(r))return one([L("Captions off","إخفاء الترجمة")],()=>{E.caps.on=false;return[L("Captions hidden","أُخفيت الترجمة")]});
+  if((m=r.match(/^(?:make |set |switch |change |convert |turn |format |use |اجعل |اجعله |اجعلها |حول |حوله |حولها |حول الفيديو )*(?:video )?(vertical|portrait|9:16|9x16|horizontal|landscape|wide|widescreen|16:9|square|1:1|4:5|21:9|cinema|reels|tiktok|tik tok|shorts|youtube|story|instagram story|عمودي|عموديا|طولي|طوليا|أفقي|أفقيا|افقي|افقيا|عرضي|عرضيا|مربع|مربعا|ريلز|تيك توك|تيكتوك|شورتس|يوتيوب|ستوري|سينما)(?: format| video| size| مقاس| حجم| فيديو)?$/))){
+    const w=m[1],cur=fmt(),vert=cur[2]/cur[3]<.7,id=/tiktok|tik tok|تيك ?توك/.test(w)?"tiktok":/shorts|شورتس/.test(w)?"shorts":/reels|ريلز/.test(w)?"reels":/story|ستوري/.test(w)?"igstory":/youtube|يوتيوب/.test(w)?"youtube":/21:9|cinema|سينما/.test(w)?"cinema":/4:5/.test(w)?"igfeed":
+      /vertical|portrait|9:16|9x16|عمودي|طولي/.test(w)?(vert?cur[0]:"reels"):/square|1:1|مربع/.test(w)?"igsq":(cur[2]/cur[3]>1.3?cur[0]:"youtube"),f=FORMATS.find(x=>x[0]===id)||FORMATS[0];
+    return one([L("Change the size to ","غيّر المقاس إلى ")+f[1]+" ("+f[2]+"×"+f[3]+")"],()=>{E.format=f[0];return[L("Now ","الآن ")+f[1]+" · "+f[2]+"×"+f[3]]})}
+  if(/^(remove|delete|no|clear|بدون|احذف|أزل|ازل) (all )?(transitions|كل الانتقالات|الانتقالات|انتقالات)$/.test(r))return one([L("Remove the transitions","احذف الانتقالات")],()=>{E.clips.forEach(c=>c.trans="cut");return[L("Transitions removed — straight cuts","حُذفت الانتقالات — قطع مباشر")]});
+  if((m=r.match(/^(?:add |use |put |apply )?(fade|crossfade|cross fade|smooth|soft|dip|dip black|slide|zoom|whip|spin|flash|glitch|wipe|blur)? ?transitions?(?: between(?: all)? (?:clips|shots|scenes))?$/)||r.match(/^(?:أضف |اضف |ضع )?(?:انتقالات|الانتقالات|انتقال)(?: (تلاشي|ناعم|ناعمة|للأسود|انزلاق|تقريب|خاطف|دوران|وميض|تشويش|مسح|ضبابي))?(?: بين (?:كل |جميع )?(?:المقاطع|اللقطات|المشاهد))?$/))){
+    const ty=TRW91[m[1]||"fade"]||"fade";if(S.ed.clips.length<2)throw[L("Transitions need two clips or more.","الانتقالات تحتاج مقطعين أو أكثر.")];
+    return one([L("Add a transition between every clip","أضف انتقالاً بين كل المقاطع")+" ("+ty+")"],()=>{E.clips.forEach((c,i)=>{if(i<E.clips.length-1)c.trans=ty});return[L("Transitions added between ","أُضيفت الانتقالات بين ")+E.clips.length+L(" clips"," مقاطع")]})}
+  if(/^(remove|delete|clear) (all )?(texts?|titles?|words on screen|on-screen text)$|^(احذف|امسح|أزل|ازل) (كل |جميع )?(ال)?(نصوص|نص|عناوين|عنوان|كتابة)$/.test(r))return one([L("Remove every text","احذف كل النصوص")],()=>{const k=E.texts.length;E.texts=[];E.selText=null;return[k+L(" texts removed"," نصوص حُذفت")]});
+  const mv=dv=>one([dv>0?L("Music louder","ارفع الموسيقى"):L("Music quieter","اخفض الموسيقى")],()=>{if(!M.edMusic)throw[L("Add music first.","أضف موسيقى أولاً.")];E.musicVol=clamp((E.musicVol||0)+dv,0,100);return[L("Music at ","الموسيقى عند ")+E.musicVol+"%"]});
+  if(/^((make |turn )?music (louder|up|higher)|(turn up|raise|increase|boost) music( volume)?|louder music|(ارفع|زد|علي) (صوت )?(ال)?موسيقى)$/.test(r))return mv(20);
+  if(/^((make |turn )?music (quieter|softer|lower|down)|(turn down|lower|reduce|decrease) music( volume)?|(quieter|softer) music|(اخفض|خفض|قلل|وطي) (صوت )?(ال)?موسيقى)$/.test(r))return mv(-20);
+  if((m=r.match(/^(?:set )?music(?: volume)? (\d+) ?%?$|^(?:صوت )?(?:ال)?موسيقى (\d+) ?%?$/))){const v=clamp(+(m[1]||m[2]),0,100);return one([L("Music at ","الموسيقى عند ")+v+"%"],()=>{if(!M.edMusic)throw[L("Add music first.","أضف موسيقى أولاً.")];E.musicVol=v;return[L("Music at ","الموسيقى عند ")+v+"%"]})}
+  const rz=r.replace(/^(add |make |apply |use |do |أضف |اضف )/,"");for(const [re,p] of ZOOM91)if(re.test(rz)){const c=C();return one([L("Camera move on ","حركة كاميرا على ")+nm(c)],()=>{edxZoomPreset(c,p);return[p==="reset"?L("Motion removed","أُزيلت الحركة"):L("Camera move added to ","أُضيفت حركة كاميرا إلى ")+nm(c)]})}
+  const rl=r.replace(/^(make |apply |use |add |give |turn |اجعل |اجعله |اجعلها |طبق |أضف |اضف )*(video )?(a |an )?(فلتر |لون |ألوان |الوان |بألوان |بالوان )?/,"").replace(/ (look|filter|colou?rs?|grade|style|فلتر|ألوان|الوان)$/,"");
+  for(const [re,id] of LOOK91)if(re.test(rl)){const tg=all?E.clips:[C()],lk=EDX_LOOKS.find(x=>x[0]===id)||EDX_LOOKS[0];
+    return one([L("Look: ","المظهر: ")+L(lk[1],lk[2])+" — "+(all?L("every clip","كل المقاطع"):nm(tg[0]))],()=>{tg.forEach(c=>{c.cg=c.cg||{};c.cg.look=id});return[L("Look: ","المظهر: ")+L(lk[1],lk[2])]})}
+  if((m=r.match(/^(?:move|انقل|انقله|انقلها|حرك|حركه|حركها) ?(?:to |إلى |الى |ل)?(start|beginning|front|end|back|first|last|earlier|later|left|right|البداية|بداية|النهاية|نهاية|الأول|الاول|أول|اول|الآخر|الاخر|آخر|اخر|للخلف|للأمام|للامام)$/))){const c=C(),w=m[1];
+    return one([L("Move ","انقل ")+nm(c)],()=>{const i=E.clips.indexOf(c),to=/start|beginning|front|first|بداية|البداية|أول|اول|الأول|الاول/.test(w)?0:/end|back|last|نهاية|النهاية|آخر|اخر|الآخر|الاخر/.test(w)?E.clips.length-1:clamp(i+(/earlier|left|للخلف/.test(w)?-1:1),0,E.clips.length-1);
+      E.clips.splice(i,1);E.clips.splice(to,0,c);E.sel=c.id;return[L("Moved to place ","نُقل إلى المكان ")+(to+1)]})}
+  if(/^(extend|continue|lengthen|make longer|مد|مده|مدها|أطل|اطل|أطله|اطله|أطلها|اطلها|كمل|كمله|كملها|أكمل|اكمل|أكمله|اكمله|مدد)$/.test(r)){const c=C();
+    return{d:[L("Extend ","مدّ ")+nm(c)+L(" by 5 s with AI"," 5 ثوانٍ بالذكاء الاصطناعي")],cost:edExtCost91(c),paid:1,run:()=>{edExtend91(c);return null}}}
+  return null}
+/* several commands in one line ("delete clip 2 and make it vertical") — only when every part is one the editor can do itself */
+function edPlan91(raw){const one=edCmd91(raw);if(one)return[one];const parts=edNorm91(raw).replace(/black and white/g,"black & white").replace(/teal and orange/g,"teal & orange").replace(/(أبيض|ابيض) و(أسود|اسود)/g,"أبيض_أسود").split(/\s*(?:,|;|،|؛|\band then\b|\bthen\b|\band\b|\sثم\s|\sبعدها\s)\s*|\s+و(?=[ء-ي])/).filter(Boolean);
+  if(parts.length<2)return null;const out=[];for(const p of parts){const c=edCmd91(p);if(!c||c.paid)return null;out.push(c)}return out}
+/* the price of what edRun would make (the same choices it makes) */
+function edPaidCost91(p){const it=edIntent(p),what=edStrip(p),sel=edSelClip();if(it==="text")return 0;if(it==="music")return PRICE_TABLE.fixed.music;if(it==="sfx")return PRICE_TABLE.fixed.sfx;if(it==="voice")return PRICE_TABLE.fixed.voice;
+  if(it==="image"){const m=IMG_MODELS.nano?"nano":"dotimg";return(IMG_MODELS[m]||{cr:5}).cr}
+  const base=sel&&sel.src.k==="job"?S.jobs.find(x=>x.id===sel.src.job):null;let mdl=base&&MODELS[base.model]&&base.kind==="video"?base.model:(hfStudio(what,5)||{shots:[{m:"seedance"}]}).shots[0].m,dur=5;
+  if(it==="change"){if(!sel)return 0;dur=Math.min(10,Math.max(5,Math.round(clipDur(sel)/5)*5))}if(engMax(mdl)<dur)dur=engMax(mdl)>=5?5:dur;return vcost(mdl,dur)}
+const EDWHAT91={music:["Makes music with AI and adds it","يصنع موسيقى بالذكاء ويضيفها"],sfx:["Makes the sound effect and adds it at the playhead","يصنع المؤثر الصوتي ويضيفه عند المؤشر"],voice:["Makes the voice-over and adds it at the playhead","يصنع التعليق الصوتي ويضيفه عند المؤشر"],
+  image:["Makes the picture and adds it after the selected clip","يصنع الصورة ويضيفها بعد المقطع المحدد"],shot:["Makes a new 5-second shot and adds it after the selected clip","يصنع لقطة جديدة من 5 ثوانٍ ويضيفها بعد المقطع المحدد"],
+  change:["Remakes the selected clip with your change","يعيد صنع المقطع المحدد بتعديلك"],text:["Adds the text at the playhead","يضيف النص عند المؤشر"]};
+function edGoInfo91(q){q=String(q||"").trim();if(!q)return null;let pl=null;try{pl=edPlan91(q)}catch(e){return{err:Array.isArray(e)?e[0]:String(e.message||e)}}
+  if(pl)return{cost:pl.reduce((a,c)=>a+c.cost,0),d:pl.map(c=>c.d[0]).join(" · ")};const it=edIntent(q);return{cost:edPaidCost91(q),d:L(...EDWHAT91[it]||EDWHAT91.change)}}
+function edGoPaint91(){const q=$("#edcmdq"),b=document.querySelector('[data-act="edcmd-go"]'),pl=$("#edplan91");if(!q||!b)return;const g=edGoInfo91(q.value);
+  b.innerHTML=L("Go","نفّذ")+(g&&!g.err?'<span class="cost">'+(g.cost?g.cost+" cr":L("free","مجاناً"))+"</span>":"");if(pl){pl.textContent=g?(g.err||g.d):"";pl.classList.toggle("err",!!(g&&g.err))}}
+let edGoT91=0;document.addEventListener("input",e=>{if(e.target&&e.target.id==="edcmdq"){clearTimeout(edGoT91);edGoT91=setTimeout(edGoPaint91,120)}});
+async function edGo91(q){q=String(q||"").trim();if(!q){toast(L("Say what to change — for example “make it vertical” or “add calm oud music”.","قل ما تريد تغييره — مثلاً «اجعله عمودياً» أو «أضف موسيقى عود هادئة».")) ;return}edxInit();
+  let pl;try{pl=edPlan91(q)}catch(e){toast(Array.isArray(e)?e[0]:String(e.message||e),{type:"warn"});return}if(!pl)return edRun(q);
+  ED.playing=false;const said=[];try{for(const c of pl){const r=c.run();if(r)said.push(r[0])}}catch(e){toast(Array.isArray(e)?e[0]:String(e.message||e),{type:"warn"});persist();renderView();return}
+  if(pl.some(c=>c.paid))return;S.edCmd="";persist();renderView();if(said.length)toast("✓ "+said.join(" · "),{type:"ok"})}
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="edcmd-go"]');if(!a)return;e.stopImmediatePropagation();e.preventDefault();edGo91(($("#edcmdq")||{}).value)},true);
+window.addEventListener("keydown",e=>{if(e.target&&e.target.id==="edcmdq"&&e.key==="Enter"&&!e.isComposing){e.preventDefault();e.stopImmediatePropagation();edGo91(e.target.value)}},true);
+window.addEventListener("click",e=>{if(e.target.closest&&e.target.closest('[data-act="edcmd-ex"]'))setTimeout(edGoPaint91,0)},true);
+/* the bar: price on Go, a line saying what will happen, and examples — free edits first, then AI ones */
+const EDEX91=[["Fade transitions between all clips","انتقالات تلاشي بين كل المقاطع"],["Make it vertical","اجعله عمودياً"],["Slow motion","حركة بطيئة"],["Captions on","أظهر الترجمة"],["Music quieter","اخفض الموسيقى"],["Extend the selected shot","مدّ اللقطة المحددة"],["Add calm oud music","أضف موسيقى عود هادئة"],["Make the selected clip night","اجعل المقطع المحدد ليلاً"]];
+VIEWS.edit=(o=>function(){let h=o();if(h.indexOf('data-act="edcmd-go"')<0)return h;const g=edGoInfo91(S.edCmd||"");
+  h=h.replace(/<button class="btn sm primary" data-act="edcmd-go">[\s\S]*?<\/button>/,'<button class="btn sm primary" data-act="edcmd-go">'+L("Go","نفّذ")+(g&&!g.err?'<span class="cost">'+(g.cost?g.cost+" cr":L("free","مجاناً"))+"</span>":"")+"</button>");
+  h=h.replace(/<div class="edcmdx">[\s\S]*?<\/div>/,'<div class="edplan91'+(g&&g.err?" err":"")+'" id="edplan91" aria-live="polite">'+esc(g?(g.err||g.d):"")+'</div><div class="edcmdx" dir="auto">'+EDEX91.map(x=>'<button class="chip" data-act="edcmd-ex" data-v="'+esc(L(x[0],x[1]))+'">'+esc(L(x[0],x[1]))+"</button>").join("")+"</div>");
+  return h})(VIEWS.edit);
+/* pictures and video the editor asks for match the project's size (a TikTok or Story project asked for 16:9 before) */
+let EDRUN91=0;edRun=(o=>async function(p){EDRUN91++;try{return await o(p)}finally{EDRUN91--}})(edRun);
+addJob=(o=>function(j){if(j&&S.view==="edit"&&(j.kind==="video"||j.kind==="image")&&(EDRUN91||(j.meta&&(j.meta.edCmd||j.meta.edAi))))j.aspect=edAspect91(j.kind);return o(j)})(addJob);
+/* a part of the page that couldn't download (on-device captions, a 3D library…) says so in words, not as a browser error */
+toast=(o=>function(m,opt){const s=String(m==null?"":m);if(/Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Loading chunk \d+ failed/i.test(s)){opt=Object.assign({type:"warn"},opt);if(!opt.detail)opt.detail=s;m=L("A part of the editor couldn't download. Check your connection and try again.","تعذّر تنزيل جزء من المحرر. تحقّق من الاتصال وحاول مرة أخرى.")}return o(m,opt)})(toast);
+(()=>{const st=document.createElement("style");st.textContent=`
+.kfbar.kf91{height:34px;cursor:pointer;touch-action:manipulation}
+.kfbar.kf91 .kfd{width:32px;height:32px;margin:-16px 0 0 -16px;transform:none;background:none;border:0;border-radius:50%;z-index:1}
+.kfbar.kf91 .kfd::before{content:"";position:absolute;inset:9px;transform:rotate(45deg);border-radius:2px;background:var(--lime);border:1px solid var(--lime-ink,#5a7a00)}
+.kfbar.kf91 .kfd.on::before{background:var(--text);border-color:var(--lime);box-shadow:0 0 0 2px var(--lime)}
+.kfbar.kf91 .kfd:focus-visible{outline:2px solid var(--lime);outline-offset:-4px}
+.kfbar.kf91>i{pointer-events:none}
+.kfrow91{flex-wrap:nowrap}.kfrow91 .btn{min-height:40px}.kfrow91 .btn:not([data-act="kf91-nav"]){flex:1;min-width:0;justify-content:center}
+#tlin .blk .kfm91{position:absolute;bottom:3px;width:7px;height:7px;margin-left:-3.5px;transform:rotate(45deg);background:var(--lime);border:1px solid rgba(0,0,0,.35);border-radius:1px;pointer-events:none}
+#tlin .blk .ext91p{position:absolute;top:0;bottom:0;right:0;width:34px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;pointer-events:none;
+  background:repeating-linear-gradient(-45deg,color-mix(in srgb,var(--lime) 70%,#000) 0 6px,color-mix(in srgb,var(--lime) 40%,#000) 6px 12px);background-size:17px 17px;animation:ext91 1s linear infinite}
+@keyframes ext91{to{background-position:17px 0}}
+@media (prefers-reduced-motion:reduce){#tlin .blk .ext91p{animation:none}}
+.ext91{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid color-mix(in srgb,var(--lime) 40%,var(--line));background:color-mix(in srgb,var(--lime) 6%,var(--panel))}.ext91 .btn{align-self:flex-start}
+.edcmd .btn .cost,.edbar .tb[data-paid] span{white-space:nowrap}
+.edcmd .btn[data-act="edcmd-go"]{flex:none;gap:6px}.edcmd .btn[data-act="edcmd-go"] .cost{margin:0;font-size:11px;opacity:.85}
+.edplan91{font-size:12.5px;color:var(--mute);margin:-2px 4px 6px;min-height:0}.edplan91:empty{display:none}.edplan91.err{color:var(--warn,#d97706)}
+@media (max-width:640px){
+  .view:has(.edcmd) .lede{display:none}
+  .edcmdx{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .edcmdx::-webkit-scrollbar{display:none}.edcmdx .chip{flex:none;white-space:nowrap}
+}
+`;document.head.appendChild(st)})();
+
+/* ================= v91: SKETCH — one drawing you keep working on, a box for what it is, one "Preview with AI" button (1, 4, 6, 8 or 10 versions, each a different look, price shown first), fast drawing ================= */
+/* The page had two modes and ~30 controls (camera, screen, recording, live AI, "when I pause" pictures, spending limit,
+   keep frame, save to cast, make 3D, floor plan, trace a photo…); pausing made a new picture each time. Now: the drawing,
+   its tools, what it is, how many versions, and one button. The drawing never changes by itself and is kept on the device. */
+ALIAS82.draw="sketch";
+TOOLDESC.sketch=["Draw, say what it is, and preview it with AI — one picture or up to ten different looks.","ارسم، وقل ما هو، وعاينه بالذكاء الاصطناعي — صورة واحدة أو حتى عشر نسخ بأساليب مختلفة."];
+const SK91={cv:null,el:null,sig:"",n:0,live:null,liveN:0,saveT:0,loaded:false,busy:false,rsig:""};
+const SKV91=[["realistic","Photo","صورة واقعية"],["concept","Cinematic","سينمائي"],["anim3d","3D animation","رسوم ثلاثية الأبعاد"],["anime","Anime","أنمي"],["watercolor","Watercolour","ألوان مائية"],
+  ["clay","Clay","صلصال"],["comic","Comic","كوميكس"],["oil","Oil painting","لوحة زيتية"],["cartoon","Cartoon","كرتون"],["sketch","Pencil art","رسم بالقلم"]];
+const SKN91=[1,4,6,8,10];
+if(S.sketch){S.sketch.ai="off";if(S.sketch.target==="floorplan")S.sketch.target="character"}
+const skCost91=()=>{const m=bestImg72();return(IMG_MODELS[m]||{cr:3}).cr};
+const skN91=()=>SKN91.includes(+S.sketch.n91)?+S.sketch.n91:1;
+function sk91Load(){if(SK91.loaded)return;SK91.loaded=true;IDB.get("sk91").then(v=>{if(v&&Array.isArray(v.strokes)&&v.strokes.length&&!SK.strokes.length&&!SK.cur){SK.strokes=v.strokes;SK.redo=[];if(S.view==="sketch")skRedraw()}})}
+function sk91Save(){clearTimeout(SK91.saveT);SK91.saveT=setTimeout(()=>{IDB.put("sk91",{strokes:SK.strokes.map(s=>({tool:s.tool,color:s.color,size:s.size,pts:s.pts.map(p=>[+p[0].toFixed(4),+p[1].toFixed(4),+(p[2]||.6).toFixed(2)])}))})},400)}
+/* drawing: only the newest bit of the line is drawn while you move (before, every move redrew the whole drawing into a new
+   canvas); the whole drawing is redrawn only after undo, redo, clear or a size change */
+skRedraw=(o=>function(){if(S.view!=="sketch")return o();const cv=$("#skcv");if(!cv)return;const r=cv.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1),W=Math.round(r.width*dpr)||512;
+  let full=cv!==SK91.cv||cv.width!==W;if(cv.width!==W){cv.width=W;cv.height=W}SK91.cv=cv;const ctx=cv.getContext("2d");
+  const n=SK.strokes.length,sig=n+":"+SK.strokes.reduce((a,s)=>a+s.pts.length,0);
+  if(sig!==SK91.sig){if(!(n===SK91.n+1&&SK91.live&&SK.strokes[n-1]===SK91.live&&SK91.liveN===SK91.live.pts.length))full=true;SK91.sig=sig;SK91.n=n;sk91Save()}
+  if(full){ctx.clearRect(0,0,W,W);if(SK.imp)ctx.drawImage(SK.imp,0,0,W,W);SK.strokes.forEach(s=>skDrawStroke(ctx,s,W,W));SK91.live=null;SK91.liveN=0}
+  const c=SK.cur;if(c){if(SK91.live!==c){SK91.live=c;SK91.liveN=0}const p=c.pts,seg=q=>skDrawStroke(ctx,{tool:c.tool,color:c.color,size:c.size,pts:q},W,W);
+    if(!SK91.liveN&&p.length){seg([p[0]]);SK91.liveN=1}for(let i=Math.max(1,SK91.liveN);i<p.length;i++)seg([p[i-1],p[i]]);SK91.liveN=p.length}
+  SK.dirty=true})(skRedraw);
+/* every point the pen or finger passed through (coalesced events), not only one per frame — smoother lines */
+window.addEventListener("pointermove",e=>{if(!SK.cur||S.view!=="sketch")return;const cv=$("#skcv");if(!cv)return;e.stopImmediatePropagation();
+  const evs=e.getCoalescedEvents?e.getCoalescedEvents():[];for(const ev of(evs.length?evs:[e])){const p=skPoint(ev,cv),l=SK.cur.pts[SK.cur.pts.length-1];if(Math.hypot(p[0]-l[0],p[1]-l[1])>=.0015)SK.cur.pts.push(p)}skRedraw()},true);
+function sk91Res(){const js=S.jobs.filter(j=>j.meta&&j.meta.sk91);if(!js.length)return"";const order=[];js.forEach(j=>{if(!order.includes(j.batch))order.push(j.batch)});
+  const list=order.reverse().flatMap(b=>js.filter(j=>j.batch===b)).slice(0,20),lab=j=>{const v=SKV91.find(x=>x[0]===(j.meta&&j.meta.style));return v?L(v[1],v[2]):""};
+  return'<span class="lbl">'+L("AI previews","معاينات الذكاء الاصطناعي")+'</span><div class="dres sk91r">'+list.map(j=>'<figure class="dfig"><div class="dthumb">'+thumb("j:"+j.id,{ar:"1/1"})+'</div><figcaption class="small">'+esc(lab(j))+"</figcaption>"+
+    (j.status==="complete"?'<button class="btn sm" data-act="drw-animate" data-id="'+j.id+'">'+ic("video")+L("Animate","حرّكها")+"</button>":"")+"</figure>").join("")+"</div>"}
+VIEWS.sketch=function(){const K=S.sketch;K.ai="off";if(K.target==="floorplan")K.target="character";SK.bg=null;sk91Load();const n=skN91(),cost=n*skCost91();
+  const tools=[["pen","Pencil","قلم",ICONS.pen],["marker","Marker","ماركر",ICONS.marker],["brush","Brush","فرشاة",ICONS.brush],["eraser","Eraser","ممحاة",ICONS.eraser]];
+  SK91.rsig=S.jobs.filter(j=>j.meta&&j.meta.sk91).map(j=>j.id+j.status+(mediaUrl(j)?1:0)).join();
+  return'<div class="view"><div class="spread"><h1>'+L("Sketch to life","من الرسم إلى الواقع")+'</h1></div><p class="lede">'+L("Draw, say what it is, and preview it with AI. Your drawing stays here — keep drawing, undo or erase, and preview again.","ارسم، وقل ما هو، وعاينه بالذكاء الاصطناعي. رسمتك تبقى هنا — تابع الرسم أو تراجع أو امسح، ثم عاين من جديد.")+"</p>"+
+    '<div class="sk91"><div class="panel pad sk91pad"><div class="skpaper"><canvas id="skcv" aria-label="'+esc(L("Your drawing","رسمتك"))+'"></canvas></div>'+
+    '<div class="hbar sk91bar">'+tools.map(x=>'<button class="tile" data-act="sk-tool" data-v="'+x[0]+'" aria-pressed="'+(K.tool===x[0])+'"><span class="gl">'+svg(x[3])+'</span><span class="lb">'+L(x[1],x[2])+"</span></button>").join("")+
+      hTile(svg('<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>'),L("Undo","تراجع"),'data-act="sk-undo"')+hTile(svg('<path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/>'),L("Redo","إعادة"),'data-act="sk-redo"')+hTile(svg(ICONS.trash||ICONS.x),L("Clear","مسح الكل"),'data-act="sk-clear"')+"</div>"+
+    '<div class="skcolors">'+SKC.map(c=>'<button class="skc" data-act="sk-color" data-v="'+c+'" style="background:'+c+'" aria-pressed="'+(K.color===c&&K.tool!=="eraser")+'" aria-label="'+c+'"></button>').join("")+"</div>"+slider("sketch.size",L("Line size","حجم الخط"),K.size,1,40,1,"")+"</div>"+
+    '<div class="panel pad sk91side"><label class="lbl" for="skwhat91" style="margin-top:0">'+L("What are you drawing?","ماذا ترسم؟")+'</label><input id="skwhat91" type="text" data-bind="sketch.prompt" value="'+esc(K.prompt||"")+'" dir="auto" maxlength="200" placeholder="'+esc(L("e.g. a red vintage car on a coast road","مثال: سيارة حمراء كلاسيكية على طريق ساحلي"))+'">'+
+    '<p class="small dim" style="margin:6px 0 0">'+L("Leave it empty and the AI reads your drawing (free) and writes it here.","اتركه فارغاً وسيقرأ الذكاء رسمتك (مجاناً) ويكتبها هنا.")+"</p>"+
+    '<span class="lbl">'+L("How many versions","كم نسخة")+'</span><div class="seg sk91n" role="radiogroup" aria-label="'+esc(L("How many versions","كم نسخة"))+'">'+SKN91.map(v=>'<button role="radio" data-act="sk91-n" data-v="'+v+'" aria-checked="'+(v===n)+'" aria-pressed="'+(v===n)+'">'+v+"</button>").join("")+"</div>"+
+    '<p class="small dim" style="margin:6px 0 0">'+(n===1?L("One realistic picture.","صورة واقعية واحدة."):L("All at once, each in a different look: ","كلها معاً، كل نسخة بأسلوب مختلف: ")+SKV91.slice(0,n).map(v=>L(v[1],v[2])).join(L(", ","، "))+".")+"</p>"+
+    '<button class="btn primary big sk91go" data-act="sk91-go"'+(SK91.busy?" disabled":"")+">"+ic("spark")+L("Preview with AI","معاينة بالذكاء الاصطناعي")+'<span class="cost">'+cost+" cr</span></button>"+
+    '<div id="sk91res" aria-live="polite">'+sk91Res()+"</div></div></div></div>"};
+/* the drawing is one canvas for the whole visit: changing a tool, a colour or the count re-draws the page around it, not the drawing */
+renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="sketch"){const v=document.querySelector("#main .view");if(v){const sw=v.querySelector(".skmode80");if(sw)sw.remove()}
+  const nc=$("#skcv");if(nc){if(SK91.el&&SK91.el!==nc&&SK91.el.width){nc.replaceWith(SK91.el)}else SK91.el=nc}}return r})(renderView);
+setInterval(()=>{if(S.view!=="sketch")return;const el=$("#sk91res");if(!el)return;const sig=S.jobs.filter(j=>j.meta&&j.meta.sk91).map(j=>j.id+j.status+(mediaUrl(j)?1:0)).join();if(sig!==SK91.rsig){SK91.rsig=sig;el.innerHTML=sk91Res()}},1000);
+async function sk91Go(){const K=S.sketch;if(!SK.strokes.length){toast(L("Draw something first.","ارسم شيئاً أولاً."));return}if(SK91.busy)return;SK91.busy=true;const b=document.querySelector('[data-act="sk91-go"]');if(b)b.disabled=true;
+  try{const n=skN91(),m=bestImg72(),each=skCost91(),blob=await new Promise(r=>skInk(768,true).toBlob(r,"image/jpeg",.9));let what=String(K.prompt||"").trim();
+    if(!what){const seen=await skSee79();if(seen){what=seen;K.prompt=String(SKAI.label||seen).slice(0,200);const i=$("#skwhat91");if(i)i.value=K.prompt;persist()}}
+    const batch=uid(),vs=SKV91.slice(0,n);let made=0;
+    withRef72("skImg",new File([blob],"sketch.jpg",{type:"image/jpeg"}),()=>{vs.forEach((v,i)=>{if(addJob({kind:"image",prompt:sketchPrompt72(what,v[0],70),title:(String(K.prompt||L("Sketch","رسمة")).slice(0,34))+(n>1?" · "+L(v[1],v[2]):""),model:m,aspect:"1:1",cost:each,batch,secs:6,art:"scene",meta:{sketch:true,sk91:true,style:v[0],variant:i+1,res:"1K"}}))made++})});
+    if(made){persist();const el=$("#sk91res");if(el){el.innerHTML=sk91Res();SK91.rsig=""}toast(made>1?made+L(" versions of your drawing are being made — your drawing stays as it is."," نسخ من رسمتك تُصنع الآن — رسمتك تبقى كما هي."):L("Your drawing is being made real — it stays as it is.","تُصنع رسمتك حقيقية الآن — وتبقى كما هي."),{type:"ok"})}}
+  finally{SK91.busy=false;const b2=document.querySelector('[data-act="sk91-go"]');if(b2)b2.disabled=false}}
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="sk91-go"],[data-act="sk91-n"]');if(!a||a.disabled)return;e.stopImmediatePropagation();
+  if(a.dataset.act==="sk91-n"){S.sketch.n91=+a.dataset.v;persist();renderView();return}sk91Go()},true);
+(()=>{const st=document.createElement("style");st.textContent=`
+.sk91{display:grid;gap:14px}
+@media (min-width:900px){.sk91{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:stretch}}
+.sk91bar{margin-top:10px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.sk91bar .tile{min-width:0;width:auto;padding:6px 2px;gap:3px}.sk91bar .tile .lb{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.sk91n{display:flex;width:100%}.sk91n button{flex:1;min-height:40px;font-variant-numeric:tabular-nums}
+.sk91go{width:100%;margin-top:14px;justify-content:center}
+#sk91res .sk91r{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:4px}
+#sk91res figcaption{margin:6px 0 4px;color:var(--mute)}#sk91res .btn{width:100%;justify-content:center}
+`;document.head.appendChild(st)})();
+
+/* ================= v91: AGENTS — Lyra, the Dialogue & Voice Director (new, her own microphone icon), Echo becomes the Sound Designer (realistic sound); nine agents in the order the work runs ================= */
+/* Echo used to write music, sound effects AND every spoken line. Now Lyra casts one real voice per character from the voice
+   library and directs each line (feeling, pace, breaths) — for films, shorts, songs and presenter videos — and Echo designs
+   what a real recording would hear: effects on the frame, the ambience of each place, music, mixed under the voices. */
+const VOICES91=[["JBFqnCBsd6RMkjVDRZzb","George","male","middle","warm"],["nPczCjzI2devNBz1zQrb","Brian","male","middle","deep"],["onwK4e9ZLuTAKqWW03F9","Daniel","male","middle","clear"],["TX3LPaxmHKxFdv7VOQHJ","Liam","male","young","energetic"],
+  ["CwhRBWXzGAHq8TQ4Fs17","Roger","male","middle","casual"],["IKne3meq5aSn9XLyUdCD","Charlie","male","young","natural"],["cjVigY5qzO86Huf0OWal","Eric","male","middle","smooth"],["iP95p4xoKVk53GoZ742B","Chris","male","middle","relaxed"],
+  ["bIHbv24MWmeRgasZH58o","Will","male","young","friendly"],["pqHfZKP75CvOlQylNhV4","Bill","male","old","trustworthy"],["N2lVS1w4EtoT3dr4eOWO","Callum","male","middle","intense"],["EXAVITQu4vr4xnSDxMaL","Sarah","female","young","soft"],
+  ["FGY2WhTYpPnrIDTdsKH5","Laura","female","young","upbeat"],["Xb7hH8MSUJpSbSDYk0k2","Alice","female","middle","confident"],["XrExE9yKIg1WjnnlVkGX","Matilda","female","middle","friendly"],["cgSgspJ2msm6clMCkdW9","Jessica","female","young","expressive"],
+  ["pFZP5JQG7iQjIQuC4Bku","Lily","female","middle","warm"],["XB0fDUnXU5powFXDhCwa","Charlotte","female","young","calm"],["9BWtsMINqrJLrRacOk9x","Aria","female","middle","expressive"],["SAz9YHcvj6GT2YYXdXww","River","neutral","middle","calm"]];
+const DELIVERY91=["neutral","calm","warm","excited","serious","sad","angry","whisper","funny"];
+// Lyra's icon: a microphone with sound waves, in the Audio colour
+FB.voice={c:"#E2437B",shape:"mic",eyes:"tilt",fx:"wave"};
+FB_SHAPE.mic='<g class="shape"><rect x="35" y="16" width="50" height="70" rx="25"/><path d="M27 60a33 31 0 0 0 66 0" fill="none" stroke-width="7" stroke-linecap="round"/><rect x="56" y="90" width="8" height="10" rx="3"/><rect x="43" y="98" width="34" height="7" rx="3.5"/></g>';
+fbFx=(o=>function(k,col,u){if(k==="wave")return'<g class="fx fx-wave"><path class="w0" d="M99 44q8 16 0 32" stroke="'+col+'" stroke-width="4.5" fill="none" stroke-linecap="round"/><path class="w1" d="M108 36q13 24 0 48" stroke="'+col+'" stroke-width="4.5" fill="none" stroke-linecap="round" opacity=".6"/></g>';return o(k,col,u)})(fbFx);
+BOTS.push({id:"voice",name:["Lyra","لايرا"],role:["Dialogue & Voice Director","مخرج الحوار والأصوات"],c:[FB.voice.c,FB.voice.c,FB.voice.c],eyes:"tilt",tool:"mic",tier:"std",added:1,job:["",""]});
+{const e=BOT("sound");if(e)e.role=["Sound Designer","مصمم الصوت"]}
+AGENT_AR.voice=["لايرا","مخرج الحوار والأصوات"];AGENT_AR.sound=[AGENT_AR.sound[0],"مصمم الصوت"];AGENT_EN.voice=["Lyra","Dialogue & Voice Director"];AGENT_EN.sound=["Echo","Sound Designer"];
+// the order the work runs: the voices are cast and directed before the sound is designed around them
+AGENT90.splice(AGENT90.findIndex(a=>a[0]==="sound"),1,
+  ["voice","Casts a real voice for every character and directs each line — feeling, pace and breaths — for films, shorts, songs and presenter videos.","يختار صوتاً حقيقياً لكل شخصية ويوجّه كل جملة — الإحساس والإيقاع والأنفاس — للأفلام والمقاطع القصيرة والأغاني وفيديوهات المقدّمين."],
+  ["sound","Designs realistic sound for every shot: effects and foley on the frame, the ambience of each place, and music mixed under the voices.","يصمم صوتاً واقعياً لكل لقطة: المؤثرات وأصوات الحركة في لحظتها، وأجواء كل مكان، وموسيقى ممزوجة تحت الأصوات."]);
+ORDER90.length=0;AGENT90.forEach(a=>ORDER90.push(a[0]));
+BOTS.sort((a,b)=>byOrder90(a.id,b.id));if(!HF_BOT_IDS.includes("voice"))HF_BOT_IDS.push("voice");HF_BOT_IDS.sort(byOrder90);
+AGENT90.forEach(([id,en,ar])=>{const b=BOT(id);if(!b)return;b.job=[en,ar];CREW_INFO[id]=[b.role[0],b.role[1],en,ar]});
+AG_DEF.voice=["casts a real voice for each character and directs every line","يختار صوتاً حقيقياً لكل شخصية ويوجّه كل جملة"];AG_DEF.sound=["designs real sound: effects, ambience and music","يصمم صوتاً واقعياً: مؤثرات وأجواء وموسيقى"];
+["video","storyboard"].forEach(k=>{const r=AG_ROLES[k];if(r&&!r.includes("voice"))r.splice(r.indexOf("sound"),0,"voice")});
+TASK_BOT2.voice="voice";
+TOOLDESC.crew=["Nine AI agents write, design, direct, shoot, voice, score, edit, produce and check your film.","تسعة وكلاء ذكاء اصطناعي يكتبون ويصممون ويخرجون ويصوّرون ويؤدّون الأصوات ويصممون الصوت ويركّبون وينتجون ويدققون فيلمك."];
+/* names and roles in every shipped language (fixed, no AI) — the new agent's name, the two new roles */
+const CREW91={fr:["Lyra","Directeur des dialogues et des voix","Concepteur sonore"],es:["Lyra","Director de diálogos y voces","Diseñador de sonido"],de:["Lyra","Dialog- und Sprachregie","Sounddesigner"],
+  it:["Lyra","Direttore di dialoghi e voci","Sound designer"],pt:["Lyra","Diretor de diálogos e vozes","Designer de som"],nl:["Lyra","Regisseur dialoog en stemmen","Geluidsontwerper"],tr:["Lyra","Diyalog ve seslendirme yönetmeni","Ses tasarımcısı"],
+  fil:["Lyra","Direktor ng diyalogo at boses","Sound designer"],ms:["Lyra","Pengarah dialog & suara","Pereka bunyi"],so:["Lyra","Agaasimaha wada-hadalka iyo codadka","Naqshadeeyaha codka"],sw:["Lyra","Mwongozaji wa mazungumzo na sauti","Mbunifu wa sauti"],
+  ku:["Lyra","Derhênerê diyalog û dengan","Sêwiranerê dengê"],sh:["Lyra","Režiser dijaloga i glasova","Dizajner zvuka"],sr:["Лира","Режисер дијалога и гласова","Дизајнер звука"],ru:["Лира","Режиссёр диалогов и озвучки","Саунд-дизайнер"],
+  ja:["ライラ","台詞・ボイスディレクター","サウンドデザイナー"],zh:["莱拉","对白与配音导演","声音设计师"],ko:["라이라","대사·보이스 디렉터","사운드 디자이너"],hi:["लायरा","संवाद और आवाज़ निर्देशक","साउंड डिज़ाइनर"],
+  th:["ไลรา","ผู้กำกับบทพูดและเสียงพากย์","นักออกแบบเสียง"],ta:["லைரா","உரையாடல் & குரல் இயக்குநர்","ஒலி வடிவமைப்பாளர்"],fa:["لایرا","کارگردان دیالوگ و صدا","طراح صدا"],ckb:["لایرا","دەرهێنەری دیالۆگ و دەنگ","دیزاینەری دەنگ"],
+  am:["ላይራ","የንግግር እና የድምፅ ዳይሬክተር","የድምፅ ዲዛይነር"]};
+Object.entries(CREW91).forEach(([l,[n,r1,r2]])=>{const d=CREW_FIXED[l]=CREW_FIXED[l]||{};d.Lyra=n;d["Dialogue & Voice Director"]=r1;d["Sound Designer"]=r2});
+CREW_EN_NAMES.push("Lyra");CREW_EN_ROLES.push("Dialogue & Voice Director","Sound Designer");
+const CREW_RX91=new RegExp("^("+CREW_EN_NAMES.map(reEsc).join("|")+")( will handle this)? · ("+CREW_EN_ROLES.map(reEsc).join("|")+")(?:\\. ([\\s\\S]+))?$");
+L=(o=>function(en,ar){const l=S&&S.lang;if(l&&l!=="en"&&l!=="ar"){const d=CREW_FIXED[l];if(d){const k=String(en).trim(),m=CREW_RX91.exec(k);
+  if(m&&(m[1]==="Lyra"||/^(Dialogue & Voice Director|Sound Designer)$/.test(m[3]))){const nm=d[m[1]]||m[1],rl=d[m[3]]||m[3];return(m[2]?(HANDLE_T[l]||"{n}").replace("{n}",nm):nm)+" · "+rl+(m[4]?(l==="ja"||l==="zh"?"。":l==="am"?"። ":". ")+o(m[4],m[4]):"")}}}return o(en,ar)})(L);
+/* the landing page: nine specialists, in the order they work */
+nooiLandingCrew=function(){return'<section class="lpsec" id="lp-crew"><div class="kicker">'+L("YOUR AI FILM CREW","طاقمك الذكي")+'</div><h2 class="lph2">'+L("Nine specialists. ","تسعة متخصصين. ")+'<span class="mute">'+L("One film.","فيلم واحد.")+'</span></h2>'+
+  '<p class="lpsub">'+L("Every project is handled by a crew of AI agents — from the first line of the script to the final quality check.","كل مشروع يتولاه طاقم من الوكلاء الأذكياء — من أول سطر في النص حتى فحص الجودة الأخير.")+'</p><div class="lpcrew">'+
+  ORDER90.map(id=>{const b=BOT(id),inf=CREW_INFO[id];if(!b||!inf)return"";return'<div class="lpbot" data-bot="'+id+'" tabindex="0" style="--bc:'+crewAccent(b.c)+'"><div class="lpbav">'+botSVG(id,"idle",92)+"</div><b>"+esc(L(b.name[0],b.name[1]))+"</b><i>"+esc(L(inf[0],inf[1]))+"</i><p>"+esc(L(inf[2],inf[3]))+"</p></div>"}).join("")+"</div></section>"};
+/* the home box's plan names Lyra where the video speaks, and Echo's realistic sound */
+hfStudioPlanHTML=(o=>function(){let h=o();if(S.hf.tab!=="video"||h.indexOf('data-bot="sound"')<0)return h;
+  const v=hfBotLine("voice",L("Gives every person who speaks a real, steady voice and directs each line.","يعطي كل من يتكلم صوتاً حقيقياً ثابتاً ويوجّه كل جملة.")).replace('<li class="hbl"','<li class="hbl" data-bot="voice"');
+  return h.replace('<li class="hbl" data-bot="sound"',v+'<li class="hbl" data-bot="sound"').replace(esc(L("Adds sound where the model makes it.","يضيف الصوت حيث يدعمه النموذج.")),esc(L("Designs real sound — effects, ambience and music — where the model makes sound.","يصمم صوتاً حقيقياً — مؤثرات وأجواء وموسيقى — حيث يصنع النموذج الصوت.")))})(hfStudioPlanHTML);
+
+/* ---- the film crew: Lyra's stage (cast + directed lines) between the Cinematographer and Echo ---- */
+const vByName91=n=>{n=String(n||"").toLowerCase().trim();return VOICES91.find(v=>v[0].toLowerCase()===n||v[1].toLowerCase()===n)};
+function castVoices91(people){const used=new Set(),out={};people.forEach(p=>{const g=p.gender==="female"||p.gender==="male"?p.gender:"male",age=p.age<25?"young":p.age>=58?"old":"middle";
+  const pool=VOICES91.filter(v=>v[2]===g),v=pool.find(x=>x[3]===age&&!used.has(x[0]))||pool.find(x=>!used.has(x[0]))||pool[0];used.add(v[0]);out[p.name.toLowerCase()]=v[0]});return out}
+SCHEMA.voice=S_("obj",{p:{style:S_("str",{opt:1}),cast:S_("arr",{max:9,of:S_("obj",{p:{name:S_("str"),voice:S_("str"),why:S_("str",{opt:1})}})}),lines:S_("arr",{max:80,of:S_("obj",{p:{id:S_("str"),speaker:S_("str"),line:S_("str"),delivery:S_("enum",{v:DELIVERY91})}})})}});
+SCHEMA.sound.p.shots.of.p.ambience=S_("str",{opt:1});
+crewNormalize=(o=>function(id,x,ctx){if(id==="sound"&&x&&Array.isArray(x.shots)){const amb=x.shots.map(s=>str(s&&s.ambience));const r=o(id,x,ctx);if(r&&r.shots)r.shots.forEach((s,i)=>{s.ambience=amb[i]||"";s.voice_line="";s.speaker=""});return r}
+  if(id!=="voice"||!x||typeof x!=="object")return o(id,x,ctx);const Cs=(ctx.out.casting||{}).characters||[],D=ctx.out.director||{shots:[]};
+  x.style=str(x.style);x.lines=(x.lines||[]).map((l,i)=>({id:str(l.id)||((D.shots[i]||D.shots[0]||{}).id||""),speaker:str(l.speaker)||"narrator",line:str(l.line),delivery:DELIVERY91.includes(l.delivery)?l.delivery:near(l.delivery,DELIVERY91,"neutral")})).filter(l=>l.line);
+  const auto=castVoices91(Cs.map(c=>({name:c.name,gender:c.gender,age:c.age})).concat([{name:"narrator",gender:/^(ar|fa|ckb|ur)/.test(ctx.brief.lang)?"male":"female",age:40}]));
+  const have={};(x.cast||[]).forEach(c=>{const n=str(c.name),v=vByName91(c.voice);if(n)have[n.toLowerCase()]={name:n,voice:v?v[0]:auto[n.toLowerCase()]||"",why:str(c.why)}});
+  x.lines.forEach(l=>{const k=l.speaker.toLowerCase();if(!have[k])have[k]={name:l.speaker,voice:auto[k]||castVoices91([{name:l.speaker,gender:"male",age:40}])[k],why:""}});
+  // a voice the client chose for a character on the Characters page always wins
+  Object.values(have).forEach(c=>{const ch=(S.chars||[]).find(z=>z.name&&z.name.toLowerCase()===c.name.toLowerCase());if(ch&&ch.voice&&ch.voice.vid)c.voice=ch.voice.vid});
+  x.cast=Object.values(have);return x})(crewNormalize);
+crossCheck=(o=>function(id,x,ctx){if(id!=="voice")return o(id,x,ctx);const e=[],D=ctx.out.director,W=ctx.out.writer,shots=new Set((D?D.shots:[]).map(s=>s.id)),names=(W?W.characters:[]).map(c=>c.name.toLowerCase()).concat(["narrator","الراوي","راوي"]);
+  x.lines.forEach(l=>{if(!shots.has(l.id))e.push("line \""+l.line.slice(0,30)+"\" points to unknown shot "+l.id);if(!names.includes(l.speaker.toLowerCase()))e.push("line \""+l.line.slice(0,30)+"\": unknown speaker "+l.speaker)});
+  const seen={};x.cast.forEach(c=>{if(c.voice&&seen[c.voice]&&seen[c.voice]!==c.name)e.push(c.name+" and "+seen[c.voice]+" share one voice");seen[c.voice]=c.name});
+  const wl=(W?W.scenes:[]).reduce((a,s)=>a+s.dialogue.length,0);if(wl&&!x.lines.length)e.push("the writer's dialogue is missing from the voice lines");return e})(crossCheck);
+crewPrompt=(o=>function(id,ctx,notes){if(id==="sound")return o(id,ctx,notes).replace(/Design sound for every shot:[^`]*?Keep the same shot ids\./,"Design realistic sound for every shot — what a real recording would hear: sfx (name the sources and materials, e.g. \"leather boots on wet gravel, a cup set on wood\"), ambience (the bed of the place: room tone, street, wind) and global music {genre, mood, bpm} mixed under the voices. The spoken lines are cast and directed by Lyra — don't write any. Keep the same shot ids.").replace('"sfx":"","voice_line":"","speaker":""','"sfx":"","ambience":""');
+  if(id!=="voice")return o(id,ctx,notes);const b=BOT(id),B=ctx.brief,lang=crewLangName(B.lang),prev={};BOTS.slice(0,BOTS.findIndex(x=>x.id===id)).forEach(x=>{if(ctx.out[x.id])prev[x.id]=ctx.out[x.id]});
+  const rules="Cast one real voice for every character who speaks (and the narrator if there is one) from this voice library — name (gender, age, feel): "+VOICES91.map(v=>v[1]+" ("+v[2]+", "+v[3]+", "+v[4]+")").join("; ")+". Match each character's gender, age and personality from casting; never give two characters the same voice. Then write the spoken lines shot by shot from the writer's dialogue: id (a director shot id), speaker (a character name or \"narrator\"), line (natural and short, written for the ear — the way people really talk, commas where a breath goes, about 2.5 words a second so it fits the shot), delivery ("+DELIVERY91.join("|")+") chosen from what is happening in that moment. Works for films, shorts, songs (short phrases on the beat) and presenter videos (one steady, warm energy).";
+  const hint='{"style":"","cast":[{"name":"","voice":"George","why":""}],"lines":[{"id":"S1-1","speaker":"","line":"","delivery":"warm"}]}';
+  return"FILM CREW · VOICE · You are "+b.name[0]+", the "+b.role[0]+" in an AI film crew. "+rules+"\nBRIEF: "+B.idea.slice(0,1500)+"\nWrite all human-readable text in "+lang+". Keep JSON keys, ids and voice names in English.\n"+(notes&&notes.length?"FIX THESE PROBLEMS FROM REVIEW:\n- "+notes.slice(0,12).join("\n- ")+"\n":"")+(Object.keys(prev).length?"WORK HANDED OVER BY THE CREW:\n"+JSON.stringify(prev).slice(0,14000)+"\n":"")+"Return ONLY JSON exactly like: "+hint})(crewPrompt);
+fallback=(o=>function(id,ctx){if(id!=="voice")return o(id,ctx);const W=ctx.out.writer,D=ctx.out.director,lines=[];
+  (W?W.scenes:[]).forEach(sc=>{const sh=(D?D.shots:[]).filter(s=>s.scene_id===sc.id);if(!sh.length)return;sc.dialogue.forEach((d,i)=>lines.push({id:sh[Math.min(i,sh.length-1)].id,speaker:d.speaker||"narrator",line:d.line,delivery:/[!！]/.test(d.line)?"excited":/[?؟]/.test(d.line)?"warm":"neutral"}))});
+  return{style:"natural",cast:[],lines}})(fallback);
+// the code audit covers every stage before the proofreader (it stopped at the seventh agent)
+hardAudit=function(ctx){const out=[],o=ctx.out,add=(sev,stage,problem,fix)=>out.push({severity:sev,stage,problem,fix}),before=BOTS.filter(b=>b.id!=="proof");
+  before.forEach(b=>{if(!o[b.id])add("error",b.id,"No output","Run this stage again")});
+  const texts=[];(function walk(v){if(typeof v==="string")texts.push(v);else if(v&&typeof v==="object")Object.values(v).forEach(walk)})(o);const flag=texts.map(moderate).find(Boolean);if(flag)add("error","writer","Content breaks the Acceptable Use Policy ("+flag+")","Rewrite without prohibited content");
+  if(/^(ar|fa|ckb|ur)/.test(ctx.brief.lang)&&o.writer){const lines=o.writer.scenes.flatMap(s=>s.dialogue.map(d=>d.line)).join(" ");const letters=lines.replace(/[^\p{L}]/gu,"");if(letters.length>20&&(lines.match(/[؀-ۿ]/g)||[]).length/letters.length<.5)add("warning","writer","Dialogue is not mainly in the chosen language","Rewrite the dialogue in "+crewLangName(ctx.brief.lang))}
+  before.forEach(b=>{if(o[b.id])crossCheck(b.id,o[b.id],ctx).forEach(p=>add(/missing|unknown|exceeds|not in|no design|No output|share one voice/.test(p)?"error":"warning",b.id,p,"Fix and keep ids consistent"))});
+  if(o.producer&&!crFree()&&o.producer.credits_estimate>S.credits)add("warning","producer","Estimated "+o.producer.credits_estimate+" credits > balance "+S.credits,"Top up or shorten the film");
+  return out};
+// every shot carries Lyra's lines (who says what, how) and Echo's sound
+pkgShots=(o=>function(run){const sh=o(run),V=run.out.voice,So=run.out.sound;if(!sh.length)return sh;const by=(l,id)=>(l||[]).find(x=>x.id===id)||{};
+  return sh.map(s=>{const ls=V?(V.lines||[]).filter(l=>l.id===s.id):[];return Object.assign(s,{lines:ls,voice:ls.length?ls.map(l=>l.line).join(" "):s.voice,speaker:ls.length?ls[0].speaker:s.speaker,ambience:by(So&&So.shots,s.id).ambience||""})})})(pkgShots);
+stageSummary=(o=>function(id,x){if(id==="voice"&&x){const li=a=>"<ul class=\"cso\">"+a.map(y=>"<li dir=\"auto\">"+y+"</li>").join("")+"</ul>";
+    return'<p class="small mute">'+x.cast.map(c=>"<b>"+esc(c.name)+"</b> → "+esc((vByName91(c.voice)||[0,c.voice])[1])).join(" · ")+"</p>"+li(x.lines.slice(0,8).map(l=>'<span class="mono dim">'+esc(l.id)+"</span> <b>"+esc(l.speaker)+"</b> <i class=\"dim\">("+esc(l.delivery)+")</i> “"+esc(l.line.slice(0,70))+"”"))}
+  if(id==="sound"&&x)return'<p class="small mute">'+esc(x.music.genre)+" · "+esc(x.music.mood)+" · "+x.music.bpm+' bpm</p><ul class="cso">'+x.shots.slice(0,10).map(s=>'<li dir="auto"><span class="mono dim">'+esc(s.id)+"</span> "+esc(s.sfx)+(s.ambience?' <i class="dim">· '+esc(s.ambience)+"</i>":"")+"</li>").join("")+"</ul>";return o(id,x)})(stageSummary);
+// "Voices, sound & music": one dialogue track in the cast voices (breaths, pauses, a real room), a realistic effect per shot, the score
+function crewAudioPlan91(run){const sh=pkgShots(run),V=run.out.voice,So=run.out.sound,lines=sh.flatMap(s=>s.lines||[]).filter(l=>l.line),fx=((So&&So.shots)||[]).filter(s=>s.sfx).slice(0,8);
+  const chars=lines.reduce((a,l)=>a+l.line.length,0),per=(ND.info&&+ND.info.per900)||1,vc=lines.length?(API.mode==="server"?Math.max(1,Math.ceil(chars/900*per)):lines.length*3):0;
+  return{lines,fx,cost:vc+fx.length*PRICE_TABLE.fixed.sfx+(So&&So.music?4:0)}}
+crewAudio=(o=>function(run){const P=crewAudioPlan91(run),V=run.out.voice,So=run.out.sound,title=(run.out.writer||{}).title||L("Film","فيلم");if(!V||API.mode!=="server"||!P.lines.length)return o(run);let n=0;
+  const cast=Object.fromEntries((V.cast||[]).map(c=>[c.name.toLowerCase(),c.voice])),spk=[],voices={};
+  const lines=P.lines.map(l=>{const k=l.speaker.toLowerCase();let i=spk.indexOf(k);if(i<0){spk.push(k);i=spk.length-1;if(cast[k])voices[i]=cast[k]}const c=((run.out.casting||{}).characters||[]).find(z=>z.name.toLowerCase()===k);return{text:l.line,speaker:i,emotion:l.delivery,gender:c?c.gender:undefined}});
+  ndMake(lines,{lang:run.brief.lang,tags:true,room:true,ear:true,voices,context:(run.out.writer||{}).logline||"",title:L("Dialogue · ","الحوار · ")+title,meta:{crew:run.id}}).then(()=>{if(S.view==="crew"||S.view==="library")renderView();toast(L("The dialogue track is ready — every character in their own voice.","مسار الحوار جاهز — كل شخصية بصوتها."),{type:"ok"})}).catch(e=>toast(String(e.message||e),{type:"warn"}));n++;
+  P.fx.forEach(s=>{if(addJob({kind:"sfx",prompt:s.sfx+(s.ambience?", with "+s.ambience+" underneath":""),title:L("Sound · ","صوت · ")+s.id,dur:3,cost:PRICE_TABLE.fixed.sfx,secs:2,art:"wave",meta:{crew:run.id,shot:s.id}}))n++});
+  const M_=So&&So.music;if(M_&&addJob({kind:"music",prompt:M_.genre+", "+M_.mood+", "+M_.bpm+" bpm",title:L("Score · ","الموسيقى · ")+title,cost:4,secs:6,dur:Math.round((run.out.editor||{}).total_duration||30),meta:{crew:run.id}}))n++;
+  if(n){renderAll();toast(n+L(" audio jobs started"," مهام صوتية بدأت"),{type:"ok"})}})(crewAudio);
+VIEWS.crew=(o=>function(){const h=o(),run=S.crew.run;if(API.mode==="server"&&!ND.info)setTimeout(ndLoad,0);if(!run||!run.out||!run.out.director)return h;const c=crewAudioPlan91(run).cost;
+  return h.replace(L("Make voices & music","اصنع الأصوات والموسيقى"),esc(L("Voices, sound & music · ","الأصوات والصوت والموسيقى · ")+c+" cr"))})(VIEWS.crew);
+(()=>{const st=document.createElement("style");st.textContent=`
+@media (prefers-reduced-motion: no-preference){
+ .fb-voice.st-idle .body{animation:fbBreathe 3s ease-in-out infinite}
+ .fb-voice.st-idle .fx-wave{animation:wave91 3s ease-in-out infinite}
+ .fb-voice.st-working .body{animation:fbBeat .7s ease-in-out infinite}
+ .fb-voice.st-working .fx-wave .w0{animation:wave91 .7s ease-in-out infinite}.fb-voice.st-working .fx-wave .w1{animation:wave91 .7s ease-in-out .18s infinite}
+ .fb-voice.st-done .body{animation:fbSing91 1s cubic-bezier(.3,1.4,.5,1);transform-box:fill-box;transform-origin:50% 100%}
+ .fb-voice.st-done .fx-wave{animation:waveOut91 1s ease-out}
+}
+@keyframes wave91{0%,100%{opacity:.25}50%{opacity:1}}
+/* Lyra's own "done": a singer's bow — leans back on the last note, then a small bow — while her sound waves ring out */
+@keyframes fbSing91{0%{transform:none}35%{transform:translateY(-3px) rotate(-5deg)}65%{transform:translateY(2px) rotate(4deg) scaleY(.96)}100%{transform:none}}
+@keyframes waveOut91{0%{opacity:1}60%{opacity:.2}100%{opacity:1}}
+/* nine on the landing page: three rows of three on a computer; on a phone the last one takes the whole row */
+.lpcrew{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:1079px){.lpcrew{grid-template-columns:repeat(2,minmax(0,1fr))}.lpcrew>.lpbot:last-child:nth-child(odd){grid-column:1/-1}}
+@media (max-width:360px){.lpcrew{grid-template-columns:1fr}}
+`;document.head.appendChild(st)})();
+
+/* ================= v91: CHARACTER VOICES — pick a real voice for each character, hear it first, and it stays that character's voice in dialogue, storyboards and films ================= */
+/* The voices come from the voice library (men, women and a neutral voice; young, middle-aged, older; each with its own feel).
+   A sample is free when the voice engine has one or someone heard it before; otherwise it is made once for 1 credit (the price
+   is on the button) and kept for everyone. What makes it sound real: one steady voice per character, a feeling for every
+   line, lines rewritten for the ear, breaths and pauses, the line before and after as context, and a real room with even loudness. */
+const VP91={info:null,loading:false,all:false,busy:{},sb:null,audio:null};
+const VFEEL91={warm:["warm","دافئ"],deep:["deep","عميق"],clear:["clear","واضح"],energetic:["energetic","حيوي"],casual:["casual","عفوي"],natural:["natural","طبيعي"],smooth:["smooth","ناعم"],relaxed:["relaxed","مسترخٍ"],friendly:["friendly","ودود"],
+  trustworthy:["trustworthy","موثوق"],intense:["intense","قوي"],soft:["soft","رقيق"],upbeat:["upbeat","مبهج"],confident:["confident","واثق"],expressive:["expressive","معبّر"],calm:["calm","هادئ"]};
+const VAGE91={young:["young","شاب"],middle:["middle-aged","متوسط العمر"],old:["older","كبير السن"]};
+const vGender91=g=>g==="female"?L("Woman","امرأة"):g==="male"?L("Man","رجل"):L("Neutral","محايد");
+async function vp91Load(){if(VP91.loading||API.mode!=="server")return;VP91.loading=true;try{VP91.info=await API.req("/v1/voice/natural?lang="+encodeURIComponent(S.lang||"en"));if(!ND.info)ND.info=VP91.info}catch(e){VP91.info={ready:false,voices:[]}}finally{VP91.loading=false}vp91Paint()}
+const vp91List=()=>(VP91.info&&VP91.info.voices&&VP91.info.voices.length?VP91.info.voices:VOICES91.map(v=>({id:v[0],name:v[1],gender:v[2],age:v[3],tone:v[4],sample:""})));
+function vp91Card(v,cur){const st=v.sample,busy=VP91.busy[v.id],srv=API.mode==="server";const play=!srv?"":'<button class="vp91play'+(busy?" busy":"")+'" data-act="vp91-play" data-id="'+v.id+'" aria-label="'+esc(L("Hear ","استمع إلى ")+v.name)+'"'+(st?"":" disabled")+">"+ic(busy?"refresh":"play")+(st==="paid"?"<span>1 cr</span>":"")+"</button>";
+  return'<div class="vp91c'+(cur===v.id?" on":"")+'"><button class="vp91pick" role="radio" aria-checked="'+(cur===v.id)+'" data-act="vp91-pick" data-id="'+v.id+'"><b>'+esc(v.name)+'</b><small>'+esc(vGender91(v.gender)+" · "+L(...(VAGE91[v.age]||[v.age,v.age]))+" · "+L(...(VFEEL91[v.tone]||[v.tone,v.tone])))+"</small></button>"+play+"</div>"}
+function vp91HTML(c){if(API.mode==="server"&&!VP91.info&&!VP91.loading)setTimeout(vp91Load,0);const g=(c.voice&&c.voice.gender)||c.gender,cur=c.voice&&c.voice.vid||"",all=vp91List();
+  const fit=all.filter(v=>!g||!["male","female"].includes(g)||v.gender===g||v.gender==="neutral"),list=VP91.all?all:fit,ready=!VP91.info||VP91.info.ready!==false;
+  return'<div class="vp91"><span class="lbl">'+L("Realistic voice","الصوت الواقعي")+'</span><p class="small dim" style="margin:0 0 8px">'+L("Choose the voice this character speaks with — it stays the same in every dialogue, storyboard and film.","اختر الصوت الذي تتكلم به هذه الشخصية — يبقى نفسه في كل حوار وستوري بورد وفيلم.")+"</p>"+
+    '<div class="vp91g" role="radiogroup" aria-label="'+esc(L("Realistic voice","الصوت الواقعي"))+'"><div class="vp91c'+(cur?"":" on")+'"><button class="vp91pick" role="radio" aria-checked="'+!cur+'" data-act="vp91-pick" data-id=""><b>'+L("Automatic","تلقائي")+"</b><small>"+L("The agents choose by age and personality","يختار الوكلاء حسب العمر والشخصية")+"</small></button></div>"+list.map(v=>vp91Card(v,cur)).join("")+"</div>"+
+    (fit.length<all.length?'<button class="btn sm ghost" style="margin-top:8px" data-act="vp91-all">'+(VP91.all?L("Show the matching voices","اعرض الأصوات المناسبة"):L("Show all "+all.length+" voices","اعرض كل الأصوات ("+all.length+")"))+"</button>":"")+
+    (API.mode==="server"&&!ready?'<p class="small" style="margin:8px 0 0;color:var(--warn,#d97706)">'+L("Voices play once a voice engine is connected (Admin → AI providers).","تعمل الأصوات بعد ربط محرك صوت (الإدارة ← مزودو الذكاء).")+"</p>":"")+
+    '<details class="vp91how"><summary class="small">'+L("How it sounds real","كيف يبدو حقيقياً")+'</summary><ul class="small mute"><li>'+L("One steady voice for this character, everywhere.","صوت واحد ثابت لهذه الشخصية في كل مكان.")+"</li><li>"+L("A feeling for every line — calm, warm, excited, serious, sad, a whisper.","إحساس لكل جملة — هادئ، دافئ، متحمس، جاد، حزين، همس.")+"</li><li>"+
+    L("Lines rewritten the way people really talk, with breaths and small pauses.","جمل معاد صياغتها كما يتكلم الناس فعلاً، مع أنفاس ووقفات صغيرة.")+"</li><li>"+L("Each line knows the line before and after, so the tone flows.","كل جملة تعرف ما قبلها وما بعدها، فينساب الأداء.")+"</li><li>"+L("A real room, gentle compression and even loudness — like a studio recording.","غرفة حقيقية وضغط لطيف ومستوى صوت متوازن — كتسجيل استوديو.")+"</li></ul></details></div>"}
+// open sections of the character page stay open when the page redraws (they all closed on every change)
+renderView=(o=>function(){const keep=S.view==="chars"?[...document.querySelectorAll("#main details.acc[open]>summary")].map(x=>x.textContent):null,r=o.apply(this,arguments);
+  if(keep&&keep.length&&S.view==="chars")document.querySelectorAll("#main details.acc>summary").forEach(x=>{if(keep.includes(x.textContent))x.parentElement.open=true});return r})(renderView);
+VIEWS.chars=(o=>function(){let h=o();const c=S.chars&&S.chars[S.charSel];if(!c||!c.voice)return h;return h.replace(/<button class="btn sm"[^>]*data-act="speak-char"[^>]*>/,m=>vp91HTML(c)+m)})(VIEWS.chars);
+async function vp91Play(id,btn){const v=vp91List().find(x=>x.id===id);if(!v||VP91.busy[id])return;if(API.mode!=="server"){toast(L("Voices play on the live site.","تعمل الأصوات في الموقع."),{type:"info"});return}
+  VP91.busy[id]=1;if(btn){btn.classList.add("busy");btn.disabled=true}
+  try{const r=await API.req("/v1/voice/sample",{json:{id,lang:S.lang}});v.sample="ready";if(VP91.audio)VP91.audio.pause();VP91.audio=new Audio(r.url);VP91.audio.play().catch(()=>{});if(r.cost)toast(L("Sample made — it's free from now on.","صُنعت العيّنة — مجانية من الآن."),{type:"ok"})}
+  catch(e){toast(String(e.message||e),{type:"warn"})}finally{delete VP91.busy[id];vp91Paint()}}
+// the picker redraws itself in place, so the Voice section stays open and the page doesn't jump
+function vp91Paint(){const box=document.querySelector(".vp91"),c=S.chars&&S.chars[S.charSel];if(box&&c&&c.voice&&S.view==="chars")box.outerHTML=vp91HTML(c)}
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act^="vp91-"]');if(!a)return;e.stopImmediatePropagation();const c=S.chars&&S.chars[S.charSel];
+  if(a.dataset.act==="vp91-all"){VP91.all=!VP91.all;vp91Paint();return}
+  if(a.dataset.act==="vp91-play"){vp91Play(a.dataset.id,a);return}
+  if(a.dataset.act==="vp91-pick"&&c){const v=vp91List().find(x=>x.id===a.dataset.id);c.voice.vid=v?v.id:"";c.voice.vname=v?v.name:"";if(v&&["male","female"].includes(v.gender))c.voice.gender=v.gender;persist();vp91Paint();if(v)toast(L(c.name+" now speaks with "+v.name+".",c.name+" يتكلم الآن بصوت "+v.name+"."),{type:"ok"})}},true);
+// "Hear voice" plays the character's real voice when one is chosen (instead of the browser's robot voice)
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="speak-char"]');if(!a)return;const c=S.chars&&S.chars[S.charSel];if(!c||!c.voice||!c.voice.vid||API.mode!=="server")return;e.stopImmediatePropagation();vp91Play(c.voice.vid,null)},true);
+// the Voice studio: a speaker named like a character gets that character's voice (unless you pick another)
+window.addEventListener("click",e=>{if(!e.target.closest||!e.target.closest('[data-act="nd-go"]'))return;const N=ndState(),t=$("#ndtext"),P=ndParse(t?t.value:N.text,N.tags!==false);
+  P.names.forEach(n=>{const k=n||"_",c=n&&(S.chars||[]).find(x=>x.name&&x.name.toLowerCase()===n.toLowerCase());if(!N.pick[k]&&c&&c.voice&&c.voice.vid)N.pick[k]=c.voice.vid})},true);
+ndSpeakers=(o=>function(){const N=ndState(),P=ndParse(N.text,N.tags);P.names.forEach(n=>{const k=n||"_",c=n&&(S.chars||[]).find(x=>x.name&&x.name.toLowerCase()===n.toLowerCase());if(!N.pick[k]&&c&&c.voice&&c.voice.vid)N.pick[k]=c.voice.vid});return o()})(ndSpeakers);
+// the storyboard's voiceover: each character speaks with its chosen voice
+window.addEventListener("click",e=>{if(!e.target.closest||!e.target.closest('[data-act="agsb-voice"]'))return;const fr=(S.board&&S.board.frames)||[],spk={},voices={};let k=0;
+  fr.filter(f=>(f.dialogue||"").trim()).forEach(f=>{if(!(f.speaker in spk)){spk[f.speaker]=k++;const c=charById(f.speaker);if(c&&c.voice&&c.voice.vid)voices[spk[f.speaker]]=c.voice.vid}});VP91.sb=Object.keys(voices).length?voices:null},true);
+API.req=(o=>function(path,opts){if(VP91.sb&&path==="/v1/voice/natural"&&opts&&opts.json&&Array.isArray(opts.json.lines)){opts.json.voices=Object.assign({},VP91.sb,opts.json.voices||{});opts.json.tags=opts.json.tags!==false;VP91.sb=null}return o.apply(this,arguments)})(API.req);
+(()=>{const st=document.createElement("style");st.textContent=`
+.vp91{margin-top:14px}
+.vp91g{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.vp91c{display:flex;align-items:stretch;border:1px solid var(--line2);border-radius:12px;background:var(--panel2);overflow:hidden}
+.vp91c.on{border-color:var(--lime);box-shadow:0 0 0 1px var(--lime);background:color-mix(in srgb,var(--lime) 10%,var(--panel2))}
+.vp91pick{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:9px 10px;border:0;background:none;color:var(--text);text-align:start;cursor:pointer;min-height:48px}
+.vp91pick small{font-size:11.5px;color:var(--mute);line-height:1.3}
+.vp91play{flex:none;display:flex;align-items:center;justify-content:center;gap:3px;min-width:44px;padding:0 8px;border:0;border-inline-start:1px solid var(--line2);background:none;color:var(--text);cursor:pointer;font-size:11px}
+.vp91play svg{width:16px;height:16px}.vp91play[disabled]{opacity:.4;cursor:default}.vp91play.busy svg{animation:spin 1s linear infinite}
+.vp91how{margin-top:10px}.vp91how ul{margin:6px 0 0;padding-inline-start:18px}
+`;document.head.appendChild(st)})();
+
+/* ================= v91: 3D WORLD — Realistic means real: the AI's 360° picture lights the world, an AI photo covers the ground, photo cut-outs replace the built trees and palms; price on the Create button ================= */
+/* With only the picture engine connected, "Realistic" used to add a sky picture and nothing else, so the land, trees and houses
+   stayed low-poly. Now each realistic world asks the picture engine for: the 360° surroundings (also the light and reflections),
+   a seamless photo of the ground seen from above, and one photo per kind of plant on white (made into a cut-out in the browser,
+   free) — all shown as one price before Create. Real 3D objects and World Labs are added on top when they're connected. */
+const GROUND91={grass:"a lawn of fresh green grass with small weeds and a few fallen leaves",sand:"fine golden desert sand with soft wind ripples",snow:"fresh clean snow with a soft uneven surface",dirt:"dry brown earth with small stones and dry grass",
+  asphalt:"weathered city pavement and asphalt with fine cracks",stone:"old stone paving with worn joints",redrock:"red sandstone desert ground with small pebbles",floor:"a wooden floor",moon:"grey lunar regolith with tiny craters and footprints-free dust"};
+const PLANT91={tree:"a full-grown leafy tree",pine:"a tall pine tree",palm:"a date palm tree",ghaf:"a wide desert ghaf tree",bush:"a round green bush",cactus:"a tall desert cactus"};
+const nwBbN91=()=>{const n=NW.W&&NW.W.plantTypes?NW.W.plantTypes().filter(t=>PLANT91[t[0]]).length:3;return Math.min(3,n)};
+// the ground and the plants are simple pictures: the lowest-cost good picture model makes them (the 360° sky keeps the best one)
+const nwPartModel91=()=>typeof agImgModel==="function"?agImgModel():bestImg72(),nwPartCost91=()=>(IMG_MODELS[nwPartModel91()]||{cr:4}).cr||4;
+nwRealCost=(o=>function(){const c=NW.caps||{};if(c.worldlabs)return o();const objs=(S.world.plan&&S.world.plan.objects||[]).filter(x=>nwHeroish(x)).slice(0,2).length;return nwPanoCost()+nwPartCost91()*(1+nwBbN91())+(c.objects3d?objs*nwObjCost():0)})(nwRealCost);
+// a realistic world is the default once the picture engine is there (the price is on the Create button); your own choice is kept
+nwCaps=(o=>async function(){const c=await o();const W=S.world;if(c&&c.images&&!W.opts.look91){W.opts.look91=1;W.opts.look="real";persist();nwRefresh()}return c})(nwCaps);
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="nw-opt"][data-k="look"]');if(a)S.world.opts.look91=1},true);
+nwUI=(o=>function(){let h=o();const W=S.world,c=NW.caps||{},has=!!NW.W;
+  if(W.opts.look==="real"&&!(has&&!W.pic))h=h.replace(/(<button class="btn primary nw-go"[^>]*>[\s\S]*?<span>[^<]*<\/span>)(<\/button>)/,"$1"+'<span class="cost">'+nwRealCost()+" cr</span>$2");
+  if(W.opts.look==="real"&&!c.worldlabs)h=h.replace(/<p class="small mute nw-note">[\s\S]*?<\/p>/,'<p class="small mute nw-note">'+esc(L("Realistic: the AI makes a 360° picture of the surroundings that also lights the world, a real photo of the ground, and real-looking trees and plants"+(c.objects3d?", plus the main things as real 3D objects":"")+". The world is ready at once; the realistic parts appear as they're made.","واقعي: يصنع الذكاء صورة 360° للمحيط تُضيء العالم أيضاً، وصورة حقيقية للأرض، وأشجاراً ونباتات حقيقية المظهر"+(c.objects3d?"، والعناصر الرئيسية كمجسّمات ثلاثية حقيقية":"")+". العالم جاهز فوراً، والأجزاء الواقعية تظهر عند صنعها."))+"</p>");
+  return h})(nwUI);
+nwRealistic=(o=>async function(pic){await o(pic);const W=NW.W,c=NW.caps||{};if(!W||c.worldlabs)return;const plan=W.plan,seed=plan.seed,desc=plan.describe||plan.prompt||"",m=nwPartModel91(),cr=nwPartCost91(),made=[];
+  const gk=plan.terrain&&plan.terrain.ground;if(GROUND91[gk]&&gk!=="floor"&&!plan.splat){const j=addJob({kind:"image",model:m,aspect:"1:1",prompt:"A seamless tileable ground texture photographed straight down from above: "+GROUND91[gk]+". Even soft daylight, no shadows of objects, no horizon, no objects, the pattern fills the whole frame and its edges continue seamlessly. Photorealistic, high detail. For a place like: "+desc.slice(0,200),title:L("Ground · ","الأرض · ")+String(plan.title||"").slice(0,24),cost:cr,secs:30,art:"scene",meta:{nw:{seed,role:"ground"}}});if(j)made.push(j)}
+  for(const [t] of (W.plantTypes?W.plantTypes():[]).filter(x=>PLANT91[x[0]]).slice(0,3)){const j=addJob({kind:"image",model:m,aspect:t==="bush"?"1:1":"3:4",prompt:"One single "+PLANT91[t]+" standing alone, the whole plant from the ground to the very top, centered, straight side view at eye level, photorealistic, natural daylight, on a plain pure white background with nothing else: no ground, no shadow, no other plants, no text. Like the ones in "+desc.slice(0,160),title:L("Real plants · ","نباتات حقيقية · ")+t,cost:cr,secs:30,art:"scene",meta:{nw:{seed,role:"bb",type:t}}});if(j)made.push(j)}
+  if(made.length){S.world.track91=(S.world.track91||[]).concat(made.map(j=>j.id));persist()}})(nwRealistic);
+// finished parts join the world they were made for (the ground photo, the plant cut-outs)
+setInterval(async()=>{const W=S.world,T=W.track91;if(!T||!T.length)return;const left=[];
+  for(const id of T){const j=S.jobs.find(x=>x.id===id);if(!j)continue;const n=j.meta&&j.meta.nw;if(j.status==="failed"||!n)continue;if(j.status!=="complete"||!mediaUrl(j)){left.push(id);continue}
+    const here=NW.W&&NW.W.plan.seed===n.seed,P=W.plan&&W.plan.seed===n.seed?W.plan:null,u=mediaUrl(j);
+    try{if(n.role==="ground"){if(here&&await NW.W.setGround(u))toast(L("The real ground is here.","وصلت الأرض الحقيقية."),{type:"ok"});if(P)P.groundTex=u}
+      else if(n.role==="bb"){let k=0;if(here)k=await NW.W.setBillboard(n.type,u);if(P&&(k||!here))P.billboards=Object.assign({},P.billboards,{[n.type]:u});if(here&&k)toast(L("Real-looking plants are here.","وصلت نباتات حقيقية المظهر."),{type:"ok"})}}catch(e){console.warn("world part",e)}}
+  W.track91=left;persist()},2500);
+
+/* ================= v91: VIDEOS FIT THEIR FRAME — the whole video shows in every card and preview, and no two buttons sit on each other ================= */
+/* A small video preview (library, the Video page's takes, any thumbnail) played at the video's own size (1280 px wide in a
+   150 px card), so only its top-left corner showed; the home result cut the top and bottom off tall videos on a computer;
+   on the library cards "Share to Explore" sat on top of Delete, and on the big preview the old play button sat on top of
+   the player's Full screen button. */
+(()=>{const st=document.createElement("style");st.textContent=`
+video.frame,img.frame{display:block;width:100%;height:100%}
+.thumb>video.frame,.thumb video.frame{object-fit:contain!important;background:#000}
+.hfrm>video,.hfrm>.frame{object-fit:contain;background:#000}
+.xpshare{width:28px;height:28px}.xpshare svg{width:15px;height:15px}
+.thumb>.xpshare{top:6px;inset-inline-end:40px;z-index:4}
+.hfrc:not(.aud) .hfrm{width:min(100%,calc(420px * (var(--ar,16/9))));max-height:none;margin-inline:auto}
+.stage:has(.vp87)>.ctl{display:none}
+.stage:has(.vp87) .cap{bottom:58px}
+@media (max-width:767px){.hfres .hfrc:not(.aud) .hfrm{width:min(100%,calc(46vh * (var(--ar,16/9))))}}
+`;document.head.appendChild(st)})();
+/* "Share to Explore" goes inside the picture, next to Delete (top), clear of View (bottom) and the time (top, other side) */
+renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="library")document.querySelectorAll("[data-open-job] .xpshare").forEach(x=>{const t=x.parentElement.querySelector(".thumb");if(t&&x.parentElement!==t)t.appendChild(x)});return r})(renderView);
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

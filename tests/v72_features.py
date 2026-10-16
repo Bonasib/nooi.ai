@@ -2,7 +2,7 @@
 # (front / side / back views on white, a 2:1 panorama). Checks, on a phone and a desktop:
 #  · editor: the preview stays pinned while scrolling to the last tool, taps on the preview never move the page,
 #    overlapping sound effects get their own lanes, an AI-designed effect is added and drawn, the logo size stays a clean number
-#  · live sketch "Make it real" and Draw & create send the sketch to the engine (and leave the user's own reference alone)
+#  · the sketch's "Preview with AI" sends the drawing to the engine (and leaves the user's own reference alone)
 #  · a character made from an uploaded photo; its looks use the photo as the face reference
 #  · AI full 3D from a photo and for a character: front/side/back views → a closed mesh with real depth → editor / scene
 #  · a 3D world from a photo (3D Studio): 21:9 panorama job continuing the photo → sky + lighting → walk-through clip in the editor
@@ -74,18 +74,11 @@ async def run(p, w):
     r["aiVfx"] = await E("""()=>{const v=S.ed.vfx[S.ed.vfx.length-1];if(!v||!VFX_SPEC[v.kind])return null;const c=document.createElement('canvas');c.width=640;c.height=360;const x=c.getContext('2d');edVfxDraw(x,640,360,v.start+1);const d=x.getImageData(0,0,640,360).data;let n=0;for(let i=3;i<d.length;i+=4)if(d[i]>0)n++;return [VFX_SPEC[v.kind].layers[0].dir,VFX_SPEC[v.kind].layers[0].color,n,!!document.querySelector('[data-vx="'+v.id+'"]')]}""")
     ok(r["aiVfx"] and r["aiVfx"][0] == "swirl" and r["aiVfx"][2] > 300 and r["aiVfx"][3], f"{tag}: AI effect {r['aiVfx']}")
     await E("()=>{S.brand.size=5.3962965866;S.ed.tab='logo';renderView()}"); r["logo"] = await E("()=>S.brand.size"); ok(r["logo"] == 5.4, f"{tag}: logo size {r['logo']}")
-    # live sketch → make it real
-    await E("()=>{S.sketch.target='vehicle';S.sketch.prompt='a red classic car';S.sketch.style='realistic';go('sketch');renderAll()}"); await pg.wait_for_timeout(500)
-    await E("()=>{SK.strokes=[{tool:'pen',color:'#222',size:6,pts:[[.2,.6,.6],[.5,.4,.6],[.8,.6,.6]]}];skRedraw();document.querySelector('[data-act=sk-hd]').click()}")
-    ok(await wait_for(E, "()=>S.jobs.some(j=>j.meta&&j.meta.skLive&&j.remote)"), f"{tag}: sketch job sent")
-    await pg.wait_for_timeout(500); r["skBox"] = await E("()=>!!document.querySelector('.sklive72')"); ok(r["skBox"], f"{tag}: real pictures shown under the live sketch")
-    # draw & create keeps the user's own reference
-    await E("()=>{S.drw.mode='draw';S.drw.scene='a red car on a beach';S.drw.style='realistic';S.drw.n=1;go('draw');renderAll()}"); await pg.wait_for_timeout(600)
-    await pg.locator('#drwcv').wait_for(state="visible", timeout=10000); bx = await pg.locator('#drwcv').bounding_box()   # (a busy machine draws the page later)
-    await pg.mouse.move(bx['x'] + 40, bx['y'] + 40); await pg.mouse.down(); await pg.mouse.move(bx['x'] + 180, bx['y'] + 120, steps=8); await pg.mouse.up()
-    await E("()=>{M.iRef={type:'image',file:new Blob(['x'],{type:'image/png'}),name:'mine.png',url:''};document.querySelector('[data-act=drw-go]').click()}")
-    sent = await wait_for(E, "()=>S.jobs.some(j=>j.batch===S.drw.batch&&j.remote)")
-    ok(sent, f"{tag}: draw job sent " + ("" if sent else json.dumps(await E("()=>({batch:S.drw.batch,jobs:S.jobs.filter(j=>j.batch&&j.batch===S.drw.batch).map(j=>[j.status,j.error,j.remote]),empty:DRW.ctx?drwEmpty():'noctx',view:S.view,toasts:[...document.querySelectorAll('.toast')].map(t=>t.textContent).slice(-3)})"))))
+    # the sketch (v91: one drawing, one "Preview with AI" button) sends the drawing to the engine and leaves the user's own reference alone
+    await E("()=>{S.sketch.prompt='a red classic car';S.sketch.n91=1;M.iRef={type:'image',file:new Blob(['x'],{type:'image/png'}),name:'mine.png',url:''};go('sketch');renderAll()}"); await pg.wait_for_timeout(500)
+    await E("()=>{SK.strokes=[{tool:'pen',color:'#222',size:6,pts:[[.2,.6,.6],[.5,.4,.6],[.8,.6,.6]]}];skRedraw();document.querySelector('[data-act=sk91-go]').click()}")
+    ok(await wait_for(E, "()=>S.jobs.some(j=>j.meta&&j.meta.sk91&&j.remote)"), f"{tag}: sketch job sent")
+    await pg.wait_for_timeout(500); r["skBox"] = await E("()=>!!document.querySelector('#sk91res .dfig')"); ok(r["skBox"], f"{tag}: the AI preview is shown under the button")
     r["keepRef"] = await E("()=>M.iRef&&M.iRef.name"); ok(r["keepRef"] == "mine.png", f"{tag}: the user's reference was replaced ({r['keepRef']})")
     # character from a photo → looks keep the face
     await E("()=>{go('chars');renderAll()}"); await pg.wait_for_timeout(500); n0 = await E("()=>S.chars.length")
@@ -145,10 +138,8 @@ if __name__ == "__main__":
             except Exception: time.sleep(.25)
         out = asyncio.run(main())
         jobs = db_jobs()
-        sk = [j for j in jobs if (j.get("payload") or {}).get("meta", {}).get("skLive")]
+        sk = [j for j in jobs if (j.get("payload") or {}).get("meta", {}).get("sk91")]
         ok(sk and "skImg" in sk[-1]["payload"].get("inputs", {}), "sketch picture not uploaded to the engine")
-        dr = [j for j in jobs if (j.get("payload") or {}).get("meta", {}).get("sketch") and not (j.get("payload") or {}).get("meta", {}).get("skLive")]
-        ok(dr and "iRef" in dr[-1]["payload"].get("inputs", {}), "draw sketch not uploaded to the engine")
         lk = [j for j in jobs if j.get("kind") == "look" and (j.get("payload") or {}).get("meta", {}).get("photo")]
         ok(lk and "chRef" in lk[-1]["payload"].get("inputs", {}), "character photo not sent with the looks")
         a3 = [j for j in jobs if (j.get("payload") or {}).get("meta", {}).get("a3")]
