@@ -20,9 +20,10 @@ option groups are folded into one line (“choose …”). Shared parts (top bar
 | 16:9 | chooses the format (16:9, 9:16, 1:1…) |
 | Send | creates from the prompt |
 | Claude & ChatGPT Connect | opens **Integrations · MCP** |
+| All tools | opens **All tools** |
 | Create video Text or image to video with camera control and  | opens **Create video** |
 | Create image Several images per prompt, pick the best. | opens **Create image** |
-| nooi Studio Eight AI bots write, design, direct, shoot, scor | opens **nooi Studio** |
+| nooi Studio Eight AI agents write, design, direct, shoot, sc | opens **nooi Studio** |
 | UGC ads Market a product with a presenter, product shots, an | opens **UGC ads** |
 | Characters Characters with ages, voices and several looks. | opens **Characters** |
 | 3D World Write what you want — or add a picture — and walk a | opens **3D World** |
@@ -130,6 +131,44 @@ _Ready steps in a row: picture → video → sharper copy._
 | nooi Auto | — |
 | Run the recipe 42 | action `rec-run` |
 | Save as my recipe | action `rec-save` |
+| contact@nooi.ai | link → mailto:contact@nooi.ai |
+| Help & support | opens **Help & support** |
+| Admin login | admin sign-in |
+
+## All tools
+
+### All tools  `apps`
+
+_Every tool in one place, by section._
+
+| control | what it does |
+|---|---|
+| Find a tool | field (search) |
+| Templates Ready-made starting points. | opens **Templates** |
+| Community Videos and images made by the community — recreate | opens **Community** |
+| Recipes Ready steps in a row: picture → video → sharper copy | opens **Recipes** |
+| Create image Several images per prompt, pick the best. | opens **Create image** |
+| Sketch to life Draw and watch it become a character, asset o | opens **Sketch to life** |
+| Coloring book Turn your film, story or post into printable c | opens **Coloring book** |
+| Create video Text or image to video with camera control and  | opens **Create video** |
+| Cinema Studio Camera, lens, focal length, aperture, move and | opens **Cinema Studio** |
+| Motion Control A character performs the movement of any vide | opens **Motion Control** |
+| UGC ads Market a product with a presenter, product shots, an | opens **UGC ads** |
+| nooi Studio Eight AI agents write, design, direct, shoot, sc | opens **nooi Studio** |
+| Chapter story Multi-chapter films that continue from the las | opens **Chapter story** |
+| Storyboard Frames, dialogue, sound and transitions on a canv | opens **Storyboard** |
+| Voice & audio Voices by dialect and age, lip sync, music and | opens **Voice & audio** |
+| Subtitles & dubbing Transcribe, translate and dub with synce | opens **Subtitles & dubbing** |
+| Characters Characters with ages, voices and several looks. | opens **Characters** |
+| 3D World Write what you want — or add a picture — and walk a | opens **3D World** |
+| Video editor Trim, effects, text, and edit frames with a pro | opens **Video editor** |
+| Video from pictures Your pictures become a video with gentle | opens **Video from pictures** |
+| Visual effects Background & keying, color grading and motion | opens **Visual effects** |
+| Enhance Upscale 4K, 120 fps, extend, reframe, captions, dubb | opens **Enhance** |
+| Video intelligence Summarize long videos, ask questions abou | opens **Video intelligence** |
+| Schedule & publish Schedule and publish to every platform. | opens **Schedule & publish** |
+| Content plan Analyze your website and get a ready content pl | opens **Content plan** |
+| Hook lab Openings that stop the scroll, for any topic. | opens **Hook lab** |
 | contact@nooi.ai | link → mailto:contact@nooi.ai |
 | Help & support | opens **Help & support** |
 | Admin login | admin sign-in |
@@ -390,7 +429,7 @@ _Market a product with a presenter, product shots, an image or motion graphics._
 
 ### nooi Studio  `crew`
 
-_Eight AI bots write, design, direct, shoot, score, edit, produce and audit your film._
+_Eight AI agents write, design, direct, shoot, score, edit, produce and check your film._
 
 | control | what it does |
 |---|---|
@@ -503,6 +542,108 @@ _Frames, dialogue, sound and transitions on a canvas._
 | Put it together in the editor | action `agsb-edit` |
 | Render every frame as a clip 336 | action `board-render` |
 
+## Audio
+
+### Voice & audio  `voice`
+
+_Voices by dialect and age, lip sync, music and SFX._
+
+| control | what it does |
+|---|---|
+| Voice & audio | opens **Voice & audio** |
+| Subtitles & dubbing | opens **Subtitles & dubbing** |
+| Script | field |
+| Natural | action `nd-emo` |
+| Calm | action `nd-emo` |
+| Warm | action `nd-emo` |
+| Excited | action `nd-emo` |
+| Serious | action `nd-emo` |
+| Sad | action `nd-emo` |
+| Angry | action `nd-emo` |
+| Whisper | action `nd-emo` |
+| Playful | action `nd-emo` |
+| French Arabic English Japanese Chinese Hindi Spanish Korean  | field |
+| English | — |
+| Neutral American British Australian Indian | field |
+| Neutral | — |
+| on | field (checkbox) |
+| Make it sound real free | action `nd-go` |
+| Clone a voice | action `vc-open` |
+| nooi voices | action `veng` |
+| ElevenLabs PRO | action `veng` |
+| choose: Remove noise · Change voice | sets `alab.mode` |
+| Upload audio | field (file) |
+| Record | action `al-rec` |
+| 60 | field (range) |
+| choose: Off · 50 Hz · 60 Hz | sets `alab.hum` |
+| Cut low rumble | — |
+| Remove noise | action `al-run` |
+| Abu Fahad Saudi · Najdi · Male · Middle-aged (45–60) · Deep | chooses this voice |
+| Hear | plays a sample of this voice |
+| Noura Saudi · Najdi · Female · Young adult (20s) · Warm | chooses this voice |
+| Documentary narrator Arabic · MSA · Male · Adult (30–45) · N | chooses this voice |
+| Layan Saudi · Hijazi · Female · Teen (13–19) · Energetic | chooses this voice |
+| Grandpa Saad Gulf · Male · Senior (60+) · Calm | chooses this voice |
+| Salma Egyptian · Female · Adult (30–45) · Energetic | chooses this voice |
+| Yousef (kid) Arabic · MSA · Male · Child (6–12) · Energetic | chooses this voice |
+| Ava English · US · Female · Young adult (20s) · Warm | chooses this voice |
+| Arthur English · UK · Male · Senior (60+) · Narrator | chooses this voice |
+| Rana (UGC) Levantine · Female · Young adult (20s) · Energeti | chooses this voice |
+| Arabic · MSA Saudi · Najdi Saudi · Hijazi Gulf Egyptian Leva | field |
+| English · US | — |
+| choose: Male · Female | sets `tools.voice.gender` |
+| choose: Child (6–12) · Teen (13–19) · Young adult (20s) · Adult (30–45) · Middle-aged (45–60) · Senior (60+) | sets `tools.voice.age` |
+| choose: Warm · Deep · Energetic · Calm · Whisper · Narrator · Dramatic | sets `tools.voice.tone` |
+| 1 | field (range) |
+| Type the line to speak… | field |
+| Preview on device | action `voice-preview` |
+| Generate voiceover 3 | action `voice-gen` |
+| Save voice to a character… The Keeper | field |
+| Save voice to a character… | — |
+| Save | action `voice-assign` |
+| Face video or portrait image | field (file) |
+| What should they say? | field |
+| …or upload an audio track | field (file) |
+| Sync lips with Abu Fahad 12 | action `lipsync` |
+| Describe the music: “slow oud and strings, rising tension” | field |
+| choose: Orchestral · Arabic / oud · Electronic · Lo-fi · Hip-hop · Ambient | sets `tools.music.genre` |
+| choose: Melancholic · Epic · Happy · Tense · Calm | sets `tools.music.mood` |
+| choose: 15s · 30s · 60s · 2m | sets `tools.music.dur` |
+| Generate music 4 | action `music-gen` |
+| Thunder | action `sfx` |
+| Waves | action `sfx` |
+| Footsteps | action `sfx` |
+| Door creak | action `sfx` |
+| Crowd | action `sfx` |
+| Wind | action `sfx` |
+| Whoosh | action `sfx` |
+| Heartbeat | action `sfx` |
+| contact@nooi.ai | link → mailto:contact@nooi.ai |
+| Help & support | opens **Help & support** |
+| Admin login | admin sign-in |
+
+### Subtitles & dubbing  `subs`
+
+_Transcribe, translate and dub with synced captions._
+
+| control | what it does |
+|---|---|
+| Voice & audio | opens **Voice & audio** |
+| Subtitles & dubbing | opens **Subtitles & dubbing** |
+| Upload the video to subtitle or dub | field (file) |
+| + From library… | field |
+| Demo clip | action `subs-demo` |
+| choose: Lines · Languages · Dubbing · Caption style · Export | sets `subs.tab` |
+| Transcribe audio | action `subs-transcribe` |
+| Add line at playhead | action `seg-add` |
+| One sentence per line… | field |
+| (no label) | action `subs-paste` |
+| ع Arabic | action `subs-active` |
+| EN English | action `subs-active` |
+| contact@nooi.ai | link → mailto:contact@nooi.ai |
+| Help & support | opens **Help & support** |
+| Admin login | admin sign-in |
+
 ## Characters
 
 ### Characters  `chars`
@@ -596,8 +737,6 @@ _Trim, effects, text, and edit frames with a prompt._
 | Video editor | opens **Video editor** |
 | Video from pictures | opens **Video from pictures** |
 | Visual effects | opens **Visual effects** |
-| Voice & audio | opens **Voice & audio** |
-| Subtitles & dubbing | opens **Subtitles & dubbing** |
 | Enhance | opens **Enhance** |
 | Video intelligence | opens **Video intelligence** |
 | Instagram Reels 1080×1920 | action `open-fmt` |
@@ -643,8 +782,6 @@ _Your pictures become a video with gentle motion, captions and music — free._
 | Video editor | opens **Video editor** |
 | Video from pictures | opens **Video from pictures** |
 | Visual effects | opens **Visual effects** |
-| Voice & audio | opens **Voice & audio** |
-| Subtitles & dubbing | opens **Subtitles & dubbing** |
 | Enhance | opens **Enhance** |
 | Video intelligence | opens **Video intelligence** |
 | Upload pictures | field (file) |
@@ -667,8 +804,6 @@ _Background & keying, color grading and motion capture._
 | Video editor | opens **Video editor** |
 | Video from pictures | opens **Video from pictures** |
 | Visual effects | opens **Visual effects** |
-| Voice & audio | opens **Voice & audio** |
-| Subtitles & dubbing | opens **Subtitles & dubbing** |
 | Enhance | opens **Enhance** |
 | Video intelligence | opens **Video intelligence** |
 | Redeem gift code | redeems a gift code |
@@ -682,9 +817,10 @@ _Background & keying, color grading and motion capture._
 | 16:9 | chooses the format (16:9, 9:16, 1:1…) |
 | Send | creates from the prompt |
 | Claude & ChatGPT Connect | opens **Integrations · MCP** |
+| All tools | opens **All tools** |
 | Create video Text or image to video with camera control and  | opens **Create video** |
 | Create image Several images per prompt, pick the best. | opens **Create image** |
-| nooi Studio Eight AI bots write, design, direct, shoot, scor | opens **nooi Studio** |
+| nooi Studio Eight AI agents write, design, direct, shoot, sc | opens **nooi Studio** |
 | UGC ads Market a product with a presenter, product shots, an | opens **UGC ads** |
 | Characters Characters with ages, voices and several looks. | opens **Characters** |
 | 3D World Write what you want — or add a picture — and walk a | opens **3D World** |
@@ -702,116 +838,6 @@ _Background & keying, color grading and motion capture._
 | Help & support | opens **Help & support** |
 | Admin login | admin sign-in |
 
-### Voice & audio  `voice`
-
-_Voices by dialect and age, lip sync, music and SFX._
-
-| control | what it does |
-|---|---|
-| Video editor | opens **Video editor** |
-| Video from pictures | opens **Video from pictures** |
-| Visual effects | opens **Visual effects** |
-| Voice & audio | opens **Voice & audio** |
-| Subtitles & dubbing | opens **Subtitles & dubbing** |
-| Enhance | opens **Enhance** |
-| Video intelligence | opens **Video intelligence** |
-| Script | field |
-| Natural | action `nd-emo` |
-| Calm | action `nd-emo` |
-| Warm | action `nd-emo` |
-| Excited | action `nd-emo` |
-| Serious | action `nd-emo` |
-| Sad | action `nd-emo` |
-| Angry | action `nd-emo` |
-| Whisper | action `nd-emo` |
-| Playful | action `nd-emo` |
-| French Arabic English Japanese Chinese Hindi Spanish Korean  | field |
-| English | — |
-| Neutral American British Australian Indian | field |
-| Neutral | — |
-| on | field (checkbox) |
-| Make it sound real free | action `nd-go` |
-| Clone a voice | action `vc-open` |
-| nooi voices | action `veng` |
-| ElevenLabs PRO | action `veng` |
-| choose: Remove noise · Change voice | sets `alab.mode` |
-| Upload audio | field (file) |
-| Record | action `al-rec` |
-| 60 | field (range) |
-| choose: Off · 50 Hz · 60 Hz | sets `alab.hum` |
-| Cut low rumble | — |
-| Remove noise | action `al-run` |
-| Abu Fahad Saudi · Najdi · Male · Middle-aged (45–60) · Deep | chooses this voice |
-| Hear | plays a sample of this voice |
-| Noura Saudi · Najdi · Female · Young adult (20s) · Warm | chooses this voice |
-| Documentary narrator Arabic · MSA · Male · Adult (30–45) · N | chooses this voice |
-| Layan Saudi · Hijazi · Female · Teen (13–19) · Energetic | chooses this voice |
-| Grandpa Saad Gulf · Male · Senior (60+) · Calm | chooses this voice |
-| Salma Egyptian · Female · Adult (30–45) · Energetic | chooses this voice |
-| Yousef (kid) Arabic · MSA · Male · Child (6–12) · Energetic | chooses this voice |
-| Ava English · US · Female · Young adult (20s) · Warm | chooses this voice |
-| Arthur English · UK · Male · Senior (60+) · Narrator | chooses this voice |
-| Rana (UGC) Levantine · Female · Young adult (20s) · Energeti | chooses this voice |
-| Arabic · MSA Saudi · Najdi Saudi · Hijazi Gulf Egyptian Leva | field |
-| English · US | — |
-| choose: Male · Female | sets `tools.voice.gender` |
-| choose: Child (6–12) · Teen (13–19) · Young adult (20s) · Adult (30–45) · Middle-aged (45–60) · Senior (60+) | sets `tools.voice.age` |
-| choose: Warm · Deep · Energetic · Calm · Whisper · Narrator · Dramatic | sets `tools.voice.tone` |
-| 1 | field (range) |
-| Type the line to speak… | field |
-| Preview on device | action `voice-preview` |
-| Generate voiceover 3 | action `voice-gen` |
-| Save voice to a character… The Keeper | field |
-| Save voice to a character… | — |
-| Save | action `voice-assign` |
-| Face video or portrait image | field (file) |
-| What should they say? | field |
-| …or upload an audio track | field (file) |
-| Sync lips with Abu Fahad 12 | action `lipsync` |
-| Describe the music: “slow oud and strings, rising tension” | field |
-| choose: Orchestral · Arabic / oud · Electronic · Lo-fi · Hip-hop · Ambient | sets `tools.music.genre` |
-| choose: Melancholic · Epic · Happy · Tense · Calm | sets `tools.music.mood` |
-| choose: 15s · 30s · 60s · 2m | sets `tools.music.dur` |
-| Generate music 4 | action `music-gen` |
-| Thunder | action `sfx` |
-| Waves | action `sfx` |
-| Footsteps | action `sfx` |
-| Door creak | action `sfx` |
-| Crowd | action `sfx` |
-| Wind | action `sfx` |
-| Whoosh | action `sfx` |
-| Heartbeat | action `sfx` |
-| contact@nooi.ai | link → mailto:contact@nooi.ai |
-| Help & support | opens **Help & support** |
-| Admin login | admin sign-in |
-
-### Subtitles & dubbing  `subs`
-
-_Transcribe, translate and dub with synced captions._
-
-| control | what it does |
-|---|---|
-| Video editor | opens **Video editor** |
-| Video from pictures | opens **Video from pictures** |
-| Visual effects | opens **Visual effects** |
-| Voice & audio | opens **Voice & audio** |
-| Subtitles & dubbing | opens **Subtitles & dubbing** |
-| Enhance | opens **Enhance** |
-| Video intelligence | opens **Video intelligence** |
-| Upload the video to subtitle or dub | field (file) |
-| + From library… | field |
-| Demo clip | action `subs-demo` |
-| choose: Lines · Languages · Dubbing · Caption style · Export | sets `subs.tab` |
-| Transcribe audio | action `subs-transcribe` |
-| Add line at playhead | action `seg-add` |
-| One sentence per line… | field |
-| (no label) | action `subs-paste` |
-| ع Arabic | action `subs-active` |
-| EN English | action `subs-active` |
-| contact@nooi.ai | link → mailto:contact@nooi.ai |
-| Help & support | opens **Help & support** |
-| Admin login | admin sign-in |
-
 ### Enhance  `finish`
 
 _Upscale 4K, 120 fps, extend, reframe, captions, dubbing._
@@ -821,11 +847,10 @@ _Upscale 4K, 120 fps, extend, reframe, captions, dubbing._
 | Video editor | opens **Video editor** |
 | Video from pictures | opens **Video from pictures** |
 | Visual effects | opens **Visual effects** |
-| Voice & audio | opens **Voice & audio** |
-| Subtitles & dubbing | opens **Subtitles & dubbing** |
 | Enhance | opens **Enhance** |
 | Video intelligence | opens **Video intelligence** |
 | choose: Upscale to 4K Sharper detail without re-rendering. 8 · Smooth motion · up to 120 fps AI frame interpolation for 60/ · Extend video Continue the shot past its last frame. 10 · Auto-reframe Turn 16:9 into 9:16 or 1:1, following the subje · Auto captions Transcribe speech and burn in styled captions. · Translate & dub Same voice, new language, synced lips. 15 · Restore & stabilize Denoise, deblur and stabilize shaky foot · Remove objects Erase people, logos or wires from a shot. 8 | sets `tools.finish.tool` |
+| Subtitles & dubbing | opens **Subtitles & dubbing** |
 | Choose from your library… | field |
 | …or upload a file | field (file) |
 | choose: 2× · 4× | sets `tools.finish.opt.upscale.scale` |
@@ -844,8 +869,6 @@ _Summarize long videos, ask questions about them, search every video in plain wo
 | Video editor | opens **Video editor** |
 | Video from pictures | opens **Video from pictures** |
 | Visual effects | opens **Visual effects** |
-| Voice & audio | opens **Voice & audio** |
-| Subtitles & dubbing | opens **Subtitles & dubbing** |
 | Enhance | opens **Enhance** |
 | Video intelligence | opens **Video intelligence** |
 | Summarize & ask | action `vss-tab` |
@@ -1247,4 +1270,4 @@ _Plug in your APIs and accounts._
 | Admin login | admin sign-in |
 
 
-_1379 controls on 34 pages_
+_1392 controls on 35 pages_

@@ -311,7 +311,7 @@
 311|Qaab
 312|shineemo, midabbo diiran
 313|Isticmaal qaabkan
-314|Hal sadar qayb kasta — botyadu qayb kasta way akhriyaan.
+314|Hal sadar qayb kasta — wakiilladu qayb kasta way akhriyaan.
 315|Moodalka muuqaalka
 316|Sawirka koowaad & kan dambe
 317|Sawirka koowaad
@@ -375,3 +375,5 @@
 375|Tirtir moodallada la soo dejiyay
 376|Wuxuu ka shaqeeyaa qalabkaaga · bilaash
 377|Waxaa lagu dhammeeyay qalabkaaga — credit lama isticmaalin.
+378|Cod
+379|Dhammaan qalabka

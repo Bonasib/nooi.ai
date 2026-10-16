@@ -311,7 +311,7 @@
 311|Style
 312|cinematic, warm colors
 313|Use this structure
-314|One line per part — the bots read each part.
+314|One line per part — the agents read each part.
 315|Video model
 316|First & end frame
 317|First frame
@@ -375,3 +375,5 @@
 375|Remove downloaded models
 376|Runs on your device · free
 377|Done on your device — no credits used.
+378|Audio
+379|All tools

@@ -311,7 +311,7 @@
 311|Şêwaz
 312|sînemayî, rengên germ
 313|Vê avahiyê bi kar bîne
-314|Ji bo her beşê rêzek — bot her beşê dixwînin.
+314|Ji bo her beşê rêzek — ajan her beşê dixwînin.
 315|Modela vîdyoyê
 316|Çarçoveya yekem û dawî
 317|Çarçoveya yekem
@@ -375,3 +375,5 @@
 375|Modelên daxistî jê bibe
 376|Li ser cîhaza te dixebite · belaş
 377|Li ser cîhaza te qediya — tu kredî nehat bikaranîn.
+378|Deng
+379|Hemû amûr

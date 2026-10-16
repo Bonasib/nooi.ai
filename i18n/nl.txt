@@ -311,7 +311,7 @@
 311|Stijl
 312|filmisch, warme kleuren
 313|Gebruik deze structuur
-314|Eén regel per onderdeel — de bots lezen elk onderdeel.
+314|Eén regel per onderdeel — de agents lezen elk onderdeel.
 315|Videomodel
 316|Begin- & eindbeeld
 317|Beginbeeld
@@ -375,3 +375,5 @@
 375|Gedownloade modellen verwijderen
 376|Draait op je apparaat · gratis
 377|Klaar op je apparaat — geen credits gebruikt.
+378|Audio
+379|Alle tools

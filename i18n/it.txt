@@ -311,7 +311,7 @@
 311|Stile
 312|cinematografico, colori caldi
 313|Usa questa struttura
-314|Una riga per parte — i bot leggono ogni parte.
+314|Una riga per parte — gli agenti leggono ogni parte.
 315|Modello video
 316|Primo e ultimo fotogramma
 317|Primo fotogramma
@@ -375,3 +375,5 @@
 375|Rimuovi i modelli scaricati
 376|Funziona sul tuo dispositivo · gratis
 377|Fatto sul tuo dispositivo — nessun credito usato.
+378|Audio
+379|Tutti gli strumenti

@@ -311,7 +311,7 @@
 311|Stil
 312|filmski, tople boje
 313|Koristi ovu strukturu
-314|Jedan red po dijelu — botovi čitaju svaki dio.
+314|Jedan red po dijelu — agenti čitaju svaki dio.
 315|Video model
 316|Početni i završni kadar
 317|Početni kadar
@@ -375,3 +375,5 @@
 375|Ukloni preuzete modele
 376|Radi na tvom uređaju · besplatno
 377|Gotovo na tvom uređaju — bez potrošenih kredita.
+378|Audio
+379|Svi alati

@@ -311,7 +311,7 @@
 311|Estilo
 312|cinematográfico, colores cálidos
 313|Usar esta estructura
-314|Una línea por parte — los bots leen cada parte.
+314|Una línea por parte — los agentes leen cada parte.
 315|Modelo de vídeo
 316|Fotograma inicial y final
 317|Fotograma inicial
@@ -375,3 +375,5 @@
 375|Eliminar modelos descargados
 376|Funciona en tu dispositivo · gratis
 377|Hecho en tu dispositivo: sin gastar créditos.
+378|Audio
+379|Todas las herramientas

@@ -1,4 +1,4 @@
-# nooi — product map and roadmap (v89)
+# nooi — product map and roadmap (v90)
 
 The map of what every page is for, the rules every new button has to follow, what was merged or removed and why, and what
 comes next. Every button on every page, with what it does, is in **docs/UI_MAP.md** (made by `python3 tools/uimap.py`).
@@ -24,7 +24,7 @@ comes next. Every button on every page, with what it does, is in **docs/UI_MAP.m
 6. **Honest results.** Every result shows "What the AI received" (the words and settings sent, plus the measured physics line);
    failures say why in one sentence with Try again; costs are shown before a paid step.
 7. **Same everywhere.** Same menu on phone and desktop, Arabic right-to-left, every label in the visitor's language, one icon
-   set (no emoji; the sparkle only for AI).
+   set (no emoji; the sparkle only for AI) and one look (§10): a colour per section, one header, one tile, one card.
 
 ## 2. The map (hubs → tools)
 
@@ -32,6 +32,7 @@ comes next. Every button on every page, with what it does, is in **docs/UI_MAP.m
 |---|---|---|---|
 | Home | Home | one create box (agent · video · image · audio · avatar) + the main tools + templates | the tool that makes it |
 | Explore | Templates · Community · Recipes | start from a ready example, remix a community post, run saved chains of steps | Create video / image |
+| All tools | All tools | every tool as one card, by section, with a filter box | the tool |
 | Image | Create image | several pictures per prompt, pick the best | Video, Characters, editor |
 | | Sketch to life | a drawing becomes a picture, a character or a place | Image, 3D World (floor plans) |
 | | Coloring book | printable pages from a film or story | — |
@@ -41,9 +42,10 @@ comes next. Every button on every page, with what it does, is in **docs/UI_MAP.m
 | | UGC ads | product ads with a presenter, product shots or motion graphics | editor, Schedule |
 | | nooi Studio | eight AI bots write, direct, shoot, score, edit and check a whole film | editor |
 | | Chapter story · Storyboard | long films that continue from the last frame; frames on a canvas | Create video |
+| Audio | Voice & audio · Subtitles & dubbing | voices, dialogue, music and sound; subtitles, translation and dubbing | editor, Schedule |
 | Characters | Characters | people with ages, voices, looks; a full 3D character | Video, 3D World |
 | **3D** | **3D World** | **words or a picture → a living world you walk in (see §4)** | Create video, photo, .glb |
-| Edit | Video editor · Video from pictures · Visual effects · Voice & audio · Subtitles & dubbing · Enhance · Video intelligence | finish and fix what was made | Schedule & publish |
+| Edit | Video editor · Video from pictures · Visual effects · Enhance · Video intelligence | finish and fix what was made | Schedule & publish |
 | Publish | Schedule & publish · Content plan · Hook lab | plan, write openings, post everywhere | — |
 | My library | My library | everything made, with "What the AI received" | any tool |
 | Settings | Account & plan · Credits · Integrations · Legal · Help | the account; ChatGPT / Claude / Blender / Unity connections | — |
@@ -171,12 +173,74 @@ the resolution drops before the frame rate does. Phones destroy the engine when 
 - **Dead code removed** (≈141 KB of the page): versions of functions that could never run, unused helpers, logos set twice,
   unused CSS and animations.
 
-## 10. Next
+## 10. v90 — one look
 
-1. One feeling picker on Voice & audio (tone + dialogue feeling), the editor's 3D tab → hand-over to the 3D World.
-2. In the World: open doors, drive a car, carry things between saved worlds; a short "what happened" film from the tour;
-   people that talk with your character's voice; animal and car models from the 3D engines like the people.
-3. Template covers made from real results (one look per template family) and the remaining icon pass.
-4. Picture → world: more model types (the closest one is used today), and "keep this object" to turn any photo object into its
-   own AI 3D model in one tap.
-5. Keep `docs/UI_MAP.md` up to date (`python3 tools/uimap.py`) and keep every new button inside the rules of §1.
+Each page had been built with its own look: colour-gradient app icons on Home, grey squares on Video, green on Sketch; 19 icon
+sizes, 7 corner roundings, titles from 14 to 20 px; on a phone the tab row could hide the tab you were on. Now one system:
+
+| part | the rule |
+|---|---|
+| section colour | Image amber · Video violet · Audio fuchsia · Characters blue · 3D emerald · Edit cyan · Publish rose · the rest nooi green. It says where you are: the tool's icon beside the page title, the cards on Home and All tools, the open menu item. A darker shade in light mode, a lighter one in dark; each is at least 3:1 on its tinted square. |
+| choices | neutral; the picked one is always nooi green (on every page, in every section) |
+| page header | the tool's icon in its section colour + the tool's name (the same words as the menu and the tab) + one line |
+| option tile | one tile: a 32 px neutral square with a 20 px icon and a short name |
+| tool card | one card (Home, All tools): icon square in the section colour, name, one line |
+| corner rounding | 8 (small buttons, icon squares) · 12 (tiles, fields, drop zones, players) · 16 (panels, cards) — pills and circles aside |
+| titles | page 22 px (27 on a computer) · section 16 · card 14 |
+| icons | 14 beside small text · 16 beside normal text · 20 standing alone (menu, tiles, cards, headers, toolbars) |
+| tabs | one row; the open tab is always in view; a soft edge shows there are more (mirrored in Arabic) |
+
+New places: **Audio** (Voice & audio + Subtitles & dubbing — Edit had seven tabs, now five) and **All tools** (every tool as
+one card, by section, with a filter box; Home's Tools title links to it). Checked on every page by `tests/v90.py`.
+
+**The AI agents** are called agents (وكلاء), never bots, and appear in one order everywhere — the order the work runs, each
+one working from what the ones before handed over:
+
+| # | agent | role | job |
+|---|---|---|---|
+| 1 | Quill | Story Writer | turns your idea into the story: scenes, characters and dialogue |
+| 2 | Nova | Character Designer | gives every character one fixed face, outfit and voice |
+| 3 | Max | Director | splits the story into shots: framing, action, camera move and length |
+| 4 | Lumi | Cinematographer | sets light, lens and colour, and writes each shot's final prompt |
+| 5 | Echo | Sound Engineer | writes the music, sound effects and spoken lines for every shot |
+| 6 | Remy | Editor | joins the shots into one film: order, timing and transitions |
+| 7 | Duke | Producer | picks the AI model for each shot and keeps the film within your credits (he prices the final cut) |
+| 8 | Iris | Proofreader & QA | checks everything, then approves it or sends it back to be fixed |
+
+The home box's plan had listed them Director first and the Character Designer after the Cinematographer; each agent had two
+different job lines; one note still used an old name (Daqiq). Now one list, one job line each, and nooi Studio shows
+"Who does what — in the order they work".
+
+## 11. Next — from a look at how Higgsfield is organised
+
+Higgsfield's site could not be opened from the build machine, so this comes from its public help pages and reviews (structure
+and feature names only). Nothing of theirs is copied — no icons, pictures, templates, words or code; every page stays nooi's own.
+
+| Higgsfield area (public) | nooi today | what nooi adds |
+|---|---|---|
+| Explore feed | Explore: Templates · Community · Recipes | — |
+| Image (models, edit with a brush, upscale) | Create image · Sketch to life · Coloring book | **Edit picture** (brush + words) and **Expand picture**, in Image |
+| Video (many models, camera-move presets) | Create video · Cinema Studio · Motion Control | a short looping preview for every camera move and effect, made from nooi's own renders |
+| Audio | Audio (v90) | — |
+| Edit (video edit, upscale, background, grade) | Edit: editor · effects · Enhance · Video intelligence | — |
+| Character identity from photos | Characters (looks, voices, 3D); scene lock + vision check | **Identity from photos**: 3–20 photos of a person who agreed → one identity in every shot, each shot checked |
+| Product ads from a link | UGC ads (from photos) · Content plan (from a website) | **Product link → ad**: name, photos and price read from the product page |
+| Apps (one-tap tools) | All tools (v90): 25 tools | one-tap tools in the same page template: lip-sync studio, new angle of a picture, outfit change, product placement, portrait pack from selfies |
+| Canvas (chain models) | Recipes (saved chains of steps) | a canvas view of a recipe (steps as boxes you connect) |
+| Agent that plans a whole project | the Agent tab · nooi Studio's eight bots | — |
+| Assets library | My library | — |
+| MCP / CLI for AI agents | Integrations · MCP | — |
+
+Order of work:
+
+1. **v91 — one-tap tools:** Edit picture, Expand picture, New angle, Outfit change, Product placement, Portrait pack,
+   Lip-sync studio — each in the v90 page template, listed on All tools, cost shown before the paid step.
+2. **v92 — product link → UGC ad**, and the same link fills the Content plan.
+3. **v93 — identity from photos** in Characters. Tools that use a real person's face (identity, portrait pack, any face
+   change) need that person's agreement and never accept public figures; results carry the AI label.
+4. **v94 — preview loops** for every camera move and effect in the pickers.
+5. **v95 — canvas view** for Recipes.
+6. Still open from before: one feeling picker on Voice & audio; in the World doors, cars and carrying things between saved
+   worlds, a "what happened" film, people who talk with your character's voice; picture → world with more model types and
+   "keep this object"; template covers from real results.
+7. Keep `docs/UI_MAP.md` up to date (`python3 tools/uimap.py`) and every new page inside §1 and §10 (`tests/v90.py`).

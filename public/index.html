@@ -5524,17 +5524,17 @@ function stageSummary(id,o){if(!o)return"";const li=a=>"<ul class=\"cso\">"+a.ma
   if(id==="editor")return'<p class="small mute">'+L("Total ","المجموع ")+o.total_duration+L("s","ث")+"</p>"+'<div class="edstrip">'+o.sequence.map(s=>'<i style="flex:'+s.duration+'" title="'+esc(s.id)+'"></i>').join("")+"</div>";
   if(id==="producer")return'<p class="small">'+ic("coin","width:14px;vertical-align:-2px")+" "+o.credits_estimate+L(" credits · "," رصيد · ")+(o.within_budget?L("within budget","ضمن الميزانية"):L("over budget","يتجاوز الميزانية"))+"</p>"+li(Object.entries(o.models.reduce((a,m)=>{a[m.model]=(a[m.model]||0)+1;return a},{})).map(([m,n])=>esc(MODELS[m]?MODELS[m].name:m)+" × "+n))+(o.risks.length?li(o.risks.map(esc)):"");
   if(id==="proof")return'<p class="small">'+L("Score ","الدرجة ")+"<b>"+o.score+"</b> · "+(o.approved?L("approved","معتمد"):L("not approved","غير معتمد"))+"</p>"+(o.issues.length?li(o.issues.slice(0,10).map(x=>'<span class="sev s-'+x.severity+'">'+x.severity+"</span> "+esc(L(BOT(x.stage).name[0],BOT(x.stage).name[1]))+": "+esc(x.problem))):"");return""}
-NAVS.forEach(g=>{if(g[1].some(x=>x[0]==="story"))g[1].unshift(["crew","crew","Film crew","طاقم الفيلم",1])});ALLNAV.length=0;NAVS.flatMap(g=>g[1]).forEach(x=>ALLNAV.push(x));TOOLDESC.crew=["Eight AI bots write, design, direct, shoot, score, edit, produce and audit your film.","ثمانية بوتات تكتب وتصمم وتخرج وتصوّر وتلحّن وتركّب وتنتج وتدقق فيلمك."];FEATURE_OF_VIEW.crew="story";
+NAVS.forEach(g=>{if(g[1].some(x=>x[0]==="story"))g[1].unshift(["crew","crew","Film crew","طاقم الفيلم",1])});ALLNAV.length=0;NAVS.flatMap(g=>g[1]).forEach(x=>ALLNAV.push(x));TOOLDESC.crew=["Eight AI agents write, design, direct, shoot, score, edit, produce and check your film.","ثمانية وكلاء ذكاء اصطناعي يكتبون ويصممون ويخرجون ويصوّرون ويلحّنون ويركّبون وينتجون ويدققون فيلمك."];FEATURE_OF_VIEW.crew="story";
 VIEWS.crew=()=>{const B=S.crew.brief,run=S.crew.run,busy=CREW.busy;const est=BOTS.reduce((a,b)=>a+(b.tier==="strong"?2:1),0);
   const card=b=>{const st=run?run.stages[b.id]||{status:"waiting"}:{status:"waiting"},cs=crewStatus(st.status);return'<div class="botcard'+(st.status==="working"?" on":"")+(b.added?" added":"")+'"><div class="botav">'+botSVG(b.id,st.status==="working"?"working":st.status==="done"||st.status==="degraded"?"done":st.status==="failed"?"failed":(run&&run.status==="running")?"waiting":"idle",68)+'</div><b>'+L(b.name[0],b.name[1])+'</b><span class="small mute">'+L(b.role[0],b.role[1])+"</span>"+(b.added?'<span class="newtag">'+L("New to the crew","جديد في الطاقم")+"</span>":"")+'<span class="badge b-'+cs[2]+'">'+L(cs[0],cs[1])+(st.attempts>1?'<span class="att"> · '+st.attempts+"×</span>":"")+"</span></div>"};
   const lineup='<div class="crewline">'+BOTS.map((b,i)=>card(b)+(i<BOTS.length-1?'<span class="baton'+(run&&run.stages[b.id]&&["done","degraded"].includes(run.stages[b.id].status)?" lit":"")+'" aria-hidden="true">'+svg('<path d="M5 12h14M13 6l6 6-6 6"/>')+"</span>":"")).join("")+"</div>";
   const brief='<div class="panel pad"><label class="lbl" style="margin-top:0">'+L("Your film idea","فكرة فيلمك")+'</label><textarea data-bind="crew.brief.idea" dir="auto" style="min-height:90px" placeholder="'+esc(L("e.g. An old lighthouse keeper finds a message in a bottle from his younger self…","مثال: حارس منارة عجوز يجد رسالة في زجاجة من نفسه عندما كان شاباً…"))+'">'+esc(B.idea)+'</textarea><span class="lbl">'+L("Length","المدة")+'</span><div class="seg">'+[15,30,60,90].map(n=>'<button data-set="crew.brief.seconds" data-val="'+n+'" data-num="1" aria-pressed="'+(+B.seconds===n)+'">'+n+L("s","ث")+"</button>").join("")+'</div><span class="lbl">'+L("Genre","النوع")+"</span>"+chips("crew.brief.genre",[["drama","Drama","دراما"],["comedy","Comedy","كوميديا"],["thriller","Thriller","إثارة"],["scifi","Sci-fi","خيال علمي"],["kids","Kids","أطفال"],["documentary","Documentary","وثائقي"],["ad","Ad","إعلان"]],B.genre)+'<div class="grid2"><div><span class="lbl">'+L("Language","اللغة")+'</span><select data-bind="crew.brief.lang">'+LANGS.map(l=>'<option value="'+l[0]+'"'+(B.lang===l[0]?" selected":"")+">"+esc(L(l[1],l[2]))+"</option>").join("")+'</select></div><div><span class="lbl">'+L("Aspect","الأبعاد")+'</span><div class="seg">'+["16:9","9:16","1:1"].map(a=>'<button data-set="crew.brief.aspect" data-val="'+a+'" aria-pressed="'+(B.aspect===a)+'">'+a+"</button>").join("")+"</div></div></div>"+
-    '<div class="row" style="margin-top:14px">'+(busy?'<button class="btn danger big" data-act="crew-cancel">'+ic("x")+L("Stop the crew","أوقف الطاقم")+"</button>":'<button class="btn primary big" data-act="crew-start">'+ic("crew")+L("Start the crew","ابدأ الطاقم")+'<span class="cost">~'+est+" cr</span></button>")+"</div>"+'<p class="small dim" style="margin:8px 0 0">'+L("Each bot checks its own work, checks it fits everyone else's, repairs mistakes up to 3 times, then hands over. Daqiq audits the whole film and can send work back.","كل بوت يفحص عمله، ويتأكد أنه يتوافق مع عمل الآخرين، ويصلح الأخطاء حتى 3 مرات، ثم يسلّم. دقيق يراجع الفيلم كله ويستطيع إعادة العمل للتصحيح.")+"</p></div>";
+    '<div class="row" style="margin-top:14px">'+(busy?'<button class="btn danger big" data-act="crew-cancel">'+ic("x")+L("Stop the crew","أوقف الطاقم")+"</button>":'<button class="btn primary big" data-act="crew-start">'+ic("crew")+L("Start the crew","ابدأ الطاقم")+'<span class="cost">~'+est+" cr</span></button>")+"</div>"+'<p class="small dim" style="margin:8px 0 0">'+L("Each agent checks its own work, checks it fits everyone else's, repairs mistakes up to 3 times, then hands it to the next. Last, Iris (Proofreader & QA) checks the whole film and can send any work back to be fixed.","كل وكيل يفحص عمله، ويتأكد أنه يتوافق مع عمل الآخرين، ويصلح الأخطاء حتى 3 مرات، ثم يسلّمه للتالي. وفي النهاية يراجع آيريس (المدقق ومراقب الجودة) الفيلم كله ويستطيع إعادة أي عمل للتصحيح.")+"</p></div>";
   let body="";if(run){const act=run.active&&BOT(run.active);body='<div class="panel pad crewstat"><div class="spread"><div class="row" style="flex-wrap:nowrap">'+(act?botSVG(act.id,"working",40):run.status==="approved"?botSVG("proof","done",40):"")+'<div><b>'+(run.status==="running"&&act?L(act.name[0],act.name[1])+" · "+L(act.job[0],act.job[1]):run.status==="approved"?L("Approved — your film package is ready","معتمد — حزمة فيلمك جاهزة"):run.status==="review"?L("Finished — needs your review","انتهى — يحتاج مراجعتك"):run.status==="cancelled"?L("Stopped","متوقف"):run.status==="failed"?L("Stopped with an error","توقف بخطأ"):"")+"</b>"+(run.score!=null&&run.status!=="running"?'<div class="small mute">'+L("Quality score ","درجة الجودة ")+run.score+"/100 · "+(run.audit||[]).filter(a=>a.severity==="error").length+L(" errors · "," أخطاء · ")+(run.audit||[]).filter(a=>a.severity==="warning").length+L(" warnings"," تحذيرات")+"</div>":"")+"</div></div>"+(run.status==="running"?'<span class="small mono">'+Object.values(run.stages).filter(s=>["done","degraded"].includes(s.status)).length+"/"+BOTS.length+"</span>":"")+'</div><div class="bar" style="height:6px;margin-top:10px"><i style="width:'+Math.round(Object.values(run.stages).filter(s=>["done","degraded"].includes(s.status)).length/BOTS.length*100)+'%"></i></div></div>'+
     (run.status!=="running"&&run.out.director?'<div class="panel pad"><h3 style="margin-top:0">'+L("Use the film package","استخدم حزمة الفيلم")+'</h3><div class="hbar">'+hTile(svg(ICONS.board||OI.anim3d),L("Open as storyboard","افتحه كستوري بورد"),'data-act="crew-board"')+hTile(svg(ICONS.story),L("Open as Chapter Story","افتحه كقصة فصول"),'data-act="crew-story"')+hTile(svg(ICONS.video),L("Render all shots","ولّد كل اللقطات"),'data-act="crew-render"')+hTile(svg(ICONS.voice),L("Make voices & music","اصنع الأصوات والموسيقى"),'data-act="crew-audio"')+hTile(svg(ICONS.download),L("Download package","نزّل الحزمة"),'data-act="crew-export"')+"</div></div>":"")+
     '<div class="crewstages">'+BOTS.map(b=>{const st=run.stages[b.id]||{},o=run.out[b.id];return'<details class="panel cstage"'+(st.status==="working"||(b.id==="proof"&&o)?" open":"")+'><summary>'+botSVG(b.id,st.status==="working"?"working":o?"done":"idle",34)+"<b>"+L(b.name[0],b.name[1])+'</b><span class="small mute">'+L(b.role[0],b.role[1])+'</span><span style="flex:1"></span>'+(st.mode==="fallback"?'<span class="badge b-queued">'+L("fallback","بديل")+"</span>":"")+(st.t1?'<span class="small mono dim">'+((st.t1-st.t0)/1000).toFixed(1)+"s</span>":"")+"</summary>"+(o?stageSummary(b.id,o):'<p class="small dim">'+L(b.job[0],b.job[1])+"</p>")+(st.errors&&st.errors.length&&st.mode!=="ai"?'<p class="small" style="color:var(--red)">'+esc(st.errors.slice(0,3).join(" · "))+"</p>":"")+"</details>"}).join("")+"</div>"+
     '<details class="panel pad"><summary class="small mute">'+L("Hand-off log","سجل التسليم")+" ("+run.log.length+')</summary><div class="clog">'+run.log.slice(-60).reverse().map(l=>'<div class="k-'+l.kind+'"><span class="mono dim">'+new Date(l.t).toTimeString().slice(0,8)+"</span> <b>"+esc(L(BOT(l.stage)?BOT(l.stage).name[0]:l.stage,BOT(l.stage)?BOT(l.stage).name[1]:l.stage))+"</b> "+esc(l.msg)+"</div>").join("")+"</div></details>"}
-  return tilify('<div class="view"><div class="spread"><h1>'+L("Film crew","طاقم الفيلم")+'</h1><span class="small mute">'+BOTS.length+L(" bots"," بوتات")+"</span></div><p class=\"lede\">"+L("A family of AI bots that make a film together. Each one owns one job, checks it, and hands it to the next.","عائلة من بوتات الذكاء تصنع فيلماً معاً. كل بوت مسؤول عن مهمة واحدة، يتحقق منها ويسلّمها للتالي.")+"</p>"+lineup+'<div class="crewgrid">'+brief+"<div>"+body+"</div></div></div>")};
+  return tilify('<div class="view"><div class="spread"><h1>'+L("Film crew","طاقم الفيلم")+'</h1><span class="small mute">'+BOTS.length+L(" agents"," وكلاء")+"</span></div><p class=\"lede\">"+L("A team of AI agents that make a film together, in the order below. Each one owns one job, checks it, and hands it to the next.","فريق من وكلاء الذكاء الاصطناعي يصنعون فيلماً معاً بالترتيب أدناه. لكل وكيل مهمة واحدة، يتحقق منها ويسلّمها للتالي.")+"</p>"+lineup+'<div class="crewgrid">'+brief+"<div>"+body+"</div></div></div>")};
 document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest("[data-act]");if(!a)return;const run=S.crew.run;
   switch(a.dataset.act){case"crew-start":runCrew();break;case"crew-cancel":if(CREW.abort)CREW.abort.abort();break;case"crew-board":run&&crewToBoard(run);break;case"crew-story":run&&crewToStory(run);break;case"crew-render":run&&crewRender(run);break;case"crew-audio":run&&crewAudio(run);break;case"crew-export":run&&crewExport(run);break}});
 const _rt8=rootFor;rootFor=function(p){if(p.startsWith("crew.brief.")){return[S.crew.brief,p.split(".").slice(2)]}return _rt8(p)};
@@ -5628,10 +5628,10 @@ function uniPanel(){const U=S.uni;const t=U.task==="auto"&&U.prompt.trim()?detec
   const cost=fam==="video"?(U.model==="auto"?vcost(pickVideo(U.prompt||"").id,U.dur):vcost(U.model,U.dur))+({60:2,120:4}[+U.fps]||0):fam==="image"?(IMG_MODELS[U.imodel]||IMG_MODELS.auto).cr*U.n:null;
   return'<div class="panel pad uni"><div class="unihead">'+av+'<div><h2 style="margin:0">'+L("What do you want to make?","ماذا تريد أن تصنع؟")+'</h2><div class="small mute unitag">'+esc(tag)+"</div></div></div>"+
    '<div class="tasks" role="radiogroup" aria-label="'+esc(L("Task","المهمة"))+'">'+UTASKS.filter(x=>{const f={content:"video",productad:"video",image:"image",story:"story",board:"board",character:"chars",voice:"voice",music:"voice",hook:"hooks",coloring:"coloring",film:"story"}[x[0]];return!f||featureOn(f)}).map(x=>'<button class="task" role="radio" data-act="uni-task2" data-v="'+x[0]+'" aria-checked="'+(U.task===x[0])+'">'+ic(x[3])+"<span>"+L(x[1],x[2])+"</span></button>").join("")+"</div>"+
-   '<div class="pbox"><textarea id="uniq" dir="auto" data-bind="uni.prompt" rows="5" placeholder="'+esc(briefLines(t))+'">'+esc(U.prompt)+'</textarea><div class="pboxbar"><button class="btn sm ghost" data-act="uni-example">'+ic("spark")+L("Use this structure","استخدم هذا الترتيب")+'</button><span class="small dim">'+L("One line per part — the bots read each part.","سطر لكل جزء — البوتات تقرأ كل جزء.")+"</span></div></div>"+
+   '<div class="pbox"><textarea id="uniq" dir="auto" data-bind="uni.prompt" rows="5" placeholder="'+esc(briefLines(t))+'">'+esc(U.prompt)+'</textarea><div class="pboxbar"><button class="btn sm ghost" data-act="uni-example">'+ic("spark")+L("Use this structure","استخدم هذا الترتيب")+'</button><span class="small dim">'+L("One line per part — the agents read each part.","سطر لكل جزء — يقرأ الوكلاء كل جزء.")+"</span></div></div>"+
    (models?'<span class="lbl">'+(fam==="video"?L("Video model","نموذج الفيديو"):L("Image model","نموذج الصور"))+"</span>"+models:"")+vctl+
    '<details class="uadv"'+(U.adv?" open":"")+'><summary data-act="uni-adv">'+L("First & end frame","الإطار الأول والأخير")+"</summary>"+(fam==="video"?frameBlock():"")+"</details>"+
-   '<span class="lbl">'+L("Your AI crew","طاقمك الذكي")+"</span>"+botStrip(BOTS.map(b=>b.id),true)+
+   '<span class="lbl">'+L("Your AI agents","وكلاء الذكاء الاصطناعي")+"</span>"+botStrip(BOTS.map(b=>b.id),true)+
    '<button class="btn primary big" style="margin-top:14px" data-act="uni-run">'+ic("spark")+L("Create","أنشئ")+(cost!=null?'<span class="cost">'+cost+" cr</span>":"")+"</button></div>"}
 document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest("[data-act]");if(!a)return;const X=a.dataset,U=S.uni;
   switch(X.act){case"uni-task2":U.task=X.v;persist();renderView();break;
@@ -7931,9 +7931,9 @@ function hfDurOK(v){const H=S.hf;if(nooiOn()||hfBotsOn())return v<=30;return v<=
 /* model row → nooi button + one model chip (everything else lives in the sheet) + bots + scene */
 function hfMRow(t){const H=S.hf,cur=t==="video"?H.vModel:H.iModel,auto=cur==="auto",u=!auto&&logoFor(cur);
   return'<div class="hfmrow g">'+
-    '<button class="hfmi nooi'+(auto?" on":"")+'" data-act="hfx-nooi" aria-pressed="'+auto+'" title="'+esc(L("nooi Studio 2.0 — 8 AI bots pick the model and make every second","nooi Studio 2.0 — 8 بوتات ذكية تختار النموذج وتصنع كل ثانية"))+'"><span class="lg"><img src="'+logoFor("auto")+'" alt=""></span><b>nooi</b></button>'+
+    '<button class="hfmi nooi'+(auto?" on":"")+'" data-act="hfx-nooi" aria-pressed="'+auto+'" title="'+esc(L("nooi Studio 2.0 — 8 AI agents pick the model and make every second","nooi Studio 2.0 — 8 وكلاء ذكاء اصطناعي يختارون النموذج ويصنعون كل ثانية"))+'"><span class="lg"><img src="'+logoFor("auto")+'" alt=""></span><b>nooi</b></button>'+
     '<button class="hfmi pick'+(auto?"":" on")+'" data-act="hf-model" aria-label="'+esc(L("Choose a model","اختر نموذجاً"))+'">'+(auto?ic("grid")+"<b>"+L("Model","النموذج")+"</b>":'<span class="lg">'+(u?'<img src="'+u+'" alt="">':ic("spark"))+"</span><b>"+esc(hfMName(t,cur))+"</b>")+svg('<path d="M6 9l6 6 6-6"/>')+"</button>"+
-    '<button class="hfmi bots'+(hfBotsOn()?" on":"")+'" data-act="hfx-bots" aria-pressed="'+hfBotsOn()+'">'+ic("users")+"<b>"+L("Bots","البوتات")+"</b></button>"+
+    '<button class="hfmi bots'+(hfBotsOn()?" on":"")+'" data-act="hfx-bots" aria-pressed="'+hfBotsOn()+'">'+ic("users")+"<b>"+L("Agents","الوكلاء")+"</b></button>"+
     '<button class="hfmi scene'+(H.scene?" on":"")+'" data-act="hfx-scene" aria-pressed="'+!!H.scene+'">'+ic("layers")+"<b>"+(H.scene?esc(H.sceneName||L("Scene","مشهد")):L("Scene: off","المشهد: متوقف"))+"</b></button></div>"}
 const HF_BOT_IDS=["director","writer","cine","casting","sound","editor","producer","proof"];
 hfBox=(o=>function(){let h=o();const H=S.hf,t=H.tab;if(t!=="video"&&t!=="image")return h;
@@ -7941,7 +7941,7 @@ hfBox=(o=>function(){let h=o();const H=S.hf,t=H.tab;if(t!=="video"&&t!=="image")
   if(t==="video"){if(!hfDurOK(H.dur))H.dur=HF_DURS.filter(hfDurOK).pop()||5;h=h.replace(/<button class="hfchip" data-act="hf-dur"[^>]*>[\s\S]*?<\/button>/,'<button class="hfchip" data-act="hfx-dur" aria-haspopup="dialog">'+ic("clock")+"<span>"+H.dur+L("s","ث")+"</span>"+svg('<path d="M6 9l6 6 6-6"/>')+"</button>")}
   /* nooi Studio 2.0: the 8 bots appear and work */
   const mn=nooiOn()?"":hfMName(t,t==="video"?H.vModel:H.iModel);
-  if(hfBotsOn())h=h.replace('<div class="hfbar">','<div class="hfbots"><div class="hfbh"><b>nooi Studio 2.0</b><span class="small mute">'+(t==="video"?(mn?L("8 AI bots plan the shots for "+mn+", keep continuity and check every frame — up to 30 s.","8 بوتات ذكية تخطط لقطات "+mn+" وتحافظ على الاستمرارية وتراجع كل إطار — حتى 30 ثانية."):L("8 AI bots plan the shots, keep continuity and check every frame — up to 30 s with any model.","8 بوتات ذكية تخطط اللقطات وتحافظ على الاستمرارية وتراجع كل إطار — حتى 30 ثانية مع أي نموذج.")):(mn?L("8 AI bots write the best prompt for "+mn+" and check every picture.","8 بوتات ذكية تكتب أفضل وصف لـ "+mn+" وتراجع كل صورة."):L("8 AI bots pick the best model and check every picture.","8 بوتات ذكية تختار أفضل نموذج وتراجع كل صورة.")))+'</span><button class="btn sm ghost" data-go="crew">'+L("Meet them","تعرّف عليهم")+"</button></div>"+botStrip(HF_BOT_IDS,true)+'</div><div class="hfbar">');
+  if(hfBotsOn())h=h.replace('<div class="hfbar">','<div class="hfbots"><div class="hfbh"><b>nooi Studio 2.0</b><span class="small mute">'+(t==="video"?(mn?L("8 AI agents plan the shots for "+mn+", keep continuity and check every frame — up to 30 s.","8 وكلاء ذكاء اصطناعي يخططون لقطات "+mn+" ويحافظون على الاستمرارية ويراجعون كل إطار — حتى 30 ثانية."):L("8 AI agents plan the shots, keep continuity and check every frame — up to 30 s with any model.","8 وكلاء ذكاء اصطناعي يخططون اللقطات ويحافظون على الاستمرارية ويراجعون كل إطار — حتى 30 ثانية مع أي نموذج.")):(mn?L("8 AI agents write the best prompt for "+mn+" and check every picture.","8 وكلاء ذكاء اصطناعي يكتبون أفضل وصف لـ "+mn+" ويراجعون كل صورة."):L("8 AI agents pick the best model and check every picture.","8 وكلاء ذكاء اصطناعي يختارون أفضل نموذج ويراجعون كل صورة.")))+'</span><button class="btn sm ghost" data-go="crew">'+L("Meet them","تعرّف عليهم")+"</button></div>"+botStrip(HF_BOT_IDS,true)+'</div><div class="hfbar">');
   return h})(hfBox);
 document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest("[data-act]");if(!a||!/^hfx-/.test(a.dataset.act))return;e.stopImmediatePropagation();const H=S.hf,act=a.dataset.act;
   if(act==="hfx-nooi"){if(H.tab==="video")H.vModel="auto";else H.iModel="auto";H.bots=true;persist();renderView();return}
@@ -8138,7 +8138,7 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
 hfBox=(o=>function(){let h=o();const H=S.hf;
   h=h.replace(/(<label class="hfref has"[\s\S]*?<\/label>)/,'<span class="hfrefw">$1<button class="hfrefx" data-act="hfz-rm" aria-label="'+esc(L("Remove photo","إزالة الصورة"))+'">'+ic("x")+"</button></span>");
   if(H.tab==="avatar"){const ang=[1,2,3].map(i=>M["hfAng"+i]);
-    h=h.replace('<div class="hfbar">','<div class="hfangs"><span class="small mute">'+L("More angles of the same face (optional): side, ¾, smiling — the bots join them into one sharp face first.","زوايا أخرى للوجه نفسه (اختياري): جانب، ¾، ابتسامة — تدمجها البوتات أولاً في وجه واحد دقيق.")+'</span><div class="hfangl">'+
+    h=h.replace('<div class="hfbar">','<div class="hfangs"><span class="small mute">'+L("More angles of the same face (optional): side, ¾, smiling — the agents join them into one sharp face first.","زوايا أخرى للوجه نفسه (اختياري): جانب، ¾، ابتسامة — يدمجها الوكلاء أولاً في وجه واحد دقيق.")+'</span><div class="hfangl">'+
       ang.map((m,i)=>m?'<span class="hfang"><img src="'+esc(m.url)+'" alt=""><button data-act="hfz-ang" data-v="'+(i+1)+'" aria-label="'+esc(L("Remove angle "+(i+1),"إزالة الزاوية "+(i+1)))+'">'+ic("x")+"</button></span>"
         :'<label class="hfang add">'+ic("plus")+'<input type="file" accept="image/*" data-hfslot="hfAng'+(i+1)+'" aria-label="'+esc(L("Add angle "+(i+1),"أضف زاوية "+(i+1)))+'"></label>').join("")+'</div></div><div class="hfbar">')}
   return h})(hfBox);
@@ -8155,7 +8155,7 @@ hfSend=(o=>async function(){const H=S.hf,ang=[1,2,3].map(i=>M["hfAng"+i]).filter
     prompt:"Studio portrait of exactly the same person shown in all reference photos: the same face, features, skin tone, hair and age. Front-facing, looking straight at the camera, mouth closed, soft even light, plain light background, head and shoulders, photorealistic.",meta:{avatarFace:1,res:"2K"}});
   const g=HF_GRAB;HF_GRAB=null;if(!j){keep.forEach(([k,v])=>M[k]=v);return}
   H.out=g.concat((H.out||[]).filter(x=>!g.includes(x))).slice(0,12);persist();renderView();
-  toast(L("The bots are joining your "+(ang.length+1)+" photos into one face, then the avatar starts by itself.","تدمج البوتات صورك الـ"+(ang.length+1)+" في وجه واحد، ثم يبدأ الأفاتار تلقائياً."),{type:"info",ms:4500});
+  toast(L("The agents are joining your "+(ang.length+1)+" photos into one face, then the avatar starts by itself.","يدمج الوكلاء صورك الـ"+(ang.length+1)+" في وجه واحد، ثم يبدأ الأفاتار تلقائياً."),{type:"info",ms:4500});
   const t0=Date.now();let restored=false;
   const jid=j.id;const tick=setInterval(()=>{const j=S.jobs.find(x=>x.id===jid)||{status:"failed"};if(!restored&&(j.remote||j.status==="failed")){restored=true;keep.forEach(([k,v])=>M[k]=v)}
     if(j.status==="failed"||Date.now()-t0>15*60e3){clearInterval(tick);if(!restored)keep.forEach(([k,v])=>M[k]=v);toast(L("Joining the photos failed — try again or use one photo.","تعذّر دمج الصور — حاول مجدداً أو استخدم صورة واحدة."),{type:"warn"});return}
@@ -8198,8 +8198,8 @@ document.addEventListener("input",e=>{if(e.target&&e.target.id==="hfq"){clearTim
 /* nooi Studio 2.0 panel: a premium look + what the bots will do */
 hfBox=(o=>function(){let h=o();const H=S.hf;if(!/class="hfbots"/.test(h))return h;lrnLoad();const nooi=nooiOn(),learned=(LRN.n||0)+(lrnLocal().n||0);
   h=h.replace('<div class="hfbots">','<div class="hfbots pro'+(nooi?" nooi":"")+'">').replace(/<div class="hfbh"><b>nooi Studio 2.0<\/b><span class="small mute">([\s\S]*?)<\/span>(<button class="btn sm ghost" data-go="crew">[^<]*<\/button>)<\/div>/,(m0,desc,btn)=>
-    '<div class="hfbh"><span class="nst"><span class="nstw">nooi Studio</span><em>2.0</em></span>'+btn+'</div><p class="hfstd">'+(nooi?L("8 AI bots direct every shot and pick the right model for each one — the strongest where it shows, a lighter one where it doesn't. Better videos, fewer credits.","8 بوتات ذكية تخرج كل لقطة وتختار النموذج المناسب لكل واحدة — الأقوى حيث يظهر الفرق، والأخف حيث لا يظهر. فيديو أفضل برصيد أقل."):desc)+"</p>"+
-    '<div class="hfstf"><span>'+ic("users")+L("8 AI bots","8 بوتات ذكية")+"</span><span>"+ic("layers")+L("Best model per shot","أفضل نموذج لكل لقطة")+"</span><span>"+ic("coin")+L("Saves credits","يوفّر الرصيد")+'</span><span class="hflearn">'+ic("spark")+L("Learned from ","تعلّمت من ")+"<b>"+learned+"</b>"+L(" results"," نتيجة")+"</span></div>"+
+    '<div class="hfbh"><span class="nst"><span class="nstw">nooi Studio</span><em>2.0</em></span>'+btn+'</div><p class="hfstd">'+(nooi?L("8 AI agents direct every shot and pick the right model for each one — the strongest where it shows, a lighter one where it doesn't. Better videos, fewer credits.","8 وكلاء ذكاء اصطناعي يخرجون كل لقطة ويختارون النموذج المناسب لكل واحدة — الأقوى حيث يظهر الفرق، والأخف حيث لا يظهر. فيديو أفضل برصيد أقل."):desc)+"</p>"+
+    '<div class="hfstf"><span>'+ic("users")+L("8 AI agents","8 وكلاء ذكاء اصطناعي")+"</span><span>"+ic("layers")+L("Best model per shot","أفضل نموذج لكل لقطة")+"</span><span>"+ic("coin")+L("Saves credits","يوفّر الرصيد")+'</span><span class="hflearn">'+ic("spark")+L("Learned from ","تعلّمت من ")+"<b>"+learned+"</b>"+L(" results"," نتيجة")+"</span></div>"+
     '<div class="hfstplanw">'+hfStudioPlanHTML()+"</div>");
   return h})(hfBox);
 /* jobs from the box carry their category (for learning); nooi videos carry the per-shot plan */
@@ -8313,7 +8313,7 @@ function hfStudioPlanHTML(){const H=S.hf,t=H.tab;if(t!=="video"&&t!=="image")ret
   else{const m=nooiOn()?pickImage(p||"photo"):H.iModel;li.push(hfBotLine("cine",L("Writes the picture prompt: light, lens and colour.","يكتب وصف الصورة: الإضاءة والعدسة والألوان.")));
     li.push(hfBotLine("producer",nooiOn()?L("Picks the best picture model:","يختار أفضل نموذج صور:"):L("Uses your model:","يستخدم نموذجك:"),'<span class="mchips">'+(()=>{const u=logoFor(m);return'<span class="mdl">'+(u?'<img src="'+u+'" alt="">':"")+esc(hfMName("image",m))+"</span>"})()+"</span>"));
     li.push(hfBotLine("proof",L("Checks every picture.","يراجع كل صورة.")))}
-  return'<div class="hfstplan bots"><span class="lbl2">'+L("The bots' plan","خطة البوتات")+'</span><ul class="hbls">'+li.join("")+"</ul></div>"}
+  return'<div class="hfstplan bots"><span class="lbl2">'+L("The agents' plan","خطة الوكلاء")+'</span><ul class="hbls">'+li.join("")+"</ul></div>"}
 /* send bar (length, ratio, credits, send) above the bots panel; nooi logo in the Agent tab */
 hfBox=(o=>function(){let h=o();const i=h.indexOf('<div class="hfbots');if(i>=0){let j=h.indexOf('<div class="hfangs',i);const k=h.indexOf('<div class="hfbar">',i);if(j<0||j>k)j=k;if(j>i){const bots=h.slice(i,j);h=h.slice(0,i)+h.slice(j);h=h.replace(/<\/div>$/,bots+"</div>")}}
   h=h.replace(/(<button role="tab" data-act="hf-tab" data-v="agent"[^>]*>)<svg[\s\S]*?<\/svg>/,'$1<img class="hftlogo" src="'+logoFor("auto")+'" alt="">');
@@ -8429,8 +8429,8 @@ function hfDurSheet(){const H=S.hf,m=H.vModel,long=nooiOn()||hfBotsOn(),mx=long?
     const chip=document.querySelector('.hfbox [data-act="hfx-dur"] span');if(chip)chip.textContent=v+L("s","ث");if(final){persist();hfStudioPaint()}};
   r.addEventListener("input",()=>set(+r.value,false));r.addEventListener("change",()=>set(+r.value,true));n.addEventListener("change",()=>{set(+n.value||5,true);r.value=H.dur;r.style.setProperty("--v",(H.dur/30*100)+"%")})}
 function hfDurNote(v,cap,mx){const m=S.hf.vModel;if(v>=cap&&cap<mx)return L("Longer videos are on a bigger plan.","الفيديو الأطول متاح في باقة أعلى.");
-  if(nooiOn()||hfBotsOn()){const p=nooiOn()?Math.min(6,Math.ceil(v/10)):Math.ceil(v/engMax(m));return p>1?L("The bots make "+p+" connected shots that continue from each other.","تصنع البوتات "+p+" لقطات متصلة تكمل بعضها."):L("One shot.","لقطة واحدة.")}
-  return L(hfMName("video",m)+" makes up to "+mx+" s. Turn the bots on for up to 30 s.",hfMName("video",m)+" يصنع حتى "+mx+" ثانية. شغّل البوتات للوصول إلى 30 ثانية.")}
+  if(nooiOn()||hfBotsOn()){const p=nooiOn()?Math.min(6,Math.ceil(v/10)):Math.ceil(v/engMax(m));return p>1?L("The agents make "+p+" connected shots that continue from each other.","يصنع الوكلاء "+p+" لقطات متصلة تكمل بعضها."):L("One shot.","لقطة واحدة.")}
+  return L(hfMName("video",m)+" makes up to "+mx+" s. Turn the agents on for up to 30 s.",hfMName("video",m)+" يصنع حتى "+mx+" ثانية. شغّل الوكلاء للوصول إلى 30 ثانية.")}
 document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="close-sheet"]');if(a&&$("#hfdr"))setTimeout(()=>{persist();renderView()},0)},true);
 (()=>{const st=document.createElement("style");st.textContent=`
 .hfpill{margin-top:12px}
@@ -12494,6 +12494,153 @@ nwGo=(o=>async function(){const W=S.world,ta=document.getElementById("nwprompt")
 /* ================= v89: the preview's caption shows only the client's words ================= */
 // (the site's own lines — "Faisal = the person in reference picture 1 …" — are for the engine, never the caption)
 previewCol=(o=>function(g,prev){if(!g||!g.prompt)return o(g,prev);const p=g.prompt;try{g.prompt=shown88(g);return o(g,prev)}finally{g.prompt=p}})(previewCol);
+
+/* ================= v90: one look — a colour per section, one header, one tile, one card ================= */
+// The site grew page by page and every page had its own look: colour-gradient app icons on Home, grey squares on Video,
+// green on Sketch; 19 icon sizes, 7 corner roundings, titles from 14 to 20 px; tab rows that hid the open tab on a phone.
+// Now there is one system:
+//  - a colour per section (Image amber · Video violet · Audio fuchsia · Characters blue · 3D emerald · Edit cyan ·
+//    Publish rose · the rest nooi green). It says where you are: the tool's icon beside every page title, the cards on
+//    Home and All tools, the open item in the menu. Choices stay neutral; the picked one is always nooi green.
+//  - one header on every tool page (icon in the section colour + the tool's name + one line), one option tile, one tool
+//    card; three corner roundings (8 · 12 · 16), three title sizes (22 · 16 · 14), three icon sizes (14 beside small
+//    text · 16 beside normal text · 20 standing alone).
+//  - Voice & audio and Subtitles & dubbing are their own section, Audio (Edit had seven tabs); All tools lists every tool
+//    in one grid, by section; the open tab is always in view and a soft edge shows there are more.
+const SEC90={image:"image",video:"video",audio:"audio",chars:"chars",world:"world",edit:"edit",calendar:"publish"};
+const sec90=v=>{const h=hubOf(ALIAS82[v]||v);return(h&&SEC90[h[0]])||"brand"};
+const secKey90=k=>SEC90[k]||sec90(k);
+const APPSEC90=["explore","image","video","audio","chars","world","edit","calendar"];
+(function(){
+  const H={};for(const k of Object.keys(HUB82)){H[k]=HUB82[k];if(k==="explore")H.apps=["tools","All tools","كل الأدوات"];if(k==="video")H.audio=["music","Audio","الصوت"]}
+  for(const k of Object.keys(HUB82))delete HUB82[k];Object.assign(HUB82,H);
+  TOOLS82.forEach(t=>{if(t[1]==="voice"||t[1]==="subs")t[0]="audio"});
+  if(!TOOLS82.some(t=>t[1]==="apps"))TOOLS82.splice(TOOLS82.findIndex(t=>t[1]==="home")+1,0,["apps","apps","tools","All tools","كل الأدوات"]);
+  HUBS.length=0;Object.keys(HUB82).forEach(h=>{const tabs=TOOLS82.filter(t=>t[0]===h).map(t=>[t[1],t[3],t[4],t[5]]);HUBS.push([h,HUB82[h][0],HUB82[h][1],HUB82[h][2],tabs])});
+  ALLNAV.length=0;TOOLS82.forEach(t=>ALLNAV.push([t[1],t[2],t[3],t[4]]));
+  const hub=k=>[k,HUB82[k][0],HUB82[k][1],HUB82[k][2]];
+  NAVS.forEach(g=>{let ks=g[1].map(x=>x[0]);
+    if(ks.includes("explore")&&!ks.includes("apps")){g[1].splice(ks.indexOf("explore")+1,0,hub("apps"));ks=g[1].map(x=>x[0])}
+    if(ks.includes("video")&&!ks.includes("audio"))g[1].splice(ks.indexOf("video")+1,0,hub("audio"))});
+  ALIAS82.audio="voice";
+  TOOLDESC.apps=["Every tool in one place, by section.","كل الأدوات في مكان واحد، حسب القسم."];
+})();
+// All tools: every tool as the same card as on Home, grouped by section, with a filter box
+VIEWS.apps=()=>{const on=k=>{const f=FEATURE_OF_VIEW[k];return!(f&&typeof featureOn==="function"&&!featureOn(f))};
+  const secs=APPSEC90.map(h=>{const hb=HUBS.find(x=>x[0]===h);if(!hb)return"";const keys=TOOLS82.filter(t=>t[0]===h&&on(t[1])&&TOOLDESC[t[1]]&&TOOLDESC[t[1]][0]).map(t=>t[1]);
+    return keys.length?'<section class="apps90s" data-sec90="'+secKey90(h)+'"><h2 class="sec">'+esc(L(hb[2],hb[3]))+"</h2>"+toolGrid(keys)+"</section>":""}).join("");
+  return'<div class="view apps90"><h1>'+L("All tools","كل الأدوات")+'</h1><p class="lede">'+L("Every tool in one place — pick one to start.","كل الأدوات في مكان واحد — اختر واحدة لتبدأ.")+"</p>"+
+    '<label class="apps90f">'+ic("search")+'<input type="search" data-apps90 placeholder="'+esc(L("Find a tool","ابحث عن أداة"))+'" aria-label="'+esc(L("Find a tool","ابحث عن أداة"))+'"></label>'+
+    secs+'<p class="mute apps90none" hidden>'+L("No tool matches — try another word.","لا توجد أداة مطابقة — جرّب كلمة أخرى.")+"</p></div>"};
+document.addEventListener("input",e=>{const f=e.target.closest&&e.target.closest("[data-apps90]");if(!f)return;const q=f.value.trim().toLowerCase();let any=false;
+  document.querySelectorAll("#main .apps90s").forEach(s=>{let n=0;s.querySelectorAll(".tool").forEach(b=>{const hit=!q||b.textContent.toLowerCase().includes(q);b.hidden=!hit;if(hit)n++});s.hidden=!n;if(n)any=true});
+  const none=document.querySelector("#main .apps90none");if(none)none.hidden=any});
+// Home: "All tools" beside the Tools title, like "All templates" beside the templates
+hfHome=(o=>function(old){const t=L("Tools","الأدوات");return o(old).replace('<h2 class="sec">'+t+"</h2>",'<div class="spread sec"><h2 style="margin:0">'+t+'</h2><button class="btn ghost sm" data-go="apps">'+L("All tools","كل الأدوات")+"</button></div>")})(hfHome);
+// after every page is drawn: the section colour, the tool's icon beside the title, cards and menu items in their colours,
+// the open tab in view
+function tabFade90(t){const max=t.scrollWidth-t.clientWidth,pos=Math.abs(t.scrollLeft);t.classList.toggle("fs90",max>2&&pos>2);t.classList.toggle("fe90",max>2&&pos<max-2)}
+function look90(){const m=document.querySelector("#main");if(!m||!S.user){delete document.body.dataset.sec90;return}document.body.dataset.sec90=sec90(S.view);
+  if(S.view!=="home"){const t=tool82(S.view),h=m.querySelector("h1");if(t&&h&&!h.querySelector(".tchip90"))h.insertAdjacentHTML("afterbegin",'<span class="tchip90" aria-hidden="true">'+ic(t[2])+"</span>")}
+  m.querySelectorAll(".tool[data-go]").forEach(b=>{b.dataset.sec90=sec90(b.dataset.go)});
+  m.querySelectorAll(".hubtabs").forEach(t=>{const a=t.querySelector('[aria-selected="true"]');if(a&&t.scrollWidth>t.clientWidth+2){const tr=t.getBoundingClientRect(),ar=a.getBoundingClientRect();
+    if(ar.left<tr.left+8||ar.right>tr.right-8)t.scrollLeft+=(ar.left+ar.width/2)-(tr.left+tr.width/2)}tabFade90(t)})}
+function menu90(){document.querySelectorAll("#side .nav[data-go],#bottomnav [data-go]").forEach(b=>{b.dataset.sec90=secKey90(b.dataset.go)})}
+renderView=(o=>function(){const r=o.apply(this,arguments);try{look90()}catch(e){}return r})(renderView);
+renderShell=(o=>function(){const r=o.apply(this,arguments);try{menu90()}catch(e){}return r})(renderShell);
+document.addEventListener("scroll",e=>{const t=e.target;if(t&&t.classList&&t.classList.contains("hubtabs"))tabFade90(t)},true);
+addEventListener("resize",()=>document.querySelectorAll("#main .hubtabs").forEach(tabFade90));
+// ---- the AI agents (never "bots"): one order and one name, role and job each, everywhere. The order is the order the work
+// runs — each agent works from what the ones before handed over; the Producer prices the Editor's final cut and picks the
+// model for each shot; Iris checks everything last. The home box listed them Director first and the Character Designer after
+// the Cinematographer, and each agent had two different job lines — now one, used by every card, list and hover card.
+const AGENT90=[
+ ["writer","Turns your idea into the story: scenes, characters and dialogue.","يحوّل فكرتك إلى قصة: مشاهد وشخصيات وحوار."],
+ ["casting","Gives every character one fixed face, outfit and voice.","يعطي كل شخصية وجهاً وملابس وصوتاً ثابتة لا تتغير."],
+ ["director","Splits the story into shots: framing, action, camera move and length.","يقسّم القصة إلى لقطات: الإطار والحدث وحركة الكاميرا والمدة."],
+ ["cine","Sets light, lens and colour, and writes each shot's final prompt.","يضبط الإضاءة والعدسة والألوان، ويكتب الوصف النهائي لكل لقطة."],
+ ["sound","Writes the music, sound effects and spoken lines for every shot.","يكتب الموسيقى والمؤثرات الصوتية والجمل المنطوقة لكل لقطة."],
+ ["editor","Joins the shots into one film: order, timing and transitions.","يركّب اللقطات في فيلم واحد: الترتيب والتوقيت والانتقالات."],
+ ["producer","Picks the AI model for each shot and keeps the film within your credits.","يختار نموذج الذكاء لكل لقطة ويُبقي الفيلم ضمن رصيدك."],
+ ["proof","Checks everything, then approves it or sends it back to be fixed.","يراجع كل شيء، ثم يعتمده أو يعيده للتصحيح."]];
+const ORDER90=AGENT90.map(a=>a[0]),byOrder90=(a,b)=>ORDER90.indexOf(a)-ORDER90.indexOf(b);
+BOTS.sort((a,b)=>byOrder90(a.id,b.id));HF_BOT_IDS.sort(byOrder90);
+AGENT90.forEach(([id,en,ar])=>{const b=BOT(id);if(!b)return;b.job=[en,ar];CREW_INFO[id]=[b.role[0],b.role[1],en,ar]});
+const agentLine90=b=>L(b.name[0],b.name[1])+" · "+L(b.role[0],b.role[1])+" — "+L(b.job[0],b.job[1]);
+// every agent avatar in a strip says who it is and what it does (hover / long-press)
+botStrip=(o=>function(ids,compact){return o(ids,compact).replace(/data-bot="([a-z]+)" title="[^"]*"/g,(m,id)=>{const b=BOT(id);return b?'data-bot="'+id+'" title="'+esc(agentLine90(b))+'"':m})})(botStrip);
+// nooi Studio: who does what, in the order they work
+function roles90(){return'<section class="roles90"><h2 class="sec">'+L("Who does what — in the order they work","من يفعل ماذا — بالترتيب الذي يعملون به")+'</h2><ul>'+
+  BOTS.map(b=>'<li data-bot="'+b.id+'"><span class="r90av">'+botSVG(b.id,"idle",30)+'</span><span class="r90t"><b>'+esc(L(b.name[0],b.name[1]))+'</b><span class="r90r">'+esc(L(b.role[0],b.role[1]))+'</span><span class="r90j">'+esc(L(b.job[0],b.job[1]))+"</span></span></li>").join("")+"</ul></section>"}
+VIEWS.crew=(o=>()=>o().replace('<div class="crewgrid">',roles90()+'<div class="crewgrid">'))(VIEWS.crew);
+// the home box's plan: the agents in the same order, each doing the job its role says (the Cinematographer writes the prompts)
+hfStudioPlanHTML=function(){const H=S.hf,t=H.tab;if(t!=="video"&&t!=="image")return"";const q=$("#hfq"),p=(q&&q.value)||H.prompt||"",cat=hfCat(p),cn=L(CAT_N[cat][0],CAT_N[cat][1]),li=[];
+  const line=(id,txt,extra)=>hfBotLine(id,txt,extra).replace('<li class="hbl"','<li class="hbl" data-bot="'+id+'"');
+  if(t==="video"){const pl=nooiOn()?hfStudioP():null,mdl=nooiOn()?null:H.vModel,per=pl?pl.per:Math.min(H.dur,engMax(mdl||"seedance")),n=pl?pl.n:Math.max(1,Math.ceil(H.dur/engMax(mdl||"seedance")));
+    li.push(line("writer",L("Turns your words into the story of the video.","يحوّل كلماتك إلى قصة الفيديو.")));
+    li.push(line("casting",cat==="people"||cat==="action"?L("Keeps the same faces and clothes in every shot.","يحافظ على نفس الوجوه والملابس في كل لقطة."):L("Keeps the look the same from shot to shot.","يحافظ على نفس الشكل من لقطة لأخرى.")));
+    li.push(line("director",n>1?L("Splits "+H.dur+" s into "+n+" connected shots of "+per+" s ("+cn+").","يقسّم "+H.dur+" ثانية إلى "+n+" لقطات متصلة، كل لقطة "+per+" ث ("+cn+")."):L("Plans one "+H.dur+" s shot ("+cn+").","يخطط لقطة واحدة مدتها "+H.dur+" ث ("+cn+").")));
+    li.push(line("cine",L("Sets camera, lens and light, and writes each shot's prompt.","يضبط الكاميرا والعدسة والإضاءة، ويكتب وصف كل لقطة.")));
+    li.push(line("sound",L("Adds sound where the model makes it.","يضيف الصوت حيث يدعمه النموذج.")));
+    if(n>1)li.push(line("editor",L("Joins the shots seamlessly.","يصل اللقطات بسلاسة.")));
+    li.push(line("producer",pl?L("Picks the model for each shot:","يختار نموذج كل لقطة:"):L("Uses the model you chose for every shot:","يستخدم النموذج الذي اخترته لكل لقطة:"),'<span class="mchips">'+(pl?pl.shots.map((s,i)=>'<span class="mshot"><small>'+(i+1)+"</small>"+mchip(s.m)+"</span>").join(""):mchip(mdl))+"</span>"+(pl&&pl.save?'<em class="hfsave">'+L("saves "+pl.save+" credits","يوفّر "+pl.save+" رصيد")+"</em>":"")));
+    li.push(line("proof",L("Checks every frame before you see it.","يراجع كل إطار قبل أن تراه.")))}
+  else{const m=nooiOn()?pickImage(p||"photo"):H.iModel;li.push(line("cine",L("Writes the picture prompt: light, lens and colour.","يكتب وصف الصورة: الإضاءة والعدسة والألوان.")));
+    li.push(line("producer",nooiOn()?L("Picks the best picture model:","يختار أفضل نموذج صور:"):L("Uses your model:","يستخدم نموذجك:"),'<span class="mchips">'+(()=>{const u=logoFor(m);return'<span class="mdl">'+(u?'<img src="'+u+'" alt="">':"")+esc(hfMName("image",m))+"</span>"})()+"</span>"));
+    li.push(line("proof",L("Checks every picture.","يراجع كل صورة.")))}
+  return'<div class="hfstplan bots"><span class="lbl2">'+L("The agents' plan","خطة الوكلاء")+'</span><ul class="hbls">'+li.join("")+"</ul></div>"};
+(function(){const st=document.createElement("style");st.textContent=`
+:root{--r-s:8px;--r-m:12px;--r-l:16px;--hub:var(--c-brand);
+ --c-brand:#9cd245;--c-image:#fbbf24;--c-video:#a78bfa;--c-audio:#e879f9;--c-chars:#60a5fa;--c-world:#34d399;--c-edit:#22d3ee;--c-publish:#fb7185}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--c-brand:#4d7c0f;--c-image:#b45309;--c-video:#7c3aed;--c-audio:#a21caf;--c-chars:#2563eb;--c-world:#047857;--c-edit:#0e7490;--c-publish:#be123c}}
+:root[data-theme="light"]{--c-brand:#4d7c0f;--c-image:#b45309;--c-video:#7c3aed;--c-audio:#a21caf;--c-chars:#2563eb;--c-world:#047857;--c-edit:#0e7490;--c-publish:#be123c}
+[data-sec90="brand"]{--hub:var(--c-brand)}[data-sec90="image"]{--hub:var(--c-image)}[data-sec90="video"]{--hub:var(--c-video)}[data-sec90="audio"]{--hub:var(--c-audio)}
+[data-sec90="chars"]{--hub:var(--c-chars)}[data-sec90="world"]{--hub:var(--c-world)}[data-sec90="edit"]{--hub:var(--c-edit)}[data-sec90="publish"]{--hub:var(--c-publish)}
+/* the page header: the tool's icon in its section colour, the name, one line under it */
+#main h1:has(>.tchip90){display:flex;align-items:center;gap:10px}
+.tchip90{flex:none;display:inline-grid;place-items:center;width:36px;height:36px;margin-block:-5px;border-radius:var(--r-m);background:color-mix(in srgb,var(--hub) 15%,transparent);color:var(--hub)}
+.tchip90>svg{width:20px;height:20px}
+#main h1.h82{font-size:27px}@media (max-width:820px){#main h1.h82{font-size:22px}}#main h2.gfh{font-size:16px}#main h3{font-size:14px}
+/* tool cards (Home, All tools): one card, the icon in the tool's section colour instead of a colour per tool */
+#main .tool .ico{background:color-mix(in srgb,var(--hub) 15%,transparent)!important;color:var(--hub)!important;box-shadow:none!important;border-radius:var(--r-m)!important}
+#main .tool .ico svg{stroke:currentColor!important;stroke-width:1.7!important;width:20px!important;height:20px!important}
+#main .panel{border-radius:var(--r-l)}
+/* option tiles: one tile everywhere — neutral icon square, the picked one in nooi green */
+#main .tile,#modalRoot .tile{border-radius:var(--r-m)!important}
+#main .tile:not(.brand) .gl:has(>svg),#modalRoot .tile:not(.brand) .gl:has(>svg){width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important;padding:0!important;border-radius:var(--r-s)!important;transform:none!important}
+#main .tile .gl>svg,#modalRoot .tile .gl>svg,#main .ugcmode>button .gl>svg{width:20px!important;height:20px!important}
+#main .ugcmode>button .gl:has(>svg){width:32px!important;height:32px!important;min-width:32px;border-radius:var(--r-s)!important}
+#main .drop,#main .bkdrop,#main .model{border-radius:var(--r-m)!important}
+#main :is(.selbtn,.seg,.fontbtn,.field,.charrow,.note,.cap,.alsrc,.trow,.engine,.pcr,.fmtbtn,.routebox,.kfslot,.ugcslot,.cbitem,.autodesc,.tb,.stage,.edstage){border-radius:var(--r-m)}
+#main :is(.seg,.tl,.tabs)>button{border-radius:var(--r-s)}
+#main .stage .cap{border-radius:var(--r-m)!important}
+#main :is(.gfstrip,.botcard,.agcard,.pt87,.dcanvas,.nw-stage,.tabs){border-radius:var(--r-l)}
+@media (max-width:767px){#main .hubtabs{border-radius:var(--r-l)}}
+/* icon sizes: 14 beside small text, 16 beside normal text, 20 standing alone (over the sizes written on single icons) */
+#main :is(.btn.sm,.btn.ghost,.iconbtn.sm,.seg>button,.pcr,.paymeth>span,.note,.laichip,.rolepill,.cidchip,.trkadd)>svg,#main :is(a,li,i,.crc,.pk84ci)>svg,#main :is(.crc,.pk84ci,.laichip,.rolepill,.cidchip) svg{width:14px!important;height:14px!important}
+#main :is(.btn:not(.sm):not(.ghost),.selbtn,.fmtbtn,.fontbtn,.hfpill,h2,h3,.iconbtn,.ch87b,.curplan)>svg,#main :is(.nw-chip,.gfstrip>span) svg{width:16px!important;height:16px!important}
+#main :is(.tb,.routebox,.edcmd,.thtoggle,.nw-ib,.sil87,.hfsend,.nw-add)>svg,#main :is(.gfst,.ico3,.fin82,.rsi83,.ugcslot .gl,.drop,.bkdrop) svg{width:20px!important;height:20px!important}
+#main .ugcslot .gl{flex:none;min-width:20px;min-height:20px}
+#side .nav svg{width:20px;height:20px}
+/* the menu: the open item's icon in its section colour */
+#side .nav[aria-current="page"] svg,#bottomnav [aria-current="page"] svg{color:var(--hub)}
+/* nooi Studio: who does what, in the order they work */
+.roles90{margin:4px 0 18px}.roles90 ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.roles90 li{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-m);background:var(--panel)}
+.r90av{flex:none;width:30px;height:30px}.r90av svg{width:30px;height:30px}
+.r90t{display:flex;flex-direction:column;min-width:0;gap:1px}.r90t b{font-size:14px;font-weight:600}.r90r{font-size:12px;color:var(--hub)}.r90j{font-size:13px;color:var(--mute);line-height:1.4}
+/* All tools */
+.apps90f{display:flex;align-items:center;gap:8px;max-width:420px;margin:0 0 18px;padding:0 12px;height:44px;border:1px solid var(--line);border-radius:var(--r-m);background:var(--panel2);color:var(--mute)}
+.apps90f>svg{width:16px;height:16px;flex:none}.apps90f input{flex:1;min-width:0;border:0;background:transparent;color:var(--text);font:inherit;font-size:15px;outline:0;height:100%}
+.apps90s{margin:0 0 6px}.apps90s .sec{display:flex;align-items:center;gap:8px}.apps90s .sec::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--hub)}
+/* tabs: the open one in view, a soft edge where there are more */
+.hubtabs.fe90{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
+.hubtabs.fs90{-webkit-mask-image:linear-gradient(to right,transparent,#000 28px);mask-image:linear-gradient(to right,transparent,#000 28px)}
+.hubtabs.fs90.fe90{-webkit-mask-image:linear-gradient(to right,transparent,#000 28px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,transparent,#000 28px,#000 calc(100% - 28px),transparent)}
+[dir="rtl"] .hubtabs.fe90{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 28px),transparent)}
+[dir="rtl"] .hubtabs.fs90{-webkit-mask-image:linear-gradient(to left,transparent,#000 28px);mask-image:linear-gradient(to left,transparent,#000 28px)}
+[dir="rtl"] .hubtabs.fs90.fe90{-webkit-mask-image:linear-gradient(to left,transparent,#000 28px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to left,transparent,#000 28px,#000 calc(100% - 28px),transparent)}
+`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

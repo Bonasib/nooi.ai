@@ -311,7 +311,7 @@
 311|Istilo
 312|cinematic, maiinit na kulay
 313|Gamitin ang istrukturang ito
-314|Isang linya bawat bahagi — binabasa ng mga bot ang bawat bahagi.
+314|Isang linya bawat bahagi — binabasa ng mga ahente ang bawat bahagi.
 315|Video model
 316|Una at huling frame
 317|Unang frame
@@ -375,3 +375,5 @@
 375|Alisin ang mga na-download na model
 376|Tumatakbo sa device mo · libre
 377|Tapos sa device mo — walang nagamit na credits.
+378|Audio
+379|Lahat ng tool

@@ -311,7 +311,7 @@
 311|Mtindo
 312|kisinema, rangi za joto
 313|Tumia muundo huu
-314|Mstari mmoja kwa kila sehemu — boti husoma kila sehemu.
+314|Mstari mmoja kwa kila sehemu — mawakala husoma kila sehemu.
 315|Muundo wa video
 316|Fremu ya kwanza na ya mwisho
 317|Fremu ya kwanza
@@ -375,3 +375,5 @@
 375|Ondoa modeli zilizopakuliwa
 376|Inaendeshwa kwenye kifaa chako · bure
 377|Imekamilika kwenye kifaa chako — hakuna mikopo iliyotumika.
+378|Sauti
+379|Zana zote

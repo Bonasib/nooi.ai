@@ -311,7 +311,7 @@
 311|Stil
 312|filmisch, warme Farben
 313|Diese Struktur verwenden
-314|Eine Zeile pro Teil — die Bots lesen jeden Teil.
+314|Eine Zeile pro Teil — die KI-Agenten lesen jeden Teil.
 315|Videomodell
 316|Start- & Endbild
 317|Startbild
@@ -375,3 +375,5 @@
 375|Heruntergeladene Modelle entfernen
 376|Läuft auf deinem Gerät · kostenlos
 377|Auf deinem Gerät erledigt — keine Credits verbraucht.
+378|Audio
+379|Alle Werkzeuge

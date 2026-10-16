@@ -311,7 +311,7 @@
 311|Style
 312|cinématique, couleurs chaudes
 313|Utiliser cette structure
-314|Une ligne par partie — les bots lisent chaque partie.
+314|Une ligne par partie — les agents lisent chaque partie.
 315|Modèle vidéo
 316|Première et dernière image
 317|Première image
@@ -375,3 +375,5 @@
 375|Supprimer les modèles téléchargés
 376|Tourne sur votre appareil · gratuit
 377|Fait sur votre appareil — aucun crédit utilisé.
+378|Audio
+379|Tous les outils

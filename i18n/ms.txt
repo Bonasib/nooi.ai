@@ -311,7 +311,7 @@
 311|Gaya
 312|sinematik, warna hangat
 313|Guna struktur ini
-314|Satu baris bagi setiap bahagian — bot membaca setiap bahagian.
+314|Satu baris bagi setiap bahagian — ejen membaca setiap bahagian.
 315|Model video
 316|Bingkai pertama & akhir
 317|Bingkai pertama
@@ -375,3 +375,5 @@
 375|Buang model yang dimuat turun
 376|Berjalan pada peranti anda · percuma
 377|Siap pada peranti anda — tiada kredit digunakan.
+378|Audio
+379|Semua alat

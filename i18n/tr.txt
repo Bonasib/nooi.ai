@@ -311,7 +311,7 @@
 311|Stil
 312|sinematik, sıcak renkler
 313|Bu yapıyı kullan
-314|Her bölüm için bir satır — botlar her bölümü okur.
+314|Her bölüm için bir satır — ajanlar her bölümü okur.
 315|Video modeli
 316|İlk ve son kare
 317|İlk kare
@@ -375,3 +375,5 @@
 375|İndirilen modelleri kaldır
 376|Cihazınızda çalışır · ücretsiz
 377|Cihazınızda tamamlandı — kredi kullanılmadı.
+378|Ses
+379|Tüm araçlar
