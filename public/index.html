@@ -13150,6 +13150,35 @@ video.frame,img.frame{display:block;width:100%;height:100%}
 /* "Share to Explore" goes inside the picture, next to Delete (top), clear of View (bottom) and the time (top, other side) */
 renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="library")document.querySelectorAll("[data-open-job] .xpshare").forEach(x=>{const t=x.parentElement.querySelector(".thumb");if(t&&x.parentElement!==t)t.appendChild(x)});return r})(renderView);
 
+/* ================= v92: CALM ICONS — an icon moves once, when you choose it; nothing moves when you touch the screen or redraw a page ================= */
+/* Every tap redraws the page, and the redraw made every chosen option, the open menu item and each agent start their
+   animation again; on a phone the finger landing on any button (even to scroll) also made its icon jump. Now: an option or
+   menu item animates only when it has just become chosen, looping motions (the agents) carry on where they were, and on
+   touch screens an icon no longer jumps on touch-down (a mouse still gets its hover motion). */
+const MO92={prev:new Map(),touch:false};   // key of a chosen option / open menu item → when it became chosen
+const moKey92=e=>{const d=e.dataset||{},k=Object.keys(d).filter(x=>x!=="probe").sort().map(x=>x+"="+d[x]).join("&");if(!k)return null;
+  return (e.closest("#side")?"side|":e.closest("#bottomnav")?"bn|":e.closest("#modalRoot")?"sheet|":"main|")+k};
+function moSettle92(){const now=performance.now(),cur=new Map(),fresh=[];
+  document.querySelectorAll('[aria-pressed="true"],[aria-current="page"]').forEach(e=>{const k=moKey92(e);if(!k)return;const t0=MO92.prev.has(k)?MO92.prev.get(k):now,age=now-t0;cur.set(k,t0);
+    if(age>900)e.classList.add("mo-settled");else if(age>0)fresh.push([e,age])});   // chosen a moment ago and redrawn again: its motion carries on, it doesn't start over
+  MO92.prev=cur;MO92.fresh=(MO92.fresh||[]).concat(fresh);
+  // the timing fixes wait for the frame (reading animations mid-redraw would make later changes in the same redraw animate)
+  if(!MO92.raf)MO92.raf=requestAnimationFrame(()=>{MO92.raf=0;const fr=MO92.fresh||[];MO92.fresh=[];
+    fr.forEach(([e,age])=>{try{if(e.isConnected)e.getAnimations({subtree:true}).forEach(a=>{const t=a.effect&&a.effect.getTiming&&a.effect.getTiming();if(t&&t.iterations!==Infinity)a.currentTime=age})}catch(x){}});
+    // looping motions continue in step with the clock instead of starting over on every redraw
+    try{const now=document.timeline.currentTime||0;document.getAnimations().forEach(a=>{const t=a.effect&&a.effect.getTiming&&a.effect.getTiming();if(t&&t.iterations===Infinity&&(a.currentTime||0)<80)a.currentTime=now})}catch(e){}})}
+renderView=(o=>function(){const r=o.apply(this,arguments);moSettle92();return r})(renderView);
+renderShell=(o=>function(){const r=o.apply(this,arguments);moSettle92();return r})(renderShell);
+window.addEventListener("pointerdown",e=>{MO92.touch=e.pointerType!=="mouse"},true);
+playIcon=(o=>function(el){if(MO92.touch){MO92.touch=false;return}return o(el)})(playIcon);
+(()=>{const st=document.createElement("style");st.textContent=`
+.mo-settled:not(:hover) .gl,.mo-settled:not(:hover) .gl>svg,.mo-settled:not(:hover) svg[data-mo]:not(.ic-play),.mo-settled:not(:hover) svg [pathLength],.mo-settled .badge{animation:none!important}
+/* touch screens: the agents don't turn toward every touch or scroll (a mouse still gets it; tapping an agent still makes it hop) */
+@media (hover:none){svg.bot.look,svg.b3d{transform:none!important}svg.bot.look .eyes{translate:none!important}svg.bot.near{scale:none!important}}
+/* the Images page moves the model logos into their own row while it draws; they no longer shrink and grow back each time */
+.ipage .imodels .tile .gl{transition:background .2s ease}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
