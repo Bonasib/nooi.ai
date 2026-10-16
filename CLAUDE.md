@@ -17,6 +17,7 @@ integrations/          Blender add-on, Unity editor window, MCP client configs
 deploy/                install.sh (Hostinger/Ubuntu one-command), update.sh (auto-rollback), backup.sh, restore.sh
 docs/                  PAYMENTS_ROADMAP.md, policies/*.en.md|ar.md
 tests/                 Playwright checks (click every control, layout overflow on 4 devices, tracking accuracy, playhead smoothness)
+apps/cinema-studio-4/  a separate Next.js 14 prototype (Cinema Studio 4 UI, mock generation) — own package.json, not part of the site or its deploy
 ```
 
 ## Frontend architecture (public/index.html)
