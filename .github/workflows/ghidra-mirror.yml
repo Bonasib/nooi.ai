@@ -1,0 +1,53 @@
+# Copies the official Ghidra release (NationalSecurityAgency/ghidra on GitHub) into this repository's releases, after
+# checking its SHA-256 against the ones GitHub and the Ghidra team publish. The cloud coding session uses it for
+# reverse-engineering tools; it can't reach the Ghidra release itself. Nothing on the site uses it.
+# Runs when this file changes on the working branch, or by hand (Actions → Ghidra copy → Run workflow).
+name: Ghidra copy
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/festive-brahmagupta-08tfzr]
+    paths: [.github/workflows/ghidra-mirror.yml]
+permissions:
+  contents: write
+concurrency: ghidra-mirror
+jobs:
+  copy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VERSION: "12.1.4"
+    steps:
+      - name: Download the official release and check it
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/NationalSecurityAgency/ghidra/releases/tags/Ghidra_${VERSION}_build" > rel.json
+          name=$(jq -r '[.assets[] | select(.name | test("^ghidra_[0-9.]+_PUBLIC_[0-9]+\\.zip$"))][0].name // ""' rel.json)
+          [ -n "$name" ] || { echo "no Ghidra zip in the release"; exit 1; }
+          url=$(jq -r --arg n "$name" '.assets[] | select(.name == $n) | .browser_download_url' rel.json)
+          digest=$(jq -r --arg n "$name" '.assets[] | select(.name == $n) | .digest // ""' rel.json | sed 's/^sha256://')
+          curl -fsSL --retry 3 -o "$name" "$url"
+          got=$(sha256sum "$name" | cut -d' ' -f1)
+          echo "file: $name  size: $(stat -c %s "$name")  sha256: $got  GitHub's digest: ${digest:-none}"
+          checked=0
+          if [ -n "$digest" ]; then
+            [ "$got" = "$digest" ] || { echo "the SHA-256 differs from GitHub's digest"; exit 1; }
+            echo "matches GitHub's digest"; checked=1
+          fi
+          if jq -r '.body // ""' rel.json | grep -qi "$got"; then echo "matches the SHA-256 in the release notes"; checked=1; fi
+          [ "$checked" = 1 ] || { echo "no published SHA-256 to check against"; exit 1; }
+          echo "$got  $name" > "$name.sha256"
+          echo "NAME=$name" >> "$GITHUB_ENV"
+      - name: Publish the copy in this repository's releases
+        run: |
+          set -euo pipefail
+          tag="ghidra-${VERSION}"
+          if gh release view "$tag" -R "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$tag" "$NAME" "$NAME.sha256" --clobber -R "$GITHUB_REPOSITORY"
+          else
+            gh release create "$tag" "$NAME" "$NAME.sha256" -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --latest=false \
+              --title "Ghidra ${VERSION} (copy)" \
+              --notes "Unmodified copy of the official Ghidra ${VERSION} release (https://github.com/NationalSecurityAgency/ghidra/releases/tag/Ghidra_${VERSION}_build), Apache License 2.0. Its SHA-256 is in ${NAME}.sha256. Used by the coding session's reverse-engineering tools, not by the site."
+          fi
