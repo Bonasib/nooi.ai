@@ -3,6 +3,7 @@
 #    no icon redraws itself or pops, the agents don't turn toward the finger and their idle motion carries on instead of
 #    starting over; touching a button to scroll doesn't make its icon jump
 #  · choosing a new option animates that one icon once, and a redraw a moment later doesn't start it over
+#    (v93: the Video page's options are in nooi Studio's box — the tests open its first section)
 #  · the open menu item doesn't replay its motion when the page redraws
 #  · computer (mouse): hovering still plays an icon's motion and the agents still look toward the pointer
 # Run: python3 tests/v92.py
@@ -38,7 +39,7 @@ async def phone(b):
             await pg.wait_for_timeout(1000); await pg.tap("[data-probe='1']"); await pg.wait_for_timeout(100)
             m = await E(MOVING); ok(not m, f"phone/{v}: tapping an option that is already chosen starts movement {m[:6]}")
     # 3) a new option: only its icon, once; a redraw 300 ms later doesn't start it over
-    await E("()=>{go('video');renderAll();scrollTo(0,0)}"); await pg.wait_for_timeout(1500)
+    await E("()=>{go('video');ST93().open='type';renderAll();scrollTo(0,0);const o=document.querySelector('.sec93:not([hidden])');if(o)o.scrollIntoView({block:'center'})}"); await pg.wait_for_timeout(1500)
     key = await E("""()=>{const e=[...document.querySelectorAll('#main .tile[data-set][aria-pressed=false]')].find(x=>{const r=x.getBoundingClientRect();return r.width>10&&r.top>40&&r.bottom<840});e.setAttribute('data-probe','1');return [e.dataset.set,e.dataset.val]}""")
     await pg.tap("[data-probe='1']"); await pg.wait_for_timeout(30)
     mark = "(k)=>{const e=[...document.querySelectorAll('#main .tile[data-set]')].find(x=>x.dataset.set===k[0]&&x.dataset.val===k[1]);if(e)e.setAttribute('data-probe','1')}"
@@ -60,7 +61,7 @@ async def phone(b):
     r = await E("()=>document.getAnimations().filter(a=>a.effect&&a.effect.target.closest&&a.effect.target.closest('svg.bot')&&a.effect.getTiming().iterations===Infinity).map(a=>Math.round(a.currentTime||0))")
     ok(r and min(r) > 1000, f"phone: agents' idle motion starts over on a redraw {sorted(r)[:5]}")
     # 6) touching a button to scroll doesn't make its icon jump
-    await E("()=>{go('video');renderAll();scrollTo(0,0)}"); await pg.wait_for_timeout(1200)
+    await E("()=>{go('video');ST93().open='type';renderAll();scrollTo(0,0);const o=document.querySelector('.sec93:not([hidden])');if(o)o.scrollIntoView({block:'end'})}"); await pg.wait_for_timeout(1200)
     box = await E("()=>{const e=[...document.querySelectorAll('#main .tile')].find(x=>x.getBoundingClientRect().top>200&&x.querySelector('svg[data-mo]'));if(!e)return null;e.setAttribute('data-scroll','1');const r=e.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]}")
     if box:
         cdp = await ctx.new_cdp_session(pg)
@@ -77,7 +78,7 @@ async def computer(b):
     pg.on("pageerror", lambda e: errs.append(str(e)[:200]))
     await pg.route("**/*", lambda r: r.abort() if not r.request.url.startswith("file:") else r.continue_())
     await pg.goto(PAGE); await pg.wait_for_timeout(600); await pg.evaluate(SET, "en"); E = pg.evaluate
-    await E("()=>{go('video');renderAll()}"); await pg.wait_for_timeout(1200)
+    await E("()=>{go('video');ST93().open='type';renderAll()}"); await pg.wait_for_timeout(1200)
     sel = await E("()=>{const e=[...document.querySelectorAll('#main .tile')].find(x=>x.querySelector('svg[data-mo]')&&x.getBoundingClientRect().top>100);e.setAttribute('data-hover','1');return true}")
     await pg.hover("[data-hover='1']"); await pg.wait_for_timeout(80)
     ok(await E("()=>!!document.querySelector('[data-hover] svg.ic-play')"), "computer: hovering an option no longer plays its icon motion")

@@ -2887,7 +2887,8 @@ function drawTextLayer(ctx,tx,ow,oh,t){
 }
 function wrapText(ctx,s,max){const words=String(s).split(/\s+/);const out=[];let line="";words.forEach(w=>{const tt=line?line+" "+w:w;if(ctx.measureText(tt).width>max&&line){out.push(line);line=w}else line=tt});if(line)out.push(line);return out.length?out:[""]}
 function edTick(now){
-  const cv=$("#wk");if(!cv||S.view!=="edit")return;const F=fmt(),k=1080/Math.max(F[2],F[3]),ow=Math.round(F[2]*k),oh=Math.round(F[3]*k);if(cv.width!==ow||cv.height!==oh){cv.width=ow;cv.height=oh}
+  // the preview draws at 1080 on the long side; an export at ED.hq on the long side (v93: up to the format's own size)
+  const cv=$("#wk");if(!cv||S.view!=="edit")return;const F=fmt(),k=(ED.hq||1080)/Math.max(F[2],F[3]),ow=ED.hq?Math.round(F[2]*k/2)*2:Math.round(F[2]*k),oh=ED.hq?Math.round(F[3]*k/2)*2:Math.round(F[3]*k);if(cv.width!==ow||cv.height!==oh){cv.width=ow;cv.height=oh}
   const ctx=cv.getContext("2d"),total=edTotal(),dt=ED.last?(now-ED.last)/1000:0;ED.last=now;
   if(ED.playing&&total){ED.t+=dt;if(ED.t>=total){if(ED.rec){ED.t=total}else ED.t=0}}
   if(!S.ed.clips.length){ctx.fillStyle="#0c0e0c";ctx.fillRect(0,0,ow,oh);ctx.fillStyle="#666";ctx.font="500 "+Math.round(oh*.028)+"px Geist, sans-serif";ctx.textAlign="center";ctx.fillText(L("Add clips to start","أضف مقاطع للبدء"),ow/2,oh/2);ctx.textAlign="start";syncClipMedia(-1,0,false);return}
@@ -3832,7 +3833,7 @@ async function restoreMedia(){const keys=Object.keys(S.mediaKeys||{});let n=0;fo
 document.addEventListener("click",e=>{const a=e.target.closest('[data-act="slot-clear"],[data-act="subs-clear"],[data-act="s3d-clear"],[data-act="ed-del"]');if(!a)return;const k=a.dataset.act==="slot-clear"?a.dataset.slot:a.dataset.act==="subs-clear"?"subV":a.dataset.act==="s3d-clear"?"s3dImg":("c_"+S.ed.sel);if(S.mediaKeys&&S.mediaKeys[k]){delete S.mediaKeys[k];IDB.del(k);persist()}},true);
 /* 2) Editor: undo / redo, keyboard shortcuts, drag-to-scrub, save status */
 const HIST={stack:[],i:-1,lock:false};
-let saveT=0;const _persist=persist;persist=function(){_persist();if(S&&S.view==="edit")histPush();saveT=Date.now();const d=$("#edsaved");if(d)d.textContent=L("Saved","محفوظ")};
+let saveT=0;const _persist=persist;persist=function(){_persist();if(S&&S.view==="edit")try{histPush()}catch(e){}   /* (v93: a save while the page starts — before the editor's undo is ready — left the whole page empty when the editor was the last page open) */saveT=Date.now();const d=$("#edsaved");if(d)d.textContent=L("Saved","محفوظ")};
 const _ve4=VIEWS.edit;VIEWS.edit=()=>{if(HIST.i<0)histPush();let h=_ve4();
   const tools='<div class="edtools"><button class="btn sm" id="edundo" data-act="ed-undo" '+(HIST.i<=0?"disabled":"")+' aria-label="'+L("Undo","تراجع")+'">'+svg('<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>')+L("Undo","تراجع")+'</button><button class="btn sm" id="edredo" data-act="ed-redo" '+(HIST.i>=HIST.stack.length-1?"disabled":"")+' aria-label="'+L("Redo","إعادة")+'">'+svg('<path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/>')+L("Redo","إعادة")+'</button><span class="savedot" id="edsaved">'+L("Saved","محفوظ")+'</span><span class="small dim lphide" style="margin-inline-start:auto"><span class="kbd">Space</span> '+L("play","تشغيل")+' · <span class="kbd">S</span> '+L("split","قص")+' · <span class="kbd">←→</span> '+L("frame","إطار")+' · <span class="kbd">⌘Z</span> '+L("undo","تراجع")+"</span></div>";
   return h.replace('<div class="tlwrap" dir="ltr">',tools+'<div class="tlwrap" dir="ltr">')};
@@ -5526,7 +5527,7 @@ function stageSummary(id,o){if(!o)return"";const li=a=>"<ul class=\"cso\">"+a.ma
   if(id==="proof")return'<p class="small">'+L("Score ","الدرجة ")+"<b>"+o.score+"</b> · "+(o.approved?L("approved","معتمد"):L("not approved","غير معتمد"))+"</p>"+(o.issues.length?li(o.issues.slice(0,10).map(x=>'<span class="sev s-'+x.severity+'">'+x.severity+"</span> "+esc(L(BOT(x.stage).name[0],BOT(x.stage).name[1]))+": "+esc(x.problem))):"");return""}
 NAVS.forEach(g=>{if(g[1].some(x=>x[0]==="story"))g[1].unshift(["crew","crew","Film crew","طاقم الفيلم",1])});ALLNAV.length=0;NAVS.flatMap(g=>g[1]).forEach(x=>ALLNAV.push(x));TOOLDESC.crew=["Eight AI agents write, design, direct, shoot, score, edit, produce and check your film.","ثمانية وكلاء ذكاء اصطناعي يكتبون ويصممون ويخرجون ويصوّرون ويلحّنون ويركّبون وينتجون ويدققون فيلمك."];FEATURE_OF_VIEW.crew="story";
 VIEWS.crew=()=>{const B=S.crew.brief,run=S.crew.run,busy=CREW.busy;const est=BOTS.reduce((a,b)=>a+(b.tier==="strong"?2:1),0);
-  const card=b=>{const st=run?run.stages[b.id]||{status:"waiting"}:{status:"waiting"},cs=crewStatus(st.status);return'<div class="botcard'+(st.status==="working"?" on":"")+(b.added?" added":"")+'"><div class="botav">'+botSVG(b.id,st.status==="working"?"working":st.status==="done"||st.status==="degraded"?"done":st.status==="failed"?"failed":(run&&run.status==="running")?"waiting":"idle",68)+'</div><b>'+L(b.name[0],b.name[1])+'</b><span class="small mute">'+L(b.role[0],b.role[1])+"</span>"+(b.added?'<span class="newtag">'+L("New to the crew","جديد في الطاقم")+"</span>":"")+'<span class="badge b-'+cs[2]+'">'+L(cs[0],cs[1])+(st.attempts>1?'<span class="att"> · '+st.attempts+"×</span>":"")+"</span></div>"};
+  const card=b=>{const st=run?run.stages[b.id]||{status:"waiting"}:{status:"waiting"},cs=crewStatus(st.status);return'<div class="botcard'+(st.status==="working"?" on":"")+(b.added?" added":"")+'" data-bot="'+b.id+'"'+(b.job?' title="'+esc(L(b.job[0],b.job[1]))+'"':"")+'><div class="botav">'+botSVG(b.id,st.status==="working"?"working":st.status==="done"||st.status==="degraded"?"done":st.status==="failed"?"failed":(run&&run.status==="running")?"waiting":"idle",68)+'</div><b>'+L(b.name[0],b.name[1])+'</b><span class="small mute">'+L(b.role[0],b.role[1])+"</span>"+(b.added?'<span class="newtag">'+L("New to the crew","جديد في الطاقم")+"</span>":"")+'<span class="badge b-'+cs[2]+'">'+L(cs[0],cs[1])+(st.attempts>1?'<span class="att"> · '+st.attempts+"×</span>":"")+"</span></div>"};
   const lineup='<div class="crewline">'+BOTS.map((b,i)=>card(b)+(i<BOTS.length-1?'<span class="baton'+(run&&run.stages[b.id]&&["done","degraded"].includes(run.stages[b.id].status)?" lit":"")+'" aria-hidden="true">'+svg('<path d="M5 12h14M13 6l6 6-6 6"/>')+"</span>":"")).join("")+"</div>";
   const brief='<div class="panel pad"><label class="lbl" style="margin-top:0">'+L("Your film idea","فكرة فيلمك")+'</label><textarea data-bind="crew.brief.idea" dir="auto" style="min-height:90px" placeholder="'+esc(L("e.g. An old lighthouse keeper finds a message in a bottle from his younger self…","مثال: حارس منارة عجوز يجد رسالة في زجاجة من نفسه عندما كان شاباً…"))+'">'+esc(B.idea)+'</textarea><span class="lbl">'+L("Length","المدة")+'</span><div class="seg">'+[15,30,60,90].map(n=>'<button data-set="crew.brief.seconds" data-val="'+n+'" data-num="1" aria-pressed="'+(+B.seconds===n)+'">'+n+L("s","ث")+"</button>").join("")+'</div><span class="lbl">'+L("Genre","النوع")+"</span>"+chips("crew.brief.genre",[["drama","Drama","دراما"],["comedy","Comedy","كوميديا"],["thriller","Thriller","إثارة"],["scifi","Sci-fi","خيال علمي"],["kids","Kids","أطفال"],["documentary","Documentary","وثائقي"],["ad","Ad","إعلان"]],B.genre)+'<div class="grid2"><div><span class="lbl">'+L("Language","اللغة")+'</span><select data-bind="crew.brief.lang">'+LANGS.map(l=>'<option value="'+l[0]+'"'+(B.lang===l[0]?" selected":"")+">"+esc(L(l[1],l[2]))+"</option>").join("")+'</select></div><div><span class="lbl">'+L("Aspect","الأبعاد")+'</span><div class="seg">'+["16:9","9:16","1:1"].map(a=>'<button data-set="crew.brief.aspect" data-val="'+a+'" aria-pressed="'+(B.aspect===a)+'">'+a+"</button>").join("")+"</div></div></div>"+
     '<div class="row" style="margin-top:14px">'+(busy?'<button class="btn danger big" data-act="crew-cancel">'+ic("x")+L("Stop the crew","أوقف الطاقم")+"</button>":'<button class="btn primary big" data-act="crew-start">'+ic("crew")+L("Start the crew","ابدأ الطاقم")+'<span class="cost">~'+est+" cr</span></button>")+"</div>"+'<p class="small dim" style="margin:8px 0 0">'+L("Each agent checks its own work, checks it fits everyone else's, repairs mistakes up to 3 times, then hands it to the next. Last, Iris (Proofreader & QA) checks the whole film and can send any work back to be fixed.","كل وكيل يفحص عمله، ويتأكد أنه يتوافق مع عمل الآخرين، ويصلح الأخطاء حتى 3 مرات، ثم يسلّمه للتالي. وفي النهاية يراجع آيريس (المدقق ومراقب الجودة) الفيلم كله ويستطيع إعادة أي عمل للتصحيح.")+"</p></div>";
@@ -13177,6 +13178,266 @@ playIcon=(o=>function(el){if(MO92.touch){MO92.touch=false;return}return o(el)})(
 @media (hover:none){svg.bot.look,svg.b3d{transform:none!important}svg.bot.look .eyes{translate:none!important}svg.bot.near{scale:none!important}}
 /* the Images page moves the model logos into their own row while it draws; they no longer shrink and grow back each time */
 .ipage .imodels .tile .gl{transition:background .2s ease}
+`;document.head.appendChild(st)})();
+
+/* ================= v93: MOTION CONTROL — two clear jobs: replace the person in a video (the video's place stays), or make a character do the moves ================= */
+/* Clients asked to put their person into a video and got a new video instead: Motion Control animates the photo's person in
+   the PHOTO's setting, so the room, the objects and the light of the video were gone. Now the page asks what you want:
+   "Replace the person in the video" (Character Swap — the video's place, objects, light, camera and every movement stay; only
+   the person changes) is the default, and "My character does the moves" is the old Motion Control. Each shows only its own
+   options; the price is on the button; files over the engine's limit are caught before anything is charged. */
+if(typeof P_PRO!=="undefined"&&!P_PRO.includes("mcswap"))P_PRO.push("mcswap");
+// (not in MODELS: like Motion Control 3.0 it's only on this page, never in the Video page's engine list)
+if(PRICE_TABLE.video.mcswap==null)PRICE_TABLE.video.mcswap=83;
+Object.assign(ICONS,{swap93:'<circle cx="7" cy="7" r="2.6"/><path d="M2.5 15.5c0-2.6 2-4.3 4.5-4.3s4.5 1.7 4.5 4.3"/><circle cx="17" cy="12" r="2.6"/><path d="M12.5 20.5c0-2.6 2-4.3 4.5-4.3s4.5 1.7 4.5 4.3"/><path d="M14 4h5v4M19 4l-4 4" opacity=".75"/>'});
+const MB93=10*1024*1024;
+const mcMode93=()=>{const c=MC83();if(c.mode!=="swap"&&c.mode!=="moves")c.mode="swap";return c.mode};
+const mcRes93=c=>{const sw=c.mode==="swap",ok=sw?["480p","720p"]:["720p","1080p"];if(!ok.includes(c.res))c.res="720p";return c.res};
+const mcK93=c=>c.mode==="swap"?(c.res==="480p"?.5:1):(c.res==="1080p"?1.5:1);
+const mcModel93=c=>c.mode==="swap"?"mcswap":"mc30";
+// the video's own shape (an upload has its player; a library video is measured once, quietly)
+const mcAspect93=()=>{const m=M.mcMove;if(!m)return"9:16";const v=m.el;let w=(v&&v.videoWidth)||m.vw,h=(v&&v.videoHeight)||m.vh;
+  if((!w||!h)&&m.url&&!m.probe93){m.probe93=1;const t=document.createElement("video");t.muted=true;t.preload="metadata";t.onloadedmetadata=()=>{if(M.mcMove===m){m.vw=t.videoWidth;m.vh=t.videoHeight;if(S.view==="motion")renderView()}};t.src=m.url}
+  if(!w||!h){const j=S.jobs.find(x=>mediaUrl(x)===m.url);return j&&j.aspect?j.aspect:"9:16"}const r=w/h;return r>1.2?"16:9":r<.85?"9:16":"1:1"};
+const mcBig93=()=>{const out=[];[["mcMove",L("video","الفيديو")],["mcChar",L("photo","الصورة")]].forEach(([s,n])=>{const f=M[s]&&M[s].file;if(f&&f.size>MB93)out.push([n,Math.round(f.size/1048576)])});return out};
+VIEWS.motion=()=>{const c=MC83(),mode=mcMode93(),sw=mode==="swap",res=mcRes93(c),d=mcDur83(),model=mcModel93(c),cost=vprice83(model,d?Math.min(30,Math.max(3,d)):5,mcK93(c)),
+  mine=S.jobs.filter(j=>j.meta&&j.meta.motion83),g=mine[mine.length-1],prev=mine.slice(0,-1).slice(-8).reverse(),tooLong=d>30,tooShort=d>0&&d<3,big=sw?mcBig93():[];
+  const modes='<div class="mcmode93" role="radiogroup" aria-label="'+esc(L("What do you want?","ماذا تريد؟"))+'">'+[
+    ["swap","swap93",L("Replace the person in the video","استبدل الشخص في الفيديو"),L("The same place, light, objects and camera — only the person changes to the one in your photo.","نفس المكان والإضاءة والأشياء والكاميرا — يتغيّر الشخص فقط إلى الشخص في صورتك.")],
+    ["moves","motion83",L("My character does the moves","شخصيتي تؤدي الحركة"),L("Your character performs the video's movement in the photo's own setting.","تؤدي شخصيتك حركة الفيديو في مكان الصورة نفسها.")]]
+    .map(([v,icn,t,dd])=>'<button class="mcm93" role="radio" data-set="mc83.mode" data-val="'+v+'" aria-checked="'+(mode===v)+'" aria-pressed="'+(mode===v)+'"><span class="gl">'+ic(icn)+"</span><b>"+esc(t)+"</b><small>"+esc(dd)+"</small></button>").join("")+"</div>";
+  const form='<div class="panel pad mc83">'+modes+
+    '<span class="lbl">1 · '+(sw?L("The video","الفيديو"):L("The movement","الحركة"))+'</span><p class="small mute mc83h">'+(sw?L("The video with the person to replace: 3–30 s, one person, up to 10 MB.","الفيديو الذي فيه الشخص المراد استبداله: 3–30 ث، شخص واحد، حتى 10 ميجابايت."):L("A video of the movement: a dance, a gesture, a walk (3–30 s, one person).","فيديو للحركة: رقصة أو إشارة أو مشي (3–30 ث، شخص واحد)."))+"</p>"+
+    mediaSlot("mcMove","video/*",L("Upload the video","ارفع الفيديو"))+(M.mcMove?"":mcLib83(["video","edit","export","finish","lipsync"],"mcMove"))+
+    (tooLong?'<p class="small warn83">'+L("This video is "+d+" s — up to 30 s. Trim it in the editor first.","هذا الفيديو "+d+" ث — الحد 30 ث. قصّه في المحرر أولاً.")+"</p>":tooShort?'<p class="small warn83">'+L("This video is shorter than 3 s.","هذا الفيديو أقصر من 3 ث.")+"</p>":d?'<p class="small mute">'+L("Length: "+d+" s","المدة: "+d+" ث")+"</p>":"")+
+    '<span class="lbl">2 · '+(sw?L("The new person","الشخص الجديد"):L("The character","الشخصية"))+'</span><p class="small mute mc83h">'+(sw?L("A sharp photo of the person who will appear: face and whole body visible, facing the camera, standing like the person in the video.","صورة واضحة للشخص الذي سيظهر: الوجه والجسم كاملاً، مواجهاً للكاميرا، بوقفة تشبه الشخص في الفيديو."):L("A clear photo of the whole body, facing the camera, like the person in the video.","صورة واضحة للجسم كاملاً مواجهة للكاميرا، مثل الشخص في الفيديو."))+"</p>"+
+    mediaSlot("mcChar","image/*",L("Upload the photo","ارفع الصورة"))+(M.mcChar?"":mcLib83(["image","look","sheet"],"mcChar"))+
+    (big.length?'<p class="small warn83">'+big.map(([n,mb])=>L("The "+n+" is "+mb+" MB — this engine takes up to 10 MB.","حجم "+n+" "+mb+" ميجابايت — هذا المحرك يقبل حتى 10 ميجابايت.")).join(" ")+"</p>":"")+
+    (sw?'<p class="small mute tip93">'+ic("spark","width:14px;height:14px")+L("Best results: one person in the video, the face visible, and a photo with a similar pose and framing.","أفضل نتيجة: شخص واحد في الفيديو، والوجه ظاهر، وصورة بوقفة وكادر قريبين منه.")+"</p>"
+      :'<span class="lbl">3 · '+L("Anything to add (optional)","إضافة (اختياري)")+'</span><textarea data-bind="mc83.prompt" dir="auto" style="min-height:64px" placeholder="'+esc(L("e.g. on a sunny street in Riyadh, wearing a white thobe","مثال: في شارع مشمس بالرياض، يرتدي ثوباً أبيض"))+'">'+esc(c.prompt)+"</textarea>")+
+    '<div class="grid2"><div><span class="lbl">'+L("Quality","الجودة")+'</span><div class="seg">'+(sw?["480p","720p"]:["720p","1080p"]).map(r=>'<button data-set="mc83.res" data-val="'+r+'" aria-pressed="'+(res===r)+'">'+r+"</button>").join("")+"</div></div>"+
+    (sw?"":'<div><span class="lbl">'+L("Framing","الكادر")+'</span><div class="seg"><button data-set="mc83.orient" data-val="video" aria-pressed="'+(c.orient==="video")+'">'+L("Like the video","مثل الفيديو")+'</button><button data-set="mc83.orient" data-val="image" aria-pressed="'+(c.orient==="image")+'">'+L("Like the photo","مثل الصورة")+"</button></div></div>")+"</div>"+
+    '<label class="check83"><input type="checkbox" data-mc83consent="1"'+(c.consent?" checked":"")+"> <span>"+L("I have the right to use this photo and this video, and the people in them agreed.","لدي حق استخدام هذه الصورة وهذا الفيديو، والأشخاص الظاهرون فيهما موافقون.")+"</span></label>"+
+    '<div style="margin-top:14px"><button class="btn primary big" data-act="mc-make">'+ic(sw?"swap93":"motion83")+(sw?L("Replace the person","استبدل الشخص"):L("Make it move","حرّكها"))+'<span class="cost">'+cost+" cr"+(d?"":" / 5"+L(" s"," ث"))+"</span></button></div></div>";
+  const out=!g?'<div class="preview-col"><div class="panel pad"><div class="stage" style="aspect-ratio:'+mcAspect93().replace(":","/")+';max-height:60vh;margin:0 auto"><div class="empty">'+(sw?L("Your video with the new person appears here.","يظهر فيديوك بالشخص الجديد هنا."):L("The character moves here.","تتحرك الشخصية هنا."))+"</div></div></div></div>":previewCol(g,prev);
+  return'<div class="view"><h1>'+L("Motion Control","التحكم بالحركة")+'</h1><p class="lede">'+L("Put your person into any video in place of the one there, or make your character do any video's moves.","ضع شخصك في أي فيديو مكان الشخص الموجود، أو اجعل شخصيتك تؤدي حركة أي فيديو.")+'</p><div class="two two82'+(g?" has":"")+'">'+form+out+"</div></div>"};
+// Make: one handler for both jobs (runs before the v83 one and replaces it)
+window.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="mc-make"]');if(!a||S.view!=="motion")return;e.preventDefault();e.stopImmediatePropagation();
+  const c=MC83(),sw=mcMode93()==="swap",model=mcModel93(c);mcRes93(c);
+  if(!modelAllowed(model)){toast(L("Motion Control is part of the Pro plan.","التحكم بالحركة ضمن باقة Pro."),{type:"warn"});return}
+  if(!M.mcMove){toast(sw?L("Add the video first.","أضف الفيديو أولاً."):L("Add the video with the movement first.","أضف فيديو الحركة أولاً."),{type:"warn"});return}
+  if(!M.mcChar){toast(sw?L("Add a photo of the new person first.","أضف صورة الشخص الجديد أولاً."):L("Add a photo of the character first.","أضف صورة الشخصية أولاً."),{type:"warn"});return}
+  const d=mcDur83();if(d>30){toast(L("The video must be 30 s or shorter.","يجب أن يكون الفيديو 30 ث أو أقل."),{type:"warn"});return}
+  if(sw&&mcBig93().length){toast(L("This engine takes files up to 10 MB — trim or shorten the video in the editor first.","هذا المحرك يقبل ملفات حتى 10 ميجابايت — قصّ الفيديو أو اختصره في المحرر أولاً."),{type:"warn"});return}
+  if(!c.consent){toast(L("Confirm that you have the right to use this photo and video.","أكّد أن لديك حق استخدام الصورة والفيديو."),{type:"warn"});const x=document.querySelector("[data-mc83consent]");if(x)x.focus();return}
+  const dur=Math.min(30,Math.max(3,d||5)),cost=vprice83(model,dur,mcK93(c)),meta={motion83:true,res:c.res,consent:true};if(sw)meta.swap93=true;else meta.orient=c.orient;
+  let inputs={};if(API.mode==="server"){a.disabled=true;try{for(const s of["mcMove","mcChar"]){const m=M[s];inputs[s]=m.file?(await API.upload(m.file,m.name)).url:m.remote}}catch(err){a.disabled=false;toast(L("Couldn't upload the files — try again.","تعذّر رفع الملفات — حاول مجدداً."),{type:"warn"});return}a.disabled=false}
+  const words=sw?"":String(c.prompt||"").trim();
+  const j=addJob({kind:"video",model,prompt:words,title:(sw?L("Swap · ","استبدال · "):L("Motion · ","حركة · "))+(words||M.mcChar.name||"").slice(0,40),dur,aspect:sw||c.orient==="video"?mcAspect93():"9:16",cost,secs:12,art:"scene",meta,inputsUrl:{},inputs83:inputs});
+  if(j){persist();renderAll();toast(sw?L("Replacing the person — usually 3–8 minutes.","جارٍ استبدال الشخص — عادةً 3–8 دقائق."):L("Making it move — usually 2–5 minutes.","جارٍ التحريك — عادةً 2–5 دقائق."),{type:"info"})}},true);
+(()=>{const st=document.createElement("style");st.textContent=`
+.mcmode93{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.mcm93{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;row-gap:2px;align-items:start;text-align:start;padding:12px;border-radius:var(--r-m,12px);border:1px solid var(--line2);background:var(--panel);color:var(--text);cursor:pointer;min-width:0}
+.mcm93 .gl{grid-row:1/3;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:color-mix(in srgb,var(--text) 7%,transparent)}.mcm93 .gl svg{width:20px;height:20px}
+.mcm93 b{font-size:14px;line-height:1.25}.mcm93 small{font-size:12px;color:var(--mute);line-height:1.35}
+.mcm93[aria-checked="true"]{border-color:var(--lime);box-shadow:inset 0 0 0 1px var(--lime);background:color-mix(in srgb,var(--lime) 10%,var(--panel))}
+.mcm93[aria-checked="true"] .gl{background:var(--lime);color:var(--lime-ink,#0b0d0a)}
+.tip93{display:flex;gap:6px;align-items:flex-start;margin-top:8px}
+@media (max-width:520px){.mcmode93{grid-template-columns:1fr}}
+`;document.head.appendChild(st)})();
+
+/* ================= v93: NOOI STUDIO — Create video + Cinema Studio + the agents' film on one page, every option in one box ================= */
+/* Video had three doors that did nearly the same thing (Create video, Cinema Studio, nooi Studio), each with its own format,
+   length, camera-move and engine pickers. Now there is one: nooi Studio. One box: the idea on top, then one row of option
+   chips — tap a chip and its choices open inside the box (one at a time). "One video" has every Create-video option plus
+   Cinema Studio's camera, lens, focal length, aperture, light and ready looks (they become tested wording added to the shot);
+   "A film by 9 agents" is the agents' film with its own options in the same kind of box. The old doors open nooi Studio;
+   "Who does what" is gone (each agent's card already says it). */
+const ST93=()=>(S.studio93=Object.assign({open:""},S.studio93||{}));
+const cine93=()=>(S.draft.cine93=Object.assign({cam:"",lens:"",focal:"",ap:"",light:""},S.draft.cine93||{}));
+ALIAS82.cinema="video";
+HUBS.forEach(h=>{if(h[0]!=="video")return;const t=h[4],v=t.find(x=>x[0]==="video");if(v){v[1]="nooi Studio";v[2]="استوديو nooi";v[3]=[...new Set([...(v[3]||[]),"cinema","crew"])]}
+  ["cinema","crew"].forEach(id=>{const i=t.findIndex(x=>x[0]===id);if(i>=0)t.splice(i,1)})});
+(()=>{const v=TOOLS82.find(t=>t[1]==="video");if(v){v[3]="nooi Studio";v[4]="استوديو nooi"}for(const id of["cinema","crew"]){const i=TOOLS82.findIndex(t=>t[1]===id);if(i>=0)TOOLS82.splice(i,1)}})();
+(()=>{const n=ALLNAV.find(x=>x[0]==="video");if(n){n[2]="nooi Studio";n[3]="استوديو nooi"}const i=ALLNAV.findIndex(x=>x[0]==="cinema");if(i>=0)ALLNAV.splice(i,1)})();
+// search: "cinema", "camera", "lens" still find nooi Studio (Cinema Studio's old name is not a second door)
+palItems=(o=>function(q){const r=o(q),s=(q||"").trim().toLowerCase(),sub={video:L("Tool · one video — camera, lens & light","أداة · فيديو واحد — الكاميرا والعدسة والإضاءة"),crew:L("Tool · a whole film by nine AI agents","أداة · فيلم كامل يصنعه تسعة وكلاء ذكاء")};
+  if(s&&/video|film|cinema|camera|lens|فيديو|فيلم|سينما|كاميرا|عدسة/.test(s)&&!r.some(x=>x.act&&x.act.go==="video"))r.unshift({icon:"video",title:L("nooi Studio","استوديو nooi"),sub:"",act:{go:"video"}});
+  r.forEach(x=>{const g=x.act&&x.act.go;if(sub[g])x.sub=sub[g]});return r})(palItems);
+TOOLDESC.video=["One video with full control of camera, lens and light — or a whole film made by nine AI agents.","فيديو واحد بتحكم كامل في الكاميرا والعدسة والإضاءة — أو فيلم كامل يصنعه تسعة وكلاء ذكاء."];
+Object.assign(ICONS,{type93:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9.5h4M3 14.5h4M17 9.5h4M17 14.5h4"/>',clock93:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  fps93:'<rect x="3" y="6" width="5" height="12" rx="1"/><rect x="10" y="6" width="5" height="12" rx="1"/><path d="M17 9l4-2v10l-4-2"/>',takes93:'<rect x="7" y="3" width="13" height="13" rx="2"/><path d="M4 7v11a2 2 0 0 0 2 2h11"/>',
+  more93:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',look93:'<path d="M5 19l9-9M14 10l2-6 1 4 4 1-6 2z"/><path d="M4 4l1 2M3 9h2" opacity=".6"/>',
+  genre93:'<path d="M4 5h7v6a3.5 3.5 0 0 1-7 0z"/><path d="M13 9h7v6a3.5 3.5 0 0 1-7 0z"/><path d="M6 8h.01M9 8h.01M15 12h.01M18 12h.01"/>',lang93:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/>'});
+const CINEK93=[["cam",["Camera","الكاميرا"],'<rect x="3" y="8" width="13" height="10" rx="2"/><path d="M16 11l5-3v10l-5-3"/>'],["lens",["Lens","العدسة"],'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/>'],
+  ["focal",["Focal length","البعد البؤري"],fov82(35)],["ap",["Aperture","فتحة العدسة"],ap82(4)],["light",["Light","الإضاءة"],'<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6L7 7M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/>']];
+function cineWords93(){const c=cine93(),w=[];if(c.cam)w.push(cinPick82("cam",c.cam)[3]);if(c.lens)w.push(cinPick82("lens",c.lens)[3]);if(+c.focal)w.push(cinPick82("focal",c.focal)[3]);if(c.ap)w.push(cinPick82("ap",c.ap)[3]);if(c.light)w.push("lighting: "+cinPick82("light",c.light)[3]);
+  if(!w.length)return"";const t=w.join(", ");return t[0].toUpperCase()+t.slice(1)+"."}
+const cineVal93=k=>{const v=cine93()[k];if(!v||(k==="focal"&&!+v))return L("Auto","تلقائي");const x=cinPick82(k,v);return L(x[1],x[2])};
+const cineSec93=k=>'<div class="tiles cin82t">'+'<button class="tile" data-set="draft.cine93.'+k+'" data-val=""'+(k==="focal"?' data-num="1"':"")+' aria-pressed="'+(!cine93()[k]||(k==="focal"&&!+cine93()[k]))+'"><span class="gl">'+ic("spark")+'</span><span class="lb">'+esc(L("Auto","تلقائي"))+"</span></button>"+
+  CIN82[k].map(x=>'<button class="tile" data-set="draft.cine93.'+k+'" data-val="'+x[0]+'"'+(k==="focal"?' data-num="1"':"")+' aria-pressed="'+(String(cine93()[k])===String(x[0]))+'"><span class="gl">'+svg(x[4])+'</span><span class="lb">'+esc(L(x[1],x[2]))+"</span></button>").join("")+"</div>";
+const lookSec93=()=>{const c=cine93(),on=CINLOOK82.find(l=>["cam","lens","focal","ap","light"].every(f=>String(c[f])===String(l[3][f])));
+  return'<p class="small mute" style="margin:0 0 8px">'+L("A ready set of camera, lens, focal length, aperture and light. Change any of them after.","مجموعة جاهزة من الكاميرا والعدسة والبعد البؤري وفتحة العدسة والإضاءة. غيّر أياً منها بعدها.")+'</p><div class="chips">'+CINLOOK82.map(l=>'<button class="chip" data-act="look93" data-v="'+l[0]+'" aria-pressed="'+(on===l)+'">'+esc(L(l[1],l[2]))+"</button>").join("")+'<button class="chip" data-act="look93" data-v="" aria-pressed="false">'+esc(L("Clear","مسح"))+"</button></div>"};
+// one chip of the row: what it is and what is chosen
+const chip93=(key,icon,title,val)=>{const on=ST93().open===key;return'<button type="button" class="o93" data-o93="'+key+'" aria-expanded="'+on+'" aria-controls="sec93-'+key+'"><span class="o93i">'+icon+'</span><span class="o93t">'+esc(title)+'</span><b class="o93v">'+esc(val)+"</b></button>"};
+const modes93=()=>'<div class="mode93" role="tablist" aria-label="'+esc(L("What to make","ماذا تصنع"))+'"><button role="tab" data-go="video" aria-selected="'+(S.view!=="crew")+'">'+ic("video")+esc(L("One video","فيديو واحد"))+'</button><button role="tab" data-go="crew" aria-selected="'+(S.view==="crew")+'">'+ic("users")+esc(L("A film by 9 agents","فيلم من 9 وكلاء"))+"</button></div>";
+const LEDE93=()=>L("Write your idea once: one video with full control of the camera, lens and light — or a whole film made by nine AI agents.","اكتب فكرتك مرة واحدة: فيديو واحد بتحكم كامل في الكاميرا والعدسة والإضاءة — أو فيلم كامل يصنعه تسعة وكلاء ذكاء.");
+/* put a form's children into one box: the top part (idea, its tools), one chip row, the open section, the button */
+function box93(panel,spec){const kids=[...panel.children],buckets={},order=[],top=[],bottom=[];let pend=[],last="top",pk=null;
+  const put=(key,el)=>{if(key==="top")top.push(el);else if(key==="bottom")bottom.push(el);else{if(!buckets[key]){buckets[key]=[];order.push(key)}buckets[key].push(el)}};
+  for(const el of kids){if(el.classList.contains("lbl")&&!el.matches("label[for]")){pend.push(el);continue}
+    if(el.classList.contains("pk84row")){pk=el;pend=[];continue}
+    let key=spec.find(x=>x.test&&x.test(el));key=key?key.key:(el.matches(".small.dim,.small.mute")?last:last);
+    pend.forEach(l=>put(key,l));pend=[];put(key,el);last=key}
+  pend.forEach(l=>put(last,l));
+  const st=ST93(),known=spec.filter(x=>x.key!=="top"&&x.key!=="bottom"&&(x.key==="@pk"?!!pk:(buckets[x.key]||x.html))),open=known.some(x=>x.key===st.open)?st.open:"";
+  panel.classList.add("box93");panel.textContent="";top.forEach(e=>panel.appendChild(e));
+  const row=document.createElement("div");row.className="opt93";row.setAttribute("role","group");row.setAttribute("aria-label",L("Options","الخيارات"));
+  known.forEach(x=>{if(x.key==="@pk"){if(pk)row.appendChild(pk);return}row.insertAdjacentHTML("beforeend",chip93(x.key,x.icon,x.title,x.value()))});if(pk&&!pk.parentElement)row.appendChild(pk);
+  panel.appendChild(row);
+  known.forEach(x=>{if(x.key==="@pk")return;const sec=document.createElement("div");sec.className="sec93";sec.id="sec93-"+x.key;sec.dataset.sec93=x.key;if(x.key!==open)sec.hidden=true;
+    if(x.html)sec.innerHTML=x.html();(buckets[x.key]||[]).forEach(e=>sec.appendChild(e));panel.appendChild(sec)});
+  bottom.forEach(e=>panel.appendChild(e))}
+const has93=(sel)=>el=>el.matches(sel)||!!el.querySelector(sel);
+function videoBox93(){const v=document.querySelector("#main .view");if(!v)return;const panel=v.querySelector(".two>.panel");if(!panel||panel.classList.contains("box93"))return;const d=S.draft;cine93();
+  const tp=(TYPES.find(x=>x[0]===d.type)||[0,d.type,d.type]),M0=MODELS[d.model]||{name:d.model},lg=typeof logoFor==="function"&&logoFor(d.model);
+  box93(panel,[
+    {key:"top",test:el=>el.matches("label[for=dprompt],#dprompt,.botstrip")||!!el.querySelector('[data-act="enhance"]')},
+    {key:"bottom",test:has93('[data-act="gen-video"]')},
+    {key:"type",icon:ic("type93"),title:L("Type","النوع"),value:()=>L(tp[1],tp[2]),test:has93('[data-set="draft.type"]')},
+    {key:"@pk"},
+    {key:"model",icon:lg?'<img src="'+esc(lg)+'" alt="">':ic("spark"),title:L("Engine","المحرك"),value:()=>M0.name,test:el=>el.matches(".models,.routebox")||!!el.querySelector('[data-set="draft.model"]')},
+    {key:"length",icon:ic("clock93"),title:L("Length & frames","المدة والإطارات"),value:()=>d.dur+L(" s"," ث")+(M.vStart||M.vEnd||d.startJob?" · "+L("frames","إطارات"):""),test:el=>el.matches(".kfbox")},
+    {key:"look",icon:ic("look93"),title:L("Look","المظهر"),value:()=>{const c=cine93(),l=CINLOOK82.find(l=>["cam","lens","focal","ap","light"].every(f=>String(c[f])===String(l[3][f])));return l?L(l[1],l[2]):["cam","lens","focal","ap","light"].some(f=>c[f]&&+c[f]!==0)?L("Custom","مخصص"):L("Auto","تلقائي")},html:lookSec93,test:()=>false},
+    ...CINEK93.map(([k,t,icn])=>({key:"c_"+k,icon:svg(icn),title:L(t[0],t[1]),value:()=>cineVal93(k),html:()=>cineSec93(k),test:()=>false})),
+    {key:"fps",icon:ic("fps93"),title:L("Frame rate","معدل الإطارات"),value:()=>(d.fps||30)+" fps",test:has93('[data-set="draft.fps"]')},
+    {key:"takes",icon:ic("takes93"),title:L("Takes","اللقطات"),value:()=>d.variations+"×",test:has93('[data-set="draft.variations"]')},
+    {key:"sound",icon:ic("voice"),title:L("Sound","الصوت"),value:()=>(d.audio?L("On","مفعّل"):L("Off","متوقف"))+(String(d.vo||"").trim()?" · "+L("voiceover","تعليق"):""),test:el=>has93('[data-toggle="draft.audio"],[data-bind="draft.vo"],[data-bind="draft.voice"]')(el)},
+    {key:"more",icon:ic("more93"),title:L("More","المزيد"),value:()=>L("Motion ","الحركة ")+(d.motion??50),test:el=>el.matches(".cast,details")||!!el.querySelector('[data-bind="draft.motion"],[data-bind="draft.neg"]')}])}
+function crewBox93(){const v=document.querySelector("#main .view");if(!v)return;const b=S.crew&&S.crew.brief||{},go=v.querySelector('[data-act="crew-start"]'),panel=go&&go.closest(".panel");if(!panel||panel.classList.contains("box93"))return;
+  const gen=(typeof GENRES90!=="undefined"&&GENRES90)||null,lang=(panel.querySelector('select')||{}).selectedOptions,lv=lang&&lang[0]?lang[0].textContent:"";
+  const gb=panel.querySelector('[data-set="crew.brief.genre"][aria-pressed="true"]');
+  box93(panel,[
+    {key:"top",test:el=>el.matches("label[for],textarea")||!!el.querySelector('textarea')},
+    {key:"bottom",test:el=>has93('[data-act="crew-start"]')(el)||el.matches("p.small")},
+    {key:"len",icon:ic("clock93"),title:L("Length","المدة"),value:()=>(b.seconds||30)+L(" s"," ث"),test:has93('[data-set="crew.brief.seconds"]')},
+    {key:"genre",icon:ic("genre93"),title:L("Genre","النوع"),value:()=>gb?gb.textContent.trim():"",test:has93('[data-set="crew.brief.genre"]')},
+    {key:"@pk"},
+    {key:"lang",icon:ic("lang93"),title:L("Language","اللغة"),value:()=>lv,test:has93("select")}])}
+renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view!=="video"&&S.view!=="crew")return r;const v=document.querySelector("#main .view");if(!v)return r;
+  try{const h1=v.querySelector("h1");if(h1&&S.view==="video"){const ch=h1.querySelector(".tchip90");h1.textContent=L("nooi Studio","استوديو nooi");if(ch)h1.prepend(ch)}
+    if(h1&&S.view==="crew"&&!h1.querySelector(".tchip90")){const t=TOOLS82.find(x=>x[1]==="video");if(t)h1.insertAdjacentHTML("afterbegin",'<span class="tchip90" aria-hidden="true">'+ic(t[2])+"</span>")}
+    const lede=v.querySelector(":scope>.lede");if(lede)lede.textContent=LEDE93();
+    if(!v.querySelector(".mode93")){const at=lede||(h1&&(h1.closest(".spread")||h1));if(at)at.insertAdjacentHTML("afterend",modes93())}
+    if(S.view==="video")videoBox93();
+    else{const rl=v.querySelector(".roles90");if(rl)rl.remove();const g=v.querySelector(".crewgrid"),line=v.querySelector(".crewline");if(g&&line&&g.compareDocumentPosition(line)&Node.DOCUMENT_POSITION_PRECEDING)line.before(g);crewBox93()}}catch(e){console.warn("studio93",e)}
+  return r})(renderView);
+// a chip opens its choices inside the box (one at a time), without redrawing the page
+document.addEventListener("click",e=>{const c=e.target.closest&&e.target.closest("[data-o93]");if(!c)return;e.preventDefault();const st=ST93(),k=c.dataset.o93;st.open=st.open===k?"":k;persist();
+  const box=c.closest(".box93");if(!box)return;box.querySelectorAll("[data-o93]").forEach(b=>b.setAttribute("aria-expanded",String(b.dataset.o93===st.open)));box.querySelectorAll(".sec93").forEach(s=>s.hidden=s.dataset.sec93!==st.open)});
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="look93"]');if(!a)return;e.preventDefault();const c=cine93(),l=CINLOOK82.find(x=>x[0]===a.dataset.v);
+  ["cam","lens","focal","ap","light"].forEach(f=>c[f]=l?l[3][f]:"");persist();renderView()});
+// the shot gets the camera / lens / light wording; the job keeps the client's own words as its title
+makeVideo=(o=>function(){const d=S.draft,w=S.view==="video"?cineWords93():"",orig=d.prompt;if(!w||!String(orig||"").trim())return o.apply(this,arguments);
+  const words=String(orig).trim().replace(/[.\s]+$/,"")+". "+w,ad=addJob,c=Object.assign({},cine93());d.prompt=words;
+  addJob=function(j){if(j&&j.kind==="video"){j.title=j.title||String(orig).trim().slice(0,60);j.meta=Object.assign({},j.meta,{cinema:c})}return ad.apply(this,arguments)};
+  try{return o.apply(this,arguments)}finally{addJob=ad;if(d.prompt===words)d.prompt=orig}})(makeVideo);
+(()=>{const st=document.createElement("style");st.textContent=`
+.mode93{display:flex;gap:6px;margin:4px 0 14px;padding:4px;border-radius:999px;background:var(--panel);border:1px solid var(--line2);width:fit-content;max-width:100%}
+.mode93 button{display:inline-flex;align-items:center;gap:6px;border:0;background:none;color:var(--mute);font:600 14px var(--sans,inherit);padding:8px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.mode93 button svg{width:16px;height:16px}.mode93 button[aria-selected="true"]{background:var(--text);color:var(--bg)}
+.box93>label[for=dprompt]{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.box93>textarea,.box93 #dprompt{min-height:96px}
+.opt93{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px}
+.box93 .opt93 .pk84row{display:contents!important}
+.box93 .opt93 .pk84c{display:inline-flex!important;width:auto!important;margin:0!important;min-height:36px;padding:5px 11px 5px 6px;border-radius:999px;font-size:13px}
+.o93{display:inline-flex;align-items:center;gap:6px;max-width:100%;min-height:36px;padding:5px 11px 5px 6px;border-radius:999px;border:1px solid var(--line2);background:var(--panel);color:var(--text);font:500 13px var(--sans,inherit);cursor:pointer}
+.o93 .o93i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--text) 7%,transparent);flex:none;overflow:hidden}
+.o93 .o93i svg{width:16px;height:16px}.o93 .o93i img{width:18px;height:18px;object-fit:contain}
+.o93 .o93t{color:var(--mute)}.o93 .o93v{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.o93[aria-expanded="true"]{border-color:var(--lime);box-shadow:inset 0 0 0 1px var(--lime)}
+.sec93{margin:8px 0 2px;padding:12px;border-radius:var(--r-m,12px);background:color-mix(in srgb,var(--text) 4%,transparent);border:1px solid var(--line2)}
+.sec93>.lbl:first-child{margin-top:0}
+.view:has(.mode93) .crewgrid{margin-bottom:16px}
+`;document.head.appendChild(st)})();
+
+/* ================= v93: EDITOR — sharp exports, your own pictures and numbers in Infographics, fades, icons that keep their size ================= */
+/* The editor recorded its 1080-on-the-long-side preview, so a 1080×1920 export was really 608×1080 made bigger — soft.
+   Exports now draw at the format's own size (a "Fast" choice keeps the old, lighter way for slow phones). Infographics had
+   no way to add your own things: now "Your picture or logo" (a picture you can move, resize, animate, frame and caption,
+   kept on this device) and "Numbers from a file" (CSV from Excel or Sheets fills a chart). The whole video can fade in from
+   black and out to black. Icons inside headings had no size and filled the panel (the giant star in AI motion graphic). */
+// 1) exports as sharp as this device records smoothly. A recording is real time: a device that can't draw a frame in time
+//    records fewer frames — a shorter video that starts black. The preview's own frames are measured as they come (nothing
+//    extra is drawn): the time between frames (how fast this device shows the page) and the time to draw one. A device that
+//    already shows the preview under 40 frames a second exports at the preview size; otherwise at the format's own size (up
+//    to 2160) when the bigger drawing still fits 30 frames a second, else the largest size that does.
+const med93=a=>{const b=(a||[]).slice().sort((x,y)=>x-y);return b.length>=5?b[b.length>>1]:null};
+function edHQ93(){const F=fmt(),full=Math.min(Math.max(F[2],F[3]),2160),gap=med93(ED.ti93),ms=med93(ED.tk93);if(full<=1080||gap==null||ms==null||gap>25)return 0;
+  const fit=1080*Math.sqrt(22/Math.max(ms,.1));return fit>=full?full:fit<1200?0:Math.floor(fit/8)*8}
+edExport=(o=>async function(){const cv=$("#wk"),hq=cv&&S.ed.q93!=="fast"&&!recording&&S.view==="edit",F=fmt(),full=Math.min(Math.max(F[2],F[3]),2160);let long=0;
+  if(hq){long=edHQ93();if(long){ED.hq=long;const k=long/Math.max(F[2],F[3]);cv.width=Math.round(F[2]*k/2)*2;cv.height=Math.round(F[3]*k/2)*2}
+    if(long)await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))}   // the loop draws the new size before the recording starts
+  try{const r=await o.apply(this,arguments);if(hq&&full>1080&&long<full){const k=(long||1080)/Math.max(F[2],F[3]),sz=Math.round(F[2]*k)+"×"+Math.round(F[3]*k);
+      toast(L("Exported at "+sz+", the sharpest this device keeps smooth — a faster device exports at "+F[2]+"×"+F[3]+".","صُدّر بمقاس "+sz+"، أوضح مقاس يبقى سلساً على هذا الجهاز — الجهاز الأسرع يصدّر بمقاس "+F[2]+"×"+F[3]+"."),{type:"info",ms:5000})}
+    return r}finally{ED.hq=0}})(edExport);
+// 2) fade in from black / out to black (drawn last, so it covers everything like a real fade)
+edTick=(o=>function(now){o(now);if(S.view!=="edit")return;const E=S.ed,fi=+E.fadeIn93||0,fo=+E.fadeOut93||0;if(!fi&&!fo)return;const cv=$("#wk");if(!cv)return;
+  const T=edTotal(),t=ED.t;let a=0;if(fi&&t<fi)a=1-t/fi;if(fo&&T&&t>T-fo)a=Math.max(a,(t-(T-fo))/fo);if(a<=0)return;const c=cv.getContext("2d");c.save();c.globalAlpha=clamp(a,0,1);c.fillStyle="#000";c.fillRect(0,0,cv.width,cv.height);c.restore()})(edTick);
+// the preview's frames, measured as they come (the last 30, not while recording) — the export size above is chosen from them
+edTick=(o=>function(now){if(S.view!=="edit"||recording||ED.hq){ED.tl93=0;return o.apply(this,arguments)}const t0=performance.now(),r=o.apply(this,arguments),d=performance.now()-t0,keep=(k,v)=>{const a=ED[k]=ED[k]||[];a.push(v);if(a.length>30)a.shift()};
+  if(d>0)keep("tk93",d);if(ED.tl93&&now>ED.tl93&&now-ED.tl93<1000)keep("ti93",now-ED.tl93);ED.tl93=now;return r})(edTick);
+// 3) your own picture or logo as an infographic
+const PIC93={};
+function pic93Load(id){if(PIC93[id])return;PIC93[id]=1;IDB.get("ip_"+id).then(b=>{if(!b)return;const img=new Image();img.onload=()=>{M["ip_"+id]={img,url:img.src}};img.src=URL.createObjectURL(b)}).catch(()=>{})}
+function picDraw93(ctx,W,H,t,it){if(t<it.start||t>it.end)return;const m=M["ip_"+it.id];if(!m)pic93Load(it.id);
+  const lt=t-it.start,len=it.end-it.start,an=it.anim!=="none",p=an?ezo(lt/.5):1,out=an?clamp((len-lt)/.3,0,1):1,U=Math.min(W,H)*(it.k||1),ac=it.accent||"#CFE13E",fr=it.frame||"card";
+  const img=m&&m.img&&m.img.naturalWidth?m.img:null,ar=img?img.naturalWidth/img.naturalHeight:1;let w=U*.55,h=w/ar;if(h>U*.7){h=U*.7;w=h*ar}if(fr==="circle"){w=h=Math.min(w,h)}
+  const F=it.t1?fitF(ctx,it.t1,700,U*.045,W*.9):0,capH=it.t1?F*2:0;ctx.font=infoFont(700,F||10);const bw=Math.max(w,it.t1?ctx.measureText(it.t1).width+U*.06:0),bh=h+capH;
+  const cx=clamp(it.x*W,bw/2,W-bw/2),cy=clamp(it.y*H,bh/2,H-bh/2),s=an?.85+.15*p:1,x0=-w/2,y0=-bh/2;
+  const shape=()=>{ctx.beginPath();if(fr==="circle")ctx.arc(0,y0+h/2,w/2,0,7);else if(fr==="card"&&ctx.roundRect)ctx.roundRect(x0,y0,w,h,U*.03);else ctx.rect(x0,y0,w,h);ctx.closePath()};
+  ctx.save();ctx.globalAlpha=out*(an?Math.min(1,p*1.4):1);ctx.translate(cx,cy);ctx.scale(s,s);
+  if(img){if(fr!=="plain"){ctx.save();shape();ctx.shadowColor="rgba(0,0,0,.45)";ctx.shadowBlur=U*.04;ctx.fillStyle="#fff";ctx.fill();ctx.restore()}
+    ctx.save();shape();ctx.clip();ctx.drawImage(img,x0,y0,w,h);ctx.restore();if(fr!=="plain"){shape();ctx.lineWidth=U*.012;ctx.strokeStyle=ac;ctx.stroke()}}
+  else{ctx.fillStyle="rgba(255,255,255,.12)";ctx.fillRect(x0,y0,w,h)}
+  if(it.t1){ctx.direction=isRtl(it.t1)?"rtl":"ltr";ctx.font=infoFont(700,F);ctx.textAlign="center";ctx.textBaseline="middle";const tw=ctx.measureText(it.t1).width+U*.06,ty=y0+h+capH/2+U*.004;
+    ctx.fillStyle="rgba(10,12,10,.8)";ctx.beginPath();ctx.roundRect?ctx.roundRect(-tw/2,ty-F*.8,tw,F*1.6,F*.4):ctx.rect(-tw/2,ty-F*.8,tw,F*1.6);ctx.fill();ctx.fillStyle="#fff";ctx.fillText(it.t1,0,ty)}
+  ctx.restore();(ED.hit=ED.hit||[]).push({k:"info",id:it.id,x:cx-bw/2,y:cy-bh/2,w:bw,h:bh,cx,cy})}
+edInfoDraw=(o=>function(ctx,W,H,t){const E=S.ed,all=E.infos||[];if(!all.some(x=>x.type==="pic"))return o.apply(this,arguments);E.infos=all.filter(x=>x.type!=="pic");
+  try{o.apply(this,arguments)}finally{E.infos=all}for(const it of all)if(it.type==="pic")picDraw93(ctx,W,H,t,it)})(edInfoDraw);
+async function picAdd93(file){if(!file||!/^image\//.test(file.type||"")){toast(L("Pick a picture (PNG, JPG, WebP or SVG).","اختر صورة (PNG أو JPG أو WebP أو SVG)."),{type:"warn"});return}
+  const E=S.ed;E.infos=E.infos||[];const s=Math.min(ED.t,Math.max(0,edTotal()-1)),it={id:uid(),type:"pic",start:+s.toFixed(2),end:+(s+4).toFixed(2),x:.5,y:.45,k:1,accent:"#CFE13E",anim:"in",frame:/svg|png/.test(file.type)?"plain":"card",t1:"",t2:"",val:""};
+  IDB.put("ip_"+it.id,file).catch(()=>{});const img=new Image();   /* saved in parallel: the first open of device storage can take a second or two */img.src=URL.createObjectURL(file);await new Promise(r=>{img.onload=r;img.onerror=r;setTimeout(r,3000)});M["ip_"+it.id]={img,url:img.src};PIC93[it.id]=1;
+  if(typeof histPush==="function")try{histPush()}catch(e){}E.infos.push(it);edSetPick("info",it.id);persist();renderView();toast(L("Picture added — drag it on the video, drag the corner to resize.","أُضيفت الصورة — اسحبها على الفيديو واسحب الزاوية لتكبيرها."),{type:"ok"})}
+// 4) numbers from a file (CSV from Excel / Google Sheets): label,value rows fill a chart
+function csv93(text){const rows=String(text||"").replace(/^﻿/,"").split(/\r?\n/).map(l=>l.split(/[,;\t]/).map(x=>x.trim().replace(/^"|"$/g,""))).filter(r=>r.length>=2&&r[0]!==""&&isFinite(parseFloat(String(r[1]).replace(/[^\d.\-]/g,""))));
+  return rows.slice(0,6).map(r=>[r[0].slice(0,24),parseFloat(String(r[1]).replace(/[^\d.\-]/g,""))])}
+async function csvAdd93(file){let rows=[];try{rows=csv93(await file.text())}catch(e){}if(!rows.length){toast(L("No numbers found — the file needs rows like: name, number.","لم نجد أرقاماً — يحتاج الملف صفوفاً مثل: اسم، رقم."),{type:"warn"});return}
+  const E=S.ed,p=edPick(),si=p&&p.k==="info"&&edItem(p),t2=rows.map(r=>r[0]+":"+r[1]).join(", ");if(typeof histPush==="function")try{histPush()}catch(e){}
+  if(si&&si.type==="bars")si.t2=t2;else if(si&&["donut","progress","counter"].includes(si.type)){si.val=String(rows[0][1]);if(!si.t1)si.t1=rows[0][0]}
+  else{const it=edAddInfo("bars");it.t1=String(file.name||"").replace(/\.[a-z0-9]+$/i,"").slice(0,40)||it.t1;it.t2=t2}
+  persist();renderView();toast(L("Loaded "+rows.length+" numbers from the file.","تم تحميل "+rows.length+" أرقام من الملف."),{type:"ok"})}
+document.addEventListener("change",e=>{const t=e.target;if(!t||!t.dataset)return;if(t.dataset.ipic93!=null&&t.files&&t.files[0]){picAdd93(t.files[0]);t.value=""}else if(t.dataset.icsv93!=null&&t.files&&t.files[0]){csvAdd93(t.files[0]);t.value=""}});
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="ipic-frame"]');if(!a)return;const p=edPick(),si=p&&p.k==="info"&&edItem(p);if(!si)return;si.frame=a.dataset.v;persist();renderView()});
+VIEWS.edit=(o=>function(){let h=o();const E=S.ed;
+  (E.infos||[]).forEach(it=>{if(it.type==="pic"&&!it.t1)h=h.replace(new RegExp('(data-ix="'+it.id+'"[^>]*>)pic(</div>)'),"$1"+esc(L("Picture","صورة"))+"$2")});
+  if(E.tab==="info"){const mine='<div class="mine93"><label class="btn sm">'+ic("image")+L("Your picture or logo","صورتك أو شعارك")+'<input type="file" accept="image/*" data-ipic93="1" style="display:none"></label>'+
+      '<label class="btn sm">'+ic("grid")+L("Numbers from a file","أرقام من ملف")+'<input type="file" accept=".csv,.tsv,.txt,text/csv,text/plain" data-icsv93="1" style="display:none"></label><span class="small mute">'+L("CSV from Excel or Google Sheets: name, number on each row.","CSV من Excel أو Google Sheets: اسم، رقم في كل صف.")+"</span></div>";
+    h=h.replace('<div class="vfxgrid"><button class="vfxt" data-act="edi-add"',mine+'<div class="vfxgrid"><button class="vfxt" data-act="edi-add"');
+    const p=edPick(),si=p&&p.k==="info"&&edItem(p);
+    if(si&&si.type==="pic"){h=h.replace('<label class="lbl">'+L("Main text","النص الرئيسي")+"</label>",'<label class="lbl">'+L("Caption (optional)","تعليق (اختياري)")+"</label>");
+      const fr=si.frame||"card";h=h.replace(/(<input dir="auto" data-ib="t1"[^>]*>)/,"$1"+'<label class="lbl">'+L("Frame","الإطار")+'</label><div class="seg">'+[["plain",L("None","بدون")],["card",L("Card","بطاقة")],["circle",L("Circle","دائرة")]].map(x=>'<button data-act="ipic-frame" data-v="'+x[0]+'" aria-pressed="'+(fr===x[0])+'">'+esc(x[1])+"</button>").join("")+"</div>")}}
+  if(E.tab==="export"){const a=h.indexOf('data-act="ed-export"');if(a>0){const i=h.lastIndexOf("<button",a),F=fmt(),q=E.q93==="fast"?"fast":"full",fi=+E.fadeIn93||0,fo=+E.fadeOut93||0;
+    const seg=(path,cur,opts)=>'<div class="seg">'+opts.map(([v,t])=>'<button data-set="'+path+'" data-val="'+v+'" data-num="1" aria-pressed="'+(cur===v)+'">'+esc(t)+"</button>").join("")+"</div>";
+    const add='<span class="lbl">'+L("Quality","الجودة")+'</span><div class="seg"><button data-set="ed.q93" data-val="full" aria-pressed="'+(q==="full")+'">'+L("Sharp · up to ","حادة · حتى ")+F[2]+"×"+F[3]+'</button><button data-set="ed.q93" data-val="fast" aria-pressed="'+(q==="fast")+'">'+L("Fast · lighter","سريعة · أخف")+"</button></div>"+
+      '<div class="grid2"><div><span class="lbl">'+L("Fade in from black","ظهور تدريجي من الأسود")+"</span>"+seg("ed.fadeIn93",fi,[[0,L("Off","بدون")],[.5,"0.5 s"],[1,"1 s"]])+"</div>"+
+      '<div><span class="lbl">'+L("Fade out to black","اختفاء تدريجي إلى الأسود")+"</span>"+seg("ed.fadeOut93",fo,[[0,L("Off","بدون")],[.5,"0.5 s"],[1,"1 s"]])+"</div></div>";
+    h=h.slice(0,i)+add+h.slice(i)}}
+  return h})(VIEWS.edit);
+(()=>{const st=document.createElement("style");st.textContent=`
+:where(:is(b,strong,h2,h3,h4,label,summary,.lbl)>svg[viewBox="0 0 24 24"]){width:1.15em;height:1.15em;vertical-align:-.2em;flex:none}
+.mine93{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}.mine93 .small{flex-basis:100%}
+.mine93 label.btn{cursor:pointer}
 `;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */

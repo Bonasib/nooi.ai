@@ -97,6 +97,9 @@ export function kieInput(model, p) {
   // the engine needs a prompt: the client's words (if any) plus what Motion Control is for
   if (/motion-control/.test(m)) return drop({ prompt: (String(p.prompt || "").trim() ? String(p.prompt).trim().replace(/[.\s]*$/, ". ") : "") + "The person in the picture performs exactly the same movements as the person in the video, natural and smooth.", input_urls: [absUrl(inp.mcChar || img0)], video_urls: [absUrl(inp.mcMove)], mode: pickRes(p, ["720p", "1080p"], "720p"),
     character_orientation: (p.meta?.orient || (/kling-2\.6/.test(m) ? "image" : "video")) === "image" ? "image" : "video", ...(/kling-3\.0/.test(m) ? { background_source: "input_video" } : {}) });
+  // v93 Character Swap: the person in the video is replaced by the person in the photo — the video's place, objects, light,
+  // camera and every movement stay (the engine takes the video and the photo only; no prompt)
+  if (/^wan\/2-2-animate-(replace|move)/.test(m)) return drop({ video_url: absUrl(inp.mcMove), image_url: absUrl(inp.mcChar || img0), resolution: pickRes(p, ["480p", "580p", "720p"], "720p") });
   if (/^kling\/v3-turbo/.test(m)) return img ? { prompt, image_urls: [img], duration: String(clamp(dur, 3, 15)), resolution: pickRes(p, ["720p", "1080p"], "720p") }
     : { prompt, aspect_ratio: snapAR(p.aspect, ["16:9", "9:16", "1:1"]), duration: String(clamp(dur, 3, 15)), resolution: pickRes(p, ["720p", "1080p"], "720p") };
   if (/^gemini-omni-video/.test(m)) return drop({ prompt, image_urls: img ? [img] : undefined, duration: snapDur(dur, ["4", "6", "8", "10"]), aspect_ratio: snapAR(p.aspect, ["16:9", "9:16"]), resolution: pickRes(p, ["720p", "1080p", "4k"], "720p") });
@@ -202,7 +205,7 @@ export const kie = (model) => {
 export function kieDur(model, dur) {
   const m = String(model || "").toLowerCase(), d = Math.round(+dur || 5);
   if (VEO.has(m)) return 8;
-  if (/motion-control/.test(m)) return clamp(d, 3, 30);                   // as long as the movement video (up to 30 s)
+  if (/motion-control|^wan\/2-2-animate/.test(m)) return clamp(d, 3, 30);   // as long as the movement video (up to 30 s)
   if (/^kling\/v3-turbo/.test(m)) return clamp(d, 3, 15);
   if (/^gemini-omni-video/.test(m)) return +snapDur(d, ["4", "6", "8", "10"]);
   if (/grok-imagine-video-1-5/.test(m)) return clamp(d, 1, 15);
@@ -225,7 +228,7 @@ export const KIE_BUILTIN = {
     seedance: "bytedance/seedance-2-fast", hailuoh3: "minimax-h3/text-to-video", hailuo: "minimax-h3/text-to-video", wan30: "wan/3-0-video", wan22: "wan/2-7-text-to-video",
     qwenwan: "wan/2-7-text-to-video", hunyuan: "wan/2-7-text-to-video", ltx23: "veo3_fast", ltxfast: "bytedance/seedance-2-fast", veo: "veo3", veofast: "veo3_fast", veo31: "veo3", veo31f: "veo3_fast", grok: "grok-imagine/text-to-video", pixverse6: "pixverse-v6/text-to-video", kling26: "kling-2.6/text-to-video", wan27: "wan/2-7-text-to-video", auto: "bytedance/seedance-2-fast",
     kling30t: "kling/v3-turbo-text-to-video", seedance2mini: "bytedance/seedance-2-mini", gemomni: "gemini-omni-video", grok15: "grok-imagine-video-1-5-preview", happyhorse: "happyhorse/text-to-video",
-    mc26: "kling-2.6/motion-control", mc30: "kling-3.0/motion-control" },
+    mc26: "kling-2.6/motion-control", mc30: "kling-3.0/motion-control", mcswap: "wan/2-2-animate-replace" },
   image: { nano: "nano-banana-2", nanopro: "nano-banana-pro", img20: "gpt-image-2-text-to-image", img25: "seedream/4.5-text-to-image", qwen: "qwen3/text-to-image", qwen2: "qwen3/text-to-image",
     flux: "flux-2/pro-text-to-image", sdxl: "seedream/4.5-text-to-image", dotimg: "nano-banana-2", mj: "mj:7", seedream5: "seedream/5-pro-text-to-image", imagen4: "google/imagen4-ultra", ideogram3: "ideogram/v3-text-to-image", grokimg: "grok-imagine/text-to-image", flux2: "flux-2/pro-text-to-image", auto: "nano-banana-2",
     nano2lite: "nano-banana-2-lite", seedream5lite: "seedream/5-lite-text-to-image", zimage: "z-image" },

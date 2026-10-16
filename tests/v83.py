@@ -159,16 +159,16 @@ async def browser_checks(p):
         # the new engines are in the pickers with prices from the server
         r = await pg.evaluate("()=>({v:['kling30t','seedance2mini','gemomni','grok15','happyhorse'].map(k=>MODELS[k]&&MODELS[k].cr),i:['nano2lite','seedream5lite','zimage'].map(k=>IMG_MODELS[k]&&IMG_MODELS[k].cr),mcInPicker:!!MODELS.mc26,p:API.cfg.prices.video.kling30t})")
         ok(all(r["v"]) and all(r["i"]) and r["v"][0] == r["p"] and not r["mcInPicker"], f"{tag}: new engines in the pickers (Motion Control only on its own page) {r}")
-        # Motion Control page: the tab after Cinema Studio, a title, two uploads, the rights box
+        # Motion Control page: the tab after nooi Studio (Cinema Studio is part of it since v93), a title, two uploads, the rights box
         await pg.evaluate("()=>{go('motion');renderAll()}"); await pg.wait_for_timeout(400)
         r = await pg.evaluate("()=>({h1:document.querySelector('#main h1').textContent,tabs:[...document.querySelectorAll('.hubtabs [data-go]')].map(e=>e.dataset.go),slots:document.querySelectorAll('#main input[data-slot=\"mcMove\"],#main input[data-slot=\"mcChar\"]').length,consent:!!document.querySelector('[data-mc83consent]'),over:document.documentElement.scrollWidth>innerWidth})")
-        ok(r["h1"] in ("Motion Control", "التحكم بالحركة") and r["tabs"][:3] == ["video", "cinema", "motion"] and r["slots"] == 2 and r["consent"] and not r["over"], f"{tag}: Motion Control page {r}")
+        ok(r["h1"] in ("Motion Control", "التحكم بالحركة") and r["tabs"][:2] == ["video", "motion"] and "cinema" not in r["tabs"] and r["slots"] == 2 and r["consent"] and not r["over"], f"{tag}: Motion Control page {r}")
         await pg.click('[data-act="mc-make"]'); await pg.wait_for_timeout(300)
         ok(await pg.evaluate("()=>S.jobs.filter(j=>j.meta&&j.meta.motion83).length") == 0, f"{tag}: nothing is made without the files")
         if lang == "en":
             # make one: files from the library (made on the server), rights confirmed
             await pg.evaluate("""()=>{const mk=(kind,u,dur)=>{const j={id:uid(),kind,status:'complete',resultUrl:u,prompt:kind,title:kind,dur,created:Date.now(),remote:'x'+kind};S.jobs.push(j);return j};
-              const v=mk('video','/media/move.mp4',4),i=mk('image','/media/char.png');M.mcMove={type:'video',url:v.resultUrl,remote:v.resultUrl,name:'move',libDur:4};M.mcChar={type:'image',url:i.resultUrl,remote:i.resultUrl,name:'char'};S.mc83.consent=true;renderView()}""")
+              const v=mk('video','/media/move.mp4',4),i=mk('image','/media/char.png');M.mcMove={type:'video',url:v.resultUrl,remote:v.resultUrl,name:'move',libDur:4};M.mcChar={type:'image',url:i.resultUrl,remote:i.resultUrl,name:'char'};S.mc83.consent=true;S.mc83.mode='moves';renderView()}""")
             await pg.wait_for_timeout(300); n0 = len(stats()["tasks"])
             await pg.click('[data-act="mc-make"]'); await pg.wait_for_timeout(5000)
             r = await pg.evaluate("()=>{const j=S.jobs.filter(j=>j.meta&&j.meta.motion83).pop();return j&&{status:j.status,dur:j.dur,model:j.model,remote:!!j.remote}}")

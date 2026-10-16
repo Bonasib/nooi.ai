@@ -14,7 +14,7 @@
 #    when nothing matches; Home has "All tools" beside its Tools title
 #  · the AI agents are never called bots (any page, the home box, titles and labels); they appear in one order everywhere —
 #    the order the work runs (writer → character designer → director → cinematographer → sound → editor → producer → QA);
-#    nooi Studio lists who does what (name, role, one job line each — the hover cards say the same)
+#    nooi Studio's agent cards say who does what (name, role, one job line each — the hover cards say the same; v93: no second list)
 # Run: python3 tests/v90.py
 import asyncio, json, os, subprocess, tempfile, time, urllib.request
 from playwright.async_api import async_playwright
@@ -65,9 +65,9 @@ CARDS = r"""async()=>{const wait=ms=>new Promise(r=>setTimeout(r,ms)),res={};
   go('home');renderAll();await wait(250);
   res.homeCards=[...document.querySelectorAll('#main .tool[data-go]')].map(b=>{const ico=b.querySelector('.ico');return [b.dataset.go,getComputedStyle(ico).color===want(sec90(b.dataset.go))]});
   res.homeAll=!!document.querySelector('#main .spread.sec [data-go="apps"]');
-  go('video');renderAll();await wait(250);
+  go('video');renderAll();ST93().open='type';renderView();await wait(250);   // v93: the option tiles live in nooi Studio's box sections
   res.tiles=[...new Set([...document.querySelectorAll('#main .tile:not(.brand) .gl')].filter(g=>g.querySelector(':scope>svg')&&g.offsetParent).map(g=>{const r=g.getBoundingClientRect(),s=g.querySelector('svg').getBoundingClientRect();return Math.round(r.width)+'/'+Math.round(s.width)}))];
-  res.side=[...document.querySelectorAll('#side .nav[data-go]')].map(b=>b.dataset.go);
+  ST93().open=null;res.side=[...document.querySelectorAll('#side .nav[data-go]')].map(b=>b.dataset.go);
   go('audio');renderAll();await wait(250);res.audio=[S.view,[...document.querySelectorAll('#main .hubtabs [data-go]')].map(b=>b.dataset.go),document.body.dataset.sec90,
     [...document.querySelectorAll('#side .nav[aria-current="page"]')].map(b=>b.dataset.go)];
   go('subs');renderAll();await wait(200);res.subs=[document.body.dataset.sec90,[...document.querySelectorAll('#main .hubtabs [aria-selected="true"]')].map(b=>b.dataset.go)];
@@ -93,7 +93,9 @@ AGENTS = r"""async()=>{const wait=ms=>new Promise(r=>setTimeout(r,ms)),res={},OR
   res.strip=[...document.querySelectorAll('#main .hfbots .sbot')].map(e=>e.dataset.bot);res.plan=[...document.querySelectorAll('#main .hfstplan li[data-bot]')].map(e=>e.dataset.bot);
   res.planWho=[...document.querySelectorAll('#main .hfstplan li[data-bot]')].map(e=>e.dataset.bot+':'+/prompt|وصف/i.test(e.textContent)).filter(x=>x.endsWith(':true')).map(x=>x.split(':')[0]);
   go('crew');renderAll();await wait(300);res.line=[...document.querySelectorAll('#main .crewline .botcard')].map(c=>BOTS.find(b=>c.querySelector('b').textContent===L(b.name[0],b.name[1])).id);
-  res.roles=[...document.querySelectorAll('#main .roles90 li')].map(li=>{const b=BOT(li.dataset.bot);return [li.dataset.bot,li.querySelector('b').textContent===L(b.name[0],b.name[1])&&li.querySelector('.r90r').textContent===L(b.role[0],b.role[1])&&li.querySelector('.r90j').textContent===L(b.job[0],b.job[1])]});
+  // v93: the separate "who does what" list was a copy of the cards — each card now carries name, role and its job line
+  res.roles=[...document.querySelectorAll('#main .crewline .botcard[data-bot]')].map(c=>{const b=BOT(c.dataset.bot);return [c.dataset.bot,c.querySelector('b').textContent===L(b.name[0],b.name[1])&&c.querySelector('.small').textContent===L(b.role[0],b.role[1])&&c.getAttribute('title')===L(b.job[0],b.job[1])]});
+  res.dupList=!!document.querySelector('#main .roles90');
   res.jobs=new Set(BOTS.map(b=>b.job[0])).size;res.info=BOTS.filter(b=>CREW_INFO[b.id][2]!==b.job[0]||CREW_INFO[b.id][3]!==b.job[1]).map(b=>b.id);
   res.note=[...document.querySelectorAll('#main p')].map(p=>p.textContent).filter(t=>/Daqiq|دقيق يراجع/.test(t)).length;
   res.inOrder={strip:inOrder(res.strip),plan:inOrder(res.plan),line:inOrder(res.line),roles:inOrder(res.roles.map(r=>r[0])),bots:inOrder(BOTS.map(b=>b.id))};
@@ -113,7 +115,7 @@ async def run(b, lang, w, theme):
     ok(not r["chip"], f"{tag}: every tool page shows its icon in its section colour beside its name {r['chip'][:4]}")
     ok(not r["tabs"], f"{tag}: the open tab is fully in view {r['tabs'][:4]}")
     ok(not r["errs"], f"{tag}: every page draws {r['errs']}")
-    S = r["sec"]; ok(S.get("video") == "video" and S.get("cinema") == "video" and S.get("image") == "image" and S.get("voice") == "audio" and S.get("subs") == "audio" and S.get("chars") == "chars"
+    S = r["sec"]; ok(S.get("video") == "video" and S.get("cinema") in (None, "video") and S.get("image") == "image" and S.get("voice") == "audio" and S.get("subs") == "audio" and S.get("chars") == "chars"
                      and S.get("world") == "world" and S.get("edit") == "edit" and S.get("plan") == "publish" and S.get("library") == "brand" and S.get("apps") == "brand", f"{tag}: each page carries its section's colour {S}")
     if w == 390 and lang == "en":
         c = await pg.evaluate(COLOURS); out[tag]["colours"] = c
@@ -126,7 +128,7 @@ async def run(b, lang, w, theme):
     ok(k["audio"][0] == "voice" and k["audio"][1] == ["voice", "subs"] and k["audio"][2] == "audio" and (w < 500 or k["audio"][3] == ["audio"]), f"{tag}: Audio = Voice & audio + Subtitles & dubbing {k['audio']}")
     ok(k["subs"] == ["audio", ["subs"]], f"{tag}: Subtitles & dubbing is in Audio {k['subs']}")
     ok(k["edit"] == ["edit", "slideshow", "fx", "finish", "vss"], f"{tag}: Edit has five tabs {k['edit']}")
-    a = k["apps"]; ok(a["n"] >= 25 and a["n"] == a["unique"] and not a["colours"], f"{tag}: All tools lists every tool once, in its colour {a}")
+    a = k["apps"]; ok(a["n"] >= 23 and a["n"] == a["unique"] and not a["colours"], f"{tag}: All tools lists every tool once, in its colour {a}")
     ok(a["secs"] == ["brand", "image", "video", "audio", "chars", "world", "edit", "publish"], f"{tag}: All tools is grouped by section {a['secs']}")
     ok(not k["opened"], f"{tag}: every card on All tools opens its page {k['opened'][:4]}")
     ok("voice" in k["find"][0] and len(k["find"][0]) <= 4 and not k["find"][1], f"{tag}: the filter finds a tool {k['find']}")
@@ -135,7 +137,7 @@ async def run(b, lang, w, theme):
     g = await pg.evaluate(AGENTS); out[tag]["agents"] = {x: g[x] for x in ("bots", "strip", "plan", "planWho", "jobs", "info", "note", "inOrder")}
     ok(not g["bots"], f"{tag}: the agents are never called bots {g['bots'][:4]}")
     ok(all(g["inOrder"].values()) and len(g["strip"]) == 9 and len(g["line"]) == 9, f"{tag}: one order everywhere (story → characters → shots → light → voices → sound → cut → models → check) {g['inOrder']} {g['strip']}")
-    ok(len(g["roles"]) == 9 and all(r[1] for r in g["roles"]), f"{tag}: nooi Studio lists who does what — name, role, job — for all nine {g['roles']}")
+    ok(len(g["roles"]) == 9 and all(r[1] for r in g["roles"]) and not g["dupList"], f"{tag}: nooi Studio's cards say who does what — name, role, job — for all nine, with no second list {g['roles']}")
     ok(g["jobs"] == 9 and not g["info"], f"{tag}: one job line per agent (hover cards say the same) {g['info']}")
     ok(g["planWho"] == ["cine"], f"{tag}: in the home box's plan the Cinematographer writes the prompts, as its role says {g['planWho']}")
     ok(g["note"] == 0, f"{tag}: the QA agent is called by its name (Iris), not an old one")

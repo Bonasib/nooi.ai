@@ -172,7 +172,7 @@ async def agents(b):
     for l, nm, rl in (("ru", "Лира", "Режиссёр диалогов и озвучки"), ("ja", "ライラ", "台詞・ボイスディレクター"), ("fr", "Lyra", "Directeur des dialogues et des voix")):
         t = await E("(l)=>{S.lang=l;const b=BOT('voice'),r=[L(b.name[0],b.name[1]),L(b.role[0],b.role[1])];S.lang='en';return r}", l); ok(t == [nm, rl], f"{tag}: {l} name and role {t}")
     await E("()=>{go('crew');renderAll()}"); await pg.wait_for_timeout(800)
-    r = await E("()=>({roles:[...document.querySelectorAll('.roles90 li')].map(li=>li.dataset.bot),cards:document.querySelectorAll('.crewline .botcard').length})")
+    r = await E("()=>({roles:[...document.querySelectorAll('.crewline .botcard[data-bot]')].map(c=>c.dataset.bot),cards:document.querySelectorAll('.crewline .botcard').length})")   # v93: the cards are the list
     ok(r["roles"] == want and r["cards"] == 9, f"{tag}: nooi Studio lists all nine in order {r}")
     await E("()=>{S.user=null;renderAll()}"); await pg.wait_for_timeout(500)
     r = await E("()=>({ids:[...document.querySelectorAll('#lp-crew .lpbot')].map(x=>x.dataset.bot),h:(document.querySelector('#lp-crew .lph2')||{}).textContent})")

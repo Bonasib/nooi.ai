@@ -31,7 +31,8 @@ SEL = {"format": '[data-set="draft.aspect"],[data-set="img.aspect"],[data-set="s
   "look": '[data-set="tools.grade.preset"],[data-act="edx-look"]', "effects": '[data-toggle^="tools.edit.fx."],[data-act="edx-vfx"]',
   "overlay": '[data-act="edv-add"]', "transition": '[data-set="ss83.tr"],[data-set="edclip.trans"]', "textfx": '[data-act="edx-tfx"]'}
 # v91: the Sketch page is only the drawing, what it is and one AI button (no style or format pickers; Draw a scene opens it)
-PAGES = [("video", ["style", "format", "move"]), ("image", ["style", "format"]), ("story", ["format", "style", "move"]), ("cinema", ["camera", "lens", "move", "light", "format"]),
+# v93: Cinema Studio is part of nooi Studio — camera, lens, focal length, aperture and light are sections of its one box (checked below)
+PAGES = [("video", ["style", "format", "move"]), ("image", ["style", "format"]), ("story", ["format", "style", "move"]),
   ("crew", ["format"]), ("recipes", ["format"]), ("slideshow", ["format", "move", "transition"]), ("ugcads", ["format"]),
   ("chars", ["style"]), ("grade", ["look"]), ("edit:color", ["look", "effects"]), ("edit:vfx", ["overlay"]), ("edit:look", ["effects"]), ("edit:clip", ["transition"])]
 STATE = """(sel)=>{const vis=[...document.querySelectorAll(sel)].filter(b=>b.offsetParent!==null&&!b.closest('#modalRoot'));
@@ -92,13 +93,12 @@ async def main():
             await pg.evaluate(GO, "video"); await pick("format", '[data-val="9:16"]')
             r = await pg.evaluate("()=>({a:S.draft.aspect,open:!!document.querySelector('#modalRoot .pk84s'),chip:document.querySelector('.pk84c[data-pk84=format] .pk84v').textContent})")
             ok(r == {"a": "9:16", "open": False, "chip": "9:16"}, f"video: the format sheet sets the format and closes {r}")
-            await pg.evaluate(GO, "cinema"); await pg.evaluate("()=>document.querySelector('#main .pk84c[data-pk84=lens]').click()"); await pg.wait_for_timeout(200)
-            for v in ('[data-val="anamorphic"]', '[data-val="85"]', '[data-val="1.4"]'): await pg.click("#modalRoot .pk84o" + v); await pg.wait_for_timeout(250)
-            r1 = await pg.evaluate("()=>({lens:S.cin.lens,focal:S.cin.focal,ap:S.cin.ap,open:!!document.querySelector('#modalRoot .pk84s'),on:[...document.querySelectorAll('#modalRoot .pk84o[aria-pressed=true]')].map(b=>b.dataset.val)})")
-            await pg.click('#modalRoot .pk84done [data-act="close-sheet"]'); await pg.wait_for_timeout(250)
-            r2 = await pg.evaluate("()=>({open:!!document.querySelector('#modalRoot .pk84s'),chip:document.querySelector('.pk84c[data-pk84=lens] .pk84v').textContent,p:cinPrompt82()})")
-            ok(r1["lens"] == "anamorphic" and r1["focal"] == 85 and r1["ap"] == "1.4" and r1["open"] and sorted(r1["on"]) == sorted(["anamorphic", "85", "1.4"]), f"cinema: the lens sheet sets lens, focal length and aperture and stays open {r1}")
-            ok(not r2["open"] and r2["chip"] == "Anamorphic · 85 mm · f/1.4" and "anamorphic" in r2["p"] and "85mm" in r2["p"] and "f/1.4" in r2["p"], f"cinema: Done closes it; the chip and the words the engine receives follow {r2}")
+            await pg.evaluate(GO, "cinema"); await pg.wait_for_timeout(200)
+            for sec, v in (("c_lens", "anamorphic"), ("c_focal", "85"), ("c_ap", "1.4")):
+                await pg.click(f'[data-o93="{sec}"]'); await pg.wait_for_timeout(150); await pg.click(f'.box93 [data-set="draft.cine93.{sec[2:]}"][data-val="{v}"]'); await pg.wait_for_timeout(250)
+            r = await pg.evaluate("()=>({view:S.view,c:{...S.draft.cine93},chips:['c_lens','c_focal','c_ap'].map(k=>(document.querySelector('[data-o93='+k+'] .o93v')||{}).textContent),p:cineWords93()})")
+            ok(r["view"] == "video" and r["c"].get("lens") == "anamorphic" and str(r["c"].get("focal")) == "85" and str(r["c"].get("ap")) == "1.4" and r["chips"][0] == "Anamorphic" and "85" in r["chips"][1] and "1.4" in r["chips"][2], f"nooi Studio: the box sets lens, focal length and aperture, each chip shows its choice {r}")
+            ok("anamorphic" in r["p"].lower() and "85mm" in r["p"] and "f/1.4" in r["p"], f"nooi Studio: the words the engine receives follow the lens choices {r['p']}")
             await pg.evaluate(GO, "image"); await pick("style", '[data-val="anime"]')
             ok(await pg.evaluate("()=>S.img.style") == "anime", "image: the style sheet sets the style")
             await pg.evaluate(GO, "slideshow"); await pick("transition", '[data-val="slide"]'); await pick("move", '[data-val="pan"]')
