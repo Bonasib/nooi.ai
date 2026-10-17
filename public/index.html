@@ -8834,7 +8834,7 @@ async function charFromPhoto(file){const big=await shrinkImage(URL.createObjectU
     const x=S.chars.find(q=>q.id===c.id);if(x&&r){if(r.name)x.name=String(r.name).slice(0,30);if(/^(male|female)$/.test(r.gender))x.gender=r.gender;if(+r.age>0&&+r.age<100)x.age=Math.round(+r.age);if(/^#[0-9a-f]{6}$/i.test(r.hair||""))x.hair=r.hair;if(/^#[0-9a-f]{6}$/i.test(r.eyes||""))x.eyes=r.eyes;if(r.look)x.look=String(r.look).slice(0,160);if(r.outfit)x.outfit=String(r.outfit).slice(0,160);if(r.persona)x.persona=String(r.persona).slice(0,160);x.voice.gender=x.gender;persist();renderView()}}catch(e){}}}
 document.addEventListener("change",e=>{const t=e.target;if(t.dataset&&t.dataset.chphoto&&t.files&&t.files[0]){const f=t.files[0];if(t.dataset.chphoto==="new")charFromPhoto(f);else{const c=S.chars[S.charSel];if(!c)return;shrinkImage(URL.createObjectURL(f),1024).then(async big=>{if(!big)return;c.photo=await shrinkImage(big,320);await IDB.put(charPhotoKey(c.id),dataURLtoBlob(big));persist();renderView();toast(L("Photo set — new looks keep this face","عُيّنت الصورة — الأشكال الجديدة تحافظ على هذا الوجه"),{type:"ok"})})}}});
 VIEWS.chars=(o=>()=>{let h=o();const c=S.chars[S.charSel];
-  const box='<div class="panel pad a3card" style="margin:0 0 14px"><h3>'+ic("upload")+L("Create a character from a photo","أنشئ شخصية من صورة")+'</h3><p class="small mute">'+L("Upload a clear photo of a person or a drawn character. The AI reads the face, hair and clothes; every look, sheet, 3D model and video then keeps that identity.","ارفع صورة واضحة لشخص أو شخصية مرسومة. يقرأ الذكاء الوجه والشعر والملابس، وتحافظ كل الأشكال والأوراق والمجسّمات والفيديوهات على هذه الهوية.")+'</p><div class="chphoto"><label class="drop">'+ic("upload")+"<div>"+L("Upload a photo → new character","ارفع صورة ← شخصية جديدة")+'</div><input type="file" accept="image/*" data-chphoto="new"></label>'+(c?'<label class="btn sm" style="position:relative">'+ic("image")+(c.photo?L("Change this character's photo","غيّر صورة هذه الشخصية"):L("Add a photo to this character","أضف صورة لهذه الشخصية"))+'<input type="file" accept="image/*" data-chphoto="cur" style="position:absolute;inset:0;opacity:0"></label>'+(c.photo?'<img src="'+c.photo+'" alt="">':""):"")+"</div></div>";
+  const box='<div class="panel pad a3card" style="margin:0 0 14px"><h3>'+ic("upload")+L("Create a character from a photo","أنشئ شخصية من صورة")+'</h3><p class="small mute">'+L("Upload a clear photo of a person or a drawn character. The AI reads the face, hair and clothes; every look, sheet, 3D model and video then keeps that identity.","ارفع صورة واضحة لشخص أو شخصية مرسومة. يقرأ الذكاء الوجه والشعر والملابس، وتحافظ كل الأشكال والأوراق والمجسّمات والفيديوهات على هذه الهوية.")+'</p><div class="chphoto"><label class="drop">'+ic("upload")+"<div>"+L("Upload a photo → new character","ارفع صورة ← شخصية جديدة")+'</div><input type="file" accept="image/*" data-chphoto="new"></label>'+(c?'<label class="btn sm" style="position:relative">'+ic("image")+(c.photo?L("Change this character's photo","غيّر صورة هذه الشخصية"):L("Add a photo to this character","أضف صورة لهذه الشخصية"))+'<input type="file" accept="image/*" data-chphoto="cur" style="position:absolute;inset:0;opacity:0"></label>'+(c.photo?'<img src="'+c.photo+'" alt="">':""):"")+"</div>"+(c?face106(c):"")+"</div>";
   h=h.replace(/(<p class="lede">[\s\S]*?<\/p>)/,"$1"+box);
   h=h.replace(/<button class="btn" data-act="char-3dbody">[\s\S]*?<\/button>/,'<button class="btn" data-act="char-3dbody">'+ic("cube")+L("Full 3D character (AI)","شخصية 3D كاملة (ذكاء)")+' <span class="mono dim">'+a3Cost()+"cr</span></button>");
   return h})(VIEWS.chars);
@@ -11975,7 +11975,7 @@ function presOwnerCard87(){if(!staff82()||API.mode!=="server"||AV.total==null)re
     (AV.making?"":'<button class="btn sm primary" data-act="av87-make">'+ic("spark")+esc(L("Make the presenters' photos","اصنع صور المقدّمين"))+"</button>")+"</div>"}
 function presTile87(act,v,on,img,name,busy){return'<button class="pt87" data-act="'+act+'" data-v="'+esc(v)+'" aria-pressed="'+on+'"><span class="ph">'+(img?'<img src="'+esc(img)+'" alt="" loading="lazy">':'<span class="sil87">'+SIL87+"</span>")+(busy?'<i class="star79"></i>':"")+'</span><span class="nm">'+esc(name)+"</span></button>"}
 function presPicker87(){const mine=S.chars.filter(c=>!c.av87),cur=S.draft.charId;
-  const own=mine.map(c=>presTile87("ugc-char",c.id,cur===c.id,faceShow87(c),c.name,realBusy87(c))).join("")+'<button class="pt87 add" data-go="chars"><span class="ph"><span class="sil87">'+ic("plus")+'</span></span><span class="nm">'+esc(L("Create your own","اصنع شخصيتك"))+"</span></button>";
+  const own=mine.map(c=>presTile87("ugc-char",c.id,cur===c.id,avatar106(c),c.name,realBusy87(c))).join("")+'<button class="pt87 add" data-go="chars"><span class="ph"><span class="sil87">'+ic("plus")+'</span></span><span class="nm">'+esc(L("Create your own","اصنع شخصيتك"))+"</span></button>";
   const ready=PRES_ALL87().map(a=>presTile87("ugc-av87",a.id,cur==="av87-"+a.id,a.url,L(a.name[0],a.name[1]))).join("");
   const c=charById(cur),warn=c&&!hasFace87(c)&&!realBusy87(c)?'<p class="ugcnote">'+ic("info")+esc(L(c.name+" has no real face yet — the ad first makes one (+"+faceCost87()+" cr), so the same real person appears in every ad.",c.name+" بلا وجه حقيقي بعد — يصنع الإعلان وجهاً أولاً (+"+faceCost87()+" رصيد) ليظهر الشخص الحقيقي نفسه في كل إعلان."))+"</p>":"";
   return'<div class="pres87"><span class="lbl">'+esc(L("Your characters","شخصياتك"))+'</span><div class="presrow87">'+own+"</div>"+(ready?'<span class="lbl">'+esc(L("Ready presenters","مقدّمون جاهزون"))+'</span><div class="presrow87">'+ready+"</div>":"")+presOwnerCard87()+warn+"</div>"}
@@ -12069,8 +12069,8 @@ setInterval(()=>{if(!S.flow87.length)return;let ch=false;
     if(r&&S.hf&&Array.isArray(S.hf.out)&&f.wait.some(id=>S.hf.out.includes(id))){S.hf.out=[r.id].concat(S.hf.out.filter(id=>id!==r.id)).slice(0,12)}}
   if(ch){persist();renderAll()}},1500);
 // ---- the "Characters" chip and the "@" list
-function chip87(forId){const cs=(S.chars||[]).filter(hasFace87).slice(-3);return'<button type="button" class="ch87b" data-act="ch87-open" data-for="'+forId+'" title="'+esc(L("Put one of your characters in this","ضع إحدى شخصياتك في هذا"))+'">'+(cs.length?'<span class="fc87">'+cs.map(c=>'<img src="'+esc(faceShow87(c))+'" alt="">').join("")+"</span>":ic("char"))+"<span>"+esc(L("Characters","الشخصيات"))+'</span><b class="mono">@</b></button>'}
-function sheet87(forId){const list=(S.chars||[]).map(c=>{const u=faceShow87(c);return'<button class="chpick87" data-act="ch87-put" data-for="'+forId+'" data-id="'+c.id+'"><span class="ph">'+(u?'<img src="'+esc(u)+'" alt="">':'<span class="sil87">'+SIL87+"</span>")+"</span><b>"+esc(c.name)+"</b>"+(u?"":'<small>'+esc(L("gets a real face first","يُصنع وجهه أولاً"))+"</small>")+"</button>"}).join("");
+function chip87(forId){const cs=(S.chars||[]).filter(hasFace87).slice(-3);return'<button type="button" class="ch87b" data-act="ch87-open" data-for="'+forId+'" title="'+esc(L("Put one of your characters in this","ضع إحدى شخصياتك في هذا"))+'">'+(cs.length?'<span class="fc87">'+cs.map(c=>'<img src="'+esc(avatar106(c))+'" alt="">').join("")+"</span>":ic("char"))+"<span>"+esc(L("Characters","الشخصيات"))+'</span><b class="mono">@</b></button>'}
+function sheet87(forId){const list=(S.chars||[]).map(c=>{const u=avatar106(c);return'<button class="chpick87" data-act="ch87-put" data-for="'+forId+'" data-id="'+c.id+'"><span class="ph">'+(u?'<img src="'+esc(u)+'" alt="">':'<span class="sil87">'+SIL87+"</span>")+"</span><b>"+esc(c.name)+"</b>"+(u?"":'<small>'+esc(L("gets a real face first","يُصنع وجهه أولاً"))+"</small>")+"</button>"}).join("");
   hfSheet(L("Your characters","شخصياتك"),'<p class="small mute" style="margin:0 0 12px">'+esc(L("Tap one to put it in your prompt as @name — the same real face is used in the picture, the video or the 3D world.","اضغط واحدة لتضعها في وصفك بصيغة @الاسم — يُستخدم الوجه الحقيقي نفسه في الصورة أو الفيديو أو العالم ثلاثي الأبعاد."))+"</p>"+
     (list?'<div class="chpicks87">'+list+"</div>":'<p class="small">'+esc(L("You have no characters yet.","ليس لديك شخصيات بعد."))+"</p>")+'<div class="row" style="margin-top:14px"><button class="btn sm" data-go="chars" data-act="close-sheet">'+ic("plus")+esc(L("Create a character","أنشئ شخصية"))+"</button></div>")}
 function put87(ta,c,replaceAt){if(!ta||!c)return;const v=ta.value,pos=ta.selectionStart==null?v.length:ta.selectionStart;let a=pos,b=pos;
@@ -12083,7 +12083,7 @@ const AT87={el:null,ta:null,at:-1,list:[],i:0};
 function at87Close(){if(AT87.el)AT87.el.remove();AT87.el=null;AT87.ta=null}
 function at87Show(ta,at,q){const ql=q.toLowerCase(),list=(S.chars||[]).filter(c=>String(c.name||"").toLowerCase().includes(ql)).slice(0,6);if(!list.length){at87Close();return}
   AT87.ta=ta;AT87.at=at;AT87.list=list;AT87.i=Math.min(AT87.i,list.length-1);if(!AT87.el){AT87.el=document.createElement("div");AT87.el.className="at87";AT87.el.setAttribute("role","listbox");document.body.appendChild(AT87.el)}
-  AT87.el.innerHTML=list.map((c,i)=>{const u=faceShow87(c);return'<button type="button" role="option" aria-selected="'+(i===AT87.i)+'" data-i="'+i+'"><span class="ph">'+(u?'<img src="'+esc(u)+'" alt="">':'<span class="sil87">'+SIL87+"</span>")+"</span><b>"+esc(c.name)+"</b></button>"}).join("");
+  AT87.el.innerHTML=list.map((c,i)=>{const u=avatar106(c);return'<button type="button" role="option" aria-selected="'+(i===AT87.i)+'" data-i="'+i+'"><span class="ph">'+(u?'<img src="'+esc(u)+'" alt="">':'<span class="sil87">'+SIL87+"</span>")+"</span><b>"+esc(c.name)+"</b></button>"}).join("");
   const r=ta.getBoundingClientRect(),w=Math.min(300,innerWidth-24);AT87.el.style.width=w+"px";AT87.el.style.left=Math.max(12,Math.min(innerWidth-w-12,r.left+(document.dir==="rtl"?r.width-w:0)))+"px";
   const below=r.bottom+6,h=Math.min(list.length*46+8,290);AT87.el.style.top=(below+h>innerHeight-8?Math.max(8,r.top-h-6):below)+"px"}
 document.addEventListener("input",e=>{const ta=e.target;if(!ta||!PROMPTS87.includes(ta.id)){return}const v=ta.value.slice(0,ta.selectionStart==null?ta.value.length:ta.selectionStart),m=/(^|\s)@([^\s@]{0,20})$/u.exec(v);
@@ -12272,7 +12272,7 @@ nwUI=(o=>function(){let h=o();h=h.replace(/(<textarea id="nwprompt"[\s\S]*?<\/te
   const W=NW.W,ppl=W&&W.plan&&W.plan.people||[],cast=NW87.cast||{},parts=[];
   if(NW87.better)parts.push('<div class="nw87card"><span>'+esc(L("The AI's more detailed version of this world is ready.","نسخة الذكاء الأكثر تفصيلاً من هذا العالم جاهزة."))+'</span><button class="btn sm primary" data-act="nw87-better">'+ic("spark")+esc(L("Show it","اعرضها"))+"</button></div>");
   for(const e of ppl.filter(x=>x.char)){const c=charById(e.char);if(!c||c.body3d)continue;const busy=make3dBusy87(c);
-    parts.push('<div class="nw87card"><span>'+(faceShow87(c)?'<img src="'+esc(faceShow87(c))+'" alt="">':"")+esc(busy?L(c.name+" is being made in 3D — they walk in when ready.","يُصنع "+c.name+" ثلاثياً — يدخل العالم عند جاهزيته."):L(c.name+" isn't in 3D yet.",c.name+" ليس ثلاثياً بعد."))+"</span>"+(busy?'<i class="star79"></i>':'<button class="btn sm primary" data-act="nw87-3d" data-id="'+c.id+'">'+ic("cube")+esc(L("Make "+c.name+" 3D","اصنع "+c.name+" ثلاثياً"))+' <span class="mono">'+body3dCost87()+"</span></button>")+"</div>")}
+    parts.push('<div class="nw87card"><span>'+(avatar106(c)?'<img src="'+esc(avatar106(c))+'" alt="">':"")+esc(busy?L(c.name+" is being made in 3D — they walk in when ready.","يُصنع "+c.name+" ثلاثياً — يدخل العالم عند جاهزيته."):L(c.name+" isn't in 3D yet.",c.name+" ليس ثلاثياً بعد."))+"</span>"+(busy?'<i class="star79"></i>':'<button class="btn sm primary" data-act="nw87-3d" data-id="'+c.id+'">'+ic("cube")+esc(L("Make "+c.name+" 3D","اصنع "+c.name+" ثلاثياً"))+' <span class="mono">'+body3dCost87()+"</span></button>")+"</div>")}
   const generic=ppl.filter(x=>!x.char).length,have=(cast.items||[]).length;
   if(generic&&!have&&staff82()&&API.mode==="server"&&(NW.caps||{}).objects3d)parts.push('<div class="nw87card"><span>'+esc(cast.making?L("The world's people are being made — they walk in when ready.","تُصنع شخصيات العالم — تدخل عند جاهزيتها."):L("Make the world's real-looking people once (8 people, for every world on the site — owner only).","اصنع شخصيات العالم الواقعية مرة واحدة (8 أشخاص لكل عوالم الموقع — للمالك فقط)."))+"</span>"+(cast.making?'<i class="star79"></i>':'<button class="btn sm primary" data-act="nw87-cast">'+ic("spark")+esc(L("Make the people","اصنع الشخصيات"))+"</button>")+"</div>");
   if(parts.length)h=h.replace('<div class="nw-opts">','<div class="nw87cards">'+parts.join("")+'</div><div class="nw-opts">');
@@ -12366,7 +12366,7 @@ addJob=(o=>function(j){const r=o(j);if(r&&j&&j.meta&&j.meta.motion83){setTimeout
 // ---- pictures in every list: character lists show faces, engine lists show the engine's logo, "From my library" shows the
 // picture (the lists on phones are the site's own sheet, so this is one place for all of them)
 function pic88(s){const b=s.dataset.bind||"",id=s.id||"";
-  if(/charId$|^char$/.test(b)||s.dataset.char88)return v=>{if(!v)return{none:1};const c=charById(v);return c?{img:faceShow87(c)||"",sil:1}:{none:1}};
+  if(/charId$|^char$/.test(b)||s.dataset.char88)return v=>{if(!v)return{none:1};const c=charById(v);return c?{img:avatar106(c)||"",sil:1}:{none:1}};
   if(id==="ugcmodel"||/(^|\.)(model|vModel|iModel)$/.test(b))return v=>({img:logoFor(v)||logoFor("auto")||"",logo:1});
   if(s.dataset.mclib)return v=>{const j=v&&S.jobs.find(x=>x.id===v),u=j&&mediaUrl(j);return u?{img:/video|edit|export|finish|lipsync/.test(j.kind)?poster88(u)||"":u}:{none:1}};
   return null}
@@ -13982,6 +13982,73 @@ Object.assign(SRVTX81,{
     "تعذّر على المحرّك إكمال الاستبدال — خطأ من جهته. لم يُخصم شيء. حاول بعد دقائق؛ أفضل النتائج مع صورة تُظهر الشخص كاملاً، واقفاً مثل الشخص في الفيديو.",
   "The engine couldn't finish this — an error on its side. Nothing was charged. Try again in a few minutes; a photo that shows the whole character, standing like the person in the video, works best.":
     "تعذّر على المحرّك إكمال هذا — خطأ من جهته. لم يُخصم شيء. حاول بعد دقائق؛ أفضل النتائج مع صورة تُظهر الشخصية كاملة، واقفة مثل الشخص في الفيديو."});
+
+/* ================= v106: the character's face — its avatar ================= */
+// Each character can have its own face photo (optional). Without one, the face is found in the character's photo: the text AI
+// points at it (on a front / side / back sheet, the view that faces the camera), a small face is looked at again closer, and the
+// page cuts a square around the head. The face is the character's avatar wherever a character is shown small (the list, @
+// mentions, pickers, presenters, the World) and the reference "Make it real" works from. No text AI: the avatar stays the photo.
+const faceKey106=id=>"chfc_"+id,F106={busy:new Set(),fail:{}};
+const FACE_Q106='Find the face of the main person or character in this picture. If the picture shows the same person several times (front, side and back views), use the view that faces the camera. Reply only JSON: {"face":[left,top,right,bottom]} — the box around the head, from the top of the hair to the chin and from ear to ear, as fractions from 0 to 1 of the picture\'s width and height — or {"face":null} if no face can be seen.';
+const sig106=p=>p?String(p).length+":"+String(p).slice(-32):"";
+const ai106=()=>API.mode==="server"&&!!(API.cfg&&API.cfg.providers&&API.cfg.providers.llm);
+const img106=src=>new Promise((ok,bad)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=bad;i.src=src});
+function avatar106(c){return(c&&c.facePic)||faceShow87(c)}
+// one look by the text AI: the box of the face in this picture (fractions of its size), or null
+async function box106(src){const r=await API.req("/v1/llm/json",{json:{task:"character face",tier:"quick",images:[src],prompt:FACE_Q106}});
+  const f=r&&Array.isArray(r.face)?r.face.map(Number):null;if(!f||f.length!==4||f.some(v=>!isFinite(v)))return null;
+  const b=f.map(v=>Math.min(1,Math.max(0,v)));return b[2]-b[0]>.01&&b[3]-b[1]>.01?b:null}
+// a square of the picture (px) → a JPEG data URL of n px
+function cut106(im,x,y,sd,n){const c=document.createElement("canvas");c.width=c.height=n;const g=c.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,n,n);g.drawImage(im,x,y,sd,sd,0,0,n,n);return c.toDataURL("image/jpeg",.9)}
+// the square around a face box (k × its size, a little more room below for the chin and neck), inside the picture
+function sq106(im,b,k){const W=im.naturalWidth,H=im.naturalHeight,sd=Math.min(W,H,Math.max((b[2]-b[0])*W,(b[3]-b[1])*H)*k),cx=(b[0]+b[2])/2*W,cy=(b[1]+b[3])/2*H+sd*.04;
+  return{x:Math.min(W-sd,Math.max(0,cx-sd/2)),y:Math.min(H-sd,Math.max(0,cy-sd/2)),sd}}
+// the face in a picture → a 512 px square JPEG data URL, or null
+async function findFace106(src){const im=await img106(src),small=await shrinkImage(src,768);let b=small?await box106(small):null;if(!b)return null;
+  if(b[2]-b[0]<.25&&b[3]-b[1]<.25){   // a small face (a full-body photo, a sheet): a closer look at the part around it
+    const z=sq106(im,b,3.2),b2=await box106(cut106(im,z.x,z.y,z.sd,640)).catch(()=>null),W=im.naturalWidth,H=im.naturalHeight;
+    if(b2)b=[(z.x+b2[0]*z.sd)/W,(z.y+b2[1]*z.sd)/H,(z.x+b2[2]*z.sd)/W,(z.y+b2[3]*z.sd)/H]}
+  const q=sq106(im,b,1.45);return cut106(im,q.x,q.y,q.sd,512)}
+// (characters are found again by id after each wait: the page may have replaced the object meanwhile)
+async function setFace106(id,pic,own){await IDB.put(faceKey106(id),dataURLtoBlob(pic));const small=await shrinkImage(pic,256),c=charById(id);if(!c)return;c.facePic=small;c.faceOwn=own?1:0;c.fp106=sig106(c.photo);persist()}
+// the face from the character's photo (a new character, a new photo, or a character made before this)
+async function autoFace106(c){const id=c.id,sg=sig106(c.photo);F106.busy.add(id);if(S.view==="chars")renderView();
+  try{const b=await charPhotoBlob(c),u=b?URL.createObjectURL(b):c.photo;let pic=null;try{pic=await findFace106(u)}finally{if(b)URL.revokeObjectURL(u)}
+    const x=charById(id);if(!x||x.faceOwn||sig106(x.photo)!==sg)return;   // gone or changed meanwhile
+    if(pic)await setFace106(id,pic,false);else{delete x.facePic;x.fp106=sg;IDB.del(faceKey106(id)).catch(()=>{});persist()}}
+  catch(e){F106.fail[id]=(F106.fail[id]||0)+1}
+  finally{F106.busy.delete(id);if(["chars","ugcads","home","video","image","world"].includes(S.view))renderView()}}
+setInterval(()=>{if(!S.user||!ai106()||F106.busy.size)return;const c=(S.chars||[]).find(x=>x.photo&&!x.faceOwn&&x.fp106!==sig106(x.photo)&&(F106.fail[x.id]||0)<2);if(c)autoFace106(c)},2000);
+// the face field on the Characters page (under the character's photo)
+function face106(c){const busy=F106.busy.has(c.id),u=c.facePic;
+  const note=busy?L("Finding the face…","يُبحث عن الوجه…"):c.faceOwn?L("Your face photo is this character's avatar.","صورة الوجه التي أضفتها هي صورة هذه الشخصية."):
+    u?L("Taken from the photo — it's this character's avatar. Add a face photo to use another.","مأخوذ من الصورة — وهو صورة هذه الشخصية. أضف صورة للوجه لاستخدام غيره."):
+    L("Becomes this character's avatar. Without one, the face is taken from the photo.","تصبح صورة هذه الشخصية. وبدونها يؤخذ الوجه من الصورة.");
+  return'<div class="face106"><span class="av106">'+(u?'<img src="'+u+'" alt="">':'<span class="sil87">'+SIL87+"</span>")+(busy?'<i class="star79"></i>':"")+'</span><div class="tx106"><b>'+L("Face (optional)","الوجه (اختياري)")+"</b><small>"+note+'</small><div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><label class="btn sm" style="position:relative">'+ic("upload")+
+    (c.faceOwn?L("Change the face photo","غيّر صورة الوجه"):L("Add a face photo","أضف صورة للوجه"))+'<input type="file" accept="image/*" data-chface="cur" style="position:absolute;inset:0;opacity:0"></label>'+
+    (c.faceOwn&&c.photo?'<button class="btn sm ghost" data-act="face106-clear">'+L("Use the face from the photo","استخدم الوجه من الصورة")+"</button>":"")+"</div></div></div>"}
+document.addEventListener("change",async e=>{const t=e.target;if(!t.dataset||t.dataset.chface!=="cur"||!t.files||!t.files[0])return;const c=S.chars[S.charSel];if(!c)return;
+  const big=await shrinkImage(URL.createObjectURL(t.files[0]),1024);t.value="";if(!big){toast(L("Couldn't read this picture.","تعذّرت قراءة الصورة."),{type:"warn"});return}
+  F106.busy.add(c.id);renderView();
+  try{let pic=ai106()?await findFace106(big).catch(()=>null):null;
+    if(!pic){const im=await img106(big),W=im.naturalWidth,H=im.naturalHeight,sd=Math.min(W,H);pic=cut106(im,(W-sd)/2,Math.min(H-sd,Math.max(0,H*.42-sd/2)),sd,512)}   // no face found: the middle, a little high
+    await setFace106(c.id,pic,true);toast(L("Face set — it's this character's avatar now","عُيّن الوجه — أصبح صورة هذه الشخصية"),{type:"ok"})}
+  finally{F106.busy.delete(c.id);renderView()}});
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="face106-clear"]');if(!a)return;const c=S.chars[S.charSel];if(!c)return;
+  delete c.faceOwn;delete c.facePic;delete c.fp106;delete F106.fail[c.id];IDB.del(faceKey106(c.id)).catch(()=>{});persist();renderView()});
+// the small round pictures of a character (the list on the Characters page, presenters) show the face
+thumb=(o=>function(ref,opt){const m=/^cp:(.+)$/.exec(ref||"");if(m&&opt&&opt.ar==="1/1"){const c=charById(m[1]);if(c&&c.facePic)return'<div class="thumb face87" style="aspect-ratio:1/1"><img class="frame" src="'+esc(c.facePic)+'" alt="" style="width:100%;height:100%;object-fit:cover"></div>'}return o(ref,opt)})(thumb);
+// "Make it real" works from the face (not a whole photo or a front / side / back sheet)
+makeReal87=(o=>async function(c,quiet){const b=c&&c.facePic?await IDB.get(faceKey106(c.id)).catch(()=>null):null;if(!(b instanceof Blob))return o.apply(this,arguments);
+  const slot={type:"image",file:new File([b],"face.jpg",{type:b.type||"image/jpeg"}),name:"face.jpg",url:""};
+  const j=withSlots87({chRef:slot},()=>addJob({kind:"look",model:FACE87(),prompt:c.name+" · "+(c.look||"")+" — the same person as the reference photo: keep the exact face, hair and identity",title:c.name,cost:faceCost87(),secs:8,art:"portrait",aspect:"3:4",opt:charOpt(c),meta:{char:c.id,real87:1,photo:true,face106:1}}));
+  if(j&&!quiet){persist();renderAll();toast(L("Making "+c.name+" real — the face appears in a few seconds.","يتم جعل "+c.name+" حقيقية — يظهر الوجه خلال ثوانٍ."),{type:"ok"})}return j})(makeReal87);
+(()=>{const st=document.createElement("style");st.textContent=`
+.face106{display:flex;gap:12px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line2)}
+.av106{position:relative;flex:0 0 64px;width:64px;height:64px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:color-mix(in srgb,var(--text) 7%,transparent);border:1px solid var(--line2)}
+.av106 img{width:100%;height:100%;object-fit:cover}.av106 .sil87{display:grid;place-items:center;width:100%;height:100%;color:var(--mute)}.av106 .sil87 svg{width:70%;height:70%}
+.av106 .star79{position:absolute;inset:0;margin:auto}
+.tx106{min-width:0;display:flex;flex-direction:column;gap:2px}.tx106 small{color:var(--mute);font-size:12px;line-height:1.45}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

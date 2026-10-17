@@ -686,3 +686,13 @@ NOT yet verified against real services (no internet in the original build enviro
 - Page: the swap takes 2–15 s (priced 4–15 s), a "3 · The product (optional)" upload slot (`M.mcProd`, upload only), tip mentions the product photo; fallback price 154.
 - Limits: H3 still redraws the frame; the list + product photo make it keep products much more closely, but pixel-exact products would need a per-frame person mask and compositing (not built).
 - Tests: `tests/kie_mock.mjs` (the request, 4 / 15 s, keep words, product = Image 2, refused resolution → resent); `tests/v103.py` cases 6–6c (2K + video + person + product + keep list, 4 s price, the video's own sound and length, 16 s refused); `tests/v93.py` (product slot on the swap only), `tests/v95.py`, `tests/v100.py` (the H3 engine).
+
+## v106 The character's face — its avatar (Characters → "Create a character from a photo")
+- The owner (screenshot: a character made from a front / side / back sheet): "add another field for the face … this face will be the avatar logo. Optional. If there is no image of the face, take the face from the picture and use it for the character."
+- `public/index.html` v106 block: a "Face (optional)" field under the character's photo (`face106(c)`: round avatar, a line saying where it comes from, "Add / Change the face photo" `input[data-chface=cur]`, "Use the face from the photo" `face106-clear`).
+- No face photo: `autoFace106` (a 2 s poller, one character at a time, only with the text AI; the photo's signature `fp106` says when to look again) → `findFace106`: `/v1/llm/json` (tier quick, free) "Find the face … the view that faces the camera" → `{face:[l,t,r,b]}` fractions; a face under 25 % of the picture is looked at again on a 640 px square 3.2× around it; the avatar is a square 1.45× the head, a little lower (chin) → 512 px JPEG in IndexedDB `chfc_<id>` + `c.facePic` (256 px). Own face photo: the same finder, or the middle (a little high) without the AI; `c.faceOwn`.
+- `avatar106(c)` (facePic, else the old `faceShow87`) in the presenter tiles, the Characters chip, the @ sheet and list, World cards and pickers; `thumb("cp:<id>",{ar:"1/1"})` (the list on the Characters page). The big picture stays the photo.
+- `makeReal87` wrapper: "Make it real" works from the face (`meta.face106`), not a whole photo or sheet.
+- Characters are found again by id after each wait (the page replaces character objects after saves).
+- Test: `tests/v106.py` (ports 8305/8306; a stand-in text AI in Python that really finds the red "face" in each picture it gets). `tests/visual82.json` updated (the Characters page).
+
