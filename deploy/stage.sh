@@ -5,7 +5,7 @@
 # to social accounts. Pictures and videos it makes do use your AI engine credits, like the live site.
 #
 #   bash /opt/nooi/deploy/stage.sh /root/nooi-update.zip   → start (or refresh) the preview with this package
-#   bash /opt/nooi/deploy/stage.sh promote                 → happy with it: put the same package live (nooi-update)
+#   bash /opt/nooi/deploy/stage.sh promote                 → happy with it: put the same package live (nooi-update), remove the preview
 #   bash /opt/nooi/deploy/stage.sh stop                    → remove the preview
 set -euo pipefail
 APP="${APP:-/opt/nooi}"; STG="${STG:-/opt/nooi-stage}"; ZIPKEEP="${STG}.zip"; SPORT="${STAGE_PORT:-8090}"; PUBPORT="${STAGE_HTTPS_PORT:-8443}"
@@ -14,15 +14,20 @@ ETC="${ETC:-/etc}"; NG="$ETC/nginx/sites-available/nooi-stage"; UNIT="$ETC/syste
 get_env() { grep -E "^$1=" "$2" 2>/dev/null | tail -1 | cut -d= -f2- || true; }
 set_env() { local k="$1" v="$2" f="$3" tmp; tmp="$(mktemp)"; grep -vE "^$k=" "$f" > "$tmp" || true; printf '%s=%s\n' "$k" "$v" >> "$tmp"; cat "$tmp" > "$f"; rm -f "$tmp"; }
 
-case "${1:-}" in
-stop)
+stop_preview() {
   systemctl disable --now nooi-stage 2>/dev/null || true; rm -f "$UNIT"; systemctl daemon-reload
   rm -f "$ETC/nginx/sites-enabled/nooi-stage" "$NG"; nginx -t >/dev/null 2>&1 && systemctl reload nginx || true
-  rm -rf "$STG"; echo "✅ Preview removed — the live site was not touched."; exit 0 ;;
+  rm -rf "$STG"; }
+
+case "${1:-}" in
+stop)
+  stop_preview; echo "✅ Preview removed — the live site was not touched."; exit 0 ;;
 promote)
   [ -f "$ZIPKEEP" ] || { echo "No preview package — start one first: bash $0 /root/nooi-update.zip"; exit 1; }
   if command -v nooi-update >/dev/null; then nooi-update "$ZIPKEEP"; else bash "$APP/deploy/update.sh" "$ZIPKEEP"; fi
-  echo "✅ The previewed version is now live. Remove the preview with: bash $APP/deploy/stage.sh stop"; exit 0 ;;
+  # v110: the preview is removed once its version is live — left running, it did the live site's work a second time on the
+  # same server (and slowed it down)
+  stop_preview; echo "✅ The previewed version is now live, and the preview was removed."; exit 0 ;;
 "") echo "Usage: bash $0 /root/nooi-update.zip | promote | stop"; exit 1 ;;
 esac
 

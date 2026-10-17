@@ -54,7 +54,7 @@ import { registerSketch, rtEngine } from "./lib/sketch.js";
 import { registerWorld } from "./lib/world.js";
 import { registerIngest } from "./lib/ingest.js";
 import { nvReady, nvCfg, nvOn } from "./providers/nvidia.js";
-import { cbSig, findJob, pollOne, speedReport } from "./lib/jobs.js";
+import { cbSig, findJob, pollOne, speedAdvice } from "./lib/jobs.js";
 import { registerGifts } from "./lib/gifts.js";
 import { registerInvoices } from "./lib/invoices.js";
 import { registerExplore } from "./lib/explore.js";
@@ -217,7 +217,7 @@ const PR_NAMES = { ...modelNames(), worldlabs: "3D world · World Labs (Marble)"
 const pricingRows = () => Object.entries(ENGINE_COST).flatMap(([g, m]) => Object.keys(m).map((id) => { const cost = engineCost(g, id), credits = basePrice(g, id), rev = credits * CREDIT_FLOOR_USD;
   return { id, group: g, name: PR_NAMES[id] || id, cost: +cost.toFixed(4), credits, override: platform().prices?.[id] != null, margin: cost ? Math.round((rev / cost - 1) * 100) : 0 }; }).sort((a, b) => b.credits - a.credits));   // strongest (most credits) first
 // v109: how busy the server is and where the time of the last jobs went (Admin → Overview → Speed)
-app.get("/v1/admin/speed", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); res.json(speedReport()); });
+app.get("/v1/admin/speed", requireUser, async (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); try { res.json(await speedAdvice()); } catch (e) { res.status(500).json({ error: e.message }); } });   // (v110: with what slows jobs, in words)
 app.get("/v1/admin/pricing", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); res.json({ rows: pricingRows(), factor: priceFactor(), floor: CREDIT_FLOOR_USD }); });
 app.put("/v1/admin/pricing", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" });
   const st = platform(), b = req.body || {}; st.costs = st.costs || {};
@@ -269,7 +269,7 @@ app.post("/v1/media/probe", requireUser, (req, res) => {
   p.on("close", (code) => { if (code !== 0) return res.status(500).json({ error: "ffprobe exited " + code }); try { const j = JSON.parse(out), v = (j.streams || []).find((x) => x.codec_type === "video"), a = (j.streams || []).find((x) => x.codec_type === "audio"), fr = v && v.r_frame_rate ? v.r_frame_rate.split("/") : null;
     res.json({ duration: +(j.format && j.format.duration) || 0, format: j.format && j.format.format_name, video: v ? { codec: v.codec_name, profile: v.profile || "", width: v.width, height: v.height, pix: v.pix_fmt, fps: fr ? Math.round((+fr[0] / (+fr[1] || 1)) * 100) / 100 : 0 } : null, audio: a ? { codec: a.codec_name, rate: +a.sample_rate, channels: a.channels, bits: a.bits_per_raw_sample || a.bits_per_sample || 0 } : null }); } catch (e) { res.status(500).json({ error: "probe parse" }); } });
 });
-setInterval(() => testAll().catch(() => {}), 15 * 60e3);
+setInterval(() => { if (process.env.NOOI_STAGE !== "1") testAll().catch(() => {}); }, 15 * 60e3);   // (v110: the live site checks; not the preview copy too)
 
 // ---- API tokens (MCP, Blender, Unity)
 app.get("/v1/tokens", requireUser, (req, res) => res.json({ tokens: listTokens(req.user.uid) }));
