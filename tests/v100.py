@@ -76,12 +76,12 @@ try:
     n0 = len(stats()["reqs"]); j = api("/v1/jobs", {"kind": "video", "model": "kling30", "prompt": " ", "dur": 5, "aspect": "16:9", "inputs": {"startImage": "/media/pic.png"}, "meta": {"style": "cinematic"}})
     d = done(j.get("id", "x")) or {}; r = [b for b in sent(n0) if "kling-3.0" in str(b.get("model"))]; pr = str(((r[0].get("input") if r else {}) or {}).get("prompt"))
     out["choices"] = [d.get("status"), pr]
-    ok(d.get("status") == "done" and "Bring this picture to life" in pr and "Cinematic film look" in pr, f"a picture with no words keeps the chosen style {out['choices']}")
+    ok(d.get("status") == "done" and "Bring this picture to life" in pr and pr.startswith("The video starts exactly on the first-frame picture") and "Cinematic film look" not in pr, f"a picture with no words: words for the picture, tied to it as the first frame (v113: the picture sets the look — no style line) {out['choices']}")
     # 3) words typed: the client's words
     n0 = len(stats()["reqs"]); j = api("/v1/jobs", {"kind": "video", "model": "kling30", "prompt": "A red kite over the sea", "dur": 5, "aspect": "16:9", "inputs": {"startImage": "/media/pic.png"}, "meta": {}})
     d = done(j.get("id", "x")) or {}; r = [b for b in sent(n0) if "kling-3.0" in str(b.get("model"))]; pr = str(((r[0].get("input") if r else {}) or {}).get("prompt"))
     out["words"] = [d.get("status"), pr]
-    ok(d.get("status") == "done" and pr.startswith("A red kite over the sea") and "Bring this picture" not in pr, f"with words typed the engine gets them {out['words']}")
+    ok(d.get("status") == "done" and "\nA red kite over the sea" in pr and pr.startswith("The video starts exactly on the first-frame picture") and "Bring this picture" not in pr, f"with words typed the engine gets them (after the first-frame words, v113) {out['words']}")
     # 4) neither words nor a picture: refused, nothing charged
     c0 = api("/v1/billing").get("credits"); j = api("/v1/jobs", {"kind": "video", "model": "kling30", "prompt": "", "dur": 5, "aspect": "16:9", "meta": {}})
     out["nothing"] = [j.get("_status"), j.get("error"), c0, api("/v1/billing").get("credits")]

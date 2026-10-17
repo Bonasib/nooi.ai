@@ -14158,6 +14158,29 @@ document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.c
   catch(err){toast(String(err.message||err))}finally{b.disabled=false;if(S.view==="admin")renderView()}});
 (()=>{const st=document.createElement("style");st.textContent=`.sw112{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-top:12px}.sw112b{display:flex;gap:6px;flex-wrap:wrap}.sw112 .btn.on{background:var(--accent,#7c5cff);color:#fff;border-color:transparent}`;document.head.appendChild(st)})();
 
+/* ================= v113: the first frame ties the video to it · Generate / Create closes the open options ================= */
+// The server now opens the words with "The video starts exactly on the first-frame picture…" (lib/intent.js) and leaves the Style
+// out while a frame is set — the frames panel says so. Pressing Generate / Create closes the open option panel (frames, type…)
+// and the phone keyboard, so the new result is in view and the prompt bar is back to its small size.
+frameBlock=(o=>function(){const h=o.apply(this,arguments);if(!(M.vStart||M.vEnd||S.draft.startJob))return h;
+  return h+'<p class="small fr113">'+ic("image","width:14px;height:14px;vertical-align:-2px")+" "+esc(M.vEnd&&!(M.vStart||S.draft.startJob)?L("The video ends on this picture, with its place, subject and look. The Style choice is left out while a frame is set.","ينتهي الفيديو على هذه الصورة، بمكانها وموضوعها ومظهرها. ويُترك خيار النمط ما دام هناك إطار."):L("The video starts on this picture and keeps its place, subject and look. The Style choice is left out while a frame is set.","يبدأ الفيديو من هذه الصورة ويحافظ على مكانها وموضوعها ومظهرها. ويُترك خيار النمط ما دام هناك إطار."))+"</p>"})(frameBlock);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest("[data-act]");if(!a||!GEN82.has(a.dataset.act))return;
+  const st=ST93();if(st.open){st.open="";setTimeout(()=>{try{renderView()}catch(_){}},0)}
+  const f=document.activeElement;if(f&&f!==document.body&&f.blur&&/^(TEXTAREA|INPUT|SELECT)$/.test(f.tagName))f.blur()},true);
+// A phone screen turned off (or the browser put away) while files are uploading or a job is being sent: the phone cuts the
+// connection, and after three quick tries the job failed. Now the upload / the sending waits until the screen is back and the
+// phone is online, then goes on (the server answers the same request with the same job — nothing is made or charged twice).
+// Once a job has reached the server, it is made there whether the page is open or not.
+let hid113=0;document.addEventListener("visibilitychange",()=>{if(document.hidden)hid113=Date.now()});
+const back113=()=>new Promise(r=>{const ok=()=>!document.hidden&&navigator.onLine!==false;if(ok())return r();
+  const f=()=>{if(!ok())return;document.removeEventListener("visibilitychange",f);window.removeEventListener("online",f);r()};document.addEventListener("visibilitychange",f);window.addEventListener("online",f)});
+const conn113=e=>netErr88(e)||/Connection problem|مشكلة في الاتصال/.test(String(e&&e.message||""));
+API.req=(o=>async function(p,opt){const method=String((opt&&opt.method)||(opt&&opt.json?"POST":"GET")).toUpperCase();
+  if(!(method==="POST"&&/^\/v1\/(uploads|jobs)$/.test(p)))return o.call(this,p,opt);const t0=Date.now();
+  for(let i=0;;i++){try{return await o.call(this,p,opt)}catch(e){const away=document.hidden||hid113>=t0||navigator.onLine===false;
+    if(!conn113(e)||!away||i>=6||Date.now()-t0>30*60e3)throw e;await back113();await new Promise(r=>setTimeout(r,1500*(i+1)))}}})(API.req);
+(()=>{const st=document.createElement("style");st.textContent=`.fr113{margin:8px 0 0;color:var(--mute);line-height:1.45}`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
