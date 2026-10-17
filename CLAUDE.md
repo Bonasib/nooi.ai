@@ -761,3 +761,10 @@ NOT yet verified against real services (no internet in the original build enviro
 - Admin → Overview → Speed: "Replace the person — engine: Seedance 2.0 · faster | MiniMax H3" (`POST /v1/admin/speed/swapengine` {engine}, providers.manage) above the resolution row (Seedance: Sharpest (1080p) · Faster (720p); H3: 2K · 768P). The waiting toast no longer promises "3–8 minutes": "this takes a few minutes. You can close this page; it keeps going."
 - Tests written for H3 run with `SWAP_ENGINE="h3"` (v93, v95, v100, v103, v107, v111, v112, v113); kie_mock: mcswap → Seedance by default, H3 when picked. Test: `tests/v114.py` (ports 8321/8322).
 
+## v115 Lips that follow the voice (Replace the person)
+- The owner: "And realistic voice" + "Also lips sync". The swap already keeps the video's own (real) voice (keepSound); now the new person's mouth is matched to it.
+- `lib/jobs.js` `lipsOr` / `syncLips`: when a swap with `meta.lips115` is ready (single: in `finish` after keepSound; long: after `joinSwap`), the engine's video lip sync `volcengine/video-to-video-lip-sync` gets `{mode: "basic", video_url: the swap, audio_url: the video's voice}` (`voiceTrack` in lib/mcprep.js: the client's video's sound as a mono 128 kb/s mp3; none → skipped). Stage `lips` ("Matching the lips to the voice…"), polled every `LIPS_POLL_MS` (4 s) up to `LIPS_MAX_MS` (20 min); `job.lipsTask` lets a restart follow the same task; `times.lips`. If it fails or the video has no voice: the swap as it came, `job.lipsMsg` → `note115` {en, ar} on the card, and `lowerHold` takes the lips part off before the charge.
+- Price: `ENGINE_COST.video.swaplips` 0.3 per 5 s (an estimate — set the real cost in Admin → Pricing); `lipsPrice(b)` (billing.js) is added in `priceOf` for `mcswap` with `lips115`, over the whole video (`durVideo`).
+- The Replace page: "Lips follow the voice — the new person's mouth is matched to the video's own voice +N" (on by default, `MC83().lips`); the button's price includes it; off lowers it; `meta.lips115`.
+- Tests: `tests/v115.py` (ports 8323/8324); v93 / v107 page-price checks include the lips.
+

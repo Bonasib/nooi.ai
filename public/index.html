@@ -2692,7 +2692,7 @@ setInterval(async()=>{
   if(API.mode!=="server"||poll109)return;const now=Date.now(),age=o=>now-(o.created||now);
   const list=S.jobs.concat(S.story.chapters).filter(o=>o.remote&&!["complete","failed"].includes(o.status)&&now-(o._poll109||0)>=(age(o)<6e5?2500:age(o)<36e5?1e4:6e4));
   if(!list.length)return;poll109=true;
-  const one=async o=>{o._poll109=Date.now();try{const r=await API.req("/v1/jobs/"+o.remote);const ch=r.status!==o.status;o.status=r.status==="done"?"complete":r.status;o.progress=r.progress||o.progress;if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;o.stage=r.stage||null;o.parts108=r.partsTotal?[r.partsDone||0,r.partsTotal]:null;o.inLine112=!!r.inLine;if(r.detail)o.detail=r.detail;if(r.via)o.via=r.via;if(r.segments&&o.kind==="transcribe"&&!o.imported){o.imported=true;importSegments(r.segments)}if(ch){persist();statusChanged()}else liveUpdate()}catch(e){goneJob(o,e)}};
+  const one=async o=>{o._poll109=Date.now();try{const r=await API.req("/v1/jobs/"+o.remote);const ch=r.status!==o.status;o.status=r.status==="done"?"complete":r.status;o.progress=r.progress||o.progress;if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;o.stage=r.stage||null;o.parts108=r.partsTotal?[r.partsDone||0,r.partsTotal]:null;o.inLine112=!!r.inLine;o.note115=r.note115||null;if(r.detail)o.detail=r.detail;if(r.via)o.via=r.via;if(r.segments&&o.kind==="transcribe"&&!o.imported){o.imported=true;importSegments(r.segments)}if(ch){persist();statusChanged()}else liveUpdate()}catch(e){goneJob(o,e)}};
   try{for(let i=0;i<list.length;i+=4)await Promise.all(list.slice(i,i+4).map(one))}finally{poll109=false}
 },3000);
 const _stl=stLabel;stLabel=st=>({failed:L("Failed","فشل"),scheduled:L("Scheduled","مجدول"),published:L("Published","منشور")})[st]||_stl(st);
@@ -8002,7 +8002,7 @@ setInterval(async()=>{if(API.mode!=="server"||!S.hf||!(S.hf.out||[]).length||hf1
     if(["queued","rendering"].includes(o.status)){const exp=(o.kind==="video"?((MODELS[o.model]||{}).sec||70)*Math.max(1,(o.dur||5)/5):({music:90,voice:15,sfx:20,lipsync:120})[o.kind]||25)*1000,est=Math.min(.93,(now-(o.created||now))/exp);if(!(o.progress>est))o.progress=est}
     try{const r=await API.req("/v1/jobs/"+o.remote);const before=o.status+"|"+JSON.stringify(o.sceneCheck||null);
       if(r.status==="queued"||r.status==="rendering")o.status="rendering";else if(r.status==="done")o.status="complete";else if(r.status==="failed")o.status="failed";
-      if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;o.stage=r.stage||null;o.parts108=r.partsTotal?[r.partsDone||0,r.partsTotal]:null;o.inLine112=!!r.inLine;if(r.detail)o.detail=r.detail;if(r.progress)o.progress=Math.max(o.progress||0,r.progress);if(r.sceneCheck)o.sceneCheck=r.sceneCheck;
+      if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;o.stage=r.stage||null;o.parts108=r.partsTotal?[r.partsDone||0,r.partsTotal]:null;o.inLine112=!!r.inLine;o.note115=r.note115||null;if(r.detail)o.detail=r.detail;if(r.progress)o.progress=Math.max(o.progress||0,r.progress);if(r.sceneCheck)o.sceneCheck=r.sceneCheck;
       if(before!==o.status+"|"+JSON.stringify(o.sceneCheck||null)){persist();statusChanged()}else liveUpdate()}catch(e){goneJob(o,e)}}}finally{hf109=false}},1500);
 (()=>{const st=document.createElement("style");st.textContent=`
 .hfmrow.g{gap:6px}.hfmi.nooi{padding:0 12px 0 4px}.hfmi.nooi b{padding:0}.hfmi.pick{padding:0 10px 0 4px}.hfmi.pick>svg:last-child{width:14px;height:14px;opacity:.7}
@@ -13217,7 +13217,7 @@ const mcAspect93=()=>{const m=M.mcMove;if(!m)return"9:16";const v=m.el;let w=(v&
   if((!w||!h)&&m.url&&!m.probe93){m.probe93=1;const t=document.createElement("video");t.muted=true;t.preload="metadata";t.onloadedmetadata=()=>{if(M.mcMove===m){m.vw=t.videoWidth;m.vh=t.videoHeight;if(S.view==="motion")renderView()}};t.src=m.url}
   if(!w||!h){const j=S.jobs.find(x=>mediaUrl(x)===m.url);return j&&j.aspect?j.aspect:"9:16"}const r=w/h;return r>1.2?"16:9":r<.85?"9:16":"1:1"};
 const mcBig93=()=>{const out=[];[["mcMove",L("video","الفيديو")],["mcChar",L("photo","الصورة")],["mcWho",L("picture of the person","صورة الشخص")],["mcProd",L("product photo","صورة المنتج")]].forEach(([s,n])=>{const f=M[s]&&M[s].file;if(f&&f.size>MB93)out.push([n,Math.round(f.size/1048576)])});return out};
-VIEWS.motion=()=>{const c=MC83(),mode=mcMode93(),sw=mode==="swap",res=mcRes93(c),d=mcDur83(),model=mcModel93(c),cost=vprice83(model,d?mcDur105(sw,d):5,mcK93(c)),
+VIEWS.motion=()=>{const c=MC83(),mode=mcMode93(),sw=mode==="swap",res=mcRes93(c),d=mcDur83(),model=mcModel93(c),lipsCr=sw&&c.lips!==false?lips115(d?mcDur105(sw,d):5):0,cost=vprice83(model,d?mcDur105(sw,d):5,mcK93(c))+lipsCr,
   mine=S.jobs.filter(j=>j.meta&&j.meta.motion83),g=mine[mine.length-1],prev=mine.slice(0,-1).slice(-8).reverse(),mx=mcMax105(sw),tooLong=d>mx,tooShort=d>0&&d<(sw?2:3),big=sw?mcBig93():[];
   const modes='<div class="mcmode93" role="radiogroup" aria-label="'+esc(L("What do you want?","ماذا تريد؟"))+'">'+[
     ["swap","swap93",L("Replace the person in the video","استبدل الشخص في الفيديو"),L("The same place, light, objects and camera — only the person changes to the one in your photo.","نفس المكان والإضاءة والأشياء والكاميرا — يتغيّر الشخص فقط إلى الشخص في صورتك.")],
@@ -13238,6 +13238,7 @@ VIEWS.motion=()=>{const c=MC83(),mode=mcMode93(),sw=mode==="swap",res=mcRes93(c)
     (sw?'<p class="small mute tip93">'+ic("spark","width:14px;height:14px")+L("Best results: the person to replace clearly seen with the face visible, a photo with a similar pose and framing — and the product's photo when it must stay exact.","أفضل نتيجة: الشخص المراد استبداله واضح والوجه ظاهر، وصورة بوقفة وكادر قريبين منه — وصورة المنتج إن كان يجب أن يبقى كما هو.")+"</p>"
       :'<span class="lbl">3 · '+L("Anything to add (optional)","إضافة (اختياري)")+'</span><textarea data-bind="mc83.prompt" dir="auto" style="min-height:64px" placeholder="'+esc(L("e.g. on a sunny street in Riyadh, wearing a white thobe","مثال: في شارع مشمس بالرياض، يرتدي ثوباً أبيض"))+'">'+esc(c.prompt)+"</textarea>")+
     (sw?"":'<div class="grid2"><div><span class="lbl">'+L("Framing","الكادر")+'</span><div class="seg"><button data-set="mc83.orient" data-val="video" aria-pressed="'+(c.orient==="video")+'">'+L("Like the video","مثل الفيديو")+'</button><button data-set="mc83.orient" data-val="image" aria-pressed="'+(c.orient==="image")+'">'+L("Like the photo","مثل الصورة")+"</button></div></div></div>")+
+    (sw?'<label class="check83 lips115"><input type="checkbox" data-mc115lips="1"'+(c.lips!==false?" checked":"")+"> <span><b>"+L("Lips follow the voice","الشفاه تتبع الصوت")+"</b> — "+L("the new person's mouth is matched to the video's own voice","يُطابَق فم الشخص الجديد مع صوت الفيديو نفسه")+' <span class="mono">+'+lips115(d?mcDur105(sw,d):5)+" cr</span></span></label>":"")+
     '<label class="check83"><input type="checkbox" data-mc83consent="1"'+(c.consent?" checked":"")+"> <span>"+L("I have the right to use this photo and this video, and the people in them agreed.","لدي حق استخدام هذه الصورة وهذا الفيديو، والأشخاص الظاهرون فيهما موافقون.")+"</span></label>"+
     '<div style="margin-top:14px"><button class="btn primary big" data-act="mc-make">'+ic(sw?"swap93":"motion83")+(sw?L("Replace the person","استبدل الشخص"):L("Make it move","حرّكها"))+'<span class="cost">'+cost+" cr"+(d?"":" / 5"+L(" s"," ث"))+"</span></button></div></div>";
   const out=!g?'<div class="preview-col"><div class="panel pad"><div class="stage" style="aspect-ratio:'+mcAspect93().replace(":","/")+';max-height:60vh;margin:0 auto"><div class="empty">'+(sw?L("Your video with the new person appears here.","يظهر فيديوك بالشخص الجديد هنا."):L("The character moves here.","تتحرك الشخصية هنا."))+"</div></div></div></div>":previewCol(g,prev);
@@ -13251,7 +13252,7 @@ window.addEventListener("click",async e=>{const a=e.target.closest&&e.target.clo
   const d=mcDur83(),mx=mcMax105(sw);if(d>mx){toast(L("The video must be "+mx+" s or shorter.","يجب أن يكون الفيديو "+mx+" ث أو أقل."),{type:"warn"});return}
   if(sw&&mcBig93().length){toast(L("Files up to 300 MB — trim or shorten the video in the editor first.","الملفات حتى 300 ميجابايت — قصّ الفيديو أو اختصره في المحرر أولاً."),{type:"warn"});return}
   if(!c.consent){toast(L("Confirm that you have the right to use this photo and video.","أكّد أن لديك حق استخدام الصورة والفيديو."),{type:"warn"});const x=document.querySelector("[data-mc83consent]");if(x)x.focus();return}
-  const dur=mcDur105(sw,d),cost=vprice83(model,dur,mcK93(c)),meta={motion83:true,res:c.res,consent:true};if(sw)meta.swap93=true;else meta.orient=c.orient;
+  const dur=mcDur105(sw,d),lipsOn=sw&&c.lips!==false,cost=vprice83(model,dur,mcK93(c))+(lipsOn?lips115(dur):0),meta={motion83:true,res:c.res,consent:true};if(sw)meta.swap93=true;else meta.orient=c.orient;if(lipsOn)meta.lips115=true;
   if(sw&&M.mcWho&&M.mcWho.tap)meta.whoTap=M.mcWho.tap;   // v107: the frame the client tapped, and where
   // (v108: the button says it's uploading — a phone video can take a while on mobile data)
   let inputs={};if(API.mode==="server"){a.disabled=true;const lb=a.innerHTML,up=setTimeout(()=>{a.innerHTML=ic("upload")+L("Uploading your files…","جارٍ رفع ملفاتك…")},600);const back=()=>{clearTimeout(up);a.innerHTML=lb};try{for(const s of["mcMove","mcChar",...(sw&&M.mcWho?["mcWho"]:[]),...(sw&&M.mcProd?["mcProd"]:[])]){const m=M[s];inputs[s]=m.file?(await API.upload(m.file,m.file.name||m.name)).url:m.remote}back()}catch(err){back();a.disabled=false;toast(L("Couldn't upload the files — try again.","تعذّر رفع الملفات — حاول مجدداً."),{type:"warn"});return}a.disabled=false}
@@ -14104,7 +14105,7 @@ window.addEventListener("click",async e=>{const a=e.target.closest&&e.target.clo
 const stage108=j=>{if(!j||!j.stage||["complete","failed"].includes(j.status))return"";const p=j.parts108;
   const t={prep:L("Getting your video ready…","تجهيز الفيديو…"),look:L("Looking at the video and the photos…","فحص الفيديو والصور…"),
     engine:j.inLine112?L("Waiting in the engine's line — it starts as soon as the engine is free…","في طابور المحرّك — يبدأ فور أن يتفرّغ…"):p&&p[1]>1?L("The engine is making it — "+p[0]+" of "+p[1]+" parts ready…","المحرّك يصنعه — جاهز "+p[0]+" من "+p[1]+" أجزاء…"):L("The engine is making it — usually a few minutes…","المحرّك يصنعه — عادةً بضع دقائق…"),
-    join:L("Joining the parts with the original sound…","جمع الأجزاء مع الصوت الأصلي…")}[j.stage];
+    join:L("Joining the parts with the original sound…","جمع الأجزاء مع الصوت الأصلي…"),lips:L("Matching the lips to the voice…","مطابقة الشفاه مع الصوت…")}[j.stage];
   return t?'<p class="small mute stage108">'+ic("spark","width:14px;height:14px")+"<span>"+esc(t)+"</span></p>":""};
 previewCol=(o=>function(g,prev){const h=o(g,prev),s=stage108(g);return s?h.replace('<div class="pipe"',s+'<div class="pipe"'):h})(previewCol);
 // the swap's refusals (now on the card, after the job is made), in Arabic too
@@ -14186,6 +14187,16 @@ API.req=(o=>async function(p,opt){const method=String((opt&&opt.method)||(opt&&o
 document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest('[data-act="sw114"]');if(!b||b.disabled)return;b.disabled=true;
   try{const r=await API.req("/v1/admin/speed/swapengine",{method:"POST",json:{engine:b.dataset.eng}});if(SP109.d)SP109.d.swapEngine=r.swapEngine;toast(r.swapEngine==="h3"?L("Replace the person now runs on MiniMax H3","استبدال الشخص يعمل الآن على MiniMax H3"):L("Replace the person now runs on Seedance 2.0","استبدال الشخص يعمل الآن على Seedance 2.0"))}
   catch(err){toast(String(err.message||err))}finally{b.disabled=false;if(S.view==="admin")renderView()}});
+
+/* ================= v115: Replace the person — lips that follow the voice ================= */
+// On by default (the price is on the button and next to the choice): once the swap is made, the engine's video lip sync matches
+// the new person's mouth to the video's own voice. The server tells the card when it couldn't (no voice in the video, or the lip
+// sync failed) — that part isn't charged.
+const lips115=d=>Math.round(((API.cfg&&API.cfg.prices&&API.cfg.prices.video&&API.cfg.prices.video.swaplips)||PRICE_TABLE.video.swaplips||71)*PDUR83(d));
+if(PRICE_TABLE.video.swaplips==null)PRICE_TABLE.video.swaplips=71;
+document.addEventListener("change",e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.mc115lips)return;MC83().lips=!!t.checked;persist();renderView()});
+previewCol=(o=>function(g,prev){const h=o(g,prev);return g&&g.note115&&g.status==="complete"?h.replace('<div class="pipe"','<p class="small mute note115">'+ic("voice","width:14px;height:14px;vertical-align:-2px")+" "+esc(L(g.note115.en,g.note115.ar))+'</p><div class="pipe"'):h})(previewCol);
+(()=>{const st=document.createElement("style");st.textContent=`.lips115 b{font-weight:600}.lips115 .mono{opacity:.75}.note115{margin:10px 0 0}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

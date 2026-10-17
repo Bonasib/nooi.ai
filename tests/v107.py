@@ -195,7 +195,7 @@ async def page_checks():
                 await asyncio.sleep(.25)
             await E("()=>renderView()"); await pg.wait_for_timeout(300)
             r = await E("""()=>({lbl:[...document.querySelectorAll('.mc83 .lbl')].map(x=>x.textContent),pick:!!document.querySelector('[data-act=mc107-pick]'),up:!!document.querySelector('input[data-slot="mcWho"]'),
-              cost:+(document.querySelector('[data-act=mc-make] .cost').textContent.match(/\\d+/)||[0])[0],want:vprice83('mcswap',mcDur105(true,mcDur83()),1),d:mcDur83()})""")
+              cost:+(document.querySelector('[data-act=mc-make] .cost').textContent.match(/\\d+/)||[0])[0],want:vprice83('mcswap',mcDur105(true,mcDur83()),1)+(MC83().lips!==false?lips115(mcDur105(true,mcDur83())):0),d:mcDur83()})""")
             out["page_" + tag] = r
             ok(r["pick"] and r["up"] and any(("The person to replace" in x) or ("الشخص المراد استبداله" in x) for x in r["lbl"]) and r["cost"] == r["want"] and r["d"] == 8, f"{tag}: step 3 — tap them in the video or upload a picture; the price {r}")
             await pg.click("[data-act=mc107-pick]")

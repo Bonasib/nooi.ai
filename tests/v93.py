@@ -91,7 +91,7 @@ async def motion(b):
             r = await E("()=>{const j=S.jobs.filter(j=>j.meta&&j.meta.motion83).pop();return j&&{model:j.model,swap:!!j.meta.swap93,aspect:j.aspect,cost:j.cost}}")
             # a customer is charged the price the page shows (the owner's own account isn't charged)
             c0 = api("/v1/billing", token=TOKEN)["credits"]
-            jj = api("/v1/jobs", {"kind": "video", "model": "mcswap", "prompt": "", "dur": 4, "aspect": "16:9", "meta": {"motion83": True, "swap93": True, "res": "720p", "consent": True}, "inputs": {"mcChar": "/media/char.png", "mcMove": "/media/move.webm"}}, token=TOKEN)
+            jj = api("/v1/jobs", {"kind": "video", "model": "mcswap", "prompt": "", "dur": 4, "aspect": "16:9", "meta": {"motion83": True, "swap93": True, "res": "720p", "consent": True, "lips115": True}, "inputs": {"mcChar": "/media/char.png", "mcMove": "/media/move.webm"}}, token=TOKEN)   # (v115: the page's price includes the lips, on by default)
             c1 = api("/v1/billing", token=TOKEN)["credits"]
             nocons = api("/v1/jobs", {"kind": "video", "model": "mcswap", "prompt": "", "dur": 4, "meta": {"res": "720p"}, "inputs": {"mcChar": "/media/char.png", "mcMove": "/media/move.webm"}}, token=TOKEN)
             out["swap"] = {"job": r, "sent": inp, "credits": [c0, c1], "shown": shown, "api": jj.get("id") or jj}
