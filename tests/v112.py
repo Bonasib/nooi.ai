@@ -115,7 +115,7 @@ async def page_checks():
         await E("()=>{S.view='admin';S.admTab='overview';renderAll()}")
         r = None
         for _ in range(40):
-            r = await E("()=>{const c=document.querySelector('.sw112');return c?c.textContent:null}")
+            r = await E("()=>{const c=document.querySelector('[data-act=sw112]')?.closest('.sw112');return c?c.textContent:null}")
             if r: break
             await asyncio.sleep(.25)
         out["card"] = r
@@ -123,17 +123,17 @@ async def page_checks():
         await pg.click('[data-act=sw112][data-res="768P"]'); await pg.wait_for_timeout(1200)
         on = await E("()=>document.querySelector('[data-act=sw112][data-res=\"768P\"]')?.classList.contains('on')")
         ok(on and api("/v1/admin/speed", None, None).get("swapRes") == "768P", f"one tap sets 768P {on}")
-        w = await E("()=>{const c=document.querySelector('.sw112');return c?c.getBoundingClientRect().right<=window.innerWidth+1:false}")
+        w = await E("()=>{const c=document.querySelector('[data-act=sw112]')?.closest('.sw112');return c?c.getBoundingClientRect().right<=window.innerWidth+1:false}")
         ok(w, "the switch fits a phone")
         await E("()=>{S.lang='ar';renderAll()}"); await pg.wait_for_timeout(400)
-        ra = await E("()=>document.querySelector('.sw112')?.textContent||''")
+        ra = await E("()=>document.querySelector('[data-act=sw112]')?.closest('.sw112')?.textContent||''")
         ok("أسرع (768P)" in ra and "الأوضح (2K)" in ra, f"…and in Arabic {ra}")
         ok(not errs, f"page errors {errs}")
         await b.close()
 
 env = {k: v for k, v in os.environ.items() if not k.startswith(("LLM_", "ANTHROPIC_", "NVIDIA_", "ELEVENLABS_", "OPENAI_", "KIE_", "FAL_", "GOOGLE_", "DASHSCOPE_", "FIREBASE_", "LOCAL_LLM", "GEMMA_", "FREE_PERIOD", "NOOI_STAGE", "MC_LOOK"))}
 mk = subprocess.Popen([sys.executable, D + "/mock.py", str(KPORT), D], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-srv = subprocess.Popen(["node", ROOT + "/server.js"], cwd=D, env=dict(env, PORT=str(PORT), SECRET_KEY="v" * 40, FIREBASE_PROJECT_ID="", PUBLIC_BASE_URL=f"http://localhost:{PORT}", AGENTS_AUTO_LEARN="false",
+srv = subprocess.Popen(["node", ROOT + "/server.js"], cwd=D, env=dict(env, SWAP_ENGINE="h3", PORT=str(PORT), SECRET_KEY="v" * 40, FIREBASE_PROJECT_ID="", PUBLIC_BASE_URL=f"http://localhost:{PORT}", AGENTS_AUTO_LEARN="false",
     KIE_API_KEY="kk", KIE_BASE_URL=f"http://localhost:{KPORT}", LLM_BASE_URL=f"http://localhost:{KPORT}", LLM_API_KEY="llm", LLM_MODEL="mock-vision", MIRROR_MEDIA="false", FREE_PERIOD="false", MC_LOOK_MS="2000"),
     stdout=subprocess.DEVNULL, stderr=open(D + "/server.log", "w"))
 try:

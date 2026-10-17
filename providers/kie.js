@@ -13,7 +13,7 @@
 // The model id is whatever Kie lists on the model's docs page ("kling-3.0/video", "bytedance/seedance-2",
 // "nano-banana-pro", "veo3_fast", "suno:V5"…). Field names differ per model family; the common ones are mapped
 // below and the admin can add/override any input field per model id (Admin → AI providers → Kie AI → Extra inputs).
-import { cfg, configured } from "../lib/settings.js";
+import { cfg, configured, S as platformS } from "../lib/settings.js";
 import { presetVoiceId } from "../lib/voicepresets.js";   // v97: the Voice page example you heard = the voice you get
 import { PICTURE_WORDS } from "../lib/picturewords.js";   // v100: a picture with no words still tells the engine what to do
 
@@ -82,8 +82,16 @@ const TOOL_SCALE = (p) => (String((p.meta?.opt || {}).scale || "2x").startsWith(
 // retention_analysis says what each one keeps. The plain words "Image 1" / "Video 1" weren't tied to the files, and H3 then kept the
 // person in the video as they were — the face didn't change.
 const one = (v, n) => String(v || "").replace(/[\r\n"]+/g, " ").replace(/\s{2,}/g, " ").trim().replace(/[.\s]+$/, "").slice(0, n);
-export const swapWords = ({ keep, prod, target, where, who } = {}) => {
-  const k = one(keep, 200), w = one(where || who, 160), pp = target ? 3 : 2, ps = target ? 3 : 2, old = target ? "<Subject 2>" : "The person in <Video 1>";
+// v114: the swap runs on Seedance 2.0 (faster) unless the owner picks MiniMax H3 (Admin → Overview → Speed); SWAP_ENGINE=h3 sets
+// the default for a server (and the tests written for H3)
+export const SWAP_MODELS = { seedance: "bytedance/seedance-2", h3: "minimax-h3/reference-to-video" };
+export const swapEngine = () => { const v = String(platformS().swapEngine || process.env.SWAP_ENGINE || "seedance").toLowerCase(); return SWAP_MODELS[v] ? v : "seedance"; };
+const swapModel = () => SWAP_MODELS[swapEngine()];
+// v114: what the text AI saw in the video (lib/mcprep.js lookMotion): the place, the light, how the person moves, their eyes
+const sceneLines = (sc = {}) => [one(sc.scene, 160) && "Place: " + one(sc.scene, 160) + ".", one(sc.light, 140) && "Light: " + one(sc.light, 140) + ".",
+  one(sc.moves, 180) && "Movement: " + one(sc.moves, 180) + ".", one(sc.eyes, 120) && "Eyes: " + one(sc.eyes, 120) + "."].filter(Boolean);
+export const swapWords = ({ keep, prod, target, where, who, scene } = {}) => {
+  const k = one(keep, 200), w = one(where || who, 160), pp = target ? 3 : 2, ps = target ? 3 : 2, old = target ? "<Subject 2>" : "The person in <Video 1>", sl = sceneLines(scene);
   return [
     "subject_definitions:",
     "<Subject 1> is the new person: the face, hair, skin tone, body shape and clothes of the person in <Picture 1>.",
@@ -96,15 +104,31 @@ export const swapWords = ({ keep, prod, target, where, who } = {}) => {
     "",
     "retention_analysis:",
     "<Subject 1>: fully_preserved - the face from <Picture 1> in every frame, never the face of the person it replaces; the hair, skin tone, body shape and clothes of <Picture 1>.",
-    `${target ? "<Subject 2>" : "The replaced person in <Video 1>"}: attribute_transfer - only the position, movements, gestures, expressions and lip movement are kept; the face, hair, body and clothes become those of <Subject 1>.`,
+    `${target ? "<Subject 2>" : "The replaced person in <Video 1>"}: attribute_transfer - only the position, movements, gestures, head turns and tilts, expressions, eye movement and blinks and lip movement are kept; the face, hair, body and clothes become those of <Subject 1>.`,
     ...(prod ? [`<Subject ${ps}>: fully_preserved - the exact shape, size, colour, logo, label and written text of <Picture ${pp}>.`] : []),
     "<Video 1>: fully_preserved - everything except the replaced person, frame by frame: " + (k ? "the products and objects (" + k + "), " : "") +
       "every product and object with its exact shape, size, colour, logo, label and written text; what the person holds and touches; the place, background, light and colours; the camera position, movement and framing; the timing and cuts" + (target ? "; every other person" : "") + ".",
     "",
-    "detailed_description: Photorealistic, the same look, light and colours as <Video 1>. [Shot 1] <Subject 1> appears exactly where the replaced person is in <Video 1> and makes the same movements at the same moments; the face of <Subject 1> is clearly the face from <Picture 1> in every frame. Nothing is added, removed, restyled or moved. No new text, captions or watermarks.",
+    "detailed_description: Photorealistic, the same look, light and colours as <Video 1>. [Shot 1] <Subject 1> appears exactly where the replaced person is in <Video 1> and makes the same movements at the same moments — the same body movement, head turns and tilts, gaze, eye movement and natural blinks; the light of <Video 1> falls on <Subject 1> the same way (direction, colour, softness, shadows and reflections); the face of <Subject 1> is clearly the face from <Picture 1> in every frame." +
+      (sl.length ? " " + sl.join(" ") : "") + " Nothing is added, removed, restyled or moved. No new text, captions or watermarks.",
     "",
     "overall_soundscape: the same sound as <Video 1>.",
     "non_diegetic_music: N/A",
+  ].join("\n");
+};
+// v114: the swap on Seedance 2.0 — its references are named in the words: @Image1 the new person (@Image2 the person to replace
+// among several, then the product), @Video1 the client's video
+export const seedanceSwapWords = ({ keep, prod, target, where, who, scene } = {}) => {
+  const k = one(keep, 200), w = one(where || who, 160), pi = target ? 3 : 2, sl = sceneLines(scene);
+  return [
+    `Replace ${target ? "the person shown in @Image2" + (w ? " (" + w + ")" : "") : "the person"} in @Video1 with the person in @Image1. @Video1 is the video to edit; everything except that person stays exactly as it is in @Video1.`,
+    "The new person has the face, hair, skin tone, body shape and clothes of the person in @Image1, clearly the same face in every frame — never the face of the person being replaced.",
+    "The new person is exactly where the replaced person is and copies their performance frame by frame: the same body movement, hand gestures, head turns and tilts, facial expressions, lip movement, gaze, eye movement and natural blinks, at the same moments.",
+    "The light of @Video1 falls on the new person the same way: the same direction, colour and softness, with the same shadows and reflections.",
+    ...(sl.length ? [sl.join(" ")] : []),
+    ...(target ? ["Every other person in @Video1 stays exactly as they are."] : []),
+    ...(prod ? [`The product looks exactly like @Image${pi}: the same shape, size, colour, logo, label and written text.`] : []),
+    "Keep from @Video1 exactly: the place, background, objects" + (k ? " (" + k + ")" : "") + ", what the person holds and touches, the camera position, framing and movement, the timing and cuts. Photorealistic, the same look and colours as @Video1. No new text, captions or watermarks.",
   ].join("\n");
 };
 export function kieInput(model, p) {
@@ -149,9 +173,15 @@ export function kieInput(model, p) {
   // it: the products the text AI saw in the video (meta.mcKeep), their look and writing, the place, light, camera and every movement
   // (v107: with several people, Image 2 = the person to replace — cut from the frame the client tapped, or their picture — and the
   // product moves to Image 3; the words say where that person is in this part)
+  if (/^bytedance\/seedance-2/.test(m) && (p.model === "mcswap" || p.meta?.swap93)) {   // v114
+    const prod = inp.mcProd ? absUrl(inp.mcProd) : null, target = inp.mcWho ? absUrl(inp.mcWho) : null;
+    return drop({ prompt: seedanceSwapWords({ keep: p.meta?.mcKeep, prod: !!prod, target: !!target, where: p.meta?.swapWhere, who: p.meta?.swapWho, scene: p.meta?.mcScene }),
+      reference_image_urls: [absUrl(inp.mcChar || img0), ...(target ? [target] : []), ...(prod ? [prod] : [])], reference_video_urls: [absUrl(inp.mcMove)],
+      generate_audio: false, resolution: p.meta?.swapFast ? "720p" : "1080p", aspect_ratio: "adaptive", duration: clamp(dur, 4, 15), web_search: false });
+  }
   if (/^minimax-h3\/reference-to-video/.test(m)) {
     const prod = inp.mcProd ? absUrl(inp.mcProd) : null, target = inp.mcWho ? absUrl(inp.mcWho) : null;
-    return drop({ prompt: swapWords({ keep: p.meta?.mcKeep, prod: !!prod, target: !!target, where: p.meta?.swapWhere, who: p.meta?.swapWho }),
+    return drop({ prompt: swapWords({ keep: p.meta?.mcKeep, prod: !!prod, target: !!target, where: p.meta?.swapWhere, who: p.meta?.swapWho, scene: p.meta?.mcScene }),
       reference_image_urls: [absUrl(inp.mcChar || img0), ...(target ? [target] : []), ...(prod ? [prod] : [])], reference_video_urls: [absUrl(inp.mcMove)],
       aspect_ratio: "adaptive", duration: clamp(dur, 4, 15), resolution: pickRes(p, ["768P", "2K"], "2K") });
   }
@@ -346,7 +376,7 @@ export function kieAuto(cap, body = {}) {
   if (cap === "lipsync") return isVid(inp.lsV) ? "volcengine/video-to-video-lip-sync" : "kling/ai-avatar-standard";
   if (!["video", "image"].includes(cap)) return null;
   const img = IMAGE_KINDS.has(kind) || cap === "image";
-  let m = KIE_BUILTIN[img ? "image" : "video"][body.model] || (img ? c.imageModel || KIE_BUILTIN.image.auto : c.videoModel || KIE_BUILTIN.video.auto);
+  let m = (!img && body.model === "mcswap" ? swapModel() : KIE_BUILTIN[img ? "image" : "video"][body.model]) || (img ? c.imageModel || KIE_BUILTIN.image.auto : c.videoModel || KIE_BUILTIN.video.auto);
   if (img) { if (refImg(body) && EDIT[m]) m = EDIT[m]; }
   else if (startImg(body) && I2V[m]) m = I2V[m];
   return m;

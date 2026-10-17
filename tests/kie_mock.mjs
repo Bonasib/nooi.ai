@@ -122,8 +122,10 @@ rt = adapterFor("music", { kind: "music" }, PROVIDERS); ok(rt.key === "kie@suno:
 // v101: the admin's default model is for "nooi Auto" only — a model with its own engine keeps it (the quick-start card saves
 // kling-3.0/video as the default, and it took over Character Swap, Motion Control, Veo, Wan…)
 st.saveCfg("providers", "kie", { videoModel: "kling-3.0/video", imageModel: "nano-banana-pro", musicModel: "suno:V5" });
-for (const [cap, m, k] of [["video", "mcswap", "minimax-h3/reference-to-video"], ["video", "mc30", "kling-3.0/motion-control"], ["video", "mc26", "kling-2.6/motion-control"], ["video", "veo31", "veo3"], ["video", "wan30", "wan/3-0-video"], ["video", "grok15", "grok-imagine-video-1-5-preview"], ["image", "imagen4", "google/imagen4-ultra"], ["image", "ideogram3", "ideogram/v3-text-to-image"]]) {
+for (const [cap, m, k] of [["video", "mcswap", "bytedance/seedance-2"], ["video", "mc30", "kling-3.0/motion-control"], ["video", "mc26", "kling-2.6/motion-control"], ["video", "veo31", "veo3"], ["video", "wan30", "wan/3-0-video"], ["video", "grok15", "grok-imagine-video-1-5-preview"], ["image", "imagen4", "google/imagen4-ultra"], ["image", "ideogram3", "ideogram/v3-text-to-image"]]) {
   rt = adapterFor(cap, { kind: cap, model: m }, PROVIDERS); ok(rt.key === "kie@" + k, `routing: ${m} keeps its own engine with an admin default set (${rt.key})`); }
+// v114: Replace the person on Seedance 2.0 by default; the owner's one-tap MiniMax H3 (Admin → Speed) routes it there
+st.S().swapEngine = "h3"; rt = adapterFor("video", { kind: "video", model: "mcswap" }, PROVIDERS); ok(rt.key === "kie@minimax-h3/reference-to-video", `routing: Replace the person on MiniMax H3 when the owner picks it (${rt.key})`); delete st.S().swapEngine;
 rt = adapterFor("video", { kind: "video", model: "auto" }, PROVIDERS); ok(rt.key === "kie@kling-3.0/video", "routing: nooi Auto still uses the admin's default video model");
 rt = adapterFor("image", { kind: "image", model: "auto" }, PROVIDERS); ok(rt.key === "kie@nano-banana-pro", "routing: nooi Auto still uses the admin's default image model");
 ok(adapterByKey("kie@kling-3.0/video", PROVIDERS).name === "Kie AI", "poller rebuilds the Kie adapter from the stored job key");
