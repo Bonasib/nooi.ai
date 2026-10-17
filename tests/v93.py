@@ -64,10 +64,10 @@ async def motion(b):
         r = await E("""()=>({modes:[...document.querySelectorAll('.mcm93')].map(x=>[x.dataset.val,x.getAttribute('aria-checked')]),words:!!document.querySelector('[data-bind="mc83.prompt"]'),frame:!!document.querySelector('[data-set="mc83.orient"]'),
           res:[...document.querySelectorAll('[data-set="mc83.res"]')].map(x=>x.dataset.val),lib:document.querySelectorAll('.mclib83').length,go:document.querySelector('[data-act=mc-make]').textContent,over:document.documentElement.scrollWidth>innerWidth+1})""")
         ok(r["modes"] == [["swap", "true"], ["moves", "false"]], f"{tag}: two jobs, Replace the person first and chosen {r['modes']}")
-        ok(not r["words"] and not r["frame"] and r["res"] == ["480p", "720p"] and not r["over"], f"{tag}: a swap shows only its own options {r}")
+        ok(not r["words"] and not r["frame"] and r["res"] == [] and not r["over"], f"{tag}: a swap shows only its own options (v104: no Quality choice — always the best) {r}")
         await pg.click('[data-set="mc83.mode"][data-val="moves"]'); await pg.wait_for_timeout(250)
         r2 = await E("""()=>({words:!!document.querySelector('[data-bind="mc83.prompt"]'),frame:!!document.querySelector('[data-set="mc83.orient"]'),res:[...document.querySelectorAll('[data-set="mc83.res"]')].map(x=>x.dataset.val)})""")
-        ok(r2["words"] and r2["frame"] and r2["res"] == ["720p", "1080p"], f"{tag}: the moves show their words box, framing and quality {r2}")
+        ok(r2["words"] and r2["frame"] and r2["res"] == [], f"{tag}: the moves show their words box and framing (v104: no Quality choice) {r2}")
         await pg.click('[data-set="mc83.mode"][data-val="swap"]'); await pg.wait_for_timeout(200)
         # nothing without the files; a file too big to upload is caught before anything is charged
         await pg.click('[data-act="mc-make"]'); await pg.wait_for_timeout(300)

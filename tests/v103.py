@@ -17,6 +17,10 @@ json.dump({"users": {"cust": {"plan": "studio", "planUntil": 4102444800000, "cre
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=0x3060a0:s=512x768", "-frames:v", "1", D + "/media/pic.png"], check=True)
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=640x360:rate=24", "-t", "3", "-c:v", "libx264", "-pix_fmt", "yuv420p", D + "/media/move.mp4"], check=True)
 subprocess.run(["cp", D + "/media/move.mp4", D + "/vid.mp4"], check=True)
+# v104: a movement video with its own sound (the engine's result, vid.mp4, is silent)
+subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=640x360:rate=24", "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=44100", "-t", "3",
+                "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest", D + "/media/talk.mp4"], check=True)
+has_sound = lambda f: "audio" in subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=codec_type", "-of", "csv=p=0", f], capture_output=True, text=True).stdout
 MOCK = r"""
 const http=require('http'),fs=require('fs'),path=require('path');const P=+process.argv[2],DIR=process.argv[3];const st={reqs:[],llm:[],look:null,swap:[]};let n=0;const T={};
 http.createServer((q,s)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{const u=new URL(q.url,'http://x');s.setHeader('connection','close');
@@ -70,6 +74,7 @@ srv = subprocess.Popen(["node", ROOT + "/server.js"], cwd=D, env=dict(env, PORT=
 try:
     wait(lambda: urllib.request.urlopen(f"http://localhost:{PORT}/v1/config", timeout=2), 30)
     tasks = lambda n0: [r["body"].get("model") for r in mock("/stats")["reqs"][n0:]]
+    PV = api("/v1/config").get("prices", {}).get("video", {}); P_SWAP, P_MC30 = PV.get("mcswap"), PV.get("mc30")
     # 1) a front / side / back sheet: three people, the AI is sure → refused, nothing charged, nothing sent
     mock("/plan", {"look": {"photo_people": 3, "video_people": 1, "video_person": "clear", "note_en": "", "note_ar": "", "sure": True}})
     c0 = credits(); n0 = len(mock("/stats")["reqs"]); l0 = len(mock("/stats")["llm"]); j = api("/v1/jobs", {**SWAP, "cid": "a1"})
@@ -95,6 +100,22 @@ try:
     mock("/plan", {"look": "down"}); n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "a5"}); d = done(j.get("id", "x")) or {}
     out["down"] = [j.get("_status"), j.get("error"), d.get("status"), tasks(n0)]
     ok(d.get("status") == "done" and tasks(n0) == ["wan/2-2-animate-replace"], f"the text AI is down: the swap goes on {out['down']}")
+    # v104 6) the page asked for 480p (an old page): the engine still gets 720p, the swap's best; the silent result keeps the video's
+    # sound; the price is the full (720p) one
+    mock("/plan", {"look": {"photo_people": 1, "video_people": 1, "video_person": "clear", "sure": True}})
+    c0 = credits(); n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "a6", "inputs": {"mcMove": "/media/talk.mp4", "mcChar": "/media/pic.png"}}); d = done(j.get("id", "x")) or {}
+    req = (mock("/stats")["reqs"][n0:] or [{}])[0].get("body", {}).get("input", {}); f = D + "/media/" + str(d.get("url", "")).split("/media/")[-1]
+    out["best"] = [j.get("_status"), j.get("cost"), c0 - (credits() or 0), req.get("resolution"), d.get("status"), d.get("url"), os.path.exists(f) and has_sound(f)]
+    ok(req.get("resolution") == "720p" and d.get("status") == "done" and P_SWAP and j.get("cost") == round(P_SWAP * 3 / 5) and wait(lambda: c0 - credits() == j.get("cost"), 10), f"the swap always goes at 720p and costs what the page shows {out['best']}")
+    ok(os.path.exists(f) and has_sound(f) and d.get("url", "").endswith("-snd.mp4"), f"the swap keeps the sound of the client's video {out['best']}")
+    # 7) a silent movement video: the result is the engine's own file, nothing added
+    n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "a7"}); d = done(j.get("id", "x")) or {}
+    out["silent"] = [d.get("status"), d.get("url")]
+    ok(d.get("status") == "done" and not d.get("url", "").endswith("-snd.mp4"), f"a silent video: nothing added {out['silent']}")
+    # 8) Make it move (Motion Control) asked at 720p: the engine gets 1080p, priced ×1.5 as the page shows
+    n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "model": "mc30", "cid": "a8", "meta": {**SWAP["meta"], "swap93": False, "res": "720p"}}); d = done(j.get("id", "x")) or {}
+    req = (mock("/stats")["reqs"][n0:] or [{}])[0].get("body", {}); out["moves"] = [j.get("_status"), j.get("error"), j.get("cost"), req.get("model"), (req.get("input") or {}).get("mode"), d.get("status")]
+    ok(req.get("model") == "kling-3.0/motion-control" and (req.get("input") or {}).get("mode") == "1080p" and P_MC30 and j.get("cost") == round(P_MC30 * 3 / 5 * 1.5), f"Make it move always goes at 1080p, priced ×1.5 {out['moves']}")
 finally:
     srv.kill(); mk.kill()
 print(json.dumps({"fails": fails, "out": out}, ensure_ascii=False, indent=1))

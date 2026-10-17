@@ -13196,8 +13196,10 @@ if(PRICE_TABLE.video.mcswap==null)PRICE_TABLE.video.mcswap=83;
 Object.assign(ICONS,{swap93:'<circle cx="7" cy="7" r="2.6"/><path d="M2.5 15.5c0-2.6 2-4.3 4.5-4.3s4.5 1.7 4.5 4.3"/><circle cx="17" cy="12" r="2.6"/><path d="M12.5 20.5c0-2.6 2-4.3 4.5-4.3s4.5 1.7 4.5 4.3"/><path d="M14 4h5v4M19 4l-4 4" opacity=".75"/>'});
 const MB93=300*1024*1024;   // v95: the server makes big phone videos ready for the engine (upright, smaller, under its 10 MB)
 const mcMode93=()=>{const c=MC83();if(c.mode!=="swap"&&c.mode!=="moves")c.mode="swap";return c.mode};
-const mcRes93=c=>{const sw=c.mode==="swap",ok=sw?["480p","720p"]:["720p","1080p"];if(!ok.includes(c.res))c.res="720p";return c.res};
-const mcK93=c=>c.mode==="swap"?(c.res==="480p"?.5:1):(c.res==="1080p"?1.5:1);
+// v104: no Quality choice — always the engine's best (the swap at 720p: at 480p it failed; the moves at 1080p, ×1.5); the server
+// sets the same before pricing, so the price on the button is the charge
+const mcRes93=c=>{c.res=c.mode==="swap"?"720p":"1080p";return c.res};
+const mcK93=c=>c.mode==="swap"?1:1.5;
 const mcModel93=c=>c.mode==="swap"?"mcswap":"mc30";
 // the video's own shape (an upload has its player; a library video is measured once, quietly)
 const mcAspect93=()=>{const m=M.mcMove;if(!m)return"9:16";const v=m.el;let w=(v&&v.videoWidth)||m.vw,h=(v&&v.videoHeight)||m.vh;
@@ -13219,8 +13221,7 @@ VIEWS.motion=()=>{const c=MC83(),mode=mcMode93(),sw=mode==="swap",res=mcRes93(c)
     (big.length?'<p class="small warn83">'+big.map(([n,mb])=>L("The "+n+" is "+mb+" MB — use one under 300 MB (trim it in the editor).","حجم "+n+" "+mb+" ميجابايت — استخدم ملفاً أقل من 300 ميجابايت (قصّه في المحرر).")).join(" ")+"</p>":"")+
     (sw?'<p class="small mute tip93">'+ic("spark","width:14px;height:14px")+L("Best results: one person in the video, the face visible, and a photo with a similar pose and framing.","أفضل نتيجة: شخص واحد في الفيديو، والوجه ظاهر، وصورة بوقفة وكادر قريبين منه.")+"</p>"
       :'<span class="lbl">3 · '+L("Anything to add (optional)","إضافة (اختياري)")+'</span><textarea data-bind="mc83.prompt" dir="auto" style="min-height:64px" placeholder="'+esc(L("e.g. on a sunny street in Riyadh, wearing a white thobe","مثال: في شارع مشمس بالرياض، يرتدي ثوباً أبيض"))+'">'+esc(c.prompt)+"</textarea>")+
-    '<div class="grid2"><div><span class="lbl">'+L("Quality","الجودة")+'</span><div class="seg">'+(sw?["480p","720p"]:["720p","1080p"]).map(r=>'<button data-set="mc83.res" data-val="'+r+'" aria-pressed="'+(res===r)+'">'+r+"</button>").join("")+"</div></div>"+
-    (sw?"":'<div><span class="lbl">'+L("Framing","الكادر")+'</span><div class="seg"><button data-set="mc83.orient" data-val="video" aria-pressed="'+(c.orient==="video")+'">'+L("Like the video","مثل الفيديو")+'</button><button data-set="mc83.orient" data-val="image" aria-pressed="'+(c.orient==="image")+'">'+L("Like the photo","مثل الصورة")+"</button></div></div>")+"</div>"+
+    (sw?"":'<div class="grid2"><div><span class="lbl">'+L("Framing","الكادر")+'</span><div class="seg"><button data-set="mc83.orient" data-val="video" aria-pressed="'+(c.orient==="video")+'">'+L("Like the video","مثل الفيديو")+'</button><button data-set="mc83.orient" data-val="image" aria-pressed="'+(c.orient==="image")+'">'+L("Like the photo","مثل الصورة")+"</button></div></div></div>")+
     '<label class="check83"><input type="checkbox" data-mc83consent="1"'+(c.consent?" checked":"")+"> <span>"+L("I have the right to use this photo and this video, and the people in them agreed.","لدي حق استخدام هذه الصورة وهذا الفيديو، والأشخاص الظاهرون فيهما موافقون.")+"</span></label>"+
     '<div style="margin-top:14px"><button class="btn primary big" data-act="mc-make">'+ic(sw?"swap93":"motion83")+(sw?L("Replace the person","استبدل الشخص"):L("Make it move","حرّكها"))+'<span class="cost">'+cost+" cr"+(d?"":" / 5"+L(" s"," ث"))+"</span></button></div></div>";
   const out=!g?'<div class="preview-col"><div class="panel pad"><div class="stage" style="aspect-ratio:'+mcAspect93().replace(":","/")+';max-height:60vh;margin:0 auto"><div class="empty">'+(sw?L("Your video with the new person appears here.","يظهر فيديوك بالشخص الجديد هنا."):L("The character moves here.","تتحرك الشخصية هنا."))+"</div></div></div></div>":previewCol(g,prev);

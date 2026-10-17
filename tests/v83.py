@@ -105,7 +105,7 @@ async def main():
         r1 = api("/v1/jobs", mc, token=TOKEN); r2 = api("/v1/jobs", {**mc, "meta": {**mc["meta"], "consent": True}, "inputs": {"mcChar": "/media/char.png"}}, token=TOKEN)
         ok(r1.get("_status") == 400 and "right to use" in r1.get("error", "") and r2.get("_status") == 400 and "movement" in r2.get("error", "") and api("/v1/billing", token=TOKEN)["credits"] == c0, f"Motion Control refused before charging: rights {r1} · movement video {r2}")
         j = api("/v1/jobs", {**mc, "meta": {**mc["meta"], "consent": True}}, token=TOKEN); c1 = api("/v1/billing", token=TOKEN)["credits"]
-        price5 = P["video"]["mc26"]; ok(j.get("cost") == round(price5 * 12 / 5) and c1 == c0 - j.get("cost", 0) and j.get("dur") == 12, f"Motion Control priced by the movement video's length (12 s) {j.get('cost')} vs {price5}/5 s")
+        price5 = P["video"]["mc26"]; ok(j.get("cost") == round(price5 * 12 / 5 * 1.5) and c1 == c0 - j.get("cost", 0) and j.get("dur") == 12, f"Motion Control priced by the movement video's length (12 s), always at 1080p (v104) {j.get('cost')} vs {price5}/5 s")
         jd = wait_job(j.get("id", ""), TOKEN); task = next((t for t in stats()["tasks"] if t.get("model") == "kling-2.6/motion-control"), {})
         inp = task.get("input") or {}
         ok(jd.get("status") == "done" and len(inp.get("input_urls") or []) == 1 and inp["input_urls"][0].startswith(f"http://localhost:{PORT}/media/") and inp["input_urls"][0].endswith("-mc.jpg") and inp.get("video_urls") == [f"http://localhost:{PORT}/media/move.mp4"] and inp.get("character_orientation") == "video", f"Motion Control job: the engine gets both files {jd.get('status')} {inp}")
