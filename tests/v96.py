@@ -161,7 +161,7 @@ async def connected(b):
         await E("()=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.user={name:'T',method:'google'};AU.showAuth=false;setUILang('en');document.getElementById('modalRoot').innerHTML='';renderAll()}")
         await E("(v)=>{go(v);renderAll()}", page); await pg.wait_for_timeout(300)
         async def press():
-            for _ in range(80):   # one job at a time on this plan
+            for _ in range(300):   # one job at a time on this plan (a 60 fps job is smoothed on the server first)
                 if not await E("()=>S.jobs.some(j=>['queued','rendering','running','waiting'].includes(j.status))"): break
                 await pg.wait_for_timeout(300)
             n0 = len(stats()["reqs"]); await E(FILL)

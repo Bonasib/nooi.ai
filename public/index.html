@@ -2592,7 +2592,7 @@ document.addEventListener("click",async e=>{
   case"pick-voice":{const v=VOICE_PRESETS.find(x=>x.id===A.id);Object.assign(S.tools.voice,{sel:v.id,dialect:v.dialect,gender:v.gender,age:v.age,tone:v.tone});persist();renderView();break}
   case"hear-voice":{e.stopPropagation();const v=VOICE_PRESETS.find(x=>x.id===A.id);speak(v.dialect.startsWith("en")?"Every prompt is a film. Let's begin.":"كل وصف فيلم. هيا نبدأ الحكاية.",v);break}
   case"voice-preview":{const T=S.tools.voice;speak(T.text||(T.dialect.startsWith("en")?"This is how your voice sounds.":"هكذا يبدو صوتك."),T);break}
-  case"voice-gen":{const T=S.tools.voice;if(!T.text.trim()){toast(L("Write the script first.","اكتب النص أولاً."));break}if(addJob({kind:"voice",prompt:T.text.trim(),title:T.text.trim().slice(0,60),cost:3,secs:4,art:"wave",meta:{dialect:T.dialect,gender:T.gender,age:T.age,tone:T.tone,rate:T.rate}}))renderAll();break}
+  case"voice-gen":{const T=S.tools.voice;if(!T.text.trim()){toast(L("Write the script first.","اكتب النص أولاً."));break}if(addJob({kind:"voice",prompt:T.text.trim(),title:T.text.trim().slice(0,60),cost:3,secs:4,art:"wave",meta:{dialect:T.dialect,gender:T.gender,age:T.age,tone:T.tone,rate:T.rate,preset:T.sel||undefined}}))renderAll();break}
   case"voice-assign":{const T=S.tools.voice,c=charById(T.assign);if(!c){toast(L("Choose a character first.","اختر شخصية أولاً."));break}c.voice={dialect:T.dialect,gender:T.gender,age:T.age,tone:T.tone};persist();toast(L("Voice saved to ","تم حفظ الصوت لـ ")+c.name);break}
   case"lipsync":{const T=S.tools.voice;if(!M.lsV){toast(L("Add a face video or image first.","أضف فيديو أو صورة وجه أولاً."));break}if(!T.lipText.trim()&&!M.lsA){toast(L("Add a script or an audio track.","أضف نصاً أو ملفاً صوتياً."));break}if(addJob({kind:"lipsync",prompt:T.lipText.trim()||M.lsA.name,cost:12,secs:10}))renderAll();break}
   case"music-gen":{const Mu=S.tools.music;if(addJob({kind:"music",prompt:Mu.prompt.trim()||(Mu.genre+" · "+Mu.mood),dur:Mu.dur,cost:4,secs:6,art:"wave"}))renderAll();break}
@@ -13625,6 +13625,56 @@ const dupImg96=()=>!!(IMG_MODELS.nano&&IMG_MODELS.dotimg);
 const tidy96=()=>{if(S.draft){if(S.draft.seed)S.draft.seed="";if(!(+S.draft.fps>30))S.draft.fps=30}if(dupImg96()&&S.img&&S.img.model==="dotimg")S.img.model="nano"};
 tidy96();renderView=(o=>function(){try{tidy96()}catch(e){}return o.apply(this,arguments)})(renderView);
 chips=(o=>function(path,opts,cur,x){if(path==="img.model"&&dupImg96()){opts=opts.filter(v=>(Array.isArray(v)?v[0]:v)!=="dotimg");if(cur==="dotimg")cur="nano"}return o.call(this,path,opts,cur,x)})(chips);
+
+/* ================= v97: EVERY VOICE EXAMPLE PLAYS =================
+   The Voice page's ten example voices ("Hear"), "Preview on device" and a character's "Hear voice" with no voice chosen
+   spoke with the device's built-in speech; most phones and computers have no Arabic voice in it, so nothing was heard and
+   nothing was said. Now "Hear" plays the example made by the voice engine (its own voice and a line in its dialect — the
+   same voice "Generate" then uses), made once on the server and free for everyone; a character with no voice chosen plays
+   the library voice that suits it; one player for every voice example is started inside the tap (iPhone Safari refuses
+   sound started after a wait), a second tap stops it; the device's own speech (no voice engine, "Preview on device") waits
+   for the device's voices and says when there is no voice for that language. The character voices are free to hear too. */
+const H97={a:null,unlocked:false,btn:null,busy:{}};
+const SILENT97="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
+function player97(){if(!H97.a){H97.a=new Audio();H97.a.preload="auto";H97.a.addEventListener("ended",()=>mark97(null))}return H97.a}
+function unlock97(){const a=player97();if(H97.unlocked)return;H97.unlocked=true;try{a.src=SILENT97;const p=a.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}}   // inside the tap
+function mark97(btn){if(H97.btn&&H97.btn!==btn)H97.btn.classList.remove("playing97");H97.btn=btn;if(btn)btn.classList.add("playing97")}
+function stop97(){if(H97.a)try{H97.a.pause()}catch(e){}mark97(null)}
+async function playUrl97(url,btn){const a=player97();try{a.pause()}catch(e){}a.src=url;try{a.currentTime=0}catch(e){}
+  try{await a.play();mark97(btn)}catch(e){mark97(null);toast(L("Your browser blocked the sound — tap again to hear it.","منع المتصفح الصوت — اضغط مرة أخرى لتسمعه."),{type:"info"})}}
+// body: {preset} (a Voice page example) or {id} (a library voice); fallback: the device's speech when there is no voice engine
+async function hear97(body,btn,fallback){const k=JSON.stringify(body);
+  if(btn&&H97.btn===btn&&H97.a&&!H97.a.paused){stop97();return}
+  unlock97();if(H97.busy[k])return;
+  if(API.mode!=="server"){if(fallback)fallback();return}
+  H97.busy[k]=1;if(btn){btn.classList.add("busy97");btn.setAttribute("aria-busy","true")}
+  try{const r=await API.req("/v1/voice/sample",{json:Object.assign({lang:S.lang},body)});await playUrl97(r.url,btn)}
+  catch(e){const m=String((e&&e.message)||e);if(/voice engine/i.test(m)&&fallback)fallback();else toast(/voice engine/i.test(m)?L("Voices aren't connected yet — try again soon.","الأصوات غير متصلة بعد — حاول بعد قليل."):m,{type:"warn"})}
+  finally{delete H97.busy[k];if(btn){btn.classList.remove("busy97");btn.removeAttribute("aria-busy")}}}
+// the Voice page's examples
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="hear-voice"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
+  const v=VOICE_PRESETS.find(x=>x.id===a.dataset.id);if(!v)return;
+  hear97({preset:v.id},a,()=>speak(v.dialect.startsWith("en")?"Every prompt is a film. Let's begin.":"كل وصف فيلم. هيا نبدأ الحكاية.",v))},true);
+// character voices: one player, and nothing to pay to hear them
+vp91Play=async function(id,btn){const v=vp91List().find(x=>x.id===id);if(!v||VP91.busy[id])return;
+  if(API.mode!=="server"){toast(L("Voices play on the live site.","تعمل الأصوات في الموقع."),{type:"info"});return}
+  unlock97();VP91.busy[id]=1;vp91Paint();try{await hear97({id},null,null);v.sample="ready"}finally{delete VP91.busy[id];vp91Paint()}};
+// "Hear voice" on a character with no voice chosen: the library voice that suits it (a chosen voice: v91; a cloned voice: as before)
+const autoVoice97=c=>{const g=(c.voice&&c.voice.gender)||c.gender,n=+c.age,age=n>=55?"old":n&&n<30?"young":"middle",all=vp91List(),same=all.filter(v=>v.gender===g);
+  return same.find(v=>v.age===age)||same[0]||all.find(v=>v.gender==="neutral")||all[0]};
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="speak-char"]');if(!a)return;const c=S.chars&&S.chars[S.charSel];
+  if(!c||API.mode!=="server"||(c.voice&&(c.voice.vid||c.voice.clone)))return;e.stopImmediatePropagation();const v=autoVoice97(c);if(v)vp91Play(v.id,a)},true);
+// the device's own speech: wait for its voices, and say so when it has none for the language (it stayed silent)
+let speak97w=false;
+speak=(o=>function(text,spec){if(!("speechSynthesis" in window)||!text||!String(text).trim())return o.apply(this,arguments);
+  const vs=speechSynthesis.getVoices();
+  if(!vs.length&&!speak97w){speak97w=true;let done=false;const go=()=>{if(done)return;done=true;try{speechSynthesis.removeEventListener("voiceschanged",go)}catch(e){}speak(text,spec)};
+    try{speechSynthesis.addEventListener("voiceschanged",go)}catch(e){}setTimeout(go,1500);return}
+  const dl=DIALECTS.find(d=>d[0]===(spec&&spec.dialect))||DIALECTS[0],pre=String(ttsLang(text,dl[3])||"").slice(0,2).toLowerCase();
+  if(!vs.some(v=>String(v.lang||"").toLowerCase().replace("_","-").startsWith(pre))){const en=pre==="ar"?"Arabic ":pre==="en"?"English ":"",ar=pre==="ar"?" عربي":pre==="en"?" إنجليزي":"";
+    toast(L("This device has no "+en+"voice to read it aloud."+(API.mode==="server"?" Tap the speaker on a voice in the library to hear the real voice.":""),"لا يوجد على هذا الجهاز صوت"+ar+" لقراءته."+(API.mode==="server"?" اضغط السمّاعة على صوت في المكتبة لتسمع الصوت الحقيقي.":"")),{type:"info",ms:5000});return}
+  return o.apply(this,arguments)})(speak);
+(()=>{const st=document.createElement("style");st.textContent=`.busy97{opacity:.55;cursor:progress}.playing97{color:var(--accent)!important;border-color:var(--accent)!important}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

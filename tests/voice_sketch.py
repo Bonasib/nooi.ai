@@ -147,7 +147,7 @@ async def main():
 if __name__ == "__main__":
     mk = subprocess.Popen(["node", D + "/mock.js", str(LPORT), D], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     env = {k: v for k, v in os.environ.items() if not k.startswith(("LLM_", "ANTHROPIC_", "NVIDIA_", "ELEVENLABS_", "OPENAI_", "CAMB_", "NV_LOCALIZE", "WAN_", "KIE_", "FAL_", "REALTIME_"))}
-    srv = subprocess.Popen(["node", ROOT + "/server.js"], cwd=D, env=dict(env, PORT=str(PORT), SECRET_KEY="a" * 40, FIREBASE_PROJECT_ID="", PUBLIC_BASE_URL=f"http://localhost:{PORT}", AGENTS_AUTO_LEARN="false", MIRROR_MEDIA="false",
+    srv = subprocess.Popen(["node", ROOT + "/server.js"], cwd=D, env=dict(env, PORT=str(PORT), SECRET_KEY="a" * 40, FIREBASE_PROJECT_ID="", PUBLIC_BASE_URL=f"http://localhost:{PORT}", AGENTS_AUTO_LEARN="false", MIRROR_MEDIA="false", FREE_PERIOD="false",
         LLM_API_KEY="mock", LLM_BASE_URL=M, LLM_MODEL="mock-text", ELEVENLABS_API_KEY="el-test", ELEVENLABS_BASE_URL=M + "/el", FAL_KEY="fal-test", FAL_BASE_URL=M + "/fal", REALTIME_FRAMES_PER_CREDIT="2"), stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     try:
         for _ in range(80):

@@ -13,7 +13,7 @@
 #  · AI agents: nine, in the order the work runs — Lyra, the new Dialogue & Voice Director (her own microphone icon and
 #    colour), and Echo, now the Sound Designer (realistic sound); names and roles in other languages; the landing page says
 #    nine; the film crew runs Lyra's stage (one voice per speaker, lines with feelings) and Echo writes no spoken lines
-#  · Character voices: the voice library with samples (free when the engine has one, otherwise made once for 1 credit and
+#  · Character voices: the voice library with samples (free when the engine has one, otherwise made once — free since v97 — and
 #    free after), a picker on each character (women's voices for a woman, all on request), the chosen voice used by the
 #    Voice studio and the film crew
 #  · 3D World: with the picture engine connected Realistic is the default and its price is on Create; Realistic asks for the
@@ -194,7 +194,7 @@ async def voices(b):
     tag = "voices"; ctx, pg, errs = await page(b, 390); E = pg.evaluate
     api = lambda path, body=None: E("(a)=>API.req(a[0],a[1]?{json:a[1]}:undefined).catch(e=>({err:String(e.message||e)}))", [path, body])
     g = await api("/v1/voice/natural?lang=en"); vs = {v["name"]: v for v in g.get("voices", [])}
-    ok(len(vs) == 20 and vs["Sarah"]["sample"] == "free" and vs["George"]["sample"] == "paid", f"{tag}: the library with free / paid samples {[(k, v['sample']) for k, v in vs.items()][:4]}")
+    ok(len(vs) == 20 and vs["Sarah"]["sample"] == "free" and vs["George"]["sample"] == "make", f"{tag}: the library with samples, all free (v97: made once, kept for everyone) {[(k, v['sample']) for k, v in vs.items()][:4]}")
     s1 = await api("/v1/voice/sample", {"id": "EXAVITQu4vr4xnSDxMaL", "lang": "en"}); ok(s1.get("cost") == 0 and "/media/vs-" in s1.get("url", "") and ST["prev"] == 1, f"{tag}: the engine's own sample, free {s1}")
     s2 = await api("/v1/voice/sample", {"id": "JBFqnCBsd6RMkjVDRZzb", "lang": "ar"}); s3 = await api("/v1/voice/sample", {"id": "JBFqnCBsd6RMkjVDRZzb", "lang": "ar"})
     ok(s2.get("url") and len(ST["tts"]) == 1 and "George" in ST["tts"][0][1] and s3.get("cost") == 0 and len(ST["tts"]) == 1, f"{tag}: a sample is spoken once in that voice, then kept for everyone {s2} {s3} {ST['tts']}")
@@ -206,7 +206,7 @@ async def voices(b):
     el = await pg.query_selector('.vp91pick[data-id="XrExE9yKIg1WjnnlVkGX"]'); await el.scroll_into_view_if_needed(); await el.tap(); await pg.wait_for_timeout(300)
     ok(await E("()=>S.chars[0].voice.vid") == "XrExE9yKIg1WjnnlVkGX" and await E("()=>document.querySelector('.vp91').closest('details').open"), f"{tag}: Matilda picked for Sara; the Voice section stays open")
     el = await pg.query_selector('.vp91play[data-id="EXAVITQu4vr4xnSDxMaL"]'); await el.scroll_into_view_if_needed(); await el.tap(); await pg.wait_for_timeout(800)
-    ok(await E("()=>!!VP91.audio&&/vs-/.test(VP91.audio.src)"), f"{tag}: hear a voice before choosing it")
+    ok(await E("()=>!!H97.a&&/vs-/.test(H97.a.src)"), f"{tag}: hear a voice before choosing it")
     await E("()=>{ndState().text='Sara: Did you see the sunrise?\\nOmar: Every day.';ndState().pick={};go('voice');renderAll()}"); await pg.wait_for_timeout(800)
     ok(await E("()=>ndState().pick.Sara") == "XrExE9yKIg1WjnnlVkGX", f"{tag}: the Voice studio gives Sara her voice")
     r = await E("""()=>{const ctx={brief:{lang:'en',seconds:20,idea:'x'},out:{writer:{characters:[{name:'Sara'},{name:'Omar'}],scenes:[]},casting:{characters:[{name:'Sara',gender:'female',age:28},{name:'Omar',gender:'male',age:30}]},director:{shots:[{id:'S1-1'}]}}};

@@ -14,6 +14,7 @@
 // "nano-banana-pro", "veo3_fast", "suno:V5"…). Field names differ per model family; the common ones are mapped
 // below and the admin can add/override any input field per model id (Admin → AI providers → Kie AI → Extra inputs).
 import { cfg, configured } from "../lib/settings.js";
+import { presetVoiceId } from "../lib/voicepresets.js";   // v97: the Voice page example you heard = the voice you get
 
 const VEO = new Set(["veo3", "veo3_fast", "veo3_lite"]);
 const VEO_RATIOS = new Set(["16:9", "9:16"]);
@@ -55,10 +56,11 @@ const EL_IDS = { rachel: "21m00Tcm4TlvDq8ikWAM", aria: "9BWtsMINqrJLrRacOk9x", r
   alice: "Xb7hH8MSUJpSbSDYk0k2", matilda: "XrExE9yKIg1WjnnlVkGX", will: "bIHbv24MWmeRgasZH58o", jessica: "cgSgspJ2msm6clMCkdW9", eric: "cjVigY5qzO86Huf0OWal", chris: "iP95p4xoKVk53GoZ742B",
   brian: "nPczCjzI2devNBz1zQrb", daniel: "onwK4e9ZLuTAKqWW03F9", lily: "pFZP5JQG7iQjIQuC4Bku", bill: "pqHfZKP75CvOlQylNhV4", adam: "pNInz6obpgDQGcFmaJgB", james: KIE_VOICE_DEFAULT };
 export const elVoiceId = (v) => { const s = String(v || "").trim(); return /^[A-Za-z0-9]{18,}$/.test(s) ? s : EL_IDS[s.toLowerCase()] || null; };
-const ttsVoice = (p) => elVoiceId(p.meta?.voiceId) || elVoiceId(p.meta?.age === "child" ? ELEVEN_VOICE[p.meta?.gender === "male" ? "boy" : "girl"] : ELEVEN_VOICE[p.meta?.gender]) || elVoiceId("Sarah");
+const ttsVoice = (p) => elVoiceId(p.meta?.voiceId) || presetVoiceId(p.meta) || elVoiceId(p.meta?.age === "child" ? ELEVEN_VOICE[p.meta?.gender === "male" ? "boy" : "girl"] : ELEVEN_VOICE[p.meta?.gender]) || elVoiceId("Sarah");
 // v96: the Voice page's Tone and Speed reach the voice: tone → how steady / expressive (ElevenLabs stability · style), speed
 // 0.7–1.2. If the engine refuses these settings, the same voice is asked for again without them (see submit).
-const TONE_FEEL = { warm: [.46, .3], deep: [.6, .15], energetic: [.32, .55], calm: [.62, .1], whisper: [.5, .4], narrator: [.66, .18], dramatic: [.3, .6] };
+const TONE_FEEL = { warm: [.46, .3], deep: [.6, .15], energetic: [.32, .55], calm: [.62, .1], whisper: [.5, .4], narrator: [.66, .18], dramatic: [.3, .6],
+  excited: [.32, .55], serious: [.66, .18], sad: [.55, .35], angry: [.3, .6], funny: [.36, .5] };   // (the second line: lib/voice.js DELIVERY feelings)
 export function ttsFeel(p) {
   if (p.meta?.plain96) return {};
   const f = TONE_FEEL[p.meta?.tone], r = +p.meta?.rate, sp = Number.isFinite(r) && r > 0 && Math.abs(r - 1) > .01 ? Math.round(clamp(r, .7, 1.2) * 100) / 100 : undefined;
