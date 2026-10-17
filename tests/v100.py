@@ -8,6 +8,9 @@
 # v101 (same run, with the Admin defaults the quick-start card saves — kling-3.0/video, nano-banana-pro):
 #  · Character Swap goes to its own engine (it went to Kling 3.0 text/picture-to-video: "prompt is required"), Wan 3.0 too
 #  · nooi Auto still uses the Admin default
+# v102 (same run): Character Swap whose engine fails on its own side ("internal error", 500) after taking the job
+#  · once: it is asked once more and the swap is made (two tasks, one charge)
+#  · every time: a clear line (an error on the engine's side, try again, a whole-body photo works best), nothing charged
 # Run: python3 tests/v100.py
 import hashlib, json, os, subprocess, sys, tempfile, time, urllib.request
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); PORT, KPORT = 8296, 8297
@@ -25,10 +28,11 @@ http.createServer((q,s)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{const u=
  if(u.pathname==='/stats'){s.setHeader('content-type','application/json');return s.end(JSON.stringify(st))}
  if(/^\/(pic\.png|vid\.mp4)$/.test(u.pathname)){s.setHeader('content-type',u.pathname.endsWith('png')?'image/png':'video/mp4');return s.end(fs.readFileSync(path.join(DIR,u.pathname)))}
  if(u.pathname==='/api/v1/chat/credit')return send(500);
+ if(u.pathname==='/swapplan'){st.swap=JSON.parse(b||'[]');return send(1)}   // outcomes for the next Character Swap tasks: "fail" / "ok"
  if(q.method==='POST'&&/^\/api\/v1\//.test(u.pathname)){let j={};try{j=JSON.parse(b||'{}')}catch{}st.reqs.push({path:u.pathname,body:j});
    if(!String((j.input||{}).prompt||'').trim()&&!/elevenlabs|topaz|recraft|animate/.test(j.model||''))return send(null,422,'prompt is required');   // like Kling 3.0
-   const id='t'+(++n);T[id]=j;return send({taskId:id})}
- if(/record-?[iI]nfo/.test(u.pathname)){const j=T[u.searchParams.get('taskId')]||{};const f=/video|kling|seedance|wan/.test(JSON.stringify(j).slice(0,300))?'vid.mp4':'pic.png';
+   const id='t'+(++n);T[id]=j;if(/animate-replace/.test(j.model||''))j._out=(st.swap||[]).shift()||'ok';return send({taskId:id})}
+ if(/record-?[iI]nfo/.test(u.pathname)){const j=T[u.searchParams.get('taskId')]||{};if(j._out==='fail')return send({state:'fail',failMsg:'internal error',failCode:'500'});const f=/video|kling|seedance|wan/.test(JSON.stringify(j).slice(0,300))?'vid.mp4':'pic.png';
    const url='http://localhost:'+P+'/'+f;return send({state:'success',successFlag:1,response:{resultUrls:[url]},resultJson:JSON.stringify({resultUrls:[url]})})}
  s.statusCode=404;s.end('{}')})}).listen(P);
 """
@@ -59,7 +63,7 @@ def sent(n0): return [r["body"] for r in stats()["reqs"][n0:]]
 mk = subprocess.Popen(["node", D + "/mock.js", str(KPORT), D], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 env = {k: v for k, v in os.environ.items() if not k.startswith(("LLM_", "ANTHROPIC_", "NVIDIA_", "ELEVENLABS_", "OPENAI_", "KIE_", "FAL_", "GOOGLE_", "DASHSCOPE_", "FIREBASE_"))}
 srv = subprocess.Popen(["node", ROOT + "/server.js"], cwd=D, env=dict(env, PORT=str(PORT), SECRET_KEY="v" * 40, FIREBASE_PROJECT_ID="", PUBLIC_BASE_URL=f"http://localhost:{PORT}",
-    AGENTS_AUTO_LEARN="false", KIE_API_KEY="kk", KIE_BASE_URL=f"http://localhost:{KPORT}", KIE_VIDEO_MODEL="kling-3.0/video", KIE_IMAGE_MODEL="nano-banana-pro", MIRROR_MEDIA="false", FREE_PERIOD="false"), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    AGENTS_AUTO_LEARN="false", KIE_API_KEY="kk", KIE_BASE_URL=f"http://localhost:{KPORT}", KIE_VIDEO_MODEL="kling-3.0/video", KIE_IMAGE_MODEL="nano-banana-pro", MC_AGAIN_MS="400", MIRROR_MEDIA="false", FREE_PERIOD="false"), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 try:
     wait(lambda: urllib.request.urlopen(f"http://localhost:{PORT}/v1/config", timeout=2), 30)
     # 1) Kling 3.0 from a picture, nothing typed
@@ -97,6 +101,19 @@ try:
         n0 = len(stats()["reqs"]); j = api("/v1/jobs", {"kind": "video", "model": m, "prompt": "A boat at sea", "dur": 5, "aspect": "16:9", "meta": {}})
         d = done(j.get("id", "x")) or {}; models = [b.get("model") for b in sent(n0)]; out["route_" + m] = [d.get("status"), models]
         ok(d.get("status") == "done" and models and models[0] == want, f"{m} → {want} {out['route_' + m]}")
+    # 8) v102: the swap engine fails on its side once → asked once more → made
+    SWAP = {"kind": "video", "model": "mcswap", "prompt": "", "dur": 5, "aspect": "9:16", "inputs": {"mcMove": "/media/move.mp4", "mcChar": "/media/pic.png"}, "meta": {"motion83": True, "swap93": True, "consent": True, "res": "480p"}}
+    def plan(o): urllib.request.urlopen(urllib.request.Request(f"http://localhost:{KPORT}/swapplan", data=json.dumps(o).encode(), method="POST"))
+    plan(["fail", "ok"]); c0 = api("/v1/billing").get("credits"); n0 = len(stats()["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "sw-once"})
+    d = done(j.get("id", "x"), 90) or {}; tasks = [b.get("model") for b in sent(n0)]; c1 = api("/v1/billing").get("credits")
+    out["swapOnce"] = [d.get("status"), d.get("error"), tasks, c0, c1, j.get("cost")]
+    ok(d.get("status") == "done" and tasks.count("wan/2-2-animate-replace") == 2 and c0 - c1 == (j.get("cost") or 0) > 0, f"the swap engine failed once on its side: asked once more, made, charged once {out['swapOnce']}")
+    # 9) …fails every time → a clear line, nothing charged
+    plan(["fail", "fail"]); c0 = api("/v1/billing").get("credits"); n0 = len(stats()["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "sw-never"})
+    d = done(j.get("id", "x"), 90) or {}; tasks = [b.get("model") for b in sent(n0)]; c1 = wait(lambda: (lambda c: c if c == c0 else None)(api("/v1/billing").get("credits")), 10)
+    out["swapNever"] = [d.get("status"), d.get("error"), tasks, c0, c1]
+    ok(d.get("status") == "failed" and tasks.count("wan/2-2-animate-replace") == 2 and "an error on its side" in str(d.get("error")) and "whole person" in str(d.get("error")) and c1 == c0,
+       f"the swap engine fails every time: a clear line, nothing charged {out['swapNever']}")
 finally:
     srv.kill(); mk.kill()
 print(json.dumps({"fails": fails, "out": out}, ensure_ascii=False, indent=1))

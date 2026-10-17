@@ -3856,7 +3856,8 @@ document.addEventListener("pointerup",()=>{scrub=null});
 let notifyReady=false;setTimeout(()=>{S.jobs.forEach(j=>{if(j.status==="complete")j._n=1});S.story.chapters.forEach(c=>{if(c.status==="complete")c._n=1});notifyReady=true},1500);
 const _sc=statusChanged;statusChanged=function(){_sc();if(!notifyReady)return;const done=S.jobs.filter(j=>j.status==="complete"&&!j._n&&j.kind!=="export");const ch=S.story.chapters.filter(c=>c.status==="complete"&&!c._n);done.forEach(j=>j._n=1);ch.forEach(c=>c._n=1);
   const failed=S.jobs.filter(j=>j.status==="failed"&&!j._n);failed.forEach(j=>j._n=1);
-  if(failed.length)toast("✗ "+(failed[0].title||failed[0].prompt||"").slice(0,40)+" — "+String(failed[0].error||L("failed","فشل")).slice(0,80));
+  // (v102: the reason in the reader's language, and the owner's "Details" with the engine's own words)
+  if(failed.length)toast("✗ "+(failed[0].title||failed[0].prompt||"").slice(0,40)+" — "+String((typeof errText81==="function"?errText81(failed[0]):failed[0].error)||L("failed","فشل")).slice(0,200),{type:"warn",detail:failed[0].detail||""});
   else if(done.length+ch.length){const t=done[0]?(done[0].title||done[0].prompt):ch[0].title;toast("✓ "+L("Ready: ","جاهز: ")+String(t).slice(0,48)+(done.length+ch.length>1?" (+"+(done.length+ch.length-1)+")":""))}
   if(!crFree()&&S.credits<200&&!S._lowWarn){S._lowWarn=1;setTimeout(()=>toast(L("Credits are running low — top up from Account.","الرصيد قارب على النفاد — اشحنه من صفحة الحساب.")),2900)}};
 /* 4) Account: clear saved media on this device */
@@ -13957,6 +13958,15 @@ edxDrawLayers=(o=>function(ctx,W,H,t){const held=[];
   (S.ed.layers||[]).forEach(Ly=>{const m=M["ly_"+Ly.id];if(!m||m.type!=="video"||!m.el||m.el.error||t<Ly.start||t>Ly.end)return;const v=m.el;
     if(v.readyState>=2&&v.videoWidth>0){m._w99=0;keep99(m)}else if(m._k){const now=performance.now();m._w99=m._w99||now;if(now-m._w99<HOLD99){held.push([m,v]);m.el=m._k;m.type="image"}}});
   try{return o(ctx,W,H,t)}finally{held.forEach(([m,v])=>{m.el=v;m.type="video"})}})(edxDrawLayers);
+
+/* ================= v102: MOTION CONTROL / CHARACTER SWAP — ASKED ONCE MORE, THEN A CLEAR LINE =================
+   The server asks the engine once more when it fails on its own side (lib/jobs.js); if it still fails, the line says so,
+   in the reader's language. */
+Object.assign(SRVTX81,{
+  "The engine couldn't finish this swap — an error on its side. Nothing was charged. Try again in a few minutes; a photo that shows the whole person, standing like the person in the video, works best.":
+    "تعذّر على المحرّك إكمال الاستبدال — خطأ من جهته. لم يُخصم شيء. حاول بعد دقائق؛ أفضل النتائج مع صورة تُظهر الشخص كاملاً، واقفاً مثل الشخص في الفيديو.",
+  "The engine couldn't finish this — an error on its side. Nothing was charged. Try again in a few minutes; a photo that shows the whole character, standing like the person in the video, works best.":
+    "تعذّر على المحرّك إكمال هذا — خطأ من جهته. لم يُخصم شيء. حاول بعد دقائق؛ أفضل النتائج مع صورة تُظهر الشخصية كاملة، واقفة مثل الشخص في الفيديو."});
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

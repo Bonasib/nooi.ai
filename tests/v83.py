@@ -92,7 +92,7 @@ async def main():
     mk = subprocess.Popen(["node", D + "/mock.js", str(KPORT)], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     env = {k: v for k, v in os.environ.items() if not k.startswith(("LLM_", "ANTHROPIC_", "NVIDIA_", "ELEVENLABS_", "OPENAI_", "KIE_", "FAL_", "REALTIME_", "DEPTH_"))}
     srv = subprocess.Popen(["node", ROOT + "/server.js"], cwd=D, env=dict(env, PORT=str(PORT), SECRET_KEY="v" * 40, FIREBASE_PROJECT_ID="", PUBLIC_BASE_URL=f"http://localhost:{PORT}", AGENTS_AUTO_LEARN="false",
-        KIE_API_KEY="kk", KIE_BASE_URL=f"http://localhost:{KPORT}", MIRROR_MEDIA="false", FREE_PERIOD="false"), stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        KIE_API_KEY="kk", KIE_BASE_URL=f"http://localhost:{KPORT}", MC_AGAIN_MS="400", MIRROR_MEDIA="false", FREE_PERIOD="false"), stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     try:
         for _ in range(60):
             try: urllib.request.urlopen(f"http://localhost:{PORT}/v1/config", timeout=2); break
@@ -115,7 +115,9 @@ async def main():
         j2 = api("/v1/jobs", {**mc, "dur": 5, "prompt": "FAILME", "meta": {**mc["meta"], "consent": True, "res": "1080p"}}, token=TOKEN)
         ok(j2.get("cost") == round(price5 * 1.5), f"Motion Control 1080p ×1.5 {j2.get('cost')}")
         n0 = len(stats()["tasks"]); jf = wait_job(j2.get("id", ""), TOKEN); time.sleep(1)
-        ok(jf.get("status") == "failed" and len(stats()["tasks"]) == nb + 1 and api("/v1/billing", token=TOKEN)["credits"] == c1, f"Motion Control failure: no other model tried, credits back {jf.get('status')} {len(stats()['tasks'])}/{nb + 1}")
+        # (v102: the same engine is asked once more when it fails on its own side — never another model)
+        mt = [t.get("model") for t in stats()["tasks"][nb:]]
+        ok(jf.get("status") == "failed" and mt == ["kling-2.6/motion-control"] * 2 and api("/v1/billing", token=TOKEN)["credits"] == c1, f"Motion Control failure: asked once more on the same engine, no other model tried, credits back {jf.get('status')} {mt}")
         # Grok Imagine 1.5 starts from a picture
         g = api("/v1/jobs", {"kind": "video", "model": "grok15", "prompt": "a cat", "dur": 6}, token=TOKEN)
         ok(g.get("_status") == 400 and "picture" in g.get("error", ""), f"Grok Imagine 1.5 needs a picture {g}")
