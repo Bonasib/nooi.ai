@@ -147,7 +147,7 @@ async def ui(p, w, lang):
     r["gender"] = (g[-1].get("meta") or {}).get("gender") if g else r["gender"]
     ok(r["gender"] == "male", f"{tag}: a ready avatar's gender goes with the job {r['gender']}")
     # ---- something being made: calm colours + the stars only (v89: no percent, no time), honest steps, no pause button, no long caption
-    await E(JOBS, P); await E("()=>{go('video');renderAll()}"); await pg.wait_for_timeout(900)
+    await E(JOBS, P); await E("()=>{go('video');S.lastVideo='rv1';if(typeof ST98==='function')ST98().lb='video';renderAll()}"); await pg.wait_for_timeout(900)   # (v98: the stage opens over the gallery)
     r["stage"] = await E("""()=>{const s=document.querySelector('.preview-col .stage');const v=s&&s.querySelector('.sveil81'),cap=s&&s.querySelector('.cap');
       const cv=s&&s.querySelector('canvas.frame.live');let blocky=null;if(cv&&cv.width>40){const x=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data,W=cv.width;let jumps=0,n=0;
         for(let y=8;y<cv.height-8;y+=7)for(let i=8;i<W-9;i++){const a=(y*W+i)*4,b=a+4;const d=Math.abs(x[a]-x[b])+Math.abs(x[a+1]-x[b+1])+Math.abs(x[a+2]-x[b+2]);if(d>24)jumps++;n++}blocky=jumps/n}

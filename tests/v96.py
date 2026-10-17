@@ -142,7 +142,9 @@ APPLY = r"""([k,c])=>{const m=document.querySelector('#main');
   if(c.kind==='toggle'){m.querySelector('[data-toggle="'+k+'"]').click();return 'toggled'}
   const e=m.querySelector('[data-bind="'+k+'"]');if(!e)return null;let v;
   if(c.kind==='select'){v=c.opts.find(o=>o!==c.cur);if(v==null)return null;e.value=v}
-  else if(c.kind==='num'){const mn=+(c.min||0),mx=+(c.max||100),cur=+c.cur;v=String(cur===mx?mn:Math.min(mx,cur+Math.max(+(c.step||1),(mx-mn)/4)));e.value=v}
+  else if(c.kind==='num'){const mn=+(c.min||0),mx=+(c.max||100),cur=+c.cur;v=String(cur===mx?mn:Math.min(mx,cur+Math.max(+(c.step||1),(mx-mn)/4)));
+    if(k==='draft.dur')v=String(cur>=10?cur-2:cur+2);   // a length the engine makes in one clip (a longer video is made in parts, the first part looks like the base)
+    e.value=v}
   else if(c.kind==='check'){e.checked=!e.checked;v=String(e.checked)}
   else{v=(e.value||'')+' ZETA-WORD';e.value=v}
   e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));return v}"""

@@ -241,7 +241,9 @@ async def world(b):
 
 CARDS = """()=>{const vis=e=>{const r=e.getBoundingClientRect();if(r.width<2||r.height<2)return false;const c=getComputedStyle(e);return c.visibility!=='hidden'&&c.display!=='none'&&+c.opacity>0.05};
  const bs=[...document.querySelectorAll('#main button,#main a.btn,#main [role=button]')].filter(vis),over=[];
- for(let i=0;i<bs.length;i++)for(let j=i+1;j<bs.length;j++){const a=bs[i],b=bs[j];if(a.contains(b)||b.contains(a))continue;const A=a.getBoundingClientRect(),B=b.getBoundingClientRect();
+ // (v98: the docked prompt bar floats over the gallery on purpose; a chip in the bar's sideways-scrolling row counts only where it can be seen)
+ const rc=e=>{const r=e.getBoundingClientRect(),sc=e.closest('.cz98b .opt93');if(!sc)return r;const c=sc.getBoundingClientRect();return {left:Math.max(r.left,c.left),right:Math.min(r.right,c.right),top:Math.max(r.top,c.top),bottom:Math.min(r.bottom,c.bottom)}};
+ for(let i=0;i<bs.length;i++)for(let j=i+1;j<bs.length;j++){const a=bs[i],b=bs[j];if(a.contains(b)||b.contains(a))continue;if(!!a.closest('.dock98')!==!!b.closest('.dock98'))continue;const A=rc(a),B=rc(b);
   const w=Math.min(A.right,B.right)-Math.max(A.left,B.left),h=Math.min(A.bottom,B.bottom)-Math.max(A.top,B.top);if(w>3&&h>3)over.push([(a.getAttribute('aria-label')||a.textContent||'').trim().slice(0,20),(b.getAttribute('aria-label')||b.textContent||'').trim().slice(0,20)])}
  const big=[...document.querySelectorAll('#main video')].filter(vis).map(v=>{const r=v.getBoundingClientRect();let x=v.parentElement;while(x&&getComputedStyle(x).overflow==='visible'&&x!==document.body)x=x.parentElement;const bb=x.getBoundingClientRect();
   return {w:Math.round(r.width),h:Math.round(r.height),boxW:Math.round(bb.width),boxH:Math.round(bb.height),fit:getComputedStyle(v).objectFit,cls:v.parentElement.className.slice(0,20)}}).filter(o=>o.w>o.boxW+2||o.h>o.boxH+2||(/thumb|hfrm/.test(o.cls)&&o.fit!=='contain'));

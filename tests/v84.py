@@ -78,7 +78,7 @@ async def main():
                             ok(g["cols"] == 2 and g["done"] and g["wide"] <= 1, f"ar phone: the lens sheet has two tiles per row and Done in view {g}")
                     await pg.evaluate("()=>{document.getElementById('modalRoot').innerHTML=''}")
                 if mob:
-                    fit = await pg.evaluate("()=>({wide:document.documentElement.scrollWidth-innerWidth,out:[...document.querySelectorAll('#main .pk84c')].filter(c=>{const r=c.getBoundingClientRect();return r.width&&(r.left<-1||r.right>innerWidth+1)}).length})")
+                    fit = await pg.evaluate("()=>({wide:document.documentElement.scrollWidth-innerWidth,out:[...document.querySelectorAll('#main .pk84c')].filter(c=>{if(c.closest('.cz98b .opt93'))return false;const r=c.getBoundingClientRect();return r.width&&(r.left<-1||r.right>innerWidth+1)}).length})")   # (v98: the prompt bar's chip row scrolls sideways; the page itself must not)
                     ok(fit["wide"] <= 1 and not fit["out"], f"ar phone {page}: the chips fit {fit}")
             ok(not nodesc, f"{lang}: tiles without a description {nodesc}")
             vals = {v for v in oneSheet.values()}

@@ -90,7 +90,8 @@ JS_MEASURE = r"""()=>{
   const own=((hid(cs.overflowY)&&e.scrollHeight>e.clientHeight+2)||(hid(cs.overflowX)&&e.scrollWidth>e.clientWidth+2));
   const rg=document.createRange();rg.selectNodeContents(e);const tr=rg.getBoundingClientRect(),r=e.getBoundingClientRect();
   // ink extends past an ancestor that clips it
-  let anc=null,p=e.parentElement;while(p&&p!==document.body){const c=getComputedStyle(p);if(hid(c.overflowY)||hid(c.overflowX)){const q=p.getBoundingClientRect();if((hid(c.overflowY)&&(tr.top<q.top-2||tr.bottom>q.bottom+2))||(hid(c.overflowX)&&(tr.left<q.left-2||tr.right>q.right+2))){anc=p;break}}p=p.parentElement}
+  // (v98: a sideways scroller — the prompt bar's chips — keeps what's past its edge one swipe away: not cut off)
+  let anc=null,p=e.parentElement;while(p&&p!==document.body){const c=getComputedStyle(p);if(['auto','scroll'].includes(c.overflowX))break;if(hid(c.overflowY)||hid(c.overflowX)){const q=p.getBoundingClientRect();if((hid(c.overflowY)&&(tr.top<q.top-2||tr.bottom>q.bottom+2))||(hid(c.overflowX)&&(tr.left<q.left-2||tr.right>q.right+2))){anc=p;break}}p=p.parentElement}
   if(own||anc)clipped.push(lab(e)+(anc?' in '+lab(anc):'')+(own?' (own box)':''))}
  return {overlap:[...new Set(overlap)].slice(0,10),clipped:[...new Set(clipped)].slice(0,10)}}"""
 

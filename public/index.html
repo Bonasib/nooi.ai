@@ -13676,6 +13676,258 @@ speak=(o=>function(text,spec){if(!("speechSynthesis" in window)||!text||!String(
   return o.apply(this,arguments)})(speak);
 (()=>{const st=document.createElement("style");st.textContent=`.busy97{opacity:.55;cursor:progress}.playing97{color:var(--accent)!important;border-color:var(--accent)!important}`;document.head.appendChild(st)})();
 
+/* ================= v98: A NEW LOOK, PAGE BY PAGE — one header, and create pages that are a gallery with a prompt bar =================
+   The owner asked to rebuild the interface page by page the way Higgsfield organises its site (the structure only — every
+   drawing, word and line of code here is nooi's own). Page 1 of the rebuild:
+   · dark first: a visitor still on the automatic theme gets the dark one (the sun/moon button switches, and stays)
+   · one header on every screen: on a computer the logo (Home), the sections — Explore · Image · Video · Audio · Characters ·
+     3D · Edit · Publish · All tools — then search, credits, gifts, language, theme, My library and the account; the side
+     menu is gone. Phones keep their top bar and the bar at the bottom.
+   · a create page is the gallery of what you made with it, and one prompt bar docked at the bottom: add frames / a picture,
+     the words, the helpers (Enhance, a hook, random), the character, a row of option chips (each opens its choices just above
+     the bar, one at a time) and Generate with its price. A result opens large with everything you can do with it.
+   · Video (nooi Studio) and Images are the first pages in this layout; the others follow.
+   The pages' own fields, buttons and handlers are moved, not rewritten, so every choice still reaches the engine (v96). */
+// ---- dark first (once: someone who picks light later keeps it)
+if(!S.dark98){S.dark98=1;if(S.theme==="auto"){S.theme="dark";try{applyTheme()}catch(e){}}persist()}
+// ---- the header: the top bar on every screen, with the sections on a computer
+const HNAV98=["explore","image","video","audio","chars","world","edit","calendar","apps"];
+function hnav98(){const h=hubOf(S.view),cur=h?h[0]:S.view;
+  return'<nav class="hnav98" aria-label="'+esc(L("Sections","الأقسام"))+'">'+HNAV98.map(id=>HUBS.find(x=>x[0]===id)).filter(x=>{if(!x)return false;
+      const f=typeof FEATURE_OF_VIEW!=="undefined"&&FEATURE_OF_VIEW[x[0]];return!(f&&typeof featureOn==="function"&&!featureOn(f))})
+    .map(x=>'<button type="button" data-go="'+x[0]+'"'+(cur===x[0]?' aria-current="page"':"")+">"+esc(L(x[2],x[3]))+"</button>").join("")+"</nav>"}
+function header98(){const t=document.querySelector("#main>.topm");if(!t||t.querySelector(".hnav98"))return;const b=t.querySelector(".brand");
+  if(b){b.dataset.go="home";b.setAttribute("role","link");b.tabIndex=0;b.setAttribute("aria-label",L("Home","الرئيسية"))}
+  if(b)b.insertAdjacentHTML("afterend",hnav98());else t.insertAdjacentHTML("afterbegin",hnav98());
+  const row=t.querySelector(".row");if(!row)return;const av=row.querySelector(".av");
+  const lib='<button type="button" class="btn ghost sm lib98" data-go="library"'+(S.view==="library"?' aria-current="page"':"")+' aria-label="'+esc(L("My library","مكتبتي"))+'">'+ic("library")+"<span>"+esc(L("Library","المكتبة"))+"</span></button>"+
+    (document.querySelector('#side [data-go="admin"]')?'<button type="button" class="btn ghost sm adm98" data-go="admin" aria-label="'+esc(L("Admin dashboard","لوحة الإدارة"))+'" title="'+esc(L("Admin dashboard","لوحة الإدارة"))+'">'+ic("shield")+"</button>":"");
+  if(av)av.insertAdjacentHTML("beforebegin",lib);else row.insertAdjacentHTML("beforeend",lib)}
+
+// ---- create pages: the gallery of results, one docked prompt bar, a result opened large
+const ST98=()=>(S.st98=Object.assign({lb:""},S.st98||{}));ST98().lb="";   // (a result is never open when the page loads)
+const GAL98={video:["video"],image:["image"]};
+const EX98={
+  video:[["A red vintage car drives along a coast road at golden hour, slow tracking shot","سيارة حمراء كلاسيكية تسير على طريق ساحلي وقت الغروب، لقطة تتبّع بطيئة"],
+    ["A falcon lifts off a gloved hand in the desert at sunrise","صقر ينطلق من يد في الصحراء عند الشروق"],
+    ["Rain on a neon street at night, a woman under a clear umbrella turns to the camera","مطر في شارع بأضواء النيون ليلاً، امرأة تحت مظلة شفافة تلتفت إلى الكاميرا"],
+    ["Steam rises from a cup of Arabic coffee on a wooden table, close-up","بخار يتصاعد من فنجان قهوة عربية على طاولة خشبية، لقطة مقرّبة"]],
+  image:[["A perfume bottle on wet black stone, soft rim light, studio product shot","زجاجة عطر على حجر أسود مبلل، إضاءة حافة ناعمة، تصوير منتج"],
+    ["Portrait of an old fisherman at dawn, natural light, 85 mm","بورتريه لصياد عجوز عند الفجر، ضوء طبيعي، عدسة 85 مم"],
+    ["A desert city of glass at sunset, wide view, cinematic","مدينة من زجاج في الصحراء وقت الغروب، منظر واسع، سينمائي"],
+    ["A cosy reading corner with plants and warm lamps, interior photo","ركن قراءة دافئ بالنباتات والمصابيح، صورة داخلية"]]};
+const mname98=j=>{const m=j.model&&(MODELS[j.model]||IMG_MODELS[j.model]);return m?m.name:null};
+// a finished result is a light picture (a video shows its poster and plays only while the pointer is on it), so a long
+// history doesn't slow the page; one still being made keeps the page's own live card
+function card98(j,i){const w=typeof shown88==="function"?shown88(j):(j.title||j.prompt||""),ar=(j.aspect||"16:9").replace(":","/"),u=j.status==="complete"&&mediaUrl(j),vid=j.kind==="video";let t;
+  if(u){const pos=vid?(typeof poster88==="function"&&poster88(u)):u,mm=Math.round(+j.dur||0);
+    const pl=Array.isArray(j.pal)&&j.pal.length>1?j.pal:null,bg=pl?"background:linear-gradient(135deg,"+pl[0]+","+pl[pl.length-1]+")":"";
+    // (a video with no poster on this server shows its own first frame — the newest 8; older ones load when the pointer is on
+    // them, so a long history stays fast)
+    t='<div class="thumb tk98" style="aspect-ratio:'+ar+";"+(pos?"":bg)+'">'+(pos?'<img class="frame" src="'+esc(pos)+'" alt="" loading="lazy" decoding="async">':
+      i<8?'<video class="frame" src="'+esc(u)+'#t=0.1" muted playsinline preload="metadata"></video>':'<span class="pl98">'+ic("play")+"</span>")+
+      (vid&&mm?'<span class="dur98 mono">'+String(Math.floor(mm/60)).padStart(2,"0")+":"+String(mm%60).padStart(2,"0")+"</span>":"")+(mname98(j)?'<span class="tag98">'+esc(mname98(j))+"</span>":"")+
+      '<span role="button" tabindex="0" class="del88" data-act="del88" data-id="'+esc(j.id)+'" aria-label="'+esc(L("Delete","حذف"))+'" title="'+esc(L("Delete","حذف"))+'">'+ic("x")+"</span>"+
+      '<span class="zoom80" role="button" tabindex="0" data-act="view-media" data-kind="'+(vid?"video":"image")+'" data-src="'+esc(u)+'" aria-label="'+esc(L("View","عرض"))+'">'+ic("expand")+"</span></div>"}
+  else t=thumb("j:"+j.id,{dur:vid?j.dur:null,tag:mname98(j),ar});
+  const inner=t+'<div class="gp98" dir="auto">'+esc(String(w).slice(0,140))+"</div>";
+  return'<div class="gc98" data-open98="'+j.id+'"'+(u&&vid?' data-v98="'+esc(u)+'"':"")+(u?' data-k98="'+hash98(j.id+inner)+'"':"")+' role="button" tabindex="0" aria-label="'+esc(L("Open","افتح")+": "+String(w).slice(0,80))+'">'+inner+"</div>"}
+// a finished card that looks the same after the page is drawn again is the same card: its picture or first frame isn't
+// fetched again every time a job's state changes (the page is redrawn every few seconds while something is being made)
+function hash98(s){let h=5381;for(let i=0;i<s.length;i++)h=(h*33^s.charCodeAt(i))>>>0;return h.toString(36)+s.length.toString(36)}
+function gal98(page){const ks=GAL98[page],all=S.jobs.filter(j=>ks.includes(j.kind)).reverse(),n=Math.max(24,+ST98().n||24),list=all.slice(0,n);
+  if(!list.length)return'<section class="gal98 empty98"><div class="e98"><span class="e98i">'+ic(page==="video"?"video":"image")+"</span><h2>"+esc(page==="video"?L("Your videos appear here","تظهر فيديوهاتك هنا"):L("Your pictures appear here","تظهر صورك هنا"))+
+    '</h2><p class="mute">'+esc(L("Write what you want in the bar below, or start from one of these:","اكتب ما تريد في الشريط بالأسفل، أو ابدأ من إحدى هذه الأفكار:"))+'</p><div class="ex98">'+
+    EX98[page].map((x,i)=>'<button type="button" class="ex98b" data-ex98="'+page+'" data-i="'+i+'" dir="auto">'+esc(L(x[0],x[1]))+"</button>").join("")+"</div></div></section>";
+  return'<section class="gal98" aria-label="'+esc(L("What you made","ما صنعته"))+'"><div class="g98">'+list.map((j,i)=>card98(j,i)).join("")+"</div>"+
+    (all.length>list.length?'<div class="more98"><button type="button" class="btn" data-more98="1">'+esc(L("Show more","اعرض المزيد"))+" ("+(all.length-list.length)+")</button></div>":"")+"</section>"}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-more98]");if(!b)return;const st=ST98();st.n=Math.max(24,+st.n||24)+24;persist();renderView()});
+// a video plays while the pointer is on it (never on a phone's scroll)
+document.addEventListener("mouseover",e=>{const c=e.target.closest&&e.target.closest(".gc98[data-v98]");if(!c||c.querySelector("video.hv98"))return;const t=c.querySelector(".tk98");if(!t)return;
+  const v=document.createElement("video");v.className="frame hv98";v.src=c.dataset.v98;v.muted=true;v.loop=true;v.playsInline=true;v.autoplay=true;t.appendChild(v);v.play&&v.play().catch(()=>{})});
+document.addEventListener("mouseout",e=>{const c=e.target.closest&&e.target.closest(".gc98[data-v98]");if(!c||(e.relatedTarget&&c.contains(e.relatedTarget)))return;c.querySelectorAll("video.hv98").forEach(v=>{try{v.pause()}catch(x){}v.remove()})});
+// the page's Generate button, short: its icon, "Generate" and the price
+function gen98(btn){if(!btn||btn.dataset.g98)return;btn.dataset.g98=1;const s=btn.querySelector("svg"),c=btn.querySelector(".cost");btn.setAttribute("aria-label",btn.textContent.replace(/\s+/g," ").trim());
+  btn.innerHTML=(s?s.outerHTML:"")+'<span class="g98t">'+esc(L("Generate","توليد"))+"</span>"+(c?c.outerHTML:"")}
+// a form (already one box: v93) becomes the prompt bar: [add] [words] [helpers] / [character] [chips…] [Generate]
+function composer98(panel,o){if(panel.classList.contains("cz98"))return;panel.classList.add("cz98");
+  const ta=panel.querySelector("textarea[data-bind]");if(!ta)return;
+  const main=document.createElement("div");main.className="cz98m row";const tools=document.createElement("div");tools.className="cz98t";
+  const bar=document.createElement("div");bar.className="cz98b row";const gen=panel.querySelector(o.gen);
+  ["enhance","hooks","random"].forEach(a=>{const b=panel.querySelector('[data-act="'+a+'"]');if(b){b.classList.add("cz98h");b.title=b.textContent.trim();b.setAttribute("aria-label",b.title);tools.appendChild(b)}});
+  const add=o.add&&o.add(panel);if(add)main.appendChild(add);
+  const lab=panel.querySelector('label[for="'+ta.id+'"]');if(lab)lab.classList.add("sr98");
+  if(!ta.getAttribute("placeholder")&&o.ph)ta.setAttribute("placeholder",o.ph());
+  main.appendChild(ta);main.appendChild(tools);
+  const ch=panel.querySelector('select[data-bind$="charId"]');if(ch){const w=document.createElement("label");w.className="char98";w.title=L("Character","الشخصية");w.innerHTML=ic("char");w.appendChild(ch);bar.appendChild(w)}
+  const opt=panel.querySelector(".opt93");if(opt)bar.appendChild(opt);
+  if(gen){gen98(gen);bar.appendChild(gen)}
+  panel.querySelectorAll(".botstrip").forEach(b=>b.hidden=true);
+  panel.insertBefore(main,panel.firstChild);if(lab)panel.insertBefore(lab,main);panel.appendChild(bar);
+  // the containers the pieces came from, now empty, go
+  [...panel.querySelectorAll(".row,.icomp,.iprompt,.itools,.igen,:scope>div")].forEach(e=>{if(e!==main&&e!==bar&&!e.closest(".sec93,.cz98m,.cz98b")&&!e.querySelector("button,textarea,select,input,.sbot")&&!(e.textContent||"").trim())e.remove()})}
+// the result opened large: the video page's own stage (play, the steps, Open in editor, Upscale, Extend…); a picture with its actions
+function lightbox98(v,page){const st=ST98();if(st.lb!==page)return;let box;
+  if(page==="video"){const pc=v.querySelector(".preview-col");const g=S.lastVideo&&S.jobs.find(x=>x.id===S.lastVideo);if(!pc||!g){st.lb="";return}box=pc;
+    pc.querySelectorAll(":scope>.panel").forEach((p,i)=>{if(i>0&&!/takes|لقطات/i.test((p.querySelector("h2")||{}).textContent||""))p.remove()})}
+  else{const j=S.img.sel&&S.jobs.find(x=>x.id===S.img.sel);if(!j){st.lb="";return}const u=mediaUrl(j),acts=v.querySelector(".preview-col .spread .row");
+    box=document.createElement("div");box.className="pi98";box.innerHTML='<div class="pim98">'+(u?'<img src="'+esc(u)+'" alt="">':thumb("j:"+j.id,{}))+'</div><p class="pp98" dir="auto">'+esc(typeof shown88==="function"?shown88(j):j.prompt)+"</p>";
+    const dl=u?'<a class="btn sm" href="'+esc(u)+'" download>'+ic("download")+esc(L("Download","تنزيل"))+"</a>":"";
+    if(acts){acts.classList.add("pa98");box.appendChild(acts);if(dl)acts.insertAdjacentHTML("afterbegin",dl)}else if(dl)box.insertAdjacentHTML("beforeend",'<div class="row pa98">'+dl+"</div>")}
+  const lb=document.createElement("div");lb.className="lb98";lb.setAttribute("role","dialog");lb.setAttribute("aria-modal","true");lb.setAttribute("aria-label",L("Result","النتيجة"));
+  lb.innerHTML='<div class="lbbg98" data-lb98="close"></div><div class="lbin98"><button type="button" class="lbx98" data-lb98="close" aria-label="'+esc(L("Close","إغلاق"))+'">'+ic("x")+"</button></div>";
+  lb.querySelector(".lbin98").appendChild(box);v.appendChild(lb)}
+function studio98(page){const v=document.querySelector("#main .view");if(!v||v.classList.contains("st98"))return;
+  const two=v.querySelector(":scope>.two"),panel=two&&two.querySelector(page==="video"?":scope>.panel.box93":":scope>.panel.icard");if(!panel)return;
+  v.classList.add("st98");
+  const h1=v.querySelector(":scope>h1"),lede=v.querySelector(":scope>.lede"),mode=v.querySelector(":scope>.mode93");
+  const head=document.createElement("div");head.className="head98";if(h1)head.appendChild(h1);if(mode)head.appendChild(mode);if(lede)lede.classList.add("sr98");
+  two.before(head);if(lede)head.after(lede);
+  two.insertAdjacentHTML("beforebegin",gal98(page));
+  const dock=document.createElement("div");dock.className="dock98";two.before(dock);dock.appendChild(panel);
+  composer98(panel,page==="video"?{gen:'[data-act="gen-video"]',add:()=>{const b=document.createElement("button");b.type="button";b.className="add98";b.dataset.o93="length";
+      b.setAttribute("aria-expanded",String(ST93().open==="length"));b.setAttribute("aria-label",L("Start / end frame and length","إطار البداية / النهاية والمدة"));b.title=b.getAttribute("aria-label");b.innerHTML=ic("plus");return b}}
+    :{gen:'[data-act="gen-images"]',ph:()=>L("Describe the picture: subject, place, style, light.","صف الصورة: الموضوع، المكان، الأسلوب، الإضاءة."),add:p=>{const d=p.querySelector(".drop.iref");if(d)d.classList.add("add98");return d}});
+  lightbox98(v,page);two.remove()}
+// Images: its options become chips like Video's (count, engine, font) — the same one-box machinery (v93)
+function imageBox98(){const v=document.querySelector("#main .view.ipage");if(!v)return;const pn=v.querySelector(".two>.panel.icard");if(!pn||pn.classList.contains("box93"))return;
+  const io=pn.querySelector(":scope>.iopts");if(io){[...io.children].forEach(s=>pn.insertBefore(s,io));io.remove()}
+  const pk=pn.querySelector(":scope>.pk84row"),d=S.img,mo=IMG_MODELS[d.model]||{name:d.model},lg=typeof logoFor==="function"&&logoFor(d.model);
+  const val=sel=>{const b=pn.querySelector(sel+'[aria-pressed="true"],'+sel+'[aria-checked="true"]');return b?((b.querySelector(".lb")||b).textContent||"").replace(/\s+/g," ").trim():""};
+  box93(pn,[{key:"top",test:el=>el.matches(".icomp")},{key:"bottom",test:el=>el.matches(".igen")||has93('[data-act="gen-images"]')(el)},
+    {key:"@pk"},
+    {key:"icount",icon:ic("takes93"),title:L("Pictures","الصور"),value:()=>String(d.count),test:el=>el.matches(".icnt")},
+    {key:"imodel",icon:lg?'<img src="'+esc(lg)+'" alt="">':ic("spark"),title:L("Engine","المحرك"),value:()=>mo.name,test:el=>el.matches(".imod")},
+    {key:"ifont",icon:ic("text"),title:L("Font","الخط"),value:()=>val('[data-act="f-open"]')||(d.font?String(d.font):L("Auto","تلقائي")),test:el=>el.matches(".ifont")}]);
+  if(pk&&!pk.closest(".opt93")){const row=pn.querySelector(".opt93");if(row)row.prepend(pk)}}
+// the Video page's own stage and history are drawn first and then put away (only an open result keeps the stage): their
+// videos must not start loading for nothing each time the page is drawn again (every few seconds while something is made)
+const lazy98=h=>h.replace(/<video\b[^>]*>/g,t=>t.replace(/\s(src|poster)="/g,(m,a)=>" data-"+a+'98="'));
+VIEWS.video=(o=>function(){const h=o.apply(this,arguments);return typeof h==="string"&&ST98().lb!=="video"?lazy98(h):h})(VIEWS.video);
+function unlazy98(){document.querySelectorAll("#main video[data-src98],#main video[data-poster98]").forEach(x=>{
+  ["poster","src"].forEach(a=>{const k="data-"+a+"98";if(x.hasAttribute(k)){x.setAttribute(a,x.getAttribute(k));x.removeAttribute(k)}})})}
+renderView=(o=>function(){const keep=new Map();document.querySelectorAll("#main .gc98[data-k98]").forEach(c=>keep.set(c.dataset.k98,c));
+  const r=o.apply(this,arguments);try{header98()}catch(e){console.warn("v98 header",e)}
+  try{if(S.view==="video")studio98("video");else if(S.view==="image"){imageBox98();studio98("image")}}catch(e){console.warn("v98 studio",e)}
+  try{unlazy98()}catch(e){}
+  if(keep.size)document.querySelectorAll("#main .gc98[data-k98]").forEach(c=>{const old=keep.get(c.dataset.k98);if(old&&old!==c){keep.delete(c.dataset.k98);c.replaceWith(old)}});
+  return r})(renderView);
+// a chip's choices close when you tap elsewhere, press Esc, or move to another page
+document.addEventListener("pointerdown",e=>{const st=ST93();if(!st.open||!document.querySelector("#main .cz98"))return;if(e.target.closest&&e.target.closest(".cz98,.pk84s,#modalRoot"))return;
+  st.open="";persist();document.querySelectorAll("#main .cz98 [data-o93]").forEach(b=>b.setAttribute("aria-expanded","false"));document.querySelectorAll("#main .cz98 .sec93").forEach(s=>s.hidden=true)},true);
+let view98=S.view;go=(o=>function(v){if(v!==view98){view98=v;const st=ST93();if(st.open){st.open=""}ST98().lb=""}return o.apply(this,arguments)})(go);
+// open / close a result
+document.addEventListener("click",e=>{const c=e.target.closest&&e.target.closest("[data-open98]");if(!c||e.target.closest('[data-act]:not([data-open98])'))return;const j=S.jobs.find(x=>x.id===c.dataset.open98);if(!j)return;
+  e.preventDefault();e.stopImmediatePropagation();if(j.kind==="video")S.lastVideo=j.id;else{S.img.sel=j.id;S.lastBatch=j.batch}ST98().lb=j.kind==="video"?"video":"image";persist();renderView()},true);
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches&&e.target.matches("[data-open98]")){e.preventDefault();e.target.click()}
+  if(e.key==="Escape"){const st=ST98();if(st.lb){st.lb="";persist();renderView();return}const s=ST93();if(s.open&&document.querySelector("#main .cz98")){s.open="";persist();renderView()}}});
+document.addEventListener("click",e=>{const c=e.target.closest&&e.target.closest('[data-lb98="close"]');if(!c)return;ST98().lb="";persist();renderView()});
+// an example idea goes into the bar
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-ex98]");if(!b)return;const x=(EX98[b.dataset.ex98]||[])[+b.dataset.i];if(!x)return;const t=L(x[0],x[1]);
+  if(b.dataset.ex98==="video")S.draft.prompt=t;else S.img.prompt=t;persist();renderView();const ta=document.querySelector(b.dataset.ex98==="video"?"#dprompt":"#iprompt");if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)}});
+(()=>{const st=document.createElement("style");st.textContent=`
+/* header */
+.hnav98{display:none}
+@media (min-width:768px){
+  .app,.app:not(.noauth){grid-template-columns:minmax(0,1fr)!important}#side{display:none!important}
+  #main>.topm{display:flex!important;position:sticky;top:0;z-index:40;min-height:64px;padding:0 20px;gap:18px;align-items:center;justify-content:flex-start;
+    background:color-mix(in srgb,var(--bg) 84%,transparent)!important;-webkit-backdrop-filter:saturate(1.3) blur(14px);backdrop-filter:saturate(1.3) blur(14px);border-bottom:1px solid var(--line)}
+  #main>.topm .brand{cursor:pointer;flex:none}
+  #main>.topm .row{margin-inline-start:auto;flex:none}
+  .hnav98{display:flex;gap:2px;align-items:center;min-width:0;overflow-x:auto;scrollbar-width:none}.hnav98::-webkit-scrollbar{display:none}
+  .hnav98 button{flex:none;border:0;background:none;color:var(--mute);font:500 14px/1 var(--sans);padding:10px 12px;border-radius:8px;white-space:nowrap;cursor:pointer}
+  .hnav98 button:hover{color:var(--text);background:var(--panel2)}
+  .hnav98 button[aria-current="page"]{color:var(--text);background:var(--panel3)}
+  .lib98 span{margin-inline-start:2px}
+}
+@media (min-width:768px) and (max-width:1199px){.lib98 span{display:none}.hnav98 button{padding:9px 9px;font-size:13.5px}#main>.topm .langpick .t{display:none}
+  .hnav98{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);padding-inline-end:24px}
+  [dir="rtl"] .hnav98{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 28px),transparent)}}
+@media (max-width:767px){.lib98,.adm98{display:none!important}}
+#main>.topm .langpick .t{display:none}
+.char98,.char98 .selbtn{max-width:none!important}.char98 .selbtn .sv{overflow:visible;text-overflow:clip;max-width:none;line-height:normal}
+.lib98[aria-current="page"]{background:var(--panel3)}
+.sr98{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
+/* create pages */
+.view.st98{max-width:1600px;display:flex;flex-direction:column;min-height:calc(100vh - 64px);padding-bottom:0;flex-shrink:0}
+.head98{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:2px 0 14px}
+.head98 h1{line-height:1.2;margin:0!important;display:flex;align-items:center;gap:10px}
+.head98 .mode93{margin:0}
+.view.st98>*{flex-shrink:0}.gal98{flex:1 0 auto}
+.g98{columns:4 240px;column-gap:12px}
+.gc98{break-inside:avoid;margin:0 0 12px;position:relative;border-radius:12px;overflow:hidden;background:var(--panel2);cursor:pointer;display:block}
+.gc98 .thumb{border-radius:12px;margin:0}
+.tk98{position:relative;overflow:hidden;background:#000}.tk98 .frame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}.tk98 .hv98{z-index:1}
+.tk98 .dur98{position:absolute;top:8px;inset-inline-start:8px;z-index:2;font-size:11px;padding:2px 6px;border-radius:6px;background:rgba(0,0,0,.6);color:#fff}
+.tk98 .tag98{position:absolute;bottom:8px;inset-inline-start:8px;z-index:2;font-size:11px;padding:2px 6px;border-radius:6px;background:rgba(0,0,0,.6);color:var(--lime)}
+.tk98 .del88,.tk98 .zoom80{z-index:3}
+.pl98{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.85)}.pl98 svg{width:34px;height:34px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))}
+.more98{display:flex;justify-content:center;margin:6px 0 4px}
+.gc98 .gp98{position:absolute;left:0;right:0;bottom:0;padding:26px 12px 10px;font-size:12.5px;line-height:1.35;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.72));
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;opacity:0;transition:opacity .15s;pointer-events:none}
+.gc98:hover .gp98,.gc98:focus-visible .gp98{opacity:1}
+@media (hover:none){.gc98 .gp98{opacity:1}}
+.empty98{display:grid;grid-template-columns:minmax(0,1fr);place-items:center;padding:6vh 0 4vh}
+.e98{text-align:center;max-width:640px;width:100%;min-width:0}
+.e98i{display:inline-grid;place-items:center;width:48px;height:48px;border-radius:12px;background:var(--panel2);border:1px solid var(--line2);margin-bottom:12px}.e98i svg{width:20px;height:20px}
+.e98 h2{font-size:16px;font-weight:600;margin:0 0 6px}
+.ex98{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}
+.ex98b{border:1px solid var(--line2);background:var(--panel);color:var(--text);border-radius:999px;padding:9px 14px;font-size:13px;cursor:pointer;max-width:100%;text-align:start}
+.ex98b:hover{border-color:var(--lime)}
+/* the docked prompt bar */
+.dock98{position:sticky;bottom:12px;z-index:20;margin:16px auto 12px;width:min(980px,100%)}
+/* phone: #main already keeps 96px (+ safe area) free for the bottom menu, and a sticky bar stops inside that padding — so -30px puts it just above the menu */
+@media (max-width:767px){.dock98{bottom:-30px;margin-bottom:8px}.view.st98{min-height:calc(100vh - 162px - env(safe-area-inset-bottom,0px))}}
+.cz98{position:relative;display:flex;flex-direction:column;gap:8px;padding:12px!important;border-radius:16px!important;border:1px solid var(--line2)!important;
+  background:color-mix(in srgb,var(--panel) 92%,transparent)!important;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.cz98m{display:flex;align-items:flex-start;gap:10px;flex-wrap:nowrap!important;margin:0!important}
+.cz98m textarea{flex:1;min-width:0;min-height:48px!important;max-height:180px;resize:none;border:0!important;background:transparent!important;box-shadow:none!important;padding:8px 4px!important;font-size:15px;line-height:1.45;outline:none}
+.cz98m textarea:focus-visible{outline:none}
+.add98{flex:none;display:grid;place-items:center;width:48px;height:48px;border-radius:12px;border:1px dashed var(--line2);background:var(--panel2);color:var(--mute);cursor:pointer;padding:0;margin:0!important;min-height:0!important;overflow:hidden}
+.add98:hover,.add98[aria-expanded="true"]{color:var(--text);border-color:var(--lime)}
+.add98 svg{width:20px;height:20px}.drop.add98>div{display:none}.drop.add98 img,.drop.add98 video{width:100%;height:100%;object-fit:cover}
+.cz98t{display:flex;gap:4px;flex:none}
+.cz98t .cz98h{width:36px;height:36px;min-height:36px;padding:0;display:grid;place-items:center;border-radius:8px;font-size:0;background:transparent;border-color:transparent;color:var(--mute)}
+.cz98t .cz98h:hover{color:var(--text);background:var(--panel2)}.cz98t .cz98h svg{width:18px;height:18px;margin:0}
+.cz98b{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:nowrap!important;margin:0!important}
+.cz98b .opt93{flex:1;min-width:0;margin:0!important;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 24px),transparent);padding-inline-end:20px}
+[dir="rtl"] .cz98b .opt93{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 24px),transparent)}
+.cz98b .opt93::-webkit-scrollbar{display:none}
+.cz98b .opt93{align-items:center}.cz98b .opt93>*,.cz98b .opt93 .pk84c,.cz98b .opt93 .o93{flex:none!important;white-space:nowrap;max-width:none!important}.cz98b .opt93 .o93v{flex:none;max-width:none;overflow:visible;text-overflow:clip}
+.char98 .selbtn{border:0!important;background:transparent!important;min-height:34px!important;height:34px;padding:0 6px!important;font-size:13px!important;box-shadow:none!important;max-width:150px;width:auto!important}
+.char98:has(.selbtn)>svg{display:none}.char98 .sp88.none{display:none}.char98 .sp88{width:24px;height:24px}
+.char98{flex:none;display:inline-flex;align-items:center;gap:4px;height:36px;padding:0 4px 0 10px;border-radius:999px;border:1px solid var(--line2);background:var(--panel);max-width:170px;cursor:pointer}
+.char98 svg{width:16px;height:16px;flex:none;color:var(--mute)}
+.char98 select{border:0!important;background:transparent!important;min-height:0!important;height:34px;padding:0 4px!important;font-size:13px;max-width:130px;box-shadow:none!important}
+.cz98b [data-act^="gen-"]{flex:none;width:auto!important;min-height:44px;margin:0!important;padding:0 18px;border-radius:12px!important;display:inline-flex;align-items:center;gap:8px;font-weight:600;white-space:nowrap}
+.cz98b [data-act^="gen-"] .cost{margin:0;padding-inline-start:8px;border-inline-start:1px solid color-mix(in srgb,currentColor 30%,transparent)}
+.cz98>.sec93{position:absolute;left:0;right:0;bottom:calc(100% + 10px);max-height:min(58vh,560px);overflow:auto;margin:0!important;padding:16px!important;border-radius:16px!important;
+  background:var(--panel)!important;border:1px solid var(--line2)!important;box-shadow:0 24px 60px rgba(0,0,0,.45);z-index:3}
+.cz98 .mode93,.cz98 .botstrip{display:none!important}
+/* a result opened large */
+.lb98{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:24px}
+.lbbg98{position:absolute;inset:0;background:rgba(4,5,4,.86);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.lbin98{position:relative;width:min(1100px,100%);max-height:calc(100vh - 48px);overflow:auto;border-radius:16px;background:var(--panel);border:1px solid var(--line2);padding:18px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.lbin98 .preview-col{display:block!important;order:0!important}.lbin98 .preview-col>.panel{border:0;background:none;padding:0;margin:0 0 12px}
+.lbx98{position:sticky;top:0;float:right;z-index:2;width:38px;height:38px;border-radius:50%;border:1px solid var(--line2);background:var(--panel2);color:var(--text);display:grid;place-items:center;cursor:pointer;margin:0 0 6px 6px}
+[dir="rtl"] .lbx98{float:left;margin:0 6px 6px 0}
+.pim98{display:grid;place-items:center;background:#000;border-radius:12px;overflow:hidden}.pim98 img{max-width:100%;max-height:68vh;object-fit:contain;display:block}
+.pp98{margin:12px 2px 8px;color:var(--mute)}.pa98{flex-wrap:wrap;gap:8px;margin-top:6px}
+@media (max-width:767px){.lb98{padding:0;place-items:end stretch}.lbin98{max-height:92vh;border-radius:16px 16px 0 0;padding:14px}.g98{columns:2 150px;column-gap:8px}.gc98{margin-bottom:8px}
+  .cz98{padding:10px!important;border-radius:16px!important}.cz98m textarea{font-size:16px;min-height:44px!important}.add98{width:44px;height:44px}
+  .char98{max-width:44px;padding:0;justify-content:center}.char98 select{position:absolute;opacity:0;inset:0;width:100%}.char98{position:relative}
+  /* phone: prompt on top · the options row full width · helpers + a wide Generate button under it */
+  .cz98{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center;gap:8px}.cz98>.icomp{display:none}
+  .cz98m,.cz98b{display:contents}.cz98m .add98{order:1;align-self:flex-start}.cz98m textarea{order:2;flex:1 1 calc(100% - 64px);margin:0!important;width:auto!important}
+  .cz98b .char98{order:3}.cz98b .opt93{order:4;flex:1 1 calc(100% - 60px)}
+  .cz98t{order:5;gap:2px}.cz98b [data-act^="gen-"]{order:6;flex:1 1 0;justify-content:center;padding:0 12px}
+  .empty98{padding:2vh 0 4px}.e98i{display:none}.e98 p{font-size:13px;margin:0}
+  .ex98{flex-direction:column;align-items:stretch;margin-top:12px}.ex98b{border-radius:12px}.ex98b:nth-child(n+3){display:none}
+  .view .mode93{max-width:100%}.view .mode93>button{flex:1 1 auto;min-width:0;white-space:normal}
+  .char98{max-width:40px;padding:0;justify-content:center;width:40px}.char98 .selbtn{font-size:0!important;padding:0!important;max-width:34px;justify-content:center}.char98 .selbtn>svg{display:none}
+  .char98:has(.sp88.none)>svg,.char98:not(:has(.selbtn))>svg{display:block}.char98:has(.sp88.none) .selbtn{position:absolute;inset:0;opacity:0}}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
