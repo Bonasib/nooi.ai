@@ -2684,9 +2684,16 @@ enqueueChapter=function(c){
 // (only the app's own "Not found", twice in a row — never a web-server page while the site restarts, never a one-off)
 function goneJob(o,e){if(!o||["complete","failed"].includes(o.status)||!e||e.status!==404||e.message!=="Not found")return;
   const now=Date.now();if(!o.miss404||now-o.miss404>60000){o.miss404=now;return}delete o.miss404;o.status="failed";o.errorType="gone";o.error="";persist();statusChanged()}
+// (v109: the jobs being made are asked about 4 at a time, and a new round never starts before the last one ends; a job made long
+// ago is asked less often. Before, a slow round started another every 3 s, and old unfinished jobs kept the page and the server
+// busy — new pictures and videos showed up late)
+let poll109=false;
 setInterval(async()=>{
-  if(API.mode!=="server")return;const list=S.jobs.concat(S.story.chapters).filter(o=>o.remote&&!["complete","failed"].includes(o.status));
-  for(const o of list){try{const r=await API.req("/v1/jobs/"+o.remote);const ch=r.status!==o.status;o.status=r.status==="done"?"complete":r.status;o.progress=r.progress||o.progress;if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;o.stage=r.stage||null;o.parts108=r.partsTotal?[r.partsDone||0,r.partsTotal]:null;if(r.detail)o.detail=r.detail;if(r.via)o.via=r.via;if(r.segments&&o.kind==="transcribe"&&!o.imported){o.imported=true;importSegments(r.segments)}if(ch){persist();statusChanged()}else liveUpdate()}catch(e){goneJob(o,e)}}
+  if(API.mode!=="server"||poll109)return;const now=Date.now(),age=o=>now-(o.created||now);
+  const list=S.jobs.concat(S.story.chapters).filter(o=>o.remote&&!["complete","failed"].includes(o.status)&&now-(o._poll109||0)>=(age(o)<6e5?2500:age(o)<36e5?1e4:6e4));
+  if(!list.length)return;poll109=true;
+  const one=async o=>{o._poll109=Date.now();try{const r=await API.req("/v1/jobs/"+o.remote);const ch=r.status!==o.status;o.status=r.status==="done"?"complete":r.status;o.progress=r.progress||o.progress;if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;o.stage=r.stage||null;o.parts108=r.partsTotal?[r.partsDone||0,r.partsTotal]:null;if(r.detail)o.detail=r.detail;if(r.via)o.via=r.via;if(r.segments&&o.kind==="transcribe"&&!o.imported){o.imported=true;importSegments(r.segments)}if(ch){persist();statusChanged()}else liveUpdate()}catch(e){goneJob(o,e)}};
+  try{for(let i=0;i<list.length;i+=4)await Promise.all(list.slice(i,i+4).map(one))}finally{poll109=false}
 },3000);
 const _stl=stLabel;stLabel=st=>({failed:L("Failed","فشل"),scheduled:L("Scheduled","مجدول"),published:L("Published","منشور")})[st]||_stl(st);
 const _thumb=thumb;
@@ -7988,14 +7995,15 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
 document.addEventListener("play",e=>{const b=e.target.closest&&e.target.closest(".hfrm");if(b)b.classList.add("playing")},true);
 document.addEventListener("pause",e=>{const b=e.target.closest&&e.target.closest(".hfrm");if(b)b.classList.remove("playing")},true);
 /* faster updates: follow the box's jobs every 1.5 s, keep following scene jobs until their check arrives, estimate progress */
-setInterval(async()=>{if(API.mode!=="server"||!S.hf||!(S.hf.out||[]).length)return;const now=Date.now();
+let hf109=false;   // (v109: never two rounds at once)
+setInterval(async()=>{if(API.mode!=="server"||!S.hf||!(S.hf.out||[]).length||hf109)return;const now=Date.now();hf109=true;try{
   for(const id of S.hf.out){const o=S.jobs.find(x=>x.id===id);if(!o||!o.remote)continue;const sceneWait=o.meta&&o.meta.scene&&o.status==="complete"&&!o.sceneCheck&&now-(o.created||now)<15*60e3;
     if(!["queued","rendering"].includes(o.status)&&!sceneWait&&!(o.sceneCheck&&o.sceneCheck.retrying&&o.status!=="failed"))continue;
     if(["queued","rendering"].includes(o.status)){const exp=(o.kind==="video"?((MODELS[o.model]||{}).sec||70)*Math.max(1,(o.dur||5)/5):({music:90,voice:15,sfx:20,lipsync:120})[o.kind]||25)*1000,est=Math.min(.93,(now-(o.created||now))/exp);if(!(o.progress>est))o.progress=est}
     try{const r=await API.req("/v1/jobs/"+o.remote);const before=o.status+"|"+JSON.stringify(o.sceneCheck||null);
       if(r.status==="queued"||r.status==="rendering")o.status="rendering";else if(r.status==="done")o.status="complete";else if(r.status==="failed")o.status="failed";
       if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;o.stage=r.stage||null;o.parts108=r.partsTotal?[r.partsDone||0,r.partsTotal]:null;if(r.detail)o.detail=r.detail;if(r.progress)o.progress=Math.max(o.progress||0,r.progress);if(r.sceneCheck)o.sceneCheck=r.sceneCheck;
-      if(before!==o.status+"|"+JSON.stringify(o.sceneCheck||null)){persist();statusChanged()}else liveUpdate()}catch(e){goneJob(o,e)}}},1500);
+      if(before!==o.status+"|"+JSON.stringify(o.sceneCheck||null)){persist();statusChanged()}else liveUpdate()}catch(e){goneJob(o,e)}}}finally{hf109=false}},1500);
 (()=>{const st=document.createElement("style");st.textContent=`
 .hfmrow.g{gap:6px}.hfmi.nooi{padding:0 12px 0 4px}.hfmi.nooi b{padding:0}.hfmi.pick{padding:0 10px 0 4px}.hfmi.pick>svg:last-child{width:14px;height:14px;opacity:.7}
 .hfmi.pick:not(.on){padding-inline-start:10px}.hfmi.pick:not(.on)>svg:first-child{width:15px;height:15px}
@@ -14108,6 +14116,36 @@ errText81=(o=>function(j){const e=String((j&&j.error)||"").trim();let m;
   if(e==="This video can't be read — save it as an MP4 and add it again.")return L(e,"تعذّرت قراءة هذا الفيديو — احفظه بصيغة MP4 وأضفه مجدداً.");
   return o.apply(this,arguments)})(errText81);
 (()=>{const st=document.createElement("style");st.textContent=`.stage108{display:flex;gap:6px;align-items:center;margin:10px 0 0}.stage108 svg{flex:none}`;document.head.appendChild(st)})();
+
+/* ================= v109: Admin → Overview → Speed ================= */
+// How busy the live server is and where the time of the last day's jobs went (our part before the engine, the engine), with what
+// to do about it in plain words — read from /v1/admin/speed (owners and admins only).
+const SP109={d:null,busy:false,err:""};
+async function speed109load(){if(SP109.busy||API.mode!=="server")return;SP109.busy=true;SP109.err="";
+  try{SP109.d=await API.req("/v1/admin/speed")}catch(e){SP109.err=String(e.message||e)}finally{SP109.busy=false;if(S.view==="admin")renderView()}}
+const sec109=v=>v==null?"—":v<60?Math.round(v)+L(" s"," ث"):Math.floor(v/60)+":"+String(Math.round(v%60)).padStart(2,"0");
+function speed109(){if(!SP109.d&&!SP109.busy&&!SP109.err)speed109load();const d=SP109.d;
+  const head='<div class="panel pad sp109" style="margin-top:14px"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0;display:flex;gap:8px;align-items:center">'+ic("bolt")+L("Speed","السرعة")+'</h3><button class="btn sm" data-act="sp109">'+L("Check again","افحص مجدداً")+"</button></div>";
+  if(!d)return head+'<p class="small mute">'+(SP109.err?esc(SP109.err):L("Checking…","جارٍ الفحص…"))+"</p></div>";
+  const s=d.server,p=d.pending,notes=[];
+  if(s.load[0]/s.cpus>1.5)notes.push(L("The server's processor is overloaded ("+s.load[0]+" for "+s.cpus+" CPUs) — a server with more CPUs helps most.","معالج الخادم محمّل فوق طاقته ("+s.load[0]+" لـ "+s.cpus+" معالجات) — خادم بمعالجات أكثر يساعد أكثر شيء."));
+  if(s.lagMs.max>300)notes.push(L("The server was busy for up to "+s.lagMs.max+" ms at a time in the last minute — every request waited that long.","كان الخادم مشغولاً حتى "+s.lagMs.max+" ملّي ثانية في المرة خلال الدقيقة الأخيرة — وانتظر كل طلب ذلك."));
+  if(s.freeMB<300)notes.push(L("Free memory is low ("+s.freeMB+" MB).","الذاكرة المتاحة قليلة ("+s.freeMB+" ميجابايت)."));
+  if(p.waiting10)notes.push(L(p.waiting10+" jobs have been waiting more than 10 minutes.",p.waiting10+" مهام تنتظر أكثر من 10 دقائق."));
+  if(s.recovered)notes.push(L(s.recovered+" unfinished jobs were picked up after the last restart.","استُكملت "+s.recovered+" مهام غير منتهية بعد آخر إعادة تشغيل."));
+  const names={video:L("Videos","الفيديوهات"),image:L("Pictures","الصور"),swap:L("Replace the person","استبدال الشخص"),motion:L("Make it move","حرّكها"),other:L("Other","أخرى")};
+  const rows=Object.entries(d.last24h||{}).map(([k,v])=>"<tr><td>"+esc(names[k]||k)+"</td><td>"+v.n+"</td><td>"+sec109(v.total)+"</td><td>"+sec109(v.before)+"</td><td>"+sec109(v.engine)+"</td><td>"+sec109(v.slowest)+"</td></tr>").join("");
+  return head+'<div class="sp109g"><div><b>'+s.load[0]+" / "+s.cpus+"</b><small>"+L("Processor load / CPUs","حمل المعالج / المعالجات")+"</small></div><div><b>"+s.lagMs.max+" ms</b><small>"+L("Longest wait (last minute)","أطول انتظار (آخر دقيقة)")+"</small></div><div><b>"+s.freeMB+" MB</b><small>"+L("Free memory","الذاكرة المتاحة")+"</small></div><div><b>"+p.n+"</b><small>"+L("Being made now","قيد الصنع الآن")+"</small></div><div><b>"+s.dbMB+" MB</b><small>"+L("Data file","ملف البيانات")+"</small></div></div>"+
+    (notes.length?'<ul class="small sp109n">'+notes.map(n=>"<li>"+esc(n)+"</li>").join("")+"</ul>":'<p class="small mute">'+L("The server itself isn't busy — any wait is the engine's.","الخادم نفسه غير مشغول — أي انتظار هو من المحرّك.")+"</p>")+
+    (rows?'<div style="overflow-x:auto"><table class="sp109t"><thead><tr><th>'+L("Last 24 h","آخر 24 ساعة")+"</th><th>"+L("Made","صُنع")+"</th><th>"+L("Usual time","المدة المعتادة")+"</th><th>"+L("Our part","جزؤنا")+"</th><th>"+L("Engine","المحرّك")+"</th><th>"+L("Slowest","الأبطأ")+"</th></tr></thead><tbody>"+rows+"</tbody></table></div>":'<p class="small mute">'+L("No finished jobs in the last 24 hours yet.","لا مهام منتهية في آخر 24 ساعة بعد.")+"</p>")+"</div>"}
+VIEWS.admin=(o=>function(){const h=o.apply(this,arguments);return(S.admTab||"overview")==="overview"?h.replace(/<\/div>\s*$/,speed109()+"</div>"):h})(VIEWS.admin);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="sp109"]');if(!a)return;SP109.d=null;speed109load();renderView()});
+(()=>{const st=document.createElement("style");st.textContent=`
+.sp109g{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:12px}
+.sp109g>div{padding:10px 12px;border-radius:12px;background:var(--panel2,color-mix(in srgb,var(--text) 5%,transparent));display:flex;flex-direction:column;gap:2px;min-width:0}
+.sp109g b{font-size:18px}.sp109g small{color:var(--mute);font-size:12px}
+.sp109n{margin:12px 0 0;padding-inline-start:18px;display:grid;gap:4px}
+.sp109t{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}.sp109t th,.sp109t td{text-align:start;padding:6px 8px;border-bottom:1px solid var(--line2);white-space:nowrap}.sp109t th{color:var(--mute);font-weight:600}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;
