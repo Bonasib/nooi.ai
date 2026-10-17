@@ -48,12 +48,18 @@ const kind = (j) => (/^mcswap$/.test(j.payload?.model || "") ? "swap" : /^mc(26|
 console.log("users:", Object.keys(db.users || {}).length, "· jobs:", jobs.length, "· largest job:", Math.max(0, ...jobs.map((j) => JSON.stringify(j).length)), "bytes");
 const pend = jobs.filter((j) => ["queued", "rendering"].includes(j.status));
 console.log("being made now:", pend.length, pend.length ? "· oldest " + Math.round((now - Math.min(...pend.map((j) => j.created || now))) / 60e3) + " min" : "", JSON.stringify(pend.reduce((a, j) => { const k = kind(j) + ":" + (j.stage || (j.remoteId ? "engine" : j.status)); a[k] = (a[k] || 0) + 1; return a; }, {})));
-const day = jobs.filter((j) => j.created && now - j.created < 864e5), by = {};
+const day = jobs.filter((j) => j.created && now - j.created < 864e5 && !j.parent), by = {};
 for (const j of day) { const k = (by[kind(j)] = by[kind(j)] || { done: 0, failed: 0, other: 0, total: [], before: [], engine: [], words: [], fetch: [] }), t = j.times || {};
   if (j.status === "done") { k.done++; if (j.doneAt) k.total.push(j.doneAt - j.created + (t.words || 0) * 1e3); if (j.sentAt) { k.before.push(j.sentAt - j.created + (t.words || 0) * 1e3); k.engine.push(j.doneAt - j.sentAt - ((t.fetch || 0) + (t.after || 0)) * 1e3); }
     if (t.words != null) k.words.push(t.words * 1e3); if (t.fetch != null) k.fetch.push(t.fetch * 1e3); } else if (j.status === "failed") k.failed++; else k.other++; }
 console.log("last 24 h (usual time · our part before the engine · the engine · the words step · bringing the result here):");
 for (const [k, v] of Object.entries(by)) console.log(" ", k, "· done", v.done, "· failed", v.failed, "· waiting", v.other, "·", med(v.total), "·", med(v.before), "·", med(v.engine), "·", med(v.words), "·", med(v.fetch));
+// the last Replace the person / Make it move jobs, step by step (seconds): our steps, then the engine line and its making
+const sec = (v) => (v == null ? "—" : Math.round(+v) + " s");
+const mc = jobs.filter((j) => !j.parent && /^mc(26|30|swap)$/.test(j.payload?.model || "") && j.status === "done").sort((a, b) => b.created - a.created).slice(0, 5);
+if (mc.length) console.log("last Replace the person / Make it move (video length · parts · prepare · text AI look · engine line · engine making · bringing here · total):");
+for (const j of mc) { const t = j.times || {}, v = j.payload?.meta?.mcVideo || {};
+  console.log(" ", kind(j), Math.round((now - j.created) / 36e5) + " h ago ·", sec(v.dur), "·", v.parts || 1, "·", sec(t.prep), "·", sec(t.look), "·", sec(t.queue), "·", sec(t.making), "·", sec(t.fetch), "·", sec(j.doneAt && (j.doneAt - j.created) / 1000)); }
 const fails = day.filter((j) => j.status === "failed").slice(-8).map((j) => kind(j) + ": " + String(j.error || "").slice(0, 120));
 if (fails.length) console.log("last failures:\n  " + fails.join("\n  "));
 ' 2>&1 | mask
