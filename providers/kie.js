@@ -15,6 +15,7 @@
 // below and the admin can add/override any input field per model id (Admin → AI providers → Kie AI → Extra inputs).
 import { cfg, configured } from "../lib/settings.js";
 import { presetVoiceId } from "../lib/voicepresets.js";   // v97: the Voice page example you heard = the voice you get
+import { PICTURE_WORDS } from "../lib/picturewords.js";   // v100: a picture with no words still tells the engine what to do
 
 const VEO = new Set(["veo3", "veo3_fast", "veo3_lite"]);
 const VEO_RATIOS = new Set(["16:9", "9:16"]);
@@ -85,7 +86,7 @@ export function kieInput(model, p) {
   if (/^(kling\/ai-avatar|infinitalk\/)/.test(m)) return { ...drop({ image_url: absUrl(inp.lsV), audio_url: absUrl(inp.lsA), resolution: /infinitalk/.test(m) ? "720p" : undefined }), prompt: p.prompt || (/infinitalk/.test(m) ? "A person talking naturally" : "") };
   if (/^volcengine\/video-to-video-lip-sync/.test(m)) return { mode: "basic", video_url: absUrl(inp.lsV), audio_url: absUrl(inp.lsA) };
   if (IMAGE_KINDS.has(kind)) {
-    const ref = refImg(p) ? absUrl(refImg(p)) : undefined, prompt = fullPrompt(p);
+    const ref = refImg(p) ? absUrl(refImg(p)) : undefined, prompt = fullPrompt(p) || (ref ? PICTURE_WORDS.image : "");   // (v100: a picture and no words)
     const more = ["iRef2", "iRef3", "iRef4"].map((k) => inp[k]).filter((u) => u && u !== refImg(p)).map(absUrl);   // extra angles of the same face (avatars) · the faces of the characters in the picture
     if (/^nano-banana-2-lite/.test(m)) return drop({ prompt, image_urls: ref ? [ref, ...more] : undefined, aspect_ratio: snapAR(p.aspect, ["1:1", "16:9", "9:16", "4:3", "3:4", "4:5", "5:4", "2:3", "3:2", "21:9"]) });
     if (/^z-image/.test(m)) return { prompt: prompt.slice(0, 1000), aspect_ratio: snapAR(p.aspect, ["1:1", "4:3", "3:4", "16:9", "9:16"]), nsfw_checker: true };
@@ -102,7 +103,8 @@ export function kieInput(model, p) {
     return drop({ prompt, aspect_ratio: p.aspect || undefined, ...(ref ? { image_urls: [ref, ...more] } : {}) });
   }
   // video (and chapter / extend)
-  const img0 = startImg(p), img = img0 ? absUrl(img0) : undefined, end = inp.vEnd ? absUrl(inp.vEnd) : undefined, dur = Math.round(+p.dur || 5), prompt = fullPrompt(p), audio = !!(p.meta?.audio);
+  // (v100) a start picture and no words: the engine is still told what to do with it — most video engines refuse an empty prompt
+  const img0 = startImg(p), img = img0 ? absUrl(img0) : undefined, end = inp.vEnd ? absUrl(inp.vEnd) : undefined, dur = Math.round(+p.dur || 5), prompt = fullPrompt(p) || (img0 ? PICTURE_WORDS.video : ""), audio = !!(p.meta?.audio);
   // Motion Control: the character in the photo performs the movement of the video (orientation: follow the video or the photo)
   // the engine needs a prompt: the client's words (if any) plus what Motion Control is for
   if (/motion-control/.test(m)) return drop({ prompt: (String(p.prompt || "").trim() ? String(p.prompt).trim().replace(/[.\s]*$/, ". ") : "") + "The person in the picture performs exactly the same movements as the person in the video, natural and smooth.", input_urls: [absUrl(inp.mcChar || img0)], video_urls: [absUrl(inp.mcMove)], mode: pickRes(p, ["720p", "1080p"], "720p"),
