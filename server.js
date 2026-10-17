@@ -40,6 +40,7 @@ import { registerLocalize, locEngines } from "./lib/localize.js";
 import { registerAgents } from "./lib/agents.js";
 import { registerV88 } from "./lib/v88.js";   // v88: prompts in English for the engines, poster frames, deleting results
 import { startKeepMedia } from "./lib/v89.js";   // v89: results that still point at an engine's (expiring) link are kept here
+import "./lib/intent.js";   // v96: the page's choices (style, camera move, type, motion, what to avoid, voice-over) reach the engine as words
 // a stray error in some background task is logged — it never takes the whole site down (every request in flight would fail
 // with "Failed to fetch" while the service restarts)
 process.on("unhandledRejection", (e) => console.error("unhandled rejection:", (e && (e.stack || e.message)) || e));

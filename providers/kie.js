@@ -29,7 +29,7 @@ const URLK = /^(image_urls|input_urls|image_input|reference_image_urls|reference
 export function sentView(input) { const o = {}; let pics = 0, vids = 0;
   for (const [k, v] of Object.entries(input || {})) { if (v == null || v === "") continue;
     if (URLK.test(k)) { const n = Array.isArray(v) ? v.length : 1; if (/video/.test(k)) vids += n; else pics += n; continue; }
-    if (/^(prompt|text)$/.test(k)) o.prompt = String(v).slice(0, 4000); else if (/^(duration|aspect_ratio|ratio|image_size|aspectRatio|resolution|mode|quality|character_orientation|sound|generate_audio|negative_prompt|generationType|background_source)$/.test(k)) o[k] = typeof v === "object" ? JSON.stringify(v).slice(0, 80) : v; }
+    if (/^(prompt|text)$/.test(k)) o.prompt = String(v).slice(0, 4000); else if (/^(duration|aspect_ratio|ratio|image_size|aspectRatio|resolution|mode|quality|character_orientation|sound|generate_audio|negative_prompt|stability|speed|generationType|background_source)$/.test(k)) o[k] = typeof v === "object" ? JSON.stringify(v).slice(0, 80) : v; }
   if (pics) o.pictures = pics; if (vids) o.videos = vids; return o; }
 const drop = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && v !== ""));
 
@@ -56,6 +56,14 @@ const EL_IDS = { rachel: "21m00Tcm4TlvDq8ikWAM", aria: "9BWtsMINqrJLrRacOk9x", r
   brian: "nPczCjzI2devNBz1zQrb", daniel: "onwK4e9ZLuTAKqWW03F9", lily: "pFZP5JQG7iQjIQuC4Bku", bill: "pqHfZKP75CvOlQylNhV4", adam: "pNInz6obpgDQGcFmaJgB", james: KIE_VOICE_DEFAULT };
 export const elVoiceId = (v) => { const s = String(v || "").trim(); return /^[A-Za-z0-9]{18,}$/.test(s) ? s : EL_IDS[s.toLowerCase()] || null; };
 const ttsVoice = (p) => elVoiceId(p.meta?.voiceId) || elVoiceId(p.meta?.age === "child" ? ELEVEN_VOICE[p.meta?.gender === "male" ? "boy" : "girl"] : ELEVEN_VOICE[p.meta?.gender]) || elVoiceId("Sarah");
+// v96: the Voice page's Tone and Speed reach the voice: tone → how steady / expressive (ElevenLabs stability · style), speed
+// 0.7–1.2. If the engine refuses these settings, the same voice is asked for again without them (see submit).
+const TONE_FEEL = { warm: [.46, .3], deep: [.6, .15], energetic: [.32, .55], calm: [.62, .1], whisper: [.5, .4], narrator: [.66, .18], dramatic: [.3, .6] };
+export function ttsFeel(p) {
+  if (p.meta?.plain96) return {};
+  const f = TONE_FEEL[p.meta?.tone], r = +p.meta?.rate, sp = Number.isFinite(r) && r > 0 && Math.abs(r - 1) > .01 ? Math.round(clamp(r, .7, 1.2) * 100) / 100 : undefined;
+  return drop({ stability: f && f[0], style: f && f[1], speed: sp });
+}
 // only Turbo / Flash take a language code (multilingual v2 refuses one), and only a two-letter ISO code
 const ttsLang = (m, p) => { const l = String(p.meta?.lang || "").toLowerCase().match(/^([a-z]{2})(?:$|[-_])/); return /turbo|flash/.test(m) && l ? l[1] : undefined; };
 // the resolution the user picked (720P / 1080P / 2K / 4K for video, 1K / 2K / 4K for images) in each model's own spelling
@@ -66,7 +74,7 @@ const TOOL_SCALE = (p) => (String((p.meta?.opt || {}).scale || "2x").startsWith(
 // on docs.kie.ai (cross-checked with the @apicity/kie model registry). Exported for tests.
 export function kieInput(model, p) {
   const m = String(model).toLowerCase(), kind = p.kind || "video", inp = p.inputs || {};
-  if (/^elevenlabs\/text-to-speech/.test(m)) return drop({ text: p.prompt, voice: ttsVoice(p), language_code: ttsLang(m, p) });
+  if (/^elevenlabs\/text-to-speech/.test(m)) return drop({ text: p.prompt, voice: ttsVoice(p), language_code: ttsLang(m, p), ...ttsFeel(p) });
   if (/^elevenlabs\/sound-effect/.test(m)) return drop({ text: p.prompt, loop: p.meta?.loop || undefined });
   if (MUSIC_KINDS.has(kind)) return drop({ prompt: p.prompt, custom_mode: false, instrumental: p.meta?.instrumental ?? kind === "sfx" });
   if (/^recraft\/remove-background/.test(m)) return { image: absUrl(inp.bgFg || refImg(p)) };
@@ -186,7 +194,12 @@ export const kie = (model) => {
       const suno = mo.startsWith("suno:");
       const apiModel = suno ? "ai-music-api/generate" : mo;
       const input = { ...kieInput(apiModel, p), ...(suno ? { model: mo.slice(5) || "V5" } : {}), ...extraInputs(c, mo) };
-      const d = await call("/api/v1/jobs/createTask", { method: "POST", body: JSON.stringify(drop({ model: apiModel, callBackUrl: p.callbackUrl, input })) });
+      let d; try { d = await call("/api/v1/jobs/createTask", { method: "POST", body: JSON.stringify(drop({ model: apiModel, callBackUrl: p.callbackUrl, input })) }); }
+      catch (e) {   // v96: a voice whose tone / speed settings the engine refuses → the same voice without them
+        if (!(/^elevenlabs\/text-to-speech/.test(apiModel) && (input.stability != null || input.speed != null) && [400, 422].includes(e.status))) throw e;
+        for (const k of ["stability", "style", "speed"]) delete input[k];
+        d = await call("/api/v1/jobs/createTask", { method: "POST", body: JSON.stringify(drop({ model: apiModel, callBackUrl: p.callbackUrl, input })) });
+      }
       return { remoteId: "m:" + d.taskId, sent: sentView(input) };
     },
     async poll(rid) {
@@ -261,7 +274,7 @@ async function lipVoice(p, call) {
   const own = ttsVoice(p), tries = [["elevenlabs/text-to-speech-multilingual-v2", own], ["elevenlabs/text-to-speech-turbo-2-5", own], ["elevenlabs/text-to-speech-multilingual-v2", KIE_VOICE_DEFAULT]];
   for (const [tm, vid] of tries) {
     try {
-      const t = await call("/api/v1/jobs/createTask", { method: "POST", body: JSON.stringify({ model: tm, input: { ...kieInput(tm, { ...p, kind: "voice", meta: { ...(p.meta || {}), voiceId: vid } }), ...extraInputs(cfg("kie"), tm) } }) });
+      const t = await call("/api/v1/jobs/createTask", { method: "POST", body: JSON.stringify({ model: tm, input: { ...kieInput(tm, { ...p, kind: "voice", meta: { ...(p.meta || {}), voiceId: vid, plain96: tm !== tries[0][0] || vid !== own } }), ...extraInputs(cfg("kie"), tm) } }) });
       for (let i = 0; i < 80; i++) { await new Promise((r) => setTimeout(r, i ? 3000 : 1200)); const d = await call("/api/v1/jobs/recordInfo?taskId=" + encodeURIComponent(t.taskId), { method: "GET" }); const st = String(d.state || "").toLowerCase();
         if (st === "success") { const audio = kieResult(d); if (audio) return audio; throw new Error("finished without audio"); } if (st === "fail") throw new Error(d.failMsg || "failed"); }
       throw new Error("took too long");

@@ -44,7 +44,7 @@ CREATE = """async()=>{const wait=ms=>new Promise(r=>setTimeout(r,ms)),out={};
   try{await API.req('/v1/jobs',{json:{kind:'image',prompt:'x',model:'dotimg'}})}catch(e){out.plainError=e.message}window.fetch=of;API.req=oreq;out.netText=NET88();
   delete M.iRef;
   out.nvBadge=nvBadge();out.nvText=/Powered by NVIDIA|مدعوم من NVIDIA/i.test(document.body.innerText);
-  go('motion');renderAll();await wait(300);out.mc=[...document.querySelectorAll('[data-set="mc83.model"]')].map(b=>b.dataset.val+(b.querySelector('img')?'+logo':''));out.mcModel=MC83().model;out.kie=/\\bKie\\b/i.test(document.body.innerText);
+  go('motion');renderAll();await wait(300);out.mc=[...document.querySelectorAll('[data-set="mc83.model"]')].map(b=>b.dataset.val);out.mcModel=mcModel93(Object.assign({},MC83(),{mode:'moves'}));out.mc26=/2\\.6/.test(document.querySelector('#main').innerText);out.kie=/\\bKie\\b/i.test(document.body.innerText);
   S.draft.ugc.name='Rose serum';S.draft.ugc.price='99 SAR';S.draft.ugc.desc='';go('ugcads');renderAll();await wait(300);
   out.ugc={name:!!document.querySelector('[data-bind="draft.ugc.name"]'),price:!!document.querySelector('[data-bind="draft.ugc.price"]'),about:!!document.querySelector('#ugcabout88'),desc:S.draft.ugc.desc,n:S.draft.ugc.name,p:S.draft.ugc.price};
   const sb=document.querySelector('select#ugcmodel ~ .selbtn')||[...document.querySelectorAll('.selbtn')].find(b=>b._sel&&b._sel.id==='ugcmodel');out.engineBtnPic=!!(sb&&sb.querySelector('.sp88 img'));
@@ -113,7 +113,8 @@ async def page_run(p, W, lang, world):
     ok(c["retryCalls"] == 2, f"{tag}: a dropped connection on a new job is tried again ({c['retryCalls']} calls)")
     ok(c.get("plainError") == c["netText"] and "Failed to fetch" not in (c.get("plainError") or ""), f"{tag}: a plain message instead of \"Failed to fetch\": {c.get('plainError')}")
     ok(c["nvBadge"] == "" and not c["nvText"], f"{tag}: no \"Powered by NVIDIA AI\"")
-    ok(c["mc"] == ["mc30+logo"] and c["mcModel"] == "mc30" and not c["kie"], f"{tag}: Motion Control is 3.0 only, with its logo {c['mc']}")
+    # (since v93 the page has no engine list: "My character does the moves" uses 3.0, "Replace the person" its own engine)
+    ok(c["mc"] == [] and c["mcModel"] == "mc30" and not c["mc26"] and not c["kie"], f"{tag}: Motion Control 2.6 is gone — the moves use 3.0, no engine list {c['mc']} {c['mcModel']}")
     u = c["ugc"]
     ok(not u["name"] and not u["price"] and u["about"] and u["n"] == "" and u["p"] == "" and "Rose serum" in u["desc"], f"{tag}: UGC: name / price / special fields gone, one line about the product (the old name kept in it) {u}")
     ok(c["engineBtnPic"] and c.get("engineSheet") and c["engineSheet"][0] == c["engineSheet"][1] and c["engineSheet"][1] > 3, f"{tag}: the engine list shows each engine's logo {c.get('engineSheet')}")

@@ -7,7 +7,7 @@ import net from "net";
 import { saveBuffer, localPath, MEDIA_DIR } from "../lib/media.js";
 import { providerError } from "../lib/errors.js";
 const apiModel = (id, def) => (settingsS().modelCat || {})[id]?.apiModel || def;
-const promptOf = (p) => [p.prompt, p.meta?.style && `Style: ${p.meta.style}`, p.aspect && `Aspect ratio ${p.aspect}`].filter(Boolean).join(". ");
+const promptOf = (p) => [p.prompt, !p.meta?.words96 && p.meta?.style && `Style: ${p.meta.style}`, p.aspect && `Aspect ratio ${p.aspect}`].filter(Boolean).join(". ");
 // a picture address from a job is only fetched by this server when it is https on a public host (never our own network,
 // loopback, link-local or cloud metadata addresses; no redirects; 15 s; 20 MB)
 const privateIp = (ip) => { if (net.isIPv4(ip)) { const [a, b] = ip.split(".").map(Number); return a === 0 || a === 10 || a === 127 || a >= 224 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127); }
