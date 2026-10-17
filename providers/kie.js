@@ -76,13 +76,16 @@ const TOOL_SCALE = (p) => (String((p.meta?.opt || {}).scale || "2x").startsWith(
 // Build the market `input` for a studio job — field names and allowed values follow each model's schema
 // on docs.kie.ai (cross-checked with the @apicity/kie model registry). Exported for tests.
 // v105: the words for a Character Swap on MiniMax H3 — who changes, and everything that must stay exactly as it is
-export const swapWords = (keep, prod) => {
-  const k = String(keep || "").replace(/[\r\n"]+/g, " ").replace(/\s{2,}/g, " ").trim().replace(/[.\s]+$/, "").slice(0, 200);
-  return "Replace the person in Video 1 with the person in Image 1: the face, hair, skin tone, body shape and clothes of the person in Image 1. " +
+// (v107: target = Image 2 shows the person to replace among several; where = where that person is in this part of the video)
+const one = (v, n) => String(v || "").replace(/[\r\n"]+/g, " ").replace(/\s{2,}/g, " ").trim().replace(/[.\s]+$/, "").slice(0, n);
+export const swapWords = ({ keep, prod, target, where, who } = {}) => {
+  const k = one(keep, 200), w = one(where || who, 160), pi = target ? 3 : 2;
+  return (target ? "Replace one person in Video 1 — the person shown in Image 2" + (w ? ": " + w : "") + " — with the person in Image 1: " : "Replace the person in Video 1 with the person in Image 1: ") +
+    "the face, hair, skin tone, body shape and clothes of the person in Image 1. " + (target ? "Keep every other person in Video 1 exactly as they are. " : "") +
     "Keep everything else in Video 1 exactly the same, frame by frame: " + (k ? "the products and objects (" + k + "), " : "") +
     "every product and object with its exact shape, size, colour, logo, label and written text; what the person holds and touches; the place, background, light and colours; " +
     "the camera position, movement and framing; the timing; and every movement, gesture, hand position, expression and lip movement of the person. " +
-    (prod ? "Image 2 shows the product in the video: it must look exactly like Image 2. " : "") +
+    (prod ? `Image ${pi} shows the product in the video: it must look exactly like Image ${pi}. ` : "") +
     "Do not add, remove, restyle or move anything else. No new text, captions or watermarks.";
 };
 export function kieInput(model, p) {
@@ -125,9 +128,12 @@ export function kieInput(model, p) {
   // v105 Character Swap on MiniMax H3 (reference-to-video): Video 1 = the client's video (what happens, the place, the products),
   // Image 1 = the new person, Image 2 = the product photo (optional). H3 keeps what the words tell it to keep, so the words list
   // it: the products the text AI saw in the video (meta.mcKeep), their look and writing, the place, light, camera and every movement
+  // (v107: with several people, Image 2 = the person to replace — cut from the frame the client tapped, or their picture — and the
+  // product moves to Image 3; the words say where that person is in this part)
   if (/^minimax-h3\/reference-to-video/.test(m)) {
-    const prod = inp.mcProd ? absUrl(inp.mcProd) : null;
-    return drop({ prompt: swapWords(p.meta?.mcKeep, !!prod), reference_image_urls: [absUrl(inp.mcChar || img0), ...(prod ? [prod] : [])], reference_video_urls: [absUrl(inp.mcMove)],
+    const prod = inp.mcProd ? absUrl(inp.mcProd) : null, target = inp.mcWho ? absUrl(inp.mcWho) : null;
+    return drop({ prompt: swapWords({ keep: p.meta?.mcKeep, prod: !!prod, target: !!target, where: p.meta?.swapWhere, who: p.meta?.swapWho }),
+      reference_image_urls: [absUrl(inp.mcChar || img0), ...(target ? [target] : []), ...(prod ? [prod] : [])], reference_video_urls: [absUrl(inp.mcMove)],
       aspect_ratio: "adaptive", duration: clamp(dur, 4, 15), resolution: pickRes(p, ["768P", "2K"], "2K") });
   }
   if (/^kling\/v3-turbo/.test(m)) return img ? { prompt, image_urls: [img], duration: String(clamp(dur, 3, 15)), resolution: pickRes(p, ["720p", "1080p"], "720p") }

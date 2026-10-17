@@ -13200,14 +13200,15 @@ const mcMode93=()=>{const c=MC83();if(c.mode!=="swap"&&c.mode!=="moves")c.mode="
 // sets the same before pricing, so the price on the button is the charge
 const mcRes93=c=>{c.res=c.mode==="swap"?"2K":"1080p";return c.res};
 // v105: the swap takes videos of 2–15 s (priced 4–15 s: the engine's shortest clip is 4 s); the moves 3–30 s
-const mcMax105=sw=>sw?15:30,mcDur105=(sw,d)=>sw?Math.min(15,Math.max(4,d||5)):Math.min(30,Math.max(3,d||5));
+// (v107: the swap takes up to 2 minutes — the server makes it in parts of up to 15 s and joins them)
+const mcMax105=sw=>sw?120:30,mcDur105=(sw,d)=>sw?Math.min(120,Math.max(4,d||5)):Math.min(30,Math.max(3,d||5));
 const mcK93=c=>c.mode==="swap"?1:1.5;
 const mcModel93=c=>c.mode==="swap"?"mcswap":"mc30";
 // the video's own shape (an upload has its player; a library video is measured once, quietly)
 const mcAspect93=()=>{const m=M.mcMove;if(!m)return"9:16";const v=m.el;let w=(v&&v.videoWidth)||m.vw,h=(v&&v.videoHeight)||m.vh;
   if((!w||!h)&&m.url&&!m.probe93){m.probe93=1;const t=document.createElement("video");t.muted=true;t.preload="metadata";t.onloadedmetadata=()=>{if(M.mcMove===m){m.vw=t.videoWidth;m.vh=t.videoHeight;if(S.view==="motion")renderView()}};t.src=m.url}
   if(!w||!h){const j=S.jobs.find(x=>mediaUrl(x)===m.url);return j&&j.aspect?j.aspect:"9:16"}const r=w/h;return r>1.2?"16:9":r<.85?"9:16":"1:1"};
-const mcBig93=()=>{const out=[];[["mcMove",L("video","الفيديو")],["mcChar",L("photo","الصورة")],["mcProd",L("product photo","صورة المنتج")]].forEach(([s,n])=>{const f=M[s]&&M[s].file;if(f&&f.size>MB93)out.push([n,Math.round(f.size/1048576)])});return out};
+const mcBig93=()=>{const out=[];[["mcMove",L("video","الفيديو")],["mcChar",L("photo","الصورة")],["mcWho",L("picture of the person","صورة الشخص")],["mcProd",L("product photo","صورة المنتج")]].forEach(([s,n])=>{const f=M[s]&&M[s].file;if(f&&f.size>MB93)out.push([n,Math.round(f.size/1048576)])});return out};
 VIEWS.motion=()=>{const c=MC83(),mode=mcMode93(),sw=mode==="swap",res=mcRes93(c),d=mcDur83(),model=mcModel93(c),cost=vprice83(model,d?mcDur105(sw,d):5,mcK93(c)),
   mine=S.jobs.filter(j=>j.meta&&j.meta.motion83),g=mine[mine.length-1],prev=mine.slice(0,-1).slice(-8).reverse(),mx=mcMax105(sw),tooLong=d>mx,tooShort=d>0&&d<(sw?2:3),big=sw?mcBig93():[];
   const modes='<div class="mcmode93" role="radiogroup" aria-label="'+esc(L("What do you want?","ماذا تريد؟"))+'">'+[
@@ -13215,16 +13216,18 @@ VIEWS.motion=()=>{const c=MC83(),mode=mcMode93(),sw=mode==="swap",res=mcRes93(c)
     ["moves","motion83",L("My character does the moves","شخصيتي تؤدي الحركة"),L("Your character performs the video's movement in the photo's own setting.","تؤدي شخصيتك حركة الفيديو في مكان الصورة نفسها.")]]
     .map(([v,icn,t,dd])=>'<button class="mcm93" role="radio" data-set="mc83.mode" data-val="'+v+'" aria-checked="'+(mode===v)+'" aria-pressed="'+(mode===v)+'"><span class="gl">'+ic(icn)+"</span><b>"+esc(t)+"</b><small>"+esc(dd)+"</small></button>").join("")+"</div>";
   const form='<div class="panel pad mc83">'+modes+
-    '<span class="lbl">1 · '+(sw?L("The video","الفيديو"):L("The movement","الحركة"))+'</span><p class="small mute mc83h">'+(sw?L("The video with the person to replace: 2–15 s, one person. Phone videos of any size are made ready for the engine.","الفيديو الذي فيه الشخص المراد استبداله: 2–15 ث، شخص واحد. فيديوهات الهاتف بأي حجم تُجهَّز للمحرّك تلقائياً."):L("A video of the movement: a dance, a gesture, a walk (3–30 s, one person).","فيديو للحركة: رقصة أو إشارة أو مشي (3–30 ث، شخص واحد)."))+"</p>"+
+    '<span class="lbl">1 · '+(sw?L("The video","الفيديو"):L("The movement","الحركة"))+'</span><p class="small mute mc83h">'+(sw?L("The video with the person to replace: 2 s to 2 minutes, one person or several (you pick who in step 3). Phone videos of any size are made ready for the engine.","الفيديو الذي فيه الشخص المراد استبداله: من 2 ث إلى دقيقتين، شخص واحد أو أكثر (تختار من في الخطوة 3). فيديوهات الهاتف بأي حجم تُجهَّز للمحرّك تلقائياً."):L("A video of the movement: a dance, a gesture, a walk (3–30 s, one person).","فيديو للحركة: رقصة أو إشارة أو مشي (3–30 ث، شخص واحد)."))+"</p>"+
     mediaSlot("mcMove","video/*",L("Upload the video","ارفع الفيديو"))+(M.mcMove?"":mcLib83(["video","edit","export","finish","lipsync"],"mcMove"))+
-    (tooLong?'<p class="small warn83">'+L("This video is "+d+" s — up to "+mx+" s. Trim it in the editor first.","هذا الفيديو "+d+" ث — الحد "+mx+" ث. قصّه في المحرر أولاً.")+"</p>":tooShort?'<p class="small warn83">'+L("This video is shorter than "+(sw?2:3)+" s.","هذا الفيديو أقصر من "+(sw?2:3)+" ث.")+"</p>":d?'<p class="small mute">'+L("Length: "+d+" s","المدة: "+d+" ث")+"</p>":"")+
+    (tooLong?'<p class="small warn83">'+L("This video is "+d+" s — up to "+mx+" s. Trim it in the editor first.","هذا الفيديو "+d+" ث — الحد "+mx+" ث. قصّه في المحرر أولاً.")+"</p>":tooShort?'<p class="small warn83">'+L("This video is shorter than "+(sw?2:3)+" s.","هذا الفيديو أقصر من "+(sw?2:3)+" ث.")+"</p>":d?'<p class="small mute">'+(sw&&d>15?L("Length: "+d+" s — made in "+Math.ceil(d/15)+" parts of up to 15 s, joined into one video with its own sound.","المدة: "+d+" ث — تُصنع في "+Math.ceil(d/15)+" أجزاء حتى 15 ث، وتُجمع في فيديو واحد بصوته الأصلي."):L("Length: "+d+" s","المدة: "+d+" ث"))+"</p>":"")+
     '<span class="lbl">2 · '+(sw?L("The new person","الشخص الجديد"):L("The character","الشخصية"))+'</span><p class="small mute mc83h">'+(sw?L("A sharp photo of the person who will appear: face and whole body visible, facing the camera, standing like the person in the video.","صورة واضحة للشخص الذي سيظهر: الوجه والجسم كاملاً، مواجهاً للكاميرا، بوقفة تشبه الشخص في الفيديو."):L("A clear photo of the whole body, facing the camera, like the person in the video.","صورة واضحة للجسم كاملاً مواجهة للكاميرا، مثل الشخص في الفيديو."))+"</p>"+
     mediaSlot("mcChar","image/*",L("Upload the photo","ارفع الصورة"))+(M.mcChar?"":mcLib83(["image","look","sheet"],"mcChar"))+
+    // v107: the person to replace — tapped on a frame of the video, or a picture of them (needed when the video shows several people)
+    (sw?'<span class="lbl">3 · '+L("The person to replace","الشخص المراد استبداله")+'</span><p class="small mute mc83h">'+L("Several people in the video? Tap the one to replace on a frame, or add a picture of them — they're followed through the whole video. One person: you can skip this.","في الفيديو أكثر من شخص؟ اضغط على الشخص المراد استبداله في لقطة، أو أضف صورة له — ويُتتبّع في الفيديو كله. شخص واحد: يمكنك تخطي هذا.")+"</p>"+who107():"")+
     // v105: the product photo (optional) — the engine keeps the product exactly like it
-    (sw?'<span class="lbl">3 · '+L("The product (optional)","المنتج (اختياري)")+'</span><p class="small mute mc83h">'+L("A clear photo of the product in the video — it stays exactly as it is in the result.","صورة واضحة للمنتج الظاهر في الفيديو — يبقى في النتيجة كما هو تماماً.")+"</p>"+
+    (sw?'<span class="lbl">4 · '+L("The product (optional)","المنتج (اختياري)")+'</span><p class="small mute mc83h">'+L("A clear photo of the product in the video — it stays exactly as it is in the result.","صورة واضحة للمنتج الظاهر في الفيديو — يبقى في النتيجة كما هو تماماً.")+"</p>"+
       mediaSlot("mcProd","image/*",L("Upload the product photo","ارفع صورة المنتج")):"")+
     (big.length?'<p class="small warn83">'+big.map(([n,mb])=>L("The "+n+" is "+mb+" MB — use one under 300 MB (trim it in the editor).","حجم "+n+" "+mb+" ميجابايت — استخدم ملفاً أقل من 300 ميجابايت (قصّه في المحرر).")).join(" ")+"</p>":"")+
-    (sw?'<p class="small mute tip93">'+ic("spark","width:14px;height:14px")+L("Best results: one person in the video, the face visible, a photo with a similar pose and framing — and the product's photo when it must stay exact.","أفضل نتيجة: شخص واحد في الفيديو، والوجه ظاهر، وصورة بوقفة وكادر قريبين منه — وصورة المنتج إن كان يجب أن يبقى كما هو.")+"</p>"
+    (sw?'<p class="small mute tip93">'+ic("spark","width:14px;height:14px")+L("Best results: the person to replace clearly seen with the face visible, a photo with a similar pose and framing — and the product's photo when it must stay exact.","أفضل نتيجة: الشخص المراد استبداله واضح والوجه ظاهر، وصورة بوقفة وكادر قريبين منه — وصورة المنتج إن كان يجب أن يبقى كما هو.")+"</p>"
       :'<span class="lbl">3 · '+L("Anything to add (optional)","إضافة (اختياري)")+'</span><textarea data-bind="mc83.prompt" dir="auto" style="min-height:64px" placeholder="'+esc(L("e.g. on a sunny street in Riyadh, wearing a white thobe","مثال: في شارع مشمس بالرياض، يرتدي ثوباً أبيض"))+'">'+esc(c.prompt)+"</textarea>")+
     (sw?"":'<div class="grid2"><div><span class="lbl">'+L("Framing","الكادر")+'</span><div class="seg"><button data-set="mc83.orient" data-val="video" aria-pressed="'+(c.orient==="video")+'">'+L("Like the video","مثل الفيديو")+'</button><button data-set="mc83.orient" data-val="image" aria-pressed="'+(c.orient==="image")+'">'+L("Like the photo","مثل الصورة")+"</button></div></div></div>")+
     '<label class="check83"><input type="checkbox" data-mc83consent="1"'+(c.consent?" checked":"")+"> <span>"+L("I have the right to use this photo and this video, and the people in them agreed.","لدي حق استخدام هذه الصورة وهذا الفيديو، والأشخاص الظاهرون فيهما موافقون.")+"</span></label>"+
@@ -13241,10 +13244,11 @@ window.addEventListener("click",async e=>{const a=e.target.closest&&e.target.clo
   if(sw&&mcBig93().length){toast(L("Files up to 300 MB — trim or shorten the video in the editor first.","الملفات حتى 300 ميجابايت — قصّ الفيديو أو اختصره في المحرر أولاً."),{type:"warn"});return}
   if(!c.consent){toast(L("Confirm that you have the right to use this photo and video.","أكّد أن لديك حق استخدام الصورة والفيديو."),{type:"warn"});const x=document.querySelector("[data-mc83consent]");if(x)x.focus();return}
   const dur=mcDur105(sw,d),cost=vprice83(model,dur,mcK93(c)),meta={motion83:true,res:c.res,consent:true};if(sw)meta.swap93=true;else meta.orient=c.orient;
-  let inputs={};if(API.mode==="server"){a.disabled=true;try{for(const s of["mcMove","mcChar",...(sw&&M.mcProd?["mcProd"]:[])]){const m=M[s];inputs[s]=m.file?(await API.upload(m.file,m.name)).url:m.remote}}catch(err){a.disabled=false;toast(L("Couldn't upload the files — try again.","تعذّر رفع الملفات — حاول مجدداً."),{type:"warn"});return}a.disabled=false}
+  if(sw&&M.mcWho&&M.mcWho.tap)meta.whoTap=M.mcWho.tap;   // v107: the frame the client tapped, and where
+  let inputs={};if(API.mode==="server"){a.disabled=true;try{for(const s of["mcMove","mcChar",...(sw&&M.mcWho?["mcWho"]:[]),...(sw&&M.mcProd?["mcProd"]:[])]){const m=M[s];inputs[s]=m.file?(await API.upload(m.file,m.file.name||m.name)).url:m.remote}}catch(err){a.disabled=false;toast(L("Couldn't upload the files — try again.","تعذّر رفع الملفات — حاول مجدداً."),{type:"warn"});return}a.disabled=false}
   const words=sw?"":String(c.prompt||"").trim();
   const j=addJob({kind:"video",model,prompt:words,title:(sw?L("Swap · ","استبدال · "):L("Motion · ","حركة · "))+(words||M.mcChar.name||"").slice(0,40),dur,aspect:sw||c.orient==="video"?mcAspect93():"9:16",cost,secs:12,art:"scene",meta,inputsUrl:{},inputs83:inputs});
-  if(j){persist();renderAll();toast(sw?L("Replacing the person — usually 3–8 minutes.","جارٍ استبدال الشخص — عادةً 3–8 دقائق."):L("Making it move — usually 2–5 minutes.","جارٍ التحريك — عادةً 2–5 دقائق."),{type:"info"})}},true);
+  if(j){persist();renderAll();toast(sw?(dur>15?L("Replacing the person, part by part — usually 5–15 minutes.","جارٍ استبدال الشخص جزءاً جزءاً — عادةً 5–15 دقيقة."):L("Replacing the person — usually 3–8 minutes.","جارٍ استبدال الشخص — عادةً 3–8 دقائق.")):L("Making it move — usually 2–5 minutes.","جارٍ التحريك — عادةً 2–5 دقائق."),{type:"info"})}},true);
 (()=>{const st=document.createElement("style");st.textContent=`
 .mcmode93{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
 .mcm93{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;row-gap:2px;align-items:start;text-align:start;padding:12px;border-radius:var(--r-m,12px);border:1px solid var(--line2);background:var(--panel);color:var(--text);cursor:pointer;min-width:0}
@@ -14049,6 +14053,41 @@ makeReal87=(o=>async function(c,quiet){const b=c&&c.facePic?await IDB.get(faceKe
 .av106 img{width:100%;height:100%;object-fit:cover}.av106 .sil87{display:grid;place-items:center;width:100%;height:100%;color:var(--mute)}.av106 .sil87 svg{width:70%;height:70%}
 .av106 .star79{position:absolute;inset:0;margin:auto}
 .tx106{min-width:0;display:flex;flex-direction:column;gap:2px}.tx106 small{color:var(--mute);font-size:12px;line-height:1.45}`;document.head.appendChild(st)})();
+
+/* ================= v107: the person to replace — picked on a frame of the video ================= */
+// Motion Control → Replace the person, step 3: "Tap them in the video" shows a frame (−2 s / +2 s to find a moment where they're
+// clearly seen); a tap picks that person. The clean frame and where it was tapped go to the server, which cuts that person out
+// and follows them through every part of the video (lib/mcprep.js traceSwap). Or a picture of them is uploaded instead.
+const P107={open:false,f:null,v:null,key:null};
+const tm107=t=>{t=Math.max(0,+t||0);return Math.floor(t/60)+":"+String(Math.floor(t%60)).padStart(2,"0")};
+async function frame107(t){const m=M.mcMove;if(!m)return null;const key=m.url||m.remote;
+  if(!P107.v||P107.key!==key){const v=document.createElement("video");v.muted=true;v.playsInline=true;v.preload="auto";v.src=key;P107.v=v;P107.key=key;
+    await new Promise((ok,bad)=>{v.onloadeddata=ok;v.onerror=bad;setTimeout(bad,20000)})}
+  const v=P107.v,d=isFinite(v.duration)?v.duration:0;t=Math.max(0,d?Math.min(d-.1,t):t);
+  await new Promise(ok=>{let k=0;const f=()=>{if(!k){k=1;ok()}};v.addEventListener("seeked",f,{once:true});try{v.currentTime=t}catch(e){}setTimeout(f,2500)});
+  const s=Math.min(1,1280/Math.max(v.videoWidth||1,v.videoHeight||1)),c=document.createElement("canvas");c.width=Math.max(2,Math.round(v.videoWidth*s));c.height=Math.max(2,Math.round(v.videoHeight*s));
+  c.getContext("2d").drawImage(v,0,0,c.width,c.height);return{url:c.toDataURL("image/jpeg",.92),w:c.width,h:c.height,t:Math.round(t*10)/10,dur:d}}
+function who107(){const m=M.mcMove;
+  if(M.mcWho&&M.mcWho.tap&&M.mcWho.vid!==(m&&m.url))delete M.mcWho;   // picked in another video
+  if(P107.open&&P107.f&&m)return'<div class="pick107"><p class="small"><b>'+L("Tap the person to replace","اضغط على الشخص المراد استبداله")+'</b></p><div class="fr107"><img src="'+P107.f.url+'" alt="" data-pick107="1" draggable="false"></div>'+
+    '<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center"><button class="btn sm" data-act="mc107-step" data-d="-2">−2 '+L("s","ث")+'</button><span class="small mute mono">'+tm107(P107.f.t)+(P107.f.dur?" / "+tm107(P107.f.dur):"")+'</span><button class="btn sm" data-act="mc107-step" data-d="2">+2 '+L("s","ث")+'</button><button class="btn sm ghost" data-act="mc107-close">'+L("Cancel","إلغاء")+"</button></div></div>";
+  if(M.mcWho)return mediaSlot("mcWho","image/*",L("Upload their picture","ارفع صورته"));
+  return(m?'<button class="btn sm" data-act="mc107-pick" style="margin-bottom:8px">'+ic("hand")+L("Tap them in the video","اضغط عليه في الفيديو")+"</button>":"")+mediaSlot("mcWho","image/*",L("Or upload a picture of them","أو ارفع صورة له"))}
+window.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="mc107-pick"],[data-act="mc107-step"],[data-act="mc107-close"],img[data-pick107]');if(!a||S.view!=="motion")return;e.preventDefault();e.stopImmediatePropagation();
+  if(a.dataset.act==="mc107-close"){P107.open=false;renderView();return}
+  if(a.dataset.act){const el=M.mcMove&&M.mcMove.el,t=a.dataset.act==="mc107-step"?(P107.f?P107.f.t:0)+(+a.dataset.d||0):(el&&isFinite(el.currentTime)?el.currentTime:1);
+    a.disabled=true;const f=await frame107(t).catch(()=>null);a.disabled=false;
+    if(!f){toast(L("Couldn't read a frame of this video.","تعذّرت قراءة لقطة من هذا الفيديو."),{type:"warn"});return}P107.f=f;P107.open=true;renderView();return}
+  // a tap on the frame: that person (the picture shown has a ring where the tap was; the server gets the clean frame)
+  const r=a.getBoundingClientRect(),x=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y=Math.min(1,Math.max(0,(e.clientY-r.top)/r.height)),f=P107.f;if(!f)return;
+  const im=new Image();await new Promise(ok=>{im.onload=ok;im.onerror=ok;im.src=f.url});const c=document.createElement("canvas");c.width=f.w;c.height=f.h;const g=c.getContext("2d");g.drawImage(im,0,0);
+  const rr=Math.max(10,Math.min(f.w,f.h)*.07);g.lineWidth=Math.max(3,rr/6);g.strokeStyle="#c6f25b";g.beginPath();g.arc(x*f.w,y*f.h,rr,0,Math.PI*2);g.stroke();
+  M.mcWho={type:"image",url:c.toDataURL("image/jpeg",.85),name:L("Picked at ","اختير عند ")+tm107(f.t),file:new File([dataURLtoBlob(f.url)],"person.jpg",{type:"image/jpeg"}),tap:[Math.round(x*1e4)/1e4,Math.round(y*1e4)/1e4],vid:M.mcMove&&M.mcMove.url};
+  P107.open=false;renderView()},true);
+(()=>{const st=document.createElement("style");st.textContent=`
+.pick107{border:1px solid var(--line2);border-radius:var(--r-m,12px);padding:10px;margin-bottom:8px;background:var(--panel)}
+.fr107{border-radius:10px;overflow:hidden;background:#000;display:flex;justify-content:center}
+.fr107 img{display:block;max-width:100%;max-height:60vh;width:auto;height:auto;cursor:crosshair;touch-action:manipulation;user-select:none}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

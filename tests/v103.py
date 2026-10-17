@@ -20,10 +20,10 @@ subprocess.run(["cp", D + "/media/move.mp4", D + "/vid.mp4"], check=True)
 # v104: a movement video with its own sound (the engine's result, vid.mp4, is silent)
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=640x360:rate=24", "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=44100", "-t", "3",
                 "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest", D + "/media/talk.mp4"], check=True)
-# v105: a 4 s engine result with its own made-up sound (MiniMax H3 makes sound, and 4 s at least); a 16 s video (too long for the swap)
+# v105: a 4 s engine result with its own made-up sound (MiniMax H3 makes sound, and 4 s at least); a 125 s video (v107: too long — the swap takes up to 2 minutes)
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=640x360:rate=24", "-f", "lavfi", "-i", "sine=frequency=880:sample_rate=44100", "-t", "4",
                 "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest", D + "/vidsnd.mp4"], check=True)
-subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=gray:s=320x180:rate=10", "-t", "16", "-c:v", "libx264", "-pix_fmt", "yuv420p", D + "/media/long.mp4"], check=True)
+subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=gray:s=320x180:rate=10", "-t", "125", "-c:v", "libx264", "-pix_fmt", "yuv420p", D + "/media/long.mp4"], check=True)
 probe_dur = lambda f: float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", f], capture_output=True, text=True).stdout.strip() or 0)
 has_sound = lambda f: "audio" in subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=codec_type", "-of", "csv=p=0", f], capture_output=True, text=True).stdout
 MOCK = r"""
@@ -120,10 +120,10 @@ try:
     mock("/plan", {"swap": ["snd"]}); j = api("/v1/jobs", {**SWAP, "cid": "a6b"}); d = done(j.get("id", "x")) or {}; f = D + "/media/" + str(d.get("url", "")).split("/media/")[-1]
     out["own"] = [d.get("status"), d.get("url"), os.path.exists(f) and has_sound(f), os.path.exists(f) and probe_dur(f)]
     ok(d.get("status") == "done" and d.get("url", "").endswith("-snd.mp4") and os.path.exists(f) and not has_sound(f) and probe_dur(f) < 3.4, f"the swap has the video's own length and sound, nothing made up {out['own']}")
-    # 6c) a 16 s video: refused before anything is charged (the swap takes up to 15 s)
-    c0 = credits(); n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "a6c", "dur": 16, "inputs": {"mcMove": "/media/long.mp4", "mcChar": "/media/pic.png"}})
+    # 6c) a video over 2 minutes: refused before anything is charged (v107: the swap takes up to 2 minutes, in parts)
+    c0 = credits(); n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "a6c", "dur": 120, "inputs": {"mcMove": "/media/long.mp4", "mcChar": "/media/pic.png"}})
     out["long"] = [j.get("_status"), j.get("error"), c0, credits(), tasks(n0)]
-    ok(j.get("_status") == 400 and "up to 15 s" in str(j.get("error")) and credits() == c0 and not tasks(n0), f"a 16 s video: refused with the reason, nothing charged {out['long']}")
+    ok(j.get("_status") == 400 and "up to 2 minutes" in str(j.get("error")) and credits() == c0 and not tasks(n0), f"a 125 s video: refused with the reason, nothing charged {out['long']}")
     # 7) a silent movement video: the result is the engine's own file, nothing added
     n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "a7"}); d = done(j.get("id", "x")) or {}
     out["silent"] = [d.get("status"), d.get("url")]
