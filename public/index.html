@@ -2692,7 +2692,7 @@ setInterval(async()=>{
   if(API.mode!=="server"||poll109)return;const now=Date.now(),age=o=>now-(o.created||now);
   const list=S.jobs.concat(S.story.chapters).filter(o=>o.remote&&!["complete","failed"].includes(o.status)&&now-(o._poll109||0)>=(age(o)<6e5?2500:age(o)<36e5?1e4:6e4));
   if(!list.length)return;poll109=true;
-  const one=async o=>{o._poll109=Date.now();try{const r=await API.req("/v1/jobs/"+o.remote);const ch=r.status!==o.status;o.status=r.status==="done"?"complete":r.status;o.progress=r.progress||o.progress;if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;o.stage=r.stage||null;o.parts108=r.partsTotal?[r.partsDone||0,r.partsTotal]:null;if(r.detail)o.detail=r.detail;if(r.via)o.via=r.via;if(r.segments&&o.kind==="transcribe"&&!o.imported){o.imported=true;importSegments(r.segments)}if(ch){persist();statusChanged()}else liveUpdate()}catch(e){goneJob(o,e)}};
+  const one=async o=>{o._poll109=Date.now();try{const r=await API.req("/v1/jobs/"+o.remote);const ch=r.status!==o.status;o.status=r.status==="done"?"complete":r.status;o.progress=r.progress||o.progress;if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;o.stage=r.stage||null;o.parts108=r.partsTotal?[r.partsDone||0,r.partsTotal]:null;o.inLine112=!!r.inLine;if(r.detail)o.detail=r.detail;if(r.via)o.via=r.via;if(r.segments&&o.kind==="transcribe"&&!o.imported){o.imported=true;importSegments(r.segments)}if(ch){persist();statusChanged()}else liveUpdate()}catch(e){goneJob(o,e)}};
   try{for(let i=0;i<list.length;i+=4)await Promise.all(list.slice(i,i+4).map(one))}finally{poll109=false}
 },3000);
 const _stl=stLabel;stLabel=st=>({failed:L("Failed","فشل"),scheduled:L("Scheduled","مجدول"),published:L("Published","منشور")})[st]||_stl(st);
@@ -8002,7 +8002,7 @@ setInterval(async()=>{if(API.mode!=="server"||!S.hf||!(S.hf.out||[]).length||hf1
     if(["queued","rendering"].includes(o.status)){const exp=(o.kind==="video"?((MODELS[o.model]||{}).sec||70)*Math.max(1,(o.dur||5)/5):({music:90,voice:15,sfx:20,lipsync:120})[o.kind]||25)*1000,est=Math.min(.93,(now-(o.created||now))/exp);if(!(o.progress>est))o.progress=est}
     try{const r=await API.req("/v1/jobs/"+o.remote);const before=o.status+"|"+JSON.stringify(o.sceneCheck||null);
       if(r.status==="queued"||r.status==="rendering")o.status="rendering";else if(r.status==="done")o.status="complete";else if(r.status==="failed")o.status="failed";
-      if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;o.stage=r.stage||null;o.parts108=r.partsTotal?[r.partsDone||0,r.partsTotal]:null;if(r.detail)o.detail=r.detail;if(r.progress)o.progress=Math.max(o.progress||0,r.progress);if(r.sceneCheck)o.sceneCheck=r.sceneCheck;
+      if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;o.stage=r.stage||null;o.parts108=r.partsTotal?[r.partsDone||0,r.partsTotal]:null;o.inLine112=!!r.inLine;if(r.detail)o.detail=r.detail;if(r.progress)o.progress=Math.max(o.progress||0,r.progress);if(r.sceneCheck)o.sceneCheck=r.sceneCheck;
       if(before!==o.status+"|"+JSON.stringify(o.sceneCheck||null)){persist();statusChanged()}else liveUpdate()}catch(e){goneJob(o,e)}}}finally{hf109=false}},1500);
 (()=>{const st=document.createElement("style");st.textContent=`
 .hfmrow.g{gap:6px}.hfmi.nooi{padding:0 12px 0 4px}.hfmi.nooi b{padding:0}.hfmi.pick{padding:0 10px 0 4px}.hfmi.pick>svg:last-child{width:14px;height:14px;opacity:.7}
@@ -14103,7 +14103,7 @@ window.addEventListener("click",async e=>{const a=e.target.closest&&e.target.clo
 // prepAndStart): the card says which step it is on instead of a long silent wait; a long swap says how many parts are ready.
 const stage108=j=>{if(!j||!j.stage||["complete","failed"].includes(j.status))return"";const p=j.parts108;
   const t={prep:L("Getting your video ready…","تجهيز الفيديو…"),look:L("Looking at the video and the photos…","فحص الفيديو والصور…"),
-    engine:p&&p[1]>1?L("The engine is making it — "+p[0]+" of "+p[1]+" parts ready…","المحرّك يصنعه — جاهز "+p[0]+" من "+p[1]+" أجزاء…"):L("The engine is making it — usually a few minutes…","المحرّك يصنعه — عادةً بضع دقائق…"),
+    engine:j.inLine112?L("Waiting in the engine's line — it starts as soon as the engine is free…","في طابور المحرّك — يبدأ فور أن يتفرّغ…"):p&&p[1]>1?L("The engine is making it — "+p[0]+" of "+p[1]+" parts ready…","المحرّك يصنعه — جاهز "+p[0]+" من "+p[1]+" أجزاء…"):L("The engine is making it — usually a few minutes…","المحرّك يصنعه — عادةً بضع دقائق…"),
     join:L("Joining the parts with the original sound…","جمع الأجزاء مع الصوت الأصلي…")}[j.stage];
   return t?'<p class="small mute stage108">'+ic("spark","width:14px;height:14px")+"<span>"+esc(t)+"</span></p>":""};
 previewCol=(o=>function(g,prev){const h=o(g,prev),s=stage108(g);return s?h.replace('<div class="pipe"',s+'<div class="pipe"'):h})(previewCol);
@@ -14138,6 +14138,7 @@ function speed109(){if(!SP109.d&&!SP109.busy&&!SP109.err)speed109load();const d=
   const rows=Object.entries(d.last24h||{}).map(([k,v])=>"<tr><td>"+esc(names[k]||k)+"</td><td>"+v.n+"</td><td>"+sec109(v.total)+"</td><td>"+sec109(v.before)+"</td><td>"+sec109(v.engine)+"</td><td>"+sec109(v.slowest)+"</td></tr>").join("");
   return head+'<div class="sp109g"><div><b>'+s.load[0]+" / "+s.cpus+"</b><small>"+L("Processor load / CPUs","حمل المعالج / المعالجات")+"</small></div><div><b>"+s.lagMs.max+" ms</b><small>"+L("Longest wait (last minute)","أطول انتظار (آخر دقيقة)")+"</small></div><div><b>"+s.freeMB+" MB</b><small>"+L("Free memory","الذاكرة المتاحة")+"</small></div><div><b>"+p.n+"</b><small>"+L("Being made now","قيد الصنع الآن")+"</small></div><div><b>"+s.dbMB+" MB</b><small>"+L("Data file","ملف البيانات")+"</small></div>"+(s.saveMs?"<div><b>"+s.saveMs.avg+" ms</b><small>"+L("Each save","كل حفظ")+"</small></div>":"")+"</div>"+
     (notes.length?'<ul class="small sp109n">'+notes.map(n=>"<li>"+esc(n)+"</li>").join("")+"</ul>":'<p class="small mute">'+L("The server itself isn't busy — any wait is the engine's.","الخادم نفسه غير مشغول — أي انتظار هو من المحرّك.")+"</p>")+
+    (d.swapRes?'<div class="sw112"><span class="small">'+L("Replace the person — engine resolution","استبدال الشخص — دقة المحرّك")+'</span><div class="sw112b">'+[["2K",L("Sharpest (2K)","الأوضح (2K)")],["768P",L("Faster (768P)","أسرع (768P)")]].map(([k,t])=>'<button class="btn sm'+(d.swapRes===k?" on":"")+'" data-act="sw112" data-res="'+k+'" aria-pressed="'+(d.swapRes===k)+'">'+t+"</button>").join("")+"</div></div>":"")+
     (rows?'<div style="overflow-x:auto"><table class="sp109t"><thead><tr><th>'+L("Last 24 h","آخر 24 ساعة")+"</th><th>"+L("Made","صُنع")+"</th><th>"+L("Usual time","المدة المعتادة")+"</th><th>"+L("Our part","جزؤنا")+"</th><th>"+L("Engine","المحرّك")+"</th><th>"+L("Slowest","الأبطأ")+"</th></tr></thead><tbody>"+rows+"</tbody></table></div>":'<p class="small mute">'+L("No finished jobs in the last 24 hours yet.","لا مهام منتهية في آخر 24 ساعة بعد.")+"</p>")+"</div>"}
 VIEWS.admin=(o=>function(){const h=o.apply(this,arguments);return(S.admTab||"overview")==="overview"?h.replace(/<\/div>\s*$/,speed109()+"</div>"):h})(VIEWS.admin);
 document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="sp109"]');if(!a)return;SP109.d=null;speed109load();renderView()});
@@ -14147,6 +14148,15 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
 .sp109g b{font-size:18px}.sp109g small{color:var(--mute);font-size:12px}
 .sp109n{margin:12px 0 0;padding-inline-start:18px;display:grid;gap:4px}
 .sp109t{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}.sp109t th,.sp109t td{text-align:start;padding:6px 8px;border-bottom:1px solid var(--line2);white-space:nowrap}.sp109t th{color:var(--mute);font-weight:600}`;document.head.appendChild(st)})();
+
+/* ================= v112: waiting in the engine's line · Replace the person 2K / 768P ================= */
+// A job the engine still has waiting in its line says so (the server's inLine), also when it has no other step to show; the owner
+// switches Replace the person between 2K (the sharpest, the default) and 768P (may be quicker) on Admin → Overview → Speed.
+previewCol=(o=>function(g,prev){const h=o(g,prev);return g&&g.inLine112&&!g.stage&&!["complete","failed"].includes(g.status)?h.replace('<div class="pipe"','<p class="small mute stage108">'+ic("spark","width:14px;height:14px")+"<span>"+esc(L("Waiting in the engine's line — it starts as soon as the engine is free…","في طابور المحرّك — يبدأ فور أن يتفرّغ…"))+'</span></p><div class="pipe"'):h})(previewCol);
+document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest('[data-act="sw112"]');if(!b||b.disabled)return;b.disabled=true;
+  try{const r=await API.req("/v1/admin/speed/swapres",{method:"POST",json:{res:b.dataset.res}});if(SP109.d)SP109.d.swapRes=r.swapRes;toast(r.swapRes==="768P"?L("Replace the person now runs at 768P","استبدال الشخص يعمل الآن بدقة 768P"):L("Replace the person now runs at 2K","استبدال الشخص يعمل الآن بدقة 2K"))}
+  catch(err){toast(String(err.message||err))}finally{b.disabled=false;if(S.view==="admin")renderView()}});
+(()=>{const st=document.createElement("style");st.textContent=`.sw112{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-top:12px}.sw112b{display:flex;gap:6px;flex-wrap:wrap}.sw112 .btn.on{background:var(--accent,#7c5cff);color:#fff;border-color:transparent}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

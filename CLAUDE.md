@@ -738,3 +738,11 @@ NOT yet verified against real services (no internet in the original build enviro
 - Our part shorter (`prepMotion`): the video, the photo and the product photo are made ready at the same time; `lookMotion` and `traceSwap` run side by side (both write `body.meta` with a spread right after their own await — no lost keys); refusals keep the old order (`Promise.allSettled`, the first rejected in order video → photo → product, then look → trace).
 - Test: `tests/v111.py` (ports 8315/8316).
 
+## v112 Still slow — the text AI's 42 s look, the engine's line, a one-tap 768P
+- The owner's next check-up: the swap's own steps were prepare 3 s, text AI look 42 s (Gemma on Google with 4 pictures; each look waited up to 40 s for each text AI in turn — local → NVIDIA → Claude/Qwen), then the engine; a new swap was at the engine.
+- `lib/mcprep.js` `lookAsk`: each look (`lookMotion`, `pickedPerson`, `partLook`) waits at most `MC_LOOK_MS` (15 s) in all; a slower one is left out like a failed one (no refusal, no keep-words, the tall box around the tap) and the job is sent.
+- `publicJob` `inLine: true` while the engine has the job waiting in its line (sent, not yet `genAt`); the page (`o.inLine112`, both poll loops) shows "Waiting in the engine's line — it starts as soon as the engine is free…" (the swap's engine step, and video cards with no other step).
+- Admin → Overview → Speed: a slow look (> 10 s) is named; "Replace the person — engine resolution: Sharpest (2K) · Faster (768P)" (`POST /v1/admin/speed/swapres` {res}, `requireAdmin("providers.manage")`; `setSwapRes` edits the engine's Extra inputs per model JSON for `minimax-h3/reference-to-video`, keeping the other models' inputs; unreadable JSON → 400). The 768P advice now says to tap the switch. 2K stays the default.
+- `deploy/doctor.sh`: a job being made shows `engine line` or `engine making`.
+- Test: `tests/v112.py` (ports 8317/8318).
+

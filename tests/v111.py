@@ -100,10 +100,10 @@ def checks():
     # Admin → Speed: the engine's line, its making, and how to try 768P
     sp = api("/v1/admin/speed", None, None); sw = (sp.get("last24h") or {}).get("swap") or {}; adv = " | ".join(a["en"] for a in sp.get("advice") or []); out["speed"] = {"swap": sw, "advice": adv[:900]}
     ok(sw.get("queue") == 420 and sw.get("making") == 265, f"speed: the swaps' line and making {sw}")
-    ok("waited about 7 min in the AI engine's line" in adv and '{"minimax-h3/reference-to-video":{"resolution":"768P"}}' in adv and "Admin → Connections & APIs → AI engine (all models) → Extra inputs per model" in adv and all(a.get("ar") for a in sp.get("advice") or []), f"speed: the line named, and how to try 768P (English · Arabic) {adv}")
+    ok("waited about 7 min in the AI engine's line" in adv and 'tap "Faster (768P)" below' in adv and all(a.get("ar") for a in sp.get("advice") or []), f"speed: the line named, and how to try 768P (English · Arabic) {adv}")
     r = api("/v1/admin/providers/kie", {"apiKey": "kk", "baseUrl": f"http://localhost:{KPORT}", "inputs": '{"minimax-h3/reference-to-video":{"resolution":"768P"}}'}, None, "PUT")
     adv2 = " | ".join(a["en"] for a in api("/v1/admin/speed", None, None).get("advice") or [])
-    ok("768P" not in adv2 and "line" in adv2 and "Connections & APIs → AI engine (all models)" not in adv2, f"once 768P is set, it is no longer suggested {r} {adv2}")
+    ok("768P" not in adv2 and "line" in adv2, f"once 768P is set, it is no longer suggested {r} {adv2}")
     j = api("/v1/jobs", SWAP("v111-c"), None); jid = j.get("id", "x"); wait(lambda: (lambda x: x if x.get("status") in ("done", "failed") else None)(api("/v1/jobs/" + jid, None, None)), 120)
     sent = [x["body"] for x in mock("/stats")["reqs"]][-1]
     ok((sent.get("input") or {}).get("resolution") == "768P", f"…and the swap is sent at 768P {sent.get('input')}")

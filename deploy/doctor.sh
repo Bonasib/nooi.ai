@@ -47,7 +47,7 @@ const med = (a) => { a = a.filter((x) => x >= 0).sort((x, y) => x - y); return a
 const kind = (j) => (/^mcswap$/.test(j.payload?.model || "") ? "swap" : /^mc(26|30)$/.test(j.payload?.model || "") ? "motion" : j.kind);
 console.log("users:", Object.keys(db.users || {}).length, "· jobs:", jobs.length, "· largest job:", Math.max(0, ...jobs.map((j) => JSON.stringify(j).length)), "bytes");
 const pend = jobs.filter((j) => ["queued", "rendering"].includes(j.status));
-console.log("being made now:", pend.length, pend.length ? "· oldest " + Math.round((now - Math.min(...pend.map((j) => j.created || now))) / 60e3) + " min" : "", JSON.stringify(pend.reduce((a, j) => { const k = kind(j) + ":" + (j.stage || (j.remoteId ? "engine" : j.status)); a[k] = (a[k] || 0) + 1; return a; }, {})));
+console.log("being made now:", pend.length, pend.length ? "· oldest " + Math.round((now - Math.min(...pend.map((j) => j.created || now))) / 60e3) + " min" : "", JSON.stringify(pend.reduce((a, j) => { const st = j.stage || (j.remoteId ? "engine" : j.status), k = kind(j) + ":" + (st === "engine" && j.remoteId && j.sentAt ? (j.genAt ? "engine making" : "engine line") : st); a[k] = (a[k] || 0) + 1; return a; }, {})));
 const day = jobs.filter((j) => j.created && now - j.created < 864e5 && !j.parent), by = {};
 for (const j of day) { const k = (by[kind(j)] = by[kind(j)] || { done: 0, failed: 0, other: 0, total: [], before: [], engine: [], words: [], fetch: [] }), t = j.times || {};
   if (j.status === "done") { k.done++; if (j.doneAt) k.total.push(j.doneAt - j.created + (t.words || 0) * 1e3); if (j.sentAt) { k.before.push(j.sentAt - j.created + (t.words || 0) * 1e3); k.engine.push(j.doneAt - j.sentAt - ((t.fetch || 0) + (t.after || 0)) * 1e3); }
