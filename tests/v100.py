@@ -107,7 +107,8 @@ try:
     plan(["fail", "ok"]); c0 = api("/v1/billing").get("credits"); n0 = len(stats()["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "sw-once"})
     d = done(j.get("id", "x"), 90) or {}; tasks = [b.get("model") for b in sent(n0)]; c1 = api("/v1/billing").get("credits")
     out["swapOnce"] = [d.get("status"), d.get("error"), tasks, c0, c1, j.get("cost")]
-    ok(d.get("status") == "done" and tasks.count("minimax-h3/reference-to-video") == 2 and c0 - c1 == (j.get("cost") or 0) > 0, f"the swap engine failed once on its side: asked once more, made, charged once {out['swapOnce']}")
+    # (v108: held at the page's length when the job is made, charged for the video's real length once it's read — d's cost)
+    ok(d.get("status") == "done" and tasks.count("minimax-h3/reference-to-video") == 2 and c0 - c1 == (d.get("cost") or 0) > 0, f"the swap engine failed once on its side: asked once more, made, charged once {out['swapOnce']}")
     # 9) …fails every time → a clear line, nothing charged
     plan(["fail", "fail"]); c0 = api("/v1/billing").get("credits"); n0 = len(stats()["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "sw-never"})
     d = done(j.get("id", "x"), 90) or {}; tasks = [b.get("model") for b in sent(n0)]; c1 = wait(lambda: (lambda c: c if c == c0 else None)(api("/v1/billing").get("credits")), 10)

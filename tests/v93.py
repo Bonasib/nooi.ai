@@ -96,17 +96,18 @@ async def motion(b):
             nocons = api("/v1/jobs", {"kind": "video", "model": "mcswap", "prompt": "", "dur": 4, "meta": {"res": "720p"}, "inputs": {"mcChar": "/media/char.png", "mcMove": "/media/move.webm"}}, token=TOKEN)
             out["swap"] = {"job": r, "sent": inp, "credits": [c0, c1], "shown": shown, "api": jj.get("id") or jj}
             ok(t and t[0].get("model") == "minimax-h3/reference-to-video", f"{tag}: Replace the person reaches the Character Swap engine {[x.get('model') for x in t]}")
-            ok(set(inp) <= {"prompt", "reference_video_urls", "reference_image_urls", "aspect_ratio", "duration", "resolution"} and inp.get("resolution") == "2K" and (inp.get("reference_video_urls") or [""])[0].endswith("-mc.mp4") and (inp.get("reference_image_urls") or [""])[0].endswith("-mc.jpg") and "Video 1" in inp.get("prompt", ""), f"{tag}: the engine gets the video (a WebM made into an MP4, v95), the photo (an upright JPEG) and the quality — nothing else {inp}")
+            ok(set(inp) <= {"prompt", "reference_video_urls", "reference_image_urls", "aspect_ratio", "duration", "resolution"} and inp.get("resolution") == "2K" and (inp.get("reference_video_urls") or [""])[0].endswith("-mc.mp4") and (inp.get("reference_image_urls") or [""])[0].endswith("-mc.jpg") and "<Video 1>" in inp.get("prompt", ""), f"{tag}: the engine gets the video (a WebM made into an MP4, v95), the photo (an upright JPEG) and the quality — nothing else {inp}")
             ok(r and r["model"] == "mcswap" and r["swap"] and r["aspect"] == "16:9" and r["cost"] == shown, f"{tag}: the swap keeps the video's shape and its price is the one on the button {r} shown {shown}")
             ok(c0 - c1 == shown, f"{tag}: a customer is charged exactly the price on the button {c0}->{c1} shown {shown} {jj}")
             ok(nocons.get("_status") == 400, f"{tag}: no swap without the rights confirmed {nocons}")
             # the moves: Motion Control 3.0 with the words
             await E("()=>{S.mc83.mode='moves';S.mc83.prompt='on a beach';renderView()}"); await pg.wait_for_timeout(300); n0 = len(stats()["tasks"])
             await pg.click('[data-act="mc-make"]')
+            # (v108: the engine requests are sent in the background — an earlier swap's request may arrive after n0: look for this one)
             for _ in range(40):
                 await pg.wait_for_timeout(400)
-                if len(stats()["tasks"]) > n0: break
-            t = stats()["tasks"][n0:]
+                if any(x.get("model") == "kling-3.0/motion-control" for x in stats()["tasks"][n0:]): break
+            t = [x for x in stats()["tasks"][n0:] if x.get("model") == "kling-3.0/motion-control"]
             ok(t and t[0].get("model") == "kling-3.0/motion-control" and "on a beach" in t[0].get("input", {}).get("prompt", ""), f"{tag}: My character does the moves reaches Motion Control 3.0 with the words {t[:1]}")
         ok(not errs, f"{tag}: page errors {errs[:3]}"); await ctx.close()
 

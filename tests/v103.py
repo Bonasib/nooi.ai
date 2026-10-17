@@ -69,6 +69,10 @@ def wait(fn, sec=60):
     return None
 def done(jid, sec=60): return wait(lambda: (lambda j: j if j.get("status") in ("done", "failed") else None)(api("/v1/jobs/" + jid)), sec)
 credits = lambda: api("/v1/billing").get("credits")
+def refused(j, sec=60):   # v108: the job is made at once and the files are looked at after — a refusal is the job failing with its reason
+    if j.get("_status") == 400: return j.get("error")
+    d = done(j.get("id", "x"), sec) or {}
+    return d.get("error") if d.get("status") == "failed" else None
 SWAP = {"kind": "video", "model": "mcswap", "prompt": "", "dur": 3, "aspect": "16:9", "inputs": {"mcMove": "/media/move.mp4", "mcChar": "/media/pic.png"}, "meta": {"motion83": True, "swap93": True, "consent": True, "res": "480p"}}
 
 mk = subprocess.Popen(["node", D + "/mock.js", str(KPORT), D], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -82,14 +86,14 @@ try:
     PV = api("/v1/config").get("prices", {}).get("video", {}); P_SWAP, P_MC30 = PV.get("mcswap"), PV.get("mc30")
     # 1) a front / side / back sheet: three people, the AI is sure → refused, nothing charged, nothing sent
     mock("/plan", {"look": {"photo_people": 3, "video_people": 1, "video_person": "clear", "note_en": "", "note_ar": "", "sure": True}})
-    c0 = credits(); n0 = len(mock("/stats")["reqs"]); l0 = len(mock("/stats")["llm"]); j = api("/v1/jobs", {**SWAP, "cid": "a1"})
-    look = mock("/stats")["llm"][l0:]; out["three"] = [j.get("_status"), j.get("error"), c0, credits(), tasks(n0), look]
-    ok(j.get("_status") == 400 and "shows 3 people" in str(j.get("error")) and credits() == c0 and not tasks(n0), f"a photo with 3 people: refused with the reason, nothing charged or sent {out['three']}")
+    c0 = credits(); n0 = len(mock("/stats")["reqs"]); l0 = len(mock("/stats")["llm"]); j = api("/v1/jobs", {**SWAP, "cid": "a1"}); why = refused(j)
+    look = mock("/stats")["llm"][l0:]; out["three"] = [j.get("_status"), why, c0, credits(), tasks(n0), look]
+    ok("shows 3 people" in str(why) and wait(lambda: credits() == c0, 10) and not tasks(n0), f"a photo with 3 people: refused with the reason, nothing charged or sent {out['three']}")
     ok(look and look[0]["look"] and look[0]["imgs"] == 4, f"the AI saw the photo and three frames of the video {look}")
     # 2) no person in the video, sure → refused
     mock("/plan", {"look": {"photo_people": 1, "video_people": 0, "video_person": "none", "sure": True}})
-    j = api("/v1/jobs", {**SWAP, "cid": "a2"}); out["novideo"] = [j.get("_status"), j.get("error")]
-    ok(j.get("_status") == 400 and "can't see a person in the video" in str(j.get("error")), f"no person in the video: refused {out['novideo']}")
+    j = api("/v1/jobs", {**SWAP, "cid": "a2"}); out["novideo"] = [j.get("_status"), refused(j)]
+    ok("can't see a person in the video" in str(out["novideo"][1]), f"no person in the video: refused {out['novideo']}")
     # 3) not sure → the engine gets it
     mock("/plan", {"look": {"photo_people": 3, "video_people": 1, "sure": False}})
     n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "a3"}); d = done(j.get("id", "x")) or {}
@@ -113,7 +117,7 @@ try:
     out["best"] = [j.get("_status"), j.get("cost"), c0 - (credits() or 0), {k: v for k, v in req.items() if k != "prompt"}, req.get("prompt", "")[:400], d.get("status"), d.get("url"), os.path.exists(f) and has_sound(f)]
     imgs = req.get("reference_image_urls") or []
     ok(req.get("resolution") == "2K" and req.get("aspect_ratio") == "adaptive" and req.get("duration") == 4 and len(req.get("reference_video_urls") or []) == 1 and len(imgs) == 2 and all(u.endswith("-mc.jpg") or "/media/" in u for u in imgs)
-       and "(a red model car, a white perfume bottle)" in req.get("prompt", "") and "exactly like Image 2" in req.get("prompt", "") and d.get("status") == "done", f"the swap goes to MiniMax H3 at 2K with the video, the person, the product and what to keep {out['best']}")
+       and "(a red model car, a white perfume bottle)" in req.get("prompt", "") and "exactly as shown in <Picture 2>" in req.get("prompt", "") and d.get("status") == "done", f"the swap goes to MiniMax H3 at 2K with the video, the person, the product and what to keep {out['best']}")
     ok(P_SWAP and j.get("cost") == round(P_SWAP * 4 / 5) and wait(lambda: c0 - credits() == j.get("cost"), 10), f"the swap costs what the page shows (4 s at least) {out['best'][:3]}")
     ok(os.path.exists(f) and has_sound(f) and d.get("url", "").endswith("-snd.mp4"), f"the swap keeps the sound of the client's video {out['best'][-3:]}")
     # 6b) the engine made a 4 s clip with its own sound from a 3 s silent video → the result is cut to 3 s and has no made-up sound
@@ -121,9 +125,9 @@ try:
     out["own"] = [d.get("status"), d.get("url"), os.path.exists(f) and has_sound(f), os.path.exists(f) and probe_dur(f)]
     ok(d.get("status") == "done" and d.get("url", "").endswith("-snd.mp4") and os.path.exists(f) and not has_sound(f) and probe_dur(f) < 3.4, f"the swap has the video's own length and sound, nothing made up {out['own']}")
     # 6c) a video over 2 minutes: refused before anything is charged (v107: the swap takes up to 2 minutes, in parts)
-    c0 = credits(); n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "a6c", "dur": 120, "inputs": {"mcMove": "/media/long.mp4", "mcChar": "/media/pic.png"}})
-    out["long"] = [j.get("_status"), j.get("error"), c0, credits(), tasks(n0)]
-    ok(j.get("_status") == 400 and "up to 2 minutes" in str(j.get("error")) and credits() == c0 and not tasks(n0), f"a 125 s video: refused with the reason, nothing charged {out['long']}")
+    c0 = credits(); n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "a6c", "dur": 15, "inputs": {"mcMove": "/media/long.mp4", "mcChar": "/media/pic.png"}})
+    why = refused(j); out["long"] = [j.get("_status"), why, c0, credits(), tasks(n0)]
+    ok("up to 2 minutes" in str(why) and wait(lambda: credits() == c0, 10) and not tasks(n0), f"a 125 s video: refused with the reason, nothing charged {out['long']}")
     # 7) a silent movement video: the result is the engine's own file, nothing added
     n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "a7"}); d = done(j.get("id", "x")) or {}
     out["silent"] = [d.get("status"), d.get("url")]

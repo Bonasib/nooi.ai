@@ -102,8 +102,11 @@ def server_checks():
     # refusals: nothing charged
     c1 = credits()
     r1 = api("/v1/jobs", SWAP("short.mp4", "photo.jpg"), token=TOKEN); r2 = api("/v1/jobs", SWAP("broken.mp4", "photo.jpg"), token=TOKEN); r3 = api("/v1/jobs", SWAP("gone.mp4", "photo.jpg"), token=TOKEN)
-    ok(r1.get("_status") == 400 and "shorter than 2 seconds" in r1.get("error", "") and r2.get("_status") == 400 and "can't be read" in r2.get("error", "") and r3.get("_status") == 400 and "add it again" in r3.get("error", "") and credits() == c1,
-       f"{tag}: a too-short, unreadable or missing video is refused with the reason, nothing charged {r1} {r2} {r3}")
+    # (v108: the job is made at once and the video is read after — a refusal is the job failing with its reason, the credits back)
+    why = lambda r: r.get("error", "") if r.get("_status") == 400 else (wait(lambda: (lambda x: x if x.get("status") == "failed" else None)(api(f"/v1/jobs/{r.get('id')}", token=TOKEN)), 60) or {}).get("error") or ""
+    e1, e2, e3 = why(r1), why(r2), why(r3)
+    ok("shorter than 2 seconds" in e1 and "can't be read" in e2 and "add it again" in e3 and wait(lambda: credits() == c1, 15),
+       f"{tag}: a too-short, unreadable or missing video is refused with the reason, nothing charged {e1} · {e2} · {e3} · {credits()} {c1}")
     # the engine's own reason, no company name, credits back
     mock("/failnext?msg=" + urllib.parse.quote("No human detected in the video (Kie AI)"))
     c2 = credits(); j = api("/v1/jobs", {**SWAP("fine.mp4", "photo.jpg"), "cid": "fail-test"}, token=TOKEN)   # (its own request: the same one within 15 s is the same job)

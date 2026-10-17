@@ -2686,7 +2686,7 @@ function goneJob(o,e){if(!o||["complete","failed"].includes(o.status)||!e||e.sta
   const now=Date.now();if(!o.miss404||now-o.miss404>60000){o.miss404=now;return}delete o.miss404;o.status="failed";o.errorType="gone";o.error="";persist();statusChanged()}
 setInterval(async()=>{
   if(API.mode!=="server")return;const list=S.jobs.concat(S.story.chapters).filter(o=>o.remote&&!["complete","failed"].includes(o.status));
-  for(const o of list){try{const r=await API.req("/v1/jobs/"+o.remote);const ch=r.status!==o.status;o.status=r.status==="done"?"complete":r.status;o.progress=r.progress||o.progress;if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;if(r.detail)o.detail=r.detail;if(r.via)o.via=r.via;if(r.segments&&o.kind==="transcribe"&&!o.imported){o.imported=true;importSegments(r.segments)}if(ch){persist();statusChanged()}else liveUpdate()}catch(e){goneJob(o,e)}}
+  for(const o of list){try{const r=await API.req("/v1/jobs/"+o.remote);const ch=r.status!==o.status;o.status=r.status==="done"?"complete":r.status;o.progress=r.progress||o.progress;if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;o.stage=r.stage||null;o.parts108=r.partsTotal?[r.partsDone||0,r.partsTotal]:null;if(r.detail)o.detail=r.detail;if(r.via)o.via=r.via;if(r.segments&&o.kind==="transcribe"&&!o.imported){o.imported=true;importSegments(r.segments)}if(ch){persist();statusChanged()}else liveUpdate()}catch(e){goneJob(o,e)}}
 },3000);
 const _stl=stLabel;stLabel=st=>({failed:L("Failed","فشل"),scheduled:L("Scheduled","مجدول"),published:L("Published","منشور")})[st]||_stl(st);
 const _thumb=thumb;
@@ -7994,7 +7994,7 @@ setInterval(async()=>{if(API.mode!=="server"||!S.hf||!(S.hf.out||[]).length)retu
     if(["queued","rendering"].includes(o.status)){const exp=(o.kind==="video"?((MODELS[o.model]||{}).sec||70)*Math.max(1,(o.dur||5)/5):({music:90,voice:15,sfx:20,lipsync:120})[o.kind]||25)*1000,est=Math.min(.93,(now-(o.created||now))/exp);if(!(o.progress>est))o.progress=est}
     try{const r=await API.req("/v1/jobs/"+o.remote);const before=o.status+"|"+JSON.stringify(o.sceneCheck||null);
       if(r.status==="queued"||r.status==="rendering")o.status="rendering";else if(r.status==="done")o.status="complete";else if(r.status==="failed")o.status="failed";
-      if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;if(r.detail)o.detail=r.detail;if(r.progress)o.progress=Math.max(o.progress||0,r.progress);if(r.sceneCheck)o.sceneCheck=r.sceneCheck;
+      if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;o.stage=r.stage||null;o.parts108=r.partsTotal?[r.partsDone||0,r.partsTotal]:null;if(r.detail)o.detail=r.detail;if(r.progress)o.progress=Math.max(o.progress||0,r.progress);if(r.sceneCheck)o.sceneCheck=r.sceneCheck;
       if(before!==o.status+"|"+JSON.stringify(o.sceneCheck||null)){persist();statusChanged()}else liveUpdate()}catch(e){goneJob(o,e)}}},1500);
 (()=>{const st=document.createElement("style");st.textContent=`
 .hfmrow.g{gap:6px}.hfmi.nooi{padding:0 12px 0 4px}.hfmi.nooi b{padding:0}.hfmi.pick{padding:0 10px 0 4px}.hfmi.pick>svg:last-child{width:14px;height:14px;opacity:.7}
@@ -13245,7 +13245,8 @@ window.addEventListener("click",async e=>{const a=e.target.closest&&e.target.clo
   if(!c.consent){toast(L("Confirm that you have the right to use this photo and video.","أكّد أن لديك حق استخدام الصورة والفيديو."),{type:"warn"});const x=document.querySelector("[data-mc83consent]");if(x)x.focus();return}
   const dur=mcDur105(sw,d),cost=vprice83(model,dur,mcK93(c)),meta={motion83:true,res:c.res,consent:true};if(sw)meta.swap93=true;else meta.orient=c.orient;
   if(sw&&M.mcWho&&M.mcWho.tap)meta.whoTap=M.mcWho.tap;   // v107: the frame the client tapped, and where
-  let inputs={};if(API.mode==="server"){a.disabled=true;try{for(const s of["mcMove","mcChar",...(sw&&M.mcWho?["mcWho"]:[]),...(sw&&M.mcProd?["mcProd"]:[])]){const m=M[s];inputs[s]=m.file?(await API.upload(m.file,m.file.name||m.name)).url:m.remote}}catch(err){a.disabled=false;toast(L("Couldn't upload the files — try again.","تعذّر رفع الملفات — حاول مجدداً."),{type:"warn"});return}a.disabled=false}
+  // (v108: the button says it's uploading — a phone video can take a while on mobile data)
+  let inputs={};if(API.mode==="server"){a.disabled=true;const lb=a.innerHTML,up=setTimeout(()=>{a.innerHTML=ic("upload")+L("Uploading your files…","جارٍ رفع ملفاتك…")},600);const back=()=>{clearTimeout(up);a.innerHTML=lb};try{for(const s of["mcMove","mcChar",...(sw&&M.mcWho?["mcWho"]:[]),...(sw&&M.mcProd?["mcProd"]:[])]){const m=M[s];inputs[s]=m.file?(await API.upload(m.file,m.file.name||m.name)).url:m.remote}back()}catch(err){back();a.disabled=false;toast(L("Couldn't upload the files — try again.","تعذّر رفع الملفات — حاول مجدداً."),{type:"warn"});return}a.disabled=false}
   const words=sw?"":String(c.prompt||"").trim();
   const j=addJob({kind:"video",model,prompt:words,title:(sw?L("Swap · ","استبدال · "):L("Motion · ","حركة · "))+(words||M.mcChar.name||"").slice(0,40),dur,aspect:sw||c.orient==="video"?mcAspect93():"9:16",cost,secs:12,art:"scene",meta,inputsUrl:{},inputs83:inputs});
   if(j){persist();renderAll();toast(sw?(dur>15?L("Replacing the person, part by part — usually 5–15 minutes.","جارٍ استبدال الشخص جزءاً جزءاً — عادةً 5–15 دقيقة."):L("Replacing the person — usually 3–8 minutes.","جارٍ استبدال الشخص — عادةً 3–8 دقائق.")):L("Making it move — usually 2–5 minutes.","جارٍ التحريك — عادةً 2–5 دقائق."),{type:"info"})}},true);
@@ -14088,6 +14089,25 @@ window.addEventListener("click",async e=>{const a=e.target.closest&&e.target.clo
 .pick107{border:1px solid var(--line2);border-radius:var(--r-m,12px);padding:10px;margin-bottom:8px;background:var(--panel)}
 .fr107{border-radius:10px;overflow:hidden;background:#000;display:flex;justify-content:center}
 .fr107 img{display:block;max-width:100%;max-height:60vh;width:auto;height:auto;cursor:crosshair;touch-action:manipulation;user-select:none}`;document.head.appendChild(st)})();
+
+/* ================= v108: Replace the person / Motion Control — each step on the card, in the reader's language ================= */
+// The server makes the job at once and gets the files ready, looks at them and sends them in the background (lib/jobs.js
+// prepAndStart): the card says which step it is on instead of a long silent wait; a long swap says how many parts are ready.
+const stage108=j=>{if(!j||!j.stage||["complete","failed"].includes(j.status))return"";const p=j.parts108;
+  const t={prep:L("Getting your video ready…","تجهيز الفيديو…"),look:L("Looking at the video and the photos…","فحص الفيديو والصور…"),
+    engine:p&&p[1]>1?L("The engine is making it — "+p[0]+" of "+p[1]+" parts ready…","المحرّك يصنعه — جاهز "+p[0]+" من "+p[1]+" أجزاء…"):L("The engine is making it — usually a few minutes…","المحرّك يصنعه — عادةً بضع دقائق…"),
+    join:L("Joining the parts with the original sound…","جمع الأجزاء مع الصوت الأصلي…")}[j.stage];
+  return t?'<p class="small mute stage108">'+ic("spark","width:14px;height:14px")+"<span>"+esc(t)+"</span></p>":""};
+previewCol=(o=>function(g,prev){const h=o(g,prev),s=stage108(g);return s?h.replace('<div class="pipe"',s+'<div class="pipe"'):h})(previewCol);
+// the swap's refusals (now on the card, after the job is made), in Arabic too
+errText81=(o=>function(j){const e=String((j&&j.error)||"").trim();let m;
+  if((m=e.match(/^The video shows (\d+) people — tap/)))return L(e,"يُظهر الفيديو "+m[1]+" أشخاص — اضغط على الشخص المراد استبداله في الفيديو، أو أضف صورة له.");
+  if(e==="The video shows several people — tap the person to replace in the video, or add a picture of them.")return L(e,"يُظهر الفيديو عدة أشخاص — اضغط على الشخص المراد استبداله في الفيديو، أو أضف صورة له.");
+  if(/^We can't find the person you picked/.test(e))return L(e,"لم نجد الشخص الذي اخترته في أي جزء من الفيديو — اضغط عليه في لقطة يظهر فيها بوضوح، أو استخدم صورة أوضح له.");
+  if((m=e.match(/^This video is (\d+) s — Replace the person takes videos of up to 2 minutes/)))return L(e,"هذا الفيديو "+m[1]+" ث — استبدال الشخص يقبل فيديوهات حتى دقيقتين. قصّه في المحرر أولاً.");
+  if(e==="This video can't be read — save it as an MP4 and add it again.")return L(e,"تعذّرت قراءة هذا الفيديو — احفظه بصيغة MP4 وأضفه مجدداً.");
+  return o.apply(this,arguments)})(errText81);
+(()=>{const st=document.createElement("style");st.textContent=`.stage108{display:flex;gap:6px;align-items:center;margin:10px 0 0}.stage108 svg{flex:none}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

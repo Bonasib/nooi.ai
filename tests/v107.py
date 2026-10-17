@@ -114,6 +114,10 @@ def wait(fn, sec=60):
     return None
 def done(jid, sec=240): return wait(lambda: (lambda j: j if j.get("status") in ("done", "failed") else None)(api("/v1/jobs/" + jid)), sec)
 credits = lambda: api("/v1/billing").get("credits")
+def refused(j, sec=90):   # v108: the job is made at once and the files are looked at after — a refusal is the job failing with its reason
+    if j.get("_status") == 400: return j.get("error")
+    d = done(j.get("id", "x"), sec) or {}
+    return d.get("error") if d.get("status") == "failed" else None
 def local(u): return D + "/media/" + str(u).split("/media/")[-1]
 def probe(f):
     j = json.loads(subprocess.run(["ffprobe", "-v", "error", "-print_format", "json", "-show_streams", "-show_format", f], capture_output=True, text=True).stdout or "{}")
@@ -130,11 +134,14 @@ tasks = lambda n0: [r["body"] for r in mock("/stats")["reqs"][n0:] if r["body"].
 def server_checks():
     P_SWAP = api("/v1/config").get("prices", {}).get("video", {}).get("mcswap")
     # 1) a picture of the blue person: followed through 3 parts; the middle part (they're gone) kept as it is
-    c0 = credits(); n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "b1", "inputs": {**SWAP["inputs"], "mcWho": "/media/blue.png"}}); d = done(j.get("id", "x")) or {}
+    c0 = credits(); n0 = len(mock("/stats")["reqs"]); t0 = time.time(); j = api("/v1/jobs", {**SWAP, "cid": "b1", "inputs": {**SWAP["inputs"], "mcWho": "/media/blue.png"}}); took = round(time.time() - t0, 1)
+    st0 = api("/v1/jobs/" + j.get("id", "x")); d = done(j.get("id", "x")) or {}
+    out["fast"] = [took, j.get("status"), st0.get("stage"), j.get("cost")]
+    ok(took < 4 and j.get("status") == "queued" and st0.get("stage") in ("prep", "look", "engine"), f"v108: the job is made at once (the video is made ready after) and says which step it is on {out['fast']}")
     ts = tasks(n0); inp = [t.get("input", {}) for t in ts]
     out["blue"] = [j.get("_status"), j.get("error"), j.get("cost"), d.get("status"), d.get("error"), d.get("url"), [(t.get("model"), i.get("duration"), len(i.get("reference_image_urls") or [])) for t, i in zip(ts, inp)], [i.get("prompt", "")[:230] for i in inp]]
     ok(d.get("status") == "done" and len(ts) == 2 and all(t.get("model") == "minimax-h3/reference-to-video" for t in ts), f"the person is followed: 2 of the 3 parts go to the engine {out['blue'][:7]}")
-    ok(all(len(i.get("reference_image_urls") or []) == 2 and "the person in blue on the left" in i.get("prompt", "") and "Keep every other person in Video 1 exactly as they are" in i.get("prompt", "") and "the person shown in Image 2" in i.get("prompt", "") for i in inp),
+    ok(all(len(i.get("reference_image_urls") or []) == 2 and "the person in blue on the left" in i.get("prompt", "") and "Every other person in <Video 1> stays exactly as they are" in i.get("prompt", "") and "the person shown in <Picture 2>" in i.get("prompt", "") and "[video editing]" in i.get("prompt", "") for i in inp),
        f"the engine gets the new person (Image 1), the person to replace (Image 2) and where they are {out['blue'][7]}")
     ok(all(i.get("duration") in (13, 14) and len(i.get("reference_video_urls") or []) == 1 and (i.get("reference_video_urls") or [""])[0].endswith(("-mc1.mp4", "-mc3.mp4")) for i in inp), f"each part is its own clip of ~13 s (parts 1 and 3) {[(i.get('duration'), i.get('reference_video_urls')) for i in inp]}")
     f = local(d.get("url", "")); pr = probe(f) if os.path.exists(f) else {}; px = [pixel(f, t) for t in (6, 20, 33)] if os.path.exists(f) else []
@@ -142,7 +149,7 @@ def server_checks():
     ok(pr and 39.3 <= pr["dur"] <= 40.6 and pr["audio"] and d.get("url", "").endswith("-swap.mp4"), f"the parts joined: 40 s with the video's own sound {pr}")
     ok(len(px) == 3 and red(px[0]) and grey(px[1]) and red(px[2]), f"the swapped parts from the engine, the kept part as it was {px}")
     exp = round(P_SWAP * 27 / 5) if P_SWAP else None
-    ok(P_SWAP and j.get("cost") == exp and exp < round(P_SWAP * 40 / 5) and wait(lambda: c0 - credits() == exp, 10), f"charged for the seconds swapped (27 s), not the whole 40 s {j.get('cost')} vs {exp} (whole {round(P_SWAP * 40 / 5) if P_SWAP else None})")
+    ok(P_SWAP and j.get("cost") == round(P_SWAP * 40 / 5) and d.get("cost") == exp and exp < j.get("cost") and wait(lambda: c0 - credits() == exp, 10), f"held at the page's price (40 s), charged for the seconds swapped (27 s) {j.get('cost')} → {d.get('cost')} vs {exp}")
     # 2) a tap on the green person on a frame → just them, sent as Image 2; every part swapped
     n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "b2", "inputs": {**SWAP["inputs"], "mcWho": "/media/frame.png"}, "meta": {**SWAP["meta"], "whoTap": [0.78, 0.5]}}); d = done(j.get("id", "x")) or {}
     ts = tasks(n0); inp = [t.get("input", {}) for t in ts]; who = (inp[0].get("reference_image_urls") or ["", ""])[1] if inp else ""
@@ -150,13 +157,13 @@ def server_checks():
     ok(d.get("status") == "done" and len(ts) == 3 and all("the person in green on the right" in i.get("prompt", "") for i in inp), f"the tapped person is followed in every part {out['tap']}")
     ok(who.endswith("-who.jpg") and share(who, "green") > 0.5 and share(who, "blue") < 0.02, f"just the tapped person is cut from the frame {who} green {who and share(who, 'green')} blue {who and share(who, 'blue')}")
     # 3) several people and nobody picked → refused, nothing charged
-    c0 = credits(); n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "b3"})
-    out["nobody"] = [j.get("_status"), j.get("error"), c0, credits(), len(tasks(n0))]
-    ok(j.get("_status") == 400 and "tap the person to replace" in str(j.get("error")) and credits() == c0 and not tasks(n0), f"several people, nobody picked: refused, nothing charged {out['nobody']}")
+    c0 = credits(); n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "b3"}); why = refused(j)
+    out["nobody"] = [j.get("_status"), why, c0, credits(), len(tasks(n0))]
+    ok("tap the person to replace" in str(why) and wait(lambda: credits() == c0, 10) and not tasks(n0), f"several people, nobody picked: refused, nothing charged {out['nobody']}")
     # 4) a picture of someone who isn't in the video → refused
-    c0 = credits(); n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "b4", "inputs": {**SWAP["inputs"], "mcWho": "/media/yellow.png"}})
-    out["gone"] = [j.get("_status"), j.get("error"), c0, credits(), len(tasks(n0))]
-    ok(j.get("_status") == 400 and "can't find the person you picked" in str(j.get("error")) and credits() == c0 and not tasks(n0), f"a person not in the video: refused, nothing charged {out['gone']}")
+    c0 = credits(); n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "b4", "inputs": {**SWAP["inputs"], "mcWho": "/media/yellow.png"}}); why = refused(j)
+    out["gone"] = [j.get("_status"), why, c0, credits(), len(tasks(n0))]
+    ok("can't find the person you picked" in str(why) and wait(lambda: credits() == c0, 10) and not tasks(n0), f"a person not in the video: refused, nothing charged {out['gone']}")
     # 5) the text AI down → every part swapped, the picture as it is
     mock("/plan", {"down": True}); n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "b5", "inputs": {**SWAP["inputs"], "mcWho": "/media/blue.png"}}); d = done(j.get("id", "x")) or {}; mock("/plan", {"down": False})
     ts = tasks(n0); out["down"] = [j.get("_status"), j.get("error"), d.get("status"), len(ts)]
@@ -166,8 +173,8 @@ def server_checks():
     out["fail"] = [d.get("status"), d.get("error"), c0, credits()]
     ok(d.get("status") == "failed" and "Nothing was charged" in str(d.get("error")) and wait(lambda: credits() == c0, 15), f"a part fails: the swap fails, nothing charged {out['fail']}")
     # 7) over 2 minutes → refused
-    j = api("/v1/jobs", {**SWAP, "cid": "b7", "inputs": {**SWAP["inputs"], "mcMove": "/media/toolong.mp4"}}); out["toolong"] = [j.get("_status"), j.get("error")]
-    ok(j.get("_status") == 400 and "up to 2 minutes" in str(j.get("error")), f"over 2 minutes: refused {out['toolong']}")
+    c0 = credits(); j = api("/v1/jobs", {**SWAP, "cid": "b7", "inputs": {**SWAP["inputs"], "mcMove": "/media/toolong.mp4"}}); out["toolong"] = [j.get("_status"), refused(j)]
+    ok("up to 2 minutes" in str(out["toolong"][1]) and wait(lambda: credits() == c0, 10), f"over 2 minutes: refused, nothing charged {out['toolong']}")
 
 async def page_checks():
     async with async_playwright() as p:
@@ -211,6 +218,14 @@ async def page_checks():
             s0 = sent[0] if sent else {}
             out["sent_" + tag] = {k: s0.get(k) for k in ("model", "dur", "meta", "inputs")}
             ok(s0.get("model") == "mcswap" and str((s0.get("inputs") or {}).get("mcWho", "")).startswith(("/media/", "http")) and (s0.get("meta") or {}).get("whoTap") == r["tap"], f"{tag}: the picked frame and the tap are sent {out['sent_' + tag]}")
+            # v108: the card says which step the swap is on; a refusal reads in the page's language
+            r = await E("""()=>{const j=S.jobs.filter(x=>x.meta&&x.meta.motion83).pop();if(!j)return null;j.status='rendering';j.stage='engine';j.parts108=[1,3];renderView();
+              const a=(document.querySelector('.stage108')||{}).textContent||'';j.stage='join';renderView();const b=(document.querySelector('.stage108')||{}).textContent||'';
+              j.stage='prep';renderView();const c=(document.querySelector('.stage108')||{}).textContent||'';
+              return{a,b,c,gone:errText81({error:"We can't find the person you picked anywhere in the video — tap them on a frame where they're clearly seen, or use a clearer picture of them."})}}""")
+            out["stage_" + tag] = r; en = lang == "en"
+            ok(r and (("1 of 3 parts ready" in r["a"] and "Joining the parts" in r["b"] and "Getting your video ready" in r["c"] and r["gone"].startswith("We can't find")) if en else
+                      ("جاهز 1 من 3 أجزاء" in r["a"] and "جمع الأجزاء" in r["b"] and "تجهيز الفيديو" in r["c"] and r["gone"].startswith("لم نجد الشخص"))), f"{tag}: the step on the card, the refusal in the page's language {r}")
             ok(not errs, f"{tag}: page errors {errs}")
             await ctx.close()
         await b.close()

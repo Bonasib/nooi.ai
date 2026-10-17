@@ -76,17 +76,36 @@ const TOOL_SCALE = (p) => (String((p.meta?.opt || {}).scale || "2x").startsWith(
 // Build the market `input` for a studio job — field names and allowed values follow each model's schema
 // on docs.kie.ai (cross-checked with the @apicity/kie model registry). Exported for tests.
 // v105: the words for a Character Swap on MiniMax H3 — who changes, and everything that must stay exactly as it is
-// (v107: target = Image 2 shows the person to replace among several; where = where that person is in this part of the video)
+// (v107: target = <Picture 2> shows the person to replace among several; where = where that person is in this part of the video)
+// v108: written in H3's own prompt layout (MiniMax's H3 prompt guide): the files are named <Picture N> (in the order of
+// reference_image_urls) and <Video 1>, people and things are <Subject N>, the task type is "[video editing]", and a
+// retention_analysis says what each one keeps. The plain words "Image 1" / "Video 1" weren't tied to the files, and H3 then kept the
+// person in the video as they were — the face didn't change.
 const one = (v, n) => String(v || "").replace(/[\r\n"]+/g, " ").replace(/\s{2,}/g, " ").trim().replace(/[.\s]+$/, "").slice(0, n);
 export const swapWords = ({ keep, prod, target, where, who } = {}) => {
-  const k = one(keep, 200), w = one(where || who, 160), pi = target ? 3 : 2;
-  return (target ? "Replace one person in Video 1 — the person shown in Image 2" + (w ? ": " + w : "") + " — with the person in Image 1: " : "Replace the person in Video 1 with the person in Image 1: ") +
-    "the face, hair, skin tone, body shape and clothes of the person in Image 1. " + (target ? "Keep every other person in Video 1 exactly as they are. " : "") +
-    "Keep everything else in Video 1 exactly the same, frame by frame: " + (k ? "the products and objects (" + k + "), " : "") +
-    "every product and object with its exact shape, size, colour, logo, label and written text; what the person holds and touches; the place, background, light and colours; " +
-    "the camera position, movement and framing; the timing; and every movement, gesture, hand position, expression and lip movement of the person. " +
-    (prod ? `Image ${pi} shows the product in the video: it must look exactly like Image ${pi}. ` : "") +
-    "Do not add, remove, restyle or move anything else. No new text, captions or watermarks.";
+  const k = one(keep, 200), w = one(where || who, 160), pp = target ? 3 : 2, ps = target ? 3 : 2, old = target ? "<Subject 2>" : "The person in <Video 1>";
+  return [
+    "subject_definitions:",
+    "<Subject 1> is the new person: the face, hair, skin tone, body shape and clothes of the person in <Picture 1>.",
+    ...(target ? [`<Subject 2> is the person to replace in <Video 1>${w ? " — " + w : ""} — the person shown in <Picture 2>.`] : []),
+    ...(prod ? [`<Subject ${ps}> is the product in <Video 1>, exactly as shown in <Picture ${pp}>.`] : []),
+    "<Video 1> is the source video for the target video edit.",
+    "",
+    `summary: [video editing] The target video is an edited version of <Video 1>. ${old} is replaced by <Subject 1> in every frame: the same place in the frame, the same movements, gestures, hand positions, expressions and lip movement, with the face, hair, body and clothes of <Subject 1>.` +
+      (target ? " Every other person in <Video 1> stays exactly as they are." : "") + " Everything else stays exactly as in <Video 1>.",
+    "",
+    "retention_analysis:",
+    "<Subject 1>: fully_preserved - the face from <Picture 1> in every frame, never the face of the person it replaces; the hair, skin tone, body shape and clothes of <Picture 1>.",
+    `${target ? "<Subject 2>" : "The replaced person in <Video 1>"}: attribute_transfer - only the position, movements, gestures, expressions and lip movement are kept; the face, hair, body and clothes become those of <Subject 1>.`,
+    ...(prod ? [`<Subject ${ps}>: fully_preserved - the exact shape, size, colour, logo, label and written text of <Picture ${pp}>.`] : []),
+    "<Video 1>: fully_preserved - everything except the replaced person, frame by frame: " + (k ? "the products and objects (" + k + "), " : "") +
+      "every product and object with its exact shape, size, colour, logo, label and written text; what the person holds and touches; the place, background, light and colours; the camera position, movement and framing; the timing and cuts" + (target ? "; every other person" : "") + ".",
+    "",
+    "detailed_description: Photorealistic, the same look, light and colours as <Video 1>. [Shot 1] <Subject 1> appears exactly where the replaced person is in <Video 1> and makes the same movements at the same moments; the face of <Subject 1> is clearly the face from <Picture 1> in every frame. Nothing is added, removed, restyled or moved. No new text, captions or watermarks.",
+    "",
+    "overall_soundscape: the same sound as <Video 1>.",
+    "non_diegetic_music: N/A",
+  ].join("\n");
 };
 export function kieInput(model, p) {
   const m = String(model).toLowerCase(), kind = p.kind || "video", inp = p.inputs || {};
