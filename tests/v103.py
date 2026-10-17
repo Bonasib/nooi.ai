@@ -20,6 +20,11 @@ subprocess.run(["cp", D + "/media/move.mp4", D + "/vid.mp4"], check=True)
 # v104: a movement video with its own sound (the engine's result, vid.mp4, is silent)
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=640x360:rate=24", "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=44100", "-t", "3",
                 "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest", D + "/media/talk.mp4"], check=True)
+# v105: a 4 s engine result with its own made-up sound (MiniMax H3 makes sound, and 4 s at least); a 16 s video (too long for the swap)
+subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=640x360:rate=24", "-f", "lavfi", "-i", "sine=frequency=880:sample_rate=44100", "-t", "4",
+                "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest", D + "/vidsnd.mp4"], check=True)
+subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=gray:s=320x180:rate=10", "-t", "16", "-c:v", "libx264", "-pix_fmt", "yuv420p", D + "/media/long.mp4"], check=True)
+probe_dur = lambda f: float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", f], capture_output=True, text=True).stdout.strip() or 0)
 has_sound = lambda f: "audio" in subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=codec_type", "-of", "csv=p=0", f], capture_output=True, text=True).stdout
 MOCK = r"""
 const http=require('http'),fs=require('fs'),path=require('path');const P=+process.argv[2],DIR=process.argv[3];const st={reqs:[],llm:[],look:null,swap:[]};let n=0;const T={};
@@ -28,7 +33,7 @@ http.createServer((q,s)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{const u=
  const send=(d,code=200,msg='success')=>json({code,msg,data:d});
  if(u.pathname==='/stats')return json(st);
  if(u.pathname==='/plan'){const o=JSON.parse(b||'{}');if('look' in o)st.look=o.look;if(o.swap)st.swap=o.swap;return json({ok:1})}
- if(u.pathname==='/vid.mp4'){s.setHeader('content-type','video/mp4');return s.end(fs.readFileSync(path.join(DIR,'vid.mp4')))}
+ if(u.pathname==='/vid.mp4'||u.pathname==='/vidsnd.mp4'){s.setHeader('content-type','video/mp4');return s.end(fs.readFileSync(path.join(DIR,u.pathname.slice(1))))}
  if(u.pathname==='/v1/messages'){let j={};try{j=JSON.parse(b||'{}')}catch{}const c=(j.messages||[])[0]||{},parts=Array.isArray(c.content)?c.content:[{type:'text',text:String(c.content||'')}];
    const text=parts.filter(p=>p.type==='text').map(p=>p.text).join(' '),imgs=parts.filter(p=>p.type==='image').length;st.llm.push({imgs,look:/video tool/.test(text)});
    if(/video tool/.test(text)){if(st.look==='down')return json({error:{message:'overloaded'}},529);return json({content:[{type:'text',text:JSON.stringify(st.look||{})}]})}
@@ -36,7 +41,7 @@ http.createServer((q,s)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{const u=
  if(u.pathname==='/api/v1/chat/credit')return send(500);
  if(q.method==='POST'&&/^\/api\/v1\//.test(u.pathname)){let j={};try{j=JSON.parse(b||'{}')}catch{}st.reqs.push({path:u.pathname,body:j});const id='t'+(++n);T[id]=j;j._out=st.swap.shift()||'ok';return send({taskId:id})}
  if(/record-?[iI]nfo/.test(u.pathname)){const j=T[u.searchParams.get('taskId')]||{};if(j._out==='fail')return send({state:'fail',failMsg:'Internal Error',failCode:'500'});
-   const url='http://localhost:'+P+'/vid.mp4';return send({state:'success',successFlag:1,response:{resultUrls:[url]},resultJson:JSON.stringify({resultUrls:[url]})})}
+   const url='http://localhost:'+P+(j._out==='snd'?'/vidsnd.mp4':'/vid.mp4');return send({state:'success',successFlag:1,response:{resultUrls:[url]},resultJson:JSON.stringify({resultUrls:[url]})})}
  s.statusCode=404;s.end('{}')})}).listen(P);
 """
 open(D + "/mock.js", "w").write(MOCK)
@@ -89,7 +94,7 @@ try:
     mock("/plan", {"look": {"photo_people": 3, "video_people": 1, "sure": False}})
     n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "a3"}); d = done(j.get("id", "x")) or {}
     out["unsure"] = [j.get("_status"), d.get("status"), tasks(n0)]
-    ok(d.get("status") == "done" and tasks(n0) == ["wan/2-2-animate-replace"], f"the AI isn't sure: the swap goes on {out['unsure']}")
+    ok(d.get("status") == "done" and tasks(n0) == ["minimax-h3/reference-to-video"], f"the AI isn't sure: the swap goes on {out['unsure']}")
     # 4) the person is hidden behind an object and the engine fails → the failure says what may have stopped it
     mock("/plan", {"look": {"photo_people": 1, "video_people": 1, "video_person": "hidden", "note_en": "the man holds a large model car in front of his body", "note_ar": "الرجل يحمل مجسّم سيارة كبيراً أمام جسمه", "sure": True}, "swap": ["fail", "fail"]})
     c0 = credits(); j = api("/v1/jobs", {**SWAP, "cid": "a4"}); d = done(j.get("id", "x"), 90) or {}
@@ -99,15 +104,26 @@ try:
     # 5) the text AI is down → the swap goes on as before
     mock("/plan", {"look": "down"}); n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "a5"}); d = done(j.get("id", "x")) or {}
     out["down"] = [j.get("_status"), j.get("error"), d.get("status"), tasks(n0)]
-    ok(d.get("status") == "done" and tasks(n0) == ["wan/2-2-animate-replace"], f"the text AI is down: the swap goes on {out['down']}")
-    # v104 6) the page asked for 480p (an old page): the engine still gets 720p, the swap's best; the silent result keeps the video's
-    # sound; the price is the full (720p) one
-    mock("/plan", {"look": {"photo_people": 1, "video_people": 1, "video_person": "clear", "sure": True}})
-    c0 = credits(); n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "a6", "inputs": {"mcMove": "/media/talk.mp4", "mcChar": "/media/pic.png"}}); d = done(j.get("id", "x")) or {}
+    ok(d.get("status") == "done" and tasks(n0) == ["minimax-h3/reference-to-video"], f"the text AI is down: the swap goes on {out['down']}")
+    # v104/v105 6) the page asked for 480p (an old page): MiniMax H3 gets 2K, the video, the new person and the product photo, and
+    # words that list what the text AI saw to keep; the silent result gets the video's sound; priced for 4 s (the engine's shortest)
+    mock("/plan", {"look": {"photo_people": 1, "video_people": 1, "video_person": "clear", "keep_en": "a red model car, a white perfume bottle", "sure": True}})
+    c0 = credits(); n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "a6", "inputs": {"mcMove": "/media/talk.mp4", "mcChar": "/media/pic.png", "mcProd": "/media/pic.png"}}); d = done(j.get("id", "x")) or {}
     req = (mock("/stats")["reqs"][n0:] or [{}])[0].get("body", {}).get("input", {}); f = D + "/media/" + str(d.get("url", "")).split("/media/")[-1]
-    out["best"] = [j.get("_status"), j.get("cost"), c0 - (credits() or 0), req.get("resolution"), d.get("status"), d.get("url"), os.path.exists(f) and has_sound(f)]
-    ok(req.get("resolution") == "720p" and d.get("status") == "done" and P_SWAP and j.get("cost") == round(P_SWAP * 3 / 5) and wait(lambda: c0 - credits() == j.get("cost"), 10), f"the swap always goes at 720p and costs what the page shows {out['best']}")
-    ok(os.path.exists(f) and has_sound(f) and d.get("url", "").endswith("-snd.mp4"), f"the swap keeps the sound of the client's video {out['best']}")
+    out["best"] = [j.get("_status"), j.get("cost"), c0 - (credits() or 0), {k: v for k, v in req.items() if k != "prompt"}, req.get("prompt", "")[:400], d.get("status"), d.get("url"), os.path.exists(f) and has_sound(f)]
+    imgs = req.get("reference_image_urls") or []
+    ok(req.get("resolution") == "2K" and req.get("aspect_ratio") == "adaptive" and req.get("duration") == 4 and len(req.get("reference_video_urls") or []) == 1 and len(imgs) == 2 and all(u.endswith("-mc.jpg") or "/media/" in u for u in imgs)
+       and "(a red model car, a white perfume bottle)" in req.get("prompt", "") and "exactly like Image 2" in req.get("prompt", "") and d.get("status") == "done", f"the swap goes to MiniMax H3 at 2K with the video, the person, the product and what to keep {out['best']}")
+    ok(P_SWAP and j.get("cost") == round(P_SWAP * 4 / 5) and wait(lambda: c0 - credits() == j.get("cost"), 10), f"the swap costs what the page shows (4 s at least) {out['best'][:3]}")
+    ok(os.path.exists(f) and has_sound(f) and d.get("url", "").endswith("-snd.mp4"), f"the swap keeps the sound of the client's video {out['best'][-3:]}")
+    # 6b) the engine made a 4 s clip with its own sound from a 3 s silent video → the result is cut to 3 s and has no made-up sound
+    mock("/plan", {"swap": ["snd"]}); j = api("/v1/jobs", {**SWAP, "cid": "a6b"}); d = done(j.get("id", "x")) or {}; f = D + "/media/" + str(d.get("url", "")).split("/media/")[-1]
+    out["own"] = [d.get("status"), d.get("url"), os.path.exists(f) and has_sound(f), os.path.exists(f) and probe_dur(f)]
+    ok(d.get("status") == "done" and d.get("url", "").endswith("-snd.mp4") and os.path.exists(f) and not has_sound(f) and probe_dur(f) < 3.4, f"the swap has the video's own length and sound, nothing made up {out['own']}")
+    # 6c) a 16 s video: refused before anything is charged (the swap takes up to 15 s)
+    c0 = credits(); n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "a6c", "dur": 16, "inputs": {"mcMove": "/media/long.mp4", "mcChar": "/media/pic.png"}})
+    out["long"] = [j.get("_status"), j.get("error"), c0, credits(), tasks(n0)]
+    ok(j.get("_status") == 400 and "up to 15 s" in str(j.get("error")) and credits() == c0 and not tasks(n0), f"a 16 s video: refused with the reason, nothing charged {out['long']}")
     # 7) a silent movement video: the result is the engine's own file, nothing added
     n0 = len(mock("/stats")["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "a7"}); d = done(j.get("id", "x")) or {}
     out["silent"] = [d.get("status"), d.get("url")]

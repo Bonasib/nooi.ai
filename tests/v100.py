@@ -31,7 +31,7 @@ http.createServer((q,s)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{const u=
  if(u.pathname==='/swapplan'){st.swap=JSON.parse(b||'[]');return send(1)}   // outcomes for the next Character Swap tasks: "fail" / "ok"
  if(q.method==='POST'&&/^\/api\/v1\//.test(u.pathname)){let j={};try{j=JSON.parse(b||'{}')}catch{}st.reqs.push({path:u.pathname,body:j});
    if(!String((j.input||{}).prompt||'').trim()&&!/elevenlabs|topaz|recraft|animate/.test(j.model||''))return send(null,422,'prompt is required');   // like Kling 3.0
-   const id='t'+(++n);T[id]=j;if(/animate-replace/.test(j.model||''))j._out=(st.swap||[]).shift()||'ok';return send({taskId:id})}
+   const id='t'+(++n);T[id]=j;if(/animate-replace|minimax-h3\/reference-to-video/.test(j.model||''))j._out=(st.swap||[]).shift()||'ok';return send({taskId:id})}
  if(/record-?[iI]nfo/.test(u.pathname)){const j=T[u.searchParams.get('taskId')]||{};if(j._out==='fail')return send({state:'fail',failMsg:'internal error',failCode:'500'});const f=/video|kling|seedance|wan/.test(JSON.stringify(j).slice(0,300))?'vid.mp4':'pic.png';
    const url='http://localhost:'+P+'/'+f;return send({state:'success',successFlag:1,response:{resultUrls:[url]},resultJson:JSON.stringify({resultUrls:[url]})})}
  s.statusCode=404;s.end('{}')})}).listen(P);
@@ -95,7 +95,7 @@ try:
     n0 = len(stats()["reqs"]); j = api("/v1/jobs", {"kind": "video", "model": "mcswap", "prompt": "", "dur": 5, "aspect": "9:16", "inputs": {"mcMove": "/media/move.mp4", "mcChar": "/media/pic.png"}, "meta": {"motion83": True, "swap93": True, "consent": True, "res": "720p"}})
     d = done(j.get("id", "x"), 90) or {}; models = [b.get("model") for b in sent(n0)]
     out["swap"] = [j.get("_status"), j.get("error"), d.get("status"), d.get("error"), models]
-    ok(d.get("status") == "done" and models and models[0] == "wan/2-2-animate-replace" and "kling-3.0/video" not in models, f"Character Swap goes to its own engine {out['swap']}")
+    ok(d.get("status") == "done" and models and models[0] == "minimax-h3/reference-to-video" and "kling-3.0/video" not in models, f"Character Swap goes to its own engine {out['swap']}")
     # 7) a model with its own engine (Wan 3.0) keeps it; nooi Auto uses the Admin default
     for m, want in (("wan30", "wan/3-0-video"), ("auto", "kling-3.0/video")):
         n0 = len(stats()["reqs"]); j = api("/v1/jobs", {"kind": "video", "model": m, "prompt": "A boat at sea", "dur": 5, "aspect": "16:9", "meta": {}})
@@ -107,12 +107,12 @@ try:
     plan(["fail", "ok"]); c0 = api("/v1/billing").get("credits"); n0 = len(stats()["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "sw-once"})
     d = done(j.get("id", "x"), 90) or {}; tasks = [b.get("model") for b in sent(n0)]; c1 = api("/v1/billing").get("credits")
     out["swapOnce"] = [d.get("status"), d.get("error"), tasks, c0, c1, j.get("cost")]
-    ok(d.get("status") == "done" and tasks.count("wan/2-2-animate-replace") == 2 and c0 - c1 == (j.get("cost") or 0) > 0, f"the swap engine failed once on its side: asked once more, made, charged once {out['swapOnce']}")
+    ok(d.get("status") == "done" and tasks.count("minimax-h3/reference-to-video") == 2 and c0 - c1 == (j.get("cost") or 0) > 0, f"the swap engine failed once on its side: asked once more, made, charged once {out['swapOnce']}")
     # 9) …fails every time → a clear line, nothing charged
     plan(["fail", "fail"]); c0 = api("/v1/billing").get("credits"); n0 = len(stats()["reqs"]); j = api("/v1/jobs", {**SWAP, "cid": "sw-never"})
     d = done(j.get("id", "x"), 90) or {}; tasks = [b.get("model") for b in sent(n0)]; c1 = wait(lambda: (lambda c: c if c == c0 else None)(api("/v1/billing").get("credits")), 10)
     out["swapNever"] = [d.get("status"), d.get("error"), tasks, c0, c1]
-    ok(d.get("status") == "failed" and tasks.count("wan/2-2-animate-replace") == 2 and "an error on its side" in str(d.get("error")) and "whole person" in str(d.get("error")) and c1 == c0,
+    ok(d.get("status") == "failed" and tasks.count("minimax-h3/reference-to-video") == 2 and "an error on its side" in str(d.get("error")) and "whole person" in str(d.get("error")) and c1 == c0,
        f"the swap engine fails every time: a clear line, nothing charged {out['swapNever']}")
 finally:
     srv.kill(); mk.kill()

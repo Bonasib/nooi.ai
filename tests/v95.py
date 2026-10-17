@@ -86,19 +86,19 @@ def server_checks():
     t = wait(lambda: stats()["tasks"][t0:], 60) or []
     inp = (t[0].get("input") or {}) if t else {}
     v = p = None
-    try: v = probe(fetch(inp["video_url"], D + "/sent.mp4"))
+    try: v = probe(fetch((inp.get("reference_video_urls") or [""])[0], D + "/sent.mp4"))
     except Exception as e: v = str(e)[:120]
-    try: im = Image.open(fetch(inp["image_url"], D + "/sent.jpg")); p = [im.format, im.size, im.convert("RGB").getpixel((im.size[0] - 10, im.size[1] // 2))]
+    try: im = Image.open(fetch((inp.get("reference_image_urls") or [""])[0], D + "/sent.jpg")); p = [im.format, im.size, im.convert("RGB").getpixel((im.size[0] - 10, im.size[1] // 2))]
     except Exception as e: p = str(e)[:120]
     out["sent"] = {"video": v, "photo": p, "model": t and t[0].get("model")}
     ok(isinstance(v, dict) and v["codec"] == "h264" and max(v["w"], v["h"]) <= 1280 and v["h"] > v["w"] and not v["rot"] and v["fps"] <= 30.5 and v["size"] < 10 * 1024 * 1024 and 3.5 <= v["dur"] <= 4.5,
        f"{tag}: the engine gets an upright H.264 MP4, ≤ 1280 px, ≤ 30 fps, under 10 MB (was {out['phone']}) → {v}")
     ok(isinstance(p, list) and p[0] == "JPEG" and p[1] == (300, 400) and p[2][0] > 180 and p[2][2] < 90, f"{tag}: the photo reaches the engine upright (the red top band of the sideways file is now on the right) {p}")
-    ok(t and t[0].get("model") == "wan/2-2-animate-replace" and inp.get("resolution") == "720p", f"{tag}: Character Swap engine and quality {t and t[0].get('model')} {inp}")
+    ok(t and t[0].get("model") == "minimax-h3/reference-to-video" and inp.get("resolution") == "2K" and len(inp.get("reference_video_urls") or []) == 1, f"{tag}: Character Swap engine and quality {t and t[0].get('model')} {inp}")
     # a video that is already right is sent as it is
     t0 = len(stats()["tasks"]); api("/v1/jobs", SWAP("fine.mp4", "photo.jpg"), token=TOKEN)
     t = wait(lambda: stats()["tasks"][t0:], 30) or []
-    ok(t and t[0]["input"]["video_url"].endswith("/media/fine.mp4"), f"{tag}: a video the engine can already read is sent as it is {t and t[0]['input']['video_url']}")
+    ok(t and t[0]["input"]["reference_video_urls"][0].endswith("/media/fine.mp4"), f"{tag}: a video the engine can already read is sent as it is {t and t[0]['input'].get('reference_video_urls')}")
     # refusals: nothing charged
     c1 = credits()
     r1 = api("/v1/jobs", SWAP("short.mp4", "photo.jpg"), token=TOKEN); r2 = api("/v1/jobs", SWAP("broken.mp4", "photo.jpg"), token=TOKEN); r3 = api("/v1/jobs", SWAP("gone.mp4", "photo.jpg"), token=TOKEN)

@@ -62,12 +62,12 @@ async def motion(b):
         tag = f"motion {w}"; ctx, pg, errs = await page(b, w, lang); E = pg.evaluate
         await E("()=>{delete S.mc83;M.mcMove=null;M.mcChar=null;go('motion');renderAll()}"); await pg.wait_for_timeout(500)
         r = await E("""()=>({modes:[...document.querySelectorAll('.mcm93')].map(x=>[x.dataset.val,x.getAttribute('aria-checked')]),words:!!document.querySelector('[data-bind="mc83.prompt"]'),frame:!!document.querySelector('[data-set="mc83.orient"]'),
-          res:[...document.querySelectorAll('[data-set="mc83.res"]')].map(x=>x.dataset.val),lib:document.querySelectorAll('.mclib83').length,go:document.querySelector('[data-act=mc-make]').textContent,over:document.documentElement.scrollWidth>innerWidth+1})""")
+          res:[...document.querySelectorAll('[data-set="mc83.res"]')].map(x=>x.dataset.val),prod:!!document.querySelector('input[data-slot="mcProd"]'),lib:document.querySelectorAll('.mclib83').length,go:document.querySelector('[data-act=mc-make]').textContent,over:document.documentElement.scrollWidth>innerWidth+1})""")
         ok(r["modes"] == [["swap", "true"], ["moves", "false"]], f"{tag}: two jobs, Replace the person first and chosen {r['modes']}")
-        ok(not r["words"] and not r["frame"] and r["res"] == [] and not r["over"], f"{tag}: a swap shows only its own options (v104: no Quality choice — always the best) {r}")
+        ok(not r["words"] and not r["frame"] and r["res"] == [] and r["prod"] and not r["over"], f"{tag}: a swap shows only its own options (v104: no Quality choice — always the best; v105: the product photo) {r}")
         await pg.click('[data-set="mc83.mode"][data-val="moves"]'); await pg.wait_for_timeout(250)
-        r2 = await E("""()=>({words:!!document.querySelector('[data-bind="mc83.prompt"]'),frame:!!document.querySelector('[data-set="mc83.orient"]'),res:[...document.querySelectorAll('[data-set="mc83.res"]')].map(x=>x.dataset.val)})""")
-        ok(r2["words"] and r2["frame"] and r2["res"] == [], f"{tag}: the moves show their words box and framing (v104: no Quality choice) {r2}")
+        r2 = await E("""()=>({words:!!document.querySelector('[data-bind="mc83.prompt"]'),frame:!!document.querySelector('[data-set="mc83.orient"]'),res:[...document.querySelectorAll('[data-set="mc83.res"]')].map(x=>x.dataset.val),prod:!!document.querySelector('input[data-slot="mcProd"]')})""")
+        ok(r2["words"] and r2["frame"] and r2["res"] == [] and not r2["prod"], f"{tag}: the moves show their words box and framing (v104: no Quality choice) {r2}")
         await pg.click('[data-set="mc83.mode"][data-val="swap"]'); await pg.wait_for_timeout(200)
         # nothing without the files; a file too big to upload is caught before anything is charged
         await pg.click('[data-act="mc-make"]'); await pg.wait_for_timeout(300)
@@ -95,8 +95,8 @@ async def motion(b):
             c1 = api("/v1/billing", token=TOKEN)["credits"]
             nocons = api("/v1/jobs", {"kind": "video", "model": "mcswap", "prompt": "", "dur": 4, "meta": {"res": "720p"}, "inputs": {"mcChar": "/media/char.png", "mcMove": "/media/move.webm"}}, token=TOKEN)
             out["swap"] = {"job": r, "sent": inp, "credits": [c0, c1], "shown": shown, "api": jj.get("id") or jj}
-            ok(t and t[0].get("model") == "wan/2-2-animate-replace", f"{tag}: Replace the person reaches the Character Swap engine {[x.get('model') for x in t]}")
-            ok(set(inp) <= {"video_url", "image_url", "resolution", "nsfw_checker"} and inp.get("resolution") == "720p" and inp.get("video_url", "").endswith("-mc.mp4") and inp.get("image_url", "").endswith("-mc.jpg"), f"{tag}: the engine gets the video (a WebM made into an MP4, v95), the photo (an upright JPEG) and the quality — nothing else {inp}")
+            ok(t and t[0].get("model") == "minimax-h3/reference-to-video", f"{tag}: Replace the person reaches the Character Swap engine {[x.get('model') for x in t]}")
+            ok(set(inp) <= {"prompt", "reference_video_urls", "reference_image_urls", "aspect_ratio", "duration", "resolution"} and inp.get("resolution") == "2K" and (inp.get("reference_video_urls") or [""])[0].endswith("-mc.mp4") and (inp.get("reference_image_urls") or [""])[0].endswith("-mc.jpg") and "Video 1" in inp.get("prompt", ""), f"{tag}: the engine gets the video (a WebM made into an MP4, v95), the photo (an upright JPEG) and the quality — nothing else {inp}")
             ok(r and r["model"] == "mcswap" and r["swap"] and r["aspect"] == "16:9" and r["cost"] == shown, f"{tag}: the swap keeps the video's shape and its price is the one on the button {r} shown {shown}")
             ok(c0 - c1 == shown, f"{tag}: a customer is charged exactly the price on the button {c0}->{c1} shown {shown} {jj}")
             ok(nocons.get("_status") == 400, f"{tag}: no swap without the rights confirmed {nocons}")
