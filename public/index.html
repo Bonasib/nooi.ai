@@ -2866,7 +2866,10 @@ function drawFit(ctx,m,ow,oh,lt,filter){
 function syncClipMedia(i,lt,playing){
   S.ed.clips.forEach((c,j)=>{const m=M["c_"+c.id];if(!m||m.type!=="video")return;
     if(j===i){m.el.playbackRate=c.speed||1;m.el.muted=!S.ed.clipSound||!c.vol;m.el.volume=clamp((c.vol||0)/100,0,1);
-      if(ED.active!==i||Math.abs(m.el.currentTime-lt)>(playing?.35:.04)){try{m.el.currentTime=lt}catch(e){}}
+      // (v99) paused, a moment already asked for isn't asked again (some browsers land a hair off it, and asking every frame
+      // kept the preview blinking); while you drag, a new jump waits up to 0.25 s for the one still running
+      const asked=!playing&&ED.active===i&&((Math.abs((m._lt??-9)-lt)<.001&&Math.abs(m.el.currentTime-lt)<.25)||(m.el.seeking&&performance.now()-(m._st||0)<250));
+      if((ED.active!==i||Math.abs(m.el.currentTime-lt)>(playing?.35:.04))&&!asked){try{m.el.currentTime=lt;m._lt=lt;m._st=performance.now()}catch(e){}}
       if(playing&&m.el.paused)m.el.play().catch(()=>{});if(!playing&&!m.el.paused)m.el.pause()}
     else if(!m.el.paused)m.el.pause()});
   ED.active=i;
@@ -6668,7 +6671,7 @@ function edxDrawLayers(ctx,W,H,t){(S.ed.layers||[]).forEach(Ly=>{if(t<Ly.start||
 overlayVignette=(o=>function(ctx,w,h,amt){if(S.view==="edit"&&ctx.canvas&&ctx.canvas.id==="wk"&&S.ed.clips.length){try{edxDrawRegions(ctx,w,h,ED.t);edxDrawLayers(ctx,w,h,ED.t)}catch(e){}}return o(ctx,w,h,amt)})(overlayVignette);
 /* layer videos follow the playhead */
 syncClipMedia=(o=>function(i,lt,playing){o(i,lt,playing);(S.ed.layers||[]).forEach(Ly=>{const m=M["ly_"+Ly.id];if(!m||m.type!=="video")return;m.el.muted=!Ly.sound;m.el.loop=true;const on=ED.t>=Ly.start&&ED.t<=Ly.end,d=m.el.duration||0,want=d?(ED.t-Ly.start)%d:0;
-  if(on&&playing){if(Math.abs(m.el.currentTime-want)>.35){try{m.el.currentTime=want}catch(e){}}if(m.el.paused)m.el.play().catch(()=>{})}else{if(!m.el.paused)m.el.pause();if(on&&Math.abs(m.el.currentTime-want)>.04){try{m.el.currentTime=want}catch(e){}}}})})(syncClipMedia);
+  if(on&&playing){if(Math.abs(m.el.currentTime-want)>.35){try{m.el.currentTime=want}catch(e){}}if(m.el.paused)m.el.play().catch(()=>{})}else{if(!m.el.paused)m.el.pause();if(on&&Math.abs(m.el.currentTime-want)>.04&&!(Math.abs((m._lt??-9)-want)<.001&&Math.abs(m.el.currentTime-want)<.25)&&!(m.el.seeking&&performance.now()-(m._st||0)<250)){try{m.el.currentTime=want;m._lt=want;m._st=performance.now()}catch(e){}}}})})(syncClipMedia);   // (v99: the same calm jumps as clips)
 
 /* ---------- sound effects: built-in synthesised library + your own files ---------- */
 const EDX_SFX=[["whoosh","Whoosh","ووش"],["swoosh","Swoosh up","صعود سريع"],["swipe","Swipe","سحب"],["impact","Impact","ارتطام"],["boom","Boom","انفجار"],["drum","Drum hit","ضربة طبل"],["pop","Pop","فرقعة"],["click","Click","نقرة"],["bubble","Bubble","فقاعة"],["ding","Ding","رنين"],["notify","Notification","تنبيه"],["cash","Cash","كاش"],["shutter","Camera","كاميرا"],["typing","Typing","كتابة"],["glitch","Glitch","تشويش"],["riser","Riser","تصاعد"],["laser","Laser","ليزر"],["heart","Heartbeat","نبض"]];
@@ -13927,6 +13930,33 @@ document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest
   .char98{max-width:40px;padding:0;justify-content:center;width:40px}.char98 .selbtn{font-size:0!important;padding:0!important;max-width:34px;justify-content:center}.char98 .selbtn>svg{display:none}
   .char98:has(.sp88.none)>svg,.char98:not(:has(.selbtn))>svg{display:block}.char98:has(.sp88.none) .selbtn{position:absolute;inset:0;opacity:0}}
 `;document.head.appendChild(st)})();
+
+/* ================= v99: THE EDITOR'S PREVIEW NEVER BLINKS =================
+   Why it flickered: each time a clip's video moved to another moment (dragging the playhead, the next clip starting, the
+   paused preview catching up, a playing clip re-synced) the preview painted a grey "Loading…" screen until that frame came,
+   then the picture again — half the frames while dragging, more on a phone or with videos from the network. Now the preview
+   keeps the last picture it drew while the video catches up (up to HOLD99, then "Loading…" as before, so a file that really
+   is slow still says so); the jumps themselves are calmer (syncClipMedia, v99 lines). Export gets the same held frame
+   instead of "Loading…" written into the video. */
+const HOLD99=1500;
+// a copy of the clip's last good frame (≤960 px; while playing at most ~11 times a second — a held frame is only needed for a moment);
+// a clip's frame (main) also stands in for the next clip until that one has its first frame
+function keep99(m,main){const v=m.el,now=performance.now();if(v.seeking||(m._k&&m._kt===v.currentTime)||(ED.playing&&m._kat&&now-m._kat<90))return;
+  const W=v.videoWidth,H=v.videoHeight,s=Math.min(1,960/Math.max(W,H)),w=Math.max(2,Math.round(W*s)),h=Math.max(2,Math.round(H*s));
+  const k=m._k||(m._k=document.createElement("canvas"));if(k.width!==w||k.height!==h){k.width=w;k.height=h}
+  try{k.getContext("2d").drawImage(v,0,0,w,h);k.complete=true;k.naturalWidth=W;k.naturalHeight=H;m._kt=v.currentTime;m._kat=now;if(main){ED.k99=k;S.ed.clips.forEach(c=>{const o=M["c_"+c.id];if(o&&o!==m&&o._k){o._k=null;o._kt=null}})}}catch(e){}}   // (one clip copy at a time: phones keep their memory)
+drawFit=(o=>function(ctx,m,ow,oh,lt,filter){
+  if(m&&m.type==="video"&&m.el&&!m.el.error){const v=m.el;
+    if(v.readyState>=2&&v.videoWidth>0){m._w99=0;keep99(m,1)}
+    else{const now=performance.now(),k=m._k||ED.k99;m._w99=m._w99||now;
+      // (the copy stands in for the video for this one draw: same clip, so its move / zoom / effects still apply)
+      if(k&&now-m._w99<HOLD99){const el=m.el;m.el=k;m.type="image";try{return o(ctx,m,ow,oh,lt,filter)}finally{m.el=el;m.type="video"}}}}
+  return o(ctx,m,ow,oh,lt,filter)})(drawFit);
+// video layers too: a layer whose video is catching up shows its last frame instead of vanishing for a moment
+edxDrawLayers=(o=>function(ctx,W,H,t){const held=[];
+  (S.ed.layers||[]).forEach(Ly=>{const m=M["ly_"+Ly.id];if(!m||m.type!=="video"||!m.el||m.el.error||t<Ly.start||t>Ly.end)return;const v=m.el;
+    if(v.readyState>=2&&v.videoWidth>0){m._w99=0;keep99(m)}else if(m._k){const now=performance.now();m._w99=m._w99||now;if(now-m._w99<HOLD99){held.push([m,v]);m.el=m._k;m.type="image"}}});
+  try{return o(ctx,W,H,t)}finally{held.forEach(([m,v])=>{m.el=v;m.type="video"})}})(edxDrawLayers);
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;
