@@ -118,7 +118,7 @@ async def page_checks():
             await asyncio.sleep(.25)
         out["card"] = t
         on = lambda k, v: E(f"()=>document.querySelector('[data-act={k}][data-{'eng' if k=='sw114' else 'res'}=\"{v}\"]')?.classList.contains('on')")
-        ok(t and "Seedance 2.0 · faster" in t[0] and "MiniMax H3" in t[0] and "Sharpest (1080p)" in t[1] and "Faster (720p)" in t[1] and await on("sw114", "seedance"), f"the speed card: the engine (Seedance on) and its resolutions {t}")
+        ok(t and "Seedance 2.0" in t[0] and "MiniMax H3" in t[0] and "Sharpest (1080p)" in t[1] and "Faster (720p)" in t[1] and await on("sw114", "seedance"), f"the speed card: the engine (Seedance on) and its resolutions {t}")
         await pg.click('[data-act=sw114][data-eng="h3"]'); await pg.wait_for_timeout(1200)
         t2 = await E("()=>[...document.querySelectorAll('.sw112')].map(x=>x.textContent)")
         ok(await on("sw114", "h3") and "Sharpest (2K)" in t2[1] and api("/v1/admin/speed").get("swapEngine") == "h3", f"one tap: MiniMax H3, its resolutions {t2}")
@@ -132,7 +132,7 @@ async def page_checks():
 
 env = {k: v for k, v in os.environ.items() if not k.startswith(("LLM_", "ANTHROPIC_", "NVIDIA_", "ELEVENLABS_", "OPENAI_", "KIE_", "FAL_", "GOOGLE_", "DASHSCOPE_", "FIREBASE_", "LOCAL_LLM", "GEMMA_", "FREE_PERIOD", "NOOI_STAGE", "SWAP_ENGINE"))}
 mk = subprocess.Popen([sys.executable, D + "/mock.py", str(KPORT), D], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-srv = subprocess.Popen(["node", ROOT + "/server.js"], cwd=D, env=dict(env, PORT=str(PORT), SECRET_KEY="v" * 40, FIREBASE_PROJECT_ID="", PUBLIC_BASE_URL=f"http://localhost:{PORT}", AGENTS_AUTO_LEARN="false",
+srv = subprocess.Popen(["node", ROOT + "/server.js"], cwd=D, env=dict(env, SWAP_ENGINE="seedance", PORT=str(PORT), SECRET_KEY="v" * 40, FIREBASE_PROJECT_ID="", PUBLIC_BASE_URL=f"http://localhost:{PORT}", AGENTS_AUTO_LEARN="false",
     KIE_API_KEY="kk", KIE_BASE_URL=f"http://localhost:{KPORT}", LLM_BASE_URL=f"http://localhost:{KPORT}", LLM_API_KEY="llm", LLM_MODEL="mock-vision", MIRROR_MEDIA="false", FREE_PERIOD="false"),
     stdout=subprocess.DEVNULL, stderr=open(D + "/server.log", "w"))
 try:

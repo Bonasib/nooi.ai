@@ -4,7 +4,8 @@ import crypto from "crypto";
 import { cfg, configured, S as settingsS } from "../lib/settings.js";
 import { elevenlabs } from "./elevenlabs.js";
 import { nanoBanana, midjourney, gptImage } from "./images2.js";
-import { kie, kieDefault, kieAuto, kieVariant, KIE_BUILTIN } from "./kie.js";
+import { kie, kieDefault, kieAuto, kieVariant, KIE_BUILTIN, swapEngine } from "./kie.js";
+import { falVideo, FAL_SWAP } from "./fal.js";   // v116: Replace the person on fal.ai when the owner picks it
 import { nvRoute, nvAdapter } from "./nvidia.js";
 import { gen3dRoute, GEN3D } from "./gen3d.js";
 import { fpsAdapter } from "../lib/fps96.js";
@@ -55,6 +56,7 @@ export function adapterFor(cap, body, PROVIDERS) {
   if (cap === "enhance" && body.meta?.tool === "interp") return { key: "fps96", a: fpsAdapter() };   // v96: smooth motion on this server
   // NVIDIA AI first when it handles this job (explicit NVIDIA model, or "nooi Auto" with that capability switched on)
   const nt = nvRoute(cap, body); if (nt) return { key: "nv@" + nt, a: nvAdapter(nt) };
+  if (cap === "video" && body.model === "mcswap" && swapEngine() === "fal") return { key: "fal@" + FAL_SWAP, a: falVideo(FAL_SWAP) };   // v116
   // 3D objects on Tripo3D / Meshy, 360° worlds on Blockade Labs Skybox
   const g = gen3dRoute(cap, body); if (g) return g;
   // Any studio model with a Kie model id set in Admin → Models runs on Kie AI
@@ -85,4 +87,4 @@ function directAdapter(cap, body, PROVIDERS) {
   if (cap === "image" && body.model === "qwen") return { key: "qwen-image", a: dashscope("image") };
   return { key: cap, a: PROVIDERS[cap] };
 }
-export function adapterByKey(key, PROVIDERS) { if (key === "fps96") return fpsAdapter(); if (String(key).startsWith("nv@")) return nvAdapter(key.slice(3)); if (GEN3D[key]) return GEN3D[key](); if (String(key).startsWith("kie@")) return kie(key.slice(4)); if (String(key).startsWith("gpt@")) return gptImage(key.slice(4)); if (key === "elevenlabs") return elevenlabs(); if (key === "midjourney") return midjourney(); if (String(key).startsWith("nano@")) return nanoBanana(key.slice(5)); if (String(key).includes("@")) { const [prov, mo] = key.split("@"); return makers()[prov](mo); } return key === "minimax" ? minimax() : key === "seedance" ? seedance() : key === "kling" ? kling() : key === "qwen-video" ? dashscope("video") : key === "qwen-image" ? dashscope("image") : PROVIDERS[key]; }
+export function adapterByKey(key, PROVIDERS) { if (key === "fps96") return fpsAdapter(); if (String(key).startsWith("fal@")) return falVideo(key.slice(4)); if (String(key).startsWith("nv@")) return nvAdapter(key.slice(3)); if (GEN3D[key]) return GEN3D[key](); if (String(key).startsWith("kie@")) return kie(key.slice(4)); if (String(key).startsWith("gpt@")) return gptImage(key.slice(4)); if (key === "elevenlabs") return elevenlabs(); if (key === "midjourney") return midjourney(); if (String(key).startsWith("nano@")) return nanoBanana(key.slice(5)); if (String(key).includes("@")) { const [prov, mo] = key.split("@"); return makers()[prov](mo); } return key === "minimax" ? minimax() : key === "seedance" ? seedance() : key === "kling" ? kling() : key === "qwen-video" ? dashscope("video") : key === "qwen-image" ? dashscope("image") : PROVIDERS[key]; }

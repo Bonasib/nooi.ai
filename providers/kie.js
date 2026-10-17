@@ -84,9 +84,12 @@ const TOOL_SCALE = (p) => (String((p.meta?.opt || {}).scale || "2x").startsWith(
 const one = (v, n) => String(v || "").replace(/[\r\n"]+/g, " ").replace(/\s{2,}/g, " ").trim().replace(/[.\s]+$/, "").slice(0, n);
 // v114: the swap runs on Seedance 2.0 (faster) unless the owner picks MiniMax H3 (Admin → Overview → Speed); SWAP_ENGINE=h3 sets
 // the default for a server (and the tests written for H3)
-export const SWAP_MODELS = { seedance: "bytedance/seedance-2", h3: "minimax-h3/reference-to-video" };
-export const swapEngine = () => { const v = String(platformS().swapEngine || process.env.SWAP_ENGINE || "seedance").toLowerCase(); return SWAP_MODELS[v] ? v : "seedance"; };
-const swapModel = () => SWAP_MODELS[swapEngine()];
+// v116: Seedance 2.0 Fast is the default (the quicker tier of the same model), and fal.ai a second provider with its own queue
+// (providers/fal.js — routed in providers/extra.js; here it falls back to Seedance 2.0 Fast)
+export const SWAP_MODELS = { seedancefast: "bytedance/seedance-2-fast", seedance: "bytedance/seedance-2", h3: "minimax-h3/reference-to-video" };
+export const SWAP_ENGINES = [...Object.keys(SWAP_MODELS), "fal"];
+export const swapEngine = () => { const v = String(platformS().swapEngine || process.env.SWAP_ENGINE || "seedancefast").toLowerCase(); return SWAP_ENGINES.includes(v) ? v : "seedancefast"; };
+const swapModel = () => SWAP_MODELS[swapEngine()] || SWAP_MODELS.seedancefast;
 // v114: what the text AI saw in the video (lib/mcprep.js lookMotion): the place, the light, how the person moves, their eyes
 const sceneLines = (sc = {}) => [one(sc.scene, 160) && "Place: " + one(sc.scene, 160) + ".", one(sc.light, 140) && "Light: " + one(sc.light, 140) + ".",
   one(sc.moves, 180) && "Movement: " + one(sc.moves, 180) + ".", one(sc.eyes, 120) && "Eyes: " + one(sc.eyes, 120) + "."].filter(Boolean);
@@ -177,7 +180,7 @@ export function kieInput(model, p) {
     const prod = inp.mcProd ? absUrl(inp.mcProd) : null, target = inp.mcWho ? absUrl(inp.mcWho) : null;
     return drop({ prompt: seedanceSwapWords({ keep: p.meta?.mcKeep, prod: !!prod, target: !!target, where: p.meta?.swapWhere, who: p.meta?.swapWho, scene: p.meta?.mcScene }),
       reference_image_urls: [absUrl(inp.mcChar || img0), ...(target ? [target] : []), ...(prod ? [prod] : [])], reference_video_urls: [absUrl(inp.mcMove)],
-      generate_audio: false, resolution: p.meta?.swapFast ? "720p" : "1080p", aspect_ratio: "adaptive", duration: clamp(dur, 4, 15), web_search: false });
+      generate_audio: false, resolution: /fast/.test(m) ? (p.meta?.swapFast ? "480p" : "720p") : p.meta?.swapFast ? "720p" : "1080p", aspect_ratio: "adaptive", duration: clamp(dur, 4, 15), web_search: false });
   }
   if (/^minimax-h3\/reference-to-video/.test(m)) {
     const prod = inp.mcProd ? absUrl(inp.mcProd) : null, target = inp.mcWho ? absUrl(inp.mcWho) : null;
