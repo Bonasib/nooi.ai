@@ -12704,7 +12704,7 @@ VIEWS.edit=(o=>function(){let h=o();const E=S.ed;if(!E||!Array.isArray(E.clips))
 /* ---- extend a shot: the clip's last frame becomes the first frame of a new 5-second shot that continues it, placed right after ---- */
 function edAspect91(kind){const f=fmt(),r=f[2]/f[3];return r<.7?"9:16":r<1.15?(kind==="image"&&r<.9?"4:5":"1:1"):"16:9"}
 function edExtModel91(c){const b=c&&c.src&&c.src.k==="job"?S.jobs.find(x=>x.id===c.src.job):null;return b&&b.kind==="video"&&MODELS[b.model]&&engMax(b.model)>=5?b.model:(hfStudio("continue the shot",5)||{shots:[{m:"seedance"}]}).shots[0].m}
-const edExtCost91=c=>vcost(edExtModel91(c),5);
+const edExtCost91=c=>{const m=edExtModel91(c);return vcost(m,/^(veo|ltx23)/.test(m)?8:5)};   // v94: Veo makes 8 s
 async function edExtend91(c){if(!c){toast(L("Add a clip first.","أضف مقطعاً أولاً."));return false}
   if(Object.values(EXT91).includes(c.id)){toast(L("This shot is already being extended.","هذه اللقطة قيد المدّ بالفعل."));return false}
   const E=S.ed,i=E.clips.indexOf(c),mdl=edExtModel91(c),m=clipMedia(c);ED.playing=false;ED.t=edStarts()[i]+Math.max(0,clipDur(c)-.05);edSetPick("clip",c.id);
@@ -12719,7 +12719,7 @@ edUseJob=(o=>async function(j,opt){const r=await o(j,opt),x=j&&EXT91[j.id];if(x)
 edToolbar=(o=>function(){const h=o(),c=S.ed.clips.find(x=>x.id===S.ed.sel);
   return h.replace(/(<button class="tb" data-act="ed-move" data-d="1")/,tb("ed-extend91",ICONS.extend91,L("Extend","مدّ")+(c?" · "+edExtCost91(c)+" cr":""),(c?"":"disabled ")+'data-paid="1"')+"$1")})(edToolbar);
 VIEWS.edit=(o=>function(){let h=o();const E=S.ed;if(E.tab!=="clip")return h;const c=E.clips.find(x=>x.id===E.sel);if(!c)return h;
-  const card='<span class="lbl">'+L("Extend with AI","المدّ بالذكاء الاصطناعي")+'</span><div class="ext91"><p class="small dim" style="margin:0">'+L("Continues this shot from its last frame — same people, place and light — and puts the next 5 seconds right after it.","يكمل هذه اللقطة من آخر إطار فيها — الأشخاص والمكان والضوء نفسها — ويضع الثواني الخمس التالية بعدها مباشرة.")+'</p><button class="btn sm primary" data-act="ed-extend91">'+ic("extend91")+L("Extend shot · 5s","مدّ اللقطة · 5ث")+'<span class="cost">'+edExtCost91(c)+" cr</span></button></div>";
+  const card='<span class="lbl">'+L("Extend with AI","المدّ بالذكاء الاصطناعي")+'</span><div class="ext91"><p class="small dim" style="margin:0">'+L("Continues this shot from its own last frame — the same people, place, light and camera, one continuous take — and puts the next seconds right after it, with the clip's look. Type what happens next in the prompt box: “extend: he opens the door”.","يكمل هذه اللقطة من آخر إطار فيها — الأشخاص والمكان والضوء والكاميرا نفسها، لقطة واحدة متصلة — ويضع الثواني التالية بعدها مباشرة بنفس مظهر المقطع. اكتب ما يحدث بعدها في مربع الوصف: «مدّ: يفتح الباب».")+'</p><button class="btn sm primary" data-act="ed-extend91">'+ic("extend91")+L("Extend shot · ","مدّ اللقطة · ")+(/^(veo|ltx23)/.test(edExtModel91(c))?8:5)+L("s","ث")+'<span class="cost">'+edExtCost91(c)+" cr</span></button></div>";
   return h.replace('<span class="lbl">'+L("Precision edit","تحرير دقيق")+"</span>",card+"$&")})(VIEWS.edit);
 document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="ed-extend91"]');if(!a||a.disabled)return;e.stopImmediatePropagation();const E=S.ed;edExtend91(E.clips.find(x=>x.id===E.sel)||edSelClip())},true);
 
@@ -12823,7 +12823,7 @@ VIEWS.edit=(o=>function(){let h=o();if(h.indexOf('data-act="edcmd-go"')<0)return
   return h})(VIEWS.edit);
 /* pictures and video the editor asks for match the project's size (a TikTok or Story project asked for 16:9 before) */
 let EDRUN91=0;edRun=(o=>async function(p){EDRUN91++;try{return await o(p)}finally{EDRUN91--}})(edRun);
-addJob=(o=>function(j){if(j&&S.view==="edit"&&(j.kind==="video"||j.kind==="image")&&(EDRUN91||(j.meta&&(j.meta.edCmd||j.meta.edAi))))j.aspect=edAspect91(j.kind);return o(j)})(addJob);
+addJob=(o=>function(j){if(j&&S.view==="edit"&&(j.kind==="video"||j.kind==="image")&&!(j.meta&&j.meta.extend94)&&(EDRUN91||(j.meta&&(j.meta.edCmd||j.meta.edAi))))j.aspect=edAspect91(j.kind);return o(j)})(addJob);   // (v94: an extension keeps the clip's own shape)
 /* a part of the page that couldn't download (on-device captions, a 3D library…) says so in words, not as a browser error */
 toast=(o=>function(m,opt){const s=String(m==null?"":m);if(/Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Loading chunk \d+ failed/i.test(s)){opt=Object.assign({type:"warn"},opt);if(!opt.detail)opt.detail=s;m=L("A part of the editor couldn't download. Check your connection and try again.","تعذّر تنزيل جزء من المحرر. تحقّق من الاتصال وحاول مرة أخرى.")}return o(m,opt)})(toast);
 (()=>{const st=document.createElement("style");st.textContent=`
@@ -12871,7 +12871,7 @@ skRedraw=(o=>function(){if(S.view!=="sketch")return o();const cv=$("#skcv");if(!
   let full=cv!==SK91.cv||cv.width!==W;if(cv.width!==W){cv.width=W;cv.height=W}SK91.cv=cv;const ctx=cv.getContext("2d");
   const n=SK.strokes.length,sig=n+":"+SK.strokes.reduce((a,s)=>a+s.pts.length,0);
   if(sig!==SK91.sig){if(!(n===SK91.n+1&&SK91.live&&SK.strokes[n-1]===SK91.live&&SK91.liveN===SK91.live.pts.length))full=true;SK91.sig=sig;SK91.n=n;sk91Save()}
-  if(full){ctx.clearRect(0,0,W,W);if(SK.imp)ctx.drawImage(SK.imp,0,0,W,W);SK.strokes.forEach(s=>skDrawStroke(ctx,s,W,W));SK91.live=null;SK91.liveN=0}
+  if(full){ctx.clearRect(0,0,W,W);if(SK.imp)ctx.drawImage(SK.imp,0,0,W,W);const k=skHide94();SK.strokes.forEach((s,i)=>{if(i>=k)skDrawStroke(ctx,s,W,W)});SK91.live=null;SK91.liveN=0}   // v94: over the AI picture, only the marks made since
   const c=SK.cur;if(c){if(SK91.live!==c){SK91.live=c;SK91.liveN=0}const p=c.pts,seg=q=>skDrawStroke(ctx,{tool:c.tool,color:c.color,size:c.size,pts:q},W,W);
     if(!SK91.liveN&&p.length){seg([p[0]]);SK91.liveN=1}for(let i=Math.max(1,SK91.liveN);i<p.length;i++)seg([p[i-1],p[i]]);SK91.liveN=p.length}
   SK.dirty=true})(skRedraw);
@@ -13438,6 +13438,130 @@ VIEWS.edit=(o=>function(){let h=o();const E=S.ed;
 :where(:is(b,strong,h2,h3,h4,label,summary,.lbl)>svg[viewBox="0 0 24 24"]){width:1.15em;height:1.15em;vertical-align:-.2em;flex:none}
 .mine93{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}.mine93 .small{flex-basis:100%}
 .mine93 label.btn{cursor:pointer}
+`;document.head.appendChild(st)})();
+
+/* ================= v94: EXTEND SHOT CONTINUES THE SAME SHOT =================
+   "Extend" came back as another place. It sent the engine a grab of the editor's preview — the preview's size, with the
+   texts, logo, infographics, the look, a fade, the TikTok safe-zone guide and, for a wide clip in a tall project, the
+   blurred bars — and asked for the PROJECT's shape; with "nooi Auto" the engine could even be one that ignores a start
+   frame. Now the clip's own last frame is taken from its source (full size, nothing drawn on it), the request has the
+   clip's own shape, the engine is one that starts from a given frame (the clip's own engine when it can), the words ask
+   for one continuous take, and the new part gets the clip's look. A clip Veo made is continued by Veo itself (the server
+   finds that video's engine task); if what comes back is the whole longer video, only the new seconds are used. */
+const EXTI2V94=["kling30","seedance20","seedance25","kling","kling26","hailuo","wan27","seedance"];   // engines that start from a given frame
+const extBase94=c=>c&&c.src&&c.src.k==="job"?S.jobs.find(x=>x.id===c.src.job)||null:null;
+const extVeo94=m=>/^(veo|ltx23)/.test(m||"");
+function extModel94(c){const b=extBase94(c),ok=id=>!!(id&&MODELS[id]&&!/^(auto|mc|nv)/.test(id)&&engMax(id)>=5&&modelAllowed(id));
+  return b&&b.kind==="video"&&ok(b.model)?b.model:EXTI2V94.find(ok)||"seedance"}
+const extDur94=m=>extVeo94(m)?8:5;
+edExtModel91=extModel94;
+const seek94=(el,t)=>new Promise(r=>{if(Math.abs(el.currentTime-t)<.01&&el.readyState>=2)return r();const to=setTimeout(r,2500);el.addEventListener("seeked",()=>{clearTimeout(to);r()},{once:true});el.currentTime=t});
+// the clip's own last frame, from its source (up to 1920 on the long side), with nothing of the editor drawn on it
+async function extFrame94(c){const m=clipMedia(c);if(!m)return null;const w=srcW(m)||1280,h=srcH(m)||720;if(!w||!h)return null;
+  const end=(c.out!=null?c.out:m.type==="video"?m.el.duration:m.dur||5)||5;let back=null;
+  if(m.type==="video"){const el=m.el;if(!el.videoWidth)return null;back=el.currentTime;el.pause();await seek94(el,Math.max(0,Math.min(end,el.duration||end)-.06))}
+  const k=Math.min(1,1920/Math.max(w,h)),cv=document.createElement("canvas");cv.width=Math.round(w*k);cv.height=Math.round(h*k);
+  let b=null;try{drawSrcAt(cv.getContext("2d"),m,0,0,cv.width,cv.height,end-.05);b=await new Promise(r=>{try{cv.toBlob(r,"image/jpeg",.95)}catch(e){r(null)}})}catch(e){b=null}
+  if(back!=null)seek94(m.el,back);return b?{file:new File([b],"last-frame.jpg",{type:"image/jpeg"}),w:cv.width,h:cv.height}:null}
+function extAR94(w,h){const r=w/h,opts=[["16:9",16/9],["9:16",9/16],["1:1",1],["4:3",4/3],["3:4",3/4],["21:9",21/9]];return opts.reduce((a,o)=>Math.abs(Math.log(o[1]/r))<Math.abs(Math.log(a[1]/r))?o:a)[0]}
+function extPrompt94(c,b,next){const was=String((b&&b.prompt)||"").trim().replace(/[.\s]+$/,"");
+  return "One continuous take that continues this exact frame — the same shot, no cut: the same people (same faces, hair and clothes), the same place and background, the same objects where they are, the same light, colours, weather and time of day, the same lens and camera movement. Nothing new appears and the style doesn't change. "+
+    (was?"The shot so far: "+was+". ":"")+(String(next||"").trim()?"Next: "+String(next).trim().replace(/[.\s]+$/,"")+".":"Next: the action carries on naturally from this moment.")}
+edExtend91=async function(c,next){if(!c){toast(L("Add a clip first.","أضف مقطعاً أولاً."));return false}
+  if(Object.values(EXT91).includes(c.id)){toast(L("This shot is already being extended.","هذه اللقطة قيد المدّ بالفعل."));return false}
+  const E=S.ed,i=E.clips.indexOf(c),mdl=extModel94(c),b=extBase94(c),dur=extDur94(mdl);ED.playing=false;ED.t=edStarts()[i]+Math.max(0,clipDur(c)-.05);edSetPick("clip",c.id);
+  let fr=await extFrame94(c);
+  if(!fr){const sf=E.safe;E.safe=false;const f=await edFrameFile();E.safe=sf;if(f)fr={file:f,w:fmt()[2],h:fmt()[3]}}   // a source the browser can't read: the preview, without the guide
+  if(!fr){toast(L("Couldn't read the clip's last frame.","تعذّرت قراءة آخر إطار من المقطع."),{type:"warn"});return false}
+  const keep=M.vStart;M.vStart={type:"image",file:fr.file,url:URL.createObjectURL(fr.file),name:"last-frame.jpg"};const prompt=extPrompt94(c,b,next);
+  const j=addJob({kind:"video",prompt,title:L("Extended: ","امتداد: ")+String(clipName(c)).slice(0,50),model:mdl,dur,aspect:extAR94(fr.w,fr.h),cost:vcost(mdl,dur),
+    meta:{cat:hfCat(prompt),start:true,edCmd:"extend",extend94:1,extendOf:b&&b.remote&&extVeo94(mdl)?b.remote:undefined}});setTimeout(()=>{M.vStart=keep},60e3);
+  if(!j)return false;EXT91[j.id]=c.id;EDP[j.id]={it:"extend",after:c.id,t:ED.t};S.edCmd="";persist();renderView();
+  toast(L("Extending the shot — the next seconds continue it, right after it.","تُمدّ اللقطة — الثواني التالية تكملها وتوضع بعدها مباشرة."),{type:"info",ms:4500});return true};
+// the new part: the clip's look, and only the new seconds when the engine sent the whole longer video back
+edUseJob=(o=>async function(j,opt){const x=j&&EXT91[j.id],src=x&&S.ed.clips.find(q=>q.id===x),r=await o(j,opt);
+  const nc=x&&S.ed.clips.find(q=>q.src&&q.src.k==="job"&&q.src.job===j.id);if(!r||!nc||!src)return r;
+  ["cg","look","vfx","filter","fill"].forEach(k=>{if(src[k]!=null)nc[k]=JSON.parse(JSON.stringify(src[k]))});
+  const m=clipMedia(nc),sm=clipMedia(src),veo=!!(j.meta&&j.meta.extendOf);
+  const fit=()=>{const d=m.el.duration,bd=sm&&sm.type==="video"?sm.el.duration:0;if(!(d>0))return;if(veo&&bd>0&&d>bd+1.5)nc.in=+bd.toFixed(2);nc.out=+d.toFixed(2);persist();if(S.view==="edit")renderView()};
+  if(m&&m.type==="video"){if(m.el.duration>0)fit();else m.el.addEventListener("loadedmetadata",fit,{once:true})}   // whenever its length is known
+  persist();if(S.view==="edit")renderView();return r})(edUseJob);
+// "extend: he opens the door" / "مد اللقطة: ..." — the words say what happens next
+edCmd91=(o=>function(raw){const r=o.apply(this,arguments);if(r)return r;const s=String(raw||"").trim(),mm=s.match(/^(?:extend|continue|lengthen|مد|مدّ|مدد|أكمل|اكمل|كمل)(?:\s+(?:the\s+)?(?:shot|clip|it|scene|اللقطة|المقطع|المشهد))?\s*[:：\-—،,]\s*(.{3,300})$/i);
+  if(!mm)return null;const c=S.ed.clips.find(x=>x.id===S.ed.sel)||edSelClip();if(!c)return null;
+  return{d:[L("Extend ","مدّ ")+clipName(c)+L(" with AI — next: ","بالذكاء الاصطناعي — التالي: ")+mm[1]],cost:edExtCost91(c),paid:1,run:()=>{edExtend91(c,mm[1]);return null}}})(edCmd91);
+
+/* ================= v94: SKETCH — THE AI CHANGES THE SAME PICTURE =================
+   Every "Preview with AI" sent only the drawing, so each time a new, different picture came back and sat in a list. Now
+   the picture takes the drawing's place on the paper (the strokes it was made from are kept underneath — "My drawing"
+   shows them). What you draw next goes ON the picture, and "Update the picture" sends the picture with only those new
+   marks (and, if you like, words for the change) to an edit engine told to change only what was marked; the result
+   replaces the picture in the same frame. Undo removes your last mark, then steps back to the previous picture. Versions
+   (4–10) are for the first picture; "New picture" starts again from the drawing. The picture sits in its own layer under
+   the drawing, so the eraser removes marks, never the picture. */
+const SKS94=()=>{const K=S.sketch;K.hist94=Array.isArray(K.hist94)?K.hist94:[];return K};
+function skPic94(){const id=S.sketch&&S.sketch.pic94;return id?S.jobs.find(j=>j.id===id&&j.status==="complete"&&mediaUrl(j))||null:null}
+const skK94=()=>Math.min(+(S.sketch&&S.sketch.k94)||0,SK.strokes.length);
+const skPicMode94=()=>!!skPic94()&&S.sketch.v94!=="draw";
+function skHide94(){return skPicMode94()?skK94():0}
+const skMarks94=()=>SK.strokes.length-skK94();
+const skPend94=()=>{const id=S.sketch&&S.sketch.pend94,j=id&&S.jobs.find(x=>x.id===id);return j&&!["complete","failed"].includes(j.status)?j:null};
+function skSetPic94(j,quiet){const K=SKS94();if(K.pic94&&K.pic94!==j.id&&!K.hist94.includes(K.pic94))K.hist94.push(K.pic94);K.hist94=K.hist94.filter(x=>x!==j.id).slice(-20);
+  K.pic94=j.id;K.k94=Math.min(+(j.meta&&j.meta.k94)||0,SK.strokes.length);K.v94="pic";SK91.sig="";persist();if(S.view==="sketch")renderView();
+  if(!quiet)toast(L("Your picture is on the paper — draw on it to change it, then Update the picture.","صورتك على الورقة — ارسم عليها لتغييرها ثم اضغط «حدّث الصورة»."),{type:"ok",ms:4500})}
+function skEditPrompt94(what,chg,marks){const subj=String(what||"").trim(),c=String(chg||"").trim().replace(/[.\s]+$/,"");
+  return "Edit this picture"+(subj?" (it shows "+subj+")":"")+". "+(marks?"The rough hand-drawn lines on it mark the change to make: turn what they draw into a real part of the picture"+(c?" — "+c:"")+", in exactly the same style, light, colours and detail as the rest, and leave none of the drawn lines visible. ":"Change: "+c+". ")+
+    "Keep everything else exactly as it is — the same subject, shapes, positions, colours, background, light, composition and framing. Don't redraw or re-imagine the picture; change only what was asked."}
+// the picture with the new marks on it, as the engine will see it (the same square as on the paper)
+async function skComposite94(j){const b=await jobBlob72(j);if(!b)return null;const u=URL.createObjectURL(b),im=await new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=u});if(!im)return null;
+  const N=1024,c=document.createElement("canvas");c.width=c.height=N;const x=c.getContext("2d"),s=Math.max(N/im.naturalWidth,N/im.naturalHeight),w=im.naturalWidth*s,h=im.naturalHeight*s;x.drawImage(im,(N-w)/2,(N-h)/2,w,h);URL.revokeObjectURL(u);
+  const lay=document.createElement("canvas");lay.width=lay.height=N;const lx=lay.getContext("2d");SK.strokes.slice(skK94()).forEach(st=>skDrawStroke(lx,st,N,N));x.drawImage(lay,0,0);
+  return await new Promise(r=>{try{c.toBlob(r,"image/jpeg",.92)}catch(e){r(null)}})}
+async function skEdit94(){const K=SKS94(),cur=skPic94();if(!cur)return false;if(skPend94()){toast(L("The picture is being updated — one moment.","الصورة قيد التحديث — لحظة."));return false}
+  const marks=skMarks94()>0,chg=String(K.chg94||"").trim();if(!marks&&!chg){toast(L("Draw your change on the picture, or say what to change.","ارسم التغيير على الصورة، أو اكتب ما تريد تغييره."));return false}
+  const blob=await skComposite94(cur);if(!blob){toast(L("Couldn't read the picture — try again.","تعذّرت قراءة الصورة — حاول مجدداً."),{type:"warn"});return false}
+  let j=null;const prompt=skEditPrompt94(K.prompt,chg,marks);
+  withRef72("skImg",new File([blob],"picture-with-changes.jpg",{type:"image/jpeg"}),()=>{j=addJob({kind:"image",prompt,title:(String(K.prompt||L("Sketch","رسمة")).slice(0,30))+" · "+L("change","تعديل"),model:bestImg72(),aspect:"1:1",cost:skCost91(),batch:uid(),secs:6,art:"scene",
+    meta:{sketch:true,sk91:true,sk94e:1,style:"edit94",k94:SK.strokes.length,from:cur.id,res:"1K"}})});
+  if(!j)return false;K.pend94=j.id;K.chg94="";persist();renderView();toast(L("Updating the same picture with your change…","تُحدَّث الصورة نفسها بتغييرك…"),{type:"info",ms:3500});return true}
+// the first picture(s): every version remembers how much of the drawing it was made from; the first one ready goes on the paper
+sk91Go=(o=>async function(){if(skPic94())return skEdit94();const before=new Set(S.jobs.map(j=>j.id)),k=SK.strokes.length;const r=await o.apply(this,arguments);
+  const made=S.jobs.filter(j=>!before.has(j.id)&&j.meta&&j.meta.sk91);made.forEach(j=>{j.meta.k94=k;j.meta.auto94=1});if(made.length){S.sketch.pend94=null;persist()}return r})(sk91Go);
+setInterval(()=>{if(!S.sketch)return;const K=SKS94();
+  if(K.pend94){const j=S.jobs.find(x=>x.id===K.pend94);if(!j)K.pend94=null;else if(j.status==="failed"){K.pend94=null;persist();if(S.view==="sketch")renderView();toast(L("The change couldn't be made — your picture is as it was. Nothing was charged.","تعذّر إجراء التغيير — صورتك كما كانت. لم يُخصم شيء."),{type:"warn"})}
+    else if(j.status==="complete"&&mediaUrl(j)){K.pend94=null;skSetPic94(j,true)}}
+  if(!skPic94()){const j=S.jobs.filter(x=>x.meta&&x.meta.auto94&&!x.meta.used94&&x.status==="complete"&&mediaUrl(x)).sort((a,b)=>(b.created||0)-(a.created||0))[0];if(j){j.meta.used94=1;skSetPic94(j)}}},1000);
+// Undo: your last mark first, then the previous picture · Clear: the marks on the picture
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="sk-undo"],[data-act="sk-clear"],[data-act="sk94-view"],[data-act="sk94-new"],[data-act="sk94-use"]');if(!a||S.view!=="sketch")return;const K=SKS94(),act=a.dataset.act;
+  if(act==="sk94-view"){e.stopImmediatePropagation();K.v94=a.dataset.v==="draw"?"draw":"pic";SK91.sig="";persist();renderView();return}
+  if(act==="sk94-new"){e.stopImmediatePropagation();if(K.pic94&&!K.hist94.includes(K.pic94))K.hist94.push(K.pic94);K.pic94=null;K.k94=0;K.v94="draw";K.pend94=null;S.jobs.forEach(j=>{if(j.meta&&j.meta.auto94)j.meta.used94=1});SK91.sig="";persist();renderView();
+    toast(L("Back to your drawing — the next preview makes a new picture.","عدت إلى رسمتك — المعاينة التالية تصنع صورة جديدة."));return}
+  if(act==="sk94-use"){e.stopImmediatePropagation();const j=S.jobs.find(x=>x.id===a.dataset.id);if(j&&j.status==="complete")skSetPic94(j,true);return}
+  if(!skPic94())return;
+  if(act==="sk-undo"&&skMarks94()<=0&&K.hist94.length){e.stopImmediatePropagation();const id=K.hist94.pop(),j=S.jobs.find(x=>x.id===id&&x.status==="complete");if(!j){persist();return}
+    K.pic94=j.id;K.k94=Math.min(+(j.meta&&j.meta.k94)||0,SK.strokes.length);K.v94="pic";SK91.sig="";persist();renderView();toast(L("Back to the previous picture.","عدت إلى الصورة السابقة."));return}
+  if(act==="sk-clear"&&skPicMode94()){e.stopImmediatePropagation();if(!skMarks94())return;if(a.dataset.armed){SK.strokes.length=skK94();SK.redo=[];SK91.sig="";skRedraw()}else arm(a,L("Tap again","اضغط مرة أخرى"))}},true);
+// the page: the picture on the paper, the view switch, "What to change", one "Update the picture" button
+VIEWS.sketch=(o=>function(){let h=o();const K=SKS94(),pic=skPic94(),pend=skPend94();if(!pic)return h;const pm=K.v94!=="draw";
+  const bar='<div class="sk94bar"><div class="seg" role="radiogroup" aria-label="'+esc(L("Show","اعرض"))+'"><button role="radio" data-act="sk94-view" data-v="pic" aria-checked="'+pm+'" aria-pressed="'+pm+'">'+L("Picture","الصورة")+'</button><button role="radio" data-act="sk94-view" data-v="draw" aria-checked="'+!pm+'" aria-pressed="'+!pm+'">'+L("My drawing","رسمتي")+"</button></div>"+
+    '<button class="btn sm" data-act="sk94-new">'+ic("plus")+L("New picture","صورة جديدة")+"</button></div>";
+  const layer=(pm?'<img class="skpic94" alt="'+esc(L("Your picture","صورتك"))+'" src="'+esc(mediaUrl(pic))+'">':"")+(pend?'<div class="skwait94" role="status">'+STARS()+"<span>"+L("Updating the picture…","تُحدَّث الصورة…")+"</span></div>":"");
+  h=h.replace('<div class="skpaper">',bar+'<div class="skpaper'+(pm?" pic94":"")+'">'+layer);
+  const chg='<label class="lbl" for="skchg94">'+L("What to change (optional)","ما الذي تريد تغييره (اختياري)")+'</label><input id="skchg94" type="text" data-bind="sketch.chg94" value="'+esc(K.chg94||"")+'" dir="auto" maxlength="200" placeholder="'+esc(L("e.g. make the car blue · add a hat","مثال: اجعل السيارة زرقاء · أضف قبعة"))+'">'+
+    '<p class="small dim" style="margin:6px 0 0">'+L("Draw on the picture where it should change. Only that part changes — the rest of the picture stays the same.","ارسم على الصورة حيث تريد التغيير. يتغيّر ذلك الجزء فقط — وتبقى بقية الصورة كما هي.")+"</p>";
+  h=h.replace(/<span class="lbl">[^<]*<\/span><div class="seg sk91n"[\s\S]*?<\/div><p class="small dim"[^>]*>[\s\S]*?<\/p>(?=<button class="btn primary big sk91go")/,chg);
+  h=h.replace(/(<button class="btn primary big sk91go" data-act="sk91-go")([^>]*)>[\s\S]*?<span class="cost">\d+ cr<\/span><\/button>/,(m,a,b)=>a+(pend?" disabled":b)+">"+ic("spark")+L("Update the picture","حدّث الصورة")+'<span class="cost">'+skCost91()+" cr</span></button>");
+  return h})(VIEWS.sketch);
+// the previews: tap one to put it on the paper; the one on the paper is marked
+sk91Res=(o=>function(){const h=o(),cur=S.sketch&&S.sketch.pic94;return h.replace(/<figure class="dfig">([\s\S]*?)<\/figure>/g,(m,inner)=>{const id=(inner.match(/data-id="([^"]+)"/)||[])[1],j=id&&S.jobs.find(x=>x.id===id);
+  if(j&&j.meta&&j.meta.sk94e)inner=inner.replace('<figcaption class="small"></figcaption>','<figcaption class="small">'+L("Change","تعديل")+"</figcaption>");
+  if(!j||j.status!=="complete")return'<figure class="dfig">'+inner+"</figure>";const on=j.id===cur;return'<figure class="dfig'+(on?" on94":"")+'">'+inner+(on?'<span class="small sk94on">'+L("On the paper","على الورقة")+"</span>":'<button class="btn sm" data-act="sk94-use" data-id="'+j.id+'">'+L("Use this one","استخدم هذه")+"</button>")+"</figure>"})})(sk91Res);
+(()=>{const st=document.createElement("style");st.textContent=`
+.sk94bar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:0 0 8px;flex-wrap:wrap}.sk94bar .seg button{min-height:36px}
+.skpaper{position:relative}.skpaper.pic94 canvas{position:relative;z-index:1}
+.skpic94{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;user-select:none}
+.skwait94{position:absolute;inset:0;z-index:2;display:grid;place-content:center;justify-items:center;gap:8px;background:rgba(0,0,0,.35);color:#fff;font-weight:600;pointer-events:none}.skwait94 .nstars{width:44px;height:44px}
+#sk91res .dfig.on94 .dthumb{outline:2px solid var(--lime);outline-offset:2px;border-radius:12px}.sk94on{display:block;text-align:center;color:var(--lime);font-weight:600;margin-top:4px}
 `;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */

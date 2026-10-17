@@ -116,7 +116,7 @@ async def editor(b):
       const tb=(document.querySelector('.edbar [data-act="ed-extend91"]')||{}).textContent;document.querySelector('.ext91 [data-act="ed-extend91"]').click();
       for(let k=0;k<40&&!S.jobs.find(x=>x.meta&&x.meta.edCmd==='extend');k++)await new Promise(r=>setTimeout(r,100));const j=S.jobs.find(x=>x.meta&&x.meta.edCmd==='extend');
       return {tb,job:j&&[j.dur,j.aspect,j.meta.start,/^Extended/.test(j.title)],after:j&&EDP[j.id]&&EDP[j.id].after===c.id}}""")
-    ok(r["tb"] and any(ch.isdigit() for ch in r["tb"]) and r["job"] == [5, "9:16", True, True] and r["after"], f"{tag}: Extend shot — price shown, 5 s from the last frame in the project's size, lands after the clip {r}")
+    ok(r["tb"] and any(ch.isdigit() for ch in r["tb"]) and r["job"] == [5, "16:9", True, True] and r["after"], f"{tag}: Extend shot — price shown, 5 s from the last frame in the clip's own shape (v94: a 1280×720 clip stays 16:9 in a TikTok project), lands after the clip {r}")
     await E("()=>{$('#modalRoot').innerHTML='';$('#edcmdq').value='';S.edCmd='';renderView();scrollTo(0,0)}"); await pg.wait_for_timeout(300)
     r = await E("()=>{const l=document.querySelector('.view .lede'),ch=[...document.querySelectorAll('.edcmdx .chip')].map(c=>Math.round(c.getBoundingClientRect().top));return {lede:l?getComputedStyle(l).display:'none',rows:new Set(ch).size,sw:document.documentElement.scrollWidth}}")
     ok(r["lede"] == "none" and r["rows"] == 1 and r["sw"] <= 390, f"{tag}: compact phone header, no sideways scroll {r}")

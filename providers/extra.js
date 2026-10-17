@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { cfg, configured, S as settingsS } from "../lib/settings.js";
 import { elevenlabs } from "./elevenlabs.js";
 import { nanoBanana, midjourney, gptImage } from "./images2.js";
-import { kie, kieDefault, kieAuto } from "./kie.js";
+import { kie, kieDefault, kieAuto, kieVariant } from "./kie.js";
 import { nvRoute, nvAdapter } from "./nvidia.js";
 import { gen3dRoute, GEN3D } from "./gen3d.js";
 // Flagship models → provider + API model id set by the admin (Admin → Models)
@@ -56,13 +56,13 @@ export function adapterFor(cap, body, PROVIDERS) {
   // 3D objects on Tripo3D / Meshy, 360° worlds on Blockade Labs Skybox
   const g = gen3dRoute(cap, body); if (g) return g;
   // Any studio model with a Kie model id set in Admin → Models runs on Kie AI
-  const km = body.model && (settingsS().modelCat || {})[body.model]?.kieModel;
+  const km0 = body.model && (settingsS().modelCat || {})[body.model]?.kieModel, km = km0 && kieVariant(km0, cap, body);
   if (km) return { key: "kie@" + km, a: kie(km) };
   let r;
   try { r = directAdapter(cap, body, PROVIDERS); }
   catch (e) { const k = kieAuto(cap, body); if (k) return { key: "kie@" + k, a: kie(k) }; throw e; }  // flagship without its own API id
   // The model's own provider isn't connected → Kie AI (admin default for the capability first, then the built-in map)
-  if (r && !(r.a && r.a.configured)) { const d = r.key === cap ? kieDefault(cap, body.kind) : null; const k = d || kieAuto(cap, body); if (k) return { key: "kie@" + k, a: kie(k) }; }
+  if (r && !(r.a && r.a.configured)) { const d = r.key === cap ? kieDefault(cap, body.kind) : null; const k = (d && kieVariant(d, cap, body)) || kieAuto(cap, body); if (k) return { key: "kie@" + k, a: kie(k) }; }
   return r;
 }
 function directAdapter(cap, body, PROVIDERS) {

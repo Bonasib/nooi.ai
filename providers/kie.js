@@ -160,6 +160,17 @@ export const kie = (model) => {
       if (!mo) throw Object.assign(new Error("Set a Kie AI model id (Admin → AI providers → Kie AI, or Admin → Models)"), { code: 503 });
       if (VEO.has(mo)) {
         const img = startImg(p);
+        // v94: "Extend shot" on a clip Veo made here: Veo continues that same video (POST /api/v1/veo/extend {taskId, prompt, model};
+        // the result is read like any Veo task). The task id is the user's own earlier job's, found by the server (never sent by the
+        // browser). If Veo refuses (e.g. a 1080p upgrade can't be extended), a new video starts from the clip's last frame instead.
+        const vt = p.meta?.veoTask;
+        if (vt) {
+          try {
+            const ext = { taskId: vt, prompt: fullPrompt(p), model: { veo3: "quality", veo3_fast: "fast", veo3_lite: "lite" }[mo] || "fast" };
+            const d = await call("/api/v1/veo/extend", { method: "POST", body: JSON.stringify(drop({ ...ext, callBackUrl: p.callbackUrl })) });
+            if (d.taskId) return { remoteId: "veo:" + d.taskId, sent: sentView(ext) };
+          } catch (e) { if ([401, 402].includes(e.status)) throw e; console.warn("Veo extend refused (" + String(e.message).slice(0, 160) + ") → a new video from the last frame"); }
+        }
         const d = await call("/api/v1/veo/generate", { method: "POST", body: JSON.stringify(drop({ prompt: fullPrompt(p), model: mo, aspect_ratio: VEO_RATIOS.has(p.aspect) ? p.aspect : p.aspect && AR(p.aspect) > 1.5 ? "16:9" : "Auto", imageUrls: img ? [img] : undefined, callBackUrl: p.callbackUrl, ...extraInputs(c, mo) })) });
         return { remoteId: "veo:" + d.taskId, sent: sentView({ prompt: fullPrompt(p), aspect_ratio: VEO_RATIOS.has(p.aspect) ? p.aspect : "Auto", imageUrls: img ? [img] : undefined }) };
       }
@@ -276,6 +287,14 @@ export function kieAuto(cap, body = {}) {
   if (img) { if (refImg(body) && EDIT[m]) m = EDIT[m]; }
   else if (startImg(body) && I2V[m]) m = I2V[m];
   return m;
+}
+
+// The image-to-video / edit variant of a Kie model when the job carries a start frame / reference picture — also for ids typed
+// in Admin (a text-to-video id would ignore the start frame, so "Extend shot" or a picture-to-video made a new scene).
+export function kieVariant(m, cap, body = {}) {
+  if (!m) return m;
+  if (cap === "image" || IMAGE_KINDS.has(body.kind)) return refImg(body) && EDIT[m] ? EDIT[m] : m;
+  return cap === "video" && startImg(body) && I2V[m] ? I2V[m] : m;
 }
 
 // Default Kie model for a capability, if the admin set one (used when no direct provider is connected).
