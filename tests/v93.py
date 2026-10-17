@@ -69,13 +69,16 @@ async def motion(b):
         r2 = await E("""()=>({words:!!document.querySelector('[data-bind="mc83.prompt"]'),frame:!!document.querySelector('[data-set="mc83.orient"]'),res:[...document.querySelectorAll('[data-set="mc83.res"]')].map(x=>x.dataset.val)})""")
         ok(r2["words"] and r2["frame"] and r2["res"] == ["720p", "1080p"], f"{tag}: the moves show their words box, framing and quality {r2}")
         await pg.click('[data-set="mc83.mode"][data-val="swap"]'); await pg.wait_for_timeout(200)
-        # nothing without the files; a file over 10 MB is caught before anything is charged
+        # nothing without the files; a file too big to upload is caught before anything is charged
         await pg.click('[data-act="mc-make"]'); await pg.wait_for_timeout(300)
         ok(await E("()=>S.jobs.filter(j=>j.meta&&j.meta.motion83).length") == 0, f"{tag}: nothing is made without the files")
+        # v95: a 12 MB phone video is fine now (the server makes it ready for the engine); over 300 MB is caught before charging
         await E(LIB); await E("()=>{M.mcMove.file={size:12*1048576};renderView()}"); await pg.wait_for_timeout(200)
+        ok(not await E("()=>!!document.querySelector('.warn83')"), f"{tag}: a 12 MB video is accepted (the server makes it ready)")
+        await E("()=>{M.mcMove.file={size:301*1048576};renderView()}"); await pg.wait_for_timeout(200)
         big = await E("()=>(document.querySelector('.warn83')||{}).textContent||''")
         await pg.click('[data-act="mc-make"]'); await pg.wait_for_timeout(300)
-        ok(("10" in big) and await E("()=>S.jobs.filter(j=>j.meta&&j.meta.motion83).length") == 0, f"{tag}: a 12 MB video is caught before charging {big!r}")
+        ok(("300" in big) and await E("()=>S.jobs.filter(j=>j.meta&&j.meta.motion83).length") == 0, f"{tag}: a 301 MB video is caught before charging {big!r}")
         await E("()=>{delete M.mcMove.file;renderView()}"); await pg.wait_for_timeout(200)
         ok(await E("()=>document.querySelectorAll('.mclib83').length") == 0, f"{tag}: the library picker goes away once both files are in")
         if w == 1280:
@@ -93,7 +96,7 @@ async def motion(b):
             nocons = api("/v1/jobs", {"kind": "video", "model": "mcswap", "prompt": "", "dur": 4, "meta": {"res": "720p"}, "inputs": {"mcChar": "/media/char.png", "mcMove": "/media/move.webm"}}, token=TOKEN)
             out["swap"] = {"job": r, "sent": inp, "credits": [c0, c1], "shown": shown, "api": jj.get("id") or jj}
             ok(t and t[0].get("model") == "wan/2-2-animate-replace", f"{tag}: Replace the person reaches the Character Swap engine {[x.get('model') for x in t]}")
-            ok(set(inp) <= {"video_url", "image_url", "resolution", "nsfw_checker"} and inp.get("resolution") == "720p" and inp.get("video_url", "").endswith("move.webm") and inp.get("image_url", "").endswith("char.png"), f"{tag}: the engine gets the video, the photo and the quality — nothing else {inp}")
+            ok(set(inp) <= {"video_url", "image_url", "resolution", "nsfw_checker"} and inp.get("resolution") == "720p" and inp.get("video_url", "").endswith("-mc.mp4") and inp.get("image_url", "").endswith("-mc.jpg"), f"{tag}: the engine gets the video (a WebM made into an MP4, v95), the photo (an upright JPEG) and the quality — nothing else {inp}")
             ok(r and r["model"] == "mcswap" and r["swap"] and r["aspect"] == "16:9" and r["cost"] == shown, f"{tag}: the swap keeps the video's shape and its price is the one on the button {r} shown {shown}")
             ok(c0 - c1 == shown, f"{tag}: a customer is charged exactly the price on the button {c0}->{c1} shown {shown} {jj}")
             ok(nocons.get("_status") == 400, f"{tag}: no swap without the rights confirmed {nocons}")

@@ -26,7 +26,7 @@ for n, args in (("base.webm", ["-f", "lavfi", "-i", "testsrc2=size=640x360:rate=
     subprocess.run(["ffmpeg", "-v", "error", "-y"] + args + [D + "/" + n], check=True)
 MOCK = r"""
 const http=require('http'),fs=require('fs'),path=require('path');const P=+process.argv[2],DIR=process.argv[3];const st={tasks:[],veo:[],ext:[],failExt:false};let n=0;const T={};
-http.createServer((q,s)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{const u=new URL(q.url,'http://x');s.setHeader('access-control-allow-origin','*');
+http.createServer((q,s)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{const u=new URL(q.url,'http://x');s.setHeader('access-control-allow-origin','*');s.setHeader('connection','close');   // (a browser keeps at most 6 connections to one plain-HTTP host; paused videos would hold them all)
  const send=d=>{s.setHeader('content-type','application/json');s.end(JSON.stringify({code:200,msg:'success',data:d}))};
  if(u.pathname==='/stats'){s.setHeader('content-type','application/json');return s.end(JSON.stringify(st))}
  if(u.pathname==='/failext'){st.failExt=u.searchParams.get('on')==='1';return s.end('{}')}
@@ -122,7 +122,8 @@ async def extend(b):
     vt = [t.get("taskId") for t in stats()["veo"]]
     ok(x and x[0].get("model") == "fast" and str(x[0].get("taskId", "")).startswith("g") and "Next: he opens the door" in x[0].get("prompt", ""), f"{tag}: Veo continues that same video (extend with its engine task) {x}")
     # the whole longer video came back: only the new seconds are used, right after the clip, with the clip's look
-    r = await until(pg, """(id)=>{const c=S.ed.clips.find(q=>q.src&&q.src.k==='job'&&q.src.job===id);if(!c||!(c.out>4.5))return null;return {i:S.ed.clips.indexOf(c),in:c.in,out:c.out,look:c.cg&&c.cg.look,n:S.ed.clips.length,trans:S.ed.clips[0].trans}}""", r["id"], 60)
+    # (the new clip starts with the asked length; the real one — and the trim — comes when its video has loaded)
+    r = await until(pg, """(id)=>{const c=S.ed.clips.find(q=>q.src&&q.src.k==='job'&&q.src.job===id);if(!c||!(c.in>0))return null;return {i:S.ed.clips.indexOf(c),in:c.in,out:c.out,look:c.cg&&c.cg.look,n:S.ed.clips.length,trans:S.ed.clips[0].trans}}""", r["id"], 60)
     out["placed"] = r
     ok(r and r["i"] == 1 and 3.8 <= r["in"] <= 4.2 and 7.8 <= r["out"] <= 8.2 and r["look"] == "warm" and r["trans"] == "cut", f"{tag}: the new part is right after the clip — only its new 4 s (of the 8 s that came back), with the clip's look {r}")
     # Veo refuses → a new video from the clip's clean last frame

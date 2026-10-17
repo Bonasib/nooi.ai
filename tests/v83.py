@@ -108,13 +108,14 @@ async def main():
         price5 = P["video"]["mc26"]; ok(j.get("cost") == round(price5 * 12 / 5) and c1 == c0 - j.get("cost", 0) and j.get("dur") == 12, f"Motion Control priced by the movement video's length (12 s) {j.get('cost')} vs {price5}/5 s")
         jd = wait_job(j.get("id", ""), TOKEN); task = next((t for t in stats()["tasks"] if t.get("model") == "kling-2.6/motion-control"), {})
         inp = task.get("input") or {}
-        ok(jd.get("status") == "done" and inp.get("input_urls") == [f"http://localhost:{PORT}/media/char.png"] and inp.get("video_urls") == [f"http://localhost:{PORT}/media/move.mp4"] and inp.get("character_orientation") == "video", f"Motion Control job: the engine gets both files {jd.get('status')} {inp}")
+        ok(jd.get("status") == "done" and len(inp.get("input_urls") or []) == 1 and inp["input_urls"][0].startswith(f"http://localhost:{PORT}/media/") and inp["input_urls"][0].endswith("-mc.jpg") and inp.get("video_urls") == [f"http://localhost:{PORT}/media/move.mp4"] and inp.get("character_orientation") == "video", f"Motion Control job: the engine gets both files {jd.get('status')} {inp}")
         s = jd.get("sent") or {}; ok(s.get("pictures") == 1 and s.get("videos") == 1 and "localhost" not in json.dumps(s), f"what the AI received (no file addresses) {s}")
         # 1080p costs more; a failed Motion Control job is never moved to another model, and its credits come back
+        nb = len(stats()["tasks"])   # (v95: the files are made ready first, so the engine request can come just after the reply)
         j2 = api("/v1/jobs", {**mc, "dur": 5, "prompt": "FAILME", "meta": {**mc["meta"], "consent": True, "res": "1080p"}}, token=TOKEN)
         ok(j2.get("cost") == round(price5 * 1.5), f"Motion Control 1080p ×1.5 {j2.get('cost')}")
         n0 = len(stats()["tasks"]); jf = wait_job(j2.get("id", ""), TOKEN); time.sleep(1)
-        ok(jf.get("status") == "failed" and len(stats()["tasks"]) == n0 and api("/v1/billing", token=TOKEN)["credits"] == c1, f"Motion Control failure: no other model tried, credits back {jf.get('status')} {len(stats()['tasks'])}/{n0}")
+        ok(jf.get("status") == "failed" and len(stats()["tasks"]) == nb + 1 and api("/v1/billing", token=TOKEN)["credits"] == c1, f"Motion Control failure: no other model tried, credits back {jf.get('status')} {len(stats()['tasks'])}/{nb + 1}")
         # Grok Imagine 1.5 starts from a picture
         g = api("/v1/jobs", {"kind": "video", "model": "grok15", "prompt": "a cat", "dur": 6}, token=TOKEN)
         ok(g.get("_status") == 400 and "picture" in g.get("error", ""), f"Grok Imagine 1.5 needs a picture {g}")

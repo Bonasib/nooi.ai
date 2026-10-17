@@ -8,7 +8,7 @@ import { requireUser, firebaseWebConfig } from "./lib/auth.js";
 import { user, save, uid } from "./lib/store.js";
 import { createJob, publicJob } from "./lib/jobs.js";
 import { analyzeSite } from "./lib/site.js";
-import { MEDIA_DIR, publicUrl } from "./lib/media.js";
+import { MEDIA_DIR, publicUrl, localPath, download } from "./lib/media.js";
 import { PROVIDERS } from "./providers/index.js";
 import { kieDefault, kieAuto, KIE_BUILTIN } from "./providers/kie.js";
 import { adapterFor } from "./providers/extra.js";
@@ -116,6 +116,12 @@ app.post("/v1/uploads", requireUser, upload.single("file"), (req, res) => res.js
 
 // Generation jobs → provider adapters
 app.post("/v1/jobs", requireUser, wrap(async (req, res) => res.json(publicJob(await createJob(req.user, req.body), isStaff(req.user)))));
+// v95: a result still on the engine's own link is copied here, so the page can read it (the user's own finished job only)
+app.post("/v1/jobs/:id/keep", requireUser, wrap(async (req, res) => {
+  const j = user(req.user.uid).jobs[req.params.id]; if (!j || j.status !== "done" || !j.url) return res.status(404).json({ error: "Not found" });
+  if (/^https?:\/\//.test(j.url) && !localPath(j.url)) { try { j.url = (await download(j.url, null, { tries: 2, timeoutMs: 60000 })).url; save(); } catch (e) { return res.status(502).json({ error: "The result couldn't be copied here: " + e.message }); } }
+  res.json({ url: j.url });
+}));
 app.get("/v1/jobs/:id", requireUser, (req, res) => { const j = user(req.user.uid).jobs[req.params.id]; j ? res.json(publicJob(j, isStaff(req.user))) : res.status(404).json({ error: "Not found" }); });
 
 // AI text

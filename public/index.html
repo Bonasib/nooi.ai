@@ -13190,7 +13190,7 @@ if(typeof P_PRO!=="undefined"&&!P_PRO.includes("mcswap"))P_PRO.push("mcswap");
 // (not in MODELS: like Motion Control 3.0 it's only on this page, never in the Video page's engine list)
 if(PRICE_TABLE.video.mcswap==null)PRICE_TABLE.video.mcswap=83;
 Object.assign(ICONS,{swap93:'<circle cx="7" cy="7" r="2.6"/><path d="M2.5 15.5c0-2.6 2-4.3 4.5-4.3s4.5 1.7 4.5 4.3"/><circle cx="17" cy="12" r="2.6"/><path d="M12.5 20.5c0-2.6 2-4.3 4.5-4.3s4.5 1.7 4.5 4.3"/><path d="M14 4h5v4M19 4l-4 4" opacity=".75"/>'});
-const MB93=10*1024*1024;
+const MB93=300*1024*1024;   // v95: the server makes big phone videos ready for the engine (upright, smaller, under its 10 MB)
 const mcMode93=()=>{const c=MC83();if(c.mode!=="swap"&&c.mode!=="moves")c.mode="swap";return c.mode};
 const mcRes93=c=>{const sw=c.mode==="swap",ok=sw?["480p","720p"]:["720p","1080p"];if(!ok.includes(c.res))c.res="720p";return c.res};
 const mcK93=c=>c.mode==="swap"?(c.res==="480p"?.5:1):(c.res==="1080p"?1.5:1);
@@ -13207,12 +13207,12 @@ VIEWS.motion=()=>{const c=MC83(),mode=mcMode93(),sw=mode==="swap",res=mcRes93(c)
     ["moves","motion83",L("My character does the moves","شخصيتي تؤدي الحركة"),L("Your character performs the video's movement in the photo's own setting.","تؤدي شخصيتك حركة الفيديو في مكان الصورة نفسها.")]]
     .map(([v,icn,t,dd])=>'<button class="mcm93" role="radio" data-set="mc83.mode" data-val="'+v+'" aria-checked="'+(mode===v)+'" aria-pressed="'+(mode===v)+'"><span class="gl">'+ic(icn)+"</span><b>"+esc(t)+"</b><small>"+esc(dd)+"</small></button>").join("")+"</div>";
   const form='<div class="panel pad mc83">'+modes+
-    '<span class="lbl">1 · '+(sw?L("The video","الفيديو"):L("The movement","الحركة"))+'</span><p class="small mute mc83h">'+(sw?L("The video with the person to replace: 3–30 s, one person, up to 10 MB.","الفيديو الذي فيه الشخص المراد استبداله: 3–30 ث، شخص واحد، حتى 10 ميجابايت."):L("A video of the movement: a dance, a gesture, a walk (3–30 s, one person).","فيديو للحركة: رقصة أو إشارة أو مشي (3–30 ث، شخص واحد)."))+"</p>"+
+    '<span class="lbl">1 · '+(sw?L("The video","الفيديو"):L("The movement","الحركة"))+'</span><p class="small mute mc83h">'+(sw?L("The video with the person to replace: 2–30 s, one person. Phone videos of any size are made ready for the engine.","الفيديو الذي فيه الشخص المراد استبداله: 2–30 ث، شخص واحد. فيديوهات الهاتف بأي حجم تُجهَّز للمحرّك تلقائياً."):L("A video of the movement: a dance, a gesture, a walk (3–30 s, one person).","فيديو للحركة: رقصة أو إشارة أو مشي (3–30 ث، شخص واحد)."))+"</p>"+
     mediaSlot("mcMove","video/*",L("Upload the video","ارفع الفيديو"))+(M.mcMove?"":mcLib83(["video","edit","export","finish","lipsync"],"mcMove"))+
     (tooLong?'<p class="small warn83">'+L("This video is "+d+" s — up to 30 s. Trim it in the editor first.","هذا الفيديو "+d+" ث — الحد 30 ث. قصّه في المحرر أولاً.")+"</p>":tooShort?'<p class="small warn83">'+L("This video is shorter than 3 s.","هذا الفيديو أقصر من 3 ث.")+"</p>":d?'<p class="small mute">'+L("Length: "+d+" s","المدة: "+d+" ث")+"</p>":"")+
     '<span class="lbl">2 · '+(sw?L("The new person","الشخص الجديد"):L("The character","الشخصية"))+'</span><p class="small mute mc83h">'+(sw?L("A sharp photo of the person who will appear: face and whole body visible, facing the camera, standing like the person in the video.","صورة واضحة للشخص الذي سيظهر: الوجه والجسم كاملاً، مواجهاً للكاميرا، بوقفة تشبه الشخص في الفيديو."):L("A clear photo of the whole body, facing the camera, like the person in the video.","صورة واضحة للجسم كاملاً مواجهة للكاميرا، مثل الشخص في الفيديو."))+"</p>"+
     mediaSlot("mcChar","image/*",L("Upload the photo","ارفع الصورة"))+(M.mcChar?"":mcLib83(["image","look","sheet"],"mcChar"))+
-    (big.length?'<p class="small warn83">'+big.map(([n,mb])=>L("The "+n+" is "+mb+" MB — this engine takes up to 10 MB.","حجم "+n+" "+mb+" ميجابايت — هذا المحرك يقبل حتى 10 ميجابايت.")).join(" ")+"</p>":"")+
+    (big.length?'<p class="small warn83">'+big.map(([n,mb])=>L("The "+n+" is "+mb+" MB — use one under 300 MB (trim it in the editor).","حجم "+n+" "+mb+" ميجابايت — استخدم ملفاً أقل من 300 ميجابايت (قصّه في المحرر).")).join(" ")+"</p>":"")+
     (sw?'<p class="small mute tip93">'+ic("spark","width:14px;height:14px")+L("Best results: one person in the video, the face visible, and a photo with a similar pose and framing.","أفضل نتيجة: شخص واحد في الفيديو، والوجه ظاهر، وصورة بوقفة وكادر قريبين منه.")+"</p>"
       :'<span class="lbl">3 · '+L("Anything to add (optional)","إضافة (اختياري)")+'</span><textarea data-bind="mc83.prompt" dir="auto" style="min-height:64px" placeholder="'+esc(L("e.g. on a sunny street in Riyadh, wearing a white thobe","مثال: في شارع مشمس بالرياض، يرتدي ثوباً أبيض"))+'">'+esc(c.prompt)+"</textarea>")+
     '<div class="grid2"><div><span class="lbl">'+L("Quality","الجودة")+'</span><div class="seg">'+(sw?["480p","720p"]:["720p","1080p"]).map(r=>'<button data-set="mc83.res" data-val="'+r+'" aria-pressed="'+(res===r)+'">'+r+"</button>").join("")+"</div></div>"+
@@ -13228,7 +13228,7 @@ window.addEventListener("click",async e=>{const a=e.target.closest&&e.target.clo
   if(!M.mcMove){toast(sw?L("Add the video first.","أضف الفيديو أولاً."):L("Add the video with the movement first.","أضف فيديو الحركة أولاً."),{type:"warn"});return}
   if(!M.mcChar){toast(sw?L("Add a photo of the new person first.","أضف صورة الشخص الجديد أولاً."):L("Add a photo of the character first.","أضف صورة الشخصية أولاً."),{type:"warn"});return}
   const d=mcDur83();if(d>30){toast(L("The video must be 30 s or shorter.","يجب أن يكون الفيديو 30 ث أو أقل."),{type:"warn"});return}
-  if(sw&&mcBig93().length){toast(L("This engine takes files up to 10 MB — trim or shorten the video in the editor first.","هذا المحرك يقبل ملفات حتى 10 ميجابايت — قصّ الفيديو أو اختصره في المحرر أولاً."),{type:"warn"});return}
+  if(sw&&mcBig93().length){toast(L("Files up to 300 MB — trim or shorten the video in the editor first.","الملفات حتى 300 ميجابايت — قصّ الفيديو أو اختصره في المحرر أولاً."),{type:"warn"});return}
   if(!c.consent){toast(L("Confirm that you have the right to use this photo and video.","أكّد أن لديك حق استخدام الصورة والفيديو."),{type:"warn"});const x=document.querySelector("[data-mc83consent]");if(x)x.focus();return}
   const dur=Math.min(30,Math.max(3,d||5)),cost=vprice83(model,dur,mcK93(c)),meta={motion83:true,res:c.res,consent:true};if(sw)meta.swap93=true;else meta.orient=c.orient;
   let inputs={};if(API.mode==="server"){a.disabled=true;try{for(const s of["mcMove","mcChar"]){const m=M[s];inputs[s]=m.file?(await API.upload(m.file,m.name)).url:m.remote}}catch(err){a.disabled=false;toast(L("Couldn't upload the files — try again.","تعذّر رفع الملفات — حاول مجدداً."),{type:"warn"});return}a.disabled=false}
@@ -13483,8 +13483,10 @@ edUseJob=(o=>async function(j,opt){const x=j&&EXT91[j.id],src=x&&S.ed.clips.find
   const nc=x&&S.ed.clips.find(q=>q.src&&q.src.k==="job"&&q.src.job===j.id);if(!r||!nc||!src)return r;
   ["cg","look","vfx","filter","fill"].forEach(k=>{if(src[k]!=null)nc[k]=JSON.parse(JSON.stringify(src[k]))});
   const m=clipMedia(nc),sm=clipMedia(src),veo=!!(j.meta&&j.meta.extendOf);
-  const fit=()=>{const d=m.el.duration,bd=sm&&sm.type==="video"?sm.el.duration:0;if(!(d>0))return;if(veo&&bd>0&&d>bd+1.5)nc.in=+bd.toFixed(2);nc.out=+d.toFixed(2);persist();if(S.view==="edit")renderView()};
-  if(m&&m.type==="video"){if(m.el.duration>0)fit();else m.el.addEventListener("loadedmetadata",fit,{once:true})}   // whenever its length is known
+  const fit=()=>{const d=m.el.duration,bd=sm&&sm.type==="video"?sm.el.duration:0,c=S.ed.clips.find(q=>q.id===nc.id);if(!(d>0)||!c)return;   // (the editor may have swapped in a fresh copy of the clip meanwhile)
+    if(veo&&bd>0&&d>bd+1.5)c.in=+bd.toFixed(2);c.out=+d.toFixed(2);persist();if(S.view==="edit")renderView()};
+  if(m&&m.type==="video"){let n=0;const tick=()=>{const bd=sm&&sm.type==="video"?sm.el.duration:0;if(m.el.duration>0&&(!veo||bd>0||n>20)){fit();return}if(++n<120)setTimeout(tick,500)};   // whenever both lengths are known
+    if(m.el.readyState===0)try{m.el.preload="auto";m.el.load()}catch(e){}tick()}
   persist();if(S.view==="edit")renderView();return r})(edUseJob);
 // "extend: he opens the door" / "مد اللقطة: ..." — the words say what happens next
 edCmd91=(o=>function(raw){const r=o.apply(this,arguments);if(r)return r;const s=String(raw||"").trim(),mm=s.match(/^(?:extend|continue|lengthen|مد|مدّ|مدد|أكمل|اكمل|كمل)(?:\s+(?:the\s+)?(?:shot|clip|it|scene|اللقطة|المقطع|المشهد))?\s*[:：\-—،,]\s*(.{3,300})$/i);
@@ -13517,13 +13519,13 @@ async function skComposite94(j){const b=await jobBlob72(j);if(!b)return null;con
   const N=1024,c=document.createElement("canvas");c.width=c.height=N;const x=c.getContext("2d"),s=Math.max(N/im.naturalWidth,N/im.naturalHeight),w=im.naturalWidth*s,h=im.naturalHeight*s;x.drawImage(im,(N-w)/2,(N-h)/2,w,h);URL.revokeObjectURL(u);
   const lay=document.createElement("canvas");lay.width=lay.height=N;const lx=lay.getContext("2d");SK.strokes.slice(skK94()).forEach(st=>skDrawStroke(lx,st,N,N));x.drawImage(lay,0,0);
   return await new Promise(r=>{try{c.toBlob(r,"image/jpeg",.92)}catch(e){r(null)}})}
-async function skEdit94(){const K=SKS94(),cur=skPic94();if(!cur)return false;if(skPend94()){toast(L("The picture is being updated — one moment.","الصورة قيد التحديث — لحظة."));return false}
-  const marks=skMarks94()>0,chg=String(K.chg94||"").trim();if(!marks&&!chg){toast(L("Draw your change on the picture, or say what to change.","ارسم التغيير على الصورة، أو اكتب ما تريد تغييره."));return false}
+async function skEdit94(opt){opt=opt||{};const K=SKS94(),cur=skPic94();if(!cur)return false;if(skPend94()){if(!opt.quiet)toast(L("The picture is being updated — one moment.","الصورة قيد التحديث — لحظة."));return false}
+  const marks=skMarks94()>0,chg=String(K.chg94||"").trim();if(!marks&&!chg){if(opt.quiet)return false;toast(L("Draw your change on the picture, or say what to change.","ارسم التغيير على الصورة، أو اكتب ما تريد تغييره."));return false}
   const blob=await skComposite94(cur);if(!blob){toast(L("Couldn't read the picture — try again.","تعذّرت قراءة الصورة — حاول مجدداً."),{type:"warn"});return false}
   let j=null;const prompt=skEditPrompt94(K.prompt,chg,marks);
-  withRef72("skImg",new File([blob],"picture-with-changes.jpg",{type:"image/jpeg"}),()=>{j=addJob({kind:"image",prompt,title:(String(K.prompt||L("Sketch","رسمة")).slice(0,30))+" · "+L("change","تعديل"),model:bestImg72(),aspect:"1:1",cost:skCost91(),batch:uid(),secs:6,art:"scene",
-    meta:{sketch:true,sk91:true,sk94e:1,style:"edit94",k94:SK.strokes.length,from:cur.id,res:"1K"}})});
-  if(!j)return false;K.pend94=j.id;K.chg94="";persist();renderView();toast(L("Updating the same picture with your change…","تُحدَّث الصورة نفسها بتغييرك…"),{type:"info",ms:3500});return true}
+  withRef72("skImg",new File([blob],"picture-with-changes.jpg",{type:"image/jpeg"}),()=>{j=addJob({kind:"image",prompt,title:(String(K.prompt||L("Sketch","رسمة")).slice(0,30))+" · "+L("change","تعديل"),model:opt.m||bestImg72(),aspect:"1:1",cost:opt.m?(IMG_MODELS[opt.m]||{cr:skCost91()}).cr:skCost91(),batch:uid(),secs:6,art:"scene",
+    meta:{sketch:true,sk91:true,sk94e:1,style:"edit94",k94:SK.strokes.length,from:cur.id,res:"1K",live95:opt.live?1:undefined}})});
+  if(!j)return false;K.pend94=j.id;K.chg94="";persist();renderView();if(!opt.quiet)toast(L("Updating the same picture with your change…","تُحدَّث الصورة نفسها بتغييرك…"),{type:"info",ms:3500});return true}
 // the first picture(s): every version remembers how much of the drawing it was made from; the first one ready goes on the paper
 sk91Go=(o=>async function(){if(skPic94())return skEdit94();const before=new Set(S.jobs.map(j=>j.id)),k=SK.strokes.length;const r=await o.apply(this,arguments);
   const made=S.jobs.filter(j=>!before.has(j.id)&&j.meta&&j.meta.sk91);made.forEach(j=>{j.meta.k94=k;j.meta.auto94=1});if(made.length){S.sketch.pend94=null;persist()}return r})(sk91Go);
@@ -13563,6 +13565,46 @@ sk91Res=(o=>function(){const h=o(),cur=S.sketch&&S.sketch.pic94;return h.replace
 .skwait94{position:absolute;inset:0;z-index:2;display:grid;place-content:center;justify-items:center;gap:8px;background:rgba(0,0,0,.35);color:#fff;font-weight:600;pointer-events:none}.skwait94 .nstars{width:44px;height:44px}
 #sk91res .dfig.on94 .dthumb{outline:2px solid var(--lime);outline-offset:2px;border-radius:12px}.sk94on{display:block;text-align:center;color:var(--lime);font-weight:600;margin-top:4px}
 `;document.head.appendChild(st)})();
+
+/* ================= v95: RESULTS THE PAGE CAN READ · THE ENGINE'S OWN REASON · LIVE SKETCH =================
+   "Couldn't read the picture": a result's address is the live site's (https://nooi.ai/media/…); on the preview
+   (nooi.ai:8443) that is another site to the browser, so the page could show the picture but not read it to draw your
+   marks on it. A /media file is now read through the page's own address, and a result still on the engine's own link
+   is first copied to the server (POST /v1/jobs/:id/keep). An engine that took a job and then said why it couldn't make
+   it now shows that reason. Sketch has a Live switch: about a second after you stop drawing (or typing the change), the
+   picture updates by itself — the first picture too — one update at a time, the price of each shown on the switch, and
+   it pauses after 10 updates so nothing runs on without you. */
+const sameOrigin95=u=>{try{const x=new URL(u,location.href);return x.origin!==location.origin&&/^\/media\//.test(x.pathname)?x.pathname+x.search:u}catch(e){return u}};
+jobBlob72=async function(j){const u=j&&mediaUrl(j);if(!u)return null;
+  const get=async v=>{const r=await fetch(sameOrigin95(v));if(!r.ok)throw new Error("HTTP "+r.status);const b=await r.blob();return /^image\//.test(b.type)||/\.(png|jpe?g|webp)(\?|#|$)/i.test(v)?b:null};
+  try{return await get(u)}catch(e){}
+  if(API.mode==="server"&&j.remote){try{const r=await API.req("/v1/jobs/"+encodeURIComponent(j.remote)+"/keep",{json:{}});if(r&&r.url){j.resultUrl=r.url;persist();return await get(r.url)}}catch(e){}}
+  return null};
+errText81=(o=>function(j){const e=String((j&&j.error)||"").trim(),m=e.match(/^The engine couldn't make this: ([\s\S]*?)\s*Nothing was charged\.?$/);
+  return m?L("The engine couldn't make this: ","تعذّر على المحرّك صنع هذا: ")+m[1]+L(" Nothing was charged."," لم يُخصم شيء."):o.apply(this,arguments)})(errText81);
+// ---- Live sketch
+const LIVE95={t:0,again:false,n:0,last:-1},LIVECAP95=10;
+const liveModel95=()=>IMG_MODELS.nano&&imgOK("nano")?"nano":bestImg72();
+const liveCost95=()=>(IMG_MODELS[liveModel95()]||{cr:skCost91()}).cr;
+const skBusy95=()=>!!skPend94()||S.jobs.some(j=>j.meta&&j.meta.auto94&&!j.meta.used94&&!["complete","failed"].includes(j.status));
+function liveKick95(ms){clearTimeout(LIVE95.t);if(S.sketch&&S.sketch.live95)LIVE95.t=setTimeout(liveRun95,ms==null?1200:ms)}
+async function liveRun95(){const K=S.sketch;if(!K||!K.live95||S.view!=="sketch")return;if(SK.cur){liveKick95();return}if(skBusy95()){LIVE95.again=true;return}
+  if(LIVE95.n>=LIVECAP95){K.live95=false;persist();renderView();toast(L("Live paused after "+LIVECAP95+" updates — turn it on again to go on.","توقّف الوضع المباشر بعد "+LIVECAP95+" تحديثات — شغّله مجدداً للمتابعة."),{type:"info",ms:5000});return}
+  let did=false;
+  if(skPic94()){if(skMarks94()>0||String(K.chg94||"").trim())did=await skEdit94({m:liveModel95(),quiet:true,live:true})}
+  else if(SK.strokes.length&&SK.strokes.length!==LIVE95.last){const n=K.n91,ids=new Set(S.jobs.map(j=>j.id));K.n91=1;try{await sk91Go()}finally{K.n91=n}did=S.jobs.some(j=>!ids.has(j.id))}
+  if(did){LIVE95.n++;LIVE95.last=SK.strokes.length;if(S.view==="sketch")renderView()}}
+document.addEventListener("pointerup",e=>{if(S.view==="sketch"&&S.sketch&&S.sketch.live95&&e.target&&e.target.closest&&e.target.closest("#skcv"))liveKick95()},true);
+document.addEventListener("pointerup",()=>{if(S.view==="sketch"&&S.sketch&&S.sketch.live95&&!SK.cur)liveKick95()});   // a stroke that ended outside the paper
+document.addEventListener("input",e=>{if(e.target&&e.target.id==="skchg94"&&S.sketch&&S.sketch.live95)liveKick95(1800)});
+setInterval(()=>{if(LIVE95.again&&!skBusy95()){LIVE95.again=false;liveKick95(300)}},700);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="sk95-live"]');if(!a)return;e.stopImmediatePropagation();const K=S.sketch;K.live95=!K.live95;LIVE95.n=0;LIVE95.again=false;persist();renderView();
+  if(K.live95){toast(L("Live is on — the picture updates by itself about a second after you stop drawing. Each update "+liveCost95()+" cr; it pauses after "+LIVECAP95+".","الوضع المباشر يعمل — تتحدّث الصورة وحدها بعد ثانية تقريباً من توقفك عن الرسم. كل تحديث "+liveCost95()+" رصيد، ويتوقف بعد "+LIVECAP95+"."),{type:"info",ms:5500});liveKick95(400)}
+  else clearTimeout(LIVE95.t)},true);
+VIEWS.sketch=(o=>function(){const h=o(),K=S.sketch,on=!!K.live95,busy=on&&skBusy95();
+  const sub=on?(busy?L("Updating the picture…","تُحدَّث الصورة…"):L(LIVE95.n+" of "+LIVECAP95+" updates · "+liveCost95()+" cr each",LIVE95.n+" من "+LIVECAP95+" تحديثات · "+liveCost95()+" رصيد لكل تحديث")):L("Updates the picture by itself when you stop drawing · "+liveCost95()+" cr each","يحدّث الصورة وحده عندما تتوقف عن الرسم · "+liveCost95()+" رصيد لكل تحديث");
+  return h.replace('<button class="btn primary big sk91go"','<div class="live95">'+toggleRow(on,"sk95-live","sketch.live95",L("Live","مباشر"),sub)+"</div>"+'<button class="btn primary big sk91go"')})(VIEWS.sketch);
+(()=>{const st=document.createElement("style");st.textContent=`.live95{margin-top:12px}.live95 .trow{padding:8px 0}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;
