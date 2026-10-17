@@ -5,6 +5,9 @@
 #  · with words typed, the engine gets the client's words (nothing replaced)
 #  · neither words nor a picture: refused before anything is charged
 #  · a new picture from a reference picture with nothing typed: the picture engine gets words too
+# v101 (same run, with the Admin defaults the quick-start card saves — kling-3.0/video, nano-banana-pro):
+#  · Character Swap goes to its own engine (it went to Kling 3.0 text/picture-to-video: "prompt is required"), Wan 3.0 too
+#  · nooi Auto still uses the Admin default
 # Run: python3 tests/v100.py
 import hashlib, json, os, subprocess, sys, tempfile, time, urllib.request
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); PORT, KPORT = 8296, 8297
@@ -14,6 +17,7 @@ json.dump({"users": {"cust": {"plan": "studio", "planUntil": 4102444800000, "cre
     "tokens": [{"id": "tk", "name": "t", "hash": hashlib.sha256(TOKEN.encode()).hexdigest(), "last4": TOKEN[-4:], "created": 1, "dailyCap": 100000}]}}}, open(D + "/data/db.json", "w"))
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=0x3060a0:s=512x512", "-frames:v", "1", D + "/media/pic.png"], check=True)
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=640x360:rate=24", "-t", "2", "-c:v", "libx264", "-pix_fmt", "yuv420p", D + "/vid.mp4"], check=True)
+subprocess.run(["cp", D + "/vid.mp4", D + "/media/move.mp4"], check=True)
 MOCK = r"""
 const http=require('http'),fs=require('fs'),path=require('path');const P=+process.argv[2],DIR=process.argv[3];const st={reqs:[]};let n=0;const T={};
 http.createServer((q,s)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{const u=new URL(q.url,'http://x');s.setHeader('connection','close');
@@ -55,7 +59,7 @@ def sent(n0): return [r["body"] for r in stats()["reqs"][n0:]]
 mk = subprocess.Popen(["node", D + "/mock.js", str(KPORT), D], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 env = {k: v for k, v in os.environ.items() if not k.startswith(("LLM_", "ANTHROPIC_", "NVIDIA_", "ELEVENLABS_", "OPENAI_", "KIE_", "FAL_", "GOOGLE_", "DASHSCOPE_", "FIREBASE_"))}
 srv = subprocess.Popen(["node", ROOT + "/server.js"], cwd=D, env=dict(env, PORT=str(PORT), SECRET_KEY="v" * 40, FIREBASE_PROJECT_ID="", PUBLIC_BASE_URL=f"http://localhost:{PORT}",
-    AGENTS_AUTO_LEARN="false", KIE_API_KEY="kk", KIE_BASE_URL=f"http://localhost:{KPORT}", MIRROR_MEDIA="false", FREE_PERIOD="false"), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    AGENTS_AUTO_LEARN="false", KIE_API_KEY="kk", KIE_BASE_URL=f"http://localhost:{KPORT}", KIE_VIDEO_MODEL="kling-3.0/video", KIE_IMAGE_MODEL="nano-banana-pro", MIRROR_MEDIA="false", FREE_PERIOD="false"), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 try:
     wait(lambda: urllib.request.urlopen(f"http://localhost:{PORT}/v1/config", timeout=2), 30)
     # 1) Kling 3.0 from a picture, nothing typed
@@ -83,6 +87,16 @@ try:
     d = done(j.get("id", "x")) or {}; r = sent(n0); pr = str(((r[0].get("input") if r else {}) or {}).get("prompt"))
     out["image"] = [j.get("_status"), j.get("error"), d.get("status"), pr[:80]]
     ok(d.get("status") == "done" and "A new version of this picture" in pr, f"a new picture from a reference with nothing typed {out['image']}")
+    # 6) v101: Character Swap reaches its own engine, not the Admin default (Kling 3.0)
+    n0 = len(stats()["reqs"]); j = api("/v1/jobs", {"kind": "video", "model": "mcswap", "prompt": "", "dur": 5, "aspect": "9:16", "inputs": {"mcMove": "/media/move.mp4", "mcChar": "/media/pic.png"}, "meta": {"motion83": True, "swap93": True, "consent": True, "res": "720p"}})
+    d = done(j.get("id", "x"), 90) or {}; models = [b.get("model") for b in sent(n0)]
+    out["swap"] = [j.get("_status"), j.get("error"), d.get("status"), d.get("error"), models]
+    ok(d.get("status") == "done" and models and models[0] == "wan/2-2-animate-replace" and "kling-3.0/video" not in models, f"Character Swap goes to its own engine {out['swap']}")
+    # 7) a model with its own engine (Wan 3.0) keeps it; nooi Auto uses the Admin default
+    for m, want in (("wan30", "wan/3-0-video"), ("auto", "kling-3.0/video")):
+        n0 = len(stats()["reqs"]); j = api("/v1/jobs", {"kind": "video", "model": m, "prompt": "A boat at sea", "dur": 5, "aspect": "16:9", "meta": {}})
+        d = done(j.get("id", "x")) or {}; models = [b.get("model") for b in sent(n0)]; out["route_" + m] = [d.get("status"), models]
+        ok(d.get("status") == "done" and models and models[0] == want, f"{m} → {want} {out['route_' + m]}")
 finally:
     srv.kill(); mk.kill()
 print(json.dumps({"fails": fails, "out": out}, ensure_ascii=False, indent=1))

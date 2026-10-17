@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { cfg, configured, S as settingsS } from "../lib/settings.js";
 import { elevenlabs } from "./elevenlabs.js";
 import { nanoBanana, midjourney, gptImage } from "./images2.js";
-import { kie, kieDefault, kieAuto, kieVariant } from "./kie.js";
+import { kie, kieDefault, kieAuto, kieVariant, KIE_BUILTIN } from "./kie.js";
 import { nvRoute, nvAdapter } from "./nvidia.js";
 import { gen3dRoute, GEN3D } from "./gen3d.js";
 import { fpsAdapter } from "../lib/fps96.js";
@@ -63,8 +63,12 @@ export function adapterFor(cap, body, PROVIDERS) {
   let r;
   try { r = directAdapter(cap, body, PROVIDERS); }
   catch (e) { const k = kieAuto(cap, body); if (k) return { key: "kie@" + k, a: kie(k) }; throw e; }  // flagship without its own API id
-  // The model's own provider isn't connected → Kie AI (admin default for the capability first, then the built-in map)
-  if (r && !(r.a && r.a.configured)) { const d = r.key === cap ? kieDefault(cap, body.kind) : null; const k = (d && kieVariant(d, cap, body)) || kieAuto(cap, body); if (k) return { key: "kie@" + k, a: kie(k) }; }
+  // The model's own provider isn't connected → Kie AI: a model with its own Kie engine uses it; the admin's default model for the
+  // capability is only for "nooi Auto" and models without one. (v101: the Admin quick-start saves kling-3.0/video as the
+  // default, and it was taking over every such model — Character Swap and Motion Control went to Kling 3.0 text/picture-to-video
+  // with no words: "AI engine 422: prompt is required"; Veo, Wan, Grok, Pixverse… were made by Kling too.)
+  if (r && !(r.a && r.a.configured)) { const own = body.model && body.model !== "auto" && (KIE_BUILTIN[cap === "image" ? "image" : "video"] || {})[body.model];
+    const d = r.key === cap && !own ? kieDefault(cap, body.kind) : null; const k = (d && kieVariant(d, cap, body)) || kieAuto(cap, body); if (k) return { key: "kie@" + k, a: kie(k) }; }
   return r;
 }
 function directAdapter(cap, body, PROVIDERS) {
