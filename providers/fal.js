@@ -22,10 +22,13 @@ export function falInput(model, p) {
     image_urls: [abs(inp.mcChar), ...(target ? [target] : []), ...(prod ? [prod] : [])], video_urls: [abs(inp.mcMove)],
     resolution: p.meta?.swapFast ? "480p" : "720p", duration: String(clamp(p.dur, 4, 15)), aspect_ratio: "auto", generate_audio: false };
 }
+// v117: Sync Lipsync 2 Pro — the lips of a video matched to a voice (video_url + audio_url; the video keeps its length: cut_off)
+export const FAL_LIPS = "fal-ai/sync-lipsync/v2/pro";
+const lipsInput = (p) => ({ video_url: abs(p.inputs?.lsV), audio_url: abs(p.inputs?.lsA), sync_mode: "cut_off" });
 export const falVideo = (model) => ({
   name: "fal.ai", configured: configured("fal"),
   async submit(p) {
-    const input = falInput(model, p);
+    const input = model === FAL_LIPS ? lipsInput(p) : falInput(model, p);
     const d = await json(await fetch(QUEUE() + "/" + model, { method: "POST", headers: head(), body: JSON.stringify(input) }));
     if (!d.request_id || !d.status_url || !d.response_url) throw new Error("AI engine: no request id");
     return { remoteId: "fal:" + JSON.stringify({ s: d.status_url, r: d.response_url }), sent: { model, input } };

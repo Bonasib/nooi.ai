@@ -37,6 +37,7 @@ class H(BaseHTTPRequestHandler):
         if u.path == "/stats": return self.send(st)
         if u.path in ("/res.mp4", "/lips.mp4"): return self.file(u.path[1:])
         t = T.get(urllib.parse.parse_qs(u.query).get("taskId", [""])[0]) or {}
+        if "audio-isolation" in t.get("model", ""): return self.send({"code": 200, "data": {"state": "fail", "failMsg": "isolation unavailable", "failCode": "500"}})   # (v117: → the speech band of the video's sound)
         if "lip-sync" in t.get("model", ""):
             if t["fail"]: return self.send({"code": 200, "data": {"state": "fail", "failMsg": "lip sync failed", "failCode": "500"}})
             if time.time() - t["t"] < 3: return self.send({"code": 200, "data": {"state": "generating"}})
@@ -87,7 +88,7 @@ def server_checks():
     ok(P_SW and P_LIPS, f"the lips have a price the page can show {out['prices']}")
     d, b, spent, seen, j = run("on", "talk.mp4"); lips = [x for x in b if "lip-sync" in str(x.get("model"))]; li = (lips or [{}])[0].get("input", {})
     out["on"] = {"status": d.get("status"), "url": d.get("url"), "stages": sorted(str(s) for s in seen), "lips": li, "spent": spent, "cost": j.get("cost"), "note": d.get("note115")}
-    ok(d.get("status") == "done" and len(lips) == 1 and str(li.get("video_url", "")).startswith(f"http://localhost:{PORT}/media/") and str(li.get("audio_url", "")).endswith("-voice.mp3") and li.get("mode") == "basic",
+    ok(d.get("status") == "done" and len(lips) == 1 and str(li.get("video_url", "")).startswith(f"http://localhost:{PORT}/media/") and str(li.get("audio_url", "")).endswith("-clean.mp3") and li.get("mode") == "basic",
        f"on: the lip sync gets the swapped video and the video's voice {out['on']}")
     a = urllib.request.urlopen(li.get("audio_url")) if li.get("audio_url") else None
     ok(a is not None and a.status == 200 and len(a.read()) > 1000, "the voice is cut from the client's video and readable by the engine")

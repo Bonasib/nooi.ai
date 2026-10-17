@@ -137,6 +137,7 @@ export const seedanceSwapWords = ({ keep, prod, target, where, who, scene } = {}
 export function kieInput(model, p) {
   const m = String(model).toLowerCase(), kind = p.kind || "video", inp = p.inputs || {};
   if (/^elevenlabs\/text-to-speech/.test(m)) return drop({ text: p.prompt, voice: ttsVoice(p), language_code: ttsLang(m, p), ...ttsFeel(p) });
+  if (/^elevenlabs\/audio-isolation/.test(m)) return { audio_url: absUrl(inp.voice) };   // v117: the voice alone, for the lips to follow
   if (/^elevenlabs\/sound-effect/.test(m)) return drop({ text: p.prompt, loop: p.meta?.loop || undefined });
   if (MUSIC_KINDS.has(kind)) return drop({ prompt: p.prompt, custom_mode: false, instrumental: p.meta?.instrumental ?? kind === "sfx" });
   if (/^recraft\/remove-background/.test(m)) return { image: absUrl(inp.bgFg || refImg(p)) };

@@ -54,7 +54,7 @@ import { registerSketch, rtEngine } from "./lib/sketch.js";
 import { registerWorld } from "./lib/world.js";
 import { registerIngest } from "./lib/ingest.js";
 import { nvReady, nvCfg, nvOn } from "./providers/nvidia.js";
-import { cbSig, findJob, pollOne, speedAdvice, setSwapRes, setSwapEngine } from "./lib/jobs.js";
+import { cbSig, findJob, pollOne, speedAdvice, setSwapRes, setSwapEngine, setLipsEngine } from "./lib/jobs.js";
 import { registerGifts } from "./lib/gifts.js";
 import { registerInvoices } from "./lib/invoices.js";
 import { registerExplore } from "./lib/explore.js";
@@ -220,6 +220,7 @@ const pricingRows = () => Object.entries(ENGINE_COST).flatMap(([g, m]) => Object
 app.get("/v1/admin/speed", requireUser, async (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); try { res.json(await speedAdvice()); } catch (e) { res.status(500).json({ error: e.message }); } });   // (v110: with what slows jobs, in words)
 app.post("/v1/admin/speed/swapres", requireUser, requireAdmin("providers.manage"), (req, res) => { try { res.json({ swapRes: setSwapRes(String(req.body?.res || "").toUpperCase() === "768P" ? "768P" : "2K") }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v112: Replace the person 2K / 768P
 app.post("/v1/admin/speed/swapengine", requireUser, requireAdmin("providers.manage"), (req, res) => { try { res.json({ swapEngine: setSwapEngine(String(req.body?.engine || "").toLowerCase()) }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v114: Seedance 2.0 / MiniMax H3
+app.post("/v1/admin/speed/lipsengine", requireUser, requireAdmin("providers.manage"), (req, res) => { try { res.json({ lipsEngine: setLipsEngine(String(req.body?.engine || "").toLowerCase()) }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v117: Volcengine / Sync Lipsync 2 Pro
 app.get("/v1/admin/pricing", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); res.json({ rows: pricingRows(), factor: priceFactor(), floor: CREDIT_FLOOR_USD }); });
 app.put("/v1/admin/pricing", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" });
   const st = platform(), b = req.body || {}; st.costs = st.costs || {};
