@@ -14304,6 +14304,67 @@ document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest
 .preview-col .strip>*{width:auto;border-radius:12px;overflow:hidden}
 `;document.head.appendChild(st)})();
 
+/* ================= v120: BARS, FOOTER, BUTTONS, CARDS AND THEIR MOTION =================
+   The owner: "Bars, headers, footer, the visualize looking, buttons, options, sides, moves" (the Higgsfield-style look,
+   nooi's own drawing and code):
+   · footer: the browse pages (Home, Templates, Community, Recipes, All tools, My library) end with a full footer — the logo and
+     one line, then four columns (Create · Edit & publish · Explore · Account & help) whose links carry each tool's own name,
+     then © · Terms · Privacy. Work pages keep the slim footer line. Tools that are switched off aren't listed.
+   · bars: the top bar turns to frosted glass with a hairline once the page scrolls; on phones the bottom bar's open item has a
+     soft highlight that glides to the item you tap (like the tabs, v118)
+   · buttons: a main (lime) button gets a short light sweep under the pointer
+   · cards: on a phone a result card shows only its picture, length and engine (the words lay on top of them before and made
+     both unreadable); on a computer the words show under the pointer and the engine's name steps aside for them
+   All motion is off with the device's "reduce motion". */
+const BIG120=new Set(["home","explore","discover","recipes","apps","library"]);
+const FOOTCOLS120=[["Create","إنشاء",["image","video","voice","chars","world"]],["Edit & publish","التحرير والنشر",["edit","fx","finish","calendar"]],
+  ["Explore","استكشف",["explore","discover","recipes","apps"]],["Account & help","الحساب والمساعدة",["wallet","account","support","legal"]]];
+// a tool's own name (the same one the menu and its page use)
+const name120=id=>{const n=ALLNAV.find(x=>x[0]===id);if(n)return L(n[2],n[3]);const h=hubTab(id);return h?L(h[1],h[2]):id};
+const shown120=id=>{if(!ALLNAV.some(x=>x[0]===id)&&!hubTab(id))return false;const f=typeof FEATURE_OF_VIEW!=="undefined"&&FEATURE_OF_VIEW[id];return!(f&&typeof featureOn==="function"&&!featureOn(f))};
+function bigFooter120(){const logo=(document.querySelector("#main>.topm .brand")||{}).innerHTML||"<b>nooi</b><span>.ai</span>";
+  return'<footer class="appfoot foot120"><div class="f120top"><div class="f120brand"><div class="brand f120logo" data-go="home" role="link" tabindex="0" aria-label="'+esc(L("Home","الرئيسية"))+'">'+logo+"</div>"+
+    "<p>"+esc(L("Create videos, pictures, voices and 3D worlds with AI — in Arabic and English.","اصنع الفيديوهات والصور والأصوات والعوالم ثلاثية الأبعاد بالذكاء الاصطناعي — بالعربية والإنجليزية."))+"</p>"+
+    '<a class="f120mail" href="mailto:'+SUPPORT_EMAIL+'">'+ic("mail","width:14px;height:14px")+"<span>"+SUPPORT_EMAIL+"</span></a></div>"+
+    FOOTCOLS120.map(([en,ar,ids])=>{const l=ids.filter(shown120);return l.length?'<nav class="f120col" aria-label="'+esc(L(en,ar))+'"><h3>'+esc(L(en,ar))+"</h3>"+l.map(id=>'<a href="#" data-go="'+id+'">'+esc(name120(id))+"</a>").join("")+"</nav>":""}).join("")+
+    '</div><div class="f120bot"><span>© 2026 nooi.ai</span><a href="#" data-act="legal" data-doc="terms">'+L("Terms","الشروط")+'</a><a href="#" data-act="legal" data-doc="privacy">'+L("Privacy","الخصوصية")+"</a></div></footer>"}
+appFooter=(o=>function(){return BIG120.has(S.view)?bigFooter120():o()})(appFooter);
+// the top bar: frosted glass once the page has scrolled
+let scr120=0;function bar120(){const t=document.querySelector("#main>.topm");if(!t)return;const m=document.getElementById("main"),y=Math.max(window.scrollY||0,m?m.scrollTop:0);t.classList.toggle("scr120",y>4)}
+addEventListener("scroll",()=>{if(scr120)return;scr120=requestAnimationFrame(()=>{scr120=0;bar120()})},{passive:true,capture:true});
+// the phone's bottom bar: the open item's highlight glides to the one you tap
+renderShell=(o=>function(){const a=document.querySelector('#bottomnav [aria-current="page"]'),f=a?a.getBoundingClientRect():null;const r=o.apply(this,arguments);
+  try{const n=document.getElementById("bottomnav");if(n&&getComputedStyle(n).display!=="none")glide118(n,n.querySelector('[aria-current="page"]'),f);bar120()}catch(e){}return r})(renderShell);
+renderView=(o=>function(){const r=o.apply(this,arguments);try{bar120()}catch(e){}return r})(renderView);
+(()=>{const st=document.createElement("style");st.textContent=`
+.foot120{display:block;padding:40px 32px 28px;margin-top:48px;text-align:start}
+.f120top{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(4,minmax(0,1fr));gap:28px;max-width:1536px;margin:0 auto}
+.f120brand p{margin:12px 0 10px;color:var(--mute);font-size:13px;line-height:1.5;max-width:320px}
+.f120logo{cursor:pointer;display:inline-flex}
+.foot120 .f120mail{display:inline-flex;gap:6px;align-items:center;color:var(--mute);font-size:12.5px;padding:0;min-height:0}
+.f120col h3{font-size:14px;font-weight:600;color:var(--text);margin:4px 0 10px}
+.foot120 .f120col a{display:flex;color:var(--mute);font-size:13px;padding:5px 0;min-height:30px;text-decoration:none}
+.foot120 a:hover{color:var(--text)}
+.f120bot{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;max-width:1536px;margin:28px auto 0;padding-top:16px;border-top:1px solid var(--line);color:var(--dim);font-size:12px}
+.f120bot span{margin-inline-end:auto}
+@media (max-width:900px){.f120top{grid-template-columns:repeat(2,minmax(0,1fr))}.f120brand{grid-column:1/-1}}
+@media (max-width:767px){.foot120{padding:28px 16px calc(96px + env(safe-area-inset-bottom,0px));margin-top:32px}}
+#main>.topm{transition:background-color .2s ease,box-shadow .2s ease}
+#main>.topm.scr120{background:color-mix(in srgb,var(--bg) 76%,transparent)!important;backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);box-shadow:0 1px 0 var(--line)}
+#bottomnav>*{position:relative;z-index:1}
+#bottomnav [aria-current="page"]{background:color-mix(in srgb,var(--lime) 13%,transparent);border-radius:12px}
+#bottomnav .pill118{border-radius:12px;background:color-mix(in srgb,var(--lime) 13%,transparent)}
+#bottomnav.glide118 [aria-current="page"]{background:transparent}
+/* (the light stays inside the button — it slides through a wide gradient — so a long label is never cut off) */
+.btn.primary{position:relative;isolation:isolate}
+.btn.primary:not(.busy)::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;background:linear-gradient(110deg,transparent 40%,rgba(255,255,255,.38) 50%,transparent 60%) 100% 0/250% 100% no-repeat}
+@media (prefers-reduced-motion: no-preference) and (hover:hover){.btn.primary:not(:disabled):hover::before{background-position:0 0;transition:background-position .75s cubic-bezier(.2,.7,.2,1)}}
+/* result cards: the words never lie on top of the engine's name or the buttons */
+.gc98 .gp98{padding:26px 46px 0 12px;border-bottom:10px solid transparent;background-origin:border-box}
+.gc98:hover .tag98,.gc98:focus-visible .tag98{opacity:0}.tk98 .tag98{transition:opacity .15s}
+@media (hover:none){.gc98 .gp98{display:none}}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

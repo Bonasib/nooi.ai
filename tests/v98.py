@@ -68,7 +68,8 @@ async def run(b, W, H, lang, tag):
     ok(await E("()=>document.getElementById('sec93-model').hidden"), f"{tag}: Esc closes them")
     # a result opened large
     await E("()=>{const c=document.querySelector('#main .gc98[data-open98=\"t98v29\"]');c.scrollIntoView({block:'center'})}")
-    await pg.click('#main .gc98[data-open98="t98v29"] .gp98', force=True); await pg.wait_for_timeout(500)
+    # (v120: on phones the card shows no words — its middle opens it)
+    await pg.click('#main .gc98[data-open98="t98v29"] .tk98', force=True); await pg.wait_for_timeout(500)
     lb = await E("""()=>{const l=document.querySelector('#main .lb98');return {open:!!l,stage:!!(l&&l.querySelector('.stage')),acts:l?[...l.querySelectorAll('[data-act]')].map(b=>b.dataset.act).filter(a=>/send-edit|finish-from|extend-job|fps120/.test(a)):[]}}""")
     ok(lb["open"] and lb["stage"] and {"send-edit", "finish-from", "extend-job"} <= set(lb["acts"]), f"{tag}: a video opens large with Open in editor, Upscale, Extend {lb}")
     await pg.keyboard.press("Escape"); await pg.wait_for_timeout(300)
@@ -84,7 +85,7 @@ async def run(b, W, H, lang, tag):
       ref:!!(bar&&bar.querySelector('.add98 [data-slot="iRef"]')),chips:bar?[...bar.querySelectorAll('.opt93 [data-o93],.opt93 .pk84c')].map(c=>c.dataset.o93||c.dataset.pk84):[],gen:!!(bar&&bar.querySelector('[data-act="gen-images"] .cost'))}}""")
     ok(im["cards"] == 6 and im["ta"] and im["ph"] and im["ref"] and {"format", "style", "icount", "imodel"} <= set(im["chips"]) and im["gen"], f"{tag}: Images: gallery + the same prompt bar (reference picture, format, style, pictures, engine) {im}")
     await E("()=>{const c=document.querySelector('#main .gc98[data-open98=\"t98i5\"]');c.scrollIntoView({block:'center'})}")
-    await pg.click('#main .gc98[data-open98="t98i5"] .gp98', force=True); await pg.wait_for_timeout(500)
+    await pg.click('#main .gc98[data-open98="t98i5"] .tk98', force=True); await pg.wait_for_timeout(500)
     li = await E("""()=>{const l=document.querySelector('#main .lb98');return {img:!!(l&&l.querySelector('.pim98 img')),acts:l?[...l.querySelectorAll('[data-act],a[download]')].map(b=>b.dataset.act||'download'):[],sel:S.img.sel}}""")
     ok(li["img"] and "animate-img" in li["acts"] and "vary-img" in li["acts"] and "download" in li["acts"] and li["sel"] == "t98i5", f"{tag}: a picture opens large with Animate, More like this, Download {li}")
     await pg.keyboard.press("Escape"); await pg.wait_for_timeout(200)

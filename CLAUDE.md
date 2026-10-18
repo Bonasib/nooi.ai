@@ -801,3 +801,11 @@ NOT yet verified against real services (no internet in the original build enviro
 - Admin → Speed: `vps119(report)` → `vps` {cpus, busy, engineShare, ownShare, exportRate, exports, verdict}: "no" when the engine (line + making + lips) is ≥ 60 % of the jobs' time, "yes" when this server's own work (`times.prep` + after-the-engine minus lips + join) is ≥ 25 % or the 5-minute load ≥ 90 % of the cores; advice lines EN/AR for both and for exports (seconds of converting per second of video). `deploy/doctor.sh`: the same verdict from the last 24 h, and a 3-second x264 test of the processor (nothing saved).
 - Test: `tests/v119.py` (port 8330).
 
+## v120 Bars, footer, buttons, cards and their motion (Higgsfield-style look, part 3)
+- The owner: "Bars, headers, footer, the visualize looking, buttons, options, sides, moves". Block `v120: BARS, FOOTER, BUTTONS, CARDS AND THEIR MOTION`.
+- Footer: `appFooter` (v8x slim line on every signed-in page) → on `BIG120` (home, explore, discover, recipes, apps, library) `bigFooter120()`: the header's logo (→ Home), one line, the email, four columns `FOOTCOLS120` (Create · Edit & publish · Explore · Account & help) whose links use each tool's own name (`name120` from ALLNAV / hub tabs) and skip switched-off tools (`shown120`), then © · Terms · Privacy. Headings 14 px (v90). Phones: two columns, ends above the bottom bar.
+- Bars: `bar120` toggles `.scr120` on `#main>.topm` (frosted glass + hairline) once the page scrolls (the main area is the scroller; a capturing scroll listener catches it); the phone's `#bottomnav` open item has a soft lime highlight that glides (`glide118`) to the tapped item (renderShell wrapper).
+- Buttons: `.btn.primary::before` — a light sweep that slides through a 250 % gradient (`background-position`), so it never leaves the button and no label is clipped (an `overflow:hidden` version cut long labels: script_fonts 42 → 230 clipped). Off with reduce motion.
+- Cards: on touch screens a result card shows no words (they lay over the engine's name and the buttons); under the pointer the words show, `.tag98` steps aside, the words stop 46 px before the expand button.
+- Tests: `tests/v120.py` (port 8332); `tests/v98.py` opens a phone card by its middle (no words on phones).
+
