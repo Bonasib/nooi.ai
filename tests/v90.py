@@ -9,7 +9,7 @@
 #  · Home and All tools use one card: its icon is in the tool's section colour (no colour per tool)
 #  · one option tile: a 32 px neutral square with a 20 px icon, on every page
 #  · the open tab is always fully in view on a phone, in English and Arabic
-#  · the menu: All tools after Explore, Audio after Video; Audio = Voice & audio + Subtitles & dubbing; Edit has 5 tabs
+#  · the menu: All tools after Explore, Audio after Video; Audio = Voice & audio + Subtitles & dubbing; Edit has 4 tabs (v122)
 #  · All tools: every tool once, each card opens its page (titled with the card's name); the filter box finds tools and says
 #    when nothing matches; Home has "All tools" beside its Tools title
 #  · the AI agents are never called bots (any page, the home box, titles and labels); they appear in one order everywhere —
@@ -127,7 +127,7 @@ async def run(b, lang, w, theme):
     if w > 500: ok(k["side"] == ["home", "explore", "apps", "image", "video", "audio", "chars", "world", "edit", "calendar", "library", "account", "admin"], f"{tag}: the menu {k['side']}")
     ok(k["audio"][0] == "voice" and k["audio"][1] == ["voice", "subs"] and k["audio"][2] == "audio" and (w < 500 or k["audio"][3] == ["audio"]), f"{tag}: Audio = Voice & audio + Subtitles & dubbing {k['audio']}")
     ok(k["subs"] == ["audio", ["subs"]], f"{tag}: Subtitles & dubbing is in Audio {k['subs']}")
-    ok(k["edit"] == ["edit", "slideshow", "fx", "finish", "vss"], f"{tag}: Edit has five tabs {k['edit']}")
+    ok(k["edit"] == ["edit", "fx", "finish", "vss"], f"{tag}: Edit has four tabs (v122: Video from pictures makes a video — it is in Video) {k['edit']}")
     a = k["apps"]; ok(a["n"] >= 23 and a["n"] == a["unique"] and not a["colours"], f"{tag}: All tools lists every tool once, in its colour {a}")
     ok(a["secs"] == ["brand", "image", "video", "audio", "chars", "world", "edit", "publish"], f"{tag}: All tools is grouped by section {a['secs']}")
     ok(not k["opened"], f"{tag}: every card on All tools opens its page {k['opened'][:4]}")

@@ -14448,6 +14448,74 @@ textarea.tw121on::placeholder{color:transparent}
 }
 `;document.head.appendChild(st)})();
 
+/* ================= v122: EVERYTHING IN ITS PLACE =================
+   The owner: "even the place of the subjects and the tools and the features — reorganize everything to be in the right place
+   and the right way". What was out of place, and where it is now:
+   · Video from pictures makes a new video — it moves from Edit to Video (after UGC ads). Edit keeps what works on a video
+     you already have: Video editor · Visual effects · Enhance · Video intelligence
+   · Home's tools: one card per tool, in the header's order (Image → Video → Audio → Characters → 3D → Edit → Publish), no two
+     cards with the same name (the agents' film was a second "nooi Studio" — it is the Video page's "A film by 9 agents"),
+     with Motion Control, Voice & audio and Schedule & publish, which were missing
+   · Account & plan: twelve blocks in no order → five groups in a sensible order: Plan · Credits · Brand · Preferences ·
+     Sign-in & data
+   · Voice & audio: the voice-over first, then the voices (the library, then yours), then designing a voice, lip sync, music
+     and sound, and the audio lab last
+   · a long page gets a bar of its parts under its title, which stays in view and marks where you are; a tap goes there
+   The pages' own blocks are moved, never rewritten — every button keeps its handler. */
+// 1) Video from pictures → Video
+(()=>{const ed=HUBS.find(h=>h[0]==="edit"),vi=HUBS.find(h=>h[0]==="video");if(!ed||!vi)return;const i=ed[4].findIndex(t=>t[0]==="slideshow");if(i<0)return;
+  const [t]=ed[4].splice(i,1),at=vi[4].findIndex(x=>x[0]==="ugcads");vi[4].splice(at>=0?at+1:vi[4].length,0,t);
+  // (and in the list of every tool that All tools is drawn from: [section, tool, icon, English, Arabic])
+  const j=TOOLS82.findIndex(x=>x[1]==="slideshow");if(j<0)return;const [s]=TOOLS82.splice(j,1);s[0]="video";const u=TOOLS82.findIndex(x=>x[1]==="ugcads");TOOLS82.splice(u>=0?u+1:TOOLS82.length,0,s)})();
+// 2) Home: one card per tool, in the header's order
+HOME82.splice(0,HOME82.length,"image","sketch","video","motion","ugcads","voice","chars","world","edit","calendar");
+// 3) long pages: their blocks in groups, in order — [key, English, Arabic, the blocks] (a block without a marker of its own is
+//    found by its neighbour, on the page as just drawn)
+const PARTS122={
+  account:V=>{const k=[...V.children],has=(c,s)=>c.matches(s)||!!c.querySelector(s),f=s=>k.find(c=>has(c,s))||null,after=(c,n)=>{const r=[];let x=c&&c.nextElementSibling;while(x&&r.length<n){r.push(x);x=x.nextElementSibling}return r};
+    const plans=f('[data-set="currency"]'),pblock=[plans];let x=plans&&plans.nextElementSibling;while(x&&!x.matches(".panel.set")){pblock.push(x);x=x.nextElementSibling}
+    const top=f("#coupon"),prefs=f('[data-act="ui-set"]'),data=f('[data-act="export-json"]'),render=prefs&&prefs.nextElementSibling,signin=data&&data.previousElementSibling;
+    return[["plan","Plan","الباقة",[f('[data-act="signout"]'),...pblock]],["credits","Credits","الرصيد",[top,...after(top,1)]],["brand","Brand","العلامة",[V.querySelector(":scope>#brandkit"),f('[data-act="view-landing"]')]],
+      ["prefs","Preferences","التفضيلات",[prefs,render!==signin?render:null,f('[data-set="routing.mode"]'),f('[data-act="lai-toggle"]')]],["data","Sign-in & data","الدخول والبيانات",[signin!==render?signin:null,data,V.querySelector(":scope>#devpanel")]]]},
+  voice:V=>{const k=[...V.children],f=s=>k.find(c=>c.matches(s)||!!c.querySelector(s))||null,lib=V.querySelector(":scope>.voices"),libh=lib&&lib.previousElementSibling&&lib.previousElementSibling.matches("h2")?lib.previousElementSibling:null;
+    const mine=f('[data-act="vc-open"]'),mb=[mine];let x=mine&&mine.nextElementSibling;while(x&&x!==lib&&x!==libh&&!x.matches("#alab,.two")){mb.push(x);if(x.matches(".vengine"))break;x=x.nextElementSibling}
+    return[["make","","",[V.querySelector(":scope>#ndlg")]],["lib","","",[libh,lib]],["mine","","",mb],["more","","",[V.querySelector(":scope>.two")]],["lab","","",[V.querySelector(":scope>#alab")]]]}};
+// the bar of a page's parts: Account by its groups (named), Voice by its own headings (already in the page's language)
+let parts122=[],pend122=null;   // (pend122: the part just tapped — a redraw within 1.5 s goes straight back to it)
+function order122(){const V=document.querySelector("#main>.view"),fn=V&&PARTS122[S.view];parts122=[];if(!fn)return;
+  const groups=fn(V).map(g=>[g[0],g[1],g[2],g[3].filter((e,i,a)=>e&&e.parentElement===V&&a.indexOf(e)===i)]).filter(g=>g[3].length);if(!groups.length)return;
+  const fixed=new Set(groups.flatMap(g=>g[3])),rest=[...V.children].filter(c=>!fixed.has(c)&&!c.matches(".hubtabs,h1,.spread:has(>h1),.lede,.laichip,.secbar122"));
+  groups.forEach(g=>g[3].forEach(e=>V.appendChild(e)));rest.forEach(e=>V.appendChild(e));
+  // the bar's entries: a named group → its first block; a page without names → each of its headings
+  const items=[];groups.forEach(g=>{if(g[1]){g[3][0].classList.add("sec122t");items.push([L(g[1],g[2]),g[3][0]])}
+    else g[3].forEach(e=>(e.matches("h2")?[e]:[...e.querySelectorAll("h2")]).forEach(h=>{if(!h.offsetParent&&!e.offsetParent)return;h.classList.add("sec122t");items.push([h.textContent.trim(),h])}))});
+  if(items.length<3)return;parts122=items.map(x=>x[1]);
+  const bar=document.createElement("nav");bar.className="secbar122";bar.setAttribute("aria-label",L("On this page","في هذه الصفحة"));
+  bar.innerHTML=items.map((x,i)=>'<button type="button" data-sec122="'+i+'">'+esc(x[0].slice(0,40))+"</button>").join("");
+  const head=V.querySelector(":scope>.lede")||V.querySelector(":scope>.spread:has(>h1)")||V.querySelector(":scope>h1");(head||V.firstElementChild).insertAdjacentElement("afterend",bar);
+  if(pend122&&Date.now()-pend122.at<1500&&parts122[pend122.i])parts122[pend122.i].scrollIntoView({block:"start"});spy122()}
+function spy122(){const b=document.querySelector("#main .secbar122");if(!b||!parts122.length)return;let cur=0;parts122.forEach((e,i)=>{if(e.getBoundingClientRect().top<=170)cur=i});
+  b.querySelectorAll("[data-sec122]").forEach((x,i)=>{if(i===cur){if(x.getAttribute("aria-current")!=="true"){x.setAttribute("aria-current","true");const r=x.getBoundingClientRect(),br=b.getBoundingClientRect();if(r.left<br.left||r.right>br.right)b.scrollLeft+=r.left-br.left-16}}else x.removeAttribute("aria-current")})}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-sec122]");if(!b)return;const t=parts122[+b.dataset.sec122];if(!t)return;e.preventDefault();
+  pend122={i:+b.dataset.sec122,at:Date.now()};t.scrollIntoView({behavior:RM118()?"auto":"smooth",block:"start"});
+  // (the page can still change height above it — pictures arriving, a redraw — so for 1.6 s it is put back just under the bar,
+  // unless you start scrolling yourself)
+  const p=pend122;[450,1000,1600].forEach(ms=>setTimeout(()=>{if(pend122!==p)return;const x=parts122[p.i],bar=document.querySelector("#main .secbar122");if(!x||!bar)return;
+    const d=x.getBoundingClientRect().top-bar.getBoundingClientRect().bottom;if(d<-2||d>12)x.scrollIntoView({block:"start"})},ms))});
+["wheel","touchmove","keydown"].forEach(ev=>addEventListener(ev,()=>{pend122=null},{passive:true,capture:true}));
+let spyT122=0;addEventListener("scroll",()=>{if(spyT122)return;spyT122=requestAnimationFrame(()=>{spyT122=0;spy122()})},{passive:true,capture:true});
+renderView=(o=>function(){const r=o.apply(this,arguments);try{order122()}catch(e){console.warn("v122 order",e)}return r})(renderView);
+(()=>{const st=document.createElement("style");st.textContent=`
+.secbar122{position:sticky;top:66px;z-index:6;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 16px;padding:8px 0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.secbar122::-webkit-scrollbar{display:none}
+.secbar122 button{flex:none;border:1px solid var(--line);background:transparent;color:var(--mute);font:500 13px/1 inherit;font-family:inherit;padding:8px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;min-height:34px}
+.secbar122 button:hover{color:var(--text)}
+.secbar122 button[aria-current="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.sec122t{scroll-margin-top:124px}
+#main .curplan{flex-wrap:wrap;row-gap:4px}#main .curplan>*{min-width:0}   /* (the plan line wraps in a longer language instead of running past a phone's edge) */
+@media (prefers-reduced-motion: no-preference){.secbar122 button{transition:background-color .2s ease,color .2s ease,border-color .2s ease}}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
