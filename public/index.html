@@ -14365,6 +14365,89 @@ renderView=(o=>function(){const r=o.apply(this,arguments);try{bar120()}catch(e){
 @media (hover:none){.gc98 .gp98{display:none}}
 `;document.head.appendChild(st)})();
 
+/* ================= v121: WORDS — TITLES, A HIGHLIGHTED WORD AND WORD EFFECTS =================
+   The owner: "Words effects, words highlight, Titles" (the Higgsfield-style look; nooi's own drawing and code):
+   · titles: one weight (600), lines balanced, a slightly tighter spacing in Latin scripts (never in Arabic — spacing breaks
+     its joined letters); the Home headline larger, as a display title. Sizes elsewhere stay v90's (27 · 22 · 16 · 14)
+   · a highlighted word: the Home headline's last word (create · تصنع · erstellen · crear …) in nooi's lime, a light passes
+     over it once and a marker line draws under it
+   · word effects: when a page opens, its title's words fade in and sharpen one after another (once — a redraw doesn't replay it); the
+     prompt boxes (Home, Video, Images) type example ideas where the hint is, one after another, after the usual hint has
+     shown for 4 s — they stop as soon as you click or type, and nothing is ever put in the box itself
+   All of it off with the device's "reduce motion". */
+let view121=null,at121=0;
+// the words of a title fade in one after another (each a span; the icon stays; the highlighted word comes as one)
+function words121(el,step,past){if(!el||el.dataset.w121)return;el.dataset.w121="1";let i=0;past=past||0;
+  const walk=n=>{for(const c of [...n.childNodes]){
+    if(c.nodeType===3){const parts=c.textContent.split(/(\s+)/);if(!c.textContent.trim())continue;const f=document.createDocumentFragment();
+      for(const p of parts){if(!p)continue;if(/^\s+$/.test(p)){f.appendChild(document.createTextNode(p));continue}const s=document.createElement("span");s.className="w121";s.style.animationDelay=(i++*step-past)+"ms";s.textContent=p;f.appendChild(s)}
+      c.replaceWith(f)}
+    else if(c.nodeType===1&&c.classList.contains("hl121")){c.classList.add("w121");c.style.animationDelay=(i++*step-past)+"ms"}
+    else if(c.nodeType===1&&!c.matches("svg,.tchip90,input,button"))walk(c)}};
+  walk(el)}
+// the Home headline: its last word highlighted (in every language the question ends on the verb: create · تصنع · crear)
+function hero121(){const h=document.querySelector("#main .hfhero h1");if(!h||h.querySelector(".hl121"))return;const t=h.lastChild;if(!t||t.nodeType!==3)return;
+  const m=t.textContent.match(/^([\s\S]*?)(\S+?)([?؟!.։።]*)\s*$/);if(!m||!m[2]||!/\S\s+$/.test(m[1])||[...m[2]].length>18)return;   // (a headline written without spaces — Chinese, Japanese, Thai — keeps no highlight)
+  const f=document.createDocumentFragment();if(m[1])f.appendChild(document.createTextNode(m[1]));const s=document.createElement("span");s.className="hl121";s.textContent=m[2];f.appendChild(s);if(m[3])f.appendChild(document.createTextNode(m[3]));t.replaceWith(f)}
+renderView=(o=>function(){const r=o.apply(this,arguments);
+  // (the page is often drawn again just after it opens: a title drawn again in the first 0.7 s carries on from where it was)
+  try{hero121();const now=Date.now();if(S.view!==view121){view121=S.view;at121=now}
+    if(now-at121<700&&!RM118()){const h=document.querySelector("#main .hfhero h1")||document.querySelector("#main>.view h1,#main>.fillwrap h1");words121(h,h&&h.closest(".hfhero")?70:45,now-at121)
+      // the highlighted word's light and line play when the page opens — never again on a redraw
+      document.querySelectorAll("#main .hl121:not(.go121)").forEach(x=>{x.classList.add("go121");x.style.setProperty("--past121",(now-at121)+"ms")})}}catch(e){console.warn("v121 words",e)}
+  return r})(renderView);
+// example ideas typed where the hint is (Home by its tab, Video, Images) — the box itself stays empty
+const EX121={agent:[["Make a 20-second ad for my coffee shop with a calm voice-over","اصنع إعلاناً مدته 20 ثانية لمقهاي بتعليق صوتي هادئ"],["Turn my product photo into three short videos for Reels","حوّل صورة منتجي إلى ثلاثة فيديوهات قصيرة لريلز"],["A cinematic trailer for my brand, desert at sunrise","إعلان سينمائي لعلامتي، صحراء عند الشروق"]],
+  audio:[["Calm oud music for a morning coffee video","موسيقى عود هادئة لفيديو قهوة الصباح"],["A warm narrator: \"Every great story starts with one step\"","راوٍ دافئ: \"كل قصة عظيمة تبدأ بخطوة\""],["Rain on a window with distant thunder","مطر على نافذة مع رعد بعيد"]],
+  avatar:[["A friendly presenter introduces our new app in 15 seconds","مقدّمة ودودة تعرّف بتطبيقنا الجديد في 15 ثانية"],["A chef explains today's special to the camera","طاهٍ يشرح طبق اليوم أمام الكاميرا"]]};
+const TW121={el:null,list:null,key:"",i:0,n:0,phase:"type",until:0,since:Date.now(),view:null,box:null};
+function twTarget121(){const v=S.view;if(v==="home"){const t=(S.hf&&S.hf.tab)||"agent",l=t==="video"?EX98.video:t==="image"?EX98.image:EX121[t]||EX121.agent;return{id:"hfq",key:"home:"+t,list:l}}
+  if(v==="video")return{id:"dprompt",key:"video",list:EX98.video};if(v==="image")return{id:"iprompt",key:"image",list:EX98.image};return null}
+function twOff121(){if(TW121.box){TW121.box.remove();TW121.box=null}document.querySelectorAll("textarea.tw121on").forEach(t=>t.classList.remove("tw121on"))}
+function tw121(){const now=Date.now(),T=TW121;if(T.view!==S.view){T.view=S.view;T.since=now;twOff121()}
+  const g=twTarget121(),ta=g&&document.getElementById(g.id);
+  if(!g||!ta||RM118()||document.hidden||ta.value||document.activeElement===ta||!ta.offsetParent||now-T.since<4000){twOff121();if(g&&T.key!==g.key){T.key=g.key;T.i=0;T.n=0;T.phase="type"}return}
+  if(T.key!==g.key){T.key=g.key;T.i=0;T.n=0;T.phase="type";T.until=0}
+  const ex=g.list[T.i%g.list.length],txt=L(ex[0],ex[1]),chars=[...txt];
+  if(now>=T.until){if(T.phase==="type"){T.n++;T.until=now+42;if(T.n>=chars.length){T.phase="hold";T.until=now+2200}}
+    else if(T.phase==="hold"){T.phase="erase"}
+    else if(T.phase==="erase"){T.n=Math.max(0,T.n-2);T.until=now+16;if(!T.n){T.phase="wait";T.until=now+350}}
+    else{T.phase="type";T.i++;T.n=0}}
+  // the typed words sit exactly where the box's own hint is, in its font
+  const par=ta.offsetParent;if(!par)return;let b=T.box;if(!b||b.parentElement!==par){if(b)b.remove();b=T.box=document.createElement("div");b.className="tw121";b.setAttribute("aria-hidden","true");par.appendChild(b)}
+  const cs=getComputedStyle(ta),pl=parseFloat(cs.paddingLeft)+parseFloat(cs.borderLeftWidth),pt=parseFloat(cs.paddingTop)+parseFloat(cs.borderTopWidth),pr=parseFloat(cs.paddingRight)+parseFloat(cs.borderRightWidth);
+  Object.assign(b.style,{left:(ta.offsetLeft+pl)+"px",top:(ta.offsetTop+pt)+"px",width:Math.max(0,ta.clientWidth-(pl-parseFloat(cs.borderLeftWidth))-(pr-parseFloat(cs.borderRightWidth)))+"px",maxHeight:Math.max(0,ta.clientHeight-pt)+"px",
+    font:cs.font,lineHeight:cs.lineHeight,letterSpacing:cs.letterSpacing,direction:cs.direction,textAlign:cs.textAlign});
+  b.textContent=chars.slice(0,T.n).join("");b.classList.toggle("caret121",T.phase==="type"||T.phase==="erase");ta.classList.add("tw121on")}
+setInterval(()=>{try{tw121()}catch(e){}},30);
+document.addEventListener("focusin",e=>{if(e.target&&e.target.classList&&e.target.classList.contains("tw121on")){twOff121();TW121.since=Date.now()}},true);
+(()=>{const st=document.createElement("style");st.textContent=`
+#main>.view h1,#main>.fillwrap h1{font-weight:600;text-wrap:balance;overflow-wrap:anywhere}   /* (a word longer than the line — Russian, Tamil, Berber titles on a phone — breaks instead of running past the edge) */
+#main>.view h2{font-weight:600}
+html:not([dir="rtl"]) #main>.view h1{letter-spacing:-.02em}
+#main .hfhero h1{font-size:clamp(34px,4.4vw,56px);font-weight:600;line-height:1.1;text-wrap:balance;margin-inline:auto;max-width:18ch}
+html:not([dir="rtl"]) #main .hfhero h1{letter-spacing:-.035em}
+.hl121{position:relative;display:inline-block;max-width:100%;color:var(--lime);
+  background:linear-gradient(100deg,var(--lime) 0%,var(--lime) 40%,#f4ffc4 50%,var(--lime) 60%,var(--lime) 100%) 100% 0/250% 100% no-repeat;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+html[data-theme="light"] .hl121{color:var(--lime-ink,#4d7c0f);background-image:linear-gradient(100deg,var(--lime-ink,#4d7c0f) 0%,var(--lime-ink,#4d7c0f) 40%,#a3e635 50%,var(--lime-ink,#4d7c0f) 60%,var(--lime-ink,#4d7c0f) 100%)}
+.hl121::after{content:"";position:absolute;inset-inline:0;bottom:.02em;height:.09em;border-radius:99px;background:currentColor;opacity:.45;transform-origin:left center}
+html[dir="rtl"] .hl121::after{transform-origin:right center}
+.tw121{position:absolute;z-index:2;pointer-events:none;color:var(--dim);white-space:pre-wrap;overflow:hidden;word-break:break-word}
+.tw121.caret121::after{content:"";display:inline-block;width:2px;height:1.05em;margin-inline-start:2px;vertical-align:-.15em;background:var(--lime);animation:caret121 1s steps(1) infinite}
+textarea.tw121on::placeholder{color:transparent}
+@keyframes caret121{50%{opacity:0}}
+@media (prefers-reduced-motion: no-preference){
+  /* (the words stay inline, so a long word or a title without spaces still wraps: they fade in and sharpen) */
+  .w121{animation:w121 .5s cubic-bezier(.2,.7,.2,1) both}
+  .hl121.go121.w121{animation:w121 .5s cubic-bezier(.2,.7,.2,1) both,shine121 1.6s cubic-bezier(.4,0,.2,1) calc(500ms - var(--past121,0ms)) both}
+  @keyframes w121{from{opacity:0;filter:blur(6px)}}
+  .hl121.go121{animation:shine121 1.6s cubic-bezier(.4,0,.2,1) calc(500ms - var(--past121,0ms)) both}
+  .hl121.go121::after{animation:mark121 .7s cubic-bezier(.2,.7,.2,1) calc(700ms - var(--past121,0ms)) both}
+  @keyframes shine121{from{background-position:100% 0}to{background-position:0 0}}
+  @keyframes mark121{from{scale:0 1}to{scale:1 1}}
+}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
