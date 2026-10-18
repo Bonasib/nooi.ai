@@ -117,7 +117,8 @@ async def main():
         n0 = len(stats()["tasks"]); jf = wait_job(j2.get("id", ""), TOKEN); time.sleep(1)
         # (v102: the same engine is asked once more when it fails on its own side — never another model)
         mt = [t.get("model") for t in stats()["tasks"][nb:]]
-        ok(jf.get("status") == "failed" and mt == ["kling-2.6/motion-control"] * 2 and api("/v1/billing", token=TOKEN)["credits"] == c1, f"Motion Control failure: asked once more on the same engine, no other model tried, credits back {jf.get('status')} {mt}")
+        # (v113: the engine's "please try again later" is a busy engine — asked twice more, on the same engine)
+        ok(jf.get("status") == "failed" and mt == ["kling-2.6/motion-control"] * 3 and api("/v1/billing", token=TOKEN)["credits"] == c1, f"Motion Control failure: a busy engine asked twice more on the same engine, no other model tried, credits back {jf.get('status')} {mt}")
         # Grok Imagine 1.5 starts from a picture
         g = api("/v1/jobs", {"kind": "video", "model": "grok15", "prompt": "a cat", "dur": 6}, token=TOKEN)
         ok(g.get("_status") == 400 and "picture" in g.get("error", ""), f"Grok Imagine 1.5 needs a picture {g}")

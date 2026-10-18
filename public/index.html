@@ -14205,6 +14205,102 @@ document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.c
     toast(r.lipsEngine==="sync"?L("Lips now follow the voice with Sync Lipsync 2 Pro","تتبع الشفاه الصوت الآن عبر Sync Lipsync 2 Pro"):L("Lips now follow the voice with Volcengine","تتبع الشفاه الصوت الآن عبر Volcengine"))}
   catch(err){toast(String(err.message||err))}finally{b.disabled=false;if(S.view==="admin")renderView()}});
 
+/* ================= v118: THE OTHER PAGES IN THE SAME ARRANGEMENT, WITH MOTION =================
+   The owner: "continue building the Higgsfield-style pages — all with motion and working functions, and the same
+   arrangement, movement, harmony and placement of the icons". v98 rebuilt the header, Video and Images; this carries the
+   same order to the rest (the structure only — every drawing, word and line of code here is nooi's own):
+   · one frame: every create / edit / publish / explore page has the width and edge of Video and Images, so the tabs, the
+     title's icon and the content start at the same place on every page
+   · tool pages (Motion Control, UGC ads, Video from pictures, Video intelligence, Visual effects, Sketch to life): the
+     settings in one 420 px column on the reading side (left; right in Arabic), the work on the other side — the stage, then
+     what you made with the tool, as cards. Where the settings end in a main button (the first four) the column stays in
+     view with its own scroll, fits the first screen, and the button is pinned at its foot; the others keep both columns
+     the same height (v41's equal panels)
+   · motion: the active tab's pill glides to the tab you pick (the header's sections and a page's tabs); new results rise in
+     one after another; a card lifts and its picture eases closer under the pointer; a chip's choices rise from the bar; the
+     large view opens with a short zoom; buttons give under a press. Icons stay still (v92). All of it off with the
+     device's "reduce motion". The pages' own fields, buttons and handlers are moved, never rewritten. */
+const RM118=()=>{try{return matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){return false}};
+const NARROW118=new Set(["home","account","wallet","connect","integrations","legal","support","admin"]);
+// [the two-column box, which child holds the settings, the main button]
+const TOOL118={motion:[".two",0,'[data-act="mc-make"]'],ugcads:[".two",0,'[data-act="ugc-make"]'],slideshow:[".two",0,'[data-act="ss83-make"]'],vss:[".two",0,'[data-act="vss-run"]'],
+  fx:[".two",1,""],bg:[".two",1,""],grade:[".two",1,""],mocap:[".two",1,""],sketch:[".sk91",1,""]};
+function frame118(){const v=document.querySelector("#main>.view");if(v&&!NARROW118.has(S.view))v.classList.add("wide118")}
+function tool118(){const c=TOOL118[S.view],v=c&&document.querySelector("#main>.view");if(!v)return;const g=v.querySelector(":scope>"+c[0]);if(!g||g.children.length<2)return;
+  const set=g.children[c[1]];g.classList.add("tool118");set.classList.add("set118");if(c[1])g.classList.add("rev118");
+  // the main button at the foot of the settings, always in reach (moved, so its own handler still runs)
+  const b=c[2]&&set.querySelector(c[2]);if(b){set.classList.add("pin118");if(!b.closest(".go118")){const f=document.createElement("div");f.className="go118";set.appendChild(f);f.appendChild(b)}}fit118()}
+// the settings column fits the first screen from where it starts (so its button is in view without scrolling); the same
+// height while you scroll, so nothing jumps
+function fit118(){const s=document.querySelector("#main .tool118>.set118.pin118");if(!s)return;if(innerWidth<901){s.style.maxHeight="";return}
+  const m=document.getElementById("main"),y=s.getBoundingClientRect().top+(m?m.scrollTop:0)+((document.scrollingElement||{}).scrollTop||0);
+  s.style.maxHeight=Math.max(360,Math.min(innerHeight-96,innerHeight-y-16))+"px"}
+addEventListener("resize",()=>{try{fit118()}catch(e){}});
+// the pill glides from the tab you left to the one you picked
+function glide118(nav,on,from){if(!nav||!on||!from||RM118()||!nav.animate)return;const to=on.getBoundingClientRect(),nr=nav.getBoundingClientRect();if(!to.width||Math.abs(to.left-from.left)<2)return;
+  const p=document.createElement("span");p.className="pill118";p.setAttribute("aria-hidden","true");
+  p.style.cssText="left:"+(to.left-nr.left+nav.scrollLeft)+"px;top:"+(to.top-nr.top)+"px;width:"+to.width+"px;height:"+to.height+"px";nav.appendChild(p);nav.classList.add("glide118");
+  const a=p.animate([{transform:"translateX("+(from.left-to.left)+"px)",width:from.width+"px"},{transform:"none",width:to.width+"px"}],{duration:280,easing:"cubic-bezier(.2,.7,.2,1)"});
+  const end=()=>{p.remove();nav.classList.remove("glide118")};a.onfinish=end;a.oncancel=end}
+const TABS118=[["#main>.view>.hubtabs,#main>.fillwrap>.hubtabs",'[aria-selected="true"]'],["#main>.topm .hnav98",'[aria-current="page"]']];
+let hf118=null;   // (where the header's pill was, when the shell redraws the header before the page)
+// new results rise in one after another (only ones not shown before on this page — a redraw never replays it)
+let seen118=new Set(),page118=S.view;
+function rise118(){if(page118!==S.view){page118=S.view;seen118=new Set()}if(RM118())return;let i=0;
+  document.querySelectorAll("#main .gc98,#main .preview-col .strip>[data-open-job]").forEach(c=>{const k=c.dataset.open98||c.dataset.openJob;if(!k||seen118.has(k))return;seen118.add(k);
+    if(i>11)return;c.classList.add("rise118");c.style.animationDelay=(i++*45)+"ms";c.addEventListener("animationend",()=>{c.classList.remove("rise118");c.style.animationDelay=""},{once:true})})}
+renderView=(o=>function(){const from=TABS118.map(([n,a])=>{const x=document.querySelector(n),b=x&&x.querySelector(a);return b?b.getBoundingClientRect():null});
+  if(!from[1])from[1]=hf118;hf118=null;
+  const os=document.querySelector("#main .tool118>.set118.pin118"),keep=os&&page118===S.view?os.scrollTop:0;   // (a redraw keeps the settings where you scrolled them)
+  const r=o.apply(this,arguments);
+  try{frame118();tool118();const ns=keep&&document.querySelector("#main .tool118>.set118.pin118");if(ns)ns.scrollTop=keep}catch(e){console.warn("v118 layout",e)}
+  try{TABS118.forEach(([n,a],i)=>{const x=document.querySelector(n);glide118(x,x&&x.querySelector(a),from[i])})}catch(e){}
+  try{rise118()}catch(e){}
+  return r})(renderView);
+// the header is drawn by the shell: its pill glides too when a page of another section opens
+renderShell=(o=>function(){const x=document.querySelector('#main>.topm .hnav98 [aria-current="page"]');if(x)hf118=x.getBoundingClientRect();return o.apply(this,arguments)})(renderShell);
+// a chip's choices rise from the bar when they open (not on every redraw)
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-o93]");if(!b||RM118())return;
+  setTimeout(()=>{const s=document.getElementById("sec93-"+b.dataset.o93);if(s&&!s.hidden){s.classList.remove("up118");void s.offsetWidth;s.classList.add("up118");s.addEventListener("animationend",()=>s.classList.remove("up118"),{once:true})}},0)});
+(()=>{const st=document.createElement("style");st.textContent=`
+.view.wide118{max-width:1600px}
+@media (min-width:901px){
+  .tool118{grid-template-columns:minmax(0,420px) minmax(0,1fr)!important;gap:20px;align-items:start}
+  .tool118.rev118{align-items:stretch}.tool118.rev118>.set118{order:-1}
+  .tool118>.set118.pin118{position:sticky;top:80px;max-height:calc(100vh - 96px);overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
+  .sk91.tool118 .skpaper{max-width:min(100%,calc(100vh - 230px));margin-inline:auto}
+  .set118.pin118.pad .go118{bottom:-18px}   /* (the browser keeps the column's padding under a pinned item) */
+}
+.go118{position:sticky;bottom:0;z-index:3;margin:14px -18px -18px;padding:14px 18px 18px;background:linear-gradient(to bottom,color-mix(in srgb,var(--panel) 0%,transparent),var(--panel) 34%)}
+.go118>.btn{width:100%;margin:0}
+.set118:not(.pad) .go118{margin:12px 0 0;padding:12px 0 2px;background:linear-gradient(to bottom,color-mix(in srgb,var(--bg) 0%,transparent),var(--bg) 34%)}
+@media (max-width:900px){.set118.pad .go118{margin:12px -18px -18px;padding:12px 18px 18px}}
+@media (max-width:767px){.go118{bottom:calc(env(safe-area-inset-bottom,0px) + 64px)}}
+.hubtabs,.hnav98{position:relative}
+.pill118{position:absolute;z-index:0;border-radius:999px;background:var(--text);pointer-events:none}
+.hnav98 .pill118{border-radius:8px;background:var(--panel3)}
+.hubtabs button,.hnav98 button{position:relative;z-index:1}
+.hubtabs.glide118 button[aria-selected="true"],.hnav98.glide118 button[aria-current="page"]{background:transparent}
+@media (prefers-reduced-motion: no-preference){
+  .rise118{animation:rise118 .42s cubic-bezier(.2,.7,.2,1) both}
+  @keyframes rise118{from{opacity:0;translate:0 14px}}
+  .up118{animation:up118 .22s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes up118{from{opacity:0;translate:0 10px}}
+  .mv80{animation:fade118 .2s ease both}.mv80 .mvm{animation:zoom118 .28s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes fade118{from{opacity:0}}@keyframes zoom118{from{opacity:0;scale:.96}}
+  .gc98,.panel.tool,.preview-col .strip>[data-open-job]{transition:translate .25s cubic-bezier(.2,.7,.2,1),box-shadow .25s ease,border-color .2s ease}
+  .gc98 .frame,.preview-col .strip .frame{transition:scale .6s cubic-bezier(.2,.7,.2,1)}
+  @media (hover:hover){
+    .gc98:hover,.panel.tool:hover,.preview-col .strip>[data-open-job]:hover{translate:0 -3px;box-shadow:0 12px 30px rgba(0,0,0,.28)}
+    .gc98:hover .frame,.preview-col .strip>[data-open-job]:hover .frame{scale:1.04}
+  }
+  .hubtabs button:active,.hnav98 button:active,.panel.tool:active,.gc98:active,.o93:active,.preview-col .strip>[data-open-job]:active{scale:.97}
+}
+/* the earlier results of a tool: the same cards as Video and Images, in a grid */
+.preview-col .strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;overflow:visible}
+.preview-col .strip>*{width:auto;border-radius:12px;overflow:hidden}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
