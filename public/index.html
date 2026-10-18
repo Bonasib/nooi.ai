@@ -8508,13 +8508,16 @@ saveFile=(o=>async function(filename,data){if(hasClaude())return o(filename,data
     a.href=url;a.download=filename||"nooi-file";a.rel="noopener";a.style.display="none";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),120000);toast(L("Saved: ","تم الحفظ: ")+filename,{type:"ok"})}
   catch(e){toast(L("The file couldn't be saved.","تعذّر حفظ الملف."),{type:"warn"})}})(saveFile);
 /* export: on the server the recording becomes a file at the exact size of the format (e.g. 1080×1920), MP4 by default, with a proper duration */
-edExport=(o=>async function(){const srv=API.mode==="server",want=S.ed.fmtOut||(srv?"mp4":"webm"),keep=S.ed.fmtOut,sf=saveFile;let cap=null;
-  if(srv){saveFile=async(n,d)=>{cap={n,d}};S.ed.fmtOut="webm"}
-  try{await o()}finally{saveFile=sf;S.ed.fmtOut=keep}
+edExport=(o=>async function(){const srv=API.mode==="server",want=S.ed.fmtOut||(srv?"mp4":"webm"),keep=S.ed.fmtOut,sf=saveFile,up=API.upload;let cap=null;
+  // (v119: the recording goes up once — to be converted; the converted file is the one kept in the library. It used to be
+  // uploaded a second time first, just to keep a copy: on a home connection that doubled the wait)
+  if(srv){saveFile=async(n,d)=>{cap={n,d}};S.ed.fmtOut="webm";API.upload=async()=>({url:null})}
+  try{await o()}finally{saveFile=sf;S.ed.fmtOut=keep;API.upload=up}
+  const job119=srv&&S.jobs.find(x=>x.id===S.ed.lastExport),keep119=async()=>{if(job119&&!job119.resultUrl&&cap)try{job119.resultUrl=(await up.call(API,cap.d instanceof Blob?cap.d:await(await fetch(cap.d)).blob(),cap.n)).url;persist()}catch(e){}};
   if(!srv||!cap)return;const F=fmt(),w=F[2],h=F[3];toast(L("Preparing your "+want.toUpperCase()+" · "+w+"×"+h+"…","جارٍ تجهيز ملف "+want.toUpperCase()+" · "+w+"×"+h+"…"),{type:"info",ms:6000});
   try{const blob=cap.d instanceof Blob?cap.d:await(await fetch(cap.d)).blob();const r=await fetch("/v1/media/transcode?w="+w+"&h="+h+"&fmt="+want+"&fps="+(+S.ed.fps||30),{method:"POST",headers:Object.assign({"Content-Type":"video/webm"},await authH()),body:blob}).then(x=>x.json());
-    if(!r.url)throw new Error(r.error||"failed");const out=await(await fetch(r.url)).blob();await sf(String(cap.n).replace(/\.\w+$/,"")+"."+({prores:"mov",dnxhr:"mxf",hevc:"mp4"}[want]||want),out);if(S.ed.lastExport)EXPORTS[S.ed.lastExport]=r.url;S.ed.lastDeliverable={url:r.url,fmt:want}}
-  catch(e){toast(L("Converting failed — saving the original recording.","تعذّر التحويل — يُحفظ التسجيل الأصلي."),{type:"warn"});await sf(cap.n,cap.d)}})(edExport);
+    if(!r.url)throw new Error(r.error||"failed");if(job119){job119.resultUrl=r.url;persist()}const out=await(await fetch(r.url)).blob();await sf(String(cap.n).replace(/\.\w+$/,"")+"."+({prores:"mov",dnxhr:"mxf",hevc:"mp4"}[want]||want),out);if(S.ed.lastExport)EXPORTS[S.ed.lastExport]=r.url;S.ed.lastDeliverable={url:r.url,fmt:want}}
+  catch(e){toast(L("Converting failed — saving the original recording.","تعذّر التحويل — يُحفظ التسجيل الأصلي."),{type:"warn"});await keep119();await sf(cap.n,cap.d)}})(edExport);
 VIEWS.edit=(o=>function(){if(API.mode==="server"&&!S.ed.fmtOut)S.ed.fmtOut="mp4";return o()})(VIEWS.edit);
 /* live server: no sample data and no "try a demo" buttons */
 crmData=(o=>function(){const D=A(),fresh=!D.crm,x=o();if(API.mode==="server"){const n=x.deals.length;x.deals=x.deals.filter(d=>!/^d\d+$/.test(d.id));if(fresh||n!==x.deals.length)saveAdm("crm",x)}return x})(crmData);

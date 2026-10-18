@@ -61,6 +61,7 @@ import { registerExplore } from "./lib/explore.js";
 import { sendEmail, emailConfigured } from "./lib/email.js";
 import { renderEmail } from "./public/email-templates.js";
 import { uiLang, uiDict, uiTranslate, rateOk } from "./lib/uit.js";
+import { noteExport } from "./lib/xstats.js";
 
 const app = express();
 app.use(cors({ origin: process.env.PUBLIC_BASE_URL || true }));
@@ -260,8 +261,18 @@ app.post("/v1/media/transcode", requireUser, express.raw({ type: ["video/webm", 
   const args = F === "wav" ? ["-y", "-i", inp.file, "-vn", "-c:a", "pcm_s24le", "-ar", "48000", out]
     : F === "gif" ? ["-y", "-i", inp.file, "-vf", `fps=12,scale=${Math.min(W || 540, 720)}:-2:flags=lanczos,split[a][b];[a]palettegen=max_colors=160[p];[b][p]paletteuse=dither=sierra2_4a`, out]
     : ["-y", "-i", inp.file, ...(fit ? ["-vf", fit] : []), "-r", String(fps), ...PRESET[F][1], out];
-  const p = spawn(process.env.FFMPEG_PATH || "ffmpeg", args);
-  p.on("error", (e) => res.status(500).json({ error: "ffmpeg: " + e.message })); p.on("close", (code) => code === 0 ? res.json({ url: (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "") + "/media/" + outName }) : res.status(500).json({ error: "ffmpeg exited " + code }));
+  // v119: a recording that is already H.264 at the format's exact size (the browser recorded MP4 at full size) is only
+  // re-packed into a proper MP4 — about a second, whatever the server — instead of being made again frame by frame
+  const t0 = Date.now(), probe = spawn(process.env.FFPROBE_PATH || "ffprobe", ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name,width,height:format=duration", "-of", "json", inp.file]); let pj = "";
+  probe.stdout.on("data", (d) => (pj += d)); probe.on("error", () => go(null)); probe.on("close", () => { let v = null; try { v = JSON.parse(pj); } catch {} go(v); });
+  function go(v) {
+    const st = v?.streams?.[0] || {}, secs = +v?.format?.duration || 0, copy = F === "mp4" && st.codec_name === "h264" && (!W || (st.width === W && st.height === H));
+    const a = copy ? ["-y", "-i", inp.file, "-map", "0:v:0", "-map", "0:a:0?", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", out] : args;
+    const p = spawn(process.env.FFMPEG_PATH || "ffmpeg", a);
+    p.on("error", (e) => res.status(500).json({ error: "ffmpeg: " + e.message }));
+    p.on("close", (code) => { if (code === 0) noteExport({ ms: Date.now() - t0, secs: Math.round(secs * 10) / 10, fmt: F, w: W || st.width || 0, h: H || st.height || 0, copy });
+      code === 0 ? res.json({ url: (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "") + "/media/" + outName, copy, ms: Date.now() - t0 }) : res.status(500).json({ error: "ffmpeg exited " + code }); });
+  }
 });
 // what a delivered file really is (codec, size, frame rate, duration, audio) — the editor's render check reads it for pro formats
 app.post("/v1/media/probe", requireUser, (req, res) => {

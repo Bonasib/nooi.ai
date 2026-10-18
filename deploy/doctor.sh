@@ -19,6 +19,10 @@ sec "Busiest programs now"
 ps -eo pid,pcpu,pmem,rss,etime,comm --sort=-pcpu 2>/dev/null | head -12
 n="$(pgrep -c ffmpeg 2>/dev/null)"; echo "ffmpeg running: ${n:-0}"
 
+sec "This server's processor (a 3-second video test — nothing is saved)"
+s="$(date +%s.%N)"; if timeout 120 nice -n 10 ffmpeg -v error -f lavfi -i testsrc2=s=720x1280:r=30 -t 3 -c:v libx264 -preset veryfast -f null - 2>/dev/null; then
+  echo "making 3 s of 720×1280 video took $(awk "BEGIN{printf \"%.1f\", $(date +%s.%N)-$s}") s on $(nproc) cores (under 3 s = faster than the video plays; more cores = faster)"; else echo "ffmpeg test: could not run"; fi
+
 sec "The site's services"
 for s in nooi nooi-stage ollama; do
   st="$(systemctl show "$s" -p LoadState --value 2>/dev/null)"; [ "$st" = "loaded" ] || { echo "$s: not installed"; continue; }
@@ -54,6 +58,12 @@ for (const j of day) { const k = (by[kind(j)] = by[kind(j)] || { done: 0, failed
     if (t.words != null) k.words.push(t.words * 1e3); if (t.fetch != null) k.fetch.push(t.fetch * 1e3); } else if (j.status === "failed") k.failed++; else k.other++; }
 console.log("last 24 h (usual time · our part before the engine · the engine · the words step · bringing the result here):");
 for (const [k, v] of Object.entries(by)) console.log(" ", k, "· done", v.done, "· failed", v.failed, "· waiting", v.other, "·", med(v.total), "·", med(v.before), "·", med(v.engine), "·", med(v.words), "·", med(v.fetch));
+// v119: would a bigger server help? The AI engine (its line, making, the lip sync) does not change with this server; preparing
+// videos, the sound, 60/120 fps and joining parts run here
+let eng = 0, own = 0, tot = 0; for (const j of day) { const t = j.times || {}; if (j.status !== "done" || !j.doneAt || !j.sentAt) continue;
+  tot += j.doneAt - j.created + (t.words || 0) * 1e3; eng += Math.max(0, j.doneAt - j.sentAt - ((t.fetch || 0) + (t.after || 0)) * 1e3) + (t.lips || 0) * 1e3; own += ((t.prep || 0) + Math.max(0, (t.after || 0) - (t.lips || 0)) + (t.join || 0)) * 1e3; }
+if (tot) console.log("would a bigger server help? the AI engine own time:", Math.round((eng / tot) * 100) + "%", "· this server own work:", Math.round((own / tot) * 100) + "%", "→",
+  own / tot >= 0.25 ? "yes — more cores make that part faster" : eng / tot >= 0.6 ? "no — the engine time does not change with this server" : "not clear yet");
 // the last Replace the person / Make it move jobs, step by step (seconds): our steps, then the engine line and its making
 const sec = (v) => (v == null ? "—" : Math.round(+v) + " s");
 const mc = jobs.filter((j) => !j.parent && /^mc(26|30|swap)$/.test(j.payload?.model || "") && j.status === "done").sort((a, b) => b.created - a.created).slice(0, 5);
