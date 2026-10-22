@@ -3,7 +3,8 @@
 #    Video intelligence; All tools lists it under Video
 #  · Home's tools: one card per tool in the header's order, no two with the same name, Motion Control · Voice & audio ·
 #    Schedule & publish among them
-#  · Account & plan: Plan · Credits · Brand · Preferences · Sign-in & data, in that order, with the bar of its parts under the
+#  · Account & plan: Plan · Top-up & usage (v123: not "Credits", the name of the page beside it) · Brand · Preferences ·
+#    Sign-in & data, in that order, with the bar of its parts under the
 #    title (English, Arabic); a tap goes to the part and marks it; the moved blocks still work
 #  · Voice & audio: the voice-over first, then the voice library, your voices, design · lip sync · music, the audio lab last;
 #    its bar names its own headings
@@ -41,9 +42,9 @@ async def run(b, W, H, lang, tag):
         order:[ix('[data-act="signout"]'),ix('[data-set="currency"]'),ix('#coupon'),ix('#brandkit'),ix('[data-act="view-landing"]'),ix('[data-act="ui-set"]'),ix('[data-set="routing.mode"]'),ix('[data-act="lai-toggle"]'),ix('[data-act="export-json"]'),ix('#devpanel')],
         panels:V.querySelectorAll('.panel.set').length}}""")
     out[tag]["account"] = a
-    want = {"en": ["Plan", "Credits", "Brand", "Preferences", "Sign-in & data"], "ar": ["الباقة", "الرصيد", "العلامة", "التفضيلات", "الدخول والبيانات"]}[lang]
+    want = {"en": ["Plan", "Top-up & usage", "Brand", "Preferences", "Sign-in & data"], "ar": ["الباقة", "الشحن والاستهلاك", "العلامة", "التفضيلات", "الدخول والبيانات"]}[lang]
     ok(a["bar"] == want and a["afterTitle"], f"{tag}: Account & plan has the bar of its parts under the title {a['bar']}")
-    ok(all(x >= 0 for x in a["order"]) and a["order"] == sorted(a["order"]) and a["panels"] >= 10, f"{tag}: Account & plan in order — Plan · Credits · Brand · Preferences · Sign-in & data, nothing lost {a['order']} {a['panels']}")
+    ok(all(x >= 0 for x in a["order"]) and a["order"] == sorted(a["order"]) and a["panels"] >= 10, f"{tag}: Account & plan in order — Plan · Top-up & usage · Brand · Preferences · Sign-in & data, nothing lost {a['order']} {a['panels']}")
     # a tap goes to the part and marks it; the bar stays in view
     await pg.click('#main .secbar122 [data-sec122="3"]'); await pg.wait_for_timeout(1200)
     g = await E("""()=>{const p=document.querySelector('#main [data-act="ui-set"]').closest('.panel'),bar=document.querySelector('#main .secbar122'),r=p.getBoundingClientRect(),br=bar.getBoundingClientRect();

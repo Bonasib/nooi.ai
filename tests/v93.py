@@ -7,7 +7,8 @@
 #  · nooi Studio: Create video, Cinema Studio and the agents' film are one page — one box with the idea on top and one row of
 #    option chips (each opens its choices inside the box, one at a time); camera, lens, focal length, aperture, light and
 #    ready looks from Cinema Studio are chips there and reach the shot as tested wording (the job keeps the client's words as
-#    its title); Cinema Studio's old door opens it; "Who does what" is gone; the tab row has no duplicates
+#    its title); Cinema Studio's old door opens it; "Who does what" is gone; the tab row has no duplicates (Video from pictures
+#    joined it in v122)
 #  · Editor: icons in headings keep their size (the "giant star"); Infographics take your own picture or logo (move, size,
 #    frame, caption, kept after a reload) and numbers from a CSV file (a chart); exports record as sharp as the device keeps
 #    smooth — the format's own size (1080×1920 for TikTok, not the 608×1080 preview) when a frame draws fast enough, a size in
@@ -119,7 +120,7 @@ async def studio(b):
           chips:[...document.querySelectorAll('.box93 [data-o93]')].map(c=>c.dataset.o93),pk:document.querySelectorAll('.box93 .opt93 .pk84c').length,open:[...document.querySelectorAll('.box93 .sec93')].filter(x=>!x.hidden).length,
           boxes:document.querySelectorAll('#main .box93').length,gen:!!document.querySelector('.box93 [data-act="gen-video"]'),prompt:!!document.querySelector('.box93 #dprompt'),over:document.documentElement.scrollWidth>innerWidth+1})""")
         out.setdefault("studio", {})[w] = r
-        ok(r["view"] == "video" and r["tabs"] == ["video", "motion", "ugcads", "story", "board"], f"{tag}: Cinema Studio opens nooi Studio, the tab row has no duplicates {r['tabs']}")
+        ok(r["view"] == "video" and r["tabs"] == ["video", "motion", "ugcads", "slideshow", "story", "board"] and len(set(r["tabs"])) == len(r["tabs"]), f"{tag}: Cinema Studio opens nooi Studio, the tab row has no duplicates {r['tabs']}")
         ok(r["modes"] == ["video:true", "crew:false"] and r["boxes"] == 1 and r["gen"] and r["prompt"] and not r["over"], f"{tag}: one box with the idea, the options and Generate {r}")
         ok(all(k in r["chips"] for k in ("type", "model", "length", "look", "c_cam", "c_lens", "c_focal", "c_ap", "c_light", "fps", "takes", "sound", "more")) and r["pk"] == 3 and r["open"] == 0, f"{tag}: every option is a chip in the box, all closed {r['chips']}")
         # a chip opens its choices inside the box (one at a time) without redrawing the page
