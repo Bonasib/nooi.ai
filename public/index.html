@@ -14697,6 +14697,18 @@ nooiUiFontCSS=(o=>function(){const fam=v=>'"'+String(v).split(":")[0].replace(/\
 Object.assign(TZ_LANG,{"Asia/Jakarta":"id","Asia/Pontianak":"id","Asia/Makassar":"id","Asia/Jayapura":"id","Asia/Ho_Chi_Minh":"vi","Asia/Saigon":"vi","Europe/Warsaw":"pl","Europe/Kyiv":"uk","Europe/K\u0069ev":"uk","Asia/Dhaka":"bn","Asia/Karachi":"ur"});
 [["id","Setiap cerita layak hadir dalam setiap bahasa."],["vi","Mỗi câu chuyện xứng đáng có mọi ngôn ngữ."],["pl","Każda historia zasługuje na każdy język."],["uk","Кожна історія заслуговує на кожну мову."],["bn","প্রতিটি গল্পই প্রতিটি ভাষার যোগ্য।"],["ur","ہر کہانی ہر زبان کی حق دار ہے۔"]].forEach(x=>{if(!LP_SUBS.some(y=>y[0]===x[0]))LP_SUBS.push(x)});
 
+/* ================= v129: THE TEXT AI LOOK ON CLAUDE ================= */
+// Admin → Speed: who looks at the photo and the video before Replace the person / Make it move — Claude Haiku 5.5 (a few
+// seconds; the site's own text AI kept hitting its 15 s limit) or the site's text AI — with what it cost this week.
+speed109=(o=>function(){let h=o();const d=SP109.d,k=d&&d.look;if(!k)return h;
+  const w=k.week||{},row='<div class="sw112 lk129"><span class="small">'+L("Text AI look (Replace the person · Make it move)","نظرة الذكاء النصي (استبدال الشخص · حرّكها)")+(w.looks?" · "+L("7 days: ","٧ أيام: ")+"<b>"+w.looks+"</b>"+L(" looks · about "," نظرة · نحو ")+"<b>"+(w.avgSec==null?"—":w.avgSec+L(" s"," ث"))+"</b>"+L(" each · "," لكل نظرة · ")+"<b>$"+(+w.usd||0).toFixed(3)+"</b>":" · "+L("about $0.002 a swap","نحو $0.002 لكل استبدال"))+(w.fails?" · "+L("no answer ","بلا إجابة ")+"<b>"+w.fails+"</b>":"")+"</span>"+
+    '<div class="sw112b">'+[["claude",L("Claude Haiku 5.5 · fast","Claude Haiku 5.5 · سريع")],["chain",L("The site's text AI","الذكاء النصي للموقع")]].map(([v,t])=>{const off=v==="claude"&&!k.ready;return'<button class="btn sm'+(k.by===v?" on":"")+'" data-act="lk129" data-by="'+v+'" aria-pressed="'+(k.by===v)+'"'+(off?' disabled title="'+esc(L("Add the Claude key in Admin → AI providers first","أضف مفتاح Claude من الإدارة ← مزودو الذكاء أولاً"))+'"':"")+">"+t+"</button>"}).join("")+"</div></div>";
+  return h.replace(/(<\/div>)\s*$/,row+"$1")})(speed109);
+document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest('[data-act="lk129"]');if(!b||b.disabled)return;b.disabled=true;
+  try{await API.req("/v1/admin/speed/look",{method:"POST",json:{by:b.dataset.by}});toast(b.dataset.by==="claude"?L("Claude now does the text AI look","صار Claude يتولّى نظرة الذكاء النصي"):L("The site's text AI does the look","الذكاء النصي للموقع يتولّى النظرة"),{type:"ok"});SP109.d=null;speed109load()}
+  catch(err){toast(L(String(err.message||err),err.errorAr||String(err.message||err)));b.disabled=false}});
+(()=>{const st=document.createElement("style");st.textContent=`#main .lk129 b{color:var(--text)}`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
