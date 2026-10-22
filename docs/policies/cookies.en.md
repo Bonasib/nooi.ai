@@ -1,14 +1,14 @@
 # Cookie Policy
 
-_nooi.ai · Last updated: 2026-09-26_
+_nooi.ai · Last updated: 2026-10-22_
 
 ## What we use
 
-Essential cookies and browser storage keep you signed in and remember your language, theme, projects and uploads saved on your device.
+Only what the site needs to work: staying signed in, your language, theme and projects kept in your browser's storage, and finished pictures, sounds and 3D files kept on your device so they open instantly (clear them in Account & plan → This device).
 
-## Analytics
+## Analytics and ads
 
-Analytics cookies are used only if you agree. We do not use third-party advertising cookies.
+We don't use analytics, advertising or tracking cookies. If that ever changes, we will ask for your consent first. When you sign in or pay, the sign-in or payment provider's own page may set cookies it needs for security and to prevent fraud.
 
 ## Your choice
 

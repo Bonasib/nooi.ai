@@ -55,7 +55,8 @@ import { registerWorld } from "./lib/world.js";
 import { registerIngest } from "./lib/ingest.js";
 import { nvReady, nvCfg, nvOn } from "./providers/nvidia.js";
 import { cbSig, findJob, pollOne, speedAdvice, setSwapRes, setSwapEngine, setLipsEngine } from "./lib/jobs.js";
-import { setPace } from "./lib/line124.js";   // v124: the engine's send line
+import { setPace } from "./lib/line124.js";
+import { deleteAccount, noteUpload } from "./lib/account125.js";   // v125: Delete my account   // v124: the engine's send line
 import { fastFiles, warm } from "./lib/static124.js";   // v124: the page compressed once, kept in memory
 import { registerGifts } from "./lib/gifts.js";
 import { registerInvoices } from "./lib/invoices.js";
@@ -106,7 +107,7 @@ vendor("/vendor/three/build", THREE_R128 + "/build"); vendor("/vendor/three/exam
 app.get("/vendor/rapier/rapier.mjs", (_, res) => res.redirect(302, VENDOR.rapier + "/rapier.mjs"));
 app.use("/vendor/ort", express.static(ORT_DIR, { maxAge: "30d", immutable: true, setHeaders: vendorHeaders }));
 if (process.env.MODELS_DIR) app.use("/models", express.static(path.resolve(process.env.MODELS_DIR), { maxAge: "30d" }));
-const wrap = (fn) => (req, res) => fn(req, res).catch((e) => res.status(e.code && e.code >= 400 && e.code < 600 ? e.code : 500).json({ error: e.message }));
+const wrap = (fn) => (req, res) => fn(req, res).catch((e) => res.status(e.code && e.code >= 400 && e.code < 600 ? e.code : 500).json({ error: e.message, ...(e.errorAr ? { errorAr: e.errorAr } : {}) }));   // (v125: and in Arabic when the reason has it)
 
 app.get("/v1/health", (_, res) => res.json({ ok: true }));
 app.get("/v1/config", (_, res) => res.json({
@@ -118,7 +119,9 @@ app.get("/v1/config", (_, res) => res.json({
 
 // Uploads (start frames, references, exports, music…)
 const upload = multer({ storage: multer.diskStorage({ destination: MEDIA_DIR, filename: (_, f, cb) => cb(null, uid() + (path.extname(f.originalname) || ".bin").toLowerCase()) }), limits: { fileSize: 1024 * 1024 * 1024 } });
-app.post("/v1/uploads", requireUser, upload.single("file"), (req, res) => res.json({ url: publicUrl(req.file.filename) }));
+app.post("/v1/uploads", requireUser, upload.single("file"), (req, res) => { noteUpload(req.user.uid, req.file.filename); res.json({ url: publicUrl(req.file.filename) }); });   // (v125: noted on the account, so Delete my account removes it)
+// v125: Delete my account — the customer, by themselves, with a typed confirmation (lib/account125.js)
+app.post("/v1/me/delete", requireUser, wrap(async (req, res) => { if (req.user.viaToken) throw Object.assign(new Error("An account can only be deleted from the site, not through a connection."), { code: 403, errorAr: "لا يُحذف الحساب إلا من الموقع، لا عبر اتصال." }); res.json({ ok: true, ...(await deleteAccount(req.user.uid, req.body?.confirm)) }); }));
 
 // Generation jobs → provider adapters
 app.post("/v1/jobs", requireUser, wrap(async (req, res) => res.json(publicJob(await createJob(req.user, req.body), isStaff(req.user)))));
