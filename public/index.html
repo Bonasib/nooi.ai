@@ -14632,6 +14632,48 @@ document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.c
 #main .sf126 .sf126c b{color:var(--text)}
 `;document.head.appendChild(st)})();
 
+/* ================= v127: MADE WITH AI — LABELS ================= */
+// What the AI makes says so (lib/label127.js): every picture and video carries content credentials (C2PA) inside the file, and a
+// visible "Made with AI" mark — always on Replace the person; on everything else when the customer switches it on here
+// (Account → Preferences → AI label). The owner's card (Admin → Features) switches the credentials and can add a certificate
+// from a C2PA-trusted provider (until then readers show "unknown signer").
+const AIM127={on:null,busy:false};
+async function aim127load(){if(AIM127.busy||API.mode!=="server"||!S.user)return;AIM127.busy=true;try{AIM127.on=!!(await API.req("/v1/me/aimark")).on}catch(e){AIM127.on=false}finally{AIM127.busy=false;if(S.view==="account")renderView()}}
+function aim127(){if(!S.user)return"";if(AIM127.on==null&&!AIM127.busy)aim127load();const on=!!AIM127.on;
+  return'<div class="panel set aim127" id="aim127"><h2>'+ic("spark","width:18px;vertical-align:-3px")+" "+L("AI label","علامة الذكاء الاصطناعي")+"</h2>"+
+    '<p class="small">'+L("Every picture and video made here carries content credentials inside the file — apps and sites can read that it was made with AI.","كل صورة وفيديو يُصنع هنا يحمل بيانات اعتماد المحتوى داخل الملف — تقرأ التطبيقات والمواقع منها أنه صُنع بالذكاء الاصطناعي.")+"</p>"+
+    toggleRow(on,"aim127","on",L("Show a “Made with AI” mark","أظهر علامة «صُنع بالذكاء الاصطناعي»"),L("A small mark in the corner of my pictures and videos. Replace the person always has it.","علامة صغيرة في زاوية صوري وفيديوهاتي. استبدال الشخص يحملها دائماً."))+
+    '<img class="aim127i" src="brand/ai-mark127.png" alt="'+esc(L("Made with AI","صُنع بالذكاء الاصطناعي"))+'" width="190" height="58" loading="lazy"></div>'}
+VIEWS.account=(o=>function(){const h=o.apply(this,arguments);return S.user?h.replace(/(<\/div>\s*)$/,aim127()+"$1"):h})(VIEWS.account);
+PARTS122.account=(o=>V=>{const g=o(V),d=V.querySelector(":scope>#aim127"),pr=g.find(x=>x[0]==="prefs");if(d&&pr)pr[3].push(d);return g})(PARTS122.account);
+document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest('[data-act="aim127"]');if(!b||b.disabled)return;e.preventDefault();
+  if(API.mode!=="server"){toast(L("It works on your server.","يعمل على خادمك."));return}b.disabled=true;
+  try{AIM127.on=!!(await API.req("/v1/me/aimark",{json:{on:!AIM127.on}})).on;toast(AIM127.on?L("Your pictures and videos will carry the “Made with AI” mark","ستحمل صورك وفيديوهاتك علامة «صُنع بالذكاء الاصطناعي»"):L("The mark is off — Replace the person still has it","العلامة متوقفة — استبدال الشخص ما زال يحملها"),{type:"ok"});renderView()}
+  catch(err){toast(L(String(err.message||err),err.errorAr||String(err.message||err)));b.disabled=false}});
+// the owner's card: Admin → Features
+const LB127={d:null,busy:false,err:""};
+async function lb127load(){if(LB127.busy||API.mode!=="server")return;LB127.busy=true;LB127.err="";try{LB127.d=await API.req("/v1/admin/labels")}catch(e){LB127.err=String(e.message||e)}finally{LB127.busy=false;if(S.view==="admin")renderView()}}
+function lb127(){if(API.mode==="server"&&!LB127.d&&!LB127.busy&&!LB127.err)lb127load();const d=LB127.d;
+  let h='<div class="panel pad lb127" id="lb127" style="margin-top:14px"><h3 style="margin:0 0 6px;display:flex;gap:8px;align-items:center">'+ic("spark")+L("AI labels","علامات الذكاء الاصطناعي")+"</h3>"+
+    '<p class="small" style="margin:0 0 8px">'+L("Pictures and videos made here — and videos exported from the editor — carry content credentials (C2PA) that say they were made with AI. Replace the person always shows a visible “Made with AI” mark; customers can turn the mark on for everything in Account → Preferences. Free — nothing is sent anywhere.","الصور والفيديوهات المصنوعة هنا — والفيديوهات المصدّرة من المحرّر — تحمل بيانات اعتماد المحتوى (C2PA) التي تقول إنها صُنعت بالذكاء الاصطناعي. استبدال الشخص يُظهر دائماً علامة «صُنع بالذكاء الاصطناعي»، ويمكن للعملاء تشغيل العلامة لكل شيء من الحساب ← التفضيلات. مجاني — لا يُرسل شيء لأي جهة.")+"</p>";
+  if(API.mode!=="server")return h+'<p class="small mute">'+L("It works on your server.","يعمل على خادمك.")+"</p></div>";
+  if(!d)return h+'<p class="small mute">'+(LB127.err?esc(LB127.err):L("Checking…","جارٍ الفحص…"))+"</p></div>";
+  h+='<div class="sw112"><span class="small">'+L("Content credentials","بيانات اعتماد المحتوى")+'</span><div class="sw112b">'+[[true,L("On","تشغيل")],[false,L("Off","إيقاف")]].map(([v,t])=>'<button class="btn sm'+(d.credentials===v?" on":"")+'" data-act="lb127" data-on="'+v+'" aria-pressed="'+(d.credentials===v)+'">'+t+"</button>").join("")+"</div></div>";
+  h+='<p class="small lb127s">'+(d.ready?(d.own?L("Signed by nooi's own certificate — readers show “unknown signer” until you add one from a C2PA-trusted provider.","موقّعة بشهادة nooi الخاصة — تُظهر القارئات «موقّع غير معروف» حتى تضيف شهادة من مزوّد موثوق لدى C2PA."):L("Signed by your certificate: ","موقّعة بشهادتك: ")+'<b dir="ltr">'+esc(d.signer||"")+"</b>")+(d.until?" · "+L("valid until ","صالحة حتى ")+esc(new Date(d.until).toLocaleDateString(S.lang==="ar"?"ar":undefined)):""):esc(d.error||L("Not ready","غير جاهز")))+"</p>";
+  h+='<details class="lb127c"><summary class="small">'+L("Use your own certificate","استخدم شهادتك")+'</summary><label class="lbl" for="lb127c">'+L("Certificate chain (PEM)","سلسلة الشهادات (PEM)")+'</label><textarea id="lb127c" dir="ltr" rows="3" spellcheck="false" placeholder="PEM"></textarea><label class="lbl" for="lb127k">'+L("Private key (PKCS#8 PEM)","المفتاح الخاص (PKCS#8 PEM)")+'</label><textarea id="lb127k" dir="ltr" rows="3" spellcheck="false" placeholder="PKCS#8 PEM"></textarea>'+
+    '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn sm primary" data-act="lb127s">'+L("Save certificate","احفظ الشهادة")+"</button>"+(d.own?"":'<button class="btn sm" data-act="lb127r">'+L("Back to nooi's own","عُد إلى شهادة nooi")+"</button>")+"</div></details>";
+  return h+"</div>"}
+VIEWS.admin=(o=>function(){const h=o.apply(this,arguments);return S.admTab==="features"?h.replace(/<\/div>\s*$/,lb127()+"</div>"):h})(VIEWS.admin);
+document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest('[data-act="lb127"],[data-act="lb127s"],[data-act="lb127r"]');if(!b||b.disabled)return;e.preventDefault();b.disabled=true;
+  const a=b.dataset.act,body=a==="lb127"?{credentials:b.dataset.on==="true"}:a==="lb127r"?{reset:true}:{cert:($("#lb127c")||{}).value||"",key:($("#lb127k")||{}).value||""};
+  try{LB127.d=await API.req("/v1/admin/labels",{method:"POST",json:body});toast(a==="lb127"?(body.credentials?L("Content credentials are on","بيانات اعتماد المحتوى تعمل"):L("Content credentials are off","بيانات اعتماد المحتوى متوقفة")):L("Saved","حُفظ"),{type:"ok"});renderView()}
+  catch(err){toast(L(String(err.message||err),err.errorAr||String(err.message||err)));b.disabled=false}});
+(()=>{const st=document.createElement("style");st.textContent=`
+#main .aim127 .aim127i{display:block;width:190px;height:auto;margin-top:10px;border-radius:12px;background:var(--bg2,#222)}
+#main .lb127 textarea{width:100%;font:12px/1.4 ui-monospace,monospace}
+#main .lb127 .lb127s b{color:var(--text)}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

@@ -57,6 +57,7 @@ import { nvReady, nvCfg, nvOn } from "./providers/nvidia.js";
 import { cbSig, findJob, pollOne, speedAdvice, setSwapRes, setSwapEngine, setLipsEngine } from "./lib/jobs.js";
 import { setPace } from "./lib/line124.js";
 import { safetyInfo, setSafety } from "./lib/safety126.js";
+import { labelInfo, setLabels, setAiMark, labelExport } from "./lib/label127.js";
 import { deleteAccount, noteUpload } from "./lib/account125.js";   // v125: Delete my account   // v124: the engine's send line
 import { fastFiles, warm } from "./lib/static124.js";   // v124: the page compressed once, kept in memory
 import { registerGifts } from "./lib/gifts.js";
@@ -235,6 +236,10 @@ app.post("/v1/admin/speed/pace", requireUser, requireAdmin("providers.manage"), 
 app.post("/v1/admin/speed/lipsengine", requireUser, requireAdmin("providers.manage"), (req, res) => { try { res.json({ lipsEngine: setLipsEngine(String(req.body?.engine || "").toLowerCase()) }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v117: Volcengine / Sync Lipsync 2 Pro
 app.get("/v1/admin/safety", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); res.json(safetyInfo()); });   // v126: the content check (every language, pictures)
 app.post("/v1/admin/safety", requireUser, requireAdmin("features.manage"), (req, res) => { try { setSafety(req.body || {}); res.json(safetyInfo()); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });
+app.get("/v1/admin/labels", requireUser, async (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); res.json(await labelInfo()); });   // v127: content credentials
+app.post("/v1/admin/labels", requireUser, requireAdmin("features.manage"), async (req, res) => { try { res.json(await setLabels(req.body || {})); } catch (e) { res.status(e.code || 500).json({ error: e.message, errorAr: e.errorAr }); } });
+app.get("/v1/me/aimark", requireUser, (req, res) => res.json({ on: user(req.user.uid).aiMark127 === true }));   // v127: the customer's own "Made with AI" mark
+app.post("/v1/me/aimark", requireUser, (req, res) => res.json(setAiMark(req.user.uid, req.body?.on)));
 app.get("/v1/admin/pricing", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); res.json({ rows: pricingRows(), factor: priceFactor(), floor: CREDIT_FLOOR_USD }); });
 app.put("/v1/admin/pricing", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" });
   const st = platform(), b = req.body || {}; st.costs = st.costs || {};
@@ -284,7 +289,9 @@ app.post("/v1/media/transcode", requireUser, express.raw({ type: ["video/webm", 
     const p = spawn(process.env.FFMPEG_PATH || "ffmpeg", a);
     p.on("error", (e) => res.status(500).json({ error: "ffmpeg: " + e.message }));
     p.on("close", (code) => { if (code === 0) noteExport({ ms: Date.now() - t0, secs: Math.round(secs * 10) / 10, fmt: F, w: W || st.width || 0, h: H || st.height || 0, copy });
-      code === 0 ? res.json({ url: (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "") + "/media/" + outName, copy, ms: Date.now() - t0 }) : res.status(500).json({ error: "ffmpeg exited " + code }); });
+      if (code !== 0) return res.status(500).json({ error: "ffmpeg exited " + code });
+      // v127: an MP4 / MOV export carries content credentials ("edited on nooi.ai, may contain media made with AI")
+      labelExport(out).then((cr) => res.json({ url: (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "") + "/media/" + outName, copy, ms: Date.now() - t0, credentials: cr === "signed" })); });
   }
 });
 // what a delivered file really is (codec, size, frame rate, duration, audio) — the editor's render check reads it for pro formats
