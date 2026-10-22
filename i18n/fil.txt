@@ -95,7 +95,7 @@
 095|Kanino ang mga ginagawa ko?
 096|Sa iyo. Iyo ang mga video mo, pati sa komersyal na paggamit.
 097|Anong mga wika ang suportado?
-098|Subtitle at dubbing sa 35 wika na may mga rehiyonal na diyalekto — Saudi, Egyptian, Kuwaiti, Tunisian, British, Australian, Scottish at marami pa. Ang interface mismo ay nasa 26 na wika.
+098|Subtitle at dubbing sa 35 wika na may mga rehiyonal na diyalekto — Saudi, Egyptian, Kuwaiti, Tunisian, British, Australian, Scottish at marami pa. Ang interface mismo ay nasa 32 na wika.
 099|Paano nananatiling pare-pareho ang Kuwentong may Kabanata?
 100|Bawat kabanata ay nagsisimula sa huling frame ng nauna, at naka-lock ang pagkakakilanlan ng iyong karakter sa bawat shot.
 101|Puwede ba itong mag-post para sa akin?

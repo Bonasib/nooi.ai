@@ -1,0 +1,380 @@
+# review: machine translation (v128) — waiting for a native Vietnamese speaker's review
+001|Chuyển sang chế độ tối
+002|Chế độ tối
+003|Thả để thêm
+004|Ảnh, video, âm thanh và phông chữ tự động được đưa vào đúng công cụ.
+005|Xem trước
+006|Một con sói đơn độc băng qua hồ băng lúc trăng lên, hơi thở bốc khói.
+007|Một đứa trẻ thả quả bóng bay đỏ trên quảng trường chợ vào giờ vàng.
+008|Xưởng sửa chữa robot ở Osaka, ánh neon phản chiếu trong vũng nước, dolly chậm.
+009|Một chiếc thuyền buồm nhỏ trôi qua những con sóng phát quang lúc nửa đêm.
+010|Người chạy bộ một mình băng qua đồi cát lúc bình minh, cảnh tracking chậm.
+011|Thợ lặn lặn xuống dọc vách san hô, những tia nắng xuyên qua làn nước xanh.
+012|Chân thực
+013|Một cô gái trẻ giơ chai dưỡng da lên trước camera điện thoại trong phòng tắm sáng sủa, nói chuyện hào hứng, khung hình selfie tự nhiên, ánh sáng ban ngày dịu nhẹ.
+014|Cận cảnh đôi tay mở hộp quà đen nhám trên bàn gỗ, người đó thốt lên và lấy ra tai nghe không dây, phong cách camera điện thoại.
+015|Một con chim ưng cất cánh từ bàn tay đeo găng trên sa mạc lúc mặt trời mọc, chuyển động chậm.
+016|Người gác già thắp ngọn đèn lớn khi cơn bão kéo đến, hạt film 35mm.
+017|Mưa trong con hẻm neon, phản chiếu gợn sóng trên vũng nước, dolly chậm.
+018|Một chiếc thuyền buồm trôi qua những con sóng phát sáng lúc nửa đêm.
+019|Trưng bày
+020|Chapter Story
+021|Công cụ
+022|Ngôn ngữ
+023|Bảng giá
+024|Ngôn ngữ
+025|Đăng nhập
+026|Bắt đầu sáng tạo
+027|Chapter Story 1.0 — nay đã có bản beta công khai
+028|Đạo diễn
+029|trí tưởng tượng của bạn.
+030|nooi.ai biến câu chuyện thành phim. Viết một cảnh, nhận một clip — rồi thêm phụ đề, lồng tiếng sang 35 ngôn ngữ và đăng ở mọi nơi.
+031|Nhiều chương. Khóa nhân vật. Liền mạch.
+032|BIÊN SOẠN · TRỰC TIẾP
+033|Bắt đầu miễn phí
+034|Xem trưng bày
+035|TỪ PHẦN TRƯNG BÀY
+036|Được làm bằng nooi.ai.
+037|Mọi prompt đều được hiển thị.
+038|Bản xem trước phát ở đây cho đến lần render đầu tiên của bạn — sau đó video AI của chính bạn sẽ thay thế.
+039|TÍNH NĂNG NỔI BẬT
+040|Chapter Story.
+041|Định dạng dài, cuối cùng cũng có.
+042|Viết câu chuyện một lần. Mỗi chương bắt đầu từ khung hình cuối của chương trước. Nhân vật giữ nguyên khuôn mặt. Thế giới giữ nguyên thời tiết.
+043|Tối đa 20 chương
+044|Khóa nhân vật
+045|Storyboard & animatic
+046|AI viết chương tiếp theo
+047|CH
+048|BỘ CÔNG CỤ
+049|Mọi thứ từ ý tưởng đến khi đăng.
+050|Video
+051|Văn bản hoặc ảnh thành video với điều khiển camera và keyframe.
+052|Hình ảnh
+053|Nhiều ảnh cho mỗi prompt, chọn ảnh đẹp nhất.
+054|Nhân vật
+055|Nhân vật có tuổi, giọng nói và nhiều diện mạo.
+056|Phim nhiều chương tiếp nối từ khung hình cuối.
+057|Storyboard
+058|Khung hình, lời thoại, âm thanh và chuyển cảnh trên một canvas.
+059|Trình chỉnh sửa video
+060|Cắt, hiệu ứng, chữ và chỉnh khung hình bằng prompt.
+061|Hiệu ứng hình ảnh
+062|Tách nền, chỉnh màu và motion capture.
+063|Phụ đề & lồng tiếng
+064|Chép lời, dịch và lồng tiếng sang 30 ngôn ngữ, từng dòng một.
+065|Giọng nói & âm thanh
+066|Giọng theo phương ngữ và độ tuổi, khớp môi, nhạc và hiệu ứng âm thanh.
+067|Nâng cấp
+068|Nâng lên 4K, 120 fps, kéo dài, đổi khung, phụ đề, lồng tiếng.
+069|Phòng thử hook
+070|Những đoạn mở đầu khiến người xem dừng lướt và xem đến cuối.
+071|Lên lịch & đăng
+072|Lên lịch và đăng lên mọi nền tảng.
+073|PHỤ ĐỀ & LỒNG TIẾNG
+074|Nói với cả thế giới.
+075|35 ngôn ngữ cùng các phương ngữ vùng miền. Chỉnh từng dòng theo từng khung hình, rồi lồng tiếng bằng giọng gốc và khẩu hình khớp.
+076|ngôn ngữ cho phụ đề & lồng tiếng
+077|phương ngữ vùng miền
+078|kích thước nền tảng, sẵn sàng xuất
+079|ngôn ngữ giao diện
+080|BẢNG GIÁ
+081|Bắt đầu miễn phí.
+082|Trả tiền cho những gì bạn render.
+083|Miễn phí
+084|th
+085|480p · clip 5 giây
+086|2 nhân vật
+087|Bắt đầu
+088|Creator
+089|1080p · clip 10 giây
+090|Phụ đề 35 ngôn ngữ
+091|Studio
+092|4K · Chapter Story · storyboard
+093|Lồng tiếng, lên lịch, API
+094|Câu trả lời thẳng thắn.
+095|Ai sở hữu những gì tôi tạo ra?
+096|Bạn. Video của bạn thuộc về bạn để dùng cho mục đích thương mại.
+097|Hỗ trợ những ngôn ngữ nào?
+098|Phụ đề và lồng tiếng 35 ngôn ngữ cùng phương ngữ vùng miền — Ả Rập Xê Út, Ai Cập, Kuwait, Tunisia, Anh, Úc, Scotland và nhiều nữa. Bản thân giao diện có 32 ngôn ngữ.
+099|Chapter Story giữ tính nhất quán bằng cách nào?
+100|Mỗi chương bắt đầu từ khung hình cuối của chương trước, và danh tính nhân vật của bạn được khóa trong mọi cảnh quay.
+101|Nó có thể đăng bài giúp tôi không?
+102|Có — kết nối tài khoản, lên lịch, và bài đăng sẽ được đăng vào thời điểm đã chọn.
+103|Câu chuyện của bạn chỉ cách một prompt.
+104|Làm phim thôi.
+105|Bắt đầu miễn phí · 100 tín dụng
+106|ĐẠO DIỄN TRÍ TƯỞNG TƯỢNG CỦA BẠN
+107|Điều khoản dịch vụ
+108|Chính sách quyền riêng tư
+109|Chính sách thanh toán & hoàn tiền
+110|Chính sách sử dụng được chấp nhận
+111|Bản quyền & gỡ bỏ
+112|Chính sách cookie
+113|Liên hệ
+114|Tên pháp lý của công ty
+115|Số CR
+116|Mã số VAT
+117|Địa chỉ đăng ký
+118|Thành phố
+119|Quốc gia
+120|điện thoại
+121|Đăng nhập quản trị
+122|Nâng cấp khi bạn sẵn sàng.
+123|Hàng tháng
+124|Hàng năm · −20%
+125|Basic
+126|Dành cho người mới bắt đầu sáng tạo
+127|Thanh toán hàng tháng
+128|tín dụng / tháng
+129|giây
+130|Tiêu chuẩn
+131|Tất cả · gồm Kling 4.0
+132|1 giọng
+133|Tạo song song
+134|Độ dài video tối đa
+135|Độ phân giải
+136|Tốc độ khung hình
+137|Mô hình video
+138|Nhân bản giọng nói
+139|Phổ biến nhất
+140|Pro
+141|Dành cho nhà sáng tạo & thương hiệu chuyên nghiệp
+142|giọng
+143|Dành cho studio, agency & nhóm
+144|API & MCP (Claude, ChatGPT, Qwen)
+145|Gói miễn phí:
+146|tín dụng để thử mọi công cụ · 480p · 5 giây · có watermark
+147|So sánh mọi tính năng
+148|Tín dụng hàng tháng
+149|≈ ảnh / tháng
+150|≈ video 5 giây / tháng
+151|Không giới hạn
+152|Chapter Story (chương)
+153|Phụ đề
+154|Phòng âm thanh · phác họa trực tiếp · sách tô màu
+155|Không có watermark nooi.ai
+156|Tài khoản mạng xã hội để lên lịch
+157|Bộ nhận diện thương hiệu & logo
+158|Giấy phép thương mại
+159|Cá nhân
+160|Hỗ trợ
+161|Trung tâm trợ giúp
+162|Email
+163|Ưu tiên
+164|Ưu tiên + hướng dẫn ban đầu
+165|Mô hình ảnh
+166|Mọi mô hình ảnh
+167|Giọng ElevenLabs
+168|Tất cả · gồm Eleven v3
+169|Ocean
+170|Mô hình video hàng đầu
+171|Neon
+172|Gold
+173|Giọng AI · ElevenLabs
+174|+ nhân bản giọng nói chuyên nghiệp
+175|ngôn ngữ cho phụ đề, lồng tiếng & giọng nói
+176|ĐOÀN LÀM PHIM AI CỦA BẠN
+177|Chín chuyên gia.
+178|Một bộ phim.
+179|Mỗi dự án được một đoàn tác tử AI đảm nhận — từ dòng kịch bản đầu tiên đến bước kiểm tra chất lượng cuối cùng.
+180|Biến ý tưởng của bạn thành kịch bản: cảnh, lời thoại và lời dẫn.
+181|Thiết kế nhân vật nhất quán: khuôn mặt, trang phục và giọng nói.
+182|Lên kế hoạch từng cảnh quay: khung hình, nhịp độ và chuyển động camera.
+183|Định hình diện mạo mỗi cảnh: ánh sáng, màu sắc và ống kính.
+184|Thêm giọng nói, nhạc và hiệu ứng âm thanh khớp nhịp.
+185|Ghép các cảnh quay với chuyển cảnh và căn thời gian.
+186|Giữ mỗi dự án trong ngân sách và giới hạn gói của bạn.
+187|Kiểm tra mọi thứ trước khi giao và gửi lại những gì cần sửa.
+188|Đoàn AI
+189|Đăng nhập vào nooi.ai
+190|Tạo phim, nhân vật và câu chuyện bằng ngôn ngữ của bạn.
+191|Tiếp tục với Google
+192|Tiếp tục với Apple (iCloud)
+193|hoặc bằng email
+194|Gửi liên kết đăng nhập
+195|hoặc bằng điện thoại
+196|Mã quốc gia
+197|Số điện thoại
+198|Gửi mã SMS
+199|Đạo diễn trí tưởng tượng của bạn.
+200|Mỗi prompt là một bộ phim.
+201|Khi tiếp tục, bạn đồng ý với Điều khoản và Chính sách quyền riêng tư.
+202|Trang chủ
+203|Tạo
+204|Quảng cáo UGC
+205|Vẽ & tạo
+206|Phác họa trực tiếp
+207|Thế giới 3D
+208|Sách tô màu
+209|Câu chuyện
+210|Đoàn làm phim
+211|Chỉnh sửa
+212|Đăng
+213|Kế hoạch nội dung
+214|Thư viện
+215|Thư viện của tôi
+216|Mẫu
+217|Cài đặt
+218|Tài khoản & gói
+219|Tín dụng & giao dịch
+220|Kết nối & API
+221|Tích hợp · MCP
+222|Pháp lý & thanh toán
+223|Trợ giúp & hỗ trợ
+224|Quản trị
+225|Bảng điều khiển quản trị
+226|Tín dụng
+227|Gói Studio
+228|Điện thoại
+229|Tìm kiếm…
+230|Cả đoàn sẽ làm nó
+231|Trên không
+232|HOÀN TẤT
+233|Hoàn tất
+234|Đang khử nhiễu
+235|Dolly vào
+236|Đang mã hóa prompt
+237|Đang mã hóa video
+238|Thất bại
+239|Đang tải WAN 3.0
+240|Chưa render
+241|Đã đăng
+242|Đang chờ
+243|SẴN SÀNG
+244|ĐANG RENDER ·
+245|Máy chủ render
+246|Đang render
+247|Chạy trong trình duyệt của bạn
+248|Đã lên lịch
+249|Theo dõi
+250|MỚI
+251|Tài khoản
+252|Tìm kiếm
+253|Chào mừng trở lại,
+254|Tiếp tục câu chuyện, bắt đầu từ một mẫu, hoặc mô tả một cảnh quay mới.
+255|Tín dụng còn lại
+256|Lượt render
+257|Chương đã render
+258|Mô tả một cảnh quay — “một con chim ưng cất cánh trên sa mạc lúc mặt trời mọc”
+259|Prompt
+260|Tạo
+261|Câu chuyện của bạn
+262|chương
+263|khung storyboard
+264|Tiếp tục chương tiếp theo
+265|Bắt đầu từ một mẫu
+266|Tất cả mẫu
+267|Đánh giá dưỡng da · selfie
+268|UGC
+269|Cầm tay
+270|Phản ứng mở hộp
+271|Nhịp trailer hành động
+272|Trailer
+273|Điện ảnh
+274|Crash zoom
+275|Mở đầu anime
+276|Phim ngắn / câu chuyện
+277|Anime
+278|Cần cẩu lên
+279|Phân tích website của bạn và nhận kế hoạch nội dung sẵn sàng.
+280|Gần đây
+281|Chưa có gì. Mô tả một cảnh quay ở trên để tạo clip đầu tiên.
+282|Câu chuyện mới
+283|Bản chỉnh sửa mới
+284|Mô hình AI
+285|Thông minh
+286|tốt nhất cho prompt của bạn
+287|Giây
+288|Tốc độ khung hình (Hz)
+289|Tỉ lệ
+290|cảnh quay đơn giản
+291|Bạn muốn tạo gì?
+292|Tác vụ
+293|Chọn thông minh
+294|Video nội dung
+295|Quảng cáo sản phẩm
+296|Hình ảnh & thiết kế
+297|Tạo giọng nói
+298|Âm nhạc
+299|Nhân vật
+300|Cả bộ phim (đoàn)
+301|Trang tô màu
+302|Hook
+303|Ý tưởng
+304|Một con chim ưng bay lượn trên những đồi cát vàng lúc hoàng hôn
+305|Cảnh
+306|cảnh rộng chậm, rồi cận cảnh đôi mắt
+307|Giọng nói
+308|“Tự do bắt đầu từ bầu trời” — người dẫn chuyện giọng nam trầm
+309|Âm thanh
+310|gió nhẹ + nhạc oud êm dịu
+311|Phong cách
+312|điện ảnh, tông màu ấm
+313|Dùng cấu trúc này
+314|Mỗi phần một dòng — các tác tử đọc từng phần.
+315|Mô hình video
+316|Khung đầu & khung cuối
+317|Khung đầu
+318|Tải lên
+319|Khung cuối
+320|Số giây từ khung đầu đến khung cuối
+321|Cả hai khung đều không bắt buộc — dùng một khung để bắt đầu hoặc kết thúc đúng một hình ảnh.
+322|Gói của bạn: tối đa
+323|giây · Pro 20 giây · Studio 30 giây
+324|Đoàn AI của bạn
+325|Trực tuyến
+326|Suy giảm
+327|Bảo trì
+328|Chưa kết nối
+329|Ngoại tuyến
+330|Demo
+331|Tất cả mô hình
+332|Điều khoản
+333|Quyền riêng tư
+334|Nói thay vì gõ
+335|Khán giả
+336|Chi tiết
+337|Nhạc cụ
+338|Độ dài
+339|Diện mạo
+340|Tâm trạng
+341|Ưu đãi
+342|Hình ảnh
+343|Sản phẩm
+344|Chủ thể
+345|Văn bản
+346|Giọng điệu
+347|Chủ đề
+348|Ai
+349|Nhấn vào liên kết trong email để hoàn tất đăng nhập. Không thấy? Hãy kiểm tra thư mục Spam.
+350|Liên kết đăng nhập này đã hết hạn hoặc đã được dùng. Hãy gửi liên kết mới.
+351|Liên kết này đã được gửi đến một địa chỉ email khác.
+352|Tên hiển thị
+353|Gửi mã
+354|Nhập mã của bạn
+355|Chúng tôi đã gửi mã 6 chữ số đến
+356|Mã hết hạn sau 10 phút.
+357|Xác minh và đăng nhập
+358|Gửi lại mã
+359|Dùng cách khác
+360|Sai mã. Hãy thử lại.
+361|Mã này đã hết hạn. Hãy gửi mã mới.
+362|Quá nhiều lần thử. Hãy gửi mã mới.
+363|Nhập mã 6 chữ số.
+364|Mã mới đang được gửi.
+365|Kiểm tra hộp thư đến
+366|Chúng tôi đã gửi liên kết đăng nhập đến
+367|AI trên thiết bị
+368|Các công cụ này chạy trong trình duyệt của bạn — miễn phí, riêng tư, không tải lên và không tốn tín dụng. Mô hình được tải về một lần và dùng lại.
+369|Thiết bị của bạn:
+370|Phụ đề · giọng nói thành văn bản (Whisper)
+371|Giọng nói · văn bản thành giọng nói bằng 12 ngôn ngữ
+372|Xóa nền ảnh
+373|Nâng cấp ảnh 2× / 4×
+374|Chạy các công cụ này trên thiết bị này
+375|Xóa các mô hình đã tải
+376|Chạy trên thiết bị của bạn · miễn phí
+377|Xong trên thiết bị của bạn — không tốn tín dụng.
+378|Âm thanh
+379|Tất cả công cụ

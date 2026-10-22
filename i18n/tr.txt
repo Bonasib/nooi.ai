@@ -95,7 +95,7 @@
 095|Ürettiklerim kime ait?
 096|Size. Videolarınız sizindir, ticari olarak da kullanabilirsiniz.
 097|Hangi diller destekleniyor?
-098|Bölgesel lehçeleriyle 35 dilde altyazı ve seslendirme — Suudi, Mısır, Kuveyt, Tunus, İngiliz, Avustralya, İskoç ve daha birçoğu. Arayüzün kendisi 26 dilde sunuluyor.
+098|Bölgesel lehçeleriyle 35 dilde altyazı ve seslendirme — Suudi, Mısır, Kuveyt, Tunus, İngiliz, Avustralya, İskoç ve daha birçoğu. Arayüzün kendisi 32 dilde sunuluyor.
 099|Bölümlü Hikâye nasıl tutarlı kalıyor?
 100|Her bölüm bir öncekinin son karesinden başlar ve karakterinizin kimliği her çekimde kilitli kalır.
 101|Benim yerime yayınlayabilir mi?

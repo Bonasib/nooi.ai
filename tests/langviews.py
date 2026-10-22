@@ -10,7 +10,7 @@ async def main():
         await pg.route("**/*", lambda r: r.abort() if not r.request.url.startswith("file:") else r.continue_())
         await pg.goto(PAGE);await pg.wait_for_timeout(400)
         views=await pg.evaluate("Object.keys(VIEWS)")
-        for lang in ["ar","fa","de","th","ckb"]:
+        for lang in ["ar","fa","de","th","ckb","id","vi","pl","uk","bn","ur"]:
             bad={};dirs=set()
             for v in views:
                 m=await pg.evaluate("""([v,l])=>{S.user={name:'G',method:'google'};S.lang=l;S.uiDialect='';S.view=v;renderAll();const main=document.querySelector('#main');return {sw:main.scrollWidth,cw:main.clientWidth,doc:document.documentElement.scrollWidth,dir:document.documentElement.dir}}""",[v,lang])

@@ -95,7 +95,7 @@
 095|À qui appartient ce que je génère ?
 096|À vous. Vos vidéos vous appartiennent, y compris pour un usage commercial.
 097|Quelles langues sont prises en charge ?
-098|Sous-titres et doublage en 35 langues avec dialectes régionaux — saoudien, égyptien, koweïtien, tunisien, britannique, australien, écossais et bien d'autres. L'interface elle-même existe en 26 langues.
+098|Sous-titres et doublage en 35 langues avec dialectes régionaux — saoudien, égyptien, koweïtien, tunisien, britannique, australien, écossais et bien d'autres. L'interface elle-même existe en 32 langues.
 099|Comment l'Histoire en chapitres reste-t-elle cohérente ?
 100|Chaque chapitre commence à la dernière image du précédent, et l'identité de votre personnage est verrouillée dans chaque plan.
 101|Peut-il publier pour moi ?

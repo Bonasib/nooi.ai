@@ -95,7 +95,7 @@
 095|A quem pertence o que eu gero?
 096|A si. Os seus vídeos são seus, inclusive para uso comercial.
 097|Que idiomas são suportados?
-098|Legendas e dobragem em 35 idiomas com dialetos regionais — saudita, egípcio, kuwaitiano, tunisino, britânico, australiano, escocês e muitos mais. A própria interface existe em 26 idiomas.
+098|Legendas e dobragem em 35 idiomas com dialetos regionais — saudita, egípcio, kuwaitiano, tunisino, britânico, australiano, escocês e muitos mais. A própria interface existe em 32 idiomas.
 099|Como a História em capítulos se mantém coerente?
 100|Cada capítulo começa no último fotograma do anterior, e a identidade da sua personagem fica fixa em todos os planos.
 101|Pode publicar por mim?

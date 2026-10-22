@@ -95,7 +95,7 @@
 095|Wem gehört, was ich erzeuge?
 096|Dir. Deine Videos gehören dir, auch zur kommerziellen Nutzung.
 097|Welche Sprachen werden unterstützt?
-098|Untertitel und Synchronisation in 35 Sprachen mit regionalen Dialekten — saudisch, ägyptisch, kuwaitisch, tunesisch, britisch, australisch, schottisch und viele mehr. Die Oberfläche selbst gibt es in 26 Sprachen.
+098|Untertitel und Synchronisation in 35 Sprachen mit regionalen Dialekten — saudisch, ägyptisch, kuwaitisch, tunesisch, britisch, australisch, schottisch und viele mehr. Die Oberfläche selbst gibt es in 32 Sprachen.
 099|Wie bleibt die Kapitel-Story stimmig?
 100|Jedes Kapitel beginnt mit dem letzten Bild des vorherigen, und die Identität deiner Figur bleibt in jeder Einstellung fest.
 101|Kann es für mich veröffentlichen?

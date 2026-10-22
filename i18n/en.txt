@@ -95,7 +95,7 @@
 095|Who owns what I generate?
 096|You do. Your videos are yours to use commercially.
 097|Which languages are supported?
-098|Subtitles and dubbing in 35 languages with regional dialects — Saudi, Egyptian, Kuwaiti, Tunisian, British, Australian, Scottish and many more. The interface itself comes in 26 languages.
+098|Subtitles and dubbing in 35 languages with regional dialects — Saudi, Egyptian, Kuwaiti, Tunisian, British, Australian, Scottish and many more. The interface itself comes in 32 languages.
 099|How does Chapter Story stay consistent?
 100|Each chapter starts from the last frame of the previous one, and your character's identity is locked across every shot.
 101|Can it publish for me?

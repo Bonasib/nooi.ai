@@ -95,7 +95,7 @@
 095|Siapa pemilik apa yang saya hasilkan?
 096|Anda. Video anda milik anda, termasuk untuk kegunaan komersial.
 097|Bahasa apa yang disokong?
-098|Sari kata dan alih suara dalam 35 bahasa dengan dialek serantau — Saudi, Mesir, Kuwait, Tunisia, British, Australia, Scotland dan banyak lagi. Antara muka itu sendiri tersedia dalam 26 bahasa.
+098|Sari kata dan alih suara dalam 35 bahasa dengan dialek serantau — Saudi, Mesir, Kuwait, Tunisia, British, Australia, Scotland dan banyak lagi. Antara muka itu sendiri tersedia dalam 32 bahasa.
 099|Bagaimana Cerita Berbab kekal konsisten?
 100|Setiap bab bermula dari bingkai terakhir bab sebelumnya, dan identiti watak anda dikunci dalam setiap syot.
 101|Bolehkah ia menerbitkan untuk saya?

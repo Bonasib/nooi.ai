@@ -1,0 +1,380 @@
+# review: machine translation (v128) — waiting for a native Polish speaker's review
+001|Przełącz na tryb ciemny
+002|Tryb ciemny
+003|Upuść, aby dodać
+004|Obrazy, wideo, dźwięk i czcionki trafiają automatycznie do właściwego narzędzia.
+005|Podgląd
+006|Samotny wilk przechodzi przez zamarznięte jezioro o wschodzie księżyca, widać jego oddech.
+007|Dziecko wypuszcza czerwony balon nad rynkiem w złotej godzinie.
+008|Warsztat naprawy mechów w Osace, neonowe odbicia w kałużach, powolny najazd kamery.
+009|Mała żaglówka dryfuje przez świecące fale o północy.
+010|Samotny biegacz przemierza wydmy o świcie, powolne ujęcie z jazdą kamery.
+011|Nurek schodzi wzdłuż ściany koralowej, promienie słońca przecinają błękit.
+012|Realistyczny
+013|Młoda kobieta podnosi butelkę kosmetyku do kamery telefonu w jasnej łazience, mówi z entuzjazmem, naturalne kadrowanie selfie, miękkie światło dzienne.
+014|Zbliżenie dłoni otwierających matowe czarne pudełko na drewnianym biurku, osoba wzdycha z zachwytu i wyjmuje bezprzewodowe słuchawki, wygląd jak z kamery telefonu.
+015|Sokół startuje z dłoni w rękawicy nad pustynią o wschodzie słońca, zwolnione tempo.
+016|Stary latarnik zapala wielką lampę, gdy nadciąga burza, ziarno 35mm.
+017|Deszcz w neonowym zaułku, falujące odbicia w kałużach, powolny najazd kamery.
+018|Żaglówka dryfuje przez świecące fale o północy.
+019|Galeria
+020|Chapter Story
+021|Narzędzia
+022|Języki
+023|Cennik
+024|Język
+025|Zaloguj się
+026|Zacznij tworzyć
+027|Chapter Story 1.0 — teraz w publicznej becie
+028|Wyreżyseruj
+029|swoją wyobraźnię.
+030|nooi.ai zamienia historię w film. Napisz ujęcie, dostań klip — potem dodaj napisy, zdubbinguj w 35 językach i opublikuj wszędzie.
+031|Wiele rozdziałów. Stała postać. Ciągłość.
+032|KOMPOZYTOR · NA ŻYWO
+033|Zacznij za darmo
+034|Zobacz galerię
+035|Z GALERII
+036|Zrobione w nooi.ai.
+037|Każdy prompt jest widoczny.
+038|Tu odtwarzają się podglądy do Twoich pierwszych renderów — potem zastąpią je Twoje własne filmy AI.
+039|GŁÓWNA FUNKCJA
+040|Chapter Story.
+041|Wreszcie długa forma.
+042|Napisz historię raz. Każdy rozdział zaczyna się od ostatniej klatki poprzedniego. Postać zachowuje twarz. Świat zachowuje pogodę.
+043|Do 20 rozdziałów
+044|Blokada postaci
+045|Storyboard i animatik
+046|AI pisze kolejny rozdział
+047|ROZ
+048|ZESTAW NARZĘDZI
+049|Wszystko od pomysłu do publikacji.
+050|Wideo
+051|Z tekstu lub obrazu do wideo ze sterowaniem kamerą i klatkami kluczowymi.
+052|Obrazy
+053|Kilka obrazów na prompt, wybierz najlepszy.
+054|Postacie
+055|Postacie z wiekiem, głosem i kilkoma wyglądami.
+056|Filmy wielorozdziałowe, które kontynuują od ostatniej klatki.
+057|Storyboard
+058|Klatki, dialogi, dźwięk i przejścia na jednym płótnie.
+059|Edytor wideo
+060|Przycinanie, efekty, tekst i edycja klatek promptem.
+061|Efekty wizualne
+062|Kluczowanie, korekcja barwna i motion capture.
+063|Napisy i dubbing
+064|Transkrybuj, tłumacz i dubbinguj na 30 języków, linijka po linijce.
+065|Głos i dźwięk
+066|Głosy według dialektu i wieku, synchronizacja ust, muzyka i efekty.
+067|Ulepsz
+068|Skalowanie do 4K, 120 fps, wydłużanie, zmiana kadru, napisy, dubbing.
+069|Laboratorium hooków
+070|Początki, które zatrzymują przewijanie i trzymają widzów do końca.
+071|Planuj i publikuj
+072|Planuj i publikuj na każdej platformie.
+073|NAPISY I DUBBING
+074|Mów do całego świata.
+075|35 języków z regionalnymi dialektami. Edytuj każdą linijkę klatka po klatce, a potem zdubbinguj oryginalnym głosem ze zsynchronizowanymi ustami.
+076|języków napisów i dubbingu
+077|regionalnych dialektów
+078|formatów platform, gotowych do eksportu
+079|języków interfejsu
+080|CENNIK
+081|Zacznij za darmo.
+082|Płać za to, co renderujesz.
+083|Darmowy
+084|mies.
+085|480p · klipy 5 s
+086|2 postacie
+087|Zacznij
+088|Twórca
+089|1080p · klipy 10 s
+090|Napisy w 35 językach
+091|Studio
+092|4K · Chapter Story · storyboard
+093|Dubbing, planowanie, API
+094|Konkretne odpowiedzi.
+095|Do kogo należy to, co wygeneruję?
+096|Do Ciebie. Możesz używać swoich filmów komercyjnie.
+097|Jakie języki są obsługiwane?
+098|Napisy i dubbing w 35 językach z regionalnymi dialektami — saudyjskim, egipskim, kuwejckim, tunezyjskim, brytyjskim, australijskim, szkockim i wieloma innymi. Sam interfejs jest dostępny w 32 językach.
+099|Jak Chapter Story zachowuje spójność?
+100|Każdy rozdział zaczyna się od ostatniej klatki poprzedniego, a tożsamość Twojej postaci jest zablokowana w każdym ujęciu.
+101|Czy może publikować za mnie?
+102|Tak — połącz konta, zaplanuj, a posty pojawią się o wybranej porze.
+103|Twoja historia jest o jeden prompt stąd.
+104|Zrób film.
+105|Zacznij za darmo · 100 kredytów
+106|WYREŻYSERUJ SWOJĄ WYOBRAŹNIĘ
+107|Warunki korzystania z usługi
+108|Polityka prywatności
+109|Zasady płatności i zwrotów
+110|Zasady dopuszczalnego użytkowania
+111|Prawa autorskie i usuwanie treści
+112|Polityka plików cookie
+113|Kontakt
+114|Pełna nazwa firmy
+115|Numer CR
+116|Numer VAT
+117|Adres siedziby
+118|Miasto
+119|Kraj
+120|telefon
+121|Logowanie administratora
+122|Ulepsz, kiedy zechcesz.
+123|Miesięcznie
+124|Rocznie · −20%
+125|Basic
+126|Dla twórców, którzy zaczynają
+127|Rozliczany miesięcznie
+128|kredytów / miesiąc
+129|s
+130|Standard
+131|Wszystkie · w tym Kling 4.0
+132|1 głos
+133|Generowanie równoległe
+134|Maks. długość wideo
+135|Rozdzielczość
+136|Liczba klatek
+137|Modele wideo
+138|Klonowanie głosu
+139|Najpopularniejszy
+140|Pro
+141|Dla poważnych twórców i marek
+142|głosów
+143|Dla studiów, agencji i zespołów
+144|API i MCP (Claude, ChatGPT, Qwen)
+145|Plan darmowy:
+146|kredytów na wypróbowanie każdego narzędzia · 480p · 5 s · znak wodny
+147|Porównaj wszystkie funkcje
+148|Kredyty miesięczne
+149|≈ obrazów / miesiąc
+150|≈ filmów 5-sekundowych / miesiąc
+151|Bez limitu
+152|Chapter Story (rozdziały)
+153|Napisy
+154|Laboratorium audio · szkic na żywo · kolorowanka
+155|Bez znaku wodnego nooi.ai
+156|Konta społecznościowe do planowania
+157|Brand kit i logo
+158|Licencja komercyjna
+159|Osobista
+160|Wsparcie
+161|Centrum pomocy
+162|E-mail
+163|Priorytetowe
+164|Priorytetowe + wdrożenie
+165|Modele obrazów
+166|Wszystkie modele obrazów
+167|Głosy ElevenLabs
+168|Wszystkie · w tym Eleven v3
+169|Ocean
+170|Flagowe modele wideo
+171|Neon
+172|Gold
+173|Głosy AI · ElevenLabs
+174|+ profesjonalne klonowanie głosu
+175|języków napisów, dubbingu i głosu
+176|TWOJA FILMOWA EKIPA AI
+177|Dziewięciu specjalistów.
+178|Jeden film.
+179|Każdym projektem zajmuje się ekipa agentów AI — od pierwszej linijki scenariusza po końcową kontrolę jakości.
+180|Zamienia Twój pomysł w scenariusz: sceny, dialogi i narrację.
+181|Projektuje spójne postacie: twarze, stroje i głosy.
+182|Planuje każde ujęcie: kadr, tempo i ruchy kamery.
+183|Ustala wygląd każdej sceny: światło, kolor i obiektyw.
+184|Dodaje głosy, muzykę i efekty dźwiękowe w synchronizacji.
+185|Montuje ujęcia z przejściami i wyczuciem czasu.
+186|Pilnuje, by każdy projekt mieścił się w budżecie i limitach planu.
+187|Sprawdza wszystko przed oddaniem i odsyła to, co trzeba poprawić.
+188|Ekipa AI
+189|Zaloguj się do nooi.ai
+190|Twórz filmy, postacie i historie w swoim języku.
+191|Kontynuuj z Google
+192|Kontynuuj z Apple (iCloud)
+193|lub przez e-mail
+194|Wyślij link do logowania
+195|lub przez telefon
+196|Numer kierunkowy kraju
+197|Numer telefonu
+198|Wyślij kod SMS
+199|Wyreżyseruj swoją wyobraźnię.
+200|Każdy prompt to film.
+201|Kontynuując, akceptujesz Warunki i Politykę prywatności.
+202|Start
+203|Twórz
+204|Reklamy UGC
+205|Rysuj i twórz
+206|Szkic na żywo
+207|Światy 3D
+208|Kolorowanka
+209|Historia
+210|Ekipa filmowa
+211|Edycja
+212|Publikuj
+213|Plan treści
+214|Biblioteka
+215|Moja biblioteka
+216|Szablony
+217|Ustawienia
+218|Konto i plan
+219|Kredyty i transakcje
+220|Połączenia i API
+221|Integracje · MCP
+222|Prawo i płatności
+223|Pomoc i wsparcie
+224|Administracja
+225|Panel administratora
+226|Kredyty
+227|Plan Studio
+228|Telefon
+229|Szukaj…
+230|Zrobi to cała ekipa
+231|Z lotu ptaka
+232|GOTOWE
+233|Gotowe
+234|Odszumianie
+235|Najazd kamery
+236|Kodowanie promptu
+237|Kodowanie wideo
+238|Niepowodzenie
+239|Ładowanie WAN 3.0
+240|Nie wyrenderowano
+241|Opublikowano
+242|W kolejce
+243|GOTOWE
+244|RENDEROWANIE ·
+245|Serwer renderujący
+246|Renderowanie
+247|Działa w Twojej przeglądarce
+248|Zaplanowano
+249|Śledzenie
+250|NOWOŚĆ
+251|Konto
+252|Szukaj
+253|Witaj ponownie,
+254|Wróć do swojej historii, zacznij od szablonu albo opisz nowe ujęcie.
+255|Pozostałe kredyty
+256|Rendery
+257|Wyrenderowane rozdziały
+258|Opisz ujęcie — „sokół wzbija się nad pustynią o wschodzie słońca”
+259|Prompt
+260|Generuj
+261|Twoja historia
+262|rozdziały
+263|klatki storyboardu
+264|Kontynuuj następny rozdział
+265|Zacznij od szablonu
+266|Wszystkie szablony
+267|Recenzja kosmetyku · selfie
+268|UGC
+269|Z ręki
+270|Reakcja na unboxing
+271|Moment z trailera akcji
+272|Trailer
+273|Filmowy
+274|Crash zoom
+275|Czołówka anime
+276|Krótki film / historia
+277|Anime
+278|Kran w górę
+279|Przeanalizuj swoją stronę i otrzymaj gotowy plan treści.
+280|Ostatnie
+281|Jeszcze nic tu nie ma. Opisz ujęcie powyżej, aby zrobić pierwszy klip.
+282|Nowa historia
+283|Nowy montaż
+284|Model AI
+285|Inteligentny
+286|najlepszy do Twojego promptu
+287|Sekundy
+288|Liczba klatek (Hz)
+289|Proporcje
+290|proste ujęcie
+291|Co chcesz stworzyć?
+292|Zadanie
+293|Inteligentny wybór
+294|Film z treścią
+295|Reklama produktu
+296|Obraz i projekt
+297|Stwórz głos
+298|Muzyka
+299|Postać
+300|Cały film (ekipa)
+301|Strona do kolorowania
+302|Hooki
+303|Pomysł
+304|Sokół szybuje nad złotymi wydmami o zachodzie słońca
+305|Scena
+306|powolne ujęcie szerokie, potem zbliżenie na oczy
+307|Głos
+308|„Wolność zaczyna się w niebie” — niski męski głos lektora
+309|Dźwięk
+310|łagodny wiatr + spokojna muzyka oud
+311|Styl
+312|filmowy, ciepłe kolory
+313|Użyj tej struktury
+314|Jedna linijka na część — agenci czytają każdą część.
+315|Model wideo
+316|Pierwsza i ostatnia klatka
+317|Pierwsza klatka
+318|Prześlij
+319|Ostatnia klatka
+320|Sekundy od pierwszej do ostatniej klatki
+321|Obie klatki są opcjonalne — użyj jednej, aby zacząć lub skończyć na konkretnym obrazie.
+322|Twój plan: do
+323|s · Pro 20 s · Studio 30 s
+324|Twoja ekipa AI
+325|Online
+326|Ograniczone działanie
+327|Konserwacja
+328|Nie połączono
+329|Offline
+330|Demo
+331|Wszystkie modele
+332|Warunki
+333|Prywatność
+334|Mów zamiast pisać
+335|Odbiorcy
+336|Szczegóły
+337|Instrumenty
+338|Długość
+339|Wygląd
+340|Nastrój
+341|Oferta
+342|Obraz
+343|Produkt
+344|Obiekt
+345|Tekst
+346|Ton
+347|Temat
+348|Kto
+349|Kliknij link w e-mailu, aby dokończyć logowanie. Nie ma go? Sprawdź spam.
+350|Ten link do logowania wygasł lub został już użyty. Wyślij nowy.
+351|Ten link został wysłany na inny adres e-mail.
+352|Nazwa wyświetlana
+353|Wyślij kod
+354|Wpisz kod
+355|Wysłaliśmy 6-cyfrowy kod na adres
+356|Wygasa za 10 minut.
+357|Zweryfikuj i zaloguj się
+358|Wyślij kod ponownie
+359|Użyj innej metody
+360|Błędny kod. Spróbuj ponownie.
+361|Ten kod wygasł. Wyślij nowy.
+362|Zbyt wiele prób. Wyślij nowy kod.
+363|Wpisz 6-cyfrowy kod.
+364|Nowy kod jest w drodze.
+365|Sprawdź skrzynkę odbiorczą
+366|Wysłaliśmy link do logowania na adres
+367|AI na urządzeniu
+368|Te narzędzia działają w Twojej przeglądarce — za darmo, prywatnie, bez przesyłania i bez kredytów. Model pobiera się raz i jest używany ponownie.
+369|Twoje urządzenie:
+370|Napisy · mowa na tekst (Whisper)
+371|Głos · tekst na mowę w 12 językach
+372|Usuwanie tła z obrazów
+373|Powiększanie obrazu 2× / 4×
+374|Uruchamiaj te narzędzia na tym urządzeniu
+375|Usuń pobrane modele
+376|Działa na Twoim urządzeniu · za darmo
+377|Zrobione na Twoim urządzeniu — bez zużycia kredytów.
+378|Audio
+379|Wszystkie narzędzia

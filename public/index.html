@@ -3589,7 +3589,7 @@ function vLanding(){
   const tools=["video","image","chars","story","board","edit","fx","subs","voice","finish","hooks","calendar"];
   const ticker=LP_PROMPTS.concat(LP_PROMPTS).map(p=>'<span>“'+esc(L(p[0],p[1]))+'”</span><i>·</i>').join("");
   const plans=[["Free","مجاني",0,["480p · 5s clips","480p · مقاطع 5ث"],["2 characters","شخصيتان"]],["Creator","المبدع",12,["1080p · 10s clips","1080p · مقاطع 10ث"],["Subtitles in 35 languages","ترجمة بـ35 لغة"]],["Studio","الاستوديو",39,["4K · Chapter Story · storyboard","4K · قصة الفصول · ستوري بورد"],["Dubbing, scheduling, API","الدبلجة والجدولة وAPI"]]];
-  const faq=[["Who owns what I generate?","لمن تعود ملكية ما أنتجه؟","You do. Your videos are yours to use commercially.","لك. فيديوهاتك ملكك وتستخدمها تجارياً."],["Which languages are supported?","ما اللغات المدعومة؟","Subtitles and dubbing in 35 languages with regional dialects — Saudi, Egyptian, Kuwaiti, Tunisian, British, Australian, Scottish and many more. The interface itself comes in 26 languages.","ترجمة ودبلجة بـ35 لغة مع اللهجات — سعودي ومصري وكويتي وتونسي وبريطاني وأسترالي واسكتلندي وغيرها. والواجهة نفسها بـ26 لغة."],["How does Chapter Story stay consistent?","كيف تبقى قصة الفصول متسقة؟","Each chapter starts from the last frame of the previous one, and your character's identity is locked across every shot.","كل فصل يبدأ من آخر إطار في الفصل السابق، وهوية الشخصية مثبّتة في كل لقطة."],["Can it publish for me?","هل ينشر نيابة عني؟","Yes — connect your accounts, schedule, and posts go out at the chosen time.","نعم — اربط حساباتك وجدول، وتُنشر المنشورات في الوقت المحدد."]];
+  const faq=[["Who owns what I generate?","لمن تعود ملكية ما أنتجه؟","You do. Your videos are yours to use commercially.","لك. فيديوهاتك ملكك وتستخدمها تجارياً."],["Which languages are supported?","ما اللغات المدعومة؟","Subtitles and dubbing in 35 languages with regional dialects — Saudi, Egyptian, Kuwaiti, Tunisian, British, Australian, Scottish and many more. The interface itself comes in 32 languages.","ترجمة ودبلجة بـ35 لغة مع اللهجات — سعودي ومصري وكويتي وتونسي وبريطاني وأسترالي واسكتلندي وغيرها. والواجهة نفسها بـ32 لغة."],["How does Chapter Story stay consistent?","كيف تبقى قصة الفصول متسقة؟","Each chapter starts from the last frame of the previous one, and your character's identity is locked across every shot.","كل فصل يبدأ من آخر إطار في الفصل السابق، وهوية الشخصية مثبّتة في كل لقطة."],["Can it publish for me?","هل ينشر نيابة عني؟","Yes — connect your accounts, schedule, and posts go out at the chosen time.","نعم — اربط حساباتك وجدول، وتُنشر المنشورات في الوقت المحدد."]];
   return'<div class="lp">'+
   '<header class="lpnav"><div class="brand" style="padding:0"><i class="dot"></i><b>nooi</b><span>.ai</span></div><nav class="lplinks"><button data-act="lp-go" data-t="lp-show">'+L("Showcase","المعرض")+'</button><button data-act="lp-go" data-t="lp-story">'+L("Chapter Story","قصة الفصول")+'</button><button data-act="lp-go" data-t="lp-tools">'+L("Tools","الأدوات")+'</button><button data-act="lp-go" data-t="lp-lang">'+L("Languages","اللغات")+'</button><button data-act="lp-go" data-t="lp-price">'+L("Pricing","الأسعار")+'</button></nav><div class="row" style="flex-wrap:nowrap">'+langBtn()+'<button class="btn ghost sm lphide" data-act="to-auth">'+L("Sign in","تسجيل الدخول")+'</button><button class="btn primary sm" data-act="to-auth">'+L("Start creating","ابدأ الإنشاء")+ic("arrow","width:14px")+"</button></div></header>"+
   '<section class="lphero"><span class="lpbadge"><i class="dot" style="width:7px;height:7px"></i>'+L("Chapter Story 1.0 — now in public beta","قصة الفصول 1.0 — متاحة الآن للتجربة")+'</span><h1 class="lph1">'+L("Direct your","أخرِج")+'<br><em>'+L("imagination.","خيالك.")+'</em></h1><p class="lpsub">'+L("nooi.ai turns a story into a film. Write a shot, get a clip — then subtitle it, dub it in 35 languages and publish it everywhere.","nooi.ai يحوّل القصة إلى فيلم. اكتب لقطة واحصل على مقطع — ثم ترجمه ودبلجه بـ35 لغة وانشره في كل مكان.")+' <span class="serif">'+L("Multi-chapter. Character-locked. Continuous.","متعدد الفصول. شخصية ثابتة. سرد متصل.")+'</span></p>'+
@@ -14673,6 +14673,29 @@ document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.c
 #main .lb127 textarea{width:100%;font:12px/1.4 ui-monospace,monospace}
 #main .lb127 .lb127s b{color:var(--text)}
 `;document.head.appendChild(st)})();
+
+/* ================= v128: SIX MORE LANGUAGES ================= */
+// Indonesian, Vietnamese, Polish, Ukrainian, Bengali and Urdu (right to left): the interface (i18n/<lang>.txt →
+// public/i18n/<lang>.json — machine translations marked for a native speaker's review) and, where they were missing,
+// subtitles, dubbing and voice. Each gets its web font when its script needs one, the visitor's time zone suggests it, and
+// the landing's rotating line speaks it too. 26 → 32 interface languages.
+[["vi","Vietnamese","الفيتنامية","VI","vi-VN","more"],["pl","Polish","البولندية","PL","pl-PL","more"],["uk","Ukrainian","الأوكرانية","УК","uk-UA","more"],["bn","Bengali","البنغالية","বাং","bn-BD","more"]].forEach(l=>{if(!LANGS.some(x=>x[0]===l[0]))LANGS.push(l)});
+[["id","Bahasa Indonesia","ID"],["vi","Tiếng Việt","VI"],["pl","Polski","PL"],["uk","Українська","УК"],["bn","বাংলা","বাং"],["ur","اردو","ار"]].forEach(u=>{if(!UI_LANGS.some(x=>x[0]===u[0]))UI_LANGS.push(u)});
+Object.assign(UI_FONTS,{bn:"Noto+Sans+Bengali:wght@400;500;600",ur:"Vazirmatn:wght@400;500;600"});NOOI_TALL_SCRIPTS.bn=1;   // (Urdu in Vazirmatn like Persian and Sorani: it has every Urdu letter, and its compact lines fit the page's boxes)
+// a language's web font is also the fallback inside --sans, so buttons and labels that set their own font (var(--sans)) show the
+// script in it too — before, Hindi on a few buttons fell to whatever font the device had
+nooiUiFontCSS=(o=>function(){const fam=v=>'"'+String(v).split(":")[0].replace(/\+/g," ")+'"';
+  return o()+"\n"+Object.keys(UI_FONTS).map(l=>'html[lang="'+l+'"]{--sans:"Geist",'+fam(UI_FONTS[l])+',"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",sans-serif}').join("\n")})(nooiUiFontCSS);
+(function(){const st=document.getElementById("uifontcss");if(st)st.textContent=nooiUiFontCSS()})();
+// long translations wrap instead of being cut: the editor's format button and the pickers' chosen value
+(()=>{const st=document.createElement("style");st.textContent=`
+.spread>.row>.fmtbtn:has(~.edout) b{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+.fmtbtn:has(~.edout)>span:nth-child(2){overflow:visible}
+#main .selbtn,#modalRoot .selbtn{height:auto}
+.selbtn .sv{white-space:normal;overflow-wrap:anywhere;text-overflow:clip;line-height:1.25}
+`;document.head.appendChild(st)})();
+Object.assign(TZ_LANG,{"Asia/Jakarta":"id","Asia/Pontianak":"id","Asia/Makassar":"id","Asia/Jayapura":"id","Asia/Ho_Chi_Minh":"vi","Asia/Saigon":"vi","Europe/Warsaw":"pl","Europe/Kyiv":"uk","Europe/Kiev":"uk","Asia/Dhaka":"bn","Asia/Karachi":"ur"});
+[["id","Setiap cerita layak hadir dalam setiap bahasa."],["vi","Mỗi câu chuyện xứng đáng có mọi ngôn ngữ."],["pl","Każda historia zasługuje na każdy język."],["uk","Кожна історія заслуговує на кожну мову."],["bn","প্রতিটি গল্পই প্রতিটি ভাষার যোগ্য।"],["ur","ہر کہانی ہر زبان کی حق دار ہے۔"]].forEach(x=>{if(!LP_SUBS.some(y=>y[0]===x[0]))LP_SUBS.push(x)});
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

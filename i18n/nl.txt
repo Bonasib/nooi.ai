@@ -95,7 +95,7 @@
 095|Van wie is wat ik genereer?
 096|Van jou. Je video's zijn van jou, ook voor commercieel gebruik.
 097|Welke talen worden ondersteund?
-098|Ondertitels en nasynchronisatie in 35 talen met regionale dialecten — Saoedisch, Egyptisch, Koeweits, Tunesisch, Brits, Australisch, Schots en nog veel meer. De interface zelf is beschikbaar in 26 talen.
+098|Ondertitels en nasynchronisatie in 35 talen met regionale dialecten — Saoedisch, Egyptisch, Koeweits, Tunesisch, Brits, Australisch, Schots en nog veel meer. De interface zelf is beschikbaar in 32 talen.
 099|Hoe blijft het Hoofdstukverhaal consistent?
 100|Elk hoofdstuk begint bij het laatste beeld van het vorige en de identiteit van je personage blijft in elk shot vastgelegd.
 101|Kan het voor mij publiceren?

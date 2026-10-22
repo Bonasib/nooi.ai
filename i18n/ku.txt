@@ -95,7 +95,7 @@
 095|Tiştê ku ez çêdikim yê kê ye?
 096|Yê te ye. Vîdyoyên te yên te ne, ji bo karanîna bazirganî jî.
 097|Kîjan ziman têne piştgirîkirin?
-098|Binnivîs û dublaj bi 35 zimanan û zaravayên herêmî — Siûdî, Misirî, Kuweytî, Tûnisî, Brîtanî, Awistralî, Skotî û gelekên din. Navrû bi xwe bi 26 zimanan heye.
+098|Binnivîs û dublaj bi 35 zimanan û zaravayên herêmî — Siûdî, Misirî, Kuweytî, Tûnisî, Brîtanî, Awistralî, Skotî û gelekên din. Navrû bi xwe bi 32 zimanan heye.
 099|Çîroka Beş bi Beş çawa yekgirtî dimîne?
 100|Her beş ji çarçoveya dawî ya beşa berê dest pê dike, û nasnameya karakterê te di her dîmenê de kilîdkirî dimîne.
 101|Ma dikare li şûna min biweşîne?

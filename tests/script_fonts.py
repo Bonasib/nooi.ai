@@ -34,6 +34,11 @@ SAMPLES = {
     "ru": "Создайте профессиональное видео с ИИ",
     "yo": "Ṣẹ̀dá fídíò ọ̀jọ̀gbọ́n pẹ̀lú ọgbọ́n àtọwọ́dá",
     "fr": "Créez une vidéo professionnelle avec l'IA",
+    "id": "Buat video profesional dengan kecerdasan buatan",
+    "vi": "Tạo video chuyên nghiệp bằng trí tuệ nhân tạo",
+    "pl": "Twórz profesjonalne wideo dzięki sztucznej inteligencji",
+    "uk": "Створюйте професійне відео зі штучним інтелектом",
+    "bn": "কৃত্রিম বুদ্ধিমত্তা দিয়ে পেশাদার ভিডিও তৈরি করুন",
 }
 RTL = {"ar", "fa", "ckb", "ur"}
 # Typical length of a translation relative to the English source, in characters. CJK needs far fewer
@@ -87,6 +92,8 @@ JS_MEASURE = r"""()=>{
  for(const {e} of leaves){const cs=getComputedStyle(e);
   // the element's own box cuts its text (fixed height / nowrap / line-height too small for the glyphs)
   const hid=v=>v==='hidden'||v==='clip';if(e.matches('textarea,input,select'))continue;
+  // (v128: a preview kept to 2–3 lines on purpose — a prompt, a template's title — ends with its ellipsis; the whole text opens on tap)
+  if(cs.webkitLineClamp&&cs.webkitLineClamp!=='none')continue;
   const own=((hid(cs.overflowY)&&e.scrollHeight>e.clientHeight+2)||(hid(cs.overflowX)&&e.scrollWidth>e.clientWidth+2));
   const rg=document.createRange();rg.selectNodeContents(e);const tr=rg.getBoundingClientRect(),r=e.getBoundingClientRect();
   // ink extends past an ancestor that clips it

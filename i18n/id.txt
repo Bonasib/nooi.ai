@@ -1,0 +1,380 @@
+# review: machine translation (v128) — waiting for a native Indonesian speaker's review
+001|Beralih ke mode gelap
+002|Mode gelap
+003|Lepas untuk menambahkan
+004|Gambar, video, audio, dan font otomatis masuk ke alat yang tepat.
+005|Pratinjau
+006|Seekor serigala penyendiri menyeberangi danau beku saat bulan terbit, napasnya terlihat.
+007|Seorang anak melepaskan balon merah di atas alun-alun pasar saat golden hour.
+008|Bengkel perbaikan mecha di Osaka, pantulan neon di genangan air, dolly pelan.
+009|Perahu layar kecil hanyut melewati ombak berpendar di tengah malam.
+010|Pelari sendirian menyeberangi bukit pasir saat fajar, tracking shot pelan.
+011|Penyelam turun melewati dinding karang, sinar matahari menembus biru laut.
+012|Realistis
+013|Seorang perempuan muda mengangkat botol skincare ke kamera ponselnya di kamar mandi yang terang, berbicara dengan antusias, framing selfie alami, cahaya siang yang lembut.
+014|Close-up tangan membuka kotak hadiah hitam doff di atas meja kayu, orang itu terkesiap dan mengeluarkan earbud nirkabel, tampilan kamera ponsel.
+015|Seekor elang lepas landas dari tangan bersarung di atas gurun saat matahari terbit, gerak lambat.
+016|Penjaga tua menyalakan lampu besar saat badai mendekat, grain 35mm.
+017|Hujan di gang neon, pantulan beriak di genangan air, dolly pelan.
+018|Perahu layar hanyut melewati ombak bercahaya di tengah malam.
+019|Etalase
+020|Chapter Story
+021|Alat
+022|Bahasa
+023|Harga
+024|Bahasa
+025|Masuk
+026|Mulai berkarya
+027|Chapter Story 1.0 — kini dalam beta publik
+028|Sutradarai
+029|imajinasimu.
+030|nooi.ai mengubah cerita menjadi film. Tulis satu adegan, dapatkan klip — lalu beri subtitel, sulih suara dalam 35 bahasa, dan publikasikan di mana saja.
+031|Multi-bab. Karakter terkunci. Berkesinambungan.
+032|KOMPOSER · LIVE
+033|Mulai gratis
+034|Lihat etalase
+035|DARI ETALASE
+036|Dibuat di nooi.ai.
+037|Setiap prompt ditampilkan.
+038|Pratinjau diputar di sini sampai render pertamamu — lalu video AI milikmu sendiri menggantikannya.
+039|FITUR UTAMA
+040|Chapter Story.
+041|Format panjang, akhirnya.
+042|Tulis ceritanya sekali. Setiap bab dimulai dari frame terakhir bab sebelumnya. Karakter tetap dengan wajahnya. Dunia tetap dengan cuacanya.
+043|Hingga 20 bab
+044|Kunci karakter
+045|Storyboard & animatik
+046|AI menulis bab berikutnya
+047|BAB
+048|PERANGKAT
+049|Semua hal dari ide sampai unggahan.
+050|Video
+051|Teks atau gambar menjadi video dengan kontrol kamera dan keyframe.
+052|Gambar
+053|Beberapa gambar per prompt, pilih yang terbaik.
+054|Karakter
+055|Karakter dengan usia, suara, dan beberapa tampilan.
+056|Film multi-bab yang berlanjut dari frame terakhir.
+057|Storyboard
+058|Frame, dialog, suara, dan transisi di satu kanvas.
+059|Editor video
+060|Potong, efek, teks, dan edit frame dengan prompt.
+061|Efek visual
+062|Keying, color grading, dan motion capture.
+063|Subtitel & sulih suara
+064|Transkripsi, terjemahkan, dan sulih suara ke 30 bahasa, baris demi baris.
+065|Suara & audio
+066|Suara menurut dialek dan usia, lip sync, musik, dan SFX.
+067|Tingkatkan
+068|Upscale 4K, 120 fps, perpanjang, ubah framing, teks, sulih suara.
+069|Lab hook
+070|Pembuka yang menghentikan scroll dan membuat penonton bertahan sampai akhir.
+071|Jadwalkan & publikasikan
+072|Jadwalkan dan publikasikan ke semua platform.
+073|SUBTITEL & SULIH SUARA
+074|Bicaralah kepada seluruh dunia.
+075|35 bahasa dengan dialek daerah. Edit setiap baris frame demi frame, lalu sulih suara dengan suara asli dan bibir yang sinkron.
+076|bahasa untuk subtitel & sulih suara
+077|dialek daerah
+078|ukuran platform, siap diekspor
+079|bahasa antarmuka
+080|HARGA
+081|Mulai gratis.
+082|Bayar sesuai yang kamu render.
+083|Gratis
+084|bln
+085|480p · klip 5 dtk
+086|2 karakter
+087|Mulai
+088|Kreator
+089|1080p · klip 10 dtk
+090|Subtitel dalam 35 bahasa
+091|Studio
+092|4K · Chapter Story · storyboard
+093|Sulih suara, penjadwalan, API
+094|Jawaban langsung.
+095|Siapa pemilik hasil yang saya buat?
+096|Kamu. Videomu milikmu untuk dipakai secara komersial.
+097|Bahasa apa saja yang didukung?
+098|Subtitel dan sulih suara dalam 35 bahasa dengan dialek daerah — Saudi, Mesir, Kuwait, Tunisia, Inggris, Australia, Skotlandia, dan banyak lagi. Antarmukanya sendiri tersedia dalam 32 bahasa.
+099|Bagaimana Chapter Story tetap konsisten?
+100|Setiap bab dimulai dari frame terakhir bab sebelumnya, dan identitas karaktermu terkunci di setiap adegan.
+101|Bisakah ia memublikasikan untuk saya?
+102|Ya — hubungkan akunmu, atur jadwal, dan postingan terbit pada waktu yang dipilih.
+103|Ceritamu hanya sejauh satu prompt.
+104|Buat filmnya.
+105|Mulai gratis · 100 kredit
+106|SUTRADARAI IMAJINASIMU
+107|Ketentuan Layanan
+108|Kebijakan Privasi
+109|Kebijakan Pembayaran & Pengembalian Dana
+110|Kebijakan Penggunaan yang Dapat Diterima
+111|Hak cipta & penghapusan konten
+112|Kebijakan Cookie
+113|Kontak
+114|Nama resmi perusahaan
+115|Nomor CR
+116|Nomor PPN
+117|Alamat terdaftar
+118|Kota
+119|Negara
+120|telepon
+121|Login admin
+122|Upgrade saat kamu siap.
+123|Bulanan
+124|Tahunan · −20%
+125|Basic
+126|Untuk kreator yang baru memulai
+127|Ditagih bulanan
+128|kredit / bulan
+129|dtk
+130|Standar
+131|Semua · termasuk Kling 4.0
+132|1 suara
+133|Generasi paralel
+134|Durasi video maks.
+135|Resolusi
+136|Frame rate
+137|Model video
+138|Kloning suara
+139|Paling populer
+140|Pro
+141|Untuk kreator & brand yang serius
+142|suara
+143|Untuk studio, agensi & tim
+144|API & MCP (Claude, ChatGPT, Qwen)
+145|Paket gratis:
+146|kredit untuk mencoba semua alat · 480p · 5 dtk · watermark
+147|Bandingkan semua fitur
+148|Kredit bulanan
+149|≈ gambar / bulan
+150|≈ video 5 detik / bulan
+151|Tanpa batas
+152|Chapter Story (bab)
+153|Subtitel
+154|Lab audio · sketsa live · buku mewarnai
+155|Tanpa watermark nooi.ai
+156|Akun media sosial untuk penjadwalan
+157|Brand kit & logo
+158|Lisensi komersial
+159|Pribadi
+160|Dukungan
+161|Pusat bantuan
+162|Email
+163|Prioritas
+164|Prioritas + onboarding
+165|Model gambar
+166|Semua model gambar
+167|Suara ElevenLabs
+168|Semua · termasuk Eleven v3
+169|Ocean
+170|Model video unggulan
+171|Neon
+172|Gold
+173|Suara AI · ElevenLabs
+174|+ kloning suara profesional
+175|bahasa untuk subtitel, sulih suara & suara
+176|KRU FILM AI-MU
+177|Sembilan spesialis.
+178|Satu film.
+179|Setiap proyek ditangani kru agen AI — dari baris pertama naskah hingga pemeriksaan kualitas akhir.
+180|Mengubah idemu menjadi naskah: adegan, dialog, dan narasi.
+181|Merancang karakter yang konsisten: wajah, pakaian, dan suara.
+182|Merencanakan setiap shot: framing, tempo, dan gerakan kamera.
+183|Menentukan tampilan setiap adegan: cahaya, warna, dan lensa.
+184|Menambahkan suara, musik, dan efek suara secara sinkron.
+185|Menyambung shot dengan transisi dan timing.
+186|Menjaga setiap proyek tetap dalam anggaran dan batas paketmu.
+187|Memeriksa semuanya sebelum dikirim dan mengembalikan yang perlu diperbaiki.
+188|Kru AI
+189|Masuk ke nooi.ai
+190|Buat film, karakter, dan cerita dalam bahasamu sendiri.
+191|Lanjutkan dengan Google
+192|Lanjutkan dengan Apple (iCloud)
+193|atau dengan email
+194|Kirim tautan masuk
+195|atau dengan ponselmu
+196|Kode negara
+197|Nomor telepon
+198|Kirim kode SMS
+199|Sutradarai imajinasimu.
+200|Setiap prompt adalah sebuah film.
+201|Dengan melanjutkan, kamu menyetujui Ketentuan dan Kebijakan Privasi.
+202|Beranda
+203|Buat
+204|Iklan UGC
+205|Gambar & buat
+206|Sketsa Live
+207|Dunia 3D
+208|Buku mewarnai
+209|Cerita
+210|Kru film
+211|Edit
+212|Publikasikan
+213|Rencana konten
+214|Pustaka
+215|Pustaka saya
+216|Template
+217|Pengaturan
+218|Akun & paket
+219|Kredit & transaksi
+220|Koneksi & API
+221|Integrasi · MCP
+222|Hukum & pembayaran
+223|Bantuan & dukungan
+224|Administrasi
+225|Dasbor admin
+226|Kredit
+227|Paket Studio
+228|Telepon
+229|Cari…
+230|Seluruh kru akan membuatnya
+231|Udara
+232|SELESAI
+233|Selesai
+234|Menghilangkan noise
+235|Dolly in
+236|Mengodekan prompt
+237|Mengodekan video
+238|Gagal
+239|Memuat WAN 3.0
+240|Belum dirender
+241|Dipublikasikan
+242|Dalam antrean
+243|SIAP
+244|MERENDER ·
+245|Server render
+246|Merender
+247|Berjalan di browsermu
+248|Terjadwal
+249|Pelacakan
+250|BARU
+251|Akun
+252|Cari
+253|Selamat datang kembali,
+254|Lanjutkan ceritamu, mulai dari template, atau deskripsikan shot baru.
+255|Sisa kredit
+256|Render
+257|Bab yang dirender
+258|Deskripsikan sebuah shot — “seekor elang lepas landas di atas gurun saat matahari terbit”
+259|Prompt
+260|Buat
+261|Ceritamu
+262|bab
+263|frame storyboard
+264|Lanjutkan ke bab berikutnya
+265|Mulai dari template
+266|Semua template
+267|Ulasan skincare · selfie
+268|UGC
+269|Genggam
+270|Reaksi unboxing
+271|Momen trailer aksi
+272|Trailer
+273|Sinematik
+274|Crash zoom
+275|Opening anime
+276|Film pendek / cerita
+277|Anime
+278|Crane up
+279|Analisis situs webmu dan dapatkan rencana konten siap pakai.
+280|Terbaru
+281|Belum ada apa-apa. Deskripsikan shot di atas untuk membuat klip pertamamu.
+282|Cerita baru
+283|Editan baru
+284|Model AI
+285|Pintar
+286|terbaik untuk prompt-mu
+287|Detik
+288|Frame rate (Hz)
+289|Rasio
+290|shot sederhana
+291|Apa yang ingin kamu buat?
+292|Tugas
+293|Pilihan pintar
+294|Video konten
+295|Iklan produk
+296|Gambar & desain
+297|Buat suara
+298|Musik
+299|Karakter
+300|Film utuh (kru)
+301|Halaman mewarnai
+302|Hook
+303|Ide
+304|Seekor elang melayang di atas bukit pasir keemasan saat matahari terbenam
+305|Adegan
+306|wide shot pelan, lalu close-up pada matanya
+307|Suara
+308|“Kebebasan dimulai dari langit” — narator pria bersuara berat
+309|Suara latar
+310|angin lembut + musik oud yang tenang
+311|Gaya
+312|sinematik, warna hangat
+313|Gunakan struktur ini
+314|Satu baris per bagian — para agen membaca setiap bagian.
+315|Model video
+316|Frame awal & akhir
+317|Frame awal
+318|Unggah
+319|Frame akhir
+320|Detik dari frame awal ke akhir
+321|Kedua frame opsional — gunakan salah satunya untuk memulai atau mengakhiri pada gambar yang persis.
+322|Paketmu: hingga
+323|dtk · Pro 20 dtk · Studio 30 dtk
+324|Kru AI-mu
+325|Online
+326|Terganggu
+327|Pemeliharaan
+328|Tidak terhubung
+329|Offline
+330|Demo
+331|Semua model
+332|Ketentuan
+333|Privasi
+334|Bicara alih-alih mengetik
+335|Audiens
+336|Detail
+337|Instrumen
+338|Durasi
+339|Tampilan
+340|Suasana
+341|Penawaran
+342|Gambar
+343|Produk
+344|Subjek
+345|Teks
+346|Nada
+347|Topik
+348|Siapa
+349|Ketuk tautan di email untuk menyelesaikan proses masuk. Tidak ada? Periksa folder Spam.
+350|Tautan masuk ini sudah kedaluwarsa atau sudah dipakai. Kirim yang baru.
+351|Tautan ini dikirim ke alamat email lain.
+352|Nama tampilan
+353|Kirim kode
+354|Masukkan kodemu
+355|Kami mengirim kode 6 digit ke
+356|Kode berlaku selama 10 menit.
+357|Verifikasi dan masuk
+358|Kirim ulang kode
+359|Gunakan cara lain
+360|Kode salah. Coba lagi.
+361|Kode ini sudah kedaluwarsa. Kirim yang baru.
+362|Terlalu banyak percobaan. Kirim kode baru.
+363|Masukkan kode 6 digit.
+364|Kode baru sedang dikirim.
+365|Periksa kotak masukmu
+366|Kami mengirim tautan masuk ke
+367|AI di perangkat
+368|Alat-alat ini berjalan di browsermu — gratis, privat, tanpa unggahan dan tanpa kredit. Modelnya diunduh sekali lalu dipakai ulang.
+369|Perangkatmu:
+370|Subtitel · ucapan ke teks (Whisper)
+371|Suara · teks ke ucapan dalam 12 bahasa
+372|Penghapusan latar belakang gambar
+373|Upscale gambar 2× / 4×
+374|Jalankan alat ini di perangkat ini
+375|Hapus model yang diunduh
+376|Berjalan di perangkatmu · gratis
+377|Selesai di perangkatmu — tanpa kredit.
+378|Audio
+379|Semua alat

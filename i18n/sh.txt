@@ -95,7 +95,7 @@
 095|Čije je ono što generiram?
 096|Tvoje. Tvoji videozapisi su tvoji, i za komercijalnu upotrebu.
 097|Koji su jezici podržani?
-098|Titlovi i sinkronizacija na 35 jezika s regionalnim dijalektima — saudijski, egipatski, kuvajtski, tuniski, britanski, australski, škotski i mnogi drugi. Samo sučelje postoji na 26 jezika.
+098|Titlovi i sinkronizacija na 35 jezika s regionalnim dijalektima — saudijski, egipatski, kuvajtski, tuniski, britanski, australski, škotski i mnogi drugi. Samo sučelje postoji na 32 jezika.
 099|Kako Priča u poglavljima ostaje dosljedna?
 100|Svako poglavlje počinje od posljednjeg kadra prethodnog, a identitet tvog lika zaključan je u svakom kadru.
 101|Može li objavljivati umjesto mene?

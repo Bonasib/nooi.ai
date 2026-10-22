@@ -95,7 +95,7 @@
 095|¿De quién es lo que genero?
 096|Tuyo. Tus vídeos son tuyos, también para uso comercial.
 097|¿Qué idiomas se admiten?
-098|Subtítulos y doblaje en 35 idiomas con dialectos regionales — saudí, egipcio, kuwaití, tunecino, británico, australiano, escocés y muchos más. La propia interfaz está en 26 idiomas.
+098|Subtítulos y doblaje en 35 idiomas con dialectos regionales — saudí, egipcio, kuwaití, tunecino, británico, australiano, escocés y muchos más. La propia interfaz está en 32 idiomas.
 099|¿Cómo mantiene la coherencia la Historia por capítulos?
 100|Cada capítulo empieza en el último fotograma del anterior, y la identidad de tu personaje queda fija en cada toma.
 101|¿Puede publicar por mí?

@@ -95,7 +95,7 @@
 095|Yaa leh waxa aan sameeyo?
 096|Adiga. Muuqaalladaadu adigaa leh, xitaa isticmaal ganacsi.
 097|Luqadee la taageeraa?
-098|Qoraal-hoosaad iyo dubbing 35 luqadood oo leh lahjado gobol — Sacuudi, Masri, Kuweyti, Tuunisi, Ingiriis, Australiyaan, Iskootish iyo kuwo kale oo badan. Interface-ka laftiisa wuxuu ku jiraa 26 luqadood.
+098|Qoraal-hoosaad iyo dubbing 35 luqadood oo leh lahjado gobol — Sacuudi, Masri, Kuweyti, Tuunisi, Ingiriis, Australiyaan, Iskootish iyo kuwo kale oo badan. Interface-ka laftiisa wuxuu ku jiraa 32 luqadood.
 099|Sidee Sheekada Cutubyada leh u ahaataa mid isku xidhan?
 100|Cutub kasta wuxuu ka bilaabmaa sawirka ugu dambeeya ee kii ka horreeyay, aqoonsiga jilaagaaguna wuu go'an yahay muuqaal kasta.
 101|Ma ii daabici kartaa?

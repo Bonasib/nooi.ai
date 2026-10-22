@@ -95,7 +95,7 @@
 095|Di chi è ciò che genero?
 096|Tuo. I tuoi video sono tuoi, anche per uso commerciale.
 097|Quali lingue sono supportate?
-098|Sottotitoli e doppiaggio in 35 lingue con dialetti regionali — saudita, egiziano, kuwaitiano, tunisino, britannico, australiano, scozzese e molti altri. L'interfaccia stessa è disponibile in 26 lingue.
+098|Sottotitoli e doppiaggio in 35 lingue con dialetti regionali — saudita, egiziano, kuwaitiano, tunisino, britannico, australiano, scozzese e molti altri. L'interfaccia stessa è disponibile in 32 lingue.
 099|Come resta coerente la Storia a capitoli?
 100|Ogni capitolo parte dall'ultimo fotogramma del precedente e l'identità del tuo personaggio resta bloccata in ogni inquadratura.
 101|Può pubblicare al posto mio?
