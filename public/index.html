@@ -8810,7 +8810,7 @@ async function serverSubmit(o,kind,payload){const snap=(SLOTS_FOR[kind]||[]).map
   try{const inputs={};for(const[s,m]of snap){if(m.file){const u=await API.upload(m.file,m.name||s+".png");inputs[s]=u.url}else if(m.remote)inputs[s]=m.remote}
     if(cap){const b=await(await fetch(cap)).blob();inputs.frame=(await API.upload(b,"frame.jpg")).url}
     const res=await API.req("/v1/jobs",{json:Object.assign({kind,inputs},payload)});o.remote=res.id;o.status="queued";if(res.dur&&+res.dur!==+o.dur){o.durAsked=o.dur;o.dur=+res.dur}if(res.cost>0)o.cost=res.cost;persist()}
-  catch(e){o.status="failed";o.error=String(e.message||e);statusChanged()}}
+  catch(e){o.status="failed";o.error=String(e.message||e);o.errorAr=e.errorAr||null;statusChanged()}}
 /* run a job with a temporary reference picture, without touching what the user loaded elsewhere */
 function withRef72(slot,file,fn){const keep=M[slot];if(file)M[slot]={type:"image",file,name:(file.name||"ref.png"),url:""};else delete M[slot];try{return fn()}finally{if(keep)M[slot]=keep;else delete M[slot]}}
 const bestImg72=()=>IMG_MODELS.nanopro&&imgOK("nanopro")?"nanopro":IMG_MODELS.nano?"nano":"dotimg";
@@ -14596,6 +14596,40 @@ if(/[?&]deleted=1\b/.test(location.search)){const l=(location.search.match(/[?&]
 (()=>{const st=document.createElement("style");st.textContent=`
 #main .del125{border-color:color-mix(in srgb,var(--red,#e5484d) 45%,var(--line))}
 #main .del125 h2{color:var(--red,#e5484d)}
+`;document.head.appendChild(st)})();
+
+/* ================= v126: CONTENT CHECK — EVERY LANGUAGE AND PICTURES ================= */
+// Admin → Features: the owner switches on the content check (lib/safety126.js). The word list stays the free first line; switched
+// on, Claude Haiku 5.5 also reads the words in any language and looks at the pictures a job uses before anything is charged.
+// The card says what it costs, how many requests it checked and blocked, and the latest blocks (no words are kept).
+const SF126={d:null,busy:false,err:""};
+const CAT126={minors:["Minors","قاصرون"],sexual:["Sexual content","محتوى جنسي"],likeness:["A real person's likeness","صورة شخص حقيقي"],violence:["Violence","عنف"],hate:["Hate","كراهية"],self_harm:["Self-harm","إيذاء النفس"],illegal:["Illegal","غير قانوني"],other:["Other","أخرى"]};
+async function sf126load(){if(SF126.busy||API.mode!=="server")return;SF126.busy=true;SF126.err="";
+  try{SF126.d=await API.req("/v1/admin/safety")}catch(e){SF126.err=String(e.message||e)}finally{SF126.busy=false;if(S.view==="admin")renderView()}}
+const usd126=v=>v==null?"—":"$"+(v<0.01?(+v).toFixed(4):(+v).toFixed(2));
+function sf126(){if(API.mode==="server"&&!SF126.d&&!SF126.busy&&!SF126.err)sf126load();const d=SF126.d;
+  let h='<div class="panel pad sf126" id="sf126" style="margin-top:14px"><h3 style="margin:0 0 6px;display:flex;gap:8px;align-items:center">'+ic("shield")+L("Content check — every language and pictures","فحص المحتوى — كل اللغات والصور")+"</h3>"+
+    '<p class="small" style="margin:0 0 8px">'+L("A word list checks every request for free. Switched on, Claude Haiku 5.5 also reads the words in any language and looks at the pictures a job uses — uploads, references, and the face and video in Replace the person — before anything is charged. A blocked request is refused with one sentence in the customer's language, and nothing is charged.","قائمة كلمات تفحص كل طلب مجاناً. وعند التشغيل يقرأ Claude Haiku 5.5 أيضاً الكلمات بأي لغة وينظر إلى الصور التي تستخدمها المهمة — المرفوعة والمرجعية، والوجه والفيديو في استبدال الشخص — قبل خصم أي شيء. يُرفض الطلب المحظور بجملة واحدة بلغة العميل، ولا يُخصم شيء.")+"</p>";
+  if(API.mode!=="server")return h+'<p class="small mute">'+L("It works on your server.","يعمل على خادمك.")+"</p></div>";
+  if(!d)return h+'<p class="small mute">'+(SF126.err?esc(SF126.err):L("Checking…","جارٍ الفحص…"))+"</p></div>";
+  const est=d.estimate||{words:0.0002,pictures:0.001};
+  h+='<p class="small sf126c">'+L("Cost to you: about "+usd126(est.words)+" a check for words, up to about "+usd126(est.pictures)+" with pictures","التكلفة عليك: نحو "+usd126(est.words)+" للفحص بالكلمات، وحتى نحو "+usd126(est.pictures)+" مع الصور")+(d.perCheckUsd!=null?" · "+L("your average so far ","متوسطك حتى الآن ")+"<b>"+usd126(d.perCheckUsd)+"</b>":"")+"</p>";
+  if(!d.ready)h+='<p class="small sf126w">'+L("Add the Claude key in Admin → AI providers first.","أضف مفتاح Claude من الإدارة ← مزودو الذكاء أولاً.")+"</p>";
+  h+='<div class="sw112"><span class="small">'+L("Check with Claude","الفحص مع Claude")+'</span><div class="sw112b">'+[[true,L("On","تشغيل")],[false,L("Off","إيقاف")]].map(([v,t])=>'<button class="btn sm'+(d.on===v?" on":"")+'" data-act="sf126" data-on="'+v+'" aria-pressed="'+(d.on===v)+'"'+(v&&!d.ready?" disabled":"")+">"+t+"</button>").join("")+"</div></div>";
+  h+='<div class="sw112"><span class="small">'+L("If the check doesn't answer","إذا لم يُجب الفحص")+'</span><div class="sw112b">'+[["allow",L("Let it through (word list only)","اسمح به (قائمة الكلمات فقط)")],["hold",L("Hold it — the customer tries again","أوقفه — يحاول العميل مجدداً")]].map(([v,t])=>'<button class="btn sm'+(d.onError===v?" on":"")+'" data-act="sf126e" data-v="'+v+'" aria-pressed="'+(d.onError===v)+'">'+t+"</button>").join("")+"</div></div>";
+  const t=d.today||{},w=d.week||{},all=d.total||{};
+  h+='<div class="sp109g"><div><b>'+(t.checks||0)+" / "+(t.blocked||0)+"</b><small>"+L("Checked / blocked today","فُحص / حُظر اليوم")+"</small></div><div><b>"+(w.checks||0)+" / "+(w.blocked||0)+"</b><small>"+L("Checked / blocked, 7 days","فُحص / حُظر، 7 أيام")+"</small></div><div><b>"+usd126(w.usd||0)+"</b><small>"+L("Cost, 7 days","التكلفة، 7 أيام")+"</small></div><div><b>"+(all.words||0)+"</b><small>"+L("Stopped by the word list","أوقفته قائمة الكلمات")+"</small></div>"+(w.errors?"<div><b>"+w.errors+"</b><small>"+L("No answer, 7 days","بلا إجابة، 7 أيام")+"</small></div>":"")+"</div>";
+  const r=(d.recent||[]).slice(0,8);
+  h+=r.length?'<div style="overflow-x:auto"><table class="sp109t"><thead><tr><th>'+L("Latest blocks","آخر الحظر")+"</th><th>"+L("Kind","النوع")+"</th><th>"+L("By","بواسطة")+"</th><th>"+L("Client","العميل")+"</th></tr></thead><tbody>"+r.map(x=>"<tr><td>"+esc(new Date(x.t).toLocaleString(S.lang==="ar"?"ar":undefined,{dateStyle:"short",timeStyle:"short"}))+"</td><td>"+esc(L(...(CAT126[x.category]||[x.category,x.category])))+"</td><td>"+(x.how==="words"?L("Word list","قائمة الكلمات"):"Claude")+'</td><td dir="ltr">'+esc(String(x.uid||"").slice(0,12))+"</td></tr>").join("")+"</tbody></table></div>":'<p class="small mute">'+L("Nothing blocked yet.","لم يُحظر شيء بعد.")+"</p>";
+  return h+"</div>"}
+VIEWS.admin=(o=>function(){const h=o.apply(this,arguments);return S.admTab==="features"?h.replace(/<\/div>\s*$/,sf126()+"</div>"):h})(VIEWS.admin);
+document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest('[data-act="sf126"],[data-act="sf126e"]');if(!b||b.disabled)return;e.preventDefault();b.disabled=true;
+  const body=b.dataset.act==="sf126"?{on:b.dataset.on==="true"}:{onError:b.dataset.v};
+  try{SF126.d=await API.req("/v1/admin/safety",{method:"POST",json:body});toast("on" in body?(body.on?L("The content check is on","فحص المحتوى يعمل"):L("The content check is off — the word list still checks","فحص المحتوى متوقف — قائمة الكلمات ما زالت تفحص")):L("Saved","حُفظ"),{type:"ok"});renderView()}
+  catch(err){toast(L(String(err.message||err),err.errorAr||String(err.message||err)));b.disabled=false}});
+(()=>{const st=document.createElement("style");st.textContent=`
+#main .sf126 .sf126w{color:var(--amber,#d97706)}
+#main .sf126 .sf126c b{color:var(--text)}
 `;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */

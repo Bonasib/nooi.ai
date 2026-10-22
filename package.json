@@ -18,6 +18,7 @@
     "test:i18n": "python3 tests/i18n.py && python3 tests/langviews.py"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "1.1.0",
     "@dimforge/rapier3d-compat": "0.19.3",
     "@mujoco/mujoco": "3.16.0",
     "@sparkjsdev/spark": "2.2.0",

@@ -56,6 +56,7 @@ import { registerIngest } from "./lib/ingest.js";
 import { nvReady, nvCfg, nvOn } from "./providers/nvidia.js";
 import { cbSig, findJob, pollOne, speedAdvice, setSwapRes, setSwapEngine, setLipsEngine } from "./lib/jobs.js";
 import { setPace } from "./lib/line124.js";
+import { safetyInfo, setSafety } from "./lib/safety126.js";
 import { deleteAccount, noteUpload } from "./lib/account125.js";   // v125: Delete my account   // v124: the engine's send line
 import { fastFiles, warm } from "./lib/static124.js";   // v124: the page compressed once, kept in memory
 import { registerGifts } from "./lib/gifts.js";
@@ -232,6 +233,8 @@ app.post("/v1/admin/speed/swapres", requireUser, requireAdmin("providers.manage"
 app.post("/v1/admin/speed/swapengine", requireUser, requireAdmin("providers.manage"), (req, res) => { try { res.json({ swapEngine: setSwapEngine(String(req.body?.engine || "").toLowerCase()) }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v114: Seedance 2.0 / MiniMax H3
 app.post("/v1/admin/speed/pace", requireUser, requireAdmin("providers.manage"), (req, res) => { try { const p = setPace(String(req.body?.engine || "kie"), req.body?.pace); res.json({ pace: p ? p.n + "/" + p.per / 1000 : null }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v124: the engine's limit (after its support raised it)
 app.post("/v1/admin/speed/lipsengine", requireUser, requireAdmin("providers.manage"), (req, res) => { try { res.json({ lipsEngine: setLipsEngine(String(req.body?.engine || "").toLowerCase()) }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v117: Volcengine / Sync Lipsync 2 Pro
+app.get("/v1/admin/safety", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); res.json(safetyInfo()); });   // v126: the content check (every language, pictures)
+app.post("/v1/admin/safety", requireUser, requireAdmin("features.manage"), (req, res) => { try { setSafety(req.body || {}); res.json(safetyInfo()); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });
 app.get("/v1/admin/pricing", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); res.json({ rows: pricingRows(), factor: priceFactor(), floor: CREDIT_FLOOR_USD }); });
 app.put("/v1/admin/pricing", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" });
   const st = platform(), b = req.body || {}; st.costs = st.costs || {};
