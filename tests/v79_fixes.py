@@ -124,6 +124,13 @@ async def wait_for(E, js, sec=20):
         await asyncio.sleep(.25)
     return False
 
+# (v124: the page asks about all its jobs in one request, /v1/jobs/live?ids=… — the faked jobs answer there too)
+def live_route(prefix):
+    async def live(route):
+        from urllib.parse import urlparse, parse_qs
+        ids = parse_qs(urlparse(route.request.url).query).get("ids", [""])[0].split(",")
+        await route.fulfill(status=200, content_type="application/json", body=json.dumps({"jobs": {i: ({"id": i, "status": "done", "progress": 1, "url": "/media/ai.png"} if i.startswith(prefix) else None) for i in ids if i}}))
+    return live
 async def ui(p, w, lang):
     tag = f"{w}/{lang}"; r = {}
     b = await p.chromium.launch(args=["--use-gl=swiftshader", "--enable-webgl", "--ignore-gpu-blocklist"])
@@ -137,7 +144,7 @@ async def ui(p, w, lang):
         await route.fulfill(status=200, content_type="application/json", body=json.dumps({"id": "rj" + str(len(posted))}))
     async def jstat(route):
         await route.fulfill(status=200, content_type="application/json", body=json.dumps({"id": route.request.url.split("/")[-1], "status": "done", "progress": 1, "url": "/media/ai.png"}))
-    await pg.route("**/v1/jobs", jobs); await pg.route("**/v1/jobs/rj*", jstat)
+    await pg.route("**/v1/jobs", jobs); await pg.route("**/v1/jobs/rj*", jstat); await pg.route("**/v1/jobs/live*", live_route("rj"))
     await pg.goto(f"http://localhost:{PORT}/"); await pg.wait_for_timeout(1500)
     await E(SETUP % lang); await pg.wait_for_timeout(300)
     # free period: no credits needed; prices still shown
@@ -172,6 +179,10 @@ async def ui(p, w, lang):
     await E("()=>document.querySelector('[data-act=\"gen-looks\"]').click()"); await pg.wait_for_timeout(1000)
     lk = [x for x in posted[n0:] if x.get("kind") == "look"]
     ok(len(lk) == 4 and all(x["prompt"].startswith("Portrait of ") and "year-old" in x["prompt"] and len(x["prompt"]) > 120 for x in lk), f"{tag}: looks from the whole character {[x['prompt'][:90] for x in lk]}")
+    # (the states are set while no job check is on its way — an answer still coming would write "done" over them)
+    for _ in range(40):
+        if await E("()=>!poll109&&!hf109"): break
+        await pg.wait_for_timeout(100)
     await E("()=>{const L=S.jobs.filter(j=>j.kind==='look').slice(-4);L[0].status='failed';L[0].error='Engine said no';L[1].status='complete';L[1].resultUrl='/media/ai.png';L[2].status='rendering';L[2].progress=.4;L.forEach(j=>delete j.remote);persist();renderView()}")
     await pg.wait_for_timeout(2200)
     r["looks"] = await E("()=>{const c=S.chars[S.charSel];return [!!c.autoLook79,!(c.looks||[]).includes(c.lookSeed),document.querySelectorAll('.looks .fail79 [data-act=\"job-retry\"]').length,document.querySelectorAll('.looks canvas[data-ref^=\"look:\"]').length,!!document.querySelector('.looks .veil.v80 .star79')]}")
@@ -244,7 +255,7 @@ async def studio(p):
         if route.request.method != "POST": return await route.continue_()
         posted.append(json.loads(route.request.post_data or "{}")); await route.fulfill(status=200, content_type="application/json", body=json.dumps({"id": "rx" + str(len(posted))}))
     async def jstat(route): await route.fulfill(status=200, content_type="application/json", body=json.dumps({"id": route.request.url.split("/")[-1], "status": "done", "progress": 1, "url": "/media/ai.png"}))
-    await pg.route("**/v1/jobs", jobs); await pg.route("**/v1/jobs/rx*", jstat)
+    await pg.route("**/v1/jobs", jobs); await pg.route("**/v1/jobs/rx*", jstat); await pg.route("**/v1/jobs/live*", live_route("rx"))
     await pg.goto(f"http://localhost:{PORT}/"); await pg.wait_for_timeout(1500)
     await E(SETUP % "ar"); await E("()=>go('studio3d')")
     ok(await wait_for(E, "()=>S.view==='world'&&typeof NW!=='undefined'&&!!NW.E&&!!NW.empty87", 40), "3D World on a phone (opens empty)")

@@ -14,6 +14,7 @@
 // "nano-banana-pro", "veo3_fast", "suno:V5"…). Field names differ per model family; the common ones are mapped
 // below and the admin can add/override any input field per model id (Admin → AI providers → Kie AI → Extra inputs).
 import { cfg, configured, S as platformS } from "../lib/settings.js";
+import { inLine } from "../lib/line124.js";   // v124: new tasks leave at the pace Kie takes them (20 per 10 s)
 import { presetVoiceId } from "../lib/voicepresets.js";   // v97: the Voice page example you heard = the voice you get
 import { PICTURE_WORDS } from "../lib/picturewords.js";   // v100: a picture with no words still tells the engine what to do
 
@@ -231,7 +232,10 @@ export function kieBase(u) {
 export const kie = (model) => {
   const c = cfg("kie"), base = kieBase(c.baseUrl);
   const h = { Authorization: "Bearer " + c.apiKey, "Content-Type": "application/json" };
-  const call = async (path, init) => {
+  // v124: a request that starts a new task waits its turn in the send line; reading a task's state doesn't
+  const GEN = /^\/api\/v1\/(jobs\/createTask|veo\/(generate|extend)|mj\/generate)$/;
+  const call = (path, init) => (GEN.test(path) && String(init && init.method).toUpperCase() === "POST" ? inLine("kie", () => send(path, init)) : send(path, init));
+  const send = async (path, init) => {
     const r = await fetch(base + path, { ...init, headers: h });
     const t = await r.text(); let d; try { d = JSON.parse(t); } catch { d = { raw: t }; }
     // Kie answers HTTP 200 with its own code in the body (401 bad key, 402 no credits, 422 bad input, 429 rate limit…)
@@ -239,7 +243,7 @@ export const kie = (model) => {
     // an HTML page instead of JSON: the Base URL is a website, not the Kie API
     if (/^\s*</.test(t)) throw Object.assign(new Error(`Kie AI ${code || r.status}: ${base} answered with a web page, not the API. Clear Admin → AI providers → Kie AI → Base URL (or set it to https://api.kie.ai)`), { status: code || r.status, noFallback: true });
     // 433 = Kie's own rate limit → treat like 429 so jobs retry with backoff
-    if (code) throw Object.assign(new Error(`Kie AI ${code === 433 ? 429 : code}: ${d.msg || d.message || t.slice(0, 200)}`), { status: code });
+    if (code) throw Object.assign(new Error(`Kie AI ${code === 433 ? 429 : code}: ${d.msg || d.message || t.slice(0, 200)}`), { status: code === 433 ? 429 : code, retryAfter: (r.headers && r.headers.get && r.headers.get("retry-after")) || undefined });
     return d.data || {};
   };
   return {

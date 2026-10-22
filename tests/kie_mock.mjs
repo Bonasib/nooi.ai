@@ -97,10 +97,16 @@ queue = [record({ state: "success", resultJson: JSON.stringify({ data: [{ audio_
 p = await M.poll("m:s1"); ok(p.status === "done" && p.url === "https://cdn/a.mp3", "Suno: result is the track's audio_url, not its cover image");
 
 // ── errors: Kie answers HTTP 200 with its own code ──
-for (const [code, type, retry] of [[401, "auth", false], [402, "quota", false], [422, "input", false], [429, "rate", true], [433, "rate", true], [500, "provider", true]]) {
+for (const [code, type, retry] of [[401, "auth", false], [402, "quota", false], [422, "input", false], [500, "provider", true]]) {
   queue = [resp(200, { code, msg: "error " + code })];
   try { await K.submit({ kind: "video", prompt: "x", dur: 5, inputs: {}, meta: {} }); ok(false, `code ${code} should throw`); }
   catch (e) { const c = classify(e); ok(c.type === type && c.retryable === retry && !String(e.message).includes(KEY), `Kie code ${code} → ${type}${retry ? " (retried)" : ""}, key never in the message`); }
+}
+// v124: "too many" (429, Kie's own 433) on a new task isn't an error — the task waits its turn in the send line and goes through
+for (const code of [429, 433]) {
+  queue = [resp(200, { code, msg: "Too many requests" }), created("tq" + code)]; const n0 = seen.length, t0 = Date.now();
+  const rq = await K.submit({ kind: "video", prompt: "x", dur: 5, inputs: {}, meta: {} });
+  ok(rq.remoteId === "m:tq" + code && seen.length - n0 === 2 && Date.now() - t0 >= 400, `Kie code ${code} on a new task → it waits its turn (${Date.now() - t0} ms) and goes through, not an error`);
 }
 try { await kie("").submit({ kind: "video", prompt: "x", inputs: {}, meta: {} }); ok(false, "empty model should throw"); } catch (e) { ok(e.code === 503, "no model id → clear 503 setup message, nothing sent"); }
 

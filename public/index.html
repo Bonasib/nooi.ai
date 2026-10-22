@@ -2692,7 +2692,7 @@ setInterval(async()=>{
   if(API.mode!=="server"||poll109)return;const now=Date.now(),age=o=>now-(o.created||now);
   const list=S.jobs.concat(S.story.chapters).filter(o=>o.remote&&!["complete","failed"].includes(o.status)&&now-(o._poll109||0)>=(age(o)<6e5?2500:age(o)<36e5?1e4:6e4));
   if(!list.length)return;poll109=true;
-  const one=async o=>{o._poll109=Date.now();try{const r=await API.req("/v1/jobs/"+o.remote);const ch=r.status!==o.status;o.status=r.status==="done"?"complete":r.status;o.progress=r.progress||o.progress;if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;o.stage=r.stage||null;o.parts108=r.partsTotal?[r.partsDone||0,r.partsTotal]:null;o.inLine112=!!r.inLine;o.note115=r.note115||null;if(r.detail)o.detail=r.detail;if(r.via)o.via=r.via;if(r.segments&&o.kind==="transcribe"&&!o.imported){o.imported=true;importSegments(r.segments)}if(ch){persist();statusChanged()}else liveUpdate()}catch(e){goneJob(o,e)}};
+  const one=async o=>{o._poll109=Date.now();try{const r=await API.req("/v1/jobs/"+o.remote);const ch=r.status!==o.status;o.status=r.status==="done"?"complete":r.status;o.progress=r.progress||o.progress;if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;o.stage=r.stage||null;o.parts108=r.partsTotal?[r.partsDone||0,r.partsTotal]:null;o.inLine112=!!r.inLine;o.line124=r.line||null;o.note115=r.note115||null;if(r.detail)o.detail=r.detail;if(r.via)o.via=r.via;if(r.segments&&o.kind==="transcribe"&&!o.imported){o.imported=true;importSegments(r.segments)}if(ch){persist();statusChanged()}else liveUpdate()}catch(e){goneJob(o,e)}};
   try{for(let i=0;i<list.length;i+=4)await Promise.all(list.slice(i,i+4).map(one))}finally{poll109=false}
 },3000);
 const _stl=stLabel;stLabel=st=>({failed:L("Failed","فشل"),scheduled:L("Scheduled","مجدول"),published:L("Published","منشور")})[st]||_stl(st);
@@ -5960,7 +5960,9 @@ document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.c
   if(a.dataset.act==="h-test"||a.dataset.act==="h-all"){a.classList.add("busy");const keys=a.dataset.act==="h-all"?HEALTH_KEYS.map(x=>x[0]):[a.dataset.k];for(const k of keys){if(API.mode==="server"){try{const r=await API.req("/v1/admin/providers/"+k+"/test",{method:"POST",json:{}});D.health[k]=r;PSTATUS[k]=r.state}catch(err){D.health[k]={state:"down",note:String(err.message||err)}}}else{await new Promise(r=>setTimeout(r,120));const st=DEMO_STATUS[k]||"online";D.health[k]={state:st,note:st==="online"?L("Demo — connect a real key on your server","تجريبي — اربط مفتاحاً حقيقياً على خادمك"):L("No key saved","لا يوجد مفتاح"),latency:st==="online"?Math.round(180+Math.random()*400):0}}}a.classList.remove("busy");renderView();toast(L("Connection test finished","انتهى اختبار الاتصال"),{type:"ok"})}
   if(a.dataset.act==="h-maint"){const k=a.dataset.k,on=statusOf(k)!=="maintenance";if(API.mode==="server"){try{await API.req("/v1/admin/providers/"+k+"/maintenance",{method:"PUT",json:{on}});PSTATUS[k]=on?"maintenance":"online"}catch(err){}}else{DEMO_STATUS[k]=on?"maintenance":"online"}renderView()}});
 /* ---- clear messages when something goes wrong ---- */
-const ERR_MSG={gone:L("This result is no longer in your account — it may have been deleted on another device.","هذه النتيجة لم تعد في حسابك — ربما حُذفت من جهاز آخر."),auth:L("The AI provider rejected our key — support has been notified. Your credits were refunded.","رفض مزوّد الذكاء مفتاحنا — تم إبلاغ الدعم وأُعيد رصيدك."),rate:L("High demand right now — we retried automatically. Please try again in a minute.","ضغط عالٍ حالياً — أعدنا المحاولة تلقائياً. حاول بعد دقيقة."),provider:L("The AI provider is temporarily unavailable. Your credits were refunded.","مزوّد الذكاء غير متاح مؤقتاً، وأُعيد رصيدك."),network:L("We couldn't reach the AI provider. Your credits were refunded.","تعذّر الوصول لمزوّد الذكاء، وأُعيد رصيدك."),quota:L("The provider account is out of quota — support has been notified.","نفد رصيد حساب المزوّد — تم إبلاغ الدعم."),input:L("The provider couldn't process this request. Try rephrasing or another model.","لم يتمكن المزوّد من معالجة الطلب. أعد الصياغة أو جرّب نموذجاً آخر.")};
+// (v124: read when it is shown, in the reader's language — made once at load it stayed in the language the page opened in)
+const ERR_F124=()=>({gone:L("This result is no longer in your account — it may have been deleted on another device.","هذه النتيجة لم تعد في حسابك — ربما حُذفت من جهاز آخر."),auth:L("The AI provider rejected our key — support has been notified. Your credits were refunded.","رفض مزوّد الذكاء مفتاحنا — تم إبلاغ الدعم وأُعيد رصيدك."),rate:L("High demand right now — we retried automatically. Please try again in a minute.","ضغط عالٍ حالياً — أعدنا المحاولة تلقائياً. حاول بعد دقيقة."),provider:L("The AI provider is temporarily unavailable. Your credits were refunded.","مزوّد الذكاء غير متاح مؤقتاً، وأُعيد رصيدك."),network:L("We couldn't reach the AI provider. Your credits were refunded.","تعذّر الوصول لمزوّد الذكاء، وأُعيد رصيدك."),quota:L("The provider account is out of quota — support has been notified.","نفد رصيد حساب المزوّد — تم إبلاغ الدعم."),input:L("The provider couldn't process this request. Try rephrasing or another model.","لم يتمكن المزوّد من معالجة الطلب. أعد الصياغة أو جرّب نموذجاً آخر.")});
+const ERR_MSG=new Proxy({},{get:(_,k)=>ERR_F124()[k],has:(_,k)=>k in ERR_F124()});
 const notified=new Set();setInterval(()=>{S.jobs.forEach(j=>{if(j.status==="failed"&&!notified.has(j.id)&&Date.now()-(j.created||0)<3600e3){notified.add(j.id);notifyFail81(j)}})},1500);
 API.req=(orig=>async function(p,o){try{return await orig.call(API,p,o)}catch(e){const st=e.status||+(String(e.message).match(/\b(401|403|429|500|502|503|504)\b/)||[])[1]||0;if(st===429)e.message=ERR_MSG.rate;else if(st>=500)e.message=ERR_MSG.provider;throw e}})(API.req);
 /* ---- not enough credits → clear choice instead of a failed job ---- */
@@ -8002,7 +8004,7 @@ setInterval(async()=>{if(API.mode!=="server"||!S.hf||!(S.hf.out||[]).length||hf1
     if(["queued","rendering"].includes(o.status)){const exp=(o.kind==="video"?((MODELS[o.model]||{}).sec||70)*Math.max(1,(o.dur||5)/5):({music:90,voice:15,sfx:20,lipsync:120})[o.kind]||25)*1000,est=Math.min(.93,(now-(o.created||now))/exp);if(!(o.progress>est))o.progress=est}
     try{const r=await API.req("/v1/jobs/"+o.remote);const before=o.status+"|"+JSON.stringify(o.sceneCheck||null);
       if(r.status==="queued"||r.status==="rendering")o.status="rendering";else if(r.status==="done")o.status="complete";else if(r.status==="failed")o.status="failed";
-      if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;o.stage=r.stage||null;o.parts108=r.partsTotal?[r.partsDone||0,r.partsTotal]:null;o.inLine112=!!r.inLine;o.note115=r.note115||null;if(r.detail)o.detail=r.detail;if(r.progress)o.progress=Math.max(o.progress||0,r.progress);if(r.sceneCheck)o.sceneCheck=r.sceneCheck;
+      if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;o.stage=r.stage||null;o.parts108=r.partsTotal?[r.partsDone||0,r.partsTotal]:null;o.inLine112=!!r.inLine;o.line124=r.line||null;o.note115=r.note115||null;if(r.detail)o.detail=r.detail;if(r.progress)o.progress=Math.max(o.progress||0,r.progress);if(r.sceneCheck)o.sceneCheck=r.sceneCheck;
       if(before!==o.status+"|"+JSON.stringify(o.sceneCheck||null)){persist();statusChanged()}else liveUpdate()}catch(e){goneJob(o,e)}}}finally{hf109=false}},1500);
 (()=>{const st=document.createElement("style");st.textContent=`
 .hfmrow.g{gap:6px}.hfmi.nooi{padding:0 12px 0 4px}.hfmi.nooi b{padding:0}.hfmi.pick{padding:0 10px 0 4px}.hfmi.pick>svg:last-child{width:14px;height:14px;opacity:.7}
@@ -14113,7 +14115,7 @@ window.addEventListener("click",async e=>{const a=e.target.closest&&e.target.clo
 // prepAndStart): the card says which step it is on instead of a long silent wait; a long swap says how many parts are ready.
 const stage108=j=>{if(!j||!j.stage||["complete","failed"].includes(j.status))return"";const p=j.parts108;
   const t={prep:L("Getting your video ready…","تجهيز الفيديو…"),look:L("Looking at the video and the photos…","فحص الفيديو والصور…"),
-    engine:j.inLine112?L("Waiting in the engine's line — it starts as soon as the engine is free…","في طابور المحرّك — يبدأ فور أن يتفرّغ…"):p&&p[1]>1?L("The engine is making it — "+p[0]+" of "+p[1]+" parts ready…","المحرّك يصنعه — جاهز "+p[0]+" من "+p[1]+" أجزاء…"):L("The engine is making it — usually a few minutes…","المحرّك يصنعه — عادةً بضع دقائق…"),
+    line:line124(j),engine:j.inLine112?L("Waiting in the engine's line — it starts as soon as the engine is free…","في طابور المحرّك — يبدأ فور أن يتفرّغ…"):p&&p[1]>1?L("The engine is making it — "+p[0]+" of "+p[1]+" parts ready…","المحرّك يصنعه — جاهز "+p[0]+" من "+p[1]+" أجزاء…"):L("The engine is making it — usually a few minutes…","المحرّك يصنعه — عادةً بضع دقائق…"),
     join:L("Joining the parts with the original sound…","جمع الأجزاء مع الصوت الأصلي…"),lips:L("Matching the lips to the voice…","مطابقة الشفاه مع الصوت…")}[j.stage];
   return t?'<p class="small mute stage108">'+ic("spark","width:14px;height:14px")+"<span>"+esc(t)+"</span></p>":""};
 previewCol=(o=>function(g,prev){const h=o(g,prev),s=stage108(g);return s?h.replace('<div class="pipe"',s+'<div class="pipe"'):h})(previewCol);
@@ -14522,6 +14524,46 @@ renderView=(o=>function(){const r=o.apply(this,arguments);try{order122()}catch(e
 .sec122t{scroll-margin-top:124px}
 #main .curplan{flex-wrap:wrap;row-gap:4px}#main .curplan>*{min-width:0}   /* (the plan line wraps in a longer language instead of running past a phone's edge) */
 @media (prefers-reduced-motion: no-preference){.secbar122 button{transition:background-color .2s ease,color .2s ease,border-color .2s ease}}
+`;document.head.appendChild(st)})();
+
+/* ================= v124: MANY CUSTOMERS AT ONCE ================= */
+// The owner: "when many clients use the platform it shows 'High demand right now' — 1 client or 12,000,000, find a way so it
+// stays fast and takes them all". The engine takes only so many new tasks a moment (the AI engine: 20 every 10 s); the server now keeps
+// the rest in its send line (lib/line124.js) instead of failing them, and the page:
+//  · says where a job is in that line ("12 ahead of you · starts in about 10 s") — nothing to do, it starts by itself
+//  · asks about all its jobs in ONE request (/v1/jobs/live) instead of one each, and only every 15 s while the tab is hidden
+//  · shows the server's messages in the reader's language, and lets a sentence in the other script read in its own direction
+//  · Admin → Speed: the line (waiting, sent, "too many" answers) and the engine's limit, to raise after its support does
+function line124(j){const l=j&&j.line124;
+  if(!l)return L("Waiting for a free moment on the AI engine — it starts by itself…","بانتظار لحظة فراغ في محرّك الذكاء — يبدأ تلقائياً…");
+  const s=l.sec<=5?L("in a moment","خلال لحظات"):l.sec<90?L("in about "+l.sec+" s","خلال نحو "+l.sec+" ث"):L("in about "+Math.ceil(l.sec/60)+" min","خلال نحو "+Math.ceil(l.sec/60)+" د");
+  return l.ahead?L("Many people are creating right now — you're in line, "+l.ahead+" ahead of you · it starts "+s+" by itself.","يصنع كثيرون الآن — أنت في الطابور وأمامك "+l.ahead+" · يبدأ "+s+" تلقائياً."):L("You're next — it starts "+s+"…","أنت التالي — يبدأ "+s+"…")}
+hfrCard=(o=>function(j){let h=o(j);
+  if(j.status==="failed")return h.replace(/(<div class="hfrph bad">[\s\S]*?)<p>/,'$1<p dir="auto">');
+  if(j.stage==="line"&&j.status!=="complete")h=h.replace(/(<div class="hfrph" role="status"[^>]*>)/,'$1<small class="ln124" dir="auto">'+esc(line124(j))+"</small>");
+  return h})(hfrCard);
+// one request for all of a page's jobs; a job that request doesn't know is asked about by itself (as before)
+const JB124={q:new Map(),t:0,off:false,n:0};
+function flush124(){clearTimeout(JB124.t);JB124.t=0;const q=JB124.q;JB124.q=new Map();const ids=[...q.keys()],one=(id,cbs)=>JB124.o.call(API,"/v1/jobs/"+id).then(v=>cbs.forEach(c=>c[0](v)),e=>cbs.forEach(c=>c[1](e)));
+  for(let i=0;i<ids.length;i+=50){const part=ids.slice(i,i+50);JB124.n++;
+    JB124.o.call(API,"/v1/jobs/live?ids="+part.map(encodeURIComponent).join(",")).then(r=>{const js=(r&&r.jobs)||{};part.forEach(id=>js[id]?q.get(id).forEach(c=>c[0](js[id])):one(id,q.get(id)))},
+      e=>{if(e&&e.status===404)JB124.off=true;part.forEach(id=>one(id,q.get(id)))})}}   // (an older server without it → one by one)
+API.req=(o=>{JB124.o=o;return function(p,opt){const m=String((opt&&opt.method)||(opt&&(opt.json||opt.body)?"POST":"GET")).toUpperCase(),id=m==="GET"&&!JB124.off&&(/^\/v1\/jobs\/([A-Za-z0-9_-]+)$/.exec(p)||[])[1];
+  if(!id||id==="live")return o.call(API,p,opt);
+  return new Promise((res,rej)=>{const a=JB124.q.get(id)||[];a.push([res,rej]);JB124.q.set(id,a);if(!JB124.t)JB124.t=setTimeout(flush124,document.hidden?15000:30)})}})(API.req);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&JB124.t)flush124()});
+// Admin → Speed: the engine's send line and its limit
+speed109=(o=>function(){let h=o();const d=SP109.d,l=d&&d.lines&&d.lines.engine;if(!l)return h;
+  const row='<div class="sw112 ln124a"><span class="small">'+L("AI engine — new tasks it takes","محرّك الذكاء — المهام الجديدة التي يقبلها")+" <b>"+esc(String(l.limit||"—").replace("/",L(" every "," كل "))+L(" s"," ث"))+"</b> · "+L("waiting now ","تنتظر الآن ")+"<b>"+l.waiting+"</b> · "+L("sent ","أُرسلت ")+"<b>"+l.sent+"</b> · "+L("\"too many\" (1 h) ","\"طلبات كثيرة\" (ساعة) ")+"<b>"+l.tooMany1h+"</b>"+(l.expired?" · "+L("given back ","أُعيد رصيدها ")+"<b>"+l.expired+"</b>":"")+"</span>"+
+    '<span class="row" style="gap:6px;align-items:center"><label class="small" for="pace124">'+L("Engine limit","حدّ المحرّك")+'</label><input id="pace124" dir="ltr" inputmode="numeric" placeholder="20/10" value="'+esc(l.limit||"")+'" style="width:84px"><button class="btn sm" data-act="pace124">'+L("Save","حفظ")+"</button></span></div>";
+  return h.replace(/(<\/div>)\s*$/,row+"$1")})(speed109);
+document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest('[data-act="pace124"]');if(!b||b.disabled)return;b.disabled=true;
+  try{const r=await API.req("/v1/admin/speed/pace",{method:"POST",json:{engine:"engine",pace:($("#pace124")||{}).value||""}});toast(L("The engine limit is now "+(r.pace||"20/10")+" (tasks / seconds)","صار حدّ المحرّك "+(r.pace||"20/10")+" (مهام / ثوانٍ)"));SP109.d=null;speed109load()}
+  catch(err){toast(String(err.message||err))}finally{b.disabled=false}});
+(()=>{const st=document.createElement("style");st.textContent=`
+.hfrph small.ln124{display:block;order:2;max-width:92%;font-size:12px;line-height:1.35;color:var(--mute);text-align:center;text-wrap:balance}   /* (v81 hides a card's small print; this one is for the customer) */
+#toast .tm,.hfrph.bad p,.stage108 span{unicode-bidi:plaintext;text-align:start}
+.ln124a{border-top:1px solid var(--line2);padding-top:10px}.ln124a b{color:var(--text)}
 `;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */

@@ -55,6 +55,8 @@ import { registerWorld } from "./lib/world.js";
 import { registerIngest } from "./lib/ingest.js";
 import { nvReady, nvCfg, nvOn } from "./providers/nvidia.js";
 import { cbSig, findJob, pollOne, speedAdvice, setSwapRes, setSwapEngine, setLipsEngine } from "./lib/jobs.js";
+import { setPace } from "./lib/line124.js";   // v124: the engine's send line
+import { fastFiles, warm } from "./lib/static124.js";   // v124: the page compressed once, kept in memory
 import { registerGifts } from "./lib/gifts.js";
 import { registerInvoices } from "./lib/invoices.js";
 import { registerExplore } from "./lib/explore.js";
@@ -80,6 +82,7 @@ app.use((req, res, next) => {
 });
 app.set("trust proxy", 1);   // behind Nginx on the VPS
 app.use("/media", express.static(MEDIA_DIR, { maxAge: "7d" }));
+app.use(fastFiles("public")); warm("public", ["index.html"]);
 app.use(express.static(path.resolve("public")));
 // On-device AI: ONNX Runtime's WebAssembly/WebGPU files come from our own server (npm onnxruntime-web), and an
 // optional local model mirror (MODELS_DIR, same layout as Hugging Face: <org>/<model>/resolve/main/…).
@@ -125,6 +128,9 @@ app.post("/v1/jobs/:id/keep", requireUser, wrap(async (req, res) => {
   if (/^https?:\/\//.test(j.url) && !localPath(j.url)) { try { j.url = (await download(j.url, null, { tries: 2, timeoutMs: 60000 })).url; save(); } catch (e) { return res.status(502).json({ error: "The result couldn't be copied here: " + e.message }); } }
   res.json({ url: j.url });
 }));
+// v124: the state of several jobs in one answer — an open page asks once for all its jobs instead of once for each (max 50)
+app.get("/v1/jobs/live", requireUser, (req, res) => { const st = isStaff(req.user), mine = user(req.user.uid).jobs, ids = String(req.query.ids || "").split(",").map((x) => x.trim()).filter(Boolean).slice(0, 50);
+  res.json({ jobs: Object.fromEntries(ids.map((id) => [id, mine[id] ? publicJob(mine[id], st) : null])) }); });
 app.get("/v1/jobs/:id", requireUser, (req, res) => { const j = user(req.user.uid).jobs[req.params.id]; j ? res.json(publicJob(j, isStaff(req.user))) : res.status(404).json({ error: "Not found" }); });
 
 // AI text
@@ -221,6 +227,7 @@ const pricingRows = () => Object.entries(ENGINE_COST).flatMap(([g, m]) => Object
 app.get("/v1/admin/speed", requireUser, async (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); try { res.json(await speedAdvice()); } catch (e) { res.status(500).json({ error: e.message }); } });   // (v110: with what slows jobs, in words)
 app.post("/v1/admin/speed/swapres", requireUser, requireAdmin("providers.manage"), (req, res) => { try { res.json({ swapRes: setSwapRes(String(req.body?.res || "").toUpperCase() === "768P" ? "768P" : "2K") }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v112: Replace the person 2K / 768P
 app.post("/v1/admin/speed/swapengine", requireUser, requireAdmin("providers.manage"), (req, res) => { try { res.json({ swapEngine: setSwapEngine(String(req.body?.engine || "").toLowerCase()) }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v114: Seedance 2.0 / MiniMax H3
+app.post("/v1/admin/speed/pace", requireUser, requireAdmin("providers.manage"), (req, res) => { try { const p = setPace(String(req.body?.engine || "kie"), req.body?.pace); res.json({ pace: p ? p.n + "/" + p.per / 1000 : null }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v124: the engine's limit (after its support raised it)
 app.post("/v1/admin/speed/lipsengine", requireUser, requireAdmin("providers.manage"), (req, res) => { try { res.json({ lipsEngine: setLipsEngine(String(req.body?.engine || "").toLowerCase()) }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v117: Volcengine / Sync Lipsync 2 Pro
 app.get("/v1/admin/pricing", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); res.json({ rows: pricingRows(), factor: priceFactor(), floor: CREDIT_FLOOR_USD }); });
 app.put("/v1/admin/pricing", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" });
