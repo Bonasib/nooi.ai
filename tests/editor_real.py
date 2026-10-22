@@ -22,7 +22,8 @@ SETUP = """async()=>{S.langAsked=true;document.getElementById('langsug')?.remove
  for(const id of ['ed_va','ed_vb','ed_img','ed_mu','ed_vo']){await edUseJob(S.jobs.find(j=>j.id===id),{stay:true,quiet:true,t:1})}
  go('edit');renderAll()}"""
 SCROLL = """(sel)=>{const all=document.querySelectorAll(sel),el=all[all.length-1];if(!el)return null;let e=el.parentElement;while(e&&!(e.scrollHeight>e.clientHeight+5&&/(auto|scroll)/.test(getComputedStyle(e).overflowY)))e=e.parentElement;e=e||document.scrollingElement;
- const st=document.querySelector('.edstage');const top=(st&&getComputedStyle(st).position==='sticky')?st.getBoundingClientRect().bottom+20:120;e.style.scrollBehavior='auto';e.scrollTop+=el.getBoundingClientRect().top-top;return 1}"""
+ const st=document.querySelector('.edstage');const top=(st&&getComputedStyle(st).position==='sticky')?st.getBoundingClientRect().bottom+20:120;e.style.scrollBehavior='auto';e.scrollTop+=el.getBoundingClientRect().top-top;
+ const bar=el.closest('.edbar');if(bar&&bar.scrollWidth>bar.clientWidth){const r=el.getBoundingClientRect(),br=bar.getBoundingClientRect();bar.scrollLeft+=r.left-br.left-(br.width-r.width)/2}return 1}"""   # (v131: the tool row scrolls sideways on a phone)
 RECT = "(s)=>{const a=document.querySelectorAll(s),x=a[a.length-1].getBoundingClientRect();return [x.x,x.y,x.width,x.height]}"
 WRAP = "()=>{const r=document.querySelector('.tlwrap').getBoundingClientRect();return [r.left,r.right]}"
 

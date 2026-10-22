@@ -1,0 +1,16 @@
+# Open-source parts inside nooi
+
+What nooi ships from other projects, where it lives, and under which licence. The full licence texts are in
+`public/editor131/LICENSES.txt` (served with the page).
+
+## Video editor (v131)
+
+| What | From | Licence | In nooi |
+|---|---|---|---|
+| 22 GPU transitions (GLSL) | [gl-transitions](https://github.com/gl-transitions/gl-transitions) 1.76.1 (npm `gl-transitions`) | MIT; each transition's author is kept in `transitions.json` | `public/editor131/transitions.json` — the shader code as published, with nooi names (`gl_push`, `gl_cube`…), each transition's defaults and parameter types. Run by `glRun131` in `public/index.html` (WebGL 1). |
+| 20 text motions | [Animate.css](https://github.com/animate-css/animate.css) 4.1.1 | MIT | Keyframes, durations and timing curves rewritten as data for the canvas (`AC131` in `public/index.html`); no CSS file is shipped. |
+| 15 colour looks | [CSSgram](https://github.com/una/CSSgram) 0.1.3 | MIT | Each recipe's filter + colour / gradient layer + blend mode rewritten for the canvas (`EDX_LOOKS` additions in `public/index.html`) under nooi's own names (Linen, Sea breeze, Ember…). |
+| 38 icons for banners and stickers | [Material Symbols](https://github.com/google/material-design-icons) by Google, via npm `@material-symbols/svg-400` 0.48.1 (rounded, filled) | Apache-2.0 | `public/editor131/icons.json` — each icon's SVG path (viewBox `0 -960 960 960`), drawn with `Path2D`. |
+
+Banners, stickers and their motion are nooi's own designs built on those icons; nothing else is copied from other
+editors. The server's drag copy (`lib/scrub131.js`) uses the ffmpeg already on the server.

@@ -14903,6 +14903,387 @@ skSetPic94=(o=>function(){const r=o.apply(this,arguments);requestAnimationFrame(
   if(b.bottom<90||b.top>innerHeight-90)p.scrollIntoView({block:"center",behavior:"smooth"})});return r})(skSetPic94);
 (()=>{const st=document.createElement("style");st.textContent=`@media (min-width:900px){#main .sk91 .skpaper{width:min(100%,max(320px,calc(100vh - 430px)));margin-inline:auto}}`;document.head.appendChild(st)})();
 
+/* ================= v131: THE EDITOR, USED ON A PHONE · OPEN-SOURCE TRANSITIONS, TEXT MOTIONS, LOOKS, BANNERS & STICKERS =================
+   Looked at on a phone the way it is used:
+   · a tap on the picture stopped the video. Now it hides the guides and handles over the picture (the app's safe zones, the
+     selection and its ⤡ and × handles) so the video is seen clearly, and the video goes on; another tap brings them back.
+     A tap on a text, banner or sticker still picks it.
+   · dragging the playhead: the picture lagged behind the finger — each jump waited for the one before only 0.25 s and then
+     asked again, and a video from the engines has a keyframe only every few seconds, so a phone's jump took longer than that
+     and started over. Now a jump is never cut short (the newest place waits for it), and while you drag the picture comes from
+     a light copy of the clip made by the server (lib/scrub131.js: a keyframe every 6 frames) — when you let go, the clip itself.
+   · a long press (or a right click) on a clip, a picture, a sound, a text, a banner or an effect on the timeline opens its menu;
+     on the picture, the menu of the clip under the playhead; on a video or picture you made (Video and Image pages) — open,
+     download, edit, animate, delete.
+   · the tool row under the timeline: words broke in the middle ("Dupli-cate", "Exte-nd · 8-3") — now whole words in a row
+     that scrolls.
+   · "Grok Imagine 1.5" starts from a picture: it is in the video engine lists only when a picture is attached (or when it's
+     already the one chosen).
+   New in the editor, from official open-source projects (licences: public/editor131/LICENSES.txt, docs/THIRD_PARTY.md):
+   22 GPU transitions from gl-transitions (MIT), 20 text motions from Animate.css (MIT), 15 colour looks after CSSgram's recipes
+   (MIT, nooi's own names), and banners and stickers drawn with Google's Material Symbols (Apache-2.0). They are drawn on the
+   preview, so the export (which records the preview) has them too. */
+// ---- Grok Imagine 1.5 only with a picture
+const vPic131=()=>!!(M.vStart||S.draft.startJob),hfPic131=()=>!!(M.hfRef&&M.hfRef.type!=="video");
+VIEWS.video=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="string"||vPic131()||S.draft.model==="grok15")return h;
+  return h.replace(/<button class="model" data-set="draft\.model" data-val="grok15"[\s\S]*?<\/button>/g,"")})(VIEWS.video);
+hfModelSheet=(o=>function(){const r=o.apply(this,arguments);if(S.hf.tab==="video"&&!hfPic131()&&S.hf.vModel!=="grok15")document.querySelectorAll('.hfsheet .hfmodel[data-v="grok15"]').forEach(b=>b.remove());return r})(hfModelSheet);
+if(VIEWS.recipes)VIEWS.recipes=(o=>function(){const h=o.apply(this,arguments);return typeof h==="string"?h.replace(/<option value="grok15"[^>]*>[^<]*<\/option>/g,"").replace(/<button[^>]*data-val="grok15"[\s\S]*?<\/button>/g,""):h})(VIEWS.recipes);
+if(VIEWS.cinema)VIEWS.cinema=(o=>function(){const h=o.apply(this,arguments);return typeof h==="string"&&!(S.cin&&S.cin.model==="grok15")?h.replace(/<option value="grok15"[^>]*>[^<]*<\/option>/g,""):h})(VIEWS.cinema);   // (Cinema Studio films from words only)
+
+// ---- a tap on the picture: guides away (or back), the video goes on
+const PL131={down:null,chipT:0};
+(()=>{let pl=!!ED.playing;Object.defineProperty(ED,"playing",{configurable:true,enumerable:true,get(){return pl},set(v){const ev=window.event;
+  if(ev&&ev.type==="pointerdown"&&ev.target&&ev.target.id==="wk"&&S.view==="edit"&&!["erase","layers","motion","track"].includes(S.ed.tab)){
+    if(!PL131.down||PL131.down.ev!==ev){if(CM131.el){cmClose131();PL131.down={ev,id:-1};if(!v&&pl)return;pl=!!v;return}   // (a tap that closes a menu does only that)
+      PL131.down={ev,id:ev.pointerId,x:ev.clientX,y:ev.clientY,t:performance.now()};lpStart131(ev,ev.target)}if(!v&&pl)return}   // (the picture's own tap: it keeps playing; its handler stops the event, so the long press starts here)
+  pl=!!v}})})();
+function clean131(on){ED.clean131=on;const st=document.querySelector("#main .edstage");if(!st)return;st.classList.toggle("clean131",on);
+  let c=st.querySelector(".cl131");if(!c){c=document.createElement("span");c.className="cl131";st.appendChild(c)}c.textContent=on?L("Tap to show the guides","اضغط لإظهار الأدلة"):L("Guides on","الأدلة ظاهرة");
+  c.classList.add("on");clearTimeout(PL131.chipT);PL131.chipT=setTimeout(()=>c.classList.remove("on"),1300)}
+window.addEventListener("pointerup",e=>{const d=PL131.down;if(!d||e.pointerId!==d.id||S.view!=="edit")return;PL131.down=null;
+  if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>10||performance.now()-d.t>600)return;const p=S.ed.pick;
+  if(!p||p.k==="clip")clean131(!ED.clean131);else if(ED.clean131)clean131(false)},true);
+edTick=(o=>function(now){if(S.view!=="edit"||!ED.clean131)return o.apply(this,arguments);const E=S.ed,sf=E.safe,pk=E.pick,tab=E.tab;E.safe=false;E.pick=null;if(["erase","layers","motion"].includes(tab))E.tab="clip";
+  try{return o.apply(this,arguments)}finally{E.safe=sf;E.pick=pk;E.tab=tab}})(edTick);
+renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="edit"&&ED.clean131){const st=document.querySelector("#main .edstage");if(st)st.classList.add("clean131")}return r})(renderView);
+
+// ---- dragging the playhead: one jump at a time, the light copy while you drag
+const CT131=Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype,"currentTime"),scrub131=()=>!!(typeof TLX!=="undefined"&&TLX.s&&TLX.s.scrub);
+function jump131(v,t){if(v.seeking){v._q131=t;return}v._q131=null;if(Math.abs(CT131.get.call(v)-t)<.001)return;try{CT131.set.call(v,t)}catch(e){}}
+function landed131(v){v.addEventListener("seeked",()=>{if(v._q131!=null){const t=v._q131;v._q131=null;if(Math.abs(CT131.get.call(v)-t)<.001)return;try{CT131.set.call(v,t)}catch(e){}}})}
+// (while the copy is shown, the clip reads as being where the copy is — or the editor's sync would ask for the same place every frame)
+function hook131(m){const v=m&&m.type==="video"&&m.el;if(!v||v._h131||!v.addEventListener)return;v._h131=1;landed131(v);
+  Object.defineProperty(v,"currentTime",{configurable:true,get(){return scrub131()&&m.use131&&m.px131&&m.want131!=null?m.want131:CT131.get.call(v)},set(t){
+    if(scrub131()&&m.px131&&m.px131.readyState>=1){m.use131=performance.now();m.want131=t;jump131(m.px131,t);return}
+    jump131(v,t)}})}
+const H264_131=(()=>{try{return!!document.createElement("video").canPlayType('video/mp4; codecs="avc1.640028"')}catch(e){return false}})();
+async function px131(c,m){if(m.pxReq131||!H264_131||API.mode!=="server"||!S.user)return;m.pxReq131=1;
+  try{let url="";if(c.src&&c.src.k==="job"){url=mediaUrl(S.jobs.find(x=>x.id===c.src.job))}else if(m.file&&m.file.size<=40e6){if(m.prep88)await m.prep88;url=(await API.upload(m.file,m.file.name||m.name||"clip.mp4")).url}   // (a big file from the phone isn't sent just for this)
+    if(!url||!/^\/media\//.test(String(url).replace(location.origin,"")))return;const r=await API.req("/v1/media/scrub",{json:{url:String(url).replace(location.origin,"")}});if(!r||!r.url)return;
+    const v=document.createElement("video");v.muted=true;v.playsInline=true;v.setAttribute("playsinline","");v.preload="auto";v.crossOrigin="anonymous";v.addEventListener("error",()=>{if(m.px131===v)m.px131=null});v.src=r.url;mediaHost().appendChild(v);landed131(v);m.px131=v}
+  catch(e){}}
+let pxAt131=0;edTick=(o=>function(now){const r=o.apply(this,arguments);if(S.view==="edit"&&now-pxAt131>700){pxAt131=now;S.ed.clips.forEach(c=>{const m=M["c_"+c.id];if(m&&m.type==="video"){hook131(m);px131(c,m)}})}return r})(edTick);
+drawFit=(o=>function(ctx,m,ow,oh,lt,filter){if(!m||m.type!=="video"||!m.use131||!m.px131)return o.apply(this,arguments);const px=m.px131,v=m.el;
+  if(!scrub131()&&(performance.now()-m.use131>2500||(!v.seeking&&Math.abs(CT131.get.call(v)-(m.want131??-9))<.08))){m.use131=0;return o.apply(this,arguments)}
+  if(px.error||px.readyState<1)return o.apply(this,arguments);m.el=px;try{return o.apply(this,arguments)}finally{m.el=v}})(drawFit);   // (mid-jump, the copy's last frame is held — not the clip's old place)
+
+// ---- long press (or right click): the menu of what is under the finger
+const CM131={el:null,lp:null,fired:0};
+function cmClose131(){if(CM131.el){CM131.el.remove();CM131.el=null}}
+function cmOpen131(items,x,y,title){cmClose131();if(!items.length)return;const d=document.createElement("div");d.className="cm131";d.setAttribute("role","menu");d.setAttribute("aria-label",title||L("Menu","القائمة"));
+  d.innerHTML=(title?'<div class="cm131h" dir="auto">'+esc(title)+"</div>":"")+items.map((it,i)=>it.file?'<label class="cm131i" role="menuitem" tabindex="-1">'+ic(it.icon)+"<span>"+esc(it.label)+'</span><input type="file" accept="'+it.accept+'" data-cm131f="'+i+'"></label>':
+    '<button type="button" class="cm131i'+(it.danger?" danger":"")+'" role="menuitem" data-cm131="'+i+'">'+ic(it.icon)+"<span>"+esc(it.label)+"</span></button>").join("");
+  d._items=items;document.body.appendChild(d);CM131.el=d;const W=innerWidth,H=innerHeight,r=d.getBoundingClientRect();
+  if(W<768){d.classList.add("sheet")}else{d.style.left=Math.max(8,Math.min(x+4,W-r.width-8))+"px";d.style.top=Math.max(8,Math.min(y+4,H-r.height-8))+"px"}
+  const f=d.querySelector(".cm131i");if(f)f.focus({preventScroll:true});if(navigator.vibrate)try{navigator.vibrate(12)}catch(e){}}
+document.addEventListener("click",e=>{const d=CM131.el;if(!d||!d.contains(e.target))return;const b=e.target.closest&&e.target.closest("[data-cm131]");
+  if(b){e.preventDefault();e.stopImmediatePropagation();const it=d._items[+b.dataset.cm131];cmClose131();if(it&&it.fn)it.fn();else if(it&&it.act)fire131(it.act,it.extra);return}},true);
+// a line that is one of the editor's own buttons: the menu closes, then that button's action runs as if it was pressed
+function fire131(act,extra){const b=document.createElement("button");b.type="button";b.hidden=true;b.setAttribute("data-act",act);String(extra||"").replace(/data-([a-z0-9-]+)="([^"]*)"/g,(_,k,v)=>b.setAttribute("data-"+k,v));
+  (document.getElementById("main")||document.body).appendChild(b);try{b.click()}finally{b.remove()}}
+document.addEventListener("change",e=>{const i=e.target&&e.target.dataset&&e.target.dataset.cm131f;if(i==null||!CM131.el)return;const it=CM131.el._items[+i],f=e.target.files&&e.target.files[0];cmClose131();if(it&&f&&it.onFile)it.onFile(f)},true);
+document.addEventListener("pointerdown",e=>{if(CM131.el&&!CM131.el.contains(e.target))cmClose131()},true);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&CM131.el){cmClose131();e.stopPropagation()}},true);
+window.addEventListener("scroll",()=>{if(CM131.el&&!CM131.el.classList.contains("sheet"))cmClose131()},true);
+// what the menu offers for each thing
+const actBtn131=(icon,label,act,extra,danger)=>({icon,label,act,extra,danger});
+function edMenu131(k,id){const E=S.ed,it=k==="music"?M.edMusic:edItem({k,id});if(!it)return null;if(k!=="music")edSetPick(k,id);if(k==="clip"){E.sel=id;E.tab=E.tab||"clip"}
+  const items=[],re=()=>{persist();renderView()};
+  if(k==="clip"){const c=it,m=clipMedia(c),vid=m&&m.type==="video",i=E.clips.indexOf(c);
+    items.push(actBtn131("split",L("Split at the playhead","قص عند المؤشر"),"ed-split"),actBtn131("copy",L("Duplicate","تكرار"),"ed-dup"));
+    if(vid)[[.5,"0.5×"],[1,"1×"],[2,"2×"]].forEach(([s,l])=>items.push({icon:"motion",label:L("Speed ","السرعة ")+l+(+(c.speed||1)===s?" ✓":""),fn:()=>{c.speed=s;re()}}));
+    if(vid)items.push({icon:"voice",label:+c.vol?L("Mute this clip","اكتم صوت المقطع"):L("Turn its sound on","شغّل صوته"),fn:()=>{c.vol=+c.vol?0:100;re()}});
+    if(i>0)items.push(actBtn131("prev",L("Move earlier","انقله للخلف"),"ed-move",'data-d="-1"'));if(i<E.clips.length-1)items.push(actBtn131("next",L("Move later","انقله للأمام"),"ed-move",'data-d="1"'));
+    if(vid&&typeof edExtend91==="function")items.push({icon:"plus",label:L("Extend with AI","المدّ بالذكاء الاصطناعي")+(typeof edExtCost91==="function"?" · "+edExtCost91(c)+" cr":""),fn:()=>edExtend91(c)});
+    items.push({icon:"upload",label:L("Replace…","استبدال…"),file:1,accept:"video/*,image/*",onFile:f=>{const isV=/^video\//.test(f.type||"");loadSlot("c_"+c.id,f);c.src={k:"upload",name:f.name};c.in=0;c.out=isV?Math.min(c.out-c.in||5,30):3;c.auto=isV;
+      const mm=M["c_"+c.id];if(isV&&mm&&mm.el){mm.el.addEventListener("loadedmetadata",()=>{if(c.auto&&isFinite(mm.el.duration)){c.out=Math.min(mm.el.duration,30);c.auto=false;persist();renderView()}},{once:true});mm.el.loop=false;try{mm.el.pause()}catch(x){}}re()}},
+      {icon:"more93",label:L("Settings","الإعدادات"),fn:()=>{E.tab="clip";re()}},actBtn131("trash",L("Delete","حذف"),"ed-del","",1))}
+  else if(k==="music")items.push({icon:"upload",label:L("Replace the music…","استبدل الموسيقى…"),file:1,accept:"audio/*",onFile:f=>{loadSlot("edMusic",f);re()}},{icon:"voice",label:L("Volume","مستوى الصوت"),fn:()=>{E.tab="audio";re()}},
+      {icon:"trash",label:L("Remove the music","أزل الموسيقى"),danger:1,fn:()=>{const m=M.edMusic;if(m&&m.el)try{m.el.pause()}catch(x){}delete M.edMusic;if(S.mediaKeys&&S.mediaKeys.edMusic){delete S.mediaKeys.edMusic;IDB.del("edMusic")}re()}});
+  else{if(k==="text"||k==="info")items.push({icon:"edit",label:L("Edit","تعديل"),fn:()=>{E.tab=k==="text"?"text":"info";re();setTimeout(()=>{const i=document.querySelector(k==="text"?'[data-bind="edtext.text"]':'[data-ib="t1"]');if(i){i.focus();i.select&&i.select()}},60)}});
+    if(["text","info","vfx"].includes(k))items.push(actBtn131("copy",L("Duplicate","تكرار"),"ed-dup"),actBtn131("split",L("Split at the playhead","قص عند المؤشر"),"ed-split"));
+    items.push(actBtn131("trash",L("Delete","حذف"),"ed-del","",1))}
+  return items}
+const blkKey131=b=>{if(!b)return null;if(b.dataset.clip)return["clip",b.dataset.clip];if(b.dataset.textl)return["text",b.dataset.textl];if(b.dataset.ix)return["info",b.dataset.ix];if(b.dataset.vx)return["vfx",b.dataset.vx];
+  if(b.dataset.edxsel){const[k,id]=b.dataset.edxsel.split(":");return[{ly:"layer",rg:"region",sx:"sfx"}[k],id]}if(b.classList.contains("a"))return["music","edMusic"];return null};
+const blkName131=(k,id)=>{const it=k==="music"?M.edMusic:edItem({k,id});return k==="clip"?clipName(it):k==="music"?(it&&it.name)||L("Music","الموسيقى"):(it&&(it.text||it.t1))||""};
+function menuAt131(t,x,y){if(S.view==="edit"){const b=t.closest&&t.closest("#tlin .blk");if(b){const kk=blkKey131(b);if(!kk)return false;const items=edMenu131(kk[0],kk[1]);if(!items)return false;cmOpen131(items,x,y,blkName131(kk[0],kk[1]).slice(0,60));if(kk[0]!=="music")renderView();return true}
+    if(t.id==="wk"){const p=S.ed.pick;let kk=p&&p.k!=="clip"&&["text","info","vfx"].includes(p.k)?[p.k,p.id]:null;if(!kk){const a=edAt(Math.min(ED.t,Math.max(0,edTotal()-.001))),c=S.ed.clips[a.i];if(c)kk=["clip",c.id]}
+      if(!kk)return false;const items=edMenu131(kk[0],kk[1]);if(!items)return false;cmOpen131(items,x,y,blkName131(kk[0],kk[1]).slice(0,60));return true}}
+  const g=t.closest&&t.closest(".gc98[data-open98]");if(g){const j=S.jobs.find(x=>x.id===g.dataset.open98);if(!j)return false;const u=j.status==="complete"&&mediaUrl(j),img=j.kind==="image",items=[];
+    items.push({icon:"expand",label:L("Open","افتح"),fn:()=>g.click()});if(u)items.push({icon:"download",label:L("Download","تنزيل"),fn:()=>{const a=document.createElement("a");a.href=u;a.download="nooi-"+(img?"picture":"video");document.body.appendChild(a);a.click();a.remove()}});
+    if(u)items.push({icon:"edit",label:L("Edit in the editor","حرّر في المحرر"),fn:async()=>{await edUseJob(j);go("edit")}});if(u&&img)items.push(actBtn131("video",L("Animate","حرّكها"),"animate-img",'data-id="'+esc(j.id)+'"'));
+    items.push(actBtn131("trash",L("Delete","حذف"),"del88",'data-id="'+esc(j.id)+'"',1));cmOpen131(items,x,y,(typeof shown88==="function"?shown88(j):j.prompt||"").slice(0,60));return true}
+  return false}
+window.addEventListener("pointerdown",e=>{if(e.button>0||!e.target.closest)return;const t=e.target.closest("#tlin .blk,.gc98[data-open98]")||(e.target.id==="wk"?e.target:null);if(t)lpStart131(e,e.target)},true);
+function lpStart131(e,target){if(e.pointerType==="mouse")return;   // (a mouse has its right click)
+  if(CM131.lp&&CM131.lp.id===e.pointerId&&CM131.lp.t===target)return;clearTimeout(CM131.lp&&CM131.lp.tm);const lp={id:e.pointerId,x:e.clientX,y:e.clientY,t:target,p0:target.id==="wk"&&typeof PV!=="undefined"&&PV.pts?PV.pts.get(e.pointerId):null};
+  // (the finger's release goes to the thing it touched even when the page has redrawn it — so it is stopped there too)
+  if(e.pointerType==="touch"&&target.addEventListener)target.addEventListener("touchend",ev=>{if(CM131.fired&&performance.now()-CM131.fired<1500&&ev.cancelable)ev.preventDefault()},{once:true,passive:false});lp.tm=setTimeout(()=>{if(CM131.lp!==lp)return;CM131.lp=null;
+    if(typeof TLX!=="undefined"&&TLX.blk&&TLX.blk.started)return;
+    // (the picture's own handler keeps the finger's moves to itself while it drags — so its record says whether the finger moved or lifted)
+    if(lp.t.id==="wk"&&typeof PV!=="undefined"&&PV.pts){const p=PV.pts.get(lp.id);if(!p||PV.pts.size>1)return;if(lp.p0){const r=lp.t.getBoundingClientRect(),k=lp.t.width/Math.max(1,r.width);if(Math.hypot(p.x-lp.p0.x,p.y-lp.p0.y)>10*k)return}}
+    if(menuAt131(lp.t,lp.x,lp.y)){CM131.fired=performance.now();if(typeof TLX!=="undefined"){TLX.blk=null;TLX.s=null}if(typeof PV!=="undefined"){PV.drag=null;PV.pts&&PV.pts.clear()}}},520);CM131.lp=lp}
+window.addEventListener("pointermove",e=>{const lp=CM131.lp;if(lp&&e.pointerId===lp.id&&Math.hypot(e.clientX-lp.x,e.clientY-lp.y)>10){clearTimeout(lp.tm);CM131.lp=null}},true);
+["pointerup","pointercancel"].forEach(t=>window.addEventListener(t,e=>{const lp=CM131.lp;if(lp&&e.pointerId===lp.id){clearTimeout(lp.tm);CM131.lp=null}},true));
+// (the finger that opened the menu is still down: lifting it taps nothing — not what was under it, nor a menu line that opened under it)
+window.addEventListener("pointerdown",()=>{if(performance.now()-CM131.fired>60)CM131.fired=0},true);
+window.addEventListener("touchend",e=>{if(CM131.fired&&performance.now()-CM131.fired<1500&&e.cancelable)e.preventDefault()},{capture:true,passive:false});   // (no click at all from that finger)
+window.addEventListener("click",e=>{if(CM131.fired&&performance.now()-CM131.fired<1500){e.preventDefault();e.stopImmediatePropagation();CM131.fired=0}},true);
+document.addEventListener("contextmenu",e=>{const t=e.target;if(!t||!t.closest||!(t.closest("#tlin .blk,.gc98[data-open98]")||t.id==="wk"))return;e.preventDefault();
+  if(CM131.el||performance.now()-CM131.fired<700)return;if(CM131.lp){clearTimeout(CM131.lp.tm);CM131.lp=null}if(menuAt131(t,e.clientX,e.clientY))CM131.fired=performance.now()},true);
+(()=>{const st=document.createElement("style");st.textContent=`
+/* the tool row: whole words, a row that scrolls */
+#main .edbar{overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 18px),transparent);padding-inline-end:14px}
+#main .edbar::-webkit-scrollbar{display:none}
+[dir=rtl] #main .edbar{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 18px),transparent)}
+#main .edbar .tb{flex:0 0 auto;min-width:56px;padding:6px 8px}
+#main .edbar .tb span{white-space:nowrap!important;overflow-wrap:normal!important;word-break:keep-all!important;overflow:visible!important;font-size:11px}
+/* clean view */
+#main .edstage .cl131{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);padding:5px 12px;border-radius:999px;background:rgba(0,0,0,.66);color:#fff;font-size:12px;pointer-events:none;opacity:0;transition:opacity .25s;white-space:nowrap;z-index:3}
+#main .edstage .cl131.on{opacity:1}
+/* long press */
+#tlin .blk,.gc98,#wk{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.cm131{position:fixed;z-index:90;min-width:220px;max-width:min(320px,calc(100vw - 16px));max-height:min(70vh,520px);overflow:auto;padding:6px;border-radius:14px;background:var(--panel);border:1px solid var(--line2);box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.cm131.sheet{left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));max-width:none;border-radius:16px}
+.cm131h{padding:8px 10px 6px;font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cm131i{position:relative;display:flex;align-items:center;gap:10px;width:100%;padding:10px 10px;border:0;border-radius:10px;background:none;color:var(--text);font:inherit;font-size:14px;text-align:start;cursor:pointer;min-height:44px;margin:0}
+.cm131i:hover,.cm131i:focus-visible{background:var(--panel2);outline:none}.cm131i svg{width:18px;height:18px;flex:none;color:var(--mute)}.cm131i.danger,.cm131i.danger svg{color:var(--red,#ff5a5f)}
+.cm131i input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+`;document.head.appendChild(st)})();
+
+// ---- 22 transitions from gl-transitions (MIT): drawn by the graphics card over the end of a clip into the next one
+const GLT131=[["gl_push","Push","دفع"],["gl_softwipe","Soft wipe","مسح ناعم"],["gl_crosszoom","Cross zoom","تقريب متقاطع"],["gl_dreamy","Dreamy","حالم"],["gl_dreamzoom","Dream zoom","تقريب حالم"],
+  ["gl_blurmix","Blur dissolve","ذوبان ضبابي"],["gl_zoomthru","Zoom through","عبور بالتقريب"],["gl_swirl","Swirl","دوامة"],["gl_cube","Cube","مكعب"],["gl_ripple","Ripple","تموّج"],["gl_drop","Water drop","قطرة ماء"],
+  ["gl_clock","Clock wipe","مسح دائري"],["gl_circle","Circle open","فتح دائري"],["gl_pixels","Pixels","بكسلات"],["gl_slices","Slices","شرائح"],["gl_glitchmem","Glitch memory","ذكرى مشوشة"],["gl_filmburn","Film burn","احتراق الفيلم"],
+  ["gl_melt","Melt","ذوبان للأسفل"],["gl_doorway","Doorway","باب"],["gl_pageflip","Page flip","قلب الصفحة"],["gl_noise","Noise dissolve","ذوبان متناثر"],["gl_curtain","Curtain","ستارة"]];
+const GLIDS131=new Set(GLT131.map(x=>x[0])),GLX131={gl_push:{direction:[1,0]}};
+const GL131={list:null,loading:null,failed:false,gl:null,cv:null,buf:null,tex:[],progs:{},to:null};
+function glLoad131(){if(GL131.list||GL131.loading)return GL131.loading;GL131.loading=fetch("editor131/transitions.json").then(r=>r.json()).then(a=>{const l={};a.forEach(t=>l[t.id]=t);GL131.list=l}).catch(()=>{GL131.failed=true});return GL131.loading}
+function glCtx131(){if(GL131.gl)return GL131.gl;if(GL131.noGL)return null;try{const cv=document.createElement("canvas"),gl=cv.getContext("webgl",{premultipliedAlpha:false,preserveDrawingBuffer:true,antialias:false});if(!gl)throw 0;
+  GL131.cv=cv;GL131.gl=gl;GL131.buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,GL131.buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  GL131.tex=[0,1].map(()=>{const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);return t});return gl}catch(e){GL131.noGL=true;return null}}
+function glProg131(id){const t=GL131.list&&GL131.list[id],gl=GL131.gl;if(!t||!gl)return null;if(id in GL131.progs)return GL131.progs[id];
+  const sh=(type,src)=>{const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){console.warn("v131 transition",id,gl.getShaderInfoLog(s));return null}return s};
+  const v=sh(gl.VERTEX_SHADER,"attribute vec2 _p;varying vec2 _uv;void main(){gl_Position=vec4(_p,0.0,1.0);_uv=vec2(0.5,0.5)*(_p+vec2(1.0,1.0));}"),
+    f=sh(gl.FRAGMENT_SHADER,"precision highp float;varying vec2 _uv;uniform sampler2D from,to;uniform float progress,ratio,_fromR,_toR;vec4 getFromColor(vec2 uv){return texture2D(from,uv);}vec4 getToColor(vec2 uv){return texture2D(to,uv);}\n"+t.glsl+"\nvoid main(){gl_FragColor=transition(_uv);}");
+  let p=null;if(v&&f){p=gl.createProgram();gl.attachShader(p,v);gl.attachShader(p,f);gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS)){console.warn("v131 transition",id,gl.getProgramInfoLog(p));p=null}}
+  return GL131.progs[id]=p}
+function glRun131(id,from,to,p,w,h){const gl=glCtx131();if(!gl)return null;const pr=glProg131(id);if(!pr)return null;const t=GL131.list[id],cv=GL131.cv;if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}
+  gl.viewport(0,0,w,h);gl.useProgram(pr);gl.bindBuffer(gl.ARRAY_BUFFER,GL131.buf);const loc=gl.getAttribLocation(pr,"_p");gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);const u=n=>gl.getUniformLocation(pr,n);
+  [from,to].forEach((src,i)=>{gl.activeTexture(gl.TEXTURE0+i);gl.bindTexture(gl.TEXTURE_2D,GL131.tex[i]);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,src);gl.uniform1i(u(i?"to":"from"),i)});
+  gl.uniform1f(u("progress"),p);["ratio","_fromR","_toR"].forEach(n=>gl.uniform1f(u(n),w/h));
+  const over=GLX131[id]||{};for(const[k,ty]of Object.entries(t.types||{})){const val=k in over?over[k]:t.defaults[k],l=u(k);if(l==null||val==null)continue;
+    if(ty==="float")gl.uniform1f(l,+val);else if(ty==="int"||ty==="bool")gl.uniform1i(l,ty==="bool"?(val?1:0):Math.round(val));else if(ty==="vec2")gl.uniform2fv(l,val);else if(ty==="vec3")gl.uniform3fv(l,val);else if(ty==="vec4")gl.uniform4fv(l,val);else if(ty==="ivec2")gl.uniform2iv(l,val)}
+  gl.drawArrays(gl.TRIANGLES,0,3);return cv}
+// the next clip's first frame, kept as a picture: a paused clip that hasn't been shown yet has no frame to copy (phones too), so
+// it is asked for that moment once (a little before the transition) and the frame is kept until its start point changes
+function ff131(nx,nm){const v=nm.el;if(nm.ff131&&Math.abs(nm.ff131t-nx.in)<.05)return nm.ff131;if(!v||v.error)return null;
+  if(nm.ffReq131!==nx.in){nm.ffReq131=nx.in;const grab=()=>{try{const W=v.videoWidth,H=v.videoHeight;if(!W||!H)return;const s=Math.min(1,960/Math.max(W,H)),c=document.createElement("canvas");c.width=Math.round(W*s);c.height=Math.round(H*s);
+      c.getContext("2d").drawImage(v,0,0,c.width,c.height);c.complete=true;c.naturalWidth=W;c.naturalHeight=H;nm.ff131=c;nm.ff131t=nx.in}catch(e){}};
+    v.addEventListener("seeked",grab,{once:true});try{CT131.set.call(v,nx.in+.001)}catch(e){}}
+  return null}
+// over the last moments of a clip (up to 0.8 s): this clip as drawn, the next clip's first frame, the transition between them
+drawFit=(o=>function(ctx,m,ow,oh,lt,filter){if(S.view!=="edit"||!ctx||!ctx.canvas||ctx.canvas.id!=="wk")return o.apply(this,arguments);const c=edxClipOf(m,lt);if(!c||!GLIDS131.has(c.trans))return o.apply(this,arguments);
+  const cl=S.ed.clips,nx=cl[cl.indexOf(c)+1];if(!nx)return o.apply(this,arguments);const d=clipDur(c),tl=clamp((lt-c.in)/(c.speed||1),0,d),W=Math.min(.8,d*.45,clipDur(nx)*.45),p=d-tl<W?clamp(1-(d-tl)/W,0,1):0;
+  const r=o.apply(this,arguments),nm=clipMedia(nx);if(d-tl<W+1.5&&nm&&nm.type==="video")ff131(nx,nm);if(!p||!nm)return r;glLoad131();
+  const ff=nm.type==="video"?ff131(nx,nm):null;if(nm.type==="video"&&!ff)return r;   // (until the next clip's first frame is ready: a plain cut)
+  const B=GL131.to||(GL131.to=document.createElement("canvas"));if(B.width!==ow||B.height!==oh){B.width=ow;B.height=oh}const bx=B.getContext("2d");bx.setTransform(1,0,0,1,0,0);bx.globalAlpha=1;bx.fillStyle="#000";bx.fillRect(0,0,ow,oh);
+  const el=nm.el,ty=nm.type;if(ff){nm.el=ff;nm.type="image"}try{o.call(this,bx,nm,ow,oh,nx.in,filter)}catch(e){}finally{nm.el=el;nm.type=ty}
+  const ep=p*p*(3-2*p),out=GL131.list?glRun131(c.trans,ctx.canvas,B,ep,ow,oh):null;
+  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.filter="none";ctx.globalCompositeOperation="source-over";if(out){ctx.globalAlpha=1;ctx.drawImage(out,0,0,ow,oh)}else{ctx.globalAlpha=ep;ctx.drawImage(B,0,0)}ctx.restore();return r})(drawFit);
+
+// what each one does, in the Transition and Look sheets
+Object.assign(PKV84.transition=PKV84.transition||{},{
+  glpush:["","","Pushes this shot out as the next slides in.","تدفع اللقطة للخارج وتدخل التالية."],glsoftwipe:["","","A soft-edged wipe across the picture.","مسح بحافة ناعمة عبر الصورة."],
+  glcrosszoom:["","","Zooms and blurs from one shot into the next.","تقريب وضبابية من لقطة إلى التالية."],gldreamy:["","","A wavy, dreamlike blend.","مزج متموج كالحلم."],
+  gldreamzoom:["","","Turns and zooms, like a dream.","دوران وتقريب حالم."],glblurmix:["","","Both shots blur while they blend.","تضبب اللقطتان أثناء المزج."],
+  glzoomthru:["","","Flies into the picture to the next shot.","يعبر داخل الصورة إلى اللقطة التالية."],glswirl:["","","The picture swirls into the next.","تدور الصورة كالدوامة إلى التالية."],
+  glcube:["","","Turns like the side of a cube.","تدور كوجه مكعب."],glripple:["","","Ripples like water.","تتموج كالماء."],gldrop:["","","A drop hits the picture and spreads.","قطرة تسقط على الصورة وتنتشر."],
+  glclock:["","","Sweeps round like a clock hand.","تمسح دائرياً كعقرب الساعة."],glcircle:["","","A circle opens on the next shot.","دائرة تنفتح على اللقطة التالية."],
+  glpixels:["","","Breaks into pixels and back.","تتفكك إلى بكسلات ثم تعود."],glslices:["","","Slices slide across like blinds.","شرائح تنزلق كالستائر."],
+  glglitchmem:["","","A glitchy, broken memory.","ذكرى مشوشة متكسرة."],glfilmburn:["","","Film burns through to the next shot.","احتراق الفيلم يكشف اللقطة التالية."],
+  glmelt:["","","The picture melts down the screen.","تذوب الصورة نحو الأسفل."],gldoorway:["","","Doors open onto the next shot.","أبواب تنفتح على اللقطة التالية."],
+  glpageflip:["","","Turns like a book page.","تُقلب كصفحة كتاب."],glnoise:["","","Dissolves in scattered grain.","تذوب في حبيبات متناثرة."],glcurtain:["","","Opens like a curtain from the middle.","تنفتح كستارة من الوسط."]});
+Object.assign(PKV84.look=PKV84.look||{},{linen:["","","Soft, warm and a little faded.","ناعم ودافئ وباهت قليلاً."],sunwashed:["","","Bright, sun-bleached summer.","صيف مشرق كأن الشمس غسلته."],
+  pastel:["","","Light pastel colours.","ألوان باستيل فاتحة."],seabreeze:["","","Blue shadows, golden light.","ظلال زرقاء وضوء ذهبي."],spotlight:["","","Light in the middle, dark edges.","ضوء في الوسط وحواف داكنة."],
+  frost:["","","Cool lilac with deep edges.","ليلكي بارد بحواف عميقة."],crossproc:["","","Cross-processed film: a blue-green cast.","فيلم بمعالجة متقاطعة: مسحة زرقاء خضراء."],
+  punchy:["","","Strong contrast, dark corners.","تباين قوي وزوايا داكنة."],ink:["","","Crisp black and white.","أبيض وأسود حاد."],peach:["","","Peach skin, cool shadows.","بشرة خوخية وظلال باردة."],
+  morning:["","","A warm morning glow.","توهج صباحي دافئ."],ember:["","","Glowing reds and purples.","أحمر وبنفسجي متوهج."],lagoon:["","","Rich blue-green water.","مياه زرقاء خضراء غنية."],
+  retropink:["","","A pink retro tint.","مسحة وردية قديمة."],mint:["","","A mint haze with soft edges.","ضباب نعناعي بحواف ناعمة."]});
+
+// ---- 20 text motions from Animate.css (MIT): [names, seconds, pivot (c centre · b bottom · t top), keyframes [at, transform, opacity, timing], timing, loop]
+// transform: x / y in the text's width / height, Y in the picture's height, s · sx · sy scale, r turn, k skew, rx / ry tilt (degrees)
+const EZ131={ease:[.25,.1,.25,1],in:[.42,0,1,1],out:[0,0,.58,1],io:[.42,0,.58,1],b:[.215,.61,.355,1],zi:[.55,.055,.675,.19],zo:[.175,.885,.32,1]};
+const AC131={
+  backInUp:[["Back in up","عودة صاعدة"],1,"c",[[0,{Y:1.2,s:.7},.7],[.8,{s:.7},.7],[1,{},1]]],backInDown:[["Back in down","عودة نازلة"],1,"c",[[0,{Y:-1.2,s:.7},.7],[.8,{s:.7},.7],[1,{},1]]],
+  bounceIn:[["Bounce in","ظهور بقفزة"],.75,"c",[[0,{s:.3},0,"b"],[.2,{s:1.1},null,"b"],[.4,{s:.9},null,"b"],[.6,{s:1.03},1,"b"],[.8,{s:.97},null,"b"],[1,{},1]]],
+  bounceInUp:[["Bounce in up","قفزة صاعدة"],1,"c",[[0,{Y:1.2,sy:5},0,"b"],[.6,{y:-.2,sy:.9},1,"b"],[.75,{y:.1,sy:.95},null,"b"],[.9,{y:-.05,sy:.985},null,"b"],[1,{},null]]],
+  fadeInUp:[["Fade in up","ظهور صاعد"],1,"c",[[0,{y:1},0],[1,{},1]]],fadeInDown:[["Fade in down","ظهور نازل"],1,"c",[[0,{y:-1},0],[1,{},1]]],
+  flipInX:[["Flip in","انقلاب"],1,"c",[[0,{rx:90},0,"in"],[.4,{rx:-20},null,"in"],[.6,{rx:10},1],[.8,{rx:-5},null],[1,{},null]]],
+  jackInTheBox:[["Jack in the box","علبة المفاجأة"],1,"b",[[0,{s:.1,r:30},0],[.5,{r:-10},null],[.7,{r:3},null],[1,{},1]]],
+  lightSpeedIn:[["Light speed","سرعة الضوء"],1,"c",[[0,{x:1,k:-30},0],[.6,{k:20},1],[.8,{k:-5},null],[1,{},null]],"out"],
+  rollIn:[["Roll in","تدحرج"],1,"c",[[0,{x:-1,r:-120},0],[1,{},1]]],zoomIn:[["Zoom in","تكبير"],1,"c",[[0,{s:.3},0],[.5,null,1],[1,{},null]]],
+  zoomInUp:[["Zoom in up","تكبير صاعد"],1,"c",[[0,{s:.1,Y:.15},0,"zi"],[.6,{s:.475,y:-.6},1,"zo"],[1,{},null]]],slideInUp:[["Slide in up","انزلاق للأعلى"],1,"c",[[0,{y:1},null],[1,{},null]]],
+  rotateIn:[["Rotate in","دوران"],1,"c",[[0,{r:-200},0],[1,{},1]]],
+  pulse:[["Pulse","نبض"],1,"c",[[0,{},null],[.5,{s:1.05},null],[1,{},null]],"io",1],heartBeat:[["Heart beat","دقات قلب"],1.3,"c",[[0,{},null],[.14,{s:1.3},null],[.28,{},null],[.42,{s:1.3},null],[.7,{},null],[1,{},null]],"io",1],
+  rubberBand:[["Rubber band","مطاط"],1,"c",[[0,{}],[.3,{sx:1.25,sy:.75}],[.4,{sx:.75,sy:1.25}],[.5,{sx:1.15,sy:.85}],[.65,{sx:.95,sy:1.05}],[.75,{sx:1.05,sy:.95}],[1,{}]],"ease",1],
+  tada:[["Tada","تادا"],1,"c",[[0,{}],[.1,{s:.9,r:-3}],[.2,{s:.9,r:-3}],[.3,{s:1.1,r:3}],[.4,{s:1.1,r:-3}],[.5,{s:1.1,r:3}],[.6,{s:1.1,r:-3}],[.7,{s:1.1,r:3}],[.8,{s:1.1,r:-3}],[.9,{s:1.1,r:3}],[1,{}]],"ease",1],
+  headShake:[["Head shake","هزة رأس"],1,"c",[[0,{}],[.065,{x:-.04,ry:-9}],[.185,{x:.033,ry:7}],[.315,{x:-.02,ry:-5}],[.435,{x:.013,ry:3}],[.5,{}],[1,{}]],"io",1],
+  swing:[["Swing","تأرجح"],1,"t",[[0,{}],[.2,{r:15}],[.4,{r:-10}],[.6,{r:5}],[.8,{r:-5}],[1,{}]],"ease",1]};
+function bez131(e,x){const[p1x,p1y,p2x,p2y]=e;let t=x;for(let i=0;i<10;i++){const it=1-t,cx=3*p1x*t*it*it+3*p2x*t*t*it+t*t*t-x,dx=3*p1x*it*it+6*(p2x-p1x)*t*it+3*(1-p2x)*t*t;if(Math.abs(cx)<1e-5||Math.abs(dx)<1e-6)break;t=clamp(t-cx/dx,0,1)}const it=1-t;return 3*p1y*t*it*it+3*p2y*t*t*it+t*t*t}
+const ID131={x:0,y:0,Y:0,s:1,sx:1,sy:1,r:0,k:0,rx:0,ry:0};
+function acAt131(def,u){const fr=def[3],dflt=def[4]||"ease";
+  const seg=(list,val)=>{if(!list.length)return null;let a=list[0],b=list[list.length-1];for(let i=0;i<list.length-1;i++)if(u>=list[i][0]&&u<=list[i+1][0]){a=list[i];b=list[i+1];break}
+    if(u<=list[0][0])return val(list[0]);if(u>=list[list.length-1][0])return val(b);const q=bez131(EZ131[a[3]||dflt]||EZ131.ease,(u-a[0])/Math.max(1e-6,b[0]-a[0]));return[val(a),val(b),q]};
+  const ts=fr.filter(f=>f[1]);if(!ts.length||ts[0][0]>0)ts.unshift([0,{}]);if(ts[ts.length-1][0]<1)ts.push([1,{}]);
+  const os=fr.filter(f=>f[2]!=null);if(!os.length||os[0][0]>0)os.unshift([0,null,1]);if(os[os.length-1][0]<1)os.push([1,null,1]);
+  const T={},tr=seg(ts,f=>Object.assign({},ID131,f[1]));if(Array.isArray(tr)){for(const k in ID131)T[k]=tr[0][k]+(tr[1][k]-tr[0][k])*tr[2]}else Object.assign(T,tr);
+  const op=seg(os,f=>f[2]);return{T,O:Array.isArray(op)?op[0]+(op[1]-op[0])*op[2]:op}}
+const AC131L={c:null};
+drawTextLayer=(o=>function(ctx,tx,ow,oh,t){const an=String(tx.anim||"");if(!an.startsWith("ac_"))return o.apply(this,arguments);const def=AC131[an.slice(3)],plain=Object.assign({},tx,{anim:"none"});
+  if(!def||t<tx.start||t>tx.end)return o.call(this,ctx,plain,ow,oh,t);const lt=t-tx.start,dur=def[1];let u=lt/dur;if(def[5])u=(lt%(dur+.5))/dur;if(u>=1)return o.call(this,ctx,plain,ow,oh,t);
+  if(!AC131L.c||AC131L.c.width!==ow||AC131L.c.height!==oh){AC131L.c=document.createElement("canvas");AC131L.c.width=ow;AC131L.c.height=oh}const Lc=AC131L.c,lx=Lc.getContext("2d");lx.setTransform(1,0,0,1,0,0);lx.globalAlpha=1;lx.clearRect(0,0,ow,oh);
+  const n0=(ED.hit||[]).length;o.call(this,lx,plain,ow,oh,t);const b=(ED.hit||[]).slice(n0).reverse().find(x=>x.k==="text"&&x.id===tx.id)||{cx:ow/2,cy:oh*.78,w:ow*.6,h:oh*.08};
+  const{T,O}=acAt131(def,u),px=b.cx,py=def[2]==="b"?b.cy+b.h/2:def[2]==="t"?b.cy-b.h/2:b.cy,rad=Math.PI/180,sx=T.s*T.sx*Math.cos(T.ry*rad),sy=T.s*T.sy*Math.cos(T.rx*rad);
+  ctx.save();ctx.globalAlpha*=clamp(O,0,1);ctx.translate(px+T.x*b.w,py+T.y*b.h+T.Y*oh);if(T.r)ctx.rotate(T.r*rad);if(T.k)ctx.transform(1,0,Math.tan(T.k*rad),1,0,0);
+  ctx.scale(Math.abs(sx)<.001?.001:sx,Math.abs(sy)<.001?.001:sy);ctx.translate(-px,-py);ctx.drawImage(Lc,0,0);ctx.restore()})(drawTextLayer);
+
+// ---- 15 colour looks after CSSgram's recipes (MIT) — a filter, then a colour or a gradient laid on with a blend mode
+const TR131="rgba(0,0,0,0)";
+EDX_LOOKS.push(["linen","Linen","كتان","brightness(105%) hue-rotate(-10deg)",null,[{g:"x",s:[[0,"rgba(66,10,14,.2)"],[1,TR131]],b:"darken"}]],
+  ["sunwashed","Sunwashed","مغسول بالشمس","sepia(22%) brightness(110%) contrast(85%) saturate(75%)",null,[{c:"#efcdad",b:"soft-light",a:.5}]],
+  ["pastel","Pastel","باستيل","hue-rotate(-20deg) contrast(90%) saturate(85%) brightness(120%)",null,[{g:"x",s:[[0,"rgba(66,10,14,.2)"],[1,TR131]],b:"darken"}]],
+  ["seabreeze","Sea breeze","نسيم البحر","",null,[{g:"y",s:[[0,"#005b9a"],[1,"#e6c13d"]],b:"soft-light",a:.5}]],
+  ["spotlight","Spotlight","إضاءة مركزة","contrast(110%) saturate(110%)",null,[{g:"r",x:.4,y:.4,s:[[0,"rgba(255,255,255,.8)"],[.3,"rgba(255,200,200,.6)"],[.6,"#111"]],b:"overlay",a:.4}]],
+  ["frost","Frost","صقيع","brightness(120%) contrast(90%) saturate(110%)",null,[{g:"r",s:[[.5,"#a6b1ff"],[1,"#342134"]],b:"multiply",a:.5}]],
+  ["crossproc","Cross process","معالجة متقاطعة","sepia(30%)",null,[{g:"r",s:[[.4,"#e6e7e0"],[1.1,"rgba(43,42,161,.6)"]],b:"color-burn"}]],
+  ["punchy","Punchy","حاد","saturate(110%) contrast(150%)",null,[{g:"r",s:[[.7,TR131],[1.5,"#222"]],b:"multiply"}]],
+  ["ink","Ink","حبر","sepia(30%) contrast(110%) brightness(110%) grayscale(100%)"],
+  ["peach","Peach","خوخي","sepia(20%) contrast(120%) brightness(105%) saturate(120%)",null,[{c:"rgba(247,176,153,.56)",b:"darken"},{c:"rgba(0,70,150,.4)",b:"lighten"}]],
+  ["morning","Morning","صباح","contrast(90%) sepia(20%)",null,[{g:"r",s:[[.2,"#d0ba8e"],[.85,"#360309"],[1,"#1d0210"]],b:"overlay"}]],
+  ["ember","Ember","جمر","contrast(150%) brightness(90%)",null,[{g:"r",s:[[0,"#804e0f"],[1,"#3b003b"]],b:"screen"}]],
+  ["lagoon","Lagoon","بحيرة","brightness(110%) hue-rotate(-10deg) sepia(30%) saturate(160%)",null,[{c:"#04c",b:"screen",a:.3}]],
+  ["retropink","Retro pink","وردي قديم","contrast(110%) brightness(110%) saturate(130%)",null,[{c:"rgba(243,106,188,.3)",b:"screen"}]],
+  ["mint","Mint haze","ضباب نعناعي","contrast(90%) brightness(110%)",null,[{g:"r",s:[[.7,"rgba(168,223,193,.4)"],[1,"rgb(196,183,200)"]],b:"overlay"}]]);
+function grad131(ctx,ov,w,h){if(ov.c)return ov.c;const st=ov.s,mx=Math.max(1,...st.map(x=>x[0]));let g;
+  if(ov.g==="r"){const cx=(ov.x??.5)*w,cy=(ov.y??.5)*h,R=Math.max(Math.hypot(cx,cy),Math.hypot(w-cx,cy),Math.hypot(cx,h-cy),Math.hypot(w-cx,h-cy))*mx;g=ctx.createRadialGradient(cx,cy,0,cx,cy,R)}
+  else g=ov.g==="y"?ctx.createLinearGradient(0,0,0,h*mx):ctx.createLinearGradient(0,0,w*mx,0);st.forEach(([q,c])=>g.addColorStop(clamp(q/mx,0,1),c));return g}
+edxPost=(o=>function(ctx,ow,oh,c){const r=o.apply(this,arguments);const lk=c&&c.cg&&EDX_LOOKS.find(x=>x[0]===c.cg.look);if(!lk||!lk[5])return r;
+  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.filter="none";lk[5].forEach(ov=>{ctx.globalCompositeOperation=ov.b||"source-over";ctx.globalAlpha=ov.a??1;ctx.fillStyle=grad131(ctx,ov,ow,oh);ctx.fillRect(0,0,ow,oh)});ctx.restore();return r})(edxPost);
+
+// ---- banners and stickers, drawn with Google's Material Symbols (Apache-2.0)
+const IC131={d:null,p:{},loading:null};
+function icLoad131(){if(IC131.d||IC131.loading)return IC131.loading;IC131.loading=fetch("editor131/icons.json").then(r=>r.json()).then(d=>{IC131.d=d;if(S.view==="edit")renderView()}).catch(()=>{IC131.loading=null});return IC131.loading}
+const icD131=n=>{const d=IC131.d&&IC131.d[n];return d?(Array.isArray(d)?d.join(" "):d):""};
+const icPath131=n=>{if(IC131.p[n])return IC131.p[n];const d=icD131(n);if(!d)return null;try{return IC131.p[n]=new Path2D(d)}catch(e){return null}};
+const icSvg131=n=>{const d=icD131(n);return d?'<svg viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="'+d+'"/></svg>':ic("spark")};
+function icDraw131(ctx,n,cx,cy,size,col,stroke){const p=icPath131(n);if(!p)return;ctx.save();ctx.translate(cx-size/2,cy+size/2);ctx.scale(size/960,size/960);
+  if(stroke){ctx.lineJoin="round";ctx.lineWidth=stroke.w*960/size;ctx.strokeStyle=stroke.col;ctx.stroke(p)}ctx.fillStyle=col;ctx.fill(p);ctx.restore()}
+const onAcc131=c=>{const h=String(c||"#CFE13E").replace("#","");if(h.length<6)return"#111";const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);return(r*299+g*587+b*114)/1000>150?"#111":"#fff"};
+const backOut131=k=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(k-1,3)+c1*Math.pow(k-1,2)};
+// [id, name, style, icon, colour, first line, second line]
+const BN131=[["sub",["Subscribe","اشترك"],"pill","notifications","#ff3b30",["Subscribe","اشترك"],["New videos every week","فيديوهات جديدة كل أسبوع"]],
+  ["follow",["Follow","تابع"],"pill","person_add","#CFE13E",["@nooi.ai","@nooi.ai"],["Follow for more","تابعنا للمزيد"]],
+  ["place",["Location","الموقع"],"pin","location_on","#ff5a5f",["Riyadh","الرياض"],["Saudi Arabia","المملكة العربية السعودية"]],
+  ["sale",["Sale tag","وسم تخفيض"],"tag","sell","#ffd36a",["50% OFF","خصم 50%"],["This week only","هذا الأسبوع فقط"]],
+  ["shop",["Shop now","تسوّق الآن"],"button","shopping_bag","#CFE13E",["Shop now","تسوّق الآن"],["",""]],
+  ["news",["Breaking news","خبر عاجل"],"news","campaign","#ff3b30",["BREAKING","عاجل"],["Your headline here","عنوانك هنا"]],
+  ["quote",["Quote","اقتباس"],"quote","format_quote","#CFE13E",["Make every second count.","اجعل كل ثانية تستحق."],["nooi","nooi"]],
+  ["call",["Call us","اتصل بنا"],"pill","call","#2dd4a8",["Call us","اتصل بنا"],["+966 50 000 0000","+966 50 000 0000"]],
+  ["verified",["Verified","موثّق"],"badge","verified","#4dc3ff",["Verified","موثّق"],["Official account","حساب رسمي"]],
+  ["social",["Like & share","أعجبني وشارك"],"social","favorite","#ff5a5f",["Like · Comment · Share","أعجبني · علّق · شارك"],["",""]]];
+const BNST131=[["pill",["Pill","كبسولة"]],["button",["Button","زر"]],["tag",["Tag","وسم"]],["news",["News bar","شريط أخبار"]],["quote",["Quote card","بطاقة اقتباس"]],["badge",["Badge","شارة"]],["pin",["Pin","دبوس"]],["social",["Social","تواصل"]]];
+const ST131=[["favorite","#ff5a5f"],["thumb_up","#4dc3ff"],["star","#ffd36a"],["bolt","#ffd36a"],["local_fire_department","#ff7a1a"],["celebration","#c38bff"],["check_circle","#2dd4a8"],["verified","#4dc3ff"],
+  ["arrow_forward","#CFE13E"],["arrow_downward","#CFE13E"],["touch_app","#ffffff"],["rocket_launch","#c38bff"],["lightbulb","#ffd36a"],["trending_up","#2dd4a8"],["music_note","#ff5a5f"],["mic","#ffffff"],
+  ["chat_bubble","#ffffff"],["share","#ffffff"],["bookmark","#ffd36a"],["notifications","#ff3b30"],["person_add","#CFE13E"],["location_on","#ff5a5f"],["shopping_bag","#CFE13E"],["sell","#ffd36a"],
+  ["schedule","#ffffff"],["flag","#ff5a5f"],["mail","#4dc3ff"],["call","#2dd4a8"],["link","#4dc3ff"],["campaign","#ff3b30"],["play_circle","#ffffff"],["alternate_email","#CFE13E"],["pets","#ffd36a"],["flight","#4dc3ff"],["restaurant","#ff7a1a"],["home","#ffffff"]];
+function bnDraw131(ctx,W,H,t,it){if(t<it.start||t>it.end)return;const lt=t-it.start,len=it.end-it.start,an=it.anim!=="none",p=an?ezo(lt/.55):1,out=an?clamp((len-lt)/.3,0,1):1,U=Math.min(W,H)*(it.k||1),
+    ac=it.accent||"#CFE13E",fg=onAcc131(ac),rtl=isRtl((it.t1||"")+(it.t2||"")),st=it.st||"pill",t1=it.t1||"",t2=String(it.t2||"").trim(),MW=W*.9,dir=rtl?-1:1;
+  let cx=it.x*W,cy=it.y*H,bw=U*.4,bh=U*.12;const fit=()=>{bw=Math.min(bw,W*.98);bh=Math.min(bh,H*.98);cx=clamp(cx,bw/2+W*.01,W*.99-bw/2);cy=clamp(cy,bh/2+H*.01,H*.99-bh/2)};
+  const rr=(x,y,w,h,r)=>{ctx.beginPath();ctx.roundRect?ctx.roundRect(x,y,w,h,r):ctx.rect(x,y,w,h)},meas=(s,w,f)=>{ctx.font=infoFont(w,f);return s?ctx.measureText(s).width:0};
+  ctx.save();ctx.globalAlpha=out;ctx.direction=rtl?"rtl":"ltr";ctx.textBaseline="middle";
+  if(st==="pill"){const F1=fitF(ctx,t1,700,U*.05,MW*.7),F2=t2?fitF(ctx,t2,500,U*.032,MW*.7):0,w1=meas(t1,700,F1),w2=meas(t2,500,F2||10);bh=Math.max(U*.12,F1*1.5+(t2?F2*1.6:0)+U*.03);
+    const ch=bh*.74,pad=U*.035;bw=pad+ch+pad*.9+Math.max(w1,w2)+pad*1.6;fit();const x0=cx-bw/2,y0=cy-bh/2,ww=Math.max(bh,bw*p);rr(rtl?x0+bw-ww:x0,y0,ww,bh,bh/2);ctx.fillStyle="rgba(10,12,10,.82)";ctx.fill();
+    const chx=rtl?x0+bw-pad-ch/2:x0+pad+ch/2;ctx.beginPath();ctx.arc(chx,cy,ch/2*(an?Math.min(1,.4+p*.8):1),0,7);ctx.fillStyle=ac;ctx.fill();icDraw131(ctx,it.ic,chx,cy,ch*.58,fg);
+    if(p>.55){ctx.globalAlpha=out*ezo((p-.55)/.45);ctx.textAlign=rtl?"right":"left";const tx=chx+dir*(ch/2+pad*.9);ctx.fillStyle="#fff";ctx.font=infoFont(700,F1);ctx.fillText(t1,tx,t2?y0+bh*.38:cy);if(t2){ctx.fillStyle="rgba(255,255,255,.72)";ctx.font=infoFont(500,F2);ctx.fillText(t2,tx,y0+bh*.7)}}}
+  else if(st==="button"){const F1=fitF(ctx,t1,700,U*.05,MW*.7),w1=meas(t1,700,F1);bh=U*.12;const ic=bh*.46,pad=bh*.42;bw=pad+ic+pad*.5+w1+pad*.5+ic+pad;fit();
+    const sc=an?(.7+.3*ezo(lt/.4))*(1+.025*Math.sin(Math.max(0,lt-.5)*5)):1;ctx.translate(cx,cy);ctx.scale(sc,sc);ctx.shadowColor="rgba(0,0,0,.35)";ctx.shadowBlur=U*.03;rr(-bw/2,-bh/2,bw,bh,bh/2);ctx.fillStyle=ac;ctx.fill();ctx.shadowBlur=0;
+    icDraw131(ctx,it.ic,-dir*(bw/2-pad-ic/2),0,ic,fg);ctx.fillStyle=fg;ctx.font=infoFont(700,F1);ctx.textAlign="center";ctx.fillText(t1,0,0);ctx.save();ctx.translate(dir*(bw/2-pad-ic/2),0);ctx.scale(dir,1);icDraw131(ctx,"arrow_forward",0,0,ic,fg);ctx.restore()}
+  else if(st==="tag"){const F1=fitF(ctx,t1,800,U*.075,MW*.6),F2=t2?fitF(ctx,t2,600,U*.032,MW*.6):0,w1=meas(t1,800,F1),w2=meas(t2,600,F2||10),ic=F1*.9,pad=U*.04;bw=pad+ic+pad*.6+Math.max(w1,w2)+pad*1.2;bh=F1*1.3+(t2?F2*1.5:0)+pad*.8;fit();
+    ctx.translate(cx,cy);ctx.rotate(dir*-5*Math.PI/180*(an?Math.min(1,p*1.2):1));const sc=an?.5+.5*backOut131(clamp(lt/.45,0,1)):1;ctx.scale(sc,sc);ctx.shadowColor="rgba(0,0,0,.35)";ctx.shadowBlur=U*.03;rr(-bw/2,-bh/2,bw,bh,U*.02);ctx.fillStyle=ac;ctx.fill();ctx.shadowBlur=0;
+    ctx.setLineDash([U*.012,U*.01]);ctx.lineWidth=U*.005;ctx.strokeStyle=fg==="#111"?"rgba(0,0,0,.35)":"rgba(255,255,255,.5)";rr(-bw/2+U*.012,-bh/2+U*.012,bw-U*.024,bh-U*.024,U*.012);ctx.stroke();ctx.setLineDash([]);
+    const icx=dir*(-bw/2+pad+ic/2);icDraw131(ctx,it.ic,icx,0,ic,fg);ctx.fillStyle=fg;ctx.textAlign=rtl?"right":"left";const tx=icx+dir*(ic/2+pad*.6);ctx.font=infoFont(800,F1);ctx.fillText(t1,tx,t2?-bh/2+pad*.4+F1*.65:0);if(t2){ctx.font=infoFont(600,F2);ctx.fillText(t2,tx,bh/2-pad*.4-F2*.7)}}
+  else if(st==="news"){const F1=fitF(ctx,t1,800,U*.045,W*.3),F2=t2?fitF(ctx,t2,600,U*.04,W*.6):0,w1=meas(t1,800,F1),w2=meas(t2,600,F2||10);bh=U*.11;const pad=U*.035,ic=bh*.5,a=pad+ic+pad*.5+w1+pad,b=t2?pad+w2+pad:0;bw=Math.min(W*.96,a+b);fit();
+    const x0=cx-bw/2,y0=cy-bh/2;ctx.translate((1-p)*-dir*W*.5,0);const ax=rtl?x0+bw-a:x0;ctx.fillStyle=ac;ctx.fillRect(ax,y0,a,bh);if(t2){ctx.fillStyle="rgba(255,255,255,.95)";ctx.fillRect(rtl?x0:x0+a,y0,bw-a,bh)}
+    const icx=rtl?ax+a-pad-ic/2:ax+pad+ic/2;icDraw131(ctx,it.ic,icx,cy,ic,fg);ctx.fillStyle=fg;ctx.font=infoFont(800,F1);ctx.textAlign=rtl?"right":"left";ctx.fillText(t1,icx+dir*(ic/2+pad*.5),cy);
+    if(t2){ctx.fillStyle="#111";ctx.font=infoFont(600,F2);ctx.fillText(t2,rtl?x0+bw-a-pad:x0+a+pad,cy)}}
+  else if(st==="quote"){const A1=fitWrap(ctx,t1,600,U*.055,Math.min(MW,U*1.1)-U*.1,3),F1=A1.f,F2=t2?fitF(ctx,"— "+t2,600,U*.032,MW*.8):0,w1=wrapW(ctx,600,F1,A1.ls),w2=meas(t2?"— "+t2:"",600,F2||10),pad=U*.05,qi=U*.09;
+    bw=Math.max(w1,w2,U*.3)+pad*2;bh=qi*.7+A1.ls.length*F1*1.3+(t2?F2*1.8:0)+pad*1.4;fit();const x0=cx-bw/2,y0=cy-bh/2+(1-p)*U*.04;ctx.globalAlpha=out*(an?Math.min(1,p*1.3):1);rr(x0,y0,bw,bh,U*.03);ctx.fillStyle="rgba(10,12,10,.84)";ctx.fill();
+    icDraw131(ctx,it.ic||"format_quote",rtl?x0+bw-pad-qi/2:x0+pad+qi/2,y0+pad*.6+qi*.35,qi,ac);ctx.textAlign=rtl?"right":"left";ctx.fillStyle="#fff";ctx.font=infoFont(600,F1);const tx=rtl?x0+bw-pad:x0+pad;
+    A1.ls.forEach((l,i)=>ctx.fillText(l,tx,y0+pad*.6+qi*.75+F1*(.65+i*1.3)));if(t2){ctx.fillStyle=ac;ctx.font=infoFont(600,F2);ctx.fillText("— "+t2,tx,y0+bh-pad*.7-F2*.5)}}
+  else if(st==="badge"){const F1=fitF(ctx,t1,700,U*.048,MW*.7),F2=t2?fitF(ctx,t2,500,U*.03,MW*.7):0,w1=meas(t1,700,F1),w2=meas(t2,500,F2||10),d=U*.11,gap=U*.025;bw=d+gap+Math.max(w1,w2);bh=Math.max(d,F1*1.3+(t2?F2*1.5:0));fit();
+    const icx=rtl?cx+bw/2-d/2:cx-bw/2+d/2,sc=an?ezo(lt/.4)*(1+.15*Math.max(0,Math.sin(Math.min(1,lt/.6)*Math.PI))):1;ctx.save();ctx.translate(icx,cy);ctx.scale(sc,sc);ctx.beginPath();ctx.arc(0,0,d/2,0,7);ctx.fillStyle=ac;ctx.shadowColor="rgba(0,0,0,.35)";ctx.shadowBlur=U*.025;ctx.fill();ctx.shadowBlur=0;icDraw131(ctx,it.ic,0,0,d*.6,fg);ctx.restore();
+    ctx.globalAlpha=out*(an?ezo((lt-.15)/.4):1);ctx.textAlign=rtl?"right":"left";const tx=icx+dir*(d/2+gap);ctx.shadowColor="rgba(0,0,0,.7)";ctx.shadowBlur=U*.02;ctx.fillStyle="#fff";ctx.font=infoFont(700,F1);ctx.fillText(t1,tx,t2?cy-F2*.6:cy);if(t2){ctx.fillStyle="rgba(255,255,255,.85)";ctx.font=infoFont(500,F2);ctx.fillText(t2,tx,cy+F1*.55)}}
+  else if(st==="pin"){const F1=fitF(ctx,t1,700,U*.045,MW*.7),F2=t2?fitF(ctx,t2,500,U*.03,MW*.7):0,w1=meas(t1,700,F1),w2=meas(t2,500,F2||10),ic=U*.12,pad=U*.035,lw=Math.max(w1,w2)+pad*2,lh=F1*1.5+(t2?F2*1.6:0);bw=Math.max(ic,lw);bh=ic+U*.02+lh;fit();
+    const y0=cy-bh/2,drop=an?(1-ezo(lt/.5))*-U*.25+(lt>.5&&lt<.8?-Math.sin((lt-.5)/.3*Math.PI)*U*.03:0):0;ctx.save();ctx.shadowColor="rgba(0,0,0,.4)";ctx.shadowBlur=U*.02;icDraw131(ctx,it.ic,cx,y0+ic/2+drop,ic,ac);ctx.restore();
+    const ly=y0+ic+U*.02;ctx.globalAlpha=out*(an?ezo((lt-.25)/.35):1);rr(cx-lw/2,ly,lw,lh,U*.02);ctx.fillStyle="rgba(10,12,10,.82)";ctx.fill();ctx.textAlign="center";ctx.fillStyle="#fff";ctx.font=infoFont(700,F1);ctx.fillText(t1,cx,ly+(t2?F1*.8:lh/2));
+    if(t2){ctx.fillStyle="rgba(255,255,255,.75)";ctx.font=infoFont(500,F2);ctx.fillText(t2,cx,ly+lh-F2*.85)}}
+  else{const F1=t1?fitF(ctx,t1,600,U*.036,MW*.6):0,w1=meas(t1,600,F1||10),ic=U*.07,gap=U*.03,pad=U*.04;bh=ic+pad*1.2;bw=pad+3*ic+2*gap+(t1?gap+w1:0)+pad;fit();const x0=cx-bw/2,y0=cy-bh/2;rr(x0,y0,bw,bh,bh/2);ctx.fillStyle="rgba(10,12,10,.82)";ctx.fill();
+    ["favorite","chat_bubble","share"].forEach((n,i)=>{const k=an?clamp((lt-.12*i)/.35,0,1):1,s=k<1?Math.max(.001,ezo(k)*(1+.25*Math.sin(k*Math.PI))):1,xx=rtl?x0+bw-pad-ic/2-i*(ic+gap):x0+pad+ic/2+i*(ic+gap);ctx.save();ctx.translate(xx,cy);ctx.scale(s,s);icDraw131(ctx,n,0,0,ic,i===0?ac:"#fff");ctx.restore()});
+    if(t1){ctx.fillStyle="#fff";ctx.font=infoFont(600,F1);ctx.textAlign=rtl?"right":"left";ctx.fillText(t1,rtl?x0+bw-pad-3*ic-3*gap:x0+pad+3*ic+3*gap,cy)}}
+  ctx.restore();(ED.hit=ED.hit||[]).push({k:"info",id:it.id,x:cx-bw/2,y:cy-bh/2,w:bw,h:bh,cx,cy})}
+function stDraw131(ctx,W,H,t,it){if(t<it.start||t>it.end)return;const lt=t-it.start,len=it.end-it.start,an=it.anim!=="none",out=an?clamp((len-lt)/.25,0,1):1,U=Math.min(W,H)*(it.k||1),ac=it.accent||"#CFE13E",S0=U*.2;
+  const cx=clamp(it.x*W,S0/2,W-S0/2),cy=clamp(it.y*H,S0/2,H-S0/2);let s=1,r=0;if(an){const k=clamp(lt/.45,0,1);s=k<1?Math.max(.001,backOut131(k)):1+.04*Math.sin((lt-.45)*4);r=Math.sin(lt*2.2)*.06}
+  ctx.save();ctx.globalAlpha=out;ctx.translate(cx,cy);ctx.rotate(r);ctx.scale(s,s);ctx.shadowColor="rgba(0,0,0,.35)";ctx.shadowBlur=S0*.08;icDraw131(ctx,it.ic,0,0,S0,"#fff",{w:S0*.1,col:"#fff"});ctx.shadowBlur=0;icDraw131(ctx,it.ic,0,0,S0,ac);
+  if(it.t1){const F=fitF(ctx,it.t1,700,S0*.2,W*.8);ctx.font=infoFont(700,F);ctx.textAlign="center";ctx.textBaseline="middle";ctx.direction=isRtl(it.t1)?"rtl":"ltr";ctx.lineWidth=F*.22;ctx.strokeStyle="rgba(0,0,0,.75)";ctx.lineJoin="round";ctx.strokeText(it.t1,0,S0*.62);ctx.fillStyle="#fff";ctx.fillText(it.t1,0,S0*.62)}
+  ctx.restore();(ED.hit=ED.hit||[]).push({k:"info",id:it.id,x:cx-S0/2,y:cy-S0/2,w:S0,h:S0*(it.t1?1.3:1),cx,cy})}
+edInfoDraw=(o=>function(ctx,W,H,t){const E=S.ed,all=E.infos||[],mine=x=>x.type==="bn131"||x.type==="st131";if(!all.some(mine))return o.apply(this,arguments);if(!IC131.d)icLoad131();
+  E.infos=all.filter(x=>!mine(x));try{o.apply(this,arguments)}finally{E.infos=all}for(const it of all){if(!mine(it))continue;try{(it.type==="bn131"?bnDraw131:stDraw131)(ctx,W,H,t,it)}catch(e){console.warn("v131 banner",e)}}})(edInfoDraw);
+function infoAdd131(o){const E=S.ed;E.infos=E.infos||[];const s=Math.min(ED.t,Math.max(0,edTotal()-1)),it=Object.assign({id:uid(),start:+s.toFixed(2),end:+(s+4).toFixed(2),x:.5,y:.5,k:1,anim:"in",t1:"",t2:"",val:""},o);
+  E.infos.push(it);edSetPick("info",it.id);E.tab="info";persist();renderView();return it}
+const bnAdd131=key=>{const b=BN131.find(x=>x[0]===key);if(b)return infoAdd131({type:"bn131",st:b[2],ic:b[3],accent:b[4],t1:L(b[5][0],b[5][1]),t2:L(b[6][0],b[6][1]).trim(),y:b[2]==="news"?.86:b[2]==="pin"?.4:b[2]==="quote"?.5:.78})};
+const stAdd131=n=>{const s=ST131.find(x=>x[0]===n);if(s)return infoAdd131({type:"st131",ic:n,accent:s[1],y:.42})};
+// the Infographics tab: banners and stickers first; a banner's second line, its style and icon; a sticker's icon and caption
+VIEWS.edit=(o=>function(){let h=o.apply(this,arguments);const E=S.ed;
+  if(E.clips.some(c=>GLIDS131.has(c.trans))||E.tab==="clip")glLoad131();
+  if((E.infos||[]).some(x=>x.type==="bn131"||x.type==="st131")||E.tab==="info")icLoad131();
+  h=h.replace(/(<div class="blk ix[^"]*"[^>]*>)st131(<\/div>)/g,"$1"+esc(L("Sticker","ملصق"))+"$2");
+  if(E.tab==="clip"){const k=h.lastIndexOf('data-set="edclip.trans"');if(k>0){const j=h.indexOf("</button>",k);const c=S.ed.clips.find(x=>x.id===E.sel);
+    if(j>0)h=h.slice(0,j+9)+GLT131.map(x=>'<button class="tile gl131" data-set="edclip.trans" data-val="'+x[0]+'" aria-pressed="'+(!!c&&c.trans===x[0])+'"><span class="gl">'+svg('<rect x="3" y="6" width="9" height="12" rx="1.5"/><rect x="12" y="6" width="9" height="12" rx="1.5" opacity=".45"/><path d="M12 4v16" stroke-dasharray="2 2"/>')+'</span><span class="lb">'+esc(L(x[1],x[2]))+"</span></button>").join("")+h.slice(j+9)}}
+  if(E.tab==="text"){const tx=E.texts.find(t=>t.id===E.selText),k=h.lastIndexOf('data-act="edx-tan"');if(tx&&k>0){const j=h.indexOf("</div>",h.indexOf("</button>",k));
+    if(j>0)h=h.slice(0,j+6)+'<span class="lbl">'+esc(L("Motions","الحركات"))+'</span><div class="tiles ac131">'+Object.entries(AC131).map(([k2,d])=>'<button class="tile" data-act="ac131" data-v="'+k2+'" aria-pressed="'+(tx.anim==="ac_"+k2)+'"><span class="gl">'+svg(ICONS.motion||"")+'</span><span class="lb">'+esc(L(d[0][0],d[0][1]))+"</span></button>").join("")+"</div>"+h.slice(j+6)}}
+  if(E.tab==="info"){const add='<span class="lbl" style="margin-top:0">'+esc(L("Banners","البانرات"))+'</span><div class="bn131g">'+BN131.map(b=>'<button type="button" class="bn131t" data-act="bn131-add" data-v="'+b[0]+'"><span class="bn131i" style="--ac:'+b[4]+";--fg:"+onAcc131(b[4])+'">'+icSvg131(b[3])+"</span><span>"+esc(L(b[1][0],b[1][1]))+"</span></button>").join("")+"</div>"+
+      '<span class="lbl">'+esc(L("Stickers","الملصقات"))+'</span><div class="st131g">'+ST131.map(s=>'<button type="button" class="st131t" data-act="st131-add" data-v="'+s[0]+'" style="--ac:'+s[1]+'" aria-label="'+esc(s[0].replace(/_/g," "))+'" title="'+esc(s[0].replace(/_/g," "))+'">'+icSvg131(s[0])+"</button>").join("")+'</div><span class="lbl">'+esc(L("Infographics","إنفوجرافيك"))+"</span>";
+    h=h.replace('<div class="vfxgrid"><button class="vfxt" data-act="edi-add"',add+'<div class="vfxgrid"><button class="vfxt" data-act="edi-add"');
+    const si=edPick()&&edPick().k==="info"&&edItem(edPick());
+    if(si&&(si.type==="bn131"||si.type==="st131")){const icons='<span class="lbl">'+esc(L("Icon","الأيقونة"))+'</span><div class="st131g sm">'+ST131.map(s=>'<button type="button" class="st131t" data-act="ic131-set" data-v="'+s[0]+'" aria-pressed="'+(si.ic===s[0])+'" aria-label="'+esc(s[0].replace(/_/g," "))+'">'+icSvg131(s[0])+"</button>").join("")+"</div>";
+      const more=si.type==="bn131"?'<label class="lbl">'+L("Second line","السطر الثاني")+'</label><input dir="auto" data-ib="t2" value="'+esc(si.t2||"")+'"><span class="lbl">'+esc(L("Style","النمط"))+'</span><div class="chips">'+BNST131.map(x=>'<button type="button" class="chip" data-act="bn131-st" data-v="'+x[0]+'" aria-pressed="'+(si.st===x[0])+'">'+esc(L(x[1][0],x[1][1]))+"</button>").join("")+"</div>"+icons:icons;
+      h=h.replace(/(<input dir="auto" data-ib="t1" value="[^"]*">)/,"$1"+more);if(si.type==="st131")h=h.replace(/(<label class="lbl">)[^<]*(<\/label><input dir="auto" data-ib="t1")/,"$1"+esc(L("Caption (optional)","تعليق (اختياري)"))+"$2")}}
+  return h})(VIEWS.edit);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="bn131-add"],[data-act="st131-add"],[data-act="ic131-set"],[data-act="bn131-st"],[data-act="ac131"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();
+  const v=a.dataset.v,act=a.dataset.act;if(act==="bn131-add")return void bnAdd131(v);if(act==="st131-add")return void stAdd131(v);
+  if(act==="ac131"){const tx=S.ed.texts.find(t=>t.id===S.ed.selText);if(!tx)return;tx.anim=tx.anim==="ac_"+v?"none":"ac_"+v;if(tx.anim!=="none"){ED.t=clamp(tx.start,0,Math.max(0,edTotal()-.01));ED.playing=true}persist();renderView();return}   // (it plays from the text's start, so you see the motion)
+  const it=edItem(edPick());if(!it)return;if(act==="ic131-set")it.ic=v;else if(act==="bn131-st")it.st=v;persist();renderView()},true);
+(()=>{const st=document.createElement("style");st.textContent=`
+#main .bn131g{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+#main .bn131t{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);font:inherit;font-size:13px;cursor:pointer;text-align:start;min-height:44px}
+#main .bn131t:hover{border-color:var(--lime)}
+#main .bn131i{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--ac);color:var(--fg)}#main .bn131i svg{width:16px;height:16px}
+#main .st131g{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px}
+#main .st131t{display:grid;place-items:center;height:44px;border-radius:10px;border:1px solid var(--line2);background:var(--panel2);color:var(--ac,var(--text));cursor:pointer;padding:0}
+#main .st131t svg{width:24px;height:24px}#main .st131t:hover,#main .st131t[aria-pressed="true"]{border-color:var(--lime)}
+#main .st131g.sm .st131t{color:var(--text);height:38px}#main .st131g.sm .st131t svg{width:20px;height:20px}
+.lk-linen{background:linear-gradient(135deg,#8a5a5c,#f3e7dc)}.lk-sunwashed{background:linear-gradient(135deg,#c9a27c,#fff1dc)}.lk-pastel{background:linear-gradient(135deg,#d7a6b3,#d8f0ff)}
+.lk-seabreeze{background:linear-gradient(135deg,#005b9a,#e6c13d)}.lk-spotlight{background:radial-gradient(circle at 40% 40%,#fff,#c88 40%,#111)}.lk-frost{background:linear-gradient(135deg,#a6b1ff,#342134)}
+.lk-crossproc{background:linear-gradient(135deg,#e6e7e0,#2b2aa1)}.lk-punchy{background:radial-gradient(circle,#ff8a3d,#c2185b 55%,#222)}.lk-ink{background:linear-gradient(135deg,#111,#e8e8e8)}
+.lk-peach{background:linear-gradient(135deg,#f7b099,#00469a)}.lk-morning{background:radial-gradient(circle,#d0ba8e 20%,#360309 85%)}.lk-ember{background:linear-gradient(135deg,#804e0f,#3b003b)}
+.lk-lagoon{background:linear-gradient(135deg,#04c,#7fe3d0)}.lk-retropink{background:linear-gradient(135deg,#f36abc,#ffd6ee)}.lk-mint{background:radial-gradient(circle,#a8dfc1 60%,#c4b7c8)}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
