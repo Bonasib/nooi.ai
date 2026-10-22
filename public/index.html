@@ -5913,7 +5913,7 @@ motionIcons=(o=>function(root){o(root);logoTiles(root)})(motionIcons);
 /* ---- durations by plan: Basic 10 s · Pro 20 s · Studio 30 s (free trial 5 s) ---- */
 LIMITS.basic.maxDur=10;LIMITS.pro.maxDur=20;LIMITS.studio.maxDur=30;
 const MODEL_MAX=id=>{const f=typeof flagModel==="function"&&flagModel(id);return f?f.maxDur:10};
-frameBlock=(o=>function(){return o().replace(/(data-bind="draft\.dur"[^>]*?)max="\d+"/,'$1max="'+lim().maxDur+'"').replace(/(max="\d+"[^>]*?data-bind="draft\.dur")/,m=>m.replace(/max="\d+"/,'max="'+lim().maxDur+'"'))+'<div class="small dim" style="margin-top:4px">'+L("Your plan: up to ","باقتك: حتى ")+lim().maxDur+L(" s · Pro 20 s · Studio 30 s"," ث · الاحترافية 20 ث · الاستوديو 30 ث")+"</div>"})(frameBlock);
+frameBlock=(o=>function(){return o().replace(/(data-bind="draft\.dur"[^>]*?)max="\d+"/,'$1max="'+lim().maxDur+'"').replace(/(max="\d+"[^>]*?data-bind="draft\.dur")/,m=>m.replace(/max="\d+"/,'max="'+lim().maxDur+'"'))+'<div class="small dim" style="margin-top:4px">'+L("Your plan: up to ","باقتك: حتى ")+lim().maxDur+L(" s · Basic 30 s · Pro 1 min · Studio 2 min"," ث · الأساسية 30 ث · الاحترافية دقيقة · الاستوديو دقيقتان")+"</div>"})(frameBlock);
 uniPanel=(o=>function(){return o().replace(/<div class="seg">((?:<button data-act="uni-dur"[^>]*>\d+<\/button>)+)<\/div>/,()=>'<div class="seg segwrap">'+[3,5,8,10,15,20,30].map(s=>'<button data-act="uni-dur" data-v="'+s+'" aria-pressed="'+(+S.uni.dur===s)+'"'+(s>lim().maxDur?' class="lockd" title="'+esc(L("Upgrade to unlock","رقِّ باقتك لفتحه"))+'"':"")+">"+s+"</button>").join("")+"</div>")})(uniPanel);
 /* longer than the model can make in one go → the server makes it in parts that continue from each other */
 addJob=(o=>function(j){if(j&&j.kind==="video"&&!(j.meta&&j.meta.parts)){const m=j.model==="auto"||!j.model?pickVideo(j.prompt||"").id:j.model,mx=MODEL_MAX(m);if((j.dur||5)>mx){const n=Math.ceil(j.dur/mx);j.meta=Object.assign({},j.meta,{parts:n,partSec:Math.ceil(j.dur/n)});toast(L("Longer than one "+(MODELS[m]||{name:m}).name+" shot — it will be made in "+n+" connected parts.","أطول من لقطة واحدة في "+(MODELS[m]||{name:m}).name+" — ستُصنع في "+n+" أجزاء متصلة."),{type:"info",ms:4000})}}return o(j)})(addJob);
@@ -7955,7 +7955,7 @@ hfBox=(o=>function(){let h=o();const H=S.hf,t=H.tab;if(t!=="video"&&t!=="image")
   if(t==="video"){if(!hfDurOK(H.dur))H.dur=HF_DURS.filter(hfDurOK).pop()||5;h=h.replace(/<button class="hfchip" data-act="hf-dur"[^>]*>[\s\S]*?<\/button>/,'<button class="hfchip" data-act="hfx-dur" aria-haspopup="dialog">'+ic("clock")+"<span>"+H.dur+L("s","ث")+"</span>"+svg('<path d="M6 9l6 6 6-6"/>')+"</button>")}
   /* nooi Studio 2.0: the 9 agents appear and work */
   const mn=nooiOn()?"":hfMName(t,t==="video"?H.vModel:H.iModel);
-  if(hfBotsOn())h=h.replace('<div class="hfbar">','<div class="hfbots"><div class="hfbh"><b>nooi Studio 2.0</b><span class="small mute">'+(t==="video"?(mn?L("9 AI agents plan the shots for "+mn+", keep continuity and check every frame — up to 30 s.","9 وكلاء ذكاء اصطناعي يخططون لقطات "+mn+" ويحافظون على الاستمرارية ويراجعون كل إطار — حتى 30 ثانية."):L("9 AI agents plan the shots, keep continuity and check every frame — up to 30 s with any model.","9 وكلاء ذكاء اصطناعي يخططون اللقطات ويحافظون على الاستمرارية ويراجعون كل إطار — حتى 30 ثانية مع أي نموذج.")):(mn?L("9 AI agents write the best prompt for "+mn+" and check every picture.","9 وكلاء ذكاء اصطناعي يكتبون أفضل وصف لـ "+mn+" ويراجعون كل صورة."):L("9 AI agents pick the best model and check every picture.","9 وكلاء ذكاء اصطناعي يختارون أفضل نموذج ويراجعون كل صورة.")))+'</span><button class="btn sm ghost" data-go="crew">'+L("Meet them","تعرّف عليهم")+"</button></div>"+botStrip(HF_BOT_IDS,true)+'</div><div class="hfbar">');
+  if(hfBotsOn())h=h.replace('<div class="hfbar">','<div class="hfbots"><div class="hfbh"><b>nooi Studio 2.0</b><span class="small mute">'+(t==="video"?(mn?L("9 AI agents plan the shots for "+mn+", keep continuity and check every frame — up to 2 minutes.","9 وكلاء ذكاء اصطناعي يخططون لقطات "+mn+" ويحافظون على الاستمرارية ويراجعون كل إطار — حتى دقيقتين."):L("9 AI agents plan the shots, keep continuity and check every frame — up to 2 minutes with any model.","9 وكلاء ذكاء اصطناعي يخططون اللقطات ويحافظون على الاستمرارية ويراجعون كل إطار — حتى دقيقتين مع أي نموذج.")):(mn?L("9 AI agents write the best prompt for "+mn+" and check every picture.","9 وكلاء ذكاء اصطناعي يكتبون أفضل وصف لـ "+mn+" ويراجعون كل صورة."):L("9 AI agents pick the best model and check every picture.","9 وكلاء ذكاء اصطناعي يختارون أفضل نموذج ويراجعون كل صورة.")))+'</span><button class="btn sm ghost" data-go="crew">'+L("Meet them","تعرّف عليهم")+"</button></div>"+botStrip(HF_BOT_IDS,true)+'</div><div class="hfbar">');
   return h})(hfBox);
 document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest("[data-act]");if(!a||!/^hfx-/.test(a.dataset.act))return;e.stopImmediatePropagation();const H=S.hf,act=a.dataset.act;
   if(act==="hfx-nooi"){if(H.tab==="video")H.vModel="auto";else H.iModel="auto";H.bots=true;persist();renderView();return}
@@ -15282,6 +15282,110 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
 .lk-crossproc{background:linear-gradient(135deg,#e6e7e0,#2b2aa1)}.lk-punchy{background:radial-gradient(circle,#ff8a3d,#c2185b 55%,#222)}.lk-ink{background:linear-gradient(135deg,#111,#e8e8e8)}
 .lk-peach{background:linear-gradient(135deg,#f7b099,#00469a)}.lk-morning{background:radial-gradient(circle,#d0ba8e 20%,#360309 85%)}.lk-ember{background:linear-gradient(135deg,#804e0f,#3b003b)}
 .lk-lagoon{background:linear-gradient(135deg,#04c,#7fe3d0)}.lk-retropink{background:linear-gradient(135deg,#f36abc,#ffd6ee)}.lk-mint{background:radial-gradient(circle,#a8dfc1 60%,#c4b7c8)}
+`;document.head.appendChild(st)})();
+
+/* ================= v132: LONG VIDEOS (UP TO 2 MINUTES) BY THE AGENTS AND THE ENGINES · AN EXTEND THAT CONTINUES =================
+   What didn't work, found by making videos on a real server with a stand-in engine:
+   · a long video was split into parts but the parts were never joined: the result was the first part only; and 30 s was the most
+     any plan allowed (the nooi Studio length slider stopped at 30, the home box at 30 with the agents on)
+   · "Extend +5s" made a new video from the same words (nothing continued); the Finish page's "Extend video" sent no words, no frame
+   · nooi Studio's Engine and Length chips sat past the right edge of the chip row, under Generate — easy to miss
+   · the 9 agents' film was made as separate shots, never one continuous film
+   Now (lib/long132.js + lib/jobs.js): any engine, up to 30 s (Basic), 1 minute (Pro), 2 minutes (Studio). Longer than the engine's
+   shot → connected parts: the agents plan it first (story, one shot per part, a continuity bible), each part starts on the last frame
+   of the one before, a vision check re-makes a part that left the film, a part that fails is asked again (then on another engine),
+   and the parts are joined into ONE video with its sound. Extend continues a finished video from its last frame and gives one longer
+   video. The cards say what is happening (planning · part 3 of 8 · joining). */
+LIMITS.basic.maxDur=30;LIMITS.pro.maxDur=60;LIMITS.studio.maxDur=120;
+const PART132={seedance:15,seedance20:15,seedance25:15,seedance2mini:15,kling30:15,kling30t:15,wan30:15,wan27:15,wan22:15,qwenwan:15,hunyuan:15,happyhorse:15,grok15:15,
+  kling:10,kling26:10,kling40:15,hailuo:10,hailuoh3:10,gemomni:10,grok:10,pixverse6:8,veo31:8,veo31f:8,ltx23:8,ltxfast:15,auto:15};
+const partMax132=m=>PART132[m]||PART132[(typeof M_ALIAS!=="undefined"&&M_ALIAS[m])||""]||10;
+const capDur132=()=>Math.min(120,lim().maxDur||5);
+const parts132=(m,d)=>{const n=Math.ceil((+d||5)/partMax132(m||"auto"));return n>1?Math.min(16,n):1};
+const mmss132=s=>{s=Math.round(+s||0);return s>=60?Math.floor(s/60)+":"+String(s%60).padStart(2,"0"):s+L(" s"," ث")};
+const LEN132=[5,10,15,30,60,90,120];
+ENG_MAX.wan30=15;if(typeof MFEAT!=="undefined"&&MFEAT.wan30)MFEAT.wan30=["Sharp detail · sound sync · up to 15 s a shot","تفاصيل حادة · مزامنة صوت · حتى 15 ث للقطة"];   // (the engine's shot is 2–30 s; nooi asks for up to 15)
+function longNote132(m,d){const n=parts132(m,d);if(n<2)return"";const per=Math.round(d/n);
+  return L("A long video: "+n+" connected parts of about "+per+" s. The agents plan it first — the story, one shot per part, and the characters, place and light that never change; each part starts on the last frame of the one before, and you get one video.",
+    "فيديو طويل: "+n+" أجزاء متصلة، كل جزء نحو "+per+" ث. يخطط له الوكلاء أولاً — القصة ولقطة لكل جزء والشخصيات والمكان والإضاءة التي لا تتغير؛ كل جزء يبدأ من آخر إطار في الجزء الذي قبله، وتحصل على فيديو واحد.")}
+// nooi Studio: the length chips (to the plan's longest), the slider to the same, what a long video is
+VIEWS.video=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string")return h;const d=S.draft,cap=capDur132();if(+d.dur>cap)d.dur=cap;
+  h=h.replace(/(<input type="range" min="\d+" max=")\d+(" step="\d+" value="\d+" data-bind="draft\.dur")/,"$1"+cap+"$2");
+  const note=longNote132(d.model,+d.dur),chips='<span class="lbl" style="margin-top:0">'+esc(L("Length","المدة"))+'</span><div class="chips len132" role="group" aria-label="'+esc(L("Video length","مدة الفيديو"))+'">'+LEN132.map(v=>{const off=v>cap;
+    return'<button type="button" class="chip" data-act="len132" data-v="'+v+'" aria-pressed="'+(+d.dur===v)+'"'+(off?' disabled title="'+esc(L("On a bigger plan","في باقة أعلى"))+'"':"")+">"+esc(mmss132(v))+(off?" "+ic("lock","width:12px;height:12px"):"")+"</button>"}).join("")+"</div>"+
+    '<p class="small mute ln132"'+(note?"":" hidden")+">"+esc(note)+"</p>";
+  h=h.replace('<div class="kfbox">','<div class="kfbox">'+chips);
+  return h.replace(/(data-act="extend-job" data-id="[^"]+">)[\s\S]*?(<\/button>)/g,"$1"+ic("plus")+esc(L("Extend…","تمديد…"))+"$2")})(VIEWS.video);
+// the Engine and the Length first in the chip row (they were past its right edge, under Generate)
+renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="video"){const row=document.querySelector("#main .box93 .opt93");
+  if(row)["length","model"].forEach(k=>{const c=row.querySelector('.o93[data-o93="'+k+'"]');if(c&&row.firstElementChild!==c)row.prepend(c)})}return r})(renderView);
+// the home box: any engine up to the plan's longest (connected parts beyond its own shot)
+hfDurOK=function(v){return v<=capDur132()};
+hfDurNote=function(v,cap){const m=nooiOn()?"auto":S.hf.vModel;if(v>=cap&&cap<120)return L("Longer videos are on a bigger plan.","الفيديو الأطول متاح في باقة أعلى.");
+  const n=parts132(m,v);return n>1?L("The agents make "+n+" connected parts that continue from each other — one video at the end.","يصنع الوكلاء "+n+" أجزاء متصلة تكمل بعضها — فيديو واحد في النهاية."):L("One shot.","لقطة واحدة.")};
+hfDurSheet=function(){const H=S.hf,cap=capDur132(),X=120,pc=v=>(v/X*100)+"%";
+  hfSheet(L("Total duration","المدة الكاملة"),'<div class="durpop"><div class="durrow" dir="ltr"><div class="durtrack"><input type="range" id="hfdr" min="0" max="'+X+'" step="5" value="'+H.dur+'" aria-label="'+esc(L("Video length in seconds","مدة الفيديو بالثواني"))+'" style="--v:'+pc(H.dur)+";--cap:"+pc(cap)+'"><div class="durticks" dir="ltr">'+[0,30,60,90,120].map(x=>'<span class="'+(x>cap?"off":"")+'">'+(x?mmss132(x).replace(/\s.*$/,""):0)+"</span>").join("")+'</div></div><label class="durbox" dir="ltr"><input id="hfdn" type="number" min="5" max="'+cap+'" step="5" value="'+H.dur+'" aria-label="'+esc(L("Seconds","ثوانٍ"))+'"><span>s</span></label></div>'+
+    '<p class="small mute" id="hfdnote" style="margin:10px 0 0">'+hfDurNote(H.dur,cap)+'</p><div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn sm primary" data-act="close-sheet">'+L("Done","تم")+"</button></div></div>");
+  const r=$("#hfdr"),n=$("#hfdn");if(!r)return;const set=(v,final)=>{v=Math.max(5,Math.min(cap,v));if(final)v=Math.max(5,Math.min(cap,Math.round(v/5)*5));H.dur=v;if(final)r.value=v;r.style.setProperty("--v",pc(+r.value));if(n&&document.activeElement!==n)n.value=v;
+    const nt=$("#hfdnote");if(nt)nt.innerHTML=hfDurNote(v,cap);const chip=document.querySelector('.hfbox [data-act="hfx-dur"] span');if(chip)chip.textContent=v+L("s","ث");if(final){persist();typeof hfStudioPaint==="function"&&hfStudioPaint()}};
+  r.addEventListener("input",()=>set(+r.value,false));r.addEventListener("change",()=>set(+r.value,true));n.addEventListener("change",()=>{set(+n.value||5,true);r.value=H.dur;r.style.setProperty("--v",pc(H.dur))})};
+// what the server says about a long video or an extension, kept on the page's job
+API.req=(o=>async function(p){const r=await o.apply(this,arguments);try{const m=/^\/v1\/jobs\/([A-Za-z0-9_-]+)$/.exec(String(p));
+  if(m&&r&&r.id){const j=S.jobs.find(x=>x.remote===r.id);if(j){if(r.plan132)j.plan132=r.plan132;if(r.longDur)j.longDur=r.longDur;if(r.ext132)j.ext132=r.ext132}}}catch(e){}return r})(API.req);
+// what is happening, on the card and in the opened result
+function line132(j){if(!j||j.kind!=="video"||["complete","failed"].includes(j.status)||/^mc/.test(j.model||""))return"";const p=j.parts108;
+  if(j.stage==="plan")return L("The agents are planning the shots…","الوكلاء يخططون اللقطات…");
+  if(j.stage==="join")return L("Joining the parts into one video…","جمع الأجزاء في فيديو واحد…");
+  if(p&&p[1]>1)return L("Part "+Math.min(p[1],p[0]+1)+" of "+p[1]+" — each starts on the last frame of the one before","الجزء "+Math.min(p[1],p[0]+1)+" من "+p[1]+" — كل جزء يبدأ من آخر إطار في الذي قبله");
+  return""}
+const lineHtml132=t=>'<p class="small mute lp132">'+ic("spark","width:14px;height:14px")+"<span>"+esc(t)+"</span></p>";
+card98=(o=>function(j){const h=o.apply(this,arguments),t=line132(j);return t?h.replace('<div class="gp98"',lineHtml132(t)+'<div class="gp98"'):h})(card98);
+previewCol=(o=>function(g){let h=o.apply(this,arguments);const t=line132(g);
+  if(t)h=h.replace(/<p class="small mute stage108">[\s\S]*?<\/p>/,"").replace('<div class="pipe"',lineHtml132(t)+'<div class="pipe"');
+  if(g&&g.status==="complete"&&g.plan132&&Array.isArray(g.plan132.shots)&&g.plan132.shots.length>1){const sh=g.plan132.shots;
+    h=h.replace('<div class="pipe"','<details class="pl132"><summary>'+esc(L("What the agents planned · "+sh.length+" connected parts"+(g.longDur?" · "+mmss132(g.longDur):""),"ما خطط له الوكلاء · "+sh.length+" أجزاء متصلة"+(g.longDur?" · "+mmss132(g.longDur):"")))+"</summary><ol>"+sh.map(s=>'<li dir="auto">'+esc(s)+"</li>").join("")+"</ol></details>"+'<div class="pipe"')}
+  return h})(previewCol);
+// Extend: the video goes on from its last frame — +5, +10 or +15 s, the price first — and comes back as one longer video
+function extSheet132(j){if(!j)return;if(API.mode==="server"&&!j.remote){toast(L("This video can be extended once it is on the server.","يمكن مدّ هذا الفيديو بعد أن يصبح على الخادم."));return}
+  const m=j.model&&MODELS[j.model]?j.model:"auto";S.ext132={id:j.id,n:S.ext132&&S.ext132.id===j.id?S.ext132.n:5,m};
+  document.querySelectorAll(".lb98").forEach(x=>x.remove());if(typeof ST98==="function"){const st=ST98();if(st)st.lb=""}   // (the opened video closes: the sheet was behind it)
+  hfSheet(L("Extend this video","مدّ هذا الفيديو"),'<div class="ex132"><p class="small mute" style="margin:0 0 10px">'+esc(L("It goes on from its last frame — the same characters, place and light — and you get one longer video.","يستمر من آخر إطار فيه — نفس الشخصيات والمكان والإضاءة — وتحصل على فيديو واحد أطول."))+'</p><div class="chips">'+
+    [5,10,15].map(n=>'<button type="button" class="chip" data-act="ext132-n" data-v="'+n+'" aria-pressed="'+(S.ext132.n===n)+'">+'+n+L(" s"," ث")+"</button>").join("")+'</div><label class="lbl" for="ext132w">'+esc(L("What happens next (optional)","ماذا يحدث بعد ذلك (اختياري)"))+'</label><textarea id="ext132w" dir="auto" rows="2" placeholder="'+esc(L("e.g. she turns and smiles at the camera","مثال: تلتفت وتبتسم للكاميرا"))+'"></textarea>'+
+    '<div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" data-act="ext132-go">'+ic("plus")+esc(L("Extend","مدّ"))+'<span class="cost" id="ext132c">'+vcost(m,S.ext132.n)+"</span></button></div></div>")}
+function extGo132(){const E=S.ext132,j=E&&S.jobs.find(x=>x.id===E.id);if(!j)return;const w=String(($("#ext132w")||{}).value||"").trim(),cost=vcost(E.m,E.n);
+  if(!crFree()&&S.credits<cost){toast(L("Not enough credits for this.","الرصيد لا يكفي لهذه العملية."));return}
+  const n=addJob({kind:"video",prompt:w,title:L("Extended: ","ممدّد: ")+String(j.title||j.prompt||"").slice(0,60),model:E.m,dur:E.n,aspect:j.aspect,cost,meta:{extend132:j.remote||j.id}});
+  $("#modalRoot").innerHTML="";if(n){S.lastVideo=n.id;persist();renderAll();toast(L("Extending — the new seconds continue from the last frame.","يجري المدّ — الثواني الجديدة تكمل من آخر إطار."),{type:"ok"})}}
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="extend-job"],[data-act="len132"],[data-act="ext132-n"],[data-act="ext132-go"],[data-act="crew-film132"]');if(!a)return;
+  e.preventDefault();e.stopImmediatePropagation();const act=a.dataset.act;
+  if(act==="extend-job")return void extSheet132(S.jobs.find(x=>x.id===a.dataset.id));
+  if(act==="len132"){S.draft.dur=+a.dataset.v;persist();renderView();return}
+  if(act==="ext132-n"){S.ext132.n=+a.dataset.v;document.querySelectorAll('[data-act="ext132-n"]').forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.v===S.ext132.n)));const c=$("#ext132c");if(c)c.textContent=vcost(S.ext132.m,S.ext132.n);return}
+  if(act==="ext132-go")return void extGo132();
+  if(act==="crew-film132"&&S.crew.run)crewFilm132(S.crew.run)},true);
+// a made video's long-press menu (v131) also offers Extend
+if(typeof menuAt131==="function")menuAt131=(o=>function(t,x,y){const r=o.apply(this,arguments);const g=r&&t.closest&&t.closest(".gc98[data-open98]"),j=g&&S.jobs.find(k=>k.id===g.dataset.open98);
+  if(j&&j.kind==="video"&&j.status==="complete"&&CM131.el){const items=CM131.el._items||[],ix=items.findIndex(i=>i.act==="del88");
+    if(ix>=0&&!items.some(i=>i.act==="extend-job")){CM131.el.remove();CM131.el=null;items.splice(ix,0,{icon:"plus",label:L("Extend…","تمديد…"),act:"extend-job",extra:'data-id="'+esc(j.id)+'"'});cmOpen131(items,x,y,(typeof shown88==="function"?shown88(j):j.prompt||"").slice(0,60))}}return r})(menuAt131);
+// the 9 agents' film as ONE continuous video: their shots in order, each from the last frame of the one before, the cast as the bible
+function crewFilm132(run){const sh=pkgShots(run);if(!sh.length){toast(L("The agents haven't planned the shots yet.","لم يخطط الوكلاء اللقطات بعد."));return}
+  const cap=capDur132();let total=0;const use=[];for(const s of sh.slice(0,16)){const d=Math.max(5,Math.min(15,Math.round(+s.duration||5)));if(total+d>cap)break;use.push([s,d]);total+=d}
+  if(!use.length){toast(L("Longer videos are on a bigger plan.","الفيديو الأطول متاح في باقة أعلى."));return}
+  const cast=((run.out.casting||{}).characters||[]).map(c=>[c.name,c.look,c.outfit].filter(Boolean).join(": ")).join(" · "),cine=run.out.cine||{},look=typeof cine.look==="string"?cine.look:typeof cine.style==="string"?cine.style:"";
+  const models=use.map(([s])=>MODELS[s.model]?s.model:"seedance"),cost=use.reduce((a,[s,d],i)=>a+vcost(models[i],d),0);
+  if(!crFree()&&S.credits<cost){upsell(L("The continuous film needs ","الفيلم المتصل يحتاج ")+cost+L(" credits."," رصيداً."),"pro");return}
+  const title=(run.out.writer&&run.out.writer.title)||L("Film","فيلم"),j=addJob({kind:"video",prompt:use.map(([s])=>s.prompt).join(" "),title,model:models[0],dur:total,aspect:run.brief.aspect,cost,
+    meta:{crew:run.id,parts:use.length,partModels:models,shots:use.map(([s])=>s.prompt),bible:[cast,look].filter(Boolean).join(" · ").slice(0,900)}});
+  if(j){S.lastVideo=j.id;persist();renderAll();toast(L("The film is being made as one continuous video — "+use.length+" connected parts.","يُصنع الفيلم كفيديو واحد متصل — "+use.length+" أجزاء."),{type:"ok"})}}
+if(VIEWS.crew)VIEWS.crew=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="string"||h.indexOf('data-act="crew-render"')<0)return h;
+  const i=h.indexOf("</button>",h.indexOf('data-act="crew-render"'));return i<0?h:h.slice(0,i+9)+hTile(svg(ICONS.video),L("One continuous film","فيلم واحد متصل"),'data-act="crew-film132"')+h.slice(i+9)})(VIEWS.crew);
+(()=>{const st=document.createElement("style");st.textContent=`
+#main .len132{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}#main .len132 .chip{min-height:36px}#main .len132 .chip[disabled]{opacity:.5}
+#main .ln132{margin:0 0 12px;line-height:1.5}
+.lp132{display:flex;align-items:center;gap:6px;margin:6px 0 2px;font-size:12px;line-height:1.35}.lp132 svg{flex:none;color:var(--lime)}
+.gc98 .lp132{margin:6px 8px 0}
+.pl132{margin:10px 0;border:1px solid var(--line2);border-radius:12px;padding:8px 12px;background:var(--panel)}.pl132 summary{cursor:pointer;font-size:13px}.pl132 ol{margin:8px 0 0;padding-inline-start:20px;font-size:13px;line-height:1.5}
+.ex132 textarea{width:100%;min-height:64px}
 `;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
