@@ -40,7 +40,10 @@ const srv = spawn("node", [ROOT + "/server.js"], { cwd: D, env: { ...env, PORT: 
 let pass = 0, fail = 0; const ok = (c, m) => { c ? pass++ : fail++; console.log((c ? "✓ " : "✗ ") + m); };
 const api = async (p, j, method) => { const r = await fetch(`http://localhost:${NPORT}${p}`, { method: method || (j ? "POST" : "GET"), headers: { "content-type": "application/json" }, body: j ? JSON.stringify(j) : undefined }); return { status: r.status, d: await r.json().catch(() => ({})) }; };
 const job = async (b) => { const r = await api("/v1/jobs", b); if (r.status !== 200) return { status: "http " + r.status, error: r.d.error }; let j = r.d; for (let i = 0; i < 80 && !["done", "failed"].includes(j.status); i++) { await new Promise((s) => setTimeout(s, 300)); j = (await api("/v1/jobs/" + j.id)).d; } return j; };
-const media = (u) => fs.readFileSync(path.join(D, "media", path.basename(u)));
+// (v127: a picture the AI made carries content credentials — a "caBX" chunk in a PNG; the picture itself is the same)
+const noCreds = (b) => { if (b.subarray(1, 4).toString() !== "PNG") return b; const parts = [b.subarray(0, 8)]; let o = 8;
+  while (o + 8 <= b.length) { const n = b.readUInt32BE(o), t = b.subarray(o + 4, o + 8).toString(); if (t !== "caBX") parts.push(b.subarray(o, o + 12 + n)); o += 12 + n; } return Buffer.concat(parts); };
+const media = (u) => noCreds(fs.readFileSync(path.join(D, "media", path.basename(u))));
 try {
   for (let i = 0; i < 80; i++) { try { await api("/v1/config"); break; } catch { await new Promise((r) => setTimeout(r, 250)); } }
   await api("/v1/admin/providers/nvidia", { imageUrl: `http://localhost:${MPORT}/nv/genai/flux`, image2Url: `http://localhost:${MPORT}/nv/genai/sd35`, editUrl: `http://localhost:${MPORT}/nv/genai/kontext`, trellisUrl: `http://localhost:${MPORT}/nv/genai/trellis`, videoUrl: `http://localhost:${MPORT}/nv/cosmos` }, "PUT");

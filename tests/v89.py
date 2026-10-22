@@ -95,7 +95,8 @@ async def page_run(p, W, lang):
     ok(c and (c["t"][1] <= 10 if c["rtl"] else c["t"][0] <= 10) and (c["x"][0] <= 10 if c["rtl"] else c["x"][1] <= 10), f"{tag}: the length is top left, the × top right (mirrored in Arabic) {c}")
     ok(any(x[0] == "ok" and x[1].startswith("/v1/poster/") for x in f["posters"]) and any(x[0] == "elsewhere" for x in f["posters"]) and all(x[1] == "" and x[2] != "none" for x in f["posters"] if x[0] == "elsewhere"), f"{tag}: a poster only when its frame loads; a video without one keeps its own first frame {f['posters']}")
     g = f["gone"]
-    ok(g["status"] == "failed" and g["type"] == "gone" and "no longer" in g["msg"] and g["toasts"] == 0, f"{tag}: a job the server no longer has stops, says so, no toast {g}")
+    ok(g["status"] == "failed" and g["type"] == "gone" and ("no longer" in g["msg"] or "لم تعد في حسابك" in g["msg"]) and g["toasts"] == 0,   # (v124: in the reader's language)
+        f"{tag}: a job the server no longer has stops, says so, no toast {g}")
     ok(not errs, f"{tag}: page errors {errs[:4]}")
     await b.close(); return r
 

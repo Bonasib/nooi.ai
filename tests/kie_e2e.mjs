@@ -80,7 +80,9 @@ try {
   ok(pages.every((t) => !leak(t)), "no provider name in /v1/config, showcase, explore, jobs or admin settings (" + pages.map((t, i) => leak(t) ? i : "").join("") + ")");
   const fsm = await import("fs"), pub = ROOT + "/public";
   const files = ["index.html", "email-templates.js", "local-ai-worker.js", ...fsm.readdirSync(pub + "/i18n").map((f) => "i18n/" + f)];
-  const bad = files.filter((f) => leak(fsm.readFileSync(pub + "/" + f, "utf8").replace(/[A-Za-z0-9+/=]{200,}/g, "").replace(/\bkies\b/g, "")));
+  // (v128: in the translations the name is looked for as a word — Polish words end in "-kie": wszystkie, krótkie)
+  const word = (t) => /\bkie\b|kie\.ai/i.test(String(t));
+  const bad = files.filter((f) => (/^i18n\//.test(f) ? word : leak)(fsm.readFileSync(pub + "/" + f, "utf8").replace(/[A-Za-z0-9+/=]{200,}/g, "").replace(/\bkies\b/g, "")));
   ok(!bad.length, "no provider name in any file the browser downloads (" + bad.join(", ") + ")");
   // showcase: the admin button makes nooi's marketing media with Kie AI and posts each one to Explore with its prompt
   const sc0 = await api("/v1/showcase"); ok(sc0.status === 200 && sc0.d.items.length >= 20 && ["motion", "anime", "vfx", "pixel"].every((c) => sc0.d.items.some((x) => x.cat === c && x.kind === "video")) && sc0.d.items.some((x) => x.kind === "image"), "showcase: motion, anime, VFX, pixel-art videos and pictures, each with a prompt");
