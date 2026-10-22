@@ -14709,6 +14709,200 @@ document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.c
   catch(err){toast(L(String(err.message||err),err.errorAr||String(err.message||err)));b.disabled=false}});
 (()=>{const st=document.createElement("style");st.textContent=`#main .lk129 b{color:var(--text)}`;document.head.appendChild(st)})();
 
+/* ================= v130: PICTURES WITH # NAMES IN THE VIDEO PROMPT BAR ================= */
+// nooi Studio took one first frame and one end frame. Now "+" adds up to 6 pictures to use — people, products, places — as
+// well as the frames. Each picture has a short name (image1… / صورة1…, renamed in place); typing "#" in the words lists the
+// pictures and puts the chosen one's name there ("#girl enjoys the cold #can"). The names are tinted in the words, and a
+// picture the words use is marked. Seedance 2.x takes reference pictures: the server sends them all and each name becomes the
+// engine's @Image1, @Image2… (lib/refs130.js). Other engines can't, so adding a picture switches the engine to Seedance, and
+// Generate says so when another engine is picked.
+const REF130=["vRef1","vRef2","vRef3","vRef4","vRef5","vRef6"],REFOK130=["auto","seedance25","seedance20","seedance"];
+SLOTS_FOR.video=(SLOTS_FOR.video||[]).concat(REF130);REF130.forEach(s=>{if(!KEEP_SLOTS.includes(s))KEEP_SLOTS.push(s)});
+const TAG130=/^[\p{L}\p{N}_]{1,20}$/u,TAGS130=/(?<![\p{L}\p{N}_])#([\p{L}\p{N}_]{1,20})(?![\p{L}\p{N}_])/gu;
+const AM130={open:false},HP130={open:false,i:0,from:0,to:0,list:[]};let REFGO130=null,RO130=null;
+const refs130=()=>(Array.isArray(S.draft.refs130)?S.draft.refs130:[]).filter(r=>r&&REF130.includes(r.s)&&M[r.s]&&TAG130.test(r.tag||""));
+const refOk130=m=>REFOK130.includes(m);
+function refNew130(){const b=S.lang==="ar"?"صورة":"image",used=new Set(refs130().map(r=>r.tag.toLowerCase()));for(let n=1;;n++)if(!used.has((b+n).toLowerCase()))return b+n}
+const used130=t=>{const s=new Set();String(t||"").replace(TAGS130,(m,x)=>{s.add(x.toLowerCase());return m});return s};
+// adding a picture: an engine that takes pictures
+function refEngine130(){const d=S.draft;if(refOk130(d.model))return;const m=["seedance20","seedance25","seedance","auto"].find(x=>MODELS[x]);if(!m)return;d.model=m;
+  toast(L(MODELS[m].name+" is the engine now — it uses your pictures.","صار "+MODELS[m].name+" هو المحرك — فهو يستخدم صورك."),{type:"ok"})}
+// the strip of pictures in the bar: the frames, then the pictures to use, each with its name
+function strip130(){const d=S.draft,R=refs130(),startJob=d.startJob&&S.jobs.find(j=>j.id===d.startJob),u=used130(d.prompt);
+  const fr=(k,lab,inner,rm)=>'<figure class="rf130i rf130f"><span class="rf130p">'+inner+'</span><figcaption class="rf130n">'+esc(lab)+"</figcaption>"+rm+"</figure>";
+  const rmb=(act,k)=>'<button type="button" class="rf130x" data-act="'+act+'"'+(k?' data-k="'+k+'"':"")+' aria-label="'+esc(L("Remove","إزالة"))+'">'+ic("x")+"</button>";
+  let h="";
+  if(startJob)h+=fr("vStart",L("First frame","الإطار الأول"),thumb("j:"+startJob.id,{}),rmb("clear-start"));
+  else if(M.vStart)h+=fr("vStart",L("First frame","الإطار الأول"),'<img src="'+esc(M.vStart.url)+'" alt="">',rmb("kf-rm","vStart"));
+  if(M.vEnd)h+=fr("vEnd",L("End frame","الإطار الأخير"),'<img src="'+esc(M.vEnd.url)+'" alt="">',rmb("kf-rm","vEnd"));
+  h+=R.map(r=>'<div class="rf130i'+(u.has(r.tag.toLowerCase())?" used":"")+'" data-s130="'+r.s+'"><button type="button" class="rf130p" data-ref130ins="'+r.s+'" title="'+esc(L("Put #"+r.tag+" in the words","ضع #"+r.tag+" في الوصف"))+'" aria-label="'+esc(L("Put #"+r.tag+" in the words","ضع #"+r.tag+" في الوصف"))+'"><img src="'+esc(M[r.s].url)+'" alt=""></button>'+
+    '<label class="rf130n"><span aria-hidden="true">#</span><input data-ref130n="'+r.s+'" value="'+esc(r.tag)+'" maxlength="20" spellcheck="false" autocomplete="off" dir="auto" aria-label="'+esc(L("Name of this picture","اسم هذه الصورة"))+'"></label>'+rmb("kf-rm",r.s)+"</div>").join("");
+  if(!h)return"";
+  if(R.length<REF130.length)h+='<label class="rf130a" title="'+esc(L("Add pictures","أضف صوراً"))+'">'+ic("plus")+'<input type="file" accept="image/*" multiple data-ref130 aria-label="'+esc(L("Add pictures","أضف صوراً"))+'"></label>';
+  return'<div class="rf130" role="group" aria-label="'+esc(L("Pictures for this video","صور هذا الفيديو"))+'">'+h+(R.length?'<span class="rf130h">'+esc(L("Type # to use a picture","اكتب # لاستخدام صورة"))+"</span>":"")+"</div>"}
+// "+": pictures to use, a first frame, an end frame
+function menu130(){const it=(icon,t,s,inp)=>'<label class="am130i" role="menuitem"><span class="am130g">'+icon+"</span><span><b>"+esc(t)+"</b><small>"+esc(s)+"</small></span>"+inp+"</label>";
+  return'<div class="am130" id="am130" role="menu" aria-label="'+esc(L("Add","أضف"))+'"'+(AM130.open?"":" hidden")+">"+
+    it(ic("image"),L("Pictures to use","صور للاستخدام"),L("People, products, places — up to 6. Type # to use one in the words.","أشخاص، منتجات، أماكن — حتى 6. اكتب # لاستخدام إحداها في الوصف."),'<input type="file" accept="image/*" multiple data-ref130>')+
+    it(svg('<path d="M5 4v16"/><rect x="8" y="6" width="12" height="12" rx="2"/>'),L("First frame","الإطار الأول"),L("The video starts on this picture.","يبدأ الفيديو من هذه الصورة."),'<input type="file" accept="image/*" data-kf="vStart">')+
+    it(svg('<path d="M19 4v16"/><rect x="4" y="6" width="12" height="12" rx="2"/>'),L("End frame","الإطار الأخير"),L("The video ends on this picture.","ينتهي الفيديو على هذه الصورة."),'<input type="file" accept="image/*" data-kf="vEnd">')+"</div>"}
+function menuShow130(on){AM130.open=on;const m=document.getElementById("am130");if(m)m.hidden=!on;const b=document.querySelector("#main .cz98 .add98");if(b)b.setAttribute("aria-expanded",String(on))}
+// the names tinted in the words: a copy of the words under the box (transparent letters, tinted names), kept in place
+function mirror130(){const ta=document.getElementById("dprompt"),pn=ta&&ta.closest(".cz98"),mr=pn&&pn.querySelector(":scope>.mr130");if(!mr)return;
+  const R=refs130(),names=new Set(R.map(r=>r.tag.toLowerCase())),cs=getComputedStyle(ta),pr=pn.getBoundingClientRect(),r=ta.getBoundingClientRect();
+  ["fontFamily","fontSize","fontWeight","fontStyle","letterSpacing","wordSpacing","lineHeight","textAlign","textIndent","textTransform","tabSize","whiteSpace","overflowWrap","wordBreak","direction","unicodeBidi",
+   "paddingTop","paddingRight","paddingBottom","paddingLeft","borderTopWidth","borderRightWidth","borderBottomWidth","borderLeftWidth","boxSizing"].forEach(k=>mr.style[k]=cs[k]);
+  Object.assign(mr.style,{left:(r.left-pr.left-pn.clientLeft)+"px",top:(r.top-pr.top-pn.clientTop)+"px",width:r.width+"px",height:r.height+"px",overflowY:ta.scrollHeight>ta.clientHeight+1?"scroll":"hidden"});
+  mr.innerHTML=esc(ta.value).replace(/(?<![\p{L}\p{N}_])#([\p{L}\p{N}_]{1,20})(?![\p{L}\p{N}_])/gu,(m,t)=>names.has(t.toLowerCase())?'<mark class="tg130">'+m+"</mark>":m)+"\n​";
+  mr.scrollTop=ta.scrollTop;
+  pn.querySelectorAll(".rf130i[data-s130]").forEach(x=>{const rr=R.find(y=>y.s===x.dataset.s130);x.classList.toggle("used",!!rr&&used130(ta.value).has(rr.tag.toLowerCase()))})}
+// put the bar together after each drawing of the Video page
+function decorate130(){if(S.view!=="video")return;const ta=document.getElementById("dprompt"),pn=ta&&ta.closest(".cz98");if(!pn)return;
+  const b=pn.querySelector(".add98");if(b&&b.dataset.o93){delete b.dataset.o93;b.dataset.act="add130";b.setAttribute("aria-haspopup","menu");b.setAttribute("aria-controls","am130");b.setAttribute("aria-expanded",String(AM130.open));
+    b.setAttribute("aria-label",L("Add pictures or frames","أضف صوراً أو إطارات"));b.title=b.getAttribute("aria-label")}
+  pn.querySelector(":scope>.rf130")?.remove();const sh=strip130(),main=pn.querySelector(":scope>.cz98m");if(sh&&main)main.insertAdjacentHTML("beforebegin",sh);
+  if(!pn.querySelector(":scope>#am130"))pn.insertAdjacentHTML("beforeend",menu130());
+  const R=refs130();if(R.length&&!ta.value)ta.setAttribute("placeholder",L("Describe the video — type # to use a picture","صف الفيديو — اكتب # لاستخدام صورة"));
+  let mr=pn.querySelector(":scope>.mr130");if(R.length&&!mr){pn.insertAdjacentHTML("afterbegin",'<div class="mr130" aria-hidden="true"></div>');mr=pn.querySelector(":scope>.mr130")}else if(!R.length&&mr){mr.remove();mr=null}
+  ta.classList.toggle("ta130",!!mr);if(RO130)RO130.disconnect();
+  if(mr){mirror130();if(typeof ResizeObserver==="function"){RO130=new ResizeObserver(()=>mirror130());RO130.observe(ta);RO130.observe(pn)}}
+  if(document.activeElement===ta)hash130(ta)}
+renderView=(o=>function(){const r=o.apply(this,arguments);try{decorate130()}catch(e){console.warn("v130",e)}return r})(renderView);
+// adding pictures (several at once): each gets the next free place and a name; from the # list, its name goes in the words
+document.addEventListener("change",e=>{const t=e.target;if(!t.matches||!t.matches("input[data-ref130]"))return;const files=[...(t.files||[])].filter(f=>/^image\//.test(f.type||"")||/\.(png|jpe?g|webp|gif|avif|heic|heif)$/i.test(f.name||""));
+  const fromHash=t.hasAttribute("data-hash130");t.value="";if(!files.length)return;
+  const list=refs130().slice(),free=REF130.filter(s=>!list.some(r=>r.s===s));let first="",n=0;
+  for(const f of files){const s=free.shift();if(!s)break;loadSlot(s,f);const tag=refNew130();list.push({s,tag});S.draft.refs130=list;n++;if(!first)first=tag}
+  S.draft.refs130=list;if(n<files.length)toast(L("Up to 6 pictures — the others weren't added.","حتى 6 صور — لم تُضف البقية."),{type:"warn"});
+  refEngine130();menuShow130(false);
+  if(fromHash&&first){const ta=document.getElementById("dprompt");if(ta)put130(ta,first,HP130.from,HP130.to)}
+  HP130.open=false;persist();renderView()});
+// "#name" into the words at the caret (or in place of the "#…" being typed)
+function put130(ta,tag,from,to){const v=ta.value;if(from==null||to==null||from>to||v[from]!=="#"){from=to=document.activeElement===ta?ta.selectionStart??v.length:v.length}
+  const pre=v.slice(0,from),post=v.slice(to),sp=pre&&!/\s$/.test(pre)?" ":"",ins=sp+"#"+tag+(/^\s/.test(post)?"":" ");
+  ta.value=pre+ins+post;const c=(pre+ins).length;ta.focus();try{ta.setSelectionRange(c,c)}catch(x){}ta.dispatchEvent(new Event("input",{bubbles:true}))}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-ref130ins]");if(!b)return;e.preventDefault();const r=refs130().find(x=>x.s===b.dataset.ref130ins),ta=document.getElementById("dprompt");if(r&&ta)put130(ta,r.tag)});
+// renaming a picture renames it in the words too
+document.addEventListener("change",e=>{const t=e.target;if(!t.dataset||!t.dataset.ref130n)return;const list=refs130(),r=list.find(x=>x.s===t.dataset.ref130n);if(!r)return;
+  const nv=String(t.value||"").trim().replace(/^#+/,"").replace(/\s+/g,"_").slice(0,20);
+  if(!TAG130.test(nv)){toast(L("A name is letters and numbers, without spaces.","الاسم حروف وأرقام بلا مسافات."),{type:"warn"});t.value=r.tag;return}
+  if(list.some(x=>x!==r&&x.tag.toLowerCase()===nv.toLowerCase())){toast(L("Another picture has this name.","صورة أخرى تحمل هذا الاسم."),{type:"warn"});t.value=r.tag;return}
+  const old=r.tag;r.tag=nv;S.draft.refs130=list;const ta=document.getElementById("dprompt");
+  const re=new RegExp("(?<![\\p{L}\\p{N}_])#"+old.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"(?![\\p{L}\\p{N}_])","giu");
+  if(ta){ta.value=ta.value.replace(re,"#"+nv);ta.dispatchEvent(new Event("input",{bubbles:true}))}else S.draft.prompt=String(S.draft.prompt||"").replace(re,"#"+nv);
+  t.value=nv;persist();const ins=t.closest(".rf130i")?.querySelector("[data-ref130ins]");if(ins){ins.title=L("Put #"+nv+" in the words","ضع #"+nv+" في الوصف");ins.setAttribute("aria-label",ins.title)}mirror130()});
+document.addEventListener("keydown",e=>{const t=e.target;if(t&&t.dataset&&t.dataset.ref130n&&e.key==="Enter"){e.preventDefault();t.blur()}});
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="kf-rm"]');if(!a||!REF130.includes(a.dataset.k))return;S.draft.refs130=(S.draft.refs130||[]).filter(r=>r&&r.s!==a.dataset.k);persist()},true);
+// the "+" menu
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest('[data-act="add130"]');if(!b)return;e.preventDefault();e.stopPropagation();
+  const st=ST93();if(st.open){st.open="";document.querySelectorAll("#main .cz98 [data-o93]").forEach(x=>x.setAttribute("aria-expanded","false"));document.querySelectorAll("#main .cz98 .sec93").forEach(s=>s.hidden=true)}
+  HP130.open=false;document.getElementById("hp130")?.remove();menuShow130(!AM130.open)});
+document.addEventListener("change",e=>{if(e.target.dataset&&e.target.dataset.kf&&AM130.open)menuShow130(false)},true);
+document.addEventListener("pointerdown",e=>{if(AM130.open&&!(e.target.closest&&e.target.closest("#am130,.add98")))menuShow130(false);if(HP130.open&&!(e.target.closest&&e.target.closest("#hp130,#dprompt")))hashClose130()},true);
+// "#": the list of pictures above the words
+function hashClose130(){HP130.open=false;document.getElementById("hp130")?.remove();const ta=document.getElementById("dprompt");if(ta){ta.removeAttribute("aria-activedescendant");ta.setAttribute("aria-expanded","false")}}
+function hash130(ta){const c=ta.selectionStart,v=ta.value;if(c==null||c!==ta.selectionEnd){hashClose130();return}
+  const m=/(?:^|[^\p{L}\p{N}_])#([\p{L}\p{N}_]{0,20})$/u.exec(v.slice(0,c));if(!m){hashClose130();return}
+  const q=m[1].toLowerCase(),R=refs130(),list=R.filter(r=>r.tag.toLowerCase().startsWith(q));
+  if(R.length&&!list.length){hashClose130();return}   // (a # word that isn't a picture's name)
+  Object.assign(HP130,{open:true,from:c-m[1].length-1,to:c,list});HP130.i=Math.min(HP130.i,Math.max(0,list.length-1));
+  const pn=ta.closest(".cz98");if(!pn)return;let box=document.getElementById("hp130");
+  if(!box){pn.insertAdjacentHTML("beforeend",'<div class="hp130" id="hp130" role="listbox" aria-label="'+esc(L("Pictures","الصور"))+'"></div>');box=document.getElementById("hp130")}
+  box.innerHTML=list.length?list.map((r,i)=>'<div class="hp130o" role="option" id="hp130-'+i+'" data-hp130="'+i+'" aria-selected="'+(i===HP130.i)+'"><img src="'+esc(M[r.s].url)+'" alt=""><b dir="auto">#'+esc(r.tag)+"</b></div>").join("")+'<span class="hp130t">'+esc(L("↑ ↓ to move · Enter to put it in","↑ ↓ للتنقل · Enter للإدراج"))+"</span>"
+    :'<label class="hp130o hp130a" role="option" id="hp130-0" aria-selected="true">'+ic("plus")+"<b>"+esc(L("Add a picture to name with #","أضف صورة لتسميتها بـ #"))+'</b><input type="file" accept="image/*" multiple data-ref130 data-hash130></label>';
+  ta.setAttribute("aria-controls","hp130");ta.setAttribute("aria-expanded","true");ta.setAttribute("aria-activedescendant","hp130-"+HP130.i)}
+function hashPick130(i){const ta=document.getElementById("dprompt"),r=HP130.list[i];if(!ta||!r)return;const f=HP130.from,t=HP130.to;hashClose130();put130(ta,r.tag,f,t)}
+document.addEventListener("input",e=>{if(e.target.id!=="dprompt"||S.view!=="video")return;hash130(e.target);mirror130()});
+document.addEventListener("click",e=>{if(e.target.id==="dprompt"&&S.view==="video")hash130(e.target)});
+document.addEventListener("scroll",e=>{if(e.target&&e.target.id==="dprompt")mirror130()},true);
+document.addEventListener("mousedown",e=>{const o=e.target.closest&&e.target.closest("[data-hp130],[data-ref130ins]");if(o)e.preventDefault()});   // (the words keep the caret)
+document.addEventListener("click",e=>{const o=e.target.closest&&e.target.closest("[data-hp130]");if(!o)return;e.preventDefault();hashPick130(+o.dataset.hp130)});
+document.addEventListener("keydown",e=>{if(e.target.id!=="dprompt"||!HP130.open)return;const n=HP130.list.length;
+  if(e.key==="Escape"){e.preventDefault();e.stopPropagation();hashClose130();return}
+  if(!n)return;
+  if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();HP130.i=(HP130.i+(e.key==="ArrowDown"?1:n-1))%n;hash130(e.target);return}
+  if(e.key==="Enter"||e.key==="Tab"){e.preventDefault();e.stopPropagation();hashPick130(HP130.i)}},true);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&AM130.open){menuShow130(false);e.stopPropagation()}},true);
+// Generate: the pictures go with every take, to an engine that takes them
+makeVideo=(o=>function(){const R=S.view==="video"?refs130():[];if(!R.length)return o.apply(this,arguments);
+  if(!refOk130(S.draft.model)){toast(L("Reference pictures work with Seedance — pick Seedance 2.0 in Engine, or remove the pictures.","الصور المرجعية تعمل مع Seedance — اختر Seedance 2.0 من المحرك، أو أزل الصور."),{type:"warn"});return}
+  REFGO130=R.map(r=>({slot:r.s,tag:r.tag}));try{return o.apply(this,arguments)}finally{REFGO130=null}})(makeVideo);
+addJob=(o=>function(j){if(REFGO130&&j&&j.kind==="video")j.meta=Object.assign({},j.meta,{refs130:REFGO130.slice()});return o.apply(this,arguments)})(addJob);
+// another video (a story, an ad…) doesn't take the Video page's pictures
+serverSubmit=(o=>function(obj,kind,payload){if(kind!=="video"||(payload&&payload.meta&&Array.isArray(payload.meta.refs130)))return o.apply(this,arguments);
+  const keep={};REF130.forEach(s=>{if(M[s]){keep[s]=M[s];M[s]=null}});try{return o.apply(this,arguments)}finally{Object.assign(M,keep)}})(serverSubmit);
+(()=>{const st=document.createElement("style");st.textContent=`
+.cz98 .rf130{display:flex;align-items:flex-start;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 4px;margin:0}
+.cz98 .rf130::-webkit-scrollbar{display:none}
+.rf130i{position:relative;flex:none;display:flex;flex-direction:column;align-items:center;gap:4px;width:64px;margin:0}
+.rf130p{display:block;width:56px;height:56px;padding:0;border-radius:10px;overflow:hidden;border:1px solid var(--line2);background:var(--panel2);cursor:pointer;min-height:0!important}
+.rf130p img,.rf130p canvas{width:100%;height:100%;object-fit:cover;display:block}
+.rf130i.used .rf130p{border-color:var(--lime);box-shadow:0 0 0 2px color-mix(in srgb,var(--lime) 45%,transparent)}
+.rf130n{display:flex;align-items:center;justify-content:center;max-width:64px;font-size:11px;line-height:1.2;color:var(--mute);margin:0}
+.rf130n input{width:100%;field-sizing:content;max-width:56px;min-width:3ch;border:0!important;background:transparent!important;box-shadow:none!important;padding:0 1px!important;min-height:0!important;height:16px;font-size:11px;color:var(--text);text-align:center}
+.rf130n input:focus{outline:1px solid var(--lime);border-radius:4px}
+.rf130f .rf130n{display:block;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rf130x{position:absolute;top:-4px;inset-inline-end:0;width:20px;height:20px;min-height:0!important;padding:0;border-radius:50%;border:1px solid var(--line2);background:var(--panel);color:var(--text);display:grid;place-items:center;cursor:pointer}
+.rf130x svg{width:11px;height:11px}
+.rf130a{position:relative;flex:none;display:grid;place-items:center;width:56px;height:56px;border-radius:10px;border:1px dashed var(--line2);color:var(--mute);cursor:pointer}
+.rf130a:hover{border-color:var(--lime);color:var(--text)}.rf130a svg{width:18px;height:18px}
+.rf130a input,.am130i input,.hp130a input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.rf130h{align-self:center;flex:none;font-size:12px;color:var(--mute);padding-inline-start:4px;white-space:nowrap}
+.am130{position:absolute;bottom:calc(100% + 10px);inset-inline-start:0;width:min(340px,100%);padding:6px;border-radius:14px;background:var(--panel);border:1px solid var(--line2);box-shadow:0 24px 60px rgba(0,0,0,.45);z-index:4}
+.am130i{position:relative;display:flex;gap:12px;align-items:flex-start;padding:10px;border-radius:10px;cursor:pointer;margin:0}
+.am130i:hover,.am130i:focus-within{background:var(--panel2)}
+.am130i b{display:block;font-size:14px;font-weight:600}.am130i small{display:block;color:var(--mute);font-size:12px;margin-top:2px;line-height:1.35}
+.am130g{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:9px;background:var(--panel2);border:1px solid var(--line2)}.am130g svg{width:18px;height:18px}
+.mr130{position:absolute;z-index:0;margin:0;pointer-events:none;color:transparent;border-style:solid;border-color:transparent;overflow:hidden;background:none}
+.mr130 .tg130{color:transparent;background:color-mix(in srgb,var(--lime) 30%,transparent);border-radius:4px;box-shadow:0 0 0 2px color-mix(in srgb,var(--lime) 30%,transparent)}
+.cz98 textarea.ta130{position:relative;z-index:1}
+.hp130{position:absolute;bottom:calc(100% + 10px);inset-inline-start:0;width:min(300px,100%);max-height:min(46vh,340px);overflow:auto;padding:6px;border-radius:14px;background:var(--panel);border:1px solid var(--line2);box-shadow:0 24px 60px rgba(0,0,0,.45);z-index:5}
+.hp130o{position:relative;display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:10px;cursor:pointer;margin:0}
+.hp130o[aria-selected="true"],.hp130o:hover{background:var(--panel2)}
+.hp130o img{width:36px;height:36px;border-radius:8px;object-fit:cover;flex:none}.hp130o b{font-size:14px;font-weight:600}.hp130a svg{width:18px;height:18px;margin:0 9px}
+.hp130t{display:block;font-size:11px;color:var(--mute);padding:4px 8px 2px}
+@media (max-width:767px){.cz98 .rf130{order:0;flex:1 1 100%;min-width:0}.rf130h{display:none}.am130,.hp130{width:100%}}
+`;document.head.appendChild(st)})();
+// ---- Sketch, looked at line by line (the drawing page)
+// · a see-through tool (marker, brush) was laid down as many short pieces, each at the tool's strength: where the round ends of
+//   two pieces overlap the colour doubled, so every line was a row of darker beads (and the cut an eraser made looked
+//   ragged). Now the whole line is drawn at full strength on its own layer and laid on once at the tool's strength — while
+//   you draw too (the paper as it was before the line, plus the whole line so far, once a frame)
+// · a touch the device cancels (a second finger, a system gesture) never ended the line: moving the pointer anywhere went on
+//   drawing it, and Live waited for it forever. A cancelled line now ends where it was. A palm or a second finger on the paper
+//   while you draw no longer replaces your line or adds to it
+// · on a computer the paper was taller than the screen (the tools under it out of sight): it is now as big as fits with
+//   its tools; the drawing is redrawn sharp when the paper changes size; when a picture lands on the paper out of sight,
+//   the page brings the paper into view
+const SKL130={c:null,x:null,snap:null,live:null,raf:0,pid:null,ro:null,el:null};
+skDrawStroke=function(ctx,s,W,H){const pts=s&&s.pts;if(!pts||!pts.length)return;
+  const a=s.tool==="marker"?.55:s.tool==="brush"?.85:1,er=s.tool==="eraser",base=s.size*(W/512)*(s.tool==="brush"?2.2:s.tool==="marker"?1.6:1);
+  const paint=x=>{x.lineCap="round";x.lineJoin="round";x.strokeStyle=s.color;x.fillStyle=s.color;
+    if(pts.length===1){x.beginPath();x.arc(pts[0][0]*W,pts[0][1]*H,base/2,0,7);x.fill();return}
+    for(let i=1;i<pts.length;i++){const p=pts[i-1],q=pts[i];x.lineWidth=base*(.5+((p[2]||.6)+(q[2]||.6))/2*.9);x.beginPath();x.moveTo(p[0]*W,p[1]*H);x.lineTo(q[0]*W,q[1]*H);x.stroke()}};
+  if(a>=1||er){ctx.save();ctx.globalAlpha=1;ctx.globalCompositeOperation=er?"destination-out":"source-over";paint(ctx);ctx.restore();return}
+  const cw=ctx.canvas.width,ch=ctx.canvas.height;if(!SKL130.c||SKL130.c.width!==cw||SKL130.c.height!==ch){SKL130.c=document.createElement("canvas");SKL130.c.width=cw;SKL130.c.height=ch;SKL130.x=SKL130.c.getContext("2d")}
+  const x=SKL130.x;x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation="source-over";x.clearRect(0,0,cw,ch);x.setTransform(ctx.getTransform());paint(x);
+  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=a;ctx.globalCompositeOperation="source-over";ctx.drawImage(SKL130.c,0,0);ctx.restore()};
+skRedraw=(o=>function(){const c=SK.cur;if(S.view!=="sketch"||!c||(c.tool!=="marker"&&c.tool!=="brush"))return o.apply(this,arguments);
+  if(SKL130.live!==c){SK.cur=null;try{o.apply(this,arguments)}finally{SK.cur=c}const cv=$("#skcv");if(!cv)return;
+    const sn=SKL130.snap||(SKL130.snap=document.createElement("canvas"));sn.width=cv.width;sn.height=cv.height;sn.getContext("2d").drawImage(cv,0,0);SKL130.live=c}
+  if(SKL130.raf)return;SKL130.raf=requestAnimationFrame(()=>{SKL130.raf=0;const cv=$("#skcv");if(SK.cur!==c||!cv||!SKL130.snap||SKL130.snap.width!==cv.width)return;const x=cv.getContext("2d");
+    x.save();x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation="copy";x.drawImage(SKL130.snap,0,0);x.restore();skDrawStroke(x,c,cv.width,cv.height);SK.dirty=true})})(skRedraw);
+// one pen at a time; a cancelled line ends where it was
+skPoint=(o=>function(e,cv){const c=SK.cur;if(c&&SKL130.pid!=null&&e&&e.pointerId!=null&&e.pointerId!==SKL130.pid&&c.pts.length)return c.pts[c.pts.length-1];return o(e,cv)})(skPoint);
+window.addEventListener("pointerdown",e=>{if(S.view!=="sketch")return;if(SK.cur){if(SKL130.pid!=null&&e.pointerId!==SKL130.pid){e.stopImmediatePropagation();if(e.target.closest&&e.target.closest("#skcv"))e.preventDefault()}return}
+  if(e.target.closest&&e.target.closest("#skcv"))SKL130.pid=e.pointerId},true);
+["pointerup","pointercancel"].forEach(t=>window.addEventListener(t,e=>{if(S.view!=="sketch"||!SK.cur)return;if(SKL130.pid!=null&&e.pointerId!==SKL130.pid){e.stopImmediatePropagation();return}
+  SKL130.pid=null;if(t==="pointercancel"){SK.strokes.push(SK.cur);SK.cur=null;skRedraw();if(S.sketch&&S.sketch.live95&&typeof liveKick95==="function")liveKick95()}},true));
+// the paper redrawn sharp when it changes size (a window made smaller or larger)
+renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="sketch"&&typeof ResizeObserver==="function"){const cv=$("#skcv");if(cv&&SKL130.el!==cv){if(SKL130.ro)SKL130.ro.disconnect();
+  SKL130.ro=new ResizeObserver(()=>{if(SK.cur||S.view!=="sketch")return;const w=Math.round(cv.getBoundingClientRect().width*Math.min(2,devicePixelRatio||1));if(w&&Math.abs(w-cv.width)>1)skRedraw()});SKL130.ro.observe(cv);SKL130.el=cv}}return r})(renderView);
+// a picture that lands on the paper out of sight: the paper comes into view
+skSetPic94=(o=>function(){const r=o.apply(this,arguments);requestAnimationFrame(()=>{const p=S.view==="sketch"&&document.querySelector("#main .skpaper");if(!p)return;const b=p.getBoundingClientRect();
+  if(b.bottom<90||b.top>innerHeight-90)p.scrollIntoView({block:"center",behavior:"smooth"})});return r})(skSetPic94);
+(()=>{const st=document.createElement("style");st.textContent=`@media (min-width:900px){#main .sk91 .skpaper{width:min(100%,max(320px,calc(100vh - 430px)));margin-inline:auto}}`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

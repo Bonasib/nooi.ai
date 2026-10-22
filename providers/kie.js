@@ -17,6 +17,7 @@ import { cfg, configured, S as platformS } from "../lib/settings.js";
 import { inLine } from "../lib/line124.js";   // v124: new tasks leave at the pace Kie takes them (20 per 10 s)
 import { presetVoiceId } from "../lib/voicepresets.js";   // v97: the Voice page example you heard = the voice you get
 import { PICTURE_WORDS } from "../lib/picturewords.js";   // v100: a picture with no words still tells the engine what to do
+import { refsOf130, takesRefs130, tagWords130, seedanceRefs130 } from "../lib/refs130.js";   // v130: reference pictures with # names
 
 const VEO = new Set(["veo3", "veo3_fast", "veo3_lite"]);
 const VEO_RATIOS = new Set(["16:9", "9:16"]);
@@ -165,7 +166,12 @@ export function kieInput(model, p) {
   }
   // video (and chapter / extend)
   // (v100) a start picture and no words: the engine is still told what to do with it — most video engines refuse an empty prompt
-  const img0 = startImg(p), img = img0 ? absUrl(img0) : undefined, end = inp.vEnd ? absUrl(inp.vEnd) : undefined, dur = Math.round(+p.dur || 5), prompt = fullPrompt(p) || (img0 ? PICTURE_WORDS.video : ""), audio = !!(p.meta?.audio);
+  // (v130) reference pictures: Seedance 2.x gets them all (below); another engine starts from the first one and reads the names
+  const refs = p.model === "mcswap" || p.meta?.swap93 ? [] : refsOf130(p), refsOn = refs.length > 0 && takesRefs130(m);
+  const img0 = startImg(p) || (refs.length && !refsOn ? refs[0].url : undefined), img = img0 ? absUrl(img0) : undefined, end = inp.vEnd ? absUrl(inp.vEnd) : undefined, dur = Math.round(+p.dur || 5), audio = !!(p.meta?.audio);
+  const prompt = refs.length && !refsOn ? tagWords130(fullPrompt(p), refs, (i) => refs[i].tag) || PICTURE_WORDS.video : fullPrompt(p) || (img0 ? PICTURE_WORDS.video : "");
+  if (refsOn) { const r = seedanceRefs130(fullPrompt(p), refs.map((x) => ({ ...x, url: absUrl(x.url) })), { start: startImg(p) ? img : undefined, end });
+    return drop({ prompt: r.prompt, reference_image_urls: r.pics, generate_audio: audio, resolution: pickRes(p, ["480p", "720p", "1080p", "4k"], "720p"), aspect_ratio: snapAR(p.aspect, ["1:1", "4:3", "3:4", "16:9", "9:16", "21:9"]), duration: clamp(dur, 4, 15), web_search: false }); }
   // Motion Control: the character in the photo performs the movement of the video (orientation: follow the video or the photo)
   // the engine needs a prompt: the client's words (if any) plus what Motion Control is for
   if (/motion-control/.test(m)) return drop({ prompt: (String(p.prompt || "").trim() ? String(p.prompt).trim().replace(/[.\s]*$/, ". ") : "") + "The person in the picture performs exactly the same movements as the person in the video, natural and smooth.", input_urls: [absUrl(inp.mcChar || img0)], video_urls: [absUrl(inp.mcMove)], mode: pickRes(p, ["720p", "1080p"], "720p"),
