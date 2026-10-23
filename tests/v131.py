@@ -285,7 +285,7 @@ async def desktop(b):
     if await card.count():
         await card.scroll_into_view_if_needed(); cb = await card.bounding_box(); await pg.mouse.click(cb["x"] + cb["width"] / 2, cb["y"] + cb["height"] / 2, button="right"); await pg.wait_for_timeout(250)
         it = await E("()=>[...document.querySelectorAll('.cm131 .cm131i')].map(x=>x.textContent.trim())"); res["menuCard"] = it
-        chk("right click on a video you made: Open, Download, Edit in the editor, Extend… (v132), Delete", it[:5] == ["Open", "Download", "Edit in the editor", "Extend…", "Delete"], it)
+        chk("right click on a video you made: Open, Download, Edit in the editor, Extend… (v132), Voices & sound… (v134), Delete", it[:6] == ["Open", "Download", "Edit in the editor", "Extend…", "Voices & sound…", "Delete"], it)
         await pg.keyboard.press("Escape")
     else: chk("a made video on the Video page", False, await E("()=>document.querySelectorAll('.gc98').length"))
     # Grok Imagine 1.5 only with a picture

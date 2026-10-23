@@ -15413,6 +15413,203 @@ previewCol=(o=>function(g){let h=o.apply(this,arguments);const s=g&&g.status==="
     "طوبقت "+s.n+" وصلات — كل جزء يبدأ من آخر إطار نقي في الجزء الذي قبله، وتستمر الحركة واللون والصوت"+(s.fades?" ("+s.fades+" نُعّمت بمزج قصير)":"")+"."))+"</span></p>"+'<div class="pipe"');
   return h})(previewCol);
 (()=>{const st=document.createElement("style");st.textContent=".sm133{display:flex;align-items:flex-start;gap:6px;margin:6px 0 2px;font-size:12px;line-height:1.4}.sm133 svg{flex:none;color:var(--lime);margin-top:1px}";document.head.appendChild(st)})();
+/* ================= v134: EXTEND THAT CAN'T BE SEEN · ANOTHER ANGLE · VOICES & SOUND · THE PROMPT BOX FOLDS ON A PHONE =================
+   1. On a phone the prompt box covered the videos: a small arrow on its top edge folds it down out of the way (a smooth slide) and
+      brings it back; a swipe on the arrow does the same; it stays as you left it.
+   2. Extend has two ways: "Same movement" (the video simply goes on — the server reads how the camera and the action move at the end
+      and the new part carries exactly that on; joined so the join can't be seen) and "Another angle" (the same moment from a new
+      camera position: close-up, wide, side, over the shoulder, above, below, reverse, or the Director's pick — a picture of that angle
+      is made first, then the video, joined with a clean cut). The Extend sheet takes words, pictures (# names) and characters.
+      The editor's Extend opens the same sheet; the new part lands after the clip, which is cut at its clean last frame.
+   3. Voices & sound for a made video — the whole video, one shot, or one moment — in the language picked: the agents decide who
+      speaks, what, how it feels, the place's ambience, the sound effects and music; real voices; the lips follow the voice. */
+// ---- 1. the phone's prompt box folds away
+function fold134(){const d=document.querySelector("#main .dock98");if(!d)return;
+  if(!d.querySelector(".fd134")){const b=document.createElement("button");b.type="button";b.className="fd134";b.dataset.act="fold134";
+    b.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';d.prepend(b)}
+  const off=!!S.fold134&&matchMedia("(max-width:767px)").matches,b=d.querySelector(".fd134");d.classList.toggle("off134",off);
+  b.setAttribute("aria-expanded",String(!off));b.setAttribute("aria-label",off?L("Show the prompt box","أظهر صندوق الوصف"):L("Hide the prompt box","أخفِ صندوق الوصف"));b.title=b.getAttribute("aria-label")}
+function setFold134(v){S.fold134=!!v;persist();if(v&&typeof ST93==="function"){const st=ST93();if(st&&st.open){st.open=null;renderView();return}}fold134()}
+renderView=(o=>function(){const r=o.apply(this,arguments);try{fold134()}catch(e){}return r})(renderView);
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest('[data-act="fold134"]');if(b){e.preventDefault();e.stopImmediatePropagation();setFold134(!S.fold134);return}
+  const d=e.target.closest&&e.target.closest(".dock98.off134");if(d){e.preventDefault();e.stopImmediatePropagation();setFold134(false)}},true);
+(()=>{let y0=null;document.addEventListener("touchstart",e=>{const t=e.target.closest&&e.target.closest(".fd134,.dock98.off134");y0=t?e.touches[0].clientY:null},{passive:true});
+  document.addEventListener("touchend",e=>{if(y0==null)return;const dy=e.changedTouches[0].clientY-y0;y0=null;if(Math.abs(dy)>28)setFold134(dy>0)},{passive:true})})();
+
+// ---- 2. Extend: the same movement or another angle, with words, pictures and characters
+const ANG134=[["auto","Director's pick","اختيار المخرج"],["close","Close-up","لقطة قريبة"],["wide","Wide","واسعة"],["side","From the side","من الجانب"],["over","Over the shoulder","من فوق الكتف"],["top","From above","من الأعلى"],["low","From below","من الأسفل"],["reverse","Reverse angle","الزاوية المعاكسة"]];
+const PIC134=()=>(IMG_MODELS.nano||IMG_MODELS.dotimg||{cr:5}).cr;
+const EXTP134={id:null,pics:[]};
+const tag134=s=>(String(s||"").normalize("NFKC").replace(/\s+/g,"_").replace(/[^\p{L}\p{N}_]/gu,"").slice(0,20))||"pic";
+const extChars134=()=>{const E=S.ext132||{};return(E.chars||[]).map(id=>S.chars.find(c=>c.id===id)).filter(Boolean)};
+const extRefs134=()=>{const E=S.ext132||{};return(EXTP134.id===E.id?EXTP134.pics.length:0)+extChars134().filter(c=>c.photo).length};
+const extModel134=()=>{const E=S.ext132||{};return extRefs134()&&!REFOK130.includes(E.m)?"seedance20":E.m};
+const extCost134=()=>{const E=S.ext132||{};return vcost(extModel134(),E.n||5)+(E.mode==="angle"?PIC134():0)};
+const SVG134={same:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="9" height="12" rx="2"/><path d="M14 12h7m-3-3 3 3-3 3"/></svg>',
+  angle:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6H7l1.5-2h5L15 6h1.5A2.5 2.5 0 0 1 19 8.5V9"/><circle cx="11" cy="12.5" r="3.2"/><path d="M3 9v8.5A2.5 2.5 0 0 0 5.5 20h7"/><path d="M17 14v6m-3-3h6"/></svg>'};
+extSheet132=function(j,o){if(!j&&!(o&&o.clip))return;o=o||{};if(j&&API.mode==="server"&&!j.remote&&!o.clip){toast(L("This video can be extended once it is on the server.","يمكن مدّ هذا الفيديو بعد أن يصبح على الخادم."));return}
+  const id=j?j.id:"clip:"+o.clip,m=j&&j.model&&MODELS[j.model]&&!/^(mc|nv)/.test(j.model)?j.model:o.model||"auto",P=S.ext132&&S.ext132.id===id?S.ext132:null;
+  S.ext132={id,n:P?P.n:o.n||5,m,mode:P?P.mode:"same",ang:P?P.ang:"auto",chars:P?P.chars||[]:[],w:P?P.w||"":"",clip:o.clip||null};if(EXTP134.id!==id){EXTP134.id=id;EXTP134.pics=[]}
+  document.querySelectorAll(".lb98").forEach(x=>x.remove());if(typeof ST98==="function"){const st=ST98();if(st)st.lb=""}   // (the opened video closes: the sheet was behind it)
+  hfSheet(o.clip?L("Extend this clip","مدّ هذا المقطع"):L("Extend this video","مدّ هذا الفيديو"),'<div class="ex132 ex134">'+extBody134()+"</div>");extWire134()};
+function extBody134(){const E=S.ext132,chars=S.chars.filter(c=>c&&c.name).slice(0,12),pics=EXTP134.id===E.id?EXTP134.pics:[],refs=extRefs134();
+  const card=(v,t,d)=>'<button type="button" class="xm134c" data-act="ext134-mode" data-v="'+v+'" role="radio" aria-checked="'+(E.mode===v)+'">'+SVG134[v]+"<span><b>"+esc(t)+"</b><small>"+esc(d)+"</small></span></button>";
+  return'<div class="xm134" role="radiogroup" aria-label="'+esc(L("How it goes on","كيف يستمر"))+'">'+
+    card("same",L("Same movement","نفس الحركة"),L("It simply goes on — the camera and the action carry on exactly as they were, and the join can't be seen.","يستمر ببساطة — الكاميرا والحركة تكملان كما كانتا تماماً، ولا يظهر مكان الوصل."))+
+    card("angle",L("Another angle","زاوية أخرى"),L("The same moment from a new camera position — a clean cut, like a film shot with two cameras.","نفس اللحظة من موضع كاميرا جديد — قطع نظيف كفيلم صُوّر بكاميرتين."))+"</div>"+
+    '<div class="xa134"'+(E.mode==="angle"?"":" hidden")+'><span class="lbl">'+esc(L("Which angle","أي زاوية"))+'</span><div class="chips">'+ANG134.map(a=>'<button type="button" class="chip" data-act="ext134-ang" data-v="'+a[0]+'" aria-pressed="'+(E.ang===a[0])+'">'+esc(L(a[1],a[2]))+"</button>").join("")+"</div></div>"+
+    '<span class="lbl">'+esc(L("How much longer","كم يطول"))+'</span><div class="chips">'+[5,10,15].map(n=>'<button type="button" class="chip" data-act="ext132-n" data-v="'+n+'" aria-pressed="'+(E.n===n)+'">+'+n+L(" s"," ث")+"</button>").join("")+"</div>"+
+    '<label class="lbl" for="ext132w">'+esc(L("What happens next (optional)","ماذا يحدث بعد ذلك (اختياري)"))+'</label><textarea id="ext132w" dir="auto" rows="2" placeholder="'+esc(L("e.g. she turns and smiles at #lina — leave empty and the action just goes on","مثال: تلتفت وتبتسم — اتركه فارغاً وتستمر الحركة كما هي"))+'">'+esc(E.w||"")+"</textarea>"+
+    '<span class="lbl">'+esc(L("Pictures and characters (optional)","صور وشخصيات (اختياري)"))+'</span><div class="xp134">'+
+      pics.map((p,i)=>'<span class="xp134i"><img src="'+esc(p.url)+'" alt=""><small>#'+esc(p.tag)+'</small><button type="button" class="xp134x" data-act="ext134-unpic" data-i="'+i+'" aria-label="'+esc(L("Remove","إزالة"))+'">'+ic("x")+"</button></span>").join("")+
+      (refs<6?'<label class="xp134a" title="'+esc(L("Add pictures","أضف صوراً"))+'">'+ic("plus")+'<input type="file" accept="image/*" multiple data-ext134pic="1"></label>':"")+
+      chars.map(c=>'<button type="button" class="chip xc134" data-act="ext134-char" data-id="'+esc(c.id)+'" aria-pressed="'+E.chars.includes(c.id)+'">'+(c.photo?'<img src="'+esc(c.photo)+'" alt="">':ic("char"))+esc(String(c.name).slice(0,20))+"</button>").join("")+"</div>"+
+    '<p class="small mute xn134" id="ext134n">'+esc(extNote134())+"</p>"+
+    '<div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn primary" data-act="ext132-go">'+ic("plus")+esc(L("Extend","مدّ"))+'<span class="cost" id="ext132c">'+extCost134()+"</span></button></div>"}
+function extNote134(){const E=S.ext132,n=[];if(E.mode==="angle")n.push(L("A picture of the new angle is made first ("+PIC134()+" cr), then the video from it.","تُصنع أولاً صورة للزاوية الجديدة ("+PIC134()+" رصيد)، ثم الفيديو منها."));
+  if(extRefs134()&&!REFOK130.includes(E.m))n.push(L("Pictures and characters are kept by Seedance 2.0 — this extension uses it.","تحفظ Seedance 2.0 الصور والشخصيات — هذا المدّ يستخدمها."));
+  if(!n.length)n.push(E.mode==="same"?L("It goes on from its last clean frame and you get one longer video.","يستمر من آخر إطار نقي فيه وتحصل على فيديو واحد أطول."):"");return n.join(" ")}
+function extRepaint134(){const E=S.ext132,w=$("#ext132w");if(w)E.w=w.value;const box=document.querySelector("#modalRoot .ex134");if(box){box.innerHTML=extBody134();extWire134()}}
+function extWire134(){const w=$("#ext132w");if(w)w.addEventListener("input",()=>{S.ext132.w=w.value});
+  const f=document.querySelector('#modalRoot [data-ext134pic]');if(f)f.addEventListener("change",()=>{const E=S.ext132;for(const file of [...f.files]){if(extRefs134()>=6)break;
+    const n=EXTP134.pics.length+1;EXTP134.pics.push({file,url:URL.createObjectURL(file),tag:L("image","صورة")+n})}extRepaint134()})}
+extGo132=async function(){const E=S.ext132;if(!E)return;const j=E.clip?null:S.jobs.find(x=>x.id===E.id);if(!j&&!E.clip)return;const w=String(($("#ext132w")||{}).value||"").trim();
+  const chars=extChars134(),pics=EXTP134.id===E.id?EXTP134.pics.slice():[],refs=pics.map(p=>({file:p.file,tag:p.tag}));
+  for(const c of chars){if(refs.length>=6)break;const b=await charPhotoBlob(c).catch(()=>null);if(b)refs.push({file:new File([b],"char.jpg",{type:b.type||"image/jpeg"}),tag:tag134(c.name)})}
+  const model=extModel134(),cost=extCost134();if(!crFree()&&S.credits<cost){toast(L("Not enough credits for this.","الرصيد لا يكفي لهذه العملية."));return}
+  let base=j?j.remote||j.id:null,clip=E.clip?S.ed.clips.find(c=>c.id===E.clip):null,cb=clip?extBase94(clip):null,aspect=j?j.aspect:null;
+  if(clip){if(cb&&cb.remote&&cb.status==="complete"){base=cb.remote;aspect=cb.aspect}
+    else{const fr=await extFrame94(clip);if(!fr){toast(L("Couldn't read the clip's last frame.","تعذّرت قراءة آخر إطار من المقطع."),{type:"warn"});return}   // (a clip of your own: its last frame goes up first)
+      try{const up=await API.upload(fr.file,"last-frame.jpg");base=up.url}catch(e){toast(String(e.message||e),{type:"warn"});return}aspect=extAR94(fr.w,fr.h)}}
+  const meta=Object.assign({extend132:base,extMode134:E.mode||"same"},E.mode==="angle"?{angle134:E.ang||"auto"}:{},chars.length?{chars134:chars.map(c=>({name:c.name,look:[c.look,c.outfit].filter(Boolean).join(", ")}))}:{},
+    refs.length?{refs130:refs.slice(0,6).map((r,i)=>({slot:REF130[i],tag:r.tag}))}:{},clip?{extNoJoin134:1,edCmd:"extend"}:{});
+  const keep={};REF130.forEach(s=>{keep[s]=M[s];M[s]=null});refs.slice(0,6).forEach((r,i)=>{M[REF130[i]]={type:"image",file:r.file,url:"",name:"ref"+(i+1)+".jpg"}});
+  let n=null;try{n=addJob({kind:"video",prompt:w,title:(E.mode==="angle"?L("New angle: ","زاوية جديدة: "):L("Extended: ","ممدّد: "))+String(j?(j.title||j.prompt||""):clipName(clip)).slice(0,60),model,dur:E.n,aspect:aspect||undefined,cost,meta})}finally{Object.assign(M,keep)}
+  $("#modalRoot").innerHTML="";if(!n)return;EXTP134.pics=[];
+  if(clip){EXT91[n.id]=clip.id;EDP[n.id]={it:"extend",after:clip.id,t:ED.t};persist();renderView();toast(L("Extending the clip — the next seconds land right after it.","يُمدّ المقطع — الثواني التالية توضع بعده مباشرة."),{type:"info",ms:4500});return}
+  S.lastVideo=n.id;persist();renderAll();toast(E.mode==="angle"?L("Making the new angle — first its picture, then the video.","تُصنع الزاوية الجديدة — صورتها أولاً ثم الفيديو."):L("Extending — it goes on from its last clean frame.","يجري المدّ — يستمر من آخر إطار نقي."),{type:"ok"})};
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="ext134-mode"],[data-act="ext134-ang"],[data-act="ext134-char"],[data-act="ext134-unpic"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
+  const E=S.ext132;if(!E)return;const act=a.dataset.act;
+  if(act==="ext134-mode")E.mode=a.dataset.v==="angle"?"angle":"same";
+  if(act==="ext134-ang")E.ang=a.dataset.v;
+  if(act==="ext134-char"){const id=a.dataset.id,i=E.chars.indexOf(id);if(i>=0)E.chars.splice(i,1);else if(E.chars.length<4)E.chars.push(id)}
+  if(act==="ext134-unpic"){const i=+a.dataset.i,p=EXTP134.pics[i];if(p){try{URL.revokeObjectURL(p.url)}catch(x){}EXTP134.pics.splice(i,1)}}
+  extRepaint134()},true);
+// the Extend cost follows the length chip (v132's handler sets S.ext132.n; the price here includes the angle picture and the engine)
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="ext132-n"]');if(!a||!S.ext132)return;setTimeout(()=>{const c=$("#ext132c");if(c)c.textContent=extCost134()},0)},true);   // (window, so it is heard before v132's handler stops the click; the price set after it)
+// the editor's Extend button and the clip's menu: the same sheet (the same movement or another angle), the new part after the clip
+// ("extend: …" typed in the prompt box still extends at once, with those words)
+function extEditor134(c){if(!c)return false;if(API.mode!=="server")return edExtend91(c);if(Object.values(EXT91).includes(c.id)){toast(L("This shot is already being extended.","هذه اللقطة قيد المدّ بالفعل."));return false}
+  const b=extBase94(c);extSheet132(b&&b.remote&&b.status==="complete"?b:null,{clip:c.id,model:extModel94(c),n:5});return true}
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="ed-extend91"]');if(!a||a.disabled||API.mode!=="server")return;e.preventDefault();e.stopImmediatePropagation();
+  const E=S.ed;extEditor134(E.clips.find(x=>x.id===E.sel)||edSelClip())},true);
+// …and when the new part lands: the clip ends at its clean last frame, the new part starts where it really begins
+edUseJob=(o=>async function(j,opt){const x=j&&EXT91[j.id],r=await o.apply(this,arguments);
+  try{const e=j&&j.ext134;if(e&&x){const src=S.ed.clips.find(q=>q.id===x),nc=S.ed.clips.find(q=>q.src&&q.src.k==="job"&&q.src.job===j.id);
+    if(src&&e.cut>0.5&&(src.out==null||e.cut<src.out))src.out=+(+e.cut).toFixed(2);if(nc&&e.head>0)nc.in=+(+e.head).toFixed(2);persist();if(S.view==="edit")renderView()}}catch(err){}return r})(edUseJob);
+// what the server says about an extension, the voices & sound, the parts of a long video
+API.req=(o=>async function(p){const r=await o.apply(this,arguments);try{const m=/^\/v1\/jobs\/([A-Za-z0-9_-]+)$/.exec(String(p));
+  if(m&&r&&r.id&&(r.ext134||r.snd134||r.cuts134)){const j=S.jobs.find(x=>x.remote===r.id);if(j){if(r.ext134)j.ext134=r.ext134;if(r.snd134)j.snd134=r.snd134;if(r.cuts134)j.cuts134=r.cuts134}}}catch(e){}return r})(API.req);
+
+// ---- 3. voices & sound — the whole video, one shot, or one moment
+const SND134={job:null,q:null,t:0};
+function snd134Sheet(j,o){if(!j)return;o=o||{};if(API.mode==="server"&&!j.remote){toast(L("Voices can be added once the video is on the server.","يمكن إضافة الأصوات بعد أن يصبح الفيديو على الخادم."));return}
+  const P=S.snd134&&S.snd134.id===j.id?S.snd134:null,lg=LANGS.some(l=>l[0]===S.lang)?S.lang:"en";
+  S.snd134={id:j.id,clip:o.clip||null,scope:P?P.scope:o.scope||"all",from:P?P.from:0,to:P?P.to:Math.round(+j.dur||5),at:P?P.at:Math.round((+j.dur||5)/2*10)/10,
+    want:P?P.want:{voice:true,sfx:true,amb:true,music:false},who:P?P.who:"auto",lang:P?P.lang:lg,lips:P?P.lips:true,keep:P?P.keep:true,say:P?P.say:""};
+  document.querySelectorAll(".lb98").forEach(x=>x.remove());if(typeof ST98==="function"){const st=ST98();if(st)st.lb=""}
+  SND134.job=j;SND134.q=null;hfSheet(L("Voices & sound","الأصوات والمؤثرات"),'<div class="snd134">'+sndBody134()+"</div>");sndWire134();sndQuote134()}
+function sndBody134(){const D=S.snd134,j=SND134.job,dur=+j.dur||5,cuts=(j.cuts134||[]).filter(x=>x>0&&x<dur),parts=cuts.length?[0,...cuts,dur].slice(0,-1).map((a,i)=>[a,[...cuts,dur][i]]):[];
+  const sc=(v,t,d)=>'<button type="button" class="xm134c" data-act="snd134-scope" data-v="'+v+'" role="radio" aria-checked="'+(D.scope===v)+'"><span><b>'+esc(t)+"</b><small>"+esc(d)+"</small></span></button>";
+  const tg=(k,t)=>'<button type="button" class="chip" data-act="snd134-want" data-v="'+k+'" aria-pressed="'+!!D.want[k]+'">'+esc(t)+"</button>";
+  const mm=s=>Math.floor(s/60)+":"+String(Math.round(s%60)).padStart(2,"0");
+  return'<p class="small mute" style="margin:0 0 10px">'+esc(L("The agents watch the video and decide what is heard: who speaks and how it feels, the sounds of the place, the effects, music if you want it. Real voices in the language you pick; the lips follow the voice.","يشاهد الوكلاء الفيديو ويقررون ما يُسمع: من يتكلم وبأي إحساس، أصوات المكان، المؤثرات، والموسيقى إن أردت. أصوات حقيقية باللغة التي تختارها، والشفاه تتبع الصوت."))+"</p>"+
+    '<span class="lbl">'+esc(L("Where","أين"))+'</span><div class="xm134 xs134" role="radiogroup">'+
+      sc("all",L("Whole video","الفيديو كله"),L("Voices and sounds across the whole video.","أصوات ومؤثرات على طول الفيديو كله."))+
+      sc("shot",L("One shot","لقطة واحدة"),L("Only one part — a part of a long video, or the seconds you pick.","جزء واحد فقط — جزء من فيديو طويل، أو الثواني التي تختارها."))+
+      sc("moment",L("One moment","لحظة واحدة"),L("A single instant: one line or one sound (a door, a laugh) at the second you pick.","لحظة واحدة: جملة واحدة أو صوت واحد (باب، ضحكة) عند الثانية التي تختارها."))+"</div>"+
+    (D.scope==="shot"?'<div class="sr134">'+(parts.length?'<div class="chips">'+parts.map(([a,b],i)=>'<button type="button" class="chip" data-act="snd134-part" data-a="'+a+'" data-b="'+b+'" aria-pressed="'+(Math.abs(D.from-a)<.05&&Math.abs(D.to-b)<.05)+'">'+esc(L("Part ","الجزء ")+(i+1))+" · "+mm(a)+"–"+mm(b)+"</button>").join("")+"</div>":"")+
+      '<div class="row sn134"><label>'+esc(L("From","من"))+' <input type="number" id="snd134f" min="0" max="'+dur+'" step="0.5" value="'+D.from+'"></label><label>'+esc(L("to","إلى"))+' <input type="number" id="snd134t" min="0" max="'+dur+'" step="0.5" value="'+D.to+'"></label><span class="small mute">'+esc(L("seconds","ثانية"))+"</span></div></div>":"")+
+    (D.scope==="moment"?'<div class="row sn134"><label>'+esc(L("At second","عند الثانية"))+' <input type="number" id="snd134a" min="0" max="'+dur+'" step="0.1" value="'+D.at+'"></label><input type="range" id="snd134r" min="0" max="'+dur+'" step="0.1" value="'+D.at+'" aria-label="'+esc(L("The moment","اللحظة"))+'"></div>':"")+
+    '<span class="lbl">'+esc(L("What to add","ماذا تضيف"))+'</span><div class="chips">'+tg("voice",L("Voice","صوت"))+tg("sfx",L("Sound effects","مؤثرات"))+(D.scope!=="moment"?tg("amb",L("Sounds of the place","أصوات المكان"))+tg("music",L("Music","موسيقى")):"")+"</div>"+
+    (D.want.voice?'<div class="sv134"><div class="row" style="gap:10px;flex-wrap:wrap"><label class="lbl" for="snd134l" style="margin:0">'+esc(L("Language","اللغة"))+'</label><select id="snd134l">'+LANGS.map(l=>'<option value="'+l[0]+'"'+(l[0]===D.lang?" selected":"")+">"+esc(L(l[1],l[2]))+"</option>").join("")+"</select></div>"+
+      '<span class="lbl">'+esc(L("Who speaks","من يتكلم"))+'</span><div class="chips">'+[["auto",L("The agents decide","يقرر الوكلاء")],["narrator",L("A narrator","راوٍ")],["characters",L("The people on screen","الأشخاص في الفيديو")]].map(w=>'<button type="button" class="chip" data-act="snd134-who" data-v="'+w[0]+'" aria-pressed="'+(D.who===w[0])+'">'+esc(w[1])+"</button>").join("")+"</div>"+
+      (D.who!=="narrator"?'<label class="tg134"><input type="checkbox" id="snd134p"'+(D.lips?" checked":"")+"> "+esc(L("The lips follow the voice","الشفاه تتبع الصوت"))+"</label>":"")+"</div>":"")+
+    '<label class="lbl" for="snd134w">'+esc(L("What should be said or heard (optional)","ماذا يُقال أو يُسمع (اختياري)"))+'</label><textarea id="snd134w" dir="auto" rows="2" placeholder="'+esc(L("Leave empty and the agents write it — or type the lines, or e.g. “a door slams, she gasps”","اتركه فارغاً ويكتبه الوكلاء — أو اكتب الجمل، أو مثلاً «يُغلق الباب بقوة، فتشهق»"))+'">'+esc(D.say||"")+"</textarea>"+
+    '<label class="tg134"><input type="checkbox" id="snd134k"'+(D.keep?" checked":"")+"> "+esc(L("Keep the video's own sound underneath","أبقِ صوت الفيديو الأصلي تحته"))+"</label>"+
+    '<p class="small mute" id="snd134n"></p><div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn primary" data-act="snd134-go">'+ic("voice")+esc(L("Make the sound","اصنع الصوت"))+'<span class="cost" id="snd134c">…</span></button></div>'}
+function sndRead134(){const D=S.snd134;if(!D)return;const v=(id)=>{const e=$(id);return e?e.value:null};const f=v("#snd134f"),t=v("#snd134t"),a=v("#snd134a"),l=v("#snd134l"),w=v("#snd134w");
+  if(f!=null)D.from=Math.max(0,+f||0);if(t!=null)D.to=Math.max(D.from+.5,+t||0);if(a!=null)D.at=Math.max(0,+a||0);if(l)D.lang=l;if(w!=null)D.say=w;const p=$("#snd134p"),k=$("#snd134k");if(p)D.lips=p.checked;if(k)D.keep=k.checked}
+function sndRepaint134(){sndRead134();const box=document.querySelector("#modalRoot .snd134");if(box){box.innerHTML=sndBody134();sndWire134()}sndQuote134()}
+function sndWire134(){const box=document.querySelector("#modalRoot .snd134");if(!box)return;box.querySelectorAll("input,select,textarea").forEach(x=>x.addEventListener(x.tagName==="TEXTAREA"?"input":"change",()=>{if(x.id==="snd134r"){const a=$("#snd134a");if(a)a.value=x.value}if(x.id==="snd134a"){const r=$("#snd134r");if(r)r.value=x.value}sndRead134();sndQuote134()}));
+  const r=$("#snd134r");if(r)r.addEventListener("input",()=>{const a=$("#snd134a");if(a)a.value=r.value})}
+function sndReq134(){const D=S.snd134,j=SND134.job;return{job:j.remote,scope:D.scope,from:D.from,to:D.to,at:D.at,want:D.want,lang:D.lang,who:D.who,say:String(D.say||"").trim(),lipsync:D.lips&&D.who!=="narrator",keep:D.keep}}
+function sndQuote134(){const t=++SND134.t;clearTimeout(SND134.tm);SND134.tm=setTimeout(async()=>{if(API.mode!=="server")return;try{const q=await API.req("/v1/sound134/quote",{json:sndReq134()});if(t!==SND134.t)return;SND134.q=q;
+  const c=$("#snd134c");if(c)c.textContent=q.total;const n=$("#snd134n");if(n)n.textContent=(q.missing&&q.missing.length?L("Not available right now: ","غير متاح الآن: ")+q.missing.join(", ")+". ":"")+L(q.len+" s of video · what isn't made isn't charged.",q.len+" ث من الفيديو · ما لا يُصنع لا يُخصم.");
+  const g=document.querySelector('#modalRoot [data-act="snd134-go"]');if(g)g.disabled=!!(q.missing&&q.missing.length)}catch(e){const n=$("#snd134n");if(n)n.textContent=String(e.message||e)}},250)}
+async function sndGo134(){sndRead134();const D=S.snd134,j=SND134.job;if(!D||!j)return;const q=SND134.q;if(!q){toast(L("Working out the price — one moment.","يُحسب السعر — لحظة."));return}
+  if(!D.want.voice&&!D.want.sfx&&!D.want.amb&&!D.want.music){toast(L("Pick what to add.","اختر ما تضيفه."));return}
+  if(!crFree()&&S.credits<q.total){toast(L("Not enough credits for this.","الرصيد لا يكفي لهذه العملية."));return}
+  const r=sndReq134(),n=addJob({kind:"video",prompt:r.say,title:L("Voices & sound: ","أصوات: ")+String(j.title||j.prompt||"").slice(0,60),model:j.model,dur:j.dur,aspect:j.aspect,cost:q.total,meta:{sound134:r}});
+  $("#modalRoot").innerHTML="";if(!n)return;if(D.clip)SNDED134[n.id]=D.clip;S.lastVideo=n.id;persist();renderAll();toast(L("The agents are on it — watching, then the voices, the sounds and the mix.","الوكلاء يعملون عليه — المشاهدة ثم الأصوات والمؤثرات والمزج."),{type:"ok"})}
+const SNDED134={};   // a clip in the editor whose sound is being made → it takes the new video when it is ready
+setInterval(()=>{for(const id of Object.keys(SNDED134)){const j=S.jobs.find(x=>x.id===id);if(!j||j.status==="failed"){delete SNDED134[id];continue}if(j.status!=="complete")continue;
+  const c=S.ed&&S.ed.clips.find(q=>q.id===SNDED134[id]);delete SNDED134[id];if(c){c.src={k:"job",job:j.id};c.vol=100;persist();if(S.view==="edit")renderView();toast(L("The clip now has its voices and sound.","أصبح للمقطع أصواته ومؤثراته."),{type:"ok"})}}},1500);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act^="snd134"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const D=S.snd134,act=a.dataset.act;
+  if(act==="snd134")return void snd134Sheet(S.jobs.find(x=>x.id===a.dataset.id));if(!D)return;sndRead134();
+  if(act==="snd134-scope"){D.scope=a.dataset.v;if(D.scope==="moment")D.want.amb=D.want.music=false}
+  if(act==="snd134-want"){const k=a.dataset.v;D.want[k]=!D.want[k]}
+  if(act==="snd134-who")D.who=a.dataset.v;
+  if(act==="snd134-part"){D.from=+a.dataset.a;D.to=+a.dataset.b}
+  if(act==="snd134-go")return void sndGo134();
+  sndRepaint134()},true);
+// where it is offered: the opened video, a made video's long press, a clip in the editor
+VIEWS.video=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="string")return h;
+  return h.replace(/(<button class="btn sm" data-act="extend-job" data-id="([^"]+)">[\s\S]*?<\/button>)/,'$1<button class="btn sm" data-act="snd134" data-id="$2">'+ic("voice")+esc(L("Voices & sound…","الأصوات والمؤثرات…"))+"</button>")})(VIEWS.video);
+if(typeof menuAt131==="function")menuAt131=(o=>function(t,x,y){const r=o.apply(this,arguments);const g=r&&t.closest&&t.closest(".gc98[data-open98]"),j=g&&S.jobs.find(k=>k.id===g.dataset.open98);
+  if(j&&j.kind==="video"&&j.status==="complete"&&CM131.el){const items=CM131.el._items||[],ix=items.findIndex(i=>i.act==="del88");
+    if(ix>=0&&!items.some(i=>i.act==="snd134")){CM131.el.remove();CM131.el=null;items.splice(ix,0,{icon:"voice",label:L("Voices & sound…","الأصوات والمؤثرات…"),act:"snd134",extra:'data-id="'+esc(j.id)+'"'});cmOpen131(items,x,y,(typeof shown88==="function"?shown88(j):j.prompt||"").slice(0,60))}}return r})(menuAt131);
+if(typeof edMenu131==="function")edMenu131=(o=>function(k,id){const items=o.apply(this,arguments);if(!items||k!=="clip"||API.mode!=="server")return items;const c=edItem({k,id}),b=c&&extBase94(c);
+  const ex=items.find(i=>i.icon==="plus"&&typeof i.fn==="function"&&/Extend|المدّ/.test(i.label||""));if(ex)ex.fn=()=>extEditor134(c);
+  if(b&&b.kind==="video"&&b.status==="complete"&&b.remote){const ix=items.findIndex(i=>i.act==="ed-del");items.splice(ix<0?items.length:ix,0,{icon:"voice",label:L("Voices & sound…","الأصوات والمؤثرات…"),fn:()=>snd134Sheet(b,{clip:c.id})})}return items})(edMenu131);
+// what is happening on the card, and what you hear in the opened video
+line132=(o=>function(j){const t=j&&!["complete","failed"].includes(j.status)&&{look:L("The agents are watching and listening…","الوكلاء يشاهدون ويستمعون…"),voice:L("Recording the voices…","تسجيل الأصوات…"),sounds:L("Making the sounds…","صنع المؤثرات…"),lips:L("The lips follow the voice…","الشفاه تتبع الصوت…"),mix:L("Mixing the sound…","مزج الصوت…"),angle:L("Making the picture of the new angle…","صنع صورة الزاوية الجديدة…")}[j.stage];return t||o.apply(this,arguments)})(line132);
+previewCol=(o=>function(g){let h=o.apply(this,arguments);const p=g&&g.status==="complete"&&g.snd134&&g.snd134.plan;if(!p)return h;
+  const mm=s=>Math.floor(s/60)+":"+String((+s%60).toFixed(1)).padStart(4,"0"),li=[];
+  (p.lines||[]).forEach(l=>li.push("<li>"+mm(l.s)+" · <b>"+esc(l.who)+"</b>"+(l.voice?" ("+esc(l.voice)+")":"")+(l.emotion?" · "+esc(l.emotion):"")+' — <span dir="auto">'+esc(l.text||"")+"</span></li>"));
+  (p.sfx||[]).forEach(x=>li.push("<li>"+mm(x.at)+" · "+esc(L("sound: ","مؤثر: "))+esc(x.what)+"</li>"));
+  if(p.ambience)li.push("<li>"+esc(L("Sounds of the place: ","أصوات المكان: "))+esc(p.ambience)+"</li>");if(p.music)li.push("<li>"+esc(L("Music: ","موسيقى: "))+esc(p.music)+"</li>");
+  if(p.lips&&p.lips.made)li.push("<li>"+esc(L("The lips follow the voice in ","الشفاه تتبع الصوت في "))+p.lips.made+esc(L(" stretch(es)"," مقطع"))+"</li>");
+  return h.replace('<div class="pipe"','<details class="pl132 sh134"><summary>'+esc(L("What you hear","ما تسمعه")+(p.by==="agents"?L(" · chosen by the agents"," · اختاره الوكلاء"):""))+"</summary><ol>"+li.join("")+"</ol></details>"+'<div class="pipe"')})(previewCol);
+(()=>{const st=document.createElement("style");st.textContent=`
+.fd134{display:none}
+@media (max-width:767px){
+  #main .dock98{transition:transform .45s cubic-bezier(.22,.9,.24,1)}
+  .fd134{display:grid;place-items:center;position:absolute;top:-17px;left:50%;transform:translateX(-50%);z-index:5;width:58px;height:26px;min-height:0!important;padding:0;margin:0;border-radius:999px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);box-shadow:0 6px 18px rgba(0,0,0,.35);cursor:pointer}
+  .fd134 svg{width:16px;height:16px;transition:transform .45s cubic-bezier(.22,.9,.24,1)}
+  #main .dock98.off134{transform:translateY(calc(100% - 26px))}
+  #main .dock98.off134 .fd134 svg{transform:rotate(180deg)}
+  #main .dock98 .cz98{transition:visibility 0s}
+  #main .dock98.off134 .cz98{visibility:hidden;transition:visibility 0s linear .4s}
+  #main .dock98::after{content:"";position:absolute;left:12px;right:12px;top:0;height:22px;border-radius:14px 14px 0 0;border:1px solid var(--line2);border-bottom:0;background:var(--panel);opacity:0;transition:opacity .3s ease;pointer-events:none}
+  #main .dock98.off134::after{opacity:1}
+}
+@media (prefers-reduced-motion:reduce){#main .dock98,.fd134 svg{transition:none!important}}
+.xm134{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 10px}.xs134{grid-template-columns:repeat(3,minmax(0,1fr))}
+.xm134c{display:flex;align-items:flex-start;gap:10px;text-align:start;padding:12px;border-radius:12px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);cursor:pointer;min-height:0;line-height:1.35}
+.xm134c svg{flex:none;width:28px;height:28px;color:var(--lime)}.xm134c b{display:block;font-size:14px;margin-bottom:2px}.xm134c small{display:block;color:var(--mute);font-size:12px}
+.xm134c[aria-checked="true"]{border-color:var(--lime);box-shadow:0 0 0 2px color-mix(in srgb,var(--lime) 40%,transparent)}
+.xa134 .chips,.ex134 .chips,.snd134 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.xp134{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 8px}
+.xp134i{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;width:56px}.xp134i img{width:52px;height:52px;object-fit:cover;border-radius:10px;border:1px solid var(--line2)}.xp134i small{font-size:11px;color:var(--mute);max-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xp134x{position:absolute;top:-6px;inset-inline-end:-4px;width:22px;height:22px;min-height:0!important;padding:0;border-radius:50%;display:grid;place-items:center;background:var(--panel);border:1px solid var(--line2);color:var(--text)}.xp134x svg{width:12px;height:12px}
+.xp134a{position:relative;display:grid;place-items:center;width:52px;height:52px;border-radius:10px;border:1px dashed var(--line2);color:var(--mute);cursor:pointer}.xp134a input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.xc134 img{width:20px;height:20px;border-radius:50%;object-fit:cover;margin-inline-end:6px}
+.ex134 textarea,.snd134 textarea{width:100%;margin:0 0 8px}.xn134{margin:4px 0 0}
+.sn134{gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 10px}.sn134 input[type=number]{width:84px}.sn134 input[type=range]{flex:1;min-width:140px}
+.tg134{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:14px}.sv134{margin:0 0 6px}.sv134 select{max-width:220px}
+@media (max-width:520px){.xm134,.xs134{grid-template-columns:1fr}}
+`;document.head.appendChild(st)})();
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
