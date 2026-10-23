@@ -82,8 +82,11 @@ sec "What needs you"
 J="$(journalctl -u nooi --since '24 hours ago' --no-pager -o cat 2>/dev/null)"
 cnt() { printf '%s\n' "$J" | grep -ciE "$1" || true; }
 nq="$(cnt 'credits insufficient|insufficient (credits|balance)|balance isn.t enough')"; ne="$(cnt 'EACCES')"; nb="$(cnt 'try again later|internal error')"; np="$(cnt 'previous part failed')"; need=0
+# v139: when the last refusal was (the time of its line) — after a top-up the old ones still count for 24 h
+LASTQ="$(journalctl -u nooi --since '24 hours ago' --no-pager -o short-unix 2>/dev/null | grep -iE 'credits insufficient|insufficient (credits|balance)|balance isn.t enough' | tail -1 | awk '{print $1}' | grep -E '^[0-9]+(\.[0-9]+)?$' || true)"
+lq=""; [ -n "$LASTQ" ] && lq=" The last one was at $(date -d "@${LASTQ%.*}" '+%H:%M' 2>/dev/null) ($(( ( $(date +%s) - ${LASTQ%.*} ) / 60 )) min ago)."
 if [ "${nq:-0}" -gt 0 ]; then need=1
-  echo "⚠ The AI engine account is out of credits — it refused $nq request(s) in the last 24 h. Pictures, videos and sounds fail until it is topped up;"
+  echo "⚠ The AI engine account ran out of credits — it refused $nq request(s) in the last 24 h.$lq Pictures, videos and sounds fail until it is topped up;"
   pp=""; [ "${np:-0}" -gt 0 ] && pp=" $np film part(s) stopped because the part before them failed the same way."
   echo "  customers were not charged (their credits came back).$pp"
   echo "  → Top up the engine account on its website (kie.ai → Billing), then the site: Admin → Models → Connections & live status → Test all."; fi
@@ -93,11 +96,15 @@ if [ "${ne:-0}" -gt 0 ]; then need=1
 if [ "${nb:-0}" -gt 0 ]; then
   echo "• The engine failed on its own side $nb time(s) (\"Internal Error, please try again later\"). From v138 voices, sounds and other engine steps are asked again"
   echo "  twice before a job fails; if it keeps happening, it is the engine's side — check its status page."; fi
-cd "$APP" 2>/dev/null && node -e '
+cd "$APP" 2>/dev/null && LASTQ="$LASTQ" node -e '
 const fs = require("fs"); let db = {}; try { db = JSON.parse(fs.readFileSync("data/db.json", "utf8")); } catch {}
 const st = (db.settings || {}).status || {}, al = (db.settings || {}).alerts138 || {}, ago = (t) => Math.round((Date.now() - t) / 60e3) + " min ago";
 for (const [k, a] of Object.entries(al)) if (a && a.type === "quota") console.log("⚠ The site has marked the AI engine (" + k + ") out of credits since " + ago(a.since) + " · " + a.count + " job(s) failed · it clears itself when a job is made again.");
 const e = st.kie; if (e) console.log("AI engine connection (last check " + ago(e.checked || 0) + "): " + e.state + (e.note ? " · " + e.note : ""));
+// v139: checked after the last refusal and answering normally, with nothing marked → most likely topped up already
+const lq = +process.env.LASTQ * 1000 || 0;
+if (lq && e && e.state === "online" && (e.checked || 0) > lq && !Object.values(al).some((a) => a && a.type === "quota"))
+  console.log("✓ The engine answered normally at its last check, after the last refusal — if you topped up, this is already solved (the count above is for the whole 24 h).");
 ' 2>/dev/null | mask
 [ "$need" = 0 ] && echo "✓ Nothing above needs you."
 echo; echo "Done — nothing was changed."

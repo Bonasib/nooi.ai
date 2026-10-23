@@ -14,3 +14,9 @@ What nooi ships from other projects, where it lives, and under which licence. Th
 
 Banners, stickers and their motion are nooi's own designs built on those icons; nothing else is copied from other
 editors. The server's drag copy (`lib/scrub131.js`) uses the ffmpeg already on the server.
+
+## Video editor export (v139)
+
+| What | From | Licence | In nooi |
+|---|---|---|---|
+| Frame-exact video decoding and encoding in the browser (WebCodecs), MP4/WebM writing | [mediabunny](https://github.com/Vanilagy/mediabunny) 1.62.1 (npm `mediabunny`) | MPL-2.0 — used unmodified; its licence and source are in `node_modules/mediabunny` | Served as it is from `/vendor/mediabunny.mjs` (`server.js`); used by the editor's frame-by-frame export (`edRender139` in `public/index.html`). No mediabunny file is changed. |

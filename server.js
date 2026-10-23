@@ -21,6 +21,7 @@ import { OAUTH, pkcePair } from "./social/oauth.js";
 import { runPost } from "./lib/scheduler.js";
 import { balance, charge, freeCredits, TEXT_PRICE, startCheckout, finishCheckout, findPayment, provider, providerName, enabledPayments, CATALOG } from "./lib/billing.js";
 import { registerAdmin } from "./lib/admin.js";
+import { registerProjects139 } from "./lib/projects139.js";   // v139: editor projects kept on the server
 import { streamTTS } from "./providers/elevenlabs.js";
 import { testAll } from "./lib/health.js";
 import { spawn } from "child_process";
@@ -117,6 +118,10 @@ const THREE_R128 = path.resolve("node_modules/three-r128");
 vendor("/vendor/three/build", THREE_R128 + "/build"); vendor("/vendor/three/examples/js", THREE_R128 + "/examples/js");
 // unversioned names for the page's own modules (short cache: they follow the installed version)
 app.get("/vendor/rapier/rapier.mjs", (_, res) => res.redirect(302, VENDOR.rapier + "/rapier.mjs"));
+// v139: the editor's frame-by-frame export decodes and encodes with mediabunny (MPL-2.0, served unmodified)
+VENDOR.mediabunny = "/vendor/mediabunny-" + pkgVer(path.resolve("node_modules/mediabunny"));
+vendor(VENDOR.mediabunny, path.resolve("node_modules/mediabunny/dist/bundles"), { index: false });
+app.get("/vendor/mediabunny.mjs", (_, res) => res.redirect(302, VENDOR.mediabunny + "/mediabunny.min.mjs"));
 app.use("/vendor/ort", express.static(ORT_DIR, { maxAge: "30d", immutable: true, setHeaders: vendorHeaders }));
 if (process.env.MODELS_DIR) app.use("/models", express.static(path.resolve(process.env.MODELS_DIR), { maxAge: "30d" }));
 const wrap = (fn) => (req, res) => fn(req, res).catch((e) => res.status(e.code && e.code >= 400 && e.code < 600 ? e.code : 500).json({ error: e.message, ...(e.errorAr ? { errorAr: e.errorAr } : {}) }));   // (v125: and in Arabic when the reason has it)
@@ -268,7 +273,7 @@ app.post("/v1/billing/webhook/:provider", wrap(async (req, res) => {
 }));
 app.get("/v1/billing/catalog", (_, res) => res.json(CATALOG));
 
-registerAdmin(app, requireUser);
+registerAdmin(app, requireUser); registerProjects139(app, requireUser);
 registerSlideshow(app, requireUser);
 registerPhysics(app, requireUser);
 // admin: engine cost per model → credits charged → margin; costs and margin are editable (prices recompute)

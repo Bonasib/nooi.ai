@@ -2943,14 +2943,18 @@ let audioCtx=null;const srcNodes=new WeakMap();
 function audioNode(el){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();let n=srcNodes.get(el);if(!n){n=audioCtx.createMediaElementSource(el);n.connect(audioCtx.destination);srcNodes.set(el,n)}return n}
 async function edExport(){
   const cv=$("#wk"),total=edTotal();if(!cv||!total||recording)return;
+  // v139: drawn frame by frame (the exact picture, faster than playing it) when the browser can; else recorded while it plays
+  let blob=null,mime="";if(typeof edRender139==="function"){try{const r=await edRender139(total);if(r){blob=r.blob;mime=r.mime}}catch(e){console.warn("frame export:",e);end139()}}
+  if(!blob){
   if(!cv.captureStream||!window.MediaRecorder){toast(L("Video export isn't supported in this browser.","تصدير الفيديو غير مدعوم في هذا المتصفح."));return}
-  const mime=["video/mp4;codecs=avc1","video/webm;codecs=vp9,opus","video/webm","video/mp4"].find(t=>MediaRecorder.isTypeSupported(t));if(!mime){toast(L("Video export isn't supported in this browser.","تصدير الفيديو غير مدعوم في هذا المتصفح."));return}
+  mime=["video/mp4;codecs=avc1","video/webm;codecs=vp9,opus","video/webm","video/mp4"].find(t=>MediaRecorder.isTypeSupported(t));if(!mime){toast(L("Video export isn't supported in this browser.","تصدير الفيديو غير مدعوم في هذا المتصفح."));return}
   const stream=cv.captureStream(30);
   try{const els=S.ed.clips.map(c=>M["c_"+c.id]).filter(m=>m&&m.type==="video").map(m=>m.el);if(M.edMusic)els.push(M.edMusic.el);if(M.edVoice)els.push(M.edVoice.el);if(els.length){const dest=(audioNode(els[0]),audioCtx).createMediaStreamDestination();els.forEach(el=>audioNode(el).connect(dest));if(audioCtx.state==="suspended")await audioCtx.resume();dest.stream.getAudioTracks().forEach(tr=>stream.addTrack(tr))}}catch(e){}
   recording=true;ED.rec=true;ED.t=0;ED.active=-1;ED.playing=true;const btn=$("#recbtn");if(btn){btn.disabled=true;btn.textContent=L("Recording… ","جارٍ التسجيل… ")+Math.round(total)+L("s","ث")}
   const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:8e6});const chunks=[];rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};const done=new Promise(r=>rec.onstop=r);
   rec.start(250);await new Promise(r=>setTimeout(r,total*1000+250));rec.stop();await done;recording=false;ED.rec=false;ED.playing=false;
-  const blob=new Blob(chunks,{type:mime.split(";")[0]});const F=fmt(),ext=mime.includes("mp4")?"mp4":"webm";
+  blob=new Blob(chunks,{type:mime.split(";")[0]})}
+  const F=fmt(),ext=mime.includes("mp4")?"mp4":"webm";
   const first=S.ed.clips[0]&&S.jobs.find(j=>j.id===(S.ed.clips[0].src||{}).job);
   const j={id:uid(),kind:"export",status:"complete",progress:1,created:Date.now(),title:F[1]+" · "+mmss(total),prompt:F[1],dur:Math.round(total),aspect:F[2]+":"+F[3],seed:first?first.seed:147821,pal:first?first.pal:S.story.palette,art:"scene",meta:{format:F[0],platform:F[4]}};
   EXPORTS[j.id]=URL.createObjectURL(blob);S.jobs.push(j);S.ed.lastExport=j.id;
@@ -8517,7 +8521,10 @@ edExport=(o=>async function(){const srv=API.mode==="server",want=S.ed.fmtOut||(s
   try{await o()}finally{saveFile=sf;S.ed.fmtOut=keep;API.upload=up}
   const job119=srv&&S.jobs.find(x=>x.id===S.ed.lastExport),keep119=async()=>{if(job119&&!job119.resultUrl&&cap)try{job119.resultUrl=(await up.call(API,cap.d instanceof Blob?cap.d:await(await fetch(cap.d)).blob(),cap.n)).url;persist()}catch(e){}};
   if(!srv||!cap)return;const F=fmt(),w=F[2],h=F[3];toast(L("Preparing your "+want.toUpperCase()+" · "+w+"×"+h+"…","جارٍ تجهيز ملف "+want.toUpperCase()+" · "+w+"×"+h+"…"),{type:"info",ms:6000});
-  try{const blob=cap.d instanceof Blob?cap.d:await(await fetch(cap.d)).blob();const r=await fetch("/v1/media/transcode?w="+w+"&h="+h+"&fmt="+want+"&fps="+(+S.ed.fps||30),{method:"POST",headers:Object.assign({"Content-Type":"video/webm"},await authH()),body:blob}).then(x=>x.json());
+  try{const blob=cap.d instanceof Blob?cap.d:await(await fetch(cap.d)).blob();
+    // (v139: a frame-by-frame MP4 already at the exact size goes up as it is — no second encode on the server)
+    const as139=typeof R139!=="undefined"&&R139.last&&R139.last.blob===blob&&blob.type==="video/mp4"&&want==="mp4"&&R139.last.w===w&&R139.last.h===h;
+    const r=as139?{url:(await up.call(API,blob,String(cap.n).replace(/\.\w+$/,"")+".mp4")).url}:await fetch("/v1/media/transcode?w="+w+"&h="+h+"&fmt="+want+"&fps="+(+S.ed.fps||30),{method:"POST",headers:Object.assign({"Content-Type":"video/webm"},await authH()),body:blob}).then(x=>x.json());
     if(!r.url)throw new Error(r.error||"failed");if(job119){job119.resultUrl=r.url;persist()}const out=await(await fetch(r.url)).blob();await sf(String(cap.n).replace(/\.\w+$/,"")+"."+({prores:"mov",dnxhr:"mxf",hevc:"mp4"}[want]||want),out);if(S.ed.lastExport)EXPORTS[S.ed.lastExport]=r.url;S.ed.lastDeliverable={url:r.url,fmt:want}}
   catch(e){toast(L("Converting failed — saving the original recording.","تعذّر التحويل — يُحفظ التسجيل الأصلي."),{type:"warn"});await keep119();await sf(cap.n,cap.d)}})(edExport);
 VIEWS.edit=(o=>function(){if(API.mode==="server"&&!S.ed.fmtOut)S.ed.fmtOut="mp4";return o()})(VIEWS.edit);
@@ -13413,7 +13420,7 @@ function edHQ93(){const F=fmt(),full=Math.min(Math.max(F[2],F[3]),2160),gap=med9
 edExport=(o=>async function(){const cv=$("#wk"),hq=cv&&S.ed.q93!=="fast"&&!recording&&S.view==="edit",F=fmt(),full=Math.min(Math.max(F[2],F[3]),2160);let long=0;
   if(hq){long=edHQ93();if(long){ED.hq=long;const k=long/Math.max(F[2],F[3]);cv.width=Math.round(F[2]*k/2)*2;cv.height=Math.round(F[3]*k/2)*2}
     if(long)await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))}   // the loop draws the new size before the recording starts
-  try{const r=await o.apply(this,arguments);if(hq&&full>1080&&long<full){const k=(long||1080)/Math.max(F[2],F[3]),sz=Math.round(F[2]*k)+"×"+Math.round(F[3]*k);
+  try{const r=await o.apply(this,arguments);if(hq&&full>1080&&long<full&&!(typeof R139!=="undefined"&&R139.full)){const k=(long||1080)/Math.max(F[2],F[3]),sz=Math.round(F[2]*k)+"×"+Math.round(F[3]*k);
       toast(L("Exported at "+sz+", the sharpest this device keeps smooth — a faster device exports at "+F[2]+"×"+F[3]+".","صُدّر بمقاس "+sz+"، أوضح مقاس يبقى سلساً على هذا الجهاز — الجهاز الأسرع يصدّر بمقاس "+F[2]+"×"+F[3]+"."),{type:"info",ms:5000})}
     return r}finally{ED.hq=0}})(edExport);
 // 2) fade in from black / out to black (drawn last, so it covers everything like a real fade)
@@ -16161,6 +16168,176 @@ async function alerts138(){if(API.mode!=="server"||!S.user)return;try{const r=aw
 VIEWS.admin=(o=>function(){const h=o.apply(this,arguments);return AL138&&typeof h==="string"?h.replace('<div class="admtabs">',()=>line138()+'<div class="admtabs">'):h})(VIEWS.admin);
 setTimeout(alerts138,2500);setInterval(alerts138,120000);
 (()=>{const st=document.createElement("style");st.textContent=`.al138{display:flex;gap:10px;align-items:flex-start;margin:10px 0 14px;padding:12px 14px;border-radius:12px;background:color-mix(in srgb,#e5484d 14%,transparent);border:1px solid color-mix(in srgb,#e5484d 55%,transparent);font-size:14px;line-height:1.45}.al138 svg{color:#e5484d;margin-top:1px}`;document.head.appendChild(st)})();
+
+/* ================= v139: THE EDITOR EXPORTS FRAME BY FRAME ================= */
+// The export used to play the timeline and record the screen (MediaRecorder): as slow as the video, softer than the preview, and
+// broken by a phone going to sleep. Now every frame is drawn on its own with the editor's own drawing (the same as the preview),
+// the video under it decoded for that exact moment, and encoded at once; the sound is mixed separately (OfflineAudioContext) and
+// laid in. Decoding and encoding: mediabunny (MPL-2.0, unmodified, /vendor/mediabunny.mjs). A browser without WebCodecs, or any
+// failure, goes back to the recording. R139.stats says how the last export was made (tests).
+const R139={on:false,mine:false,fr:null,miss:[],stats:null,last:null};const DEC139=new Map(),AUD139=new Map();let MB139=null;
+const mb139=async()=>MB139||(MB139=await import("/vendor/mediabunny.mjs"));
+function end139(){R139.on=false;R139.mine=false;R139.fr=null;recording=false;ED.rec=false;ED.playing=false;
+  for(const d of DEC139.values()){try{d.it&&d.it.return&&d.it.return()}catch(e){}try{d.inp&&d.inp.dispose&&d.inp.dispose()}catch(e){}}DEC139.clear();AUD139.clear()}
+// one decoder per piece of media: frames read in order, one jump back only when the timeline jumps back
+async function src139(m){const MB=await mb139();if(m.file instanceof Blob)return new MB.BlobSource(m.file);const u=m.url||(m.el&&(m.el.currentSrc||m.el.src))||"";
+  if(/^blob:/.test(u))return new MB.BlobSource(await(await fetch(u)).blob());if(u)return new MB.UrlSource(new URL(u,location.href).href);throw new Error("no file")}
+function dec139(m){let d=DEC139.get(m);if(d)return d;d={m,it:null,cur:null,nxt:null,el:false};DEC139.set(m,d);
+  d.ready=(async()=>{try{const MB=await mb139(),inp=new MB.Input({source:await src139(m),formats:MB.ALL_FORMATS});d.inp=inp;const tr=await inp.getPrimaryVideoTrack();
+      if(!tr||!(await tr.canDecode()))throw new Error("can't decode here");const W=tr.displayWidth,H=tr.displayHeight,k=Math.min(1,(R139.cap||1920)/Math.max(W,H));
+      d.sink=new MB.CanvasSink(tr,k<1?{width:Math.max(2,Math.round(W*k/2)*2),height:Math.max(2,Math.round(H*k/2)*2),fit:"fill",poolSize:4}:{poolSize:4});d.dur=await tr.computeDuration()}
+    catch(e){d.el=true;d.err=String(e&&e.message||e);d.dur=m.el&&isFinite(m.el.duration)?m.el.duration:0}})();return d}
+const fit139=(c,t)=>{if(c){c.complete=true;c.naturalWidth=c.width;c.naturalHeight=c.height;c.currentTime=t}return c};
+async function at139(d,t){await d.ready;if(d.el)return el139(d,t);t=Math.max(0,Math.min(t,d.dur?d.dur-1e-3:t));
+  const inCur=()=>d.cur&&t>=d.cur.timestamp-1e-4&&(!d.nxt||t<d.nxt.timestamp-1e-4);if(inCur())return fit139(d.cur.canvas,t);
+  if(!d.it||!d.cur||t<d.cur.timestamp-1e-4||(d.nxt&&t>d.nxt.timestamp+3)){try{d.it&&await d.it.return()}catch(e){}d.it=d.sink.canvases(t);d.cur=(await d.it.next()).value||null;d.nxt=d.cur?(await d.it.next()).value||null:null}
+  while(d.nxt&&t>=d.nxt.timestamp-1e-4){d.cur=d.nxt;d.nxt=(await d.it.next()).value||null}
+  return d.cur?fit139(d.cur.canvas,t):null}
+// a file the decoder can't open (another site's address…): the video itself, moved to the moment and copied
+async function el139(d,t){const v=d.m.el;if(!v||v.error)return null;if(d.cv&&Math.abs((d.et??-9)-t)<1e-4)return d.cv;
+  await new Promise(r=>{let ok=false;const fin=()=>{if(!ok){ok=true;r()}};v.addEventListener("seeked",fin,{once:true});setTimeout(fin,4000);try{typeof CT131!=="undefined"?CT131.set.call(v,t):(v.currentTime=t)}catch(e){fin()}});
+  const W=v.videoWidth,H=v.videoHeight;if(!W||!H)return null;const c=d.cv||(d.cv=document.createElement("canvas"));if(c.width!==W||c.height!==H){c.width=W;c.height=H}
+  try{c.getContext("2d").drawImage(v,0,0)}catch(e){return null}d.et=t;return fit139(c,t)}
+// what the frame at t needs: the clip under the playhead, the next one when a transition is near, the video layers
+function needs139(t){const out=[],tot=edTotal(),a=edAt(Math.min(t,Math.max(0,tot-.001))),c=S.ed.clips[a.i];
+  if(c){const m=clipMedia(c);if(m&&m.type==="video")out.push({m,t:a.lt});const nx=S.ed.clips[a.i+1];
+    if(nx&&c.trans&&c.trans!=="cut"&&a.start+clipDur(c)-t<2.4){const nm=clipMedia(nx);if(nm&&nm.type==="video")out.push({m:nm,t:nx.in,ff:nx})}}
+  (S.ed.layers||[]).forEach(Ly=>{if(t<Ly.start||t>Ly.end)return;const m=M["ly_"+Ly.id];if(m&&m.type==="video")out.push({m,t:t-Ly.start,ly:1})});return out}
+async function fetch139(list){for(const n of list){const d=dec139(n.m);await d.ready;let t=n.t;if(n.ly&&d.dur)t=t%d.dur;const c=await at139(d,t);if(!c)continue;
+    R139.fr.set(n.m,{t:n.ly?null:n.t,c});
+    // (the GPU transitions read the next clip's first frame from ff131: a copy of the decoded one)
+    if(n.ff&&!(n.m.ff131&&Math.abs((n.m.ff131t??-9)-n.t)<.05)){const k=document.createElement("canvas");k.width=c.width;k.height=c.height;k.getContext("2d").drawImage(c,0,0);fit139(k,n.t);n.m.ff131=k;n.m.ff131t=n.t}}}
+// during the export: the loop doesn't draw, the videos aren't moved, and each draw gets the frame decoded for its moment
+edTick=(o=>function(now){if(R139.on&&!R139.mine)return;return o.apply(this,arguments)})(edTick);
+syncClipMedia=(o=>function(){if(R139.on)return;return o.apply(this,arguments)})(syncClipMedia);
+drawFit=(o=>function(ctx,m,ow,oh,lt,filter){if(!R139.on||!m||m.type!=="video"||!m.el)return o.apply(this,arguments);
+  const c=edxClipOf(m,lt);if(c&&c.smooth&&c.smooth!=="off"&&EDX.sm&&EDX.sm[c.id]&&EDX.sm[c.id].ready)return o.apply(this,arguments);   // (smooth slow motion draws from its own frames)
+  const f=R139.fr&&R139.fr.get(m);if(!f||f.t==null||Math.abs(f.t-lt)>1e-3){R139.miss.push({m,t:lt});return o.apply(this,arguments)}
+  const el=m.el;m.el=f.c;m.type="image";try{return o(ctx,m,ow,oh,lt,filter)}finally{m.el=el;m.type="video"}})(drawFit);
+edxDrawLayers=(o=>function(ctx,W,H,t){if(!R139.on)return o.apply(this,arguments);const held=[];
+  (S.ed.layers||[]).forEach(Ly=>{const m=M["ly_"+Ly.id];if(!m||m.type!=="video"||t<Ly.start||t>Ly.end)return;const f=R139.fr&&R139.fr.get(m);if(!f)return;held.push([m,m.el]);m.el=f.c;m.type="image"});
+  try{return o(ctx,W,H,t)}finally{held.forEach(([m,v])=>{m.el=v;m.type="video"})}})(edxDrawLayers);
+// speed without changing the pitch (overlap-add, each piece placed where it best continues the last one)
+function stretch139(b,a,e,sp,ctx){const SR=b.sampleRate,nc=b.numberOfChannels,i0=Math.max(0,Math.floor(a*SR)),i1=Math.min(b.length,Math.floor(e*SR)),n=Math.max(0,i1-i0),outLen=Math.max(1,Math.floor(n/sp));
+  const out=ctx.createBuffer(nc,outLen,SR),N=Math.max(64,Math.round(SR*.04)&~1),H=N/2,tol=Math.round(SR*.012),win=new Float32Array(N);for(let k=0;k<N;k++)win[k]=.5-.5*Math.cos(2*Math.PI*k/N);
+  const src=Array.from({length:nc},(_,c)=>b.getChannelData(c)),dst=Array.from({length:nc},(_,c)=>out.getChannelData(c)),mono=new Float32Array(n);
+  for(let c=0;c<nc;c++){const s=src[c];for(let k=0;k<n;k++)mono[k]+=s[i0+k]/nc}if(n<N){for(let c=0;c<nc;c++)for(let k=0;k<Math.min(n,outLen);k++)dst[c][k]=src[c][i0+k];return out}
+  let prev=-1;for(let o=0;o<outLen;o+=H){const ideal=Math.round(o*sp);let best=Math.min(Math.max(0,ideal),n-N);
+    if(prev>=0){const ref=prev+H;if(ref+H<=n){let bv=-Infinity;for(let d=-tol;d<=tol;d+=2){const p=ideal+d;if(p<0||p+N>n)continue;let s=0;for(let k=0;k<H;k+=4)s+=mono[p+k]*mono[ref+k];if(s>bv){bv=s;best=p}}}}
+    for(let c=0;c<nc;c++){const s=src[c],dd=dst[c];for(let k=0;k<N&&o+k<outLen;k++)dd[o+k]+=s[i0+best+k]*win[k]}prev=best}
+  return out}
+// the sound of the whole video, mixed once: clips (their volume, speed), music (looped), the voice-over, sound effects, video layers
+async function mix139(total){const SR=48000,off=new OfflineAudioContext(2,Math.max(1,Math.ceil(total*SR)),SR),st=edStarts();let n=0;
+  const blobOf=async m=>m.file instanceof Blob?m.file:await(await fetch(m.url||m.el.currentSrc||m.el.src)).blob();
+  const dec=async(key,m)=>{if(!key)return null;if(AUD139.has(key))return AUD139.get(key);let b=null;try{b=await off.decodeAudioData(await(await blobOf(m)).arrayBuffer())}catch(e){b=null}AUD139.set(key,b);return b};
+  const put=(buf,at,o0,dur,gain)=>{if(!buf||!(gain>0)||!(dur>0.01)||at>=total)return;const s=off.createBufferSource(),g=off.createGain();s.buffer=buf;g.gain.value=gain;s.connect(g).connect(off.destination);s.start(Math.max(0,at),Math.max(0,o0),Math.min(dur,total-at));n++};
+  if(S.ed.clipSound!==false)for(let i=0;i<S.ed.clips.length;i++){const c=S.ed.clips[i],m=clipMedia(c);if(!m||m.type!=="video"||!c.vol)continue;const b=await dec(m.url||(m.el&&m.el.src),m);if(!b)continue;
+    const sp=c.speed||1,a=Math.min(c.in,b.duration),e=Math.min(c.out,b.duration);if(e-a<.02)continue;if(Math.abs(sp-1)<1e-3)put(b,st[i],a,e-a,c.vol/100);else{const x=stretch139(b,a,e,sp,off);put(x,st[i],0,x.duration,c.vol/100)}}
+  const mu=M.edMusic;if(mu&&mu.el){const b=await dec("mu:"+(mu.url||mu.el.src),mu);if(b&&b.duration>.05)for(let t=0;t<total;t+=b.duration)put(b,t,0,b.duration,(S.ed.musicVol??80)/100)}
+  const vo=M.edVoice;if(vo&&vo.el&&!(typeof REC!=="undefined"&&REC.on)){const b=await dec("vo:"+(vo.url||vo.el.src),vo);if(b)put(b,0,0,b.duration,clamp((S.ed.voiceVol??100)/100,0,1))}
+  for(const it of S.ed.sfx||[]){let b=null;try{b=await edxBuffer(it)}catch(e){}if(b)put(b,it.t,0,b.duration,clamp((it.vol??100)/100,0,2))}
+  for(const Ly of S.ed.layers||[]){const m=M["ly_"+Ly.id];if(!Ly.sound||!m||m.type!=="video")continue;const b=await dec("ly:"+(m.url||m.el.src),m);if(b&&b.duration>.05)for(let t=Ly.start;t<Ly.end;t+=b.duration)put(b,t,0,Math.min(b.duration,Ly.end-t),(Ly.vol??100)/100)}
+  return n?await off.startRendering():null}
+async function edRender139(total){
+  if(!window.VideoEncoder||!window.OfflineAudioContext||S.ed.render139===false)return null;
+  const cv=$("#wk");if(!cv)return null;let MB;try{MB=await mb139()}catch(e){return null}
+  const t0=performance.now(),btn=$("#recbtn"),btxt=btn?btn.textContent:"",hq0=ED.hq;R139.on=true;recording=true;ED.rec=true;ED.playing=false;R139.miss=[];R139.full=false;
+  // the format's own size (up to 4K): nothing has to keep up in real time any more, so no device limit (and even sizes, as encoders need)
+  {const F=fmt();ED.hq=S.ed.q93==="fast"?(ED.hq||1080):Math.min(Math.max(F[2],F[3]),2160)}
+  const draw=t=>{ED.t=t;R139.mine=true;try{edTick(t*1000)}finally{R139.mine=false}};
+  try{draw(0);let W=cv.width,H=cv.height;const fps=clamp(Math.round(+S.ed.fps||30),12,60),n=Math.max(1,Math.round(total*fps));
+    // H.264 in MP4 when this browser can also play it back (the library preview and the render check play it), else VP9/VP8 in WebM
+    const mp4ok=!!document.createElement("video").canPlayType('video/mp4; codecs="avc1.42E01E"');let vc=null,fmtO=null,mime="",acs=[];
+    if(mp4ok&&await MB.canEncodeVideo("avc",{width:W,height:H})){vc="avc";fmtO=new MB.Mp4OutputFormat({fastStart:"in-memory"});mime="video/mp4";acs=["aac","opus"]}
+    else for(const k of["vp9","vp8"])if(!vc&&await MB.canEncodeVideo(k,{width:W,height:H})){vc=k;fmtO=new MB.WebMOutputFormat();mime="video/webm";acs=["opus"]}
+    if(!vc){end139();return null}
+    // (VP9/VP8 are encoded in software on most devices: at most 1920 on the long side, the server brings it to the format's size)
+    if(vc!=="avc"&&Math.max(W,H)>1920){ED.hq=1920;draw(0);W=cv.width;H=cv.height}R139.cap=Math.max(W,H);
+    if(btn){btn.disabled=true;btn.textContent=L("Preparing the sound…","تجهيز الصوت…")}
+    const mixed=await mix139(total);let ac=null;if(mixed)for(const k of acs)if(!ac&&await MB.canEncodeAudio(k,{numberOfChannels:2,sampleRate:48000}))ac=k;
+    const out=new MB.Output({format:fmtO,target:new MB.BufferTarget()}),vs=new MB.CanvasSource(cv,{codec:vc,bitrate:MB.QUALITY_HIGH,keyFrameInterval:2,latencyMode:"realtime"});/* ("quality" mode: VP9 in software made ~1.5 frames a second on real pictures) */out.addVideoTrack(vs,{frameRate:fps});
+    let as=null;if(mixed&&ac){as=new MB.AudioBufferSource({codec:ac,bitrate:192e3});out.addAudioTrack(as)}await out.start();
+    const SR=48000;let aAt=0;const audioTo=async sec=>{if(!as)return;const end=Math.min(mixed.length,Math.round(sec*SR));while(aAt<end){const len=Math.min(SR,end-aAt),b=new AudioBuffer({length:len,numberOfChannels:2,sampleRate:SR});
+        for(let ch=0;ch<2;ch++)b.copyToChannel(mixed.getChannelData(Math.min(ch,mixed.numberOfChannels-1)).subarray(aAt,aAt+len),ch);await as.add(b);aAt+=len}};
+    let misses=0;
+    for(let f=0;f<n;f++){const t=f/fps;R139.fr=new Map();await fetch139(needs139(t));R139.miss=[];draw(t);
+      if(R139.miss.length){misses+=R139.miss.length;await fetch139(R139.miss.map(x=>({m:x.m,t:x.t})));R139.miss=[];draw(t)}   // (a moment drawn that wasn't foreseen: read it and draw again)
+      await vs.add(t,1/fps);if(f%fps===0)await audioTo(t+1.5);
+      if(f%6===0){if(btn)btn.textContent=L("Exporting… ","جارٍ التصدير… ")+Math.round(100*f/n)+"%";await new Promise(r=>setTimeout(r,0))}}
+    await audioTo(total+1);await out.finalize();const blob=new Blob([out.target.buffer],{type:mime});
+    R139.stats={path:"frames",codec:vc,audio:ac||null,mime,frames:n,fps,w:W,h:H,ms:Math.round(performance.now()-t0),secs:+total.toFixed(2),misses,fallbacks:[...DEC139.values()].filter(d=>d.el).map(d=>d.err)};
+    R139.last={blob,mime,w:W,h:H};R139.full=W===fmt()[2]&&H===fmt()[3];return{blob,mime}}
+  finally{end139();ED.hq=hq0;if(btn){btn.disabled=false;btn.textContent=btxt}}}
+// the export tab says how it works now
+VIEWS.edit=(o=>function(){let h=o.apply(this,arguments);if(window.VideoEncoder&&S.ed.render139!==false)h=h.replace(L("Export records in real time with sound, so a 30-second edit takes 30 seconds.","التصدير يسجّل بالوقت الحقيقي مع الصوت، فالمونتاج ذو 30 ثانية يستغرق 30 ثانية."),
+  L("Export draws every frame exactly as the preview, at the format's full size, with the sound mixed in — nothing has to play in real time, and it keeps going with the screen off.","يرسم التصدير كل إطار كما في المعاينة تماماً وبالمقاس الكامل مع مزج الصوت — لا شيء يحتاج إلى التشغيل بالوقت الحقيقي، ويستمر حتى مع إطفاء الشاشة."));return h})(VIEWS.edit);
+
+/* ================= v139: EDITOR PROJECTS KEPT ON THE SERVER ================= */
+// (lib/projects139.js) "Save to my account" keeps the editor's own state as one document on the server, every file as a /media
+// address (a file that is only on this device is uploaded once); Projects lists them, opens one — on any device — and deletes one.
+// Once on the account, a project keeps itself up to date a few seconds after each change (a new file from this device goes up at
+// the next Save). The device's own project list (PJ) is unchanged.
+const PJ139={list:null,busy:false,at:0,local:0,t:null,sure:null};
+const UI139=["sel","selText","selSfx","selLayer","tab","pick","rc","lastExport","lastDeliverable","busy","srv139"];
+const isSrv139=u=>{u=String(u||"");return u.startsWith("/media/")||u.startsWith(location.origin+"/media/")};
+function slots139(){const k=[];S.ed.clips.forEach(c=>{if(c.src&&c.src.k!=="job"&&c.src.k!=="demo")k.push("c_"+c.id)});(S.ed.layers||[]).forEach(l=>k.push("ly_"+l.id));
+  (S.ed.sfx||[]).forEach(x=>{if(x.n==="file")k.push("sx_"+x.id)});["edMusic","edVoice"].forEach(x=>k.push(x));return k.filter(x=>M[x])}
+async function doc139(upload){const ed=JSON.parse(JSON.stringify(S.ed));UI139.forEach(k=>delete ed[k]);const media={};let local=0;
+  for(const k of slots139()){const m=M[k];let url=m._srv139||(isSrv139(m.url)?m.url:"")||(m.el&&isSrv139(m.el.src)?m.el.src:"");
+    if(!url&&upload&&m.file instanceof Blob){try{url=(await API.upload(m.file,m.name||m.file.name||k)).url||"";if(url)m._srv139=url}catch(e){}}
+    if(url)media[k]={url:String(url).replace(location.origin,""),type:m.type,name:m.name||""};else{local++;media[k]={local:true,type:m.type,name:m.name||""}}}
+  // (a clip made here points at its result; its address goes along for a device that doesn't list that result)
+  ed.clips.forEach(c=>{if(c.src&&c.src.k==="job"){const j=S.jobs.find(x=>x.id===c.src.job),u=j&&mediaUrl(j);if(u)c.src.url139=String(u).replace(location.origin,"")}});
+  return{doc:{v:1,ed,look:JSON.parse(JSON.stringify(S.tools.edit||{})),media},local}}
+async function save139(auto){if(API.mode!=="server"||!S.user||PJ139.busy)return null;
+  if(!S.ed.clips.length&&!(S.ed.texts||[]).length){if(!auto)toast(L("Add a clip first.","أضف مقطعاً أولاً."),{type:"warn"});return null}
+  PJ139.busy=true;try{if(!S.ed.srv139)S.ed.srv139=(uid()+uid()).toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,14);
+    const{doc,local}=await doc139(!auto),key=JSON.stringify(doc);if(auto&&key===PJ139.key)return null;
+    const name=S.ed.title||PJ.name("edit"),r=await API.req("/v1/projects/"+S.ed.srv139,{method:"PUT",json:{name,doc}});
+    PJ139.key=key;PJ139.at=r.updated||Date.now();PJ139.local=local;PJ139.list=null;
+    if(!auto)toast(local?L("Saved to your account — "+local+" file(s) couldn't go up; they stay on this device.","حُفظ في حسابك — تعذّر رفع "+local+" ملف؛ بقيت على هذا الجهاز."):L("Saved to your account — open it on any device from Projects.","حُفظ في حسابك — افتحه من أي جهاز عبر المشاريع."),{type:local?"warn":"ok"});
+    return r}
+  catch(e){if(!auto)toast(L("Couldn't save: ","تعذّر الحفظ: ")+(S.lang==="ar"&&e.errorAr?e.errorAr:e.message),{type:"warn"});return null}
+  finally{PJ139.busy=false;draw139()}}
+function slotUrl139(k,x){const url=x.url;let m;
+  if(x.type==="video"){const v=document.createElement("video");v.crossOrigin="anonymous";v.muted=true;v.playsInline=true;v.setAttribute("playsinline","");v.preload="auto";v.loop=!/^c_/.test(k);v.src=url;mediaHost().appendChild(v);m={type:"video",el:v,url,name:x.name}}
+  else if(x.type==="audio"){const au=new Audio();au.crossOrigin="anonymous";au.src=url;au.loop=true;mediaHost().appendChild(au);m={type:"audio",el:au,url,name:x.name}}
+  else{const im=new Image();im.crossOrigin="anonymous";im.src=url;m={type:"image",el:im,url,name:x.name}}
+  m._srv139=url;M[k]=m;return m}
+async function open139(id){if(API.mode!=="server")return;
+  try{const r=await API.req("/v1/projects/"+id),d=r.doc||{};PJ.saveCurrent("edit");   // (the work open now stays in this device's projects)
+    Object.assign(S.ed,d.ed||{},{sel:null,selText:null,tab:"clip",srv139:id});if(d.look)S.tools.edit=d.look;
+    for(const[k,x]of Object.entries(d.media||{}))if(x&&x.url&&!x.local)slotUrl139(k,x);
+    S.ed.clips.forEach(c=>{if(c.src&&c.src.k==="job"&&!S.jobs.some(j=>j.id===c.src.job)&&c.src.url139){delete M["c_"+c.id];slotUrl139("c_"+c.id,{url:c.src.url139,type:/\.(png|jpe?g|webp|gif|avif)(\?|$)/i.test(c.src.url139)?"image":"video",name:""})}});
+    S.cur.edit=null;HIST.stack=[];HIST.i=-1;ED.t=0;try{edxInit()}catch(e){}PJ139.at=r.updated||0;try{PJ139.key=JSON.stringify((await doc139(false)).doc)}catch(e){}PJ139.local=Object.values(d.media||{}).filter(x=>x&&x.local).length;
+    persist();$("#modalRoot").innerHTML="";go("edit");renderAll();toast(L("Opened “","فُتح «")+r.name+L("”","»"),{type:"ok"})}
+  catch(e){toast(L("Couldn't open it: ","تعذّر فتحه: ")+(S.lang==="ar"&&e.errorAr?e.errorAr:e.message),{type:"warn"})}}
+const when139=t=>t?new Intl.DateTimeFormat(locale(),{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}).format(new Date(t)):"";
+function draw139(){const el=$("#pj139");if(!el)return;const list=PJ139.list,cur=S.ed.srv139;
+  const now=cur?'<p class="small" style="margin:0 0 10px">'+ic("check","width:15px;vertical-align:-3px")+" "+L("This edit is on your account","هذا المونتاج في حسابك")+(PJ139.at?" · "+L("saved ","حُفظ ")+when139(PJ139.at):"")+" — "+L("it keeps itself up to date.","ويُحدَّث تلقائياً.")+
+      (PJ139.local?" "+L(PJ139.local+" file(s) are only on this device — Save to put them on your account too.",PJ139.local+" ملف على هذا الجهاز فقط — احفظ لرفعها إلى حسابك أيضاً."):"")+"</p>":'<p class="small mute" style="margin:0 0 10px">'+L("This edit is only on this device. Save it to your account to open it anywhere.","هذا المونتاج على هذا الجهاز فقط. احفظه في حسابك لتفتحه من أي مكان.")+"</p>";
+  el.innerHTML=now+'<button class="btn primary" data-act="pj139-save"'+(PJ139.busy?" disabled":"")+">"+ic("check")+(PJ139.busy?L("Saving…","جارٍ الحفظ…"):L("Save to my account","احفظ في حسابي"))+"</button>"+
+    (list==null?'<p class="small mute">'+L("Loading…","جارٍ التحميل…")+"</p>":list.length?'<div class="pj139l">'+list.map(p=>'<div class="pj139i'+(p.id===cur?" on":"")+'"><div class="pj139t"><b dir="auto">'+esc(p.name)+"</b><small>"+mmss(p.dur||0)+" · "+(p.clips||0)+" "+L("clips","مقاطع")+" · "+when139(p.updated)+"</small></div>"+
+      (p.id===cur?'<span class="badge b-complete">'+L("Open now","مفتوح الآن")+"</span>":'<button class="btn sm" data-act="pj139-open" data-id="'+p.id+'">'+ic("folder")+L("Open","فتح")+"</button>")+
+      '<button class="btn sm ghost danger" data-act="pj139-del" data-id="'+p.id+'" aria-label="'+esc(L("Delete","حذف"))+'">'+(PJ139.sure===p.id?L("Delete?","حذف؟"):ic("trash"))+"</button></div>").join("")+"</div>":'<p class="small mute">'+L("No projects on your account yet.","لا مشاريع في حسابك بعد.")+"</p>")}
+async function sheet139(){if(API.mode!=="server"||!S.user){toast(L("Projects on your account need you signed in on the nooi server.","المشاريع في حسابك تحتاج تسجيل الدخول على خادم nooi."));return}
+  PJ139.sure=null;hfSheet(L("Projects","المشاريع"),'<div id="pj139"></div>');draw139();try{PJ139.list=(await API.req("/v1/projects")).projects||[]}catch(e){PJ139.list=[]}draw139()}
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act^="pj139"]');if(!a)return;const act=a.dataset.act;
+  if(act==="pj139"){sheet139();return}
+  if(act==="pj139-save"){await save139(false);try{PJ139.list=(await API.req("/v1/projects")).projects||[]}catch(e){}draw139();return}
+  if(act==="pj139-open"){open139(a.dataset.id);return}
+  if(act==="pj139-del"){const id=a.dataset.id;if(PJ139.sure!==id){PJ139.sure=id;draw139();return}PJ139.sure=null;
+    try{await API.req("/v1/projects/"+id,{method:"DELETE"});if(S.ed.srv139===id){delete S.ed.srv139;persist()}PJ139.list=(PJ139.list||[]).filter(p=>p.id!==id);toast(L("Project deleted","حُذف المشروع"),{type:"ok"})}
+    catch(err){toast(String(err.message||err),{type:"warn"})}draw139()}});
+// a project on the account keeps itself up to date (6 s after the last change)
+// (the page saves its state often for other reasons: one timer from the first change — not pushed back by each save — and nothing
+// is sent when the project itself didn't change)
+persist=(o=>function(){const r=o.apply(this,arguments);if(S.ed&&S.ed.srv139&&API.mode==="server"&&S.view==="edit"&&!PJ139.busy&&!R139.on&&!PJ139.t)PJ139.t=setTimeout(()=>{PJ139.t=null;save139(true)},6000);return r})(persist);
+// the Projects button beside Export video
+VIEWS.edit=(o=>function(){const h=o.apply(this,arguments);if(API.mode!=="server"||typeof h!=="string")return h;const i=h.indexOf('<button class="btn primary edout"');if(i<0||h.includes('data-act="pj139"'))return h;
+  return h.slice(0,i)+'<button class="btn pj139b" data-act="pj139" aria-haspopup="dialog" aria-label="'+esc(L("Projects","المشاريع"))+'">'+ic("folder")+"<span>"+L("Projects","المشاريع")+"</span></button>"+h.slice(i)})(VIEWS.edit);
+(()=>{const st=document.createElement("style");st.textContent=`.pj139l{display:grid;gap:8px;margin-top:14px}.pj139i{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:12px}.pj139i.on{border-color:var(--lime,#CFE13E)}
+.pj139t{flex:1;min-width:0;display:grid}.pj139t b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pj139t small{color:var(--mute,#888)}@media(max-width:560px){.pj139b span{display:none}}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

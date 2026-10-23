@@ -195,12 +195,12 @@ async def editor(b):
     out["hq"] = sz
     ok(sz[0] == [1920, sz[0][1], 0, 0, 0] and 1200 <= sz[0][1] < 1920 and sz[0][1] % 8 == 0 and sz[1][0] is not None and sz[1][1] is not None, f"{tag}: the export size follows the device (fast · medium drawing · slow drawing · slow screen · not yet measured) {sz}")
     await E("()=>{window.__hq=edHQ93;edHQ93=()=>1920}")
-    async with pg.expect_download(timeout=60000) as dl:
+    async with pg.expect_download(timeout=240000) as dl:   # (v139: drawn frame by frame — this test's procedural demo clip is slow to draw in a headless browser)
         await E("()=>edExport()")
     await dl.value; await pg.wait_for_timeout(300)
-    r = await E("()=>({cap:window.__cap,after:[document.getElementById('wk').width,document.getElementById('wk').height]})")
+    r = await E("()=>({cap:window.__cap,st:R139.stats&&[R139.stats.path,R139.stats.w,R139.stats.h],after:[document.getElementById('wk').width,document.getElementById('wk').height]})")
     out["export"] = r
-    ok(r["cap"] and r["cap"][0] == [1080, 1920], f"{tag}: the export records at 1080×1920 {r}")
+    ok((r["cap"] and r["cap"][0] == [1080, 1920]) or r["st"] == ["frames", 1080, 1920], f"{tag}: the export is made at 1080×1920 (recorded, or drawn frame by frame since v139) {r}")
     await pg.wait_for_timeout(400)
     ok(await E("()=>[document.getElementById('wk').width,document.getElementById('wk').height]") == [608, 1080], f"{tag}: the preview goes back to its light size after the export")
     await E("()=>{edHQ93=window.__hq}")
