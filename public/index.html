@@ -7977,13 +7977,13 @@ async function sceneSheet(){const H=S.hf;if(API.mode==="server"&&!SCN.items){try
 /* jobs sent from the box carry the scene, the 30 s plan and the parts split */
 let HF_PLAN=null;
 addJob=(o=>function(j){const H=S.hf;if(j&&HF_GRAB&&H.scene&&["image","video"].includes(j.kind))j.meta=Object.assign({},j.meta,{scene:H.scene});
-  if(j&&j.kind==="video"&&!(j.meta&&j.meta.parts)){const m=j.model==="auto"||!j.model?pickVideo(j.prompt||"").id:j.model,mx=engMax(m);if((j.dur||5)>mx){const n=Math.min(6,Math.ceil(j.dur/mx));j.meta=Object.assign({},j.meta,{parts:n,partSec:Math.ceil(j.dur/n)},HF_PLAN&&HF_PLAN.shots&&HF_PLAN.shots.length>=n?{shots:HF_PLAN.shots.slice(0,n),bible:HF_PLAN.bible||""}:{})}}
+  if(j&&j.kind==="video"&&!(j.meta&&j.meta.parts)){const m=j.model==="auto"||!j.model?pickVideo(j.prompt||"").id:j.model,mx=engMax(m);if((j.dur||5)>mx){const n=Math.max(1,durs133(m,j.dur).length);j.meta=Object.assign({},j.meta,{parts:n,partSec:Math.ceil(j.dur/n)},HF_PLAN&&HF_PLAN.shots&&HF_PLAN.shots.length>=n?{shots:HF_PLAN.shots.slice(0,n),bible:HF_PLAN.bible||""}:{})}}
   return o.apply(this,arguments)})(addJob);
 /* nooi Studio 2.0: before a long video the Director bot plans one shot per part (when the text AI is connected) */
 hfSend=(o=>async function(){const H=S.hf;HF_PLAN=null;const q=$("#hfq"),p=((q&&q.value)||H.prompt||"").trim();
   // the agents already planned the shots (v78c) → use their shots and continuity bible
   if(typeof AGP==="object"&&AGP.plan&&Array.isArray(AGP.plan.shots)&&AGP.plan.shots.length>1){HF_PLAN={shots:AGP.plan.shots,bible:AGP.plan.bible||""};try{return await o.apply(this,arguments)}finally{HF_PLAN=null}}
-  if(H.tab==="video"&&(nooiOn()||hfBotsOn())&&H.dur>(nooiOn()?10:engMax(H.vModel))&&p&&API.mode==="server"&&API.cfg&&API.cfg.llm){const n=Math.min(6,Math.ceil(H.dur/10));toast(L(BOT("director").name[0]+" the Director is planning "+n+" connected shots…",BOT("director").name[1]+" المخرج يخطط "+n+" لقطات متصلة…"),{type:"info",ms:3500});AI_BUSY=true;
+  if(H.tab==="video"&&(nooiOn()||hfBotsOn())&&H.dur>(nooiOn()?10:engMax(H.vModel))&&p&&API.mode==="server"&&API.cfg&&API.cfg.llm){const n=nooiOn()?((hfStudioP()||{}).n||durs133("auto",H.dur).length):durs133(H.vModel,H.dur).length;toast(L(BOT("director").name[0]+" the Director is planning "+n+" connected shots…",BOT("director").name[1]+" المخرج يخطط "+n+" لقطات متصلة…"),{type:"info",ms:3500});AI_BUSY=true;
     try{HF_PLAN=await Promise.race([API.req("/v1/llm/json",{json:{task:"nooi studio plan",tier:"quick",prompt:"You are the director of a "+H.dur+"-second video made of "+n+" consecutive shots of about "+Math.ceil(H.dur/n)+" seconds. Each shot continues exactly where the previous one ended (same characters, place, light and style). Idea: "+p+"\nReturn {\"bible\": \"one paragraph that fixes the world: place, time, light, palette, characters and their clothes, style\", \"shots\": [\""+n+" shot descriptions, one per shot, each a self-contained video prompt with camera move and action\"]}"}}),new Promise((_,r)=>setTimeout(()=>r(new Error("plan timeout")),25000))])}catch(e){HF_PLAN=null}finally{AI_BUSY=false}}
   try{return await o.apply(this,arguments)}finally{HF_PLAN=null}})(hfSend);
 /* result cards: scene badge, small play/pause instead of the big native overlay, live progress estimate */
@@ -8199,7 +8199,7 @@ function stuScore(m,cat){const p=Math.min(.99,(STU_Q[m]||.6)+((STU_B[cat]||{})[m
   const n=g+b,mean=(g+6*p)/(n+6);return{q:mean+.08/Math.sqrt(1+n),n}}
 /* nooi Studio 2.0 plan: hero shots (first, last, or a single shot of people/action/products) get the strongest model worth it;
    the shots in between get a lighter model that still fits — the result stays great and costs fewer credits */
-function hfStudio(prompt,dur){dur=+dur||5;const cat=hfCat(prompt),n=dur<=10?1:Math.min(6,Math.ceil(dur/10)),per=Math.ceil(dur/n);
+function hfStudio(prompt,dur){dur=+dur||5;const cat=hfCat(prompt),n=dur<=10?1:Math.min(16,Math.ceil(dur/(dur>60?15:10))),per=Math.ceil(dur/n);
   const cands=Object.keys(STU_Q).filter(m=>MODELS[m]&&!(M_ALIAS||{})[m]&&modelAllowed(m)&&engMax(m)>=per&&PRICE_TABLE.video[m]);if(!cands.length)return null;
   const pick=lam=>cands.map(m=>{const s=stuScore(m,cat);return{m,u:s.q-lam*PRICE_TABLE.video[m]/100}}).sort((a,b)=>b.u-a.u)[0].m;
   const heroOne=["people","action","product","vfx"].includes(cat),hero=pick(.05),light=pick(.8),shots=[];
@@ -15301,13 +15301,14 @@ const PART132={seedance:15,seedance20:15,seedance25:15,seedance2mini:15,kling30:
   kling:10,kling26:10,kling40:15,hailuo:10,hailuoh3:10,gemomni:10,grok:10,pixverse6:8,veo31:8,veo31f:8,ltx23:8,ltxfast:15,auto:15};
 const partMax132=m=>PART132[m]||PART132[(typeof M_ALIAS!=="undefined"&&M_ALIAS[m])||""]||10;
 const capDur132=()=>Math.min(120,lim().maxDur||5);
-const parts132=(m,d)=>{const n=Math.ceil((+d||5)/partMax132(m||"auto"));return n>1?Math.min(16,n):1};
+const parts132=(m,d)=>{const x=durs133(m||"auto",d);return x.length>1?x.length:1};   // (v133: the real shot lengths of each engine)
 const mmss132=s=>{s=Math.round(+s||0);return s>=60?Math.floor(s/60)+":"+String(s%60).padStart(2,"0"):s+L(" s"," ث")};
 const LEN132=[5,10,15,30,60,90,120];
 ENG_MAX.wan30=15;if(typeof MFEAT!=="undefined"&&MFEAT.wan30)MFEAT.wan30=["Sharp detail · sound sync · up to 15 s a shot","تفاصيل حادة · مزامنة صوت · حتى 15 ث للقطة"];   // (the engine's shot is 2–30 s; nooi asks for up to 15)
-function longNote132(m,d){const n=parts132(m,d);if(n<2)return"";const per=Math.round(d/n);
-  return L("A long video: "+n+" connected parts of about "+per+" s. The agents plan it first — the story, one shot per part, and the characters, place and light that never change; each part starts on the last frame of the one before, and you get one video.",
-    "فيديو طويل: "+n+" أجزاء متصلة، كل جزء نحو "+per+" ث. يخطط له الوكلاء أولاً — القصة ولقطة لكل جزء والشخصيات والمكان والإضاءة التي لا تتغير؛ كل جزء يبدأ من آخر إطار في الجزء الذي قبله، وتحصل على فيديو واحد.")}
+function longNote132(m,d){const x=durs133(m||"auto",d),n=x.length;if(n<2)return"";const tot=x.reduce((a,b)=>a+b,0),eq=x.every(v=>v===x[0]);
+  const lens=eq?L(" of "+x[0]+" s",", كل جزء "+x[0]+" ث"):" ("+x.join(" · ")+L(" s)"," ث)"),more=tot>+d?L(" — "+mmss132(tot)+" in all (the shot lengths this engine makes)"," — "+mmss132(tot)+" في المجموع (أطوال اللقطات التي يصنعها هذا المحرك)"):"";
+  return L("A long video: "+n+" connected parts"+lens+more+". The agents plan it first — the story, one shot per part, and the characters, place and light that never change; each part starts on the last clean frame of the one before, and the joins are matched — motion, colour and sound — into one video.",
+    "فيديو طويل: "+n+" أجزاء متصلة"+lens+more+". يخطط له الوكلاء أولاً — القصة ولقطة لكل جزء والشخصيات والمكان والإضاءة التي لا تتغير؛ كل جزء يبدأ من آخر إطار نقي في الجزء الذي قبله، وتُطابَق الوصلات — الحركة واللون والصوت — في فيديو واحد.")}
 // nooi Studio: the length chips (to the plan's longest), the slider to the same, what a long video is
 VIEWS.video=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string")return h;const d=S.draft,cap=capDur132();if(+d.dur>cap)d.dur=cap;
   h=h.replace(/(<input type="range" min="\d+" max=")\d+(" step="\d+" value="\d+" data-bind="draft\.dur")/,"$1"+cap+"$2");
@@ -15375,7 +15376,7 @@ function crewFilm132(run){const sh=pkgShots(run);if(!sh.length){toast(L("The age
   const models=use.map(([s])=>MODELS[s.model]?s.model:"seedance"),cost=use.reduce((a,[s,d],i)=>a+vcost(models[i],d),0);
   if(!crFree()&&S.credits<cost){upsell(L("The continuous film needs ","الفيلم المتصل يحتاج ")+cost+L(" credits."," رصيداً."),"pro");return}
   const title=(run.out.writer&&run.out.writer.title)||L("Film","فيلم"),j=addJob({kind:"video",prompt:use.map(([s])=>s.prompt).join(" "),title,model:models[0],dur:total,aspect:run.brief.aspect,cost,
-    meta:{crew:run.id,parts:use.length,partModels:models,shots:use.map(([s])=>s.prompt),bible:[cast,look].filter(Boolean).join(" · ").slice(0,900)}});
+    meta:{crew:run.id,parts:use.length,partModels:models,partDurs:use.map(([,d])=>d),shots:use.map(([s])=>s.prompt),bible:[cast,look].filter(Boolean).join(" · ").slice(0,900)}});
   if(j){S.lastVideo=j.id;persist();renderAll();toast(L("The film is being made as one continuous video — "+use.length+" connected parts.","يُصنع الفيلم كفيديو واحد متصل — "+use.length+" أجزاء."),{type:"ok"})}}
 if(VIEWS.crew)VIEWS.crew=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="string"||h.indexOf('data-act="crew-render"')<0)return h;
   const i=h.indexOf("</button>",h.indexOf('data-act="crew-render"'));return i<0?h:h.slice(0,i+9)+hTile(svg(ICONS.video),L("One continuous film","فيلم واحد متصل"),'data-act="crew-film132"')+h.slice(i+9)})(VIEWS.crew);
@@ -15388,6 +15389,30 @@ if(VIEWS.crew)VIEWS.crew=(o=>function(){const h=o.apply(this,arguments);if(typeo
 .ex132 textarea{width:100%;min-height:64px}
 `;document.head.appendChild(st)})();
 
+/* ================= v133: EVERY ENGINE FOR 1–2 MINUTES · JOINS THAT DON'T SHOW =================
+   Any engine (and a mix of them) makes a 1- or 2-minute video: each part is a length its own engine really makes (Veo 8 s,
+   MiniMax 6/10 s, Kling 2.6 5/10 s, Gemini Omni 4–10 s, the others up to 15 s) — the server says which (config shots133) and
+   plans the parts the same way (lib/long132.js planDurs133). The joins are matched on the server (lib/seam133.js): each part
+   starts on the last clean frame of the one before, repeated or still frames are left out, colour and sound carry on. */
+const SHOT133={veo:[8],veofast:[8],veo31:[8],veo31f:[8],ltx23:[8],kling:[5,10],kling26:[5,10],hailuo:[6,10],hailuoh3:[6,10],gemomni:[4,6,8,10],pixverse6:[1,2,3,4,5,6,7,8],grok:[6,7,8,9,10,11,12,13,14,15]};
+function shots133(m){const al=typeof M_ALIAS!=="undefined"&&M_ALIAS[m]||"",c=API.cfg&&API.cfg.shots133,a=c&&(c[m]||c[al]);if(Array.isArray(a)&&a.length)return a;
+  const f=SHOT133[m]||SHOT133[al];if(f)return f;const mx=partMax132(m),r=[];for(let d=3;d<=mx;d++)r.push(d);return r}
+// the length of every part (the server's planDurs133, line for line): as few parts as can be, as even as can be, each a length its engine makes
+function durs133(m,total,want,models){total=Math.min(120,Math.max(1,Math.round(+total||5)));const lensOf=i=>shots133((models&&models[i])||m||"auto"),mx=i=>Math.max(...lensOf(i)),mn=i=>Math.min(...lensOf(i));
+  let n=0,sum=0;while(n<16&&sum<total)sum+=mx(n++);n=Math.min(16,Math.max(n,Math.min(16,+want||0)));
+  const rest=i=>{let t=0;for(let j=i;j<n;j++)t+=mx(j);return t},out=[];let rem=total;
+  for(let i=0;i<n;i++){const A=lensOf(i),left=n-i;if(i===n-1){const f=A.find(x=>x>=rem);out.push(f!=null?f:A[A.length-1]);break}
+    const target=Math.max(mn(i),rem/left),need=rem-rest(i+1),pool=A.filter(x=>x>=need),P=pool.length?pool:[A[A.length-1]];
+    out.push(P.reduce((b,x)=>Math.abs(x-target)<Math.abs(b-target)||(Math.abs(x-target)===Math.abs(b-target)&&x>b)?x:b,P[0]));rem=Math.max(0,rem-out[i])}
+  return out.every((_,i)=>String(lensOf(i))===String(lensOf(0)))?out.sort((x,y)=>y-x):out}
+// what the server says about the joins, kept on the page's job
+API.req=(o=>async function(p){const r=await o.apply(this,arguments);try{const m=/^\/v1\/jobs\/([A-Za-z0-9_-]+)$/.exec(String(p));
+  if(m&&r&&r.id&&(r.seams133||r.join133)){const j=S.jobs.find(x=>x.remote===r.id);if(j){if(r.seams133)j.seams133=r.seams133;if(r.join133)j.join133=r.join133}}}catch(e){}return r})(API.req);
+previewCol=(o=>function(g){let h=o.apply(this,arguments);const s=g&&g.status==="complete"&&g.seams133;
+  if(s&&s.n)h=h.replace('<div class="pipe"','<p class="small mute sm133">'+ic("check","width:14px;height:14px")+"<span>"+esc(L(s.n+(s.n===1?" join":" joins")+" matched — each part starts on the last clean frame of the one before; motion, colour and sound carry on"+(s.fades?" ("+s.fades+" softened with a short dissolve)":"")+".",
+    "طوبقت "+s.n+" وصلات — كل جزء يبدأ من آخر إطار نقي في الجزء الذي قبله، وتستمر الحركة واللون والصوت"+(s.fades?" ("+s.fades+" نُعّمت بمزج قصير)":"")+"."))+"</span></p>"+'<div class="pipe"');
+  return h})(previewCol);
+(()=>{const st=document.createElement("style");st.textContent=".sm133{display:flex;align-items:flex-start;gap:6px;margin:6px 0 2px;font-size:12px;line-height:1.4}.sm133 svg{flex:none;color:var(--lime);margin-top:1px}";document.head.appendChild(st)})();
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
