@@ -22,7 +22,8 @@ def clip(name, dur, src):
 clip("lv1.mp4", 6, "mandelbrot=s=640x360:r=24"); clip("lv3.mp4", 5, "testsrc2=s=640x360:r=24")
 pj = lambda i, f, t, d: {"id": i, "kind": "video", "status": "done", "url": "/media/" + f, "created": 1, "doneAt": 2, "title": t, "cost": 0, "payload": {"kind": "video", "prompt": t, "dur": d, "aspect": "16:9", "model": "wan30"}}
 stu, loc = acct("studio", 90000, TOK["s"]), acct("studio", 90000, TOK["l"])
-stu["jobs"] = {"jl1": pj("jl1", "lv1.mp4", "a garden at night", 6), "jl3": pj("jl3", "lv3.mp4", "a test card", 5)}
+stu["jobs"] = {"jl1": pj("jl1", "lv1.mp4", "a garden at night", 6), "jl3": pj("jl3", "lv3.mp4", "a test card", 5),
+               "ji1": {"id": "ji1", "kind": "image", "status": "done", "url": "/media/pic1.png", "created": 1, "doneAt": 2, "title": "a man by a car", "cost": 0, "payload": {"kind": "image", "prompt": "a man by a car", "aspect": "16:9", "model": "nano"}}}
 loc["jobs"] = {"jv1": pj("jv1", "lv1.mp4", "a garden at night", 6)}
 # a film of 4 shots that came out with part 3 missing (the page's own account: staff, so making it again is free)
 PIC = f"http://localhost:{PORT}/media/pic1.png"
@@ -45,6 +46,15 @@ FF = lambda *a: subprocess.run(["ffmpeg", "-v", "error", "-y", *a], check=True)
 def fetch(u, out): open(out, "wb").write(urllib.request.urlopen(u, timeout=30).read()); return out
 def make(tid, model, inp):
     p = str(inp.get("prompt") or ""); out = DIR + "/" + tid
+    if re.match(r"elevenlabs/text-to-speech", model):
+        d = max(1.0, len(p) * 0.055); FF("-f", "lavfi", "-i", f"sine=frequency=190:duration={d:.2f}", "-af", "tremolo=f=5:d=0.7,volume=2", out + ".mp3"); return ".mp3"
+    if re.match(r"elevenlabs/sound-effect", model):
+        d = 6 if inp.get("loop") else 3; FF("-f", "lavfi", "-i", f"anoisesrc=d={d}:c=pink:a=0.35", out + ".mp3"); return ".mp3"
+    if model == "ai-music-api/generate":
+        FF("-f", "lavfi", "-i", "sine=frequency=262:duration=40", "-f", "lavfi", "-i", "sine=frequency=330:duration=40", "-filter_complex", "amix=inputs=2", out + ".mp3"); return ".mp3"
+    if re.match(r"bytedance/seedance-2", model) and inp.get("reference_video_urls"):   # an edit: the video it was sent, tinted red, as long as asked
+        v = fetch(inp["reference_video_urls"][0], out + "-ref.mp4"); d = int(inp.get("duration") or 5)
+        FF("-i", v, "-an", "-vf", f"colorchannelmixer=rr=1:gg=0.35:bb=0.35,tpad=stop_mode=clone:stop_duration=15,trim=duration={d},setpts=PTS-STARTPTS", "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18", "-pix_fmt", "yuv420p", out + ".mp4"); return ".mp4"
     if re.match(r"nano-banana", model):   # the first picture of a shot: the picture given (or the scene), with the shot's number in its colour
         m = re.search(r"shot (\d+) of", p); k = int(m.group(1)) if m else 1
         src = fetch((inp.get("image_input") or [None])[0], out + "-in.png") if inp.get("image_input") else DIR + "/scene.png"
@@ -75,7 +85,20 @@ class H(BaseHTTPRequestHandler):
     def do_POST(self):
         n = int(self.headers.get("content-length") or 0); j = json.loads(self.rfile.read(n) or b"{}"); u = urllib.parse.urlparse(self.path)
         if u.path.endswith("credit"): return self.send({"code": 200, "data": 5})
-        if u.path == "/v1/messages": return self.send({"content": [{"type": "text", "text": "{}"}]})
+        if u.path == "/v1/messages":
+            c = (j.get("messages") or [{}])[0].get("content"); parts = c if isinstance(c, list) else [{"type": "text", "text": str(c or "")}]
+            text = " ".join(x.get("text", "") for x in parts if x.get("type") == "text"); imgs = len([x for x in parts if x.get("type") == "image"])
+            with LOCK: st.setdefault("llm", []).append({"text": text[:300], "images": imgs})
+            if "Image 1 is the reference of a scene" in text: return self.send({"content": [{"type": "text", "text": json.dumps({"score": 90, "same": True, "differences": []})}]})
+            if "nooi's analysis team" in text:
+                return self.send({"content": [{"type": "text", "text": json.dumps({"scene": "A garden at night with a man walking past a parked car.", "items": [
+                    {"kind": "person", "name": "the man in the red coat", "en": "a man in a red coat walking slowly", "frames": [0, 1], "best": 0, "box": [0.3, 0.2, 0.3, 0.6]},
+                    {"kind": "vehicle", "name": "the white car", "en": "a white car parked on the right", "frames": [2, 3], "best": 2, "box": [0.6, 0.5, 0.3, 0.3]}],
+                    "sounds": [{"id": "s1", "kind": "music", "name": "a steady tone, like music"}]})}]})
+            if "continuity supervisor. The pictures come in pairs" in text:
+                n = len(re.findall(r"\n\d+\. ", text)) or 1
+                return self.send({"content": [{"type": "text", "text": json.dumps({"checks": [{"n": i + 1, "done": True, "other": False, "note": "Changed, nothing else moved"} for i in range(n)]})}]})
+            return self.send({"content": [{"type": "text", "text": "{}"}]})
         with LOCK: tid = "t%d" % (len(st["reqs"]) + 1); st["reqs"].append({"path": u.path, "body": j, "tid": tid, "t": time.time()})
         def work():
             try: EXT[tid] = make(tid, j.get("model", ""), j.get("input") or {})
@@ -165,6 +188,42 @@ def server_side():
     out["merge"] = {"status": r.get("status"), "m": r.get("merge135"), "seams": r.get("seams133"), "big": big[:12], "file": info(mfile(r["url"])) if r.get("url") else None}
     chk("Merge of two different shots: one clean cut at one frame — no dissolve, no frames of one picture over the other", r.get("status") == "done" and (r.get("merge135") or {}).get("fades") == 0
         and (r.get("merge135") or {}).get("cuts") == 1 and len(big) == 1, out["merge"])
+    # ---- Replace things: what is in a video (the analysis agents), its sounds (measured), the price first, then only the seconds it is seen in made again
+    s = api("/v1/scan136", {"job": "jl1", "lang": "en"})
+    out["scan"] = {k: s.get(k) for k in ("kind", "dur", "by", "scene", "canHear", "hearPrice")}; out["scan"]["items"] = [(i.get("id"), i.get("kind"), i.get("name"), i.get("seen"), bool(i.get("thumb"))) for i in s.get("items") or []]
+    out["scan"]["sounds"] = [(x.get("id"), x.get("kind"), x.get("from"), x.get("to")) for x in s.get("sounds") or []]
+    thumbs = [i.get("thumb") for i in s.get("items") or []]; tok = all(t and os.path.exists(mfile(t)) for t in thumbs)
+    chk("Replace things — the analysis: the agents list what is in the video (a person, a vehicle) with where and when each is seen and a small picture of it; its sound measured (a steady tone → music)",
+        s.get("by") == "agents" and [i[1] for i in out["scan"]["items"]] == ["person", "vehicle"] and out["scan"]["items"][0][3] and tok and out["scan"]["sounds"] and out["scan"]["sounds"][0][1] == "music", out["scan"])
+    s2 = api("/v1/scan136", {"job": "jl1", "lang": "en"}); h = api("/v1/scan136", {"job": "jl1", "lang": "en", "hear": True})
+    chk("…made once and kept (asked again: the same list, the agents not asked again); hearing the words without speech-to-text connected: said, nothing charged", s2.get("items") == s.get("items") and len([x for x in stats().get("llm", []) if "analysis team" in x["text"]]) == 1 and h.get("_status") == 501 and s.get("canHear") is False, {"h": h, "llm": len(stats().get("llm", []))})
+    ch = [{"id": "i1", "to": "a woman in a blue dress"}, {"id": "s1", "to": "soft rain"}]
+    q = api("/v1/replace136/quote", {"job": "jl1", "lang": "en", "changes": ch}); out["rq"] = q
+    chk("…the price first: the seconds the person is seen in, and the new sound", q.get("total", 0) > 0 and q.get("visual", 0) > 0 and q.get("sound", 0) > 0 and q.get("total") == q.get("visual") + q.get("sound") and q.get("ready") and q.get("secs", 0) >= 4 and q.get("to", 9) <= 4.5, q)
+    n0 = len(stats()["reqs"]); w0 = wallet()
+    j = api("/v1/jobs", {"kind": "video", "prompt": "the man → a woman; music → rain", "meta": {"replace136": {"job": "jl1", "lang": "en", "changes": ch}}}); r = waitjob(j.get("id", "x"), 240); w1 = wallet()
+    rq = stats()["reqs"][n0:]; ed = [x for x in rq if str(model(x)).startswith("bytedance/seedance-2") and inp(x).get("reference_video_urls")]; mu = [x for x in rq if model(x) == "ai-music-api/generate"]
+    f = mfile(r["url"]) if r.get("url") else None
+    def rgb(t):
+        b = subprocess.run(["ffmpeg", "-v", "error", "-ss", str(t), "-i", f, "-frames:v", "1", "-vf", "scale=32:18,format=rgb24", "-f", "rawvideo", "-"], capture_output=True).stdout; n = max(1, len(b) // 3); return [round(sum(b[i::3]) / n, 1) for i in range(3)]
+    out["replace"] = {"status": r.get("status"), "error": r.get("error"), "stages": r.get("_stages"), "rp": r.get("replace136"), "edits": [inp(x).get("prompt", "")[:260] for x in ed], "music": [inp(x).get("prompt", "")[:60] for x in mu],
+                      "file": info(f) if f else None, "early": rgb(1.0) if f else None, "late": rgb(5.5) if f else None, "paid": [w0 - w1, q.get("total"), r.get("cost")]}
+    e0 = out["replace"]["edits"][0] if out["replace"]["edits"] else ""
+    chk("…made: the seconds the person is seen in go to the edit engine with the list in words (what it is, where, what replaces it, everything else kept); the rest of the video is as it was; the new sound laid in; charged the price shown",
+        r.get("status") == "done" and len(ed) == 1 and e0.startswith("Edit @Video1 — change only these things:") and "a man in a red coat walking slowly" in e0 and "a woman in a blue dress" in e0 and len(mu) == 1 and "soft rain" in out["replace"]["music"][0]
+        and out["replace"]["file"] and 5.6 <= out["replace"]["file"]["dur"] <= 6.3 and out["replace"]["file"]["kinds"] == ["video", "audio"] and out["replace"]["early"][0] > 1.6 * max(1, out["replace"]["early"][1]) and not (out["replace"]["late"][0] > 1.6 * max(1, out["replace"]["late"][1]))
+        and w0 - w1 == q.get("total") and r.get("cost") == q.get("total"), out["replace"])
+    rp = r.get("replace136") or {}
+    chk("…afterwards the card says what was changed, each checked by the Continuity supervisor (before and after)", [x.get("what") for x in rp.get("list") or []] == ["replaced", "replaced"] and (rp.get("checks") or [{}])[0].get("done") is True and "Changed" in ((rp.get("checks") or [{}])[0].get("note") or ""), rp)
+    # a picture: removed with the picture engine, the same words
+    n1 = len(stats()["reqs"])
+    pj2 = api("/v1/jobs", {"kind": "image", "prompt": "remove the car", "meta": {"replace136": {"job": "ji1", "lang": "en", "changes": [{"id": "i2", "remove": True}]}}}); r2 = waitjob(pj2.get("id", "x"), 180)
+    im = [x for x in stats()["reqs"][n1:] if re.match(r"nano-banana", str(model(x)))]
+    out["pic"] = {"status": r2.get("status"), "error": r2.get("error"), "kind": r2.get("kind"), "url": r2.get("url"), "prompt": inp(im[0]).get("prompt", "")[:240] if im else None, "inputs": len(inp(im[0]).get("image_input") or []) if im else 0, "cost": r2.get("cost")}
+    chk("Replace things in a picture: the picture engine gets the picture and the change in words (remove the white car, the place behind it filled in, everything else kept)", r2.get("status") == "done" and r2.get("kind") == "image" and len(im) == 1
+        and out["pic"]["prompt"].startswith("Edit this picture (picture 1) — change only these things:") and "Remove a white car parked on the right" in out["pic"]["prompt"] and out["pic"]["inputs"] == 1 and r2.get("cost", 0) > 0, out["pic"])
+    bad = api("/v1/replace136/quote", {"job": "jl1", "changes": []}); other = api("/v1/scan136", {"job": "jf"})
+    chk("…nothing picked: said; another account's video: refused", bad.get("_status") == 400 and other.get("_status") == 400, [bad, other])
 
 async def phone(b):
     ctx = await b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True); pg = await ctx.new_page(); errs = []
@@ -222,6 +281,21 @@ async def phone(b):
     out["again"] = {"card": c, "after": st1, "status": r.get("status"), "partial": r.get("partial136"), "file": info(mfile(r["url"])) if r.get("url") else None}
     chk("a film with a part missing: the card names the missing part and offers 'Make part 3 again' (free for staff: no price shown)", c["note"] and "Part 3 of 4 couldn't be made" in c["note"] and "Make part 3 again" in c["note"] and c["btn"] and not c["price"], c)
     chk("…tapped: the film is being made again on the card, then comes back whole (4 parts: three of 6 s and the new one of 5 s, about 23 s)", st1 == ["rendering", "again"] and r.get("status") == "done" and not r.get("partial136") and out["again"]["file"] and 21.5 <= out["again"]["file"]["dur"] <= 23.2, out["again"])
+    # Replace things… on the page: the sheet lists what is in the video, the change in words, the price, Make
+    await E("()=>{const j=S.jobs.find(x=>x.remote==='jv1');rpSheet136(j)}")
+    await pg.wait_for_function("document.querySelectorAll('#rp136 .rp136i').length>=3", timeout=60000)
+    sh = await E("()=>({heads:[...document.querySelectorAll('#rp136 .rp136h')].map(h=>h.textContent.trim()),names:[...document.querySelectorAll('#rp136 .rp136i b')].map(b=>b.textContent),thumbs:document.querySelectorAll('#rp136 img.rp136t').length,go:document.querySelector('[data-act=\"rp136-go\"]').disabled})")
+    await pg.locator('#rp136 [data-act="rp136-mode"][data-id="i1"][data-v="change"]').click(); await pg.wait_for_timeout(200)
+    await pg.locator('#rp136 [data-rp136to="i1"]').fill("a woman in a blue dress"); await pg.wait_for_timeout(1200)
+    sm = await E("()=>({sum:[...document.querySelectorAll('#rp136s li')].map(x=>x.textContent),cost:(document.getElementById('rp136c')||{}).textContent,go:document.querySelector('[data-act=\"rp136-go\"]').disabled,n:(document.getElementById('rp136n')||{}).textContent})")
+    n0 = await E("()=>S.jobs.length")
+    if not sm["go"]: await pg.locator('[data-act="rp136-go"]').click(); await pg.wait_for_timeout(1500)
+    mk = await E("()=>{const j=S.jobs[S.jobs.length-1];return{n:S.jobs.length,meta:j&&j.meta&&j.meta.replace136,remote:j&&j.remote||null,sheet:!!document.getElementById('rp136')}}")
+    rr = waitjob(mk["remote"], 240, tok="l") if mk.get("remote") else {}
+    out["sheet"] = {"sheet": sh, "summary": sm, "made": mk, "status": rr.get("status"), "error": rr.get("error")}
+    chk("Replace things… on the page: the people, vehicles and sounds in the video, each with a small picture; nothing picked → Make is off", sh["heads"][:2] == ["People 1", "Vehicles 1"] and any(h.startswith("Sounds") for h in sh["heads"]) and sh["thumbs"] >= 2 and sh["go"], sh)
+    chk("…'Change' and the words: 'What changes' says it in a numbered list, the price, Make; Make sends the change and the video comes back changed", sm["sum"] == ["the man in the red coat → a woman in a blue dress"] and not sm["go"] and sm["cost"] not in ("…", "—")
+        and mk["n"] == n0 + 1 and (mk["meta"] or {}).get("changes") == [{"id": "i1", "to": "a woman in a blue dress"}] and not mk["sheet"] and rr.get("status") == "done", out["sheet"])
     chk("phone: no page errors", not errs, errs[:3]); await ctx.close()
 
 async def main():
@@ -234,7 +308,7 @@ async def main():
 env = {k: v for k, v in os.environ.items() if not k.startswith(("LLM_", "ANTHROPIC_", "NVIDIA_", "ELEVENLABS_", "OPENAI_", "KIE_", "FAL_", "GOOGLE_", "DASHSCOPE_", "FIREBASE_", "LOCAL_LLM", "GEMMA_", "FREE_PERIOD", "NOOI_STAGE", "SWAP_ENGINE", "WAN_"))}
 mk = subprocess.Popen([sys.executable, D + "/mock.py", str(KPORT), D + "/eng"], stdout=subprocess.DEVNULL, stderr=open(D + "/mock.log", "w"))
 srv = subprocess.Popen(["node", ROOT + "/server.js"], cwd=D, env=dict(env, PORT=str(PORT), SECRET_KEY="v" * 40, FIREBASE_PROJECT_ID="", PUBLIC_BASE_URL=f"http://localhost:{PORT}", AGENTS_AUTO_LEARN="false", RECOVER_MS="1500", PART_AGAIN_MS="400",
-    ENGINE134_POLL_MS="300", KIE_API_KEY="kk", KIE_BASE_URL=f"http://localhost:{KPORT}", MIRROR_MEDIA="true", FREE_PERIOD="false"), stdout=open(D + "/srv.log", "w"), stderr=subprocess.STDOUT)
+    ENGINE134_POLL_MS="300", KIE_API_KEY="kk", KIE_BASE_URL=f"http://localhost:{KPORT}", LLM_BASE_URL=f"http://localhost:{KPORT}", LLM_API_KEY="llm", LLM_MODEL="mock", MIRROR_MEDIA="true", FREE_PERIOD="false"), stdout=open(D + "/srv.log", "w"), stderr=subprocess.STDOUT)
 try:
     for _ in range(100):
         try: urllib.request.urlopen(f"http://localhost:{PORT}/v1/config", timeout=2); break

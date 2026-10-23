@@ -16018,6 +16018,109 @@ previewCol=(o=>function(g){const h=o.apply(this,arguments);return g&&g.extCut136
 #main .cz98 .opt93{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
 [dir="rtl"] #main .cz98 .opt93{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 28px),transparent)}
 `;document.head.appendChild(st)})();
+// ---- 5. Replace things: what is in a video or a picture, listed by the analysis agents; pick what changes and to what; the price first
+const RP136={j:null,scan:null,ch:{},pics:{},q:null,qt:0,busy:false,clip:null};
+const RPK136={person:["person","People","الأشخاص","users"],animal:["animal","Animals","الحيوانات","spark"],vehicle:["vehicle","Vehicles","المركبات","video"],building:["building","Buildings","المباني","home"],object:["object","Objects","الأشياء","grid"],place:["place","Places","الأماكن","globe"],text:["text","Writing","الكتابة","edit"]};
+const RPS136={speech:["Speech","كلام","voice"],music:["Music","موسيقى","music"],ambience:["Background sound","صوت المكان","wave"],effect:["A sound","مؤثر صوتي","speaker"]};
+const RPV136=[["woman","A woman","امرأة"],["man","A man","رجل"],["young_woman","A young woman","شابة"],["young_man","A young man","شاب"],["old_woman","An older woman","امرأة مسنّة"],["old_man","An older man","رجل مسنّ"]];
+const mmss136=t=>{t=Math.max(0,+t||0);return Math.floor(t/60)+":"+String(Math.floor(t%60)).padStart(2,"0")};
+const rpImg136=j=>j&&["image","look","sheet"].includes(j.kind);
+function rpSheet136(j,o){if(!j)return;if(API.mode!=="server"||!j.remote){toast(L("Replace things works on your saved videos and pictures once you're signed in.","استبدال الأشياء يعمل على فيديوهاتك وصورك المحفوظة بعد تسجيل الدخول."));return}
+  Object.assign(RP136,{j,scan:null,ch:{},pics:{},q:null,busy:true,clip:(o&&o.clip)||null});
+  hfSheet(L("Replace things","استبدال الأشياء"),'<div class="rp136" id="rp136"><p class="rp136w">'+STARS()+"<span>"+esc(L("The analysis agents are looking at it — the people, animals, vehicles, buildings, things and writing in it"+(rpImg136(j)?"":", and its sounds")+"…","وكلاء التحليل ينظرون إليه — الأشخاص والحيوانات والمركبات والمباني والأشياء والكتابة"+(rpImg136(j)?"":"، وأصواته")+"…"))+"</span></p></div>");
+  rpScan136(false)}
+async function rpScan136(hear){const j=RP136.j;try{const r=await API.req("/v1/scan136",{json:{job:j.remote,lang:S.lang,...(hear?{hear:true}:{})}});if(RP136.j!==j)return;RP136.scan=r;RP136.busy=false;if(hear&&typeof loadMe==="function")loadMe();rpPaint136()}
+  catch(e){RP136.busy=false;const b=$("#rp136");if(b)b.innerHTML='<p class="small">'+esc(S.lang==="ar"&&e.errorAr?e.errorAr:String(e.message||e))+"</p>"}}
+function rpRow136(it,snd){const c=RP136.ch[it.id]||{mode:"keep"},m=c.mode,seg=["keep","change","remove"].map(v=>'<button type="button" data-act="rp136-mode" data-id="'+esc(it.id)+'" data-v="'+v+'" aria-pressed="'+(m===v)+'">'+esc(v==="keep"?L("Keep","أبقِ"):v==="change"?(snd&&it.kind==="speech"?L("New voice","صوت جديد"):L("Change","غيّر")):L("Remove","أزِل"))+"</button>").join("");
+  const when=snd?mmss136(it.from)+"–"+mmss136(it.to):(it.seen&&it.seen.length&&RP136.scan.kind==="video"?it.seen.map(s=>mmss136(s[0])+"–"+mmss136(s[1])).join(", "):""),sub=[snd?L(RPS136[it.kind][0],RPS136[it.kind][1]):it.where,when].filter(Boolean).join(" · ");
+  const pic=snd?'<span class="rp136t ic">'+ic(RPS136[it.kind][2])+"</span>":it.thumb?'<img class="rp136t" src="'+esc(it.thumb)+'" alt="">':'<span class="rp136t ic">'+ic(RPK136[it.kind][3])+"</span>";
+  let more="";
+  if(m==="change"&&snd&&it.kind==="speech")more='<textarea class="rp136in" rows="2" dir="auto" data-rp136say="'+esc(it.id)+'" placeholder="'+esc(L("What the new voice says","ما يقوله الصوت الجديد"))+'">'+esc(c.say!=null?c.say:it.text||"")+'</textarea><select class="rp136in" data-rp136voice="'+esc(it.id)+'" aria-label="'+esc(L("Voice","الصوت"))+'">'+RPV136.map(v=>'<option value="'+v[0]+'"'+((c.voice||"woman")===v[0]?" selected":"")+">"+esc(L(v[1],v[2]))+"</option>").join("")+"</select>";
+  else if(m==="change"&&snd)more='<input class="rp136in" dir="auto" data-rp136to="'+esc(it.id)+'" value="'+esc(c.to||"")+'" placeholder="'+esc(it.kind==="music"?L("What music instead? e.g. soft piano","أي موسيقى بدلاً منها؟ مثلاً بيانو هادئ"):L("What sound instead? e.g. rain on the street","أي صوت بدلاً منه؟ مثلاً مطر على الشارع"))+'">';
+  else if(m==="change"){const cs=(S.chars||[]).filter(x=>x&&x.name).slice(-12),p=RP136.pics[it.id];
+    more='<input class="rp136in" dir="auto" data-rp136to="'+esc(it.id)+'" value="'+esc(c.to||"")+'" placeholder="'+esc(L("What instead? e.g. a man in a blue suit, a red sports car","ماذا بدلاً منه؟ مثلاً رجل ببدلة زرقاء، سيارة رياضية حمراء"))+'"><div class="rp136x">'+
+      '<label class="btn sm">'+(p&&p.url?'<img src="'+esc(p.url)+'" alt="">':ic("image"))+esc(p&&p.busy?L("Uploading…","يُرفع…"):p&&p.url?L("Picture","الصورة"):L("From a picture","من صورة"))+'<input type="file" accept="image/*" data-rp136pic="'+esc(it.id)+'"></label>'+
+      (it.kind==="person"&&cs.length?'<select class="rp136in sm" data-rp136char="'+esc(it.id)+'" aria-label="'+esc(L("One of your characters","إحدى شخصياتك"))+'"><option value="">'+esc(L("One of your characters…","إحدى شخصياتك…"))+"</option>"+cs.map(x=>'<option value="'+esc(x.id)+'"'+(c.char===x.id?" selected":"")+">"+esc(x.name)+"</option>").join("")+"</select>":"")+"</div>"}
+  return'<div class="rp136i'+(m!=="keep"?" on":"")+'" data-rp136="'+esc(it.id)+'">'+pic+'<div class="rp136m"><b dir="auto">'+esc(it.name||(snd?L(RPS136[it.kind][0],RPS136[it.kind][1]):""))+"</b>"+(sub?'<small dir="auto">'+esc(sub)+"</small>":"")+(snd&&it.text&&m==="keep"?'<small class="rp136q" dir="auto">“'+esc(it.text.slice(0,140))+"”</small>":"")+'<div class="seg rp136seg">'+seg+"</div>"+more+"</div></div>"}
+function rpPaint136(){const b=$("#rp136"),s=RP136.scan;if(!b||!s)return;const sc=b.scrollTop;
+  const groups=Object.keys(RPK136).map(k=>[k,(s.items||[]).filter(i=>i.kind===k)]).filter(g=>g[1].length),snd=s.kind==="video"?(s.sounds||[]):[],speech=snd.some(x=>x.kind==="speech");
+  let h=(s.scene?'<p class="small mute rp136sc" dir="auto">'+esc(s.scene)+"</p>":"")+(s.by==="basic"?'<p class="small mute">'+esc(L("A short list from the words it was made from — with the vision AI connected the agents list everything they see.","قائمة قصيرة من الكلمات التي صُنع منها — عند ربط الذكاء البصري يسرد الوكلاء كل ما يرونه."))+"</p>":"");
+  h+=groups.map(([k,its])=>'<h3 class="rp136h">'+ic(RPK136[k][3])+esc(L(RPK136[k][1],RPK136[k][2]))+' <span class="mute">'+its.length+"</span></h3>"+its.map(i=>rpRow136(i,false)).join("")).join("");
+  if(!groups.length)h+='<p class="small mute">'+esc(L("Nothing to list in it.","لا شيء يُسرد فيه."))+"</p>";
+  if(snd.length)h+='<h3 class="rp136h">'+ic("voice")+esc(L("Sounds","الأصوات"))+' <span class="mute">'+snd.length+"</span></h3>"+(speech&&!s.heard&&s.canHear?'<button type="button" class="btn sm rp136hear" data-act="rp136-hear">'+ic("voice")+esc(L("Hear what is said","اسمع ما يُقال"))+(s.hearPrice&&!crFree()?'<span class="cost">'+s.hearPrice+"</span>":"")+"</button>":"")+snd.map(x=>rpRow136(x,true)).join("");
+  h+='<div class="rp136sum" id="rp136s"></div><p class="small mute" id="rp136n"></p><div class="row" style="justify-content:flex-end;margin-top:8px"><button type="button" class="btn primary" data-act="rp136-go" disabled>'+ic("wand")+esc(L("Make","اصنع"))+'<span class="cost" id="rp136c">…</span></button></div>';
+  b.innerHTML=h;b.scrollTop=sc;rpSum136()}
+// the changes, as the server takes them
+function rpChanges136(){const s=RP136.scan,out=[];if(!s)return out;
+  for(const [id,c] of Object.entries(RP136.ch)){if(!c||c.mode==="keep")continue;const snd=id[0]==="s",p=RP136.pics[id],ch=c.char&&(S.chars||[]).find(x=>x.id===c.char);
+    const x={id};if(c.mode==="remove")x.remove=true;else{if(c.to)x.to=c.to;if(p&&p.url)x.pic=String(p.url).replace(location.origin,"");if(ch)x.char={name:ch.name,look:[ch.look,ch.outfit].filter(Boolean).join(", ")};
+      if(snd){const it=(s.sounds||[]).find(y=>y.id===id);if(it&&it.kind==="speech"){x.say=c.say!=null?c.say:it.text||"";x.voice=c.voice||"woman"}}}
+    if(x.remove||x.to||x.pic||x.char||x.say)out.push(x)}return out}
+// "What changes", in words, numbered
+function rpSum136(){const el=$("#rp136s"),s=RP136.scan;if(!el||!s)return;const list=rpChanges136(),find=id=>(s.items||[]).find(i=>i.id===id)||(s.sounds||[]).find(i=>i.id===id);
+  const li=list.map(x=>{const it=find(x.id)||{},snd=x.id[0]==="s",nm=it.name||(snd?L(RPS136[it.kind][0],RPS136[it.kind][1]):""),t=snd?" ("+mmss136(it.from)+"–"+mmss136(it.to)+")":"";
+    if(x.remove)return L("Remove: ","إزالة: ")+nm+t;
+    if(snd&&it.kind==="speech")return L("New voice","صوت جديد")+t+": “"+(x.say||"").slice(0,80)+"” — "+L(RPV136.find(v=>v[0]===x.voice)[1],RPV136.find(v=>v[0]===x.voice)[2]);
+    return nm+t+" → "+(x.char?x.char.name:x.to||"")+(x.pic?L(" (from your picture)"," (من صورتك)"):"")});
+  el.innerHTML=li.length?'<h3 class="rp136h">'+ic("check")+esc(L("What changes","ما الذي يتغير"))+'</h3><ol dir="auto">'+li.map(x=>"<li>"+esc(x)+"</li>").join("")+'</ol><p class="small mute">'+esc(L("Everything else stays exactly as it was"+(s.kind==="video"?" — only the seconds they are seen in are made again, and the video keeps its own sound unless you change it.":"."),"يبقى كل شيء آخر كما هو"+(s.kind==="video"?" — تُعاد صناعة الثواني التي تظهر فيها فقط، ويبقى صوت الفيديو ما لم تغيّره.":".")))+"</p>":"";
+  clearTimeout(RP136.qt);const g=document.querySelector('#modalRoot [data-act="rp136-go"]');if(g)g.disabled=true;const c=$("#rp136c");
+  if(!list.length){if(c)c.textContent="—";const n=$("#rp136n");if(n)n.textContent=L("Pick what changes: Change or Remove next to it.","اختر ما يتغير: «غيّر» أو «أزِل» بجانبه.");return}
+  if(c)c.textContent="…";RP136.qt=setTimeout(rpQuote136,350)}
+async function rpQuote136(){const j=RP136.j,list=rpChanges136();if(!j||!list.length)return;
+  try{const q=await API.req("/v1/replace136/quote",{json:{job:j.remote,lang:S.lang,changes:list}});if(RP136.j!==j)return;RP136.q=q;const c=$("#rp136c"),n=$("#rp136n"),g=document.querySelector('#modalRoot [data-act="rp136-go"]');
+    if(c)c.textContent=crFree()?"0":q.total;if(g)g.disabled=!q.ready;
+    if(n)n.textContent=!q.ready?L("Replace things isn't available right now.","استبدال الأشياء غير متاح الآن."):q.secs?L("The seconds "+mmss136(q.from)+"–"+mmss136(q.to)+" are made again ("+q.secs+" s)"+(q.sounds?", and the sounds you changed":"")+".","تُعاد صناعة الثواني "+mmss136(q.from)+"–"+mmss136(q.to)+" ("+q.secs+" ث)"+(q.sounds?"، والأصوات التي غيّرتها":"")+"."):""}
+  catch(e){const n=$("#rp136n");if(n)n.textContent=S.lang==="ar"&&e.errorAr?e.errorAr:String(e.message||e)}}
+async function rpGo136(){const j=RP136.j,q=RP136.q,list=rpChanges136();if(!j||!list.length)return;if(!q){toast(L("Working out the price — one moment.","يُحسب السعر — لحظة."));return}if(!q.ready)return;
+  if(Object.values(RP136.pics).some(p=>p&&p.busy)){toast(L("A picture is still uploading — one moment.","ما زالت صورة تُرفع — لحظة."));return}
+  if(!crFree()&&S.credits<q.total){toast(L("Not enough credits for this.","الرصيد لا يكفي لهذه العملية."));return}
+  const img=rpImg136(j),words=[...document.querySelectorAll("#rp136s li")].map(x=>x.textContent).join(". ");
+  const n=addJob({kind:img?"image":"video",prompt:words,title:L("Replaced: ","مستبدل: ")+String(j.title||j.prompt||"").slice(0,60),model:j.model,...(img?{}:{dur:+j.dur||5}),aspect:j.aspect||undefined,cost:q.total,meta:{replace136:{job:j.remote,lang:S.lang,changes:list},noPhysics:true}});
+  $("#modalRoot").innerHTML="";if(!n)return;if(RP136.clip&&typeof EDED135==="object")EDED135[n.id]=RP136.clip;if(!img)S.lastVideo=n.id;persist();renderAll();
+  toast(L("Replacing — everything else stays as it was.","يجري الاستبدال — يبقى كل شيء آخر كما هو."),{type:"ok"})}
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act^="rp136"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const act=a.dataset.act;
+  if(act==="rp136")return void rpSheet136(S.jobs.find(x=>x.id===a.dataset.id));
+  if(act==="rp136-mode"){const id=a.dataset.id,c=RP136.ch[id]||(RP136.ch[id]={});c.mode=a.dataset.v;rpPaint136();const f=document.querySelector('#rp136 [data-rp136="'+id+'"] .rp136in');if(f&&c.mode==="change"&&!f.value)f.focus();return}
+  if(act==="rp136-hear"){a.disabled=true;a.innerHTML=STARS()+esc(L("Listening…","يستمع…"));rpScan136(true);return}
+  if(act==="rp136-go")return void rpGo136()},true);
+document.addEventListener("input",e=>{const t=e.target;if(!t.dataset)return;const id=t.dataset.rp136to||t.dataset.rp136say;if(!id)return;const c=RP136.ch[id]||(RP136.ch[id]={mode:"change"});if(t.dataset.rp136to)c.to=t.value.trim().slice(0,300);else c.say=t.value.slice(0,600);rpSum136()});
+document.addEventListener("change",async e=>{const t=e.target;if(!t.dataset)return;
+  if(t.dataset.rp136voice){(RP136.ch[t.dataset.rp136voice]||(RP136.ch[t.dataset.rp136voice]={mode:"change"})).voice=t.value;rpSum136();return}
+  if(t.dataset.rp136char!=null&&t.dataset.rp136char){(RP136.ch[t.dataset.rp136char]||(RP136.ch[t.dataset.rp136char]={mode:"change"})).char=t.value||null;rpSum136();return}
+  const id=t.dataset.rp136pic;if(!id||!t.files||!t.files[0])return;const f=t.files[0];t.value="";RP136.pics[id]={busy:true};rpPaint136();
+  try{const r=await API.upload(f,f.name||"picture.jpg");RP136.pics[id]={url:r.url}}catch(x){delete RP136.pics[id];toast(L("The picture couldn't be uploaded.","تعذّر رفع الصورة."))}rpPaint136()});
+// where it is offered: the opened video and picture, a made video's or picture's long press, a clip in the editor
+VIEWS.video=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="string")return h;
+  return h.replace(/(<button class="btn sm" data-act="ew135" data-id="([^"]+)">[\s\S]*?<\/button>)/,'$1<button class="btn sm" data-act="rp136" data-id="$2">'+ic("users")+esc(L("Replace things…","استبدال الأشياء…"))+"</button>")})(VIEWS.video);
+VIEWS.image=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="string"||API.mode!=="server")return h;
+  return h.replace(/(<button class="btn sm[^"]*" data-act="animate-img" data-id="([^"]+)">[\s\S]*?<\/button>)/,'$1<button class="btn sm" data-act="rp136" data-id="$2">'+ic("users")+esc(L("Replace things…","استبدال الأشياء…"))+"</button>")})(VIEWS.image);
+if(typeof menuAt131==="function")menuAt131=(o=>function(t,x,y){const r=o.apply(this,arguments);const g=r&&t.closest&&t.closest(".gc98[data-open98]"),j=g&&S.jobs.find(k=>k.id===g.dataset.open98);
+  if(j&&(j.kind==="video"||rpImg136(j))&&j.status==="complete"&&j.remote&&CM131.el){const items=CM131.el._items||[],ix=items.findIndex(i=>i.act==="del88");
+    if(ix>=0&&!items.some(i=>i.act==="rp136")){CM131.el.remove();CM131.el=null;items.splice(ix,0,{icon:"users",label:L("Replace things…","استبدال الأشياء…"),act:"rp136",extra:'data-id="'+esc(j.id)+'"'});cmOpen131(items,x,y,(typeof shown88==="function"?shown88(j):j.prompt||"").slice(0,60))}}return r})(menuAt131);
+if(typeof edMenu131==="function")edMenu131=(o=>function(k,id){const items=o.apply(this,arguments);if(!items||k!=="clip"||API.mode!=="server")return items;const c=edItem({k,id}),b=c&&c.src&&c.src.k==="job"&&S.jobs.find(x=>x.id===c.src.job);
+  if(b&&b.kind==="video"&&b.status==="complete"&&b.remote){const at=items.findIndex(x=>x.act==="ed-del");items.splice(at<0?items.length:at,0,{icon:"users",label:L("Replace things…","استبدال الأشياء…"),fn:()=>rpSheet136(b,{clip:c.id})})}return items})(edMenu131);
+// what is happening, and afterwards what was changed (checked by the Continuity supervisor)
+API.req=(o=>async function(p){const r=await o.apply(this,arguments);try{const m=/^\/v1\/jobs\/([A-Za-z0-9_-]+)$/.exec(String(p));if(m&&r&&r.id&&r.replace136){const j=S.jobs.find(x=>x.remote===r.id);if(j)j.replace136=r.replace136}}catch(e){}return r})(API.req);
+line132=(o=>function(j){const m=j&&j.meta||{};if(j&&m.replace136&&!["complete","failed"].includes(j.status)){const p=j.parts108,st=j.stage;
+  if(st==="sound"||st==="voice")return L("Making the new voice and sound…","صنع الصوت الجديد…");if(st==="mix")return L("Laying the new sound in, at the same level…","وضع الصوت الجديد بالمستوى نفسه…");
+  if(st==="check")return L("The Continuity supervisor is checking each change…","مشرف الاستمرارية يراجع كل تغيير…");if(st==="join")return L("Putting the changed seconds back, with the video's own sound…","إعادة الثواني المتغيرة إلى مكانها مع صوت الفيديو…");
+  if(st==="edit")return p&&p[1]>1?L("Changing part "+Math.min(p[1],p[0]+1)+" of "+p[1]+" — everything else stays…","تغيير الجزء "+Math.min(p[1],p[0]+1)+" من "+p[1]+" — يبقى كل شيء آخر…"):L("Changing them — everything else stays as it was…","يجري التغيير — يبقى كل شيء آخر كما هو…");
+  return L("Preparing the seconds they are seen in…","تجهيز الثواني التي تظهر فيها…")}return o.apply(this,arguments)})(line132);
+previewCol=(o=>function(g){const h=o.apply(this,arguments),r=g&&g.status==="complete"&&g.replace136;if(!r||!Array.isArray(r.list)||!r.list.length)return h;const ck=new Map((r.checks||[]).map(c=>[c.id,c]));
+  return h.replace('<div class="pipe"','<details class="pl132 rp136d" open><summary>'+esc(L("What was changed · "+r.list.length,"ما الذي تغيّر · "+r.list.length))+"</summary><ol>"+r.list.map(x=>{const c=ck.get(x.id);
+    return'<li dir="auto">'+esc((x.what==="removed"?L("Removed: ","أُزيل: "):x.what==="voice"?L("New voice: ","صوت جديد: "):"")+(x.name||"")+(x.to&&x.what!=="removed"?" → "+x.to:""))+(c?' <span class="rp136ck'+(c.done&&!c.other?" ok":"")+'">'+ic(c.done&&!c.other?"check":"info","width:13px;height:13px;vertical-align:-2px")+(c.note?" "+esc(c.note):"")+"</span>":"")+"</li>"}).join("")+"</ol></details>"+'<div class="pipe"')})(previewCol);
+(()=>{const st=document.createElement("style");st.textContent=`
+.rp136{max-height:min(68vh,640px);overflow:auto;margin:0 -4px;padding:0 4px}.rp136w{display:flex;gap:8px;align-items:center;color:var(--mute)}
+.rp136h{display:flex;align-items:center;gap:6px;font-size:14px;margin:14px 0 6px}.rp136h svg{width:16px;height:16px}
+.rp136i{display:flex;gap:10px;align-items:flex-start;padding:8px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);margin-bottom:6px}.rp136i.on{border-color:color-mix(in srgb,var(--lime) 55%,var(--line))}
+.rp136t{flex:none;width:56px;height:56px;border-radius:8px;object-fit:cover;background:var(--panel)}.rp136t.ic{display:grid;place-items:center;color:var(--mute)}.rp136t.ic svg{width:20px;height:20px}
+.rp136m{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.rp136m b{font-size:14px}.rp136m small{color:var(--mute);font-size:12px}.rp136q{font-style:italic}
+.rp136seg{display:inline-flex;align-self:flex-start;margin-top:2px}.rp136seg button{padding:4px 10px;font-size:12.5px}
+.rp136in{width:100%;box-sizing:border-box;font:inherit;font-size:14px;padding:8px 10px;border-radius:8px;border:1px solid var(--line2);background:var(--panel);color:var(--text)}.rp136in.sm{width:auto;max-width:100%;padding:6px 8px;font-size:13px}
+.rp136x{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.rp136x label{position:relative}.rp136x label img{width:20px;height:20px;border-radius:4px;object-fit:cover}.rp136x input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.rp136hear{margin:0 0 8px}.rp136sum ol{margin:4px 0;padding-inline-start:20px;font-size:13.5px;line-height:1.5}
+.rp136ck{color:var(--mute);font-size:12px}.rp136ck.ok{color:var(--forest,#2f7d4f)}
+`;document.head.appendChild(st)})();
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

@@ -6,7 +6,9 @@ import path from "path";
 import fs from "fs";
 import { requireUser, firebaseWebConfig } from "./lib/auth.js";
 import { user, save, uid } from "./lib/store.js";
-import { createJob, publicJob, againParts136 } from "./lib/jobs.js";
+import { createJob, publicJob, againParts136, ownMedia136, replaceQuote136 } from "./lib/jobs.js";
+import { scan136, withWords136, scanCache136 } from "./lib/scan136.js";
+import { transcribeFile, sttReady, locPrice } from "./lib/localize.js";
 import { analyzeSite } from "./lib/site.js";
 import { MEDIA_DIR, publicUrl, localPath, download } from "./lib/media.js";
 import { PROVIDERS } from "./providers/index.js";
@@ -24,7 +26,7 @@ import { testAll } from "./lib/health.js";
 import { spawn } from "child_process";
 import { saveBuffer } from "./lib/media.js";
 import { LIMITS, planOf } from "./lib/plans.js";
-import { refillPlans, priceTable, ENGINE_COST, engineCost, basePrice, CREDIT_FLOOR_USD, priceFactor } from "./lib/billing.js";
+import { refillPlans, priceTable, ENGINE_COST, engineCost, basePrice, CREDIT_FLOOR_USD, priceFactor, hold, settle, release } from "./lib/billing.js";
 import { S as platform, featureOn, configured, biz } from "./lib/settings.js";
 import { modelNames, publicRegistry } from "./lib/models.js";
 import { shotsTable133, probe132, fileOf132 } from "./lib/long132.js";
@@ -139,6 +141,20 @@ app.post("/v1/edit135/quote", requireUser, wrap(async (req, res) => {
   res.json({ total: isStaff(req.user) ? 0 : editPrice135(plan, basePrice("video", "mcswap") ?? 30), secs: plan.secs, parts: plan.parts.length, from: plan.from, to: plan.to, dur: Math.round(info.dur * 10) / 10,
     short: info.dur < 4, long: plan.secs > EDIT_MAX135 + 0.01, ready: !!(ek && String(ek).startsWith("kie@")) });
 }));
+// v136: Replace things — what is in a video or a picture (the analysis agents, made once and kept), and, when asked, the words said in it
+// (speech-to-text, priced per minute like a transcript, held then charged — released if it fails)
+app.post("/v1/scan136", requireUser, wrap(async (req, res) => {
+  const b = req.body || {}, lang = String(b.lang || "en").slice(0, 5), o = ownMedia136(req.user, b), file = await fileOf132(o.url), staff = isStaff(req.user);
+  let s = await scan136(file, { lang, prompt: (o.job && (o.job.payload?.prompt || o.job.title)) || "", isImage: o.image });
+  const hearPrice = o.image || !s.dur ? 0 : staff ? 0 : (locPrice().stt || 2) * Math.max(1, Math.ceil(s.dur / 60));
+  if (b.hear && !o.image && !s.heard) {
+    if (!sttReady()) return res.status(501).json({ error: staff ? "Hearing what is said needs speech-to-text connected (Admin → AI providers)." : "Hearing what is said isn't available right now.", errorAr: "سماع ما يُقال غير متاح الآن." });
+    const ref = "hear." + uid(); if (hearPrice) hold(req.user.uid, hearPrice, "Hear what is said · " + String((o.job && o.job.title) || "video").slice(0, 40), ref);
+    try { const r = await transcribeFile(file, lang); s = withWords136({ ...s, sounds: [...(s.sounds || [])] }, r.lines || []); fs.writeFileSync(scanCache136(file, lang), JSON.stringify(s)); if (hearPrice) settle(req.user.uid, ref); }
+    catch (e) { if (hearPrice) release(req.user.uid, ref); throw Object.assign(new Error("The words couldn't be heard — nothing was charged."), { code: 502, errorAr: "تعذّر سماع الكلام — لم يُخصم شيء." }); } }
+  res.json({ ...s, image: o.image, src: o.url, job: o.job ? o.job.id : null, hearPrice, canHear: !o.image && sttReady() });
+}));
+app.post("/v1/replace136/quote", requireUser, wrap(async (req, res) => res.json(await replaceQuote136(req.user, req.body || {}))));
 // v136: a film that came out with a part missing — make the missing parts again (the price is on the card: publicJob partial136.again)
 app.post("/v1/jobs/:id/again136", requireUser, wrap(async (req, res) => res.json(publicJob(againParts136(req.user, req.params.id), isStaff(req.user)))));
 app.get("/v1/config", (_, res) => res.json({
