@@ -167,6 +167,11 @@ export function kieInput(model, p) {
   // video (and chapter / extend)
   // (v100) a start picture and no words: the engine is still told what to do with it — most video engines refuse an empty prompt
   // (v130) reference pictures: Seedance 2.x gets them all (below); another engine starts from the first one and reads the names
+  // v135: edit a made video with words — @Video1 the seconds to edit, @Image1… the customer's pictures, then the part before's last
+  // frame after the edit (lib/edit135.js writes the words); the same length as the seconds sent
+  if (/^bytedance\/seedance-2/.test(m) && p.meta?.edit135 && inp.edVideo) { const pics = [...refsOf130(p).map((x) => absUrl(x.url)), ...(inp.edPrev ? [absUrl(inp.edPrev)] : [])].slice(0, 9);
+    return drop({ prompt: String(p.prompt || ""), reference_image_urls: pics.length ? pics : undefined, reference_video_urls: [absUrl(inp.edVideo)], generate_audio: false,
+      resolution: pickRes(p, ["480p", "720p", "1080p"], "720p"), aspect_ratio: "adaptive", duration: clamp(Math.round(+p.dur || 5), 4, 15), web_search: false }); }
   const refs = p.model === "mcswap" || p.meta?.swap93 ? [] : refsOf130(p), refsOn = refs.length > 0 && takesRefs130(m);
   const img0 = startImg(p) || (refs.length && !refsOn ? refs[0].url : undefined), img = img0 ? absUrl(img0) : undefined, end = inp.vEnd ? absUrl(inp.vEnd) : undefined, dur = Math.round(+p.dur || 5), audio = !!(p.meta?.audio);
   const prompt = refs.length && !refsOn ? tagWords130(fullPrompt(p), refs, (i) => refs[i].tag) || PICTURE_WORDS.video : fullPrompt(p) || (img0 ? PICTURE_WORDS.video : "");

@@ -12846,7 +12846,7 @@ VIEWS.edit=(o=>function(){let h=o();if(h.indexOf('data-act="edcmd-go"')<0)return
   return h})(VIEWS.edit);
 /* pictures and video the editor asks for match the project's size (a TikTok or Story project asked for 16:9 before) */
 let EDRUN91=0;edRun=(o=>async function(p){EDRUN91++;try{return await o(p)}finally{EDRUN91--}})(edRun);
-addJob=(o=>function(j){if(j&&S.view==="edit"&&(j.kind==="video"||j.kind==="image")&&!(j.meta&&j.meta.extend94)&&(EDRUN91||(j.meta&&(j.meta.edCmd||j.meta.edAi))))j.aspect=edAspect91(j.kind);return o(j)})(addJob);   // (v94: an extension keeps the clip's own shape)
+addJob=(o=>function(j){if(j&&S.view==="edit"&&(j.kind==="video"||j.kind==="image")&&!(j.meta&&(j.meta.extend94||j.meta.extend132||j.meta.merge135||j.meta.edit135))&&(EDRUN91||(j.meta&&(j.meta.edCmd||j.meta.edAi))))j.aspect=edAspect91(j.kind);return o(j)})(addJob);   // (v94: an extension keeps the clip's own shape)
 /* a part of the page that couldn't download (on-device captions, a 3D library…) says so in words, not as a browser error */
 toast=(o=>function(m,opt){const s=String(m==null?"":m);if(/Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Loading chunk \d+ failed/i.test(s)){opt=Object.assign({type:"warn"},opt);if(!opt.detail)opt.detail=s;m=L("A part of the editor couldn't download. Check your connection and try again.","تعذّر تنزيل جزء من المحرر. تحقّق من الاتصال وحاول مرة أخرى.")}return o(m,opt)})(toast);
 (()=>{const st=document.createElement("style");st.textContent=`
@@ -15478,7 +15478,7 @@ extGo132=async function(){const E=S.ext132;if(!E)return;const j=E.clip?null:S.jo
   for(const c of chars){if(refs.length>=6)break;const b=await charPhotoBlob(c).catch(()=>null);if(b)refs.push({file:new File([b],"char.jpg",{type:b.type||"image/jpeg"}),tag:tag134(c.name)})}
   const model=extModel134(),cost=extCost134();if(!crFree()&&S.credits<cost){toast(L("Not enough credits for this.","الرصيد لا يكفي لهذه العملية."));return}
   let base=j?j.remote||j.id:null,clip=E.clip?S.ed.clips.find(c=>c.id===E.clip):null,cb=clip?extBase94(clip):null,aspect=j?j.aspect:null;
-  if(clip){if(cb&&cb.remote&&cb.status==="complete"){base=cb.remote;aspect=cb.aspect}
+  if(clip){if(cb&&cb.remote&&cb.status==="complete"){base=cb.remote;const mm=clipMedia(clip),vw=mm&&srcW(mm),vh=mm&&srcH(mm);aspect=vw&&vh?extAR94(vw,vh):cb.aspect||extAR94(1280,720)}   // (v135: the clip's own shape, as v94 — not the project's)
     else{const fr=await extFrame94(clip);if(!fr){toast(L("Couldn't read the clip's last frame.","تعذّرت قراءة آخر إطار من المقطع."),{type:"warn"});return}   // (a clip of your own: its last frame goes up first)
       try{const up=await API.upload(fr.file,"last-frame.jpg");base=up.url}catch(e){toast(String(e.message||e),{type:"warn"});return}aspect=extAR94(fr.w,fr.h)}}
   const meta=Object.assign({extend132:base,extMode134:E.mode||"same"},E.mode==="angle"?{angle134:E.ang||"auto"}:{},chars.length?{chars134:chars.map(c=>({name:c.name,look:[c.look,c.outfit].filter(Boolean).join(", ")}))}:{},
@@ -15610,6 +15610,213 @@ previewCol=(o=>function(g){let h=o.apply(this,arguments);const p=g&&g.status==="
 .tg134{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:14px}.sv134{margin:0 0 6px}.sv134 select{max-width:220px}
 @media (max-width:520px){.xm134,.xs134{grid-template-columns:1fr}}
 `;document.head.appendChild(st)})();
+/* ================= v135: MERGE VIDEOS SO THE JOIN CAN'T BE SEEN · EDIT A VIDEO WITH WORDS · THE PLAYHEAD FOLLOWS THE FINGER · THE FOLDED PROMPT BOX GOES AWAY =================
+   · Merge: pick videos (an extended one and its extension, or any of yours) in the order they play; they come back as one video, joined
+     by the seam engine (each cut at its last clean frame, the next one from where it really goes on, colour and sound matched, a few
+     frames worked out between two parts that nearly meet) — or with clean cuts. Free. In the editor: "Join with the next clip" and
+     "Merge all clips" put one clip in their place.
+   · Edit with words: say what to change ("her coat is red now", "it's snowing"), for the whole video or some seconds, with pictures and
+     characters if you like; everything else stays as it was, with the video's own sound. The price is shown first. In the editor the
+     clip takes the edited video (the same length, so its trim stays).
+   · Seen on a phone (the owner's screen recordings): dragging the playhead, the picture trailed the finger — each jump of the video waited
+     for the one before, so it showed where the finger had been. Now the clip's film strip (small frames of it, one picture from the
+     server) shows the frame at once while you drag; the video itself goes there when you let go. The play button said "pause" after a
+     drag stopped the video — it follows. A long press painted the timeline and the picture blue (the phone selected them) — not any more.
+   · The folded prompt box left a dark strip over the videos, and over the bottom menu while scrolling: now it goes away completely and only a
+     small arrow stays, just above the menu. */
+// ---- 1. the playhead follows the finger: the clip's film strip while you drag
+function srvUrl135(c,m){return m.srv135||(m.srv135=(async()=>{let url="";
+  if(c.src&&c.src.k==="job")url=mediaUrl(S.jobs.find(x=>x.id===c.src.job));
+  else if(m.file&&m.file.size<=40e6){if(m.prep88)await m.prep88;url=(await API.upload(m.file,m.file.name||m.name||"clip.mp4")).url}   // (a big file from the phone isn't sent just for this)
+  url=String(url||"").replace(location.origin,"");return /^\/media\//.test(url)?url:""})().catch(()=>""))}
+px131=async function(c,m){if(m.pxReq131||!H264_131||API.mode!=="server"||!S.user)return;m.pxReq131=1;   // (v131's light copy, from the same upload as the strip)
+  try{const url=await srvUrl135(c,m);if(!url)return;const r=await API.req("/v1/media/scrub",{json:{url}});if(!r||!r.url)return;
+    const v=document.createElement("video");v.muted=true;v.playsInline=true;v.setAttribute("playsinline","");v.preload="auto";v.crossOrigin="anonymous";v.addEventListener("error",()=>{if(m.px131===v)m.px131=null});v.src=r.url;mediaHost().appendChild(v);landed131(v);m.px131=v}
+  catch(e){}};
+async function sp135(c,m){if(m.spReq135||API.mode!=="server"||!S.user)return;m.spReq135=1;
+  try{const url=await srvUrl135(c,m);if(!url)return;const r=await API.req("/v1/media/sprite",{json:{url}});if(!r||!r.url||!(r.n>0))return;
+    const img=new Image();img.crossOrigin="anonymous";img.decoding="async";
+    img.onload=()=>{const cv=document.createElement("canvas");cv.width=r.w;cv.height=r.h;cv.complete=true;cv.naturalWidth=r.w;cv.naturalHeight=r.h;m.sp135={ok:true,img,cv,fps:+r.fps,cols:+r.cols,w:+r.w,h:+r.h,n:+r.n,k:-1}};
+    img.src=r.url}catch(e){}}
+// while you drag, a clip with its strip doesn't jump at all (the strip shows the frame); when you let go it goes to the last place asked
+hook131=function(m){const v=m&&m.type==="video"&&m.el;if(!v||v._h131||!v.addEventListener)return;v._h131=1;landed131(v);
+  Object.defineProperty(v,"currentTime",{configurable:true,get(){return scrub131()&&m.use131&&m.px131&&m.want131!=null?m.want131:CT131.get.call(v)},set(t){
+    if(scrub131()&&m.sp135&&m.sp135.ok){m.want135=t;return}
+    if(scrub131()&&m.px131&&m.px131.readyState>=1){m.use131=performance.now();m.want131=t;jump131(m.px131,t);return}
+    jump131(v,t)}})};
+drawFit=(o=>function(ctx,m,ow,oh,lt,filter){const sp=m&&m.type==="video"&&m.sp135;
+  if(!sp||!sp.ok||S.view!=="edit"||!ctx||!ctx.canvas||ctx.canvas.id!=="wk"||ED.rec||ED.hq)return o.apply(this,arguments);
+  const v=m.el,now=performance.now();let use=false;
+  if(scrub131()){use=true;m.spAt135=now}
+  else if(m.spAt135&&now-m.spAt135<2500&&!ED.playing&&(v.seeking||v.readyState<2||Math.abs(CT131.get.call(v)-lt)>.06))use=true;   // (let go: the strip's frame until the video is there)
+  else m.spAt135=0;
+  if(!use)return o.apply(this,arguments);
+  const k=Math.max(0,Math.min(sp.n-1,Math.round(lt*sp.fps)));
+  if(sp.k!==k){try{sp.cv.getContext("2d").drawImage(sp.img,(k%sp.cols)*sp.w,Math.floor(k/sp.cols)*sp.h,sp.w,sp.h,0,0,sp.w,sp.h);sp.k=k}catch(e){return o.apply(this,arguments)}}
+  const el=m.el,ty=m.type,u=m.use131;m.el=sp.cv;m.type="image";m.use131=0;try{return o.apply(this,arguments)}finally{m.el=el;m.type=ty;m.use131=u}})(drawFit);
+let spAt135=0;edTick=(o=>function(now){const sc=scrub131();
+  if(ED.sc135&&!sc)S.ed.clips.forEach(c=>{const m=M["c_"+c.id];if(m){m._lt=null;m.spAt135=performance.now()}});ED.sc135=sc;   // (let go: the jump is asked for again, exactly)
+  const r=o.apply(this,arguments);
+  if(S.view==="edit"){if(now-spAt135>700){spAt135=now;S.ed.clips.forEach(c=>{const m=M["c_"+c.id];if(m&&m.type==="video")sp135(c,m)})}
+    const pb=document.querySelector('#main [data-act="ed-play"]');if(pb&&pb._pl135!==!!ED.playing){pb._pl135=!!ED.playing;const sv=pb.querySelector("svg");if(sv)sv.outerHTML=ic(ED.playing?"pause":"play")}}
+  return r})(edTick);
+
+// ---- 2. the folded prompt box: gone, with a small arrow above the bottom menu
+function fu135(){let b=document.querySelector(".fu135");const d=document.querySelector("#main .dock98"),on=!!(d&&d.classList.contains("off134"));
+  if(!b){b=document.createElement("button");b.type="button";b.className="fu135";b.dataset.act="fold134";
+    b.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>';document.body.appendChild(b)}
+  const bn=document.querySelector(".bottomnav"),h=bn&&getComputedStyle(bn).display!=="none"?bn.offsetHeight:0;document.documentElement.style.setProperty("--bn135",h+"px");
+  b.classList.toggle("on",on);b.tabIndex=on?0:-1;b.setAttribute("aria-hidden",String(!on));b.setAttribute("aria-label",L("Show the prompt box","أظهر صندوق الوصف"));b.title=b.getAttribute("aria-label")}
+fold134=(o=>function(){const r=o.apply(this,arguments);try{fu135()}catch(e){}return r})(fold134);
+window.addEventListener("resize",()=>{try{fu135()}catch(e){}});
+(()=>{let y0=null;document.addEventListener("touchstart",e=>{y0=e.target.closest&&e.target.closest(".fu135")?e.touches[0].clientY:null},{passive:true});
+  document.addEventListener("touchend",e=>{if(y0==null)return;const dy=e.changedTouches[0].clientY-y0;y0=null;if(dy<-24)setFold134(false)},{passive:true})})();
+
+// ---- 3. Merge videos
+const MG135={busy:0};
+const vids135=()=>S.jobs.filter(j=>j&&j.kind==="video"&&j.status==="complete"&&j.remote&&mediaUrl(j)&&!/^(mc|nv)/.test(j.model||"")||(j&&["finish","dub"].includes(j.kind)&&j.status==="complete"&&j.remote&&mediaUrl(j))).slice().reverse();
+const chainOf135=j=>{const out=[];if(!j)return out;const up=x=>x&&x.meta&&x.meta.extend132&&S.jobs.find(k=>k.remote===x.meta.extend132||k.id===x.meta.extend132);
+  let b=j,g=0;while(up(b)&&g++<20)b=up(b);out.push(b);let cur=b;g=0;while(g++<20){const nx=S.jobs.find(k=>k.meta&&k.meta.extend132&&(k.meta.extend132===cur.remote||k.meta.extend132===cur.id)&&k.status==="complete");if(!nx)break;out.push(nx);cur=nx}return out};
+function mergeSheet135(j){if(API.mode!=="server"){toast(L("Merging works when you're signed in.","الدمج يعمل بعد تسجيل الدخول."));return}
+  const ch=chainOf135(j).filter(x=>x.remote&&x.status==="complete"),ids=j?(ch.length>1?ch:[j]).map(x=>x.id):[];
+  const all=vids135(),rel=new Set(ids.flatMap(id=>chainOf135(S.jobs.find(x=>x.id===id)).map(x=>x.id)));   // (the order is set when it opens: a tile never moves when you pick it)
+  S.mg135={ids,style:(S.mg135&&S.mg135.style)||"seamless",order:[...all.filter(j=>rel.has(j.id)),...all.filter(j=>!rel.has(j.id))].slice(0,40).map(j=>j.id)};
+  document.querySelectorAll(".lb98").forEach(x=>x.remove());if(typeof ST98==="function"){const st=ST98();if(st)st.lb=""}
+  hfSheet(L("Merge videos","دمج الفيديوهات"),'<div class="mg135">'+mergeBody135()+"</div>")}
+function mergeBody135(){const D=S.mg135,list=(D.order||[]).map(id=>S.jobs.find(x=>x.id===id)).filter(Boolean),sel=D.ids.map(id=>S.jobs.find(x=>x.id===id)).filter(Boolean),tot=sel.reduce((t,j)=>t+(+j.dur||5),0);
+  const card=(v,t,d)=>'<button type="button" class="xm134c" data-act="mg135-style" data-v="'+v+'" role="radio" aria-checked="'+(D.style===v)+'"><span><b>'+esc(t)+"</b><small>"+esc(d)+"</small></span></button>";
+  return'<p class="small mute" style="margin:0 0 10px">'+esc(L("Pick the videos in the order they play — an extended video and its extension, or any of yours. They come back as one video.","اختر الفيديوهات بترتيب عرضها — فيديو ممدّد وامتداده، أو أي فيديو لك. تعود فيديو واحداً."))+"</p>"+
+    '<div class="mg135g" role="list">'+list.map(j=>{const i=D.ids.indexOf(j.id),ex=j.meta&&j.meta.extend132;
+      return'<button type="button" class="mg135t" role="listitem" data-act="mg135-pick" data-id="'+esc(j.id)+'" aria-pressed="'+(i>=0)+'">'+thumb("j:"+j.id,{})+(i>=0?'<span class="mg135n">'+(i+1)+"</span>":"")+
+        '<span class="mg135d">'+(ex?'<em>'+esc(L("Extension","امتداد"))+"</em>":"")+mmss132(+j.dur||5)+"</span></button>"}).join("")+(list.length?"":'<p class="small mute">'+esc(L("Your finished videos show here.","تظهر هنا فيديوهاتك المكتملة."))+"</p>")+"</div>"+
+    '<span class="lbl">'+esc(L("How they join","كيف تتصل"))+'</span><div class="xm134" role="radiogroup">'+
+      card("seamless",L("So the join can't be seen","بلا وصلة ظاهرة"),L("Each video ends on its last clean frame and the next goes on from where it really begins — colour, light and sound matched; where two frames nearly meet, the frames between them are worked out.","ينتهي كل فيديو عند آخر إطار نقي فيه ويكمل التالي من حيث يبدأ فعلاً — مع مطابقة اللون والإضاءة والصوت؛ وحيث يكاد إطاران يلتقيان تُصنع الإطارات بينهما."))+
+      card("cut",L("Clean cuts","قطع نظيف"),L("One after the other, cut cleanly, the sound evened out.","واحداً تلو الآخر بقطع نظيف، مع توحيد مستوى الصوت."))+"</div>"+
+    '<p class="small mute" id="mg135n">'+esc(sel.length<2?L("Pick at least two.","اختر فيديوهين على الأقل."):L(sel.length+" videos · about "+mmss132(tot)+" · free",sel.length+" فيديو · نحو "+mmss132(tot)+" · مجاناً"))+"</p>"+
+    '<div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn primary" data-act="mg135-go"'+(sel.length<2?" disabled":"")+">"+ic("plus")+esc(L("Merge","ادمج"))+"</button></div>"}
+function mergeRepaint135(){const box=document.querySelector("#modalRoot .mg135");if(box)box.innerHTML=mergeBody135()}
+// a merge, from the page or from the editor's clips: [{job (server id), in, out}]
+function mergeJob135(items,style,title,first){const tot=items.reduce((t,it)=>t+Math.max(.5,(it.out||it.dur||5)-(it.in||0)),0);
+  const keep={vStart:M.vStart,vEnd:M.vEnd};M.vStart=M.vEnd=null;let n=null;
+  try{n=addJob({kind:"video",prompt:"",title,model:(first&&first.model)||"auto",dur:Math.round(tot*10)/10,aspect:(first&&first.aspect)||undefined,cost:0,meta:{merge135:{items:items.map(it=>({job:it.job,...(it.in>0?{in:+(+it.in).toFixed(3)}:{}),...(it.out>0?{out:+(+it.out).toFixed(3)}:{})})),style},edCmd:"merge135",noPhysics:true}})}
+  finally{M.vStart=keep.vStart;M.vEnd=keep.vEnd}return n}
+function mergeGo135(){const D=S.mg135;if(!D)return;const sel=D.ids.map(id=>S.jobs.find(x=>x.id===id)).filter(j=>j&&j.remote);if(sel.length<2){toast(L("Pick at least two videos.","اختر فيديوهين على الأقل."));return}
+  const n=mergeJob135(sel.map(j=>({job:j.remote,dur:+j.dur||5})),D.style,L("Merged: ","مدموج: ")+String(sel[0].title||sel[0].prompt||"").slice(0,50)+" +"+(sel.length-1),sel[0]);
+  $("#modalRoot").innerHTML="";if(!n)return;S.lastVideo=n.id;persist();renderAll();toast(L("Merging — one video, the joins worked out.","يجري الدمج — فيديو واحد، والوصلات تُعالج."),{type:"ok"})}
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act^="mg135"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const act=a.dataset.act;
+  if(act==="mg135")return void mergeSheet135(S.jobs.find(x=>x.id===a.dataset.id));const D=S.mg135;if(!D)return;
+  if(act==="mg135-pick"){const id=a.dataset.id,i=D.ids.indexOf(id);if(i>=0)D.ids.splice(i,1);else if(D.ids.length<12)D.ids.push(id);else toast(L("Up to 12 videos in one merge.","حتى 12 فيديو في الدمج الواحد."))}
+  if(act==="mg135-style")D.style=a.dataset.v==="cut"?"cut":"seamless";
+  if(act==="mg135-go")return void mergeGo135();
+  mergeRepaint135()},true);
+// the editor: this clip and the next as one, or all the clips — one clip in their place when it's ready
+const MGED135={};
+function edMerge135(cl){const E=S.ed,js=cl.map(c=>c&&c.src&&c.src.k==="job"&&S.jobs.find(x=>x.id===c.src.job));
+  if(js.some(j=>!j||!j.remote||j.status!=="complete")){toast(L("Only clips made on nooi.ai can be merged — add the others from the library.","يمكن دمج المقاطع المصنوعة على nooi.ai فقط — أضف الأخرى من المكتبة."),{type:"warn"});return}
+  if(cl.some(c=>(c.speed||1)!==1)){toast(L("Set the speed of these clips to 1× first.","اضبط سرعة هذه المقاطع على 1× أولاً."),{type:"warn"});return}
+  const n=mergeJob135(cl.map((c,i)=>({job:js[i].remote,in:c.in,out:c.out,dur:c.out-c.in})),"seamless",L("Merged clips: ","مقاطع مدموجة: ")+String(clipName(cl[0])).slice(0,50),js[0]);
+  if(!n)return;MGED135[n.id]=cl.map(c=>c.id);persist();toast(L("Merging the clips — one clip takes their place when it's ready.","تُدمج المقاطع — يحل مقطع واحد مكانها عندما يجهز."),{type:"info",ms:4500})}
+setInterval(()=>{for(const id of Object.keys(MGED135)){const j=S.jobs.find(x=>x.id===id);if(!j||j.status==="failed"){delete MGED135[id];continue}if(j.status!=="complete")continue;
+  const ids=MGED135[id];delete MGED135[id];const E=S.ed;if(!E)continue;const ix=E.clips.findIndex(c=>c.id===ids[0]),last=E.clips.find(c=>c.id===ids[ids.length-1]);if(ix<0)continue;
+  const nc={id:uid(),src:{k:"job",job:j.id},in:0,out:+j.dur||ids.reduce((t,cid)=>{const c=E.clips.find(q=>q.id===cid);return t+(c?c.out-c.in:0)},0),speed:1,trans:last?last.trans:"cut",vol:100};
+  E.clips=E.clips.filter(c=>!ids.includes(c.id));E.clips.splice(ix,0,nc);E.sel=nc.id;persist();if(S.view==="edit")renderView();toast(L("The clips are one now.","أصبحت المقاطع مقطعاً واحداً."),{type:"ok"})}},1500);
+
+// ---- 4. Edit with words
+const EDW135={id:null,pics:[]},EDWQ135={q:null,t:0};
+function editSheet135(j,o){if(!j)return;o=o||{};if(API.mode==="server"&&!j.remote){toast(L("This video can be edited once it is on the server.","يمكن تعديل هذا الفيديو بعد أن يصبح على الخادم."));return}
+  const P=S.ed135&&S.ed135.id===j.id?S.ed135:null,dur=+j.dur||5,c=o.clip&&S.ed.clips.find(q=>q.id===o.clip);
+  S.ed135={id:j.id,clip:o.clip||null,w:P?P.w:"",whole:c?false:P?P.whole:true,from:c?+(+c.in).toFixed(1):P?P.from:0,to:c?+(+c.out).toFixed(1):P?P.to:dur,chars:P?P.chars:[]};if(EDW135.id!==j.id){EDW135.id=j.id;EDW135.pics=[]}
+  document.querySelectorAll(".lb98").forEach(x=>x.remove());if(typeof ST98==="function"){const st=ST98();if(st)st.lb=""}
+  EDWQ135.q=null;hfSheet(o.clip?L("Edit this clip with words","عدّل هذا المقطع بالكلمات"):L("Edit with words","التعديل بالكلمات"),'<div class="ew135">'+editBody135()+"</div>");editWire135();editQuote135()}
+const editJob135=()=>S.ed135&&S.jobs.find(x=>x.id===S.ed135.id);
+const editChars135=()=>(S.ed135&&S.ed135.chars||[]).map(id=>S.chars.find(c=>c.id===id)).filter(Boolean);
+const editRefs135=()=>(EDW135.id===(S.ed135||{}).id?EDW135.pics.length:0)+editChars135().filter(c=>c.photo).length;
+function editBody135(){const D=S.ed135,j=editJob135(),dur=+(j&&j.dur)||5,chars=S.chars.filter(c=>c&&c.name).slice(0,12),pics=EDW135.id===D.id?EDW135.pics:[],refs=editRefs135();
+  return'<p class="small mute" style="margin:0 0 10px">'+esc(L("Say what to change. Everything else stays exactly as it is — the people, every movement, the place, the camera — and the video keeps its own sound.","قل ما الذي يتغير. يبقى كل شيء آخر كما هو تماماً — الأشخاص وكل حركة والمكان والكاميرا — ويبقى صوت الفيديو الأصلي."))+"</p>"+
+    '<label class="lbl" for="ew135w">'+esc(L("What to change","ما الذي يتغير"))+'</label><textarea id="ew135w" dir="auto" rows="3" placeholder="'+esc(L("e.g. her coat is red · it's snowing now · the cup on the table is #image1","مثال: معطفها أحمر · الثلج يتساقط الآن · الكوب على الطاولة هو #صورة1"))+'">'+esc(D.w||"")+"</textarea>"+
+    '<span class="lbl">'+esc(L("Which part","أي جزء"))+'</span><div class="chips"><button type="button" class="chip" data-act="ew135-whole" data-v="1" aria-pressed="'+!!D.whole+'">'+esc(L("The whole video","الفيديو كله"))+'</button><button type="button" class="chip" data-act="ew135-whole" data-v="0" aria-pressed="'+!D.whole+'">'+esc(L("Some seconds","ثوانٍ محددة"))+"</button></div>"+
+    (D.whole?"":'<div class="row sn134"><label>'+esc(L("From","من"))+' <input type="number" id="ew135f" min="0" max="'+dur+'" step="0.5" value="'+D.from+'"></label><label>'+esc(L("to","إلى"))+' <input type="number" id="ew135t" min="0" max="'+dur+'" step="0.5" value="'+D.to+'"></label><span class="small mute">'+esc(L("seconds · at least 4","ثانية · 4 على الأقل"))+"</span></div>")+
+    '<span class="lbl">'+esc(L("Pictures and characters (optional)","صور وشخصيات (اختياري)"))+'</span><div class="xp134">'+
+      pics.map((p,i)=>'<span class="xp134i"><img src="'+esc(p.url)+'" alt=""><small>#'+esc(p.tag)+'</small><button type="button" class="xp134x" data-act="ew135-unpic" data-i="'+i+'" aria-label="'+esc(L("Remove","إزالة"))+'">'+ic("x")+"</button></span>").join("")+
+      (refs<6?'<label class="xp134a" title="'+esc(L("Add pictures","أضف صوراً"))+'">'+ic("plus")+'<input type="file" accept="image/*" multiple data-ew135pic="1"></label>':"")+
+      chars.map(c=>'<button type="button" class="chip xc134" data-act="ew135-char" data-id="'+esc(c.id)+'" aria-pressed="'+D.chars.includes(c.id)+'">'+(c.photo?'<img src="'+esc(c.photo)+'" alt="">':ic("char"))+esc(String(c.name).slice(0,20))+"</button>").join("")+"</div>"+
+    '<p class="small mute" id="ew135n"></p><div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn primary" data-act="ew135-go">'+ic("wand")+esc(L("Edit","عدّل"))+'<span class="cost" id="ew135c">…</span></button></div>'}
+function editRead135(){const D=S.ed135;if(!D)return;const w=$("#ew135w"),f=$("#ew135f"),t=$("#ew135t");if(w)D.w=w.value;if(f)D.from=Math.max(0,+f.value||0);if(t)D.to=Math.max(0,+t.value||0)}
+function editRepaint135(){editRead135();const box=document.querySelector("#modalRoot .ew135");if(box){box.innerHTML=editBody135();editWire135()}editQuote135()}
+function editWire135(){const box=document.querySelector("#modalRoot .ew135");if(!box)return;
+  box.querySelectorAll("textarea,input[type=number]").forEach(x=>x.addEventListener(x.tagName==="TEXTAREA"?"input":"change",()=>{editRead135();if(x.tagName!=="TEXTAREA")editQuote135()}));
+  const f=box.querySelector("[data-ew135pic]");if(f)f.addEventListener("change",()=>{for(const file of [...f.files]){if(editRefs135()>=6)break;const n=EDW135.pics.length+1;EDW135.pics.push({file,url:URL.createObjectURL(file),tag:L("image","صورة")+n})}editRepaint135()})}
+function editReq135(){const D=S.ed135,j=editJob135();return{job:j&&j.remote,...(D.whole?{}:{from:D.from,to:D.to})}}
+function editQuote135(){const t=++EDWQ135.t;clearTimeout(EDWQ135.tm);EDWQ135.tm=setTimeout(async()=>{if(API.mode!=="server")return;try{const q=await API.req("/v1/edit135/quote",{json:editReq135()});if(t!==EDWQ135.t)return;EDWQ135.q=q;
+  const c=$("#ew135c");if(c)c.textContent=q.total;const n=$("#ew135n"),g=document.querySelector('#modalRoot [data-act="ew135-go"]'),bad=q.short||q.long||!q.ready;
+  if(n)n.textContent=q.short?L("Edit with words needs a video of at least 4 seconds.","التعديل بالكلمات يحتاج فيديو مدته 4 ثوانٍ على الأقل."):q.long?L("One edit changes up to 2 minutes — pick fewer seconds.","التعديل الواحد يغيّر حتى دقيقتين — اختر ثوانيَ أقل."):!q.ready?L("Edit with words isn't available right now.","التعديل بالكلمات غير متاح الآن."):
+    L(mmss132(q.from)+"–"+mmss132(q.to)+" · "+Math.round(q.secs)+" s edited"+(q.parts>1?" in "+q.parts+" parts, one after the other":"")+" · the rest and the sound stay as they are.",mmss132(q.from)+"–"+mmss132(q.to)+" · "+Math.round(q.secs)+" ث تُعدّل"+(q.parts>1?" على "+q.parts+" أجزاء واحداً تلو الآخر":"")+" · ويبقى الباقي والصوت كما هما.");
+  if(g)g.disabled=bad}catch(e){const n=$("#ew135n");if(n)n.textContent=String(e.message||e)}},250)}
+async function editGo135(){editRead135();const D=S.ed135,j=editJob135(),q=EDWQ135.q;if(!D||!j)return;const w=String(D.w||"").trim();
+  if(!w){toast(L("Say what to change.","اكتب ما الذي يتغير."));const t=$("#ew135w");if(t)t.focus();return}
+  if(!q){toast(L("Working out the price — one moment.","يُحسب السعر — لحظة."));return}if(q.short||q.long||!q.ready)return;
+  if(!crFree()&&S.credits<q.total){toast(L("Not enough credits for this.","الرصيد لا يكفي لهذه العملية."));return}
+  const chars=editChars135(),pics=EDW135.id===D.id?EDW135.pics.slice():[],refs=pics.map(p=>({file:p.file,tag:p.tag}));
+  for(const c of chars){if(refs.length>=6)break;const b=await charPhotoBlob(c).catch(()=>null);if(b)refs.push({file:new File([b],"char.jpg",{type:b.type||"image/jpeg"}),tag:tag134(c.name)})}
+  const meta=Object.assign({edit135:editReq135(),edCmd:"edit135",noPhysics:true},chars.length?{chars134:chars.map(c=>({name:c.name,look:[c.look,c.outfit].filter(Boolean).join(", ")}))}:{},refs.length?{refs130:refs.slice(0,6).map((r,i)=>({slot:REF130[i],tag:r.tag}))}:{});
+  const keep={vStart:M.vStart,vEnd:M.vEnd};REF130.forEach(s=>{keep[s]=M[s];M[s]=null});M.vStart=M.vEnd=null;refs.slice(0,6).forEach((r,i)=>{M[REF130[i]]={type:"image",file:r.file,url:"",name:"ref"+(i+1)+".jpg"}});
+  let n=null;try{n=addJob({kind:"video",prompt:w,title:L("Edited: ","معدّل: ")+String(j.title||j.prompt||"").slice(0,60),model:"seedance20",dur:+j.dur||5,aspect:j.aspect||undefined,cost:q.total,meta})}finally{Object.assign(M,keep)}
+  $("#modalRoot").innerHTML="";if(!n)return;EDW135.pics=[];if(D.clip)EDED135[n.id]=D.clip;S.lastVideo=n.id;persist();renderAll();
+  toast(L("Editing — the rest of the video and its sound stay as they are.","يجري التعديل — يبقى باقي الفيديو وصوته كما هما."),{type:"ok"})}
+const EDED135={};   // a clip in the editor being edited → it takes the edited video (the same length: its trim stays)
+setInterval(()=>{for(const id of Object.keys(EDED135)){const j=S.jobs.find(x=>x.id===id);if(!j||j.status==="failed"){delete EDED135[id];continue}if(j.status!=="complete")continue;
+  const c=S.ed&&S.ed.clips.find(q=>q.id===EDED135[id]);delete EDED135[id];if(c){c.src={k:"job",job:j.id};delete M["c_"+c.id];persist();if(S.view==="edit")renderView();toast(L("The clip is edited.","تم تعديل المقطع."),{type:"ok"})}}},1500);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act^="ew135"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const act=a.dataset.act;
+  if(act==="ew135")return void editSheet135(S.jobs.find(x=>x.id===a.dataset.id));const D=S.ed135;if(!D)return;editRead135();
+  if(act==="ew135-whole"){D.whole=a.dataset.v==="1";if(!D.whole&&!(D.to>D.from)){const j=editJob135();D.from=0;D.to=+(j&&j.dur)||5}}
+  if(act==="ew135-char"){const id=a.dataset.id,i=D.chars.indexOf(id);if(i>=0)D.chars.splice(i,1);else if(D.chars.length<4)D.chars.push(id)}
+  if(act==="ew135-unpic"){const i=+a.dataset.i,p=EDW135.pics[i];if(p){try{URL.revokeObjectURL(p.url)}catch(x){}EDW135.pics.splice(i,1)}}
+  if(act==="ew135-go")return void editGo135();
+  editRepaint135()},true);
+
+// ---- 5. where they are offered: the opened video, a made video's long press, a clip in the editor
+VIEWS.video=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="string")return h;
+  return h.replace(/(<button class="btn sm" data-act="snd134" data-id="([^"]+)">[\s\S]*?<\/button>)/,'$1<button class="btn sm" data-act="ew135" data-id="$2">'+ic("wand")+esc(L("Edit with words…","التعديل بالكلمات…"))+'</button><button class="btn sm" data-act="mg135" data-id="$2">'+ic("plus")+esc(L("Merge videos…","دمج الفيديوهات…"))+"</button>")})(VIEWS.video);
+if(typeof menuAt131==="function")menuAt131=(o=>function(t,x,y){const r=o.apply(this,arguments);const g=r&&t.closest&&t.closest(".gc98[data-open98]"),j=g&&S.jobs.find(k=>k.id===g.dataset.open98);
+  if(j&&j.kind==="video"&&j.status==="complete"&&CM131.el){const items=CM131.el._items||[],ix=items.findIndex(i=>i.act==="del88");
+    if(ix>=0&&!items.some(i=>i.act==="ew135")){CM131.el.remove();CM131.el=null;items.splice(ix,0,{icon:"wand",label:L("Edit with words…","التعديل بالكلمات…"),act:"ew135",extra:'data-id="'+esc(j.id)+'"'},{icon:"plus",label:L("Merge videos…","دمج الفيديوهات…"),act:"mg135",extra:'data-id="'+esc(j.id)+'"'});cmOpen131(items,x,y,(typeof shown88==="function"?shown88(j):j.prompt||"").slice(0,60))}}return r})(menuAt131);
+if(typeof edMenu131==="function")edMenu131=(o=>function(k,id){const items=o.apply(this,arguments);if(!items||k!=="clip"||API.mode!=="server")return items;const E=S.ed,c=edItem({k,id}),i=E.clips.indexOf(c),b=c&&c.src&&c.src.k==="job"&&S.jobs.find(x=>x.id===c.src.job);
+  const at=items.findIndex(x=>x.act==="ed-del"),add=[];
+  if(b&&b.kind==="video"&&b.status==="complete"&&b.remote)add.push({icon:"wand",label:L("Edit with words…","التعديل بالكلمات…"),fn:()=>editSheet135(b,{clip:c.id})});
+  if(i>=0&&E.clips[i+1])add.push({icon:"plus",label:L("Join with the next clip, seamlessly","صِله بالمقطع التالي بلا وصلة"),fn:()=>edMerge135([c,E.clips[i+1]])});
+  if(E.clips.length>2)add.push({icon:"plus",label:L("Merge all clips into one","ادمج كل المقاطع في واحد"),fn:()=>edMerge135(E.clips.slice())});
+  items.splice(at<0?items.length:at,0,...add);return items})(edMenu131);
+// what is happening on the card
+line132=(o=>function(j){const m=j&&j.meta||{};if(j&&!["complete","failed"].includes(j.status)){
+  if(m.merge135)return j.stage==="join"?L("Joining them so the joins can't be seen…","وصلها بحيث لا تظهر الوصلات…"):L("Finding where each video really ends and begins…","إيجاد أين ينتهي كل فيديو ويبدأ فعلاً…");
+  if(m.edit135){const p=j.parts108;return j.stage==="join"?L("Putting the edited seconds back, with the video's own sound…","إعادة الثواني المعدّلة إلى مكانها مع صوت الفيديو…"):j.stage==="edit"&&p&&p[1]>1?L("Editing part "+Math.min(p[1],p[0]+1)+" of "+p[1]+"…","تعديل الجزء "+Math.min(p[1],p[0]+1)+" من "+p[1]+"…"):j.stage==="edit"?L("Editing — the rest stays as it is…","يجري التعديل — يبقى الباقي كما هو…"):L("Preparing the seconds to edit…","تجهيز الثواني المراد تعديلها…")}}
+  return o.apply(this,arguments)})(line132);
+API.req=(o=>async function(p){const r=await o.apply(this,arguments);try{const m=/^\/v1\/jobs\/([A-Za-z0-9_-]+)$/.exec(String(p));
+  if(m&&r&&r.id&&(r.merge135||r.edit135)){const j=S.jobs.find(x=>x.remote===r.id);if(j){if(r.merge135)j.merge135=r.merge135;if(r.edit135)j.edit135=r.edit135;if(r.dur&&r.status==="done")j.dur=r.dur}}}catch(e){}return r})(API.req);
+(()=>{const st=document.createElement("style");st.textContent=`
+#main .edstage,#main .edstage canvas,#main .tlwrap,#main .tlin,#main .transport{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+.fu135{display:none}
+@media (max-width:767px){
+  #main .dock98{transition:transform .45s cubic-bezier(.22,.9,.24,1),opacity .28s ease}
+  #main .dock98.off134{transform:translateY(calc(100% + 48px));opacity:0;visibility:hidden;pointer-events:none;transition:transform .45s cubic-bezier(.22,.9,.24,1),opacity .28s ease,visibility 0s linear .45s}
+  #main .dock98::after,#main .dock98.off134::after{display:none}
+  .fu135{display:grid;place-items:center;position:fixed;left:50%;bottom:calc(var(--bn135,58px) + 10px);z-index:30;width:46px;height:28px;min-height:0!important;padding:0;margin:0;border-radius:999px;border:1px solid var(--line2);
+    background:color-mix(in srgb,var(--panel2) 86%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);color:var(--text);box-shadow:0 6px 18px rgba(0,0,0,.35);cursor:pointer;
+    opacity:0;pointer-events:none;transform:translate(-50%,14px) scale(.9);transition:transform .45s cubic-bezier(.22,.9,.24,1),opacity .3s ease}
+  .fu135.on{opacity:1;pointer-events:auto;transform:translate(-50%,0) scale(1)}
+  .fu135 svg{width:16px;height:16px}
+}
+@media (prefers-reduced-motion:reduce){.fu135,#main .dock98{transition:none!important}}
+.mg135g{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;max-height:min(44vh,360px);overflow:auto;margin:0 0 10px;padding:2px}
+.mg135t{position:relative;display:block;padding:0;border-radius:12px;border:1px solid var(--line2);background:var(--panel2);overflow:hidden;cursor:pointer;aspect-ratio:1;min-height:0}
+.mg135t>*:first-child{width:100%;height:100%;object-fit:cover;display:block}
+.mg135t[aria-pressed="true"]{border-color:var(--lime);box-shadow:0 0 0 2px color-mix(in srgb,var(--lime) 50%,transparent)}
+.mg135n{position:absolute;top:6px;inset-inline-start:6px;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--lime);color:#111;font:700 12px/1 var(--mono)}
+.mg135d{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;gap:4px;padding:4px 6px;font:600 11px/1.2 var(--mono);color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.7))}
+.mg135d em{font-style:normal;font-family:inherit;color:var(--lime)}
+.ew135 textarea{width:100%;margin:0 0 8px}.ew135 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

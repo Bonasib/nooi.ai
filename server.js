@@ -30,6 +30,8 @@ import { modelNames, publicRegistry } from "./lib/models.js";
 import { shotsTable133, probe132, fileOf132 } from "./lib/long132.js";
 import { clean134, quote134, ready134 } from "./lib/sound134.js";
 import { ANGLES134 } from "./lib/extend134.js";
+import { editPlan135, editPrice135, EDIT_MAX135 } from "./lib/edit135.js";
+import { engineFor134 } from "./lib/engine134.js";
 import { createToken, listTokens, revokeToken, userFromToken, updateToken, tokenRules, tokenFor, tokenCtx } from "./lib/tokens.js";
 import { handleMcp } from "./lib/mcp.js";
 import { verify, canSendSignInLinks, signInLink, customTokenForEmail } from "./lib/auth.js";
@@ -127,6 +129,16 @@ app.post("/v1/sound134/quote", requireUser, wrap(async (req, res) => {
   res.json({ total: staff ? 0 : q.total, parts: q.parts, len: q.len, dur: Math.round(info.dur * 10) / 10, scope: c.scope, t0: c.t0, t1: c.t1, lipsync: c.lipsync, missing: ready134(c), cuts: (base && base.cuts134) || [] });
 }));
 app.get("/v1/extend134/angles", (_, res) => res.json(ANGLES134));
+// v135: what an Edit with words costs — the seconds chosen (at least 4), in parts of up to 14 s, each priced like Replace the person
+app.post("/v1/edit135/quote", requireUser, wrap(async (req, res) => {
+  const b = req.body || {}, U = user(req.user.uid), base = b.job ? (U.jobs || {})[String(b.job)] : null, pub0 = (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "");
+  const src = base ? base.url : String(b.src || "").replace(pub0, "");
+  if (!src || (!base && !/^\/media\/[A-Za-z0-9._-]+$/.test(src))) return res.status(400).json({ error: "Pick a finished video first", errorAr: "اختر فيديو مكتملاً أولاً" });
+  const info = await probe132(await fileOf132(src)).catch(() => null); if (!info || !info.dur) return res.status(400).json({ error: "The video can't be read", errorAr: "تعذّرت قراءة الفيديو" });
+  const plan = editPlan135(info.dur, b.from, b.to), ek = engineFor134("video", { model: "seedance20", meta: { edit135: 1 } });
+  res.json({ total: isStaff(req.user) ? 0 : editPrice135(plan, basePrice("video", "mcswap") ?? 30), secs: plan.secs, parts: plan.parts.length, from: plan.from, to: plan.to, dur: Math.round(info.dur * 10) / 10,
+    short: info.dur < 4, long: plan.secs > EDIT_MAX135 + 0.01, ready: !!(ek && String(ek).startsWith("kie@")) });
+}));
 app.get("/v1/config", (_, res) => res.json({
   firebase: firebaseWebConfig(), localAI: { tfUrl: fs.existsSync(TF_DIR + "/transformers.min.js") ? "/vendor/transformers/transformers.min.js" : null, ortBase: fs.existsSync(ORT_DIR) ? "/vendor/ort/" : null, modelsHost: process.env.MODELS_DIR ? "/models/" : null, models: platform().localModels || {} }, emailCode: canSendSignInLinks() && emailConfigured(), kieRoutes: kieRoutes(),
   llm: llmConfigured() ? { on: true } : null,   // (which provider and model: the owner's "Test connection" only — this reply is public)

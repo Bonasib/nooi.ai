@@ -290,7 +290,7 @@ async def phone(b):
     pos = lambda: E("()=>{const d=document.querySelector('#main .dock98'),a=document.querySelector('#main .fd134');if(!d||!a)return null;const r=d.getBoundingClientRect(),b=a.getBoundingClientRect(),t=getComputedStyle(d).transform;return{top:Math.round(r.top),h:Math.round(r.height),off:d.classList.contains('off134'),arrow:[Math.round(b.width),Math.round(b.height)],label:a.getAttribute('aria-label'),t,ta:getComputedStyle(document.querySelector('#main .cz98')).visibility}}")
     a = await pos(); await pg.locator("#main .fd134").tap(); await pg.wait_for_timeout(700); bb = await pos()
     await E("()=>renderView()"); await pg.wait_for_timeout(300); kept = await pos()
-    await pg.locator("#main .fd134").tap(); await pg.wait_for_timeout(700); c = await pos()
+    await pg.locator(".fu135").tap(); await pg.wait_for_timeout(700); c = await pos()   # (v135: folded, the box is gone — the small arrow above the menu brings it back)
     out["fold"] = {"open": a, "folded": bb, "afterRender": kept, "back": c}
     chk("phone: a small arrow on the prompt box folds it away (a slide), it stays folded, the arrow brings it back; Arabic labels", a and not a["off"] and a["arrow"][0] <= 64 and bb and bb["off"] and bb["top"] > a["top"] + 0.6 * a["h"] and bb["ta"] == "hidden" and "أظهر" in bb["label"]
         and kept and kept["off"] and c and not c["off"] and c["t"] == "none" and c["ta"] == "visible" and "أخفِ" in (a["label"] or ""), out["fold"])

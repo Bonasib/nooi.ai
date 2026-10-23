@@ -117,7 +117,8 @@ async def phone(b):
       await new Promise(r=>setTimeout(r,900));const o={s,q,ct:v.currentTime,seeking:v.seeking,seeks};v.remove();return o}""")
     res["coalesce"] = q; chk("jumps: one at a time, the newest kept", q["q"] == 4.5 and abs(q["ct"] - 4.5) < .05 and not q["seeking"] and q["seeks"] == 2, q)
     # the light copy while dragging (a VP9 stand-in here: this browser has no H.264), the clip itself after
-    p = await E("""async(id)=>{const P=%s;const m=M['c_'+id],v=m.el,px=document.createElement('video');px.muted=true;px.src='/media/b.webm';mediaHost().appendChild(px);landed131(px);
+    # (v135: a clip with its film strip shows the strip instead — tests/v135.py; here the clip has none, so the copy is used)
+    p = await E("""async(id)=>{const P=%s;const m=M['c_'+id],v=m.el,px=document.createElement('video');m.sp135=null;m.spReq135=1;px.muted=true;px.src='/media/b.webm';mediaHost().appendChild(px);landed131(px);
       await new Promise(r=>px.readyState>=2?r():px.addEventListener('loadeddata',r,{once:true}));hook131(m);m.px131=px;ED.playing=false;ED.t=1;await new Promise(r=>setTimeout(r,500));
       TLX.s={scrub:true};const before=CT131.get.call(v);ED.t=2;edTick(performance.now());const r1={use:!!m.use131,want:m.want131,read:v.currentTime};await new Promise(r=>setTimeout(r,500));
       edTick(performance.now());const p1=P(.5,.5);r1.main=CT131.get.call(v);r1.before=before;r1.px=px.currentTime;
@@ -285,7 +286,7 @@ async def desktop(b):
     if await card.count():
         await card.scroll_into_view_if_needed(); cb = await card.bounding_box(); await pg.mouse.click(cb["x"] + cb["width"] / 2, cb["y"] + cb["height"] / 2, button="right"); await pg.wait_for_timeout(250)
         it = await E("()=>[...document.querySelectorAll('.cm131 .cm131i')].map(x=>x.textContent.trim())"); res["menuCard"] = it
-        chk("right click on a video you made: Open, Download, Edit in the editor, Extend… (v132), Voices & sound… (v134), Delete", it[:6] == ["Open", "Download", "Edit in the editor", "Extend…", "Voices & sound…", "Delete"], it)
+        chk("right click on a video you made: Open, Download, Edit in the editor, Extend… (v132), Voices & sound… (v134), Edit with words…, Merge videos… (v135), Delete", it[:8] == ["Open", "Download", "Edit in the editor", "Extend…", "Voices & sound…", "Edit with words…", "Merge videos…", "Delete"], it)
         await pg.keyboard.press("Escape")
     else: chk("a made video on the Video page", False, await E("()=>document.querySelectorAll('.gc98').length"))
     # Grok Imagine 1.5 only with a picture
