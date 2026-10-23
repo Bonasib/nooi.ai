@@ -1,4 +1,4 @@
-# nooi video editor — CapCut + DonkeyCut + nooi (plan, v143–v146)
+# nooi video editor — CapCut + DonkeyCut + nooi (plan, v143–v147)
 
 The owner asked (after v142) for the editor to look and work like DonkeyCut and CapCut, with every nooi feature kept.
 Ideas only, written in our own code and our own icons: DonkeyCut is Apache-2.0 (its code may be read, nothing copied here);
@@ -25,9 +25,10 @@ CapCut is a closed product (only its public feature list and the common editor l
 
 ## Stages
 
-1. **v143 — the layout**: the CapCut / DonkeyCut layout on computer and phone, the asset panel with a media library of your results, the details panel for the selection, the phone tool bars and sheets, the assistant thread, guides on the player, project name.
-2. **v144 — the settings, rebuilt clean**: every settings panel written again as its own function (no more old page underneath); new clip tools: crop, rotate 90°, reverse, canvas (colour / blur / picture), clip animations in & out, audio fades, voice changer, replace clip, extract audio.
-3. **v145 — the timeline, rebuilt clean**: the timeline written again; multi-select, groups, copy & paste, markers and beat marks; the old editor code deleted.
-4. **v146 — AI extras**: remove background (AI engine, price first), auto reframe, stabilise, silence removal, the assistant's @time and selection.
+1. **v143 — the layout** (done): the CapCut / DonkeyCut layout on computer and phone, the asset panel with a media library of your results, the details panel for the selection, the phone tool bars and sheets, the assistant thread, guides on the player, project name.
+2. **v144 — drag everything** (done, asked by the owner after v143): every tile drags onto the timeline or the picture (mouse or long press, also out of picker sheets); news tickers; text styles; each clip's transition length with smoother easing; background removed on the device with a colour, gradient, blur or picture behind; voice isolation (AI engine, priced per minute first); music that ducks under voices; the AI audio tools in one panel.
+3. **v145 — the settings, rebuilt clean**: every settings panel written again as its own function (no more old page underneath); new clip tools: crop, rotate 90°, reverse, canvas (colour / blur / picture), clip animations in & out, audio fades, voice changer, replace clip, extract audio.
+4. **v146 — the timeline, rebuilt clean**: the timeline written again; multi-select, groups, copy & paste, markers and beat marks; the old editor code deleted.
+5. **v147 — AI extras**: background removal on the AI engine as an option (price first), auto reframe, stabilise, silence removal, the assistant's @time and selection.
 
 Each stage: tests, related suites, commit, push, report with the update commands; nothing goes live before the owner approves it on the preview.

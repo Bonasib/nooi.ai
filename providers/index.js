@@ -49,7 +49,7 @@ export const PROVIDERS = {
   stt:     make("Captions / dub", "STT", (p) => ({ task: p.meta?.tool, options: p.meta?.opt, video_url: p.source || p.inputs?.fin }))
 };
 // Which provider handles each kind of studio job
-export const KIND_TO_CAP = { video: "video", chapter: "video", image: "image", look: "image", sheet: "image", voice: "tts", sfx: "music", music: "music", lipsync: "lipsync", bg: "matting", mocap: "mocap", edit: "edit", finish: "enhance", transcribe: "transcribe", dub: "dub", voiceclone: "tts", voiceconvert: "tts", world: "world", "3d": "sam3d", track3d: "sam3d", view3d: "sam3d", place3d: "sam3d" };
+export const KIND_TO_CAP = { video: "video", chapter: "video", image: "image", look: "image", sheet: "image", voice: "tts", sfx: "music", music: "music", lipsync: "lipsync", bg: "matting", mocap: "mocap", edit: "edit", finish: "enhance", transcribe: "transcribe", dub: "dub", voiceclone: "tts", voiceconvert: "tts", world: "world", "3d": "sam3d", track3d: "sam3d", view3d: "sam3d", place3d: "sam3d", isolate: "isolate" };
 export function capFor(kind, meta) {
   if (kind === "finish" && ["captions", "dub"].includes(meta?.tool)) return "stt";
   if (kind === "finish" && meta?.tool === "extend") return "video";

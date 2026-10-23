@@ -59,6 +59,10 @@ async def main():
                 else: await pg.evaluate(GO, page)
                 await pg.wait_for_timeout(250)
                 for f in fields:
+                    if page.startswith("edit:") and not mob and f != "transition":
+                        # v144: on a computer the editor's add panel shows its tiles (they drag onto the timeline); no chip there
+                        t = await pg.evaluate("(s)=>({vis:[...document.querySelectorAll('.ed143 .e-assets '+s.split(',').join(',.ed143 .e-assets '))].filter(b=>b.offsetParent!==null).length,chip:!!document.querySelector('.ed143 .e-assets .pk84c')})", SEL[f])
+                        ok(t["vis"] >= 2 and not t["chip"], f"{lang} {page}: the {f} tiles show in the editor's add panel {t}"); continue
                     st = await pg.evaluate(STATE, SEL[f]); ch = [c for c in st["chips"] if c["f"] == f]
                     ok(st["vis"] == 0, f"{lang} {page}: the old {f} buttons are still showing ({st['vis']})")
                     ok(len(ch) == 1 and ch[0]["pop"] == "dialog" and ch[0]["v"].strip() and "pk84row" in ch[0]["row"], f"{lang} {page}: one {f} chip in the bar {ch}")
@@ -103,14 +107,14 @@ async def main():
             ok(await pg.evaluate("()=>S.img.style") == "anime", "image: the style sheet sets the style")
             await pg.evaluate(GO, "slideshow"); await pick("transition", '[data-val="slide"]'); await pick("move", '[data-val="pan"]')
             ok(await pg.evaluate("()=>[S.ss83.tr,S.ss83.motion]") == ["slide", "pan"], "Video from pictures: the transition and motion sheets set them")
-            await pg.evaluate(EDIT, "color"); await pg.evaluate("()=>document.querySelector('#main .pk84c[data-pk84=effects]').click()"); await pg.wait_for_timeout(200)
-            await pg.click('#modalRoot .pk84o[data-v="glow"]'); await pg.wait_for_timeout(300); await pg.click('#modalRoot .pk84o[data-v="rgb"]'); await pg.wait_for_timeout(300)
-            r = await pg.evaluate("()=>{const c=S.ed.clips.find(x=>x.id===S.ed.sel);return {vfx:c&&c.vfx,open:!!document.querySelector('#modalRoot .pk84s'),chip:document.querySelector('.pk84c[data-pk84=effects] .pk84v').textContent}}")
-            ok(r["vfx"] and r["vfx"].get("glow") and r["vfx"].get("rgb") and r["open"] and sorted(r["chip"].split(" · ")) == ["Glow", "RGB split"], f"editor: effects are several at once, the sheet stays open {r}")
+            # (v144: on a computer the editor's add panel shows these tiles — a tap uses them, a drag puts them on the timeline)
+            await pg.evaluate(EDIT, "color"); await pg.click('.e-assets [data-act="edx-vfx"][data-v="glow"]'); await pg.wait_for_timeout(300); await pg.click('.e-assets [data-act="edx-vfx"][data-v="rgb"]'); await pg.wait_for_timeout(300)
+            r = await pg.evaluate("()=>{const c=S.ed.clips.find(x=>x.id===S.ed.sel);return {vfx:c&&c.vfx,on:[...document.querySelectorAll('.e-assets [data-act=\"edx-vfx\"][aria-pressed=\"true\"]')].map(b=>b.dataset.v).sort()}}")
+            ok(r["vfx"] and r["vfx"].get("glow") and r["vfx"].get("rgb") and r["on"] == ["glow", "rgb"], f"editor: effects are several at once, each tile shows it is on {r}")
             await pg.evaluate(EDIT, "clip"); await pick("transition", '[data-val="fade"]')
             ok(await pg.evaluate("()=>S.ed.clips.find(x=>x.id===S.ed.sel).trans") == "fade", "editor: the clip's transition is set from the sheet")
-            await pg.evaluate(EDIT, "vfx"); n0 = await pg.evaluate("()=>JSON.stringify(S.ed).length"); await pick("overlay", '[data-v="rain"]')
-            ok(await pg.evaluate("()=>JSON.stringify(S.ed).length") > n0 and not await pg.evaluate("()=>!!document.querySelector('#modalRoot .pk84s')"), "editor: weather & light adds the effect and closes")
+            await pg.evaluate(EDIT, "vfx"); n0 = await pg.evaluate("()=>(S.ed.vfx||[]).length"); await pg.click('.e-assets [data-act="edv-add"][data-v="rain"]'); await pg.wait_for_timeout(350)
+            ok(await pg.evaluate("()=>(S.ed.vfx||[]).length") == n0 + 1, "editor: a weather & light tile adds the effect")
             await pg.evaluate(GO, "home"); await pg.evaluate("()=>hfRatioSheet()"); await pg.wait_for_timeout(200)
             h = await pg.evaluate("()=>({tiles:document.querySelectorAll('#modalRoot .pk84o').length,desc:[...document.querySelectorAll('#modalRoot .pk84o small')].filter(s=>s.textContent.trim()).length})")
             await pg.click('#modalRoot .pk84o[data-v="9:16"]'); await pg.wait_for_timeout(250)

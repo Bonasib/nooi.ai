@@ -391,6 +391,7 @@ export function kieAuto(cap, body = {}) {
   if (cap === "tts") return kind === "voice" ? "elevenlabs/text-to-speech-multilingual-v2" : null;      // cloning / conversion need their own provider
   if (cap === "music" || MUSIC_KINDS.has(kind)) return kind === "sfx" ? "elevenlabs/sound-effect-v2" : c.musicModel || "suno:V5";
   if (cap === "matting") return isVid(inp.bgFg) ? null : "recraft/remove-background";
+  if (cap === "isolate") return "elevenlabs/audio-isolation";                                           // v144: the voice of an editor clip, alone
   if (cap === "enhance") { const tool = body.meta?.tool || "upscale"; return tool !== "upscale" ? null : isVid(inp.fin) || body.meta?.isVideo ? "topaz/video-upscale" : "topaz/image-upscale"; }
   if (cap === "lipsync") return isVid(inp.lsV) ? "volcengine/video-to-video-lip-sync" : "kling/ai-avatar-standard";
   if (!["video", "image"].includes(cap)) return null;
