@@ -30,3 +30,5 @@ No code was copied. These three open editors were read for ideas only, and each 
 | Tools in a few groups; subtitle files in and out (.srt / .vtt) | [OpenCut](https://github.com/OpenCut-app/OpenCut) | MIT | `G140`, `subsIn140` / `subsOut140` |
 | Every AI tool in one place; LUT (.cube) and colour-by-colour (HSL) grading | [DonkeyCut](https://github.com/DonkeyCut/Donkey) | Apache-2.0 | `panel140`, `cube140`, `grade140` (own WebGL shader, own built-in looks) |
 | One switch that cleans up voices | [Concat](https://github.com/jub0t/Concat) | AGPL-3.0 — idea only, none of its code | `vcBuild140` (Web Audio filters), `denoise140` (own spectral gate and FFT) |
+| Sound waveforms on the timeline, snapping, keyframes on any setting, masks with soft edges, shapes (v141) | OpenCut | MIT | `paintWf141`, `snap141`, `edxMo` opacity/volume, `lySoft141`, `shDraw141` |
+| A wide font library (v141) | DonkeyCut | Apache-2.0 | 38 more Google Fonts in `FONTS` |

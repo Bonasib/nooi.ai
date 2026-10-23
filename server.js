@@ -397,7 +397,7 @@ app.post("/mcp", async (req, res) => {
 app.get("/mcp", (_, res) => res.status(405).set("Allow", "POST").end());
 
 // Posts & scheduling
-app.get("/v1/posts", requireUser, (req, res) => res.json({ posts: Object.values(user(req.user.uid).posts).map((p) => ({ id: p.id, clientId: p.clientId, status: p.status, error: p.error || "", at: p.at, ...(p.status === "awaiting" ? { caption: p.caption, platforms: p.platforms, mediaUrl: p.mediaUrl, via: p.via || "api" } : {}) })) }));
+app.get("/v1/posts", requireUser, (req, res) => res.json({ posts: Object.values(user(req.user.uid).posts || {}).map((p) => ({ id: p.id, clientId: p.clientId, status: p.status, error: p.error || "", at: p.at, ...(p.status === "awaiting" ? { caption: p.caption, platforms: p.platforms, mediaUrl: p.mediaUrl, via: p.via || "api" } : {}) })) }));
 // posts a connection (MCP / API token) scheduled wait for the owner: approve → scheduled, reject → removed. A connection can't approve.
 app.post("/v1/posts/:id/:op(approve|reject)", requireUser, (req, res) => { if (req.user.viaToken) return res.status(403).json({ error: "Only you can approve posts, from the app" }); const U = user(req.user.uid), p = U.posts[req.params.id];
   if (!p || p.status !== "awaiting") return res.status(404).json({ error: "Not waiting for approval" }); if (req.params.op === "reject") delete U.posts[p.id]; else { p.status = "scheduled"; p.approved = Date.now(); if (!p.at) p.at = new Date().toISOString(); } save(); res.json({ ok: true, status: req.params.op === "reject" ? "removed" : "scheduled" }); });
@@ -414,7 +414,7 @@ app.delete("/v1/posts/:id", requireUser, (req, res) => { delete user(req.user.ui
 
 // Connected accounts (OAuth)
 const pending = new Map();
-app.get("/v1/accounts", requireUser, (req, res) => { const a = user(req.user.uid).accounts; res.json({ accounts: Object.fromEntries(Object.keys(a).map((k) => [k, true])) }); });
+app.get("/v1/accounts", requireUser, (req, res) => { const a = user(req.user.uid).accounts || {}; res.json({ accounts: Object.fromEntries(Object.keys(a).map((k) => [k, true])) }); });
 app.get("/v1/oauth/:p/start", requireUser, (req, res) => {
   const key = OAUTH[req.params.p]?.alias || req.params.p, o = OAUTH[key];
   if (!o || !o.configured()) return res.status(501).send("This platform's app keys are not set on the server yet.");

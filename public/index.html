@@ -6677,10 +6677,18 @@ function edxDrawLayers(ctx,W,H,t){(S.ed.layers||[]).forEach(Ly=>{if(t<Ly.start||
   let a=(Ly.op??100)/100,sc=1,dx=0;const e=Math.min(1,lt/.35,(len-lt)/.35);if(Ly.anim==="fade")a*=clamp(e,0,1);else if(Ly.anim==="pop")sc=lt<.3?.4+2*lt:1;else if(Ly.anim==="slide")dx=(1-clamp(Math.min(1,lt/.4),0,1))*W*.6;
   const sw=srcW(m),sh=srcH(m),dw=W*(Ly.sc||40)/100,dh=dw*sh/sw;const src=Ly.key&&Ly.key!=="none"?edxKeyed(Ly,m):m.el;
   ctx.save();ctx.globalAlpha=clamp(a,0,1);ctx.globalCompositeOperation=Ly.blend||"source-over";ctx.translate((Ly.x??.5)*W+dx,(Ly.y??.5)*H);ctx.rotate((Ly.rot||0)*Math.PI/180);ctx.scale(sc,sc);
-  if(Ly.shape==="circle"||Ly.shape==="round"){ctx.beginPath();if(Ly.shape==="circle"){const r=Math.min(dw,dh)/2;ctx.arc(0,0,r,0,Math.PI*2)}else if(ctx.roundRect)ctx.roundRect(-dw/2,-dh/2,dw,dh,Math.min(dw,dh)*.12);else ctx.rect(-dw/2,-dh/2,dw,dh);ctx.clip()}
+  const fe=clamp(+Ly.feather||0,0,100);   // (v141: a soft edge — the shape's mask blurred — instead of a hard cut)
+  if(!fe&&Ly.shape&&Ly.shape!=="none"){lyPath141(ctx,Ly.shape,dw,dh,0);ctx.clip()}
   if(Ly.shadow){ctx.shadowColor="rgba(0,0,0,.45)";ctx.shadowBlur=W*.02;ctx.shadowOffsetY=W*.006}
-  ctx.drawImage(src,-dw/2,-dh/2,dw,dh);ctx.restore();
-  if(Ly.border&&Ly.shape!=="none"){ctx.save();ctx.translate((Ly.x??.5)*W+dx,(Ly.y??.5)*H);ctx.strokeStyle="#fff";ctx.lineWidth=W*.006;ctx.beginPath();if(Ly.shape==="circle")ctx.arc(0,0,Math.min(dw,dh)/2,0,Math.PI*2);else ctx.rect(-dw/2,-dh/2,dw,dh);ctx.stroke();ctx.restore()}})}
+  ctx.drawImage(fe?lySoft141(src,Ly.shape||"none",dw,dh,fe):src,-dw/2,-dh/2,dw,dh);ctx.restore();
+  if(Ly.border&&Ly.shape!=="none"&&!fe){ctx.save();ctx.translate((Ly.x??.5)*W+dx,(Ly.y??.5)*H);ctx.rotate((Ly.rot||0)*Math.PI/180);ctx.strokeStyle="#fff";ctx.lineWidth=W*.006;lyPath141(ctx,Ly.shape,dw,dh,0);ctx.stroke();ctx.restore()}})}
+function lyPath141(c,shape,w,h,inset){const ww=Math.max(1,w-2*inset),hh=Math.max(1,h-2*inset);c.beginPath();
+  if(shape==="circle")c.arc(0,0,Math.max(.5,Math.min(w,h)/2-inset),0,Math.PI*2);else if(shape==="oval")c.ellipse(0,0,ww/2,hh/2,0,0,Math.PI*2);
+  else if(shape==="round"&&c.roundRect)c.roundRect(-ww/2,-hh/2,ww,hh,Math.min(ww,hh)*.12);else c.rect(-ww/2,-hh/2,ww,hh)}
+function lySoft141(src,shape,dw,dh,fe){const k=Math.min(2048/Math.max(dw,dh),1),w=Math.max(2,Math.round(dw*k)),h=Math.max(2,Math.round(dh*k)),f=Math.min(w,h)*fe/100*.22;
+  const A=edxCv("lyf141",w,h),a=A.getContext("2d"),B=edxCv("lym141",w,h),b=B.getContext("2d");a.setTransform(1,0,0,1,0,0);a.globalCompositeOperation="source-over";a.clearRect(0,0,w,h);a.drawImage(src,0,0,w,h);
+  b.setTransform(1,0,0,1,0,0);b.clearRect(0,0,w,h);b.filter="blur("+Math.max(.5,f*.8).toFixed(1)+"px)";b.fillStyle="#fff";b.translate(w/2,h/2);lyPath141(b,shape,w,h,f);b.fill();b.filter="none";b.setTransform(1,0,0,1,0,0);
+  a.globalCompositeOperation="destination-in";a.drawImage(B,0,0);a.globalCompositeOperation="source-over";return A}
 /* regions & layers sit on the picture, under texts, captions and the logo */
 overlayVignette=(o=>function(ctx,w,h,amt){if(S.view==="edit"&&ctx.canvas&&ctx.canvas.id==="wk"&&S.ed.clips.length){try{edxDrawRegions(ctx,w,h,ED.t);edxDrawLayers(ctx,w,h,ED.t)}catch(e){}}return o(ctx,w,h,amt)})(overlayVignette);
 /* layer videos follow the playhead */
@@ -8613,6 +8621,7 @@ window.addEventListener("pointermove",e=>{const D=TLX.blk;if(!D||e.pointerId!==D
   else if(k==="clip"){const m=M["c_"+it.id],max=m&&m.type==="video"&&isFinite(m.el.duration)?m.el.duration:(S.jobs.find(j=>j.id===(it.src&&it.src.job))||{}).dur||Math.max(D.e0,30);
     if(D.mode==="l")it.in=+clamp(D.s0+dt*(it.speed||1),0,D.e0-.2).toFixed(2);else it.out=+clamp(D.e0+dt*(it.speed||1),D.s0+.2,max).toFixed(2)}
   else{const len=D.e0-D.s0;if(D.mode==="m"){const s=clamp(D.s0+dt,0,Math.max(0,tot-.1));it.start=+s.toFixed(2);it.end=+(s+len).toFixed(2)}else if(D.mode==="l")it.start=+clamp(D.s0+dt,0,D.e0-.2).toFixed(2);else it.end=+clamp(D.e0+dt,D.s0+.2,tot+30).toFixed(2)}
+  if(typeof snap141==="function")snap141(D,it,k);   // (v141: the edges snap to the playhead, clip edges and other items)
   const z=S.ed.zoom;if(k==="sfx")D.b.style.left=(it.t*z).toFixed(1)+"px";else if(k!=="clip"){D.b.style.left=(it.start*z).toFixed(1)+"px";D.b.style.width=Math.max(14,(it.end-it.start)*z-2).toFixed(1)+"px"}else D.b.style.width=Math.max(18,clipDur(it)*z-2).toFixed(1)+"px";
   const tc=$("#tc");if(tc)tc.textContent=k==="clip"?mmss(it.in)+" → "+mmss(it.out):mmss(k==="sfx"?it.t:it.start)+" → "+mmss(k==="sfx"?it.t:it.end)},true);
 const blkEnd=e=>{const D=TLX.blk;if(!D||e.pointerId!==D.id)return;TLX.blk=null;if(!D.started)return;e.stopImmediatePropagation();D.b.classList.remove("dragging");TLX.dragDone=true;setTimeout(()=>{TLX.dragDone=false},350);edSetPick(D.inf.k,D.inf.it.id);persist();renderView()};
@@ -16585,19 +16594,22 @@ function denoise140(chs){const N=1024,Hh=N/2,len=chs[0].length,B=N/2+1;if(len<N*
     pad.forEach((p,c)=>{const r=R[c],q=I[c];for(let k=0;k<B;k++){r[k]*=g[k];q[k]*=g[k];if(k&&k<N/2){r[N-k]=r[k];q[N-k]=-q[k]}}fft140(r,q,true);const y=out[c];for(let i=0;i<N;i++)y[o+i]+=r[i]*win[i]})}
   return out.map(y=>y.subarray(N,N+len))}
 const DN140=new Map();
-async function vcClips140(total){const SR=48000,off=new OfflineAudioContext(2,Math.max(1,Math.ceil(total*SR)),SR),st=edStarts(),inp=vcBuild140(off);let n=0;
+async function vcClips140(total,clean=true){const SR=48000,off=new OfflineAudioContext(2,Math.max(1,Math.ceil(total*SR)),SR),st=edStarts(),inp=clean?vcBuild140(off):off.destination;let n=0;
   for(let i=0;i<S.ed.clips.length;i++){const c=S.ed.clips[i],m=clipMedia(c);if(!m||m.type!=="video"||!c.vol)continue;const key=m.url||(m.el&&m.el.src);
     let b=AUD139.get(key);if(b===undefined){try{const blob=m.file instanceof Blob?m.file:await(await fetch(m.url||m.el.currentSrc||m.el.src)).blob();b=await off.decodeAudioData(await blob.arrayBuffer())}catch(e){b=null}AUD139.set(key,b)}
     if(!b)continue;const sp=c.speed||1,a=Math.min(c.in,b.duration),e=Math.min(c.out,b.duration);if(e-a<.02)continue;
-    const dk=key+"|"+a.toFixed(3)+"|"+e.toFixed(3);let x=DN140.get(dk);
+    const dk=key+"|"+a.toFixed(3)+"|"+e.toFixed(3);let x=clean?DN140.get(dk):null;
+    if(!clean){const s0=Math.floor(a*b.sampleRate),s1=Math.min(b.length,Math.ceil(e*b.sampleRate));x=new AudioBuffer({length:Math.max(1,s1-s0),numberOfChannels:b.numberOfChannels,sampleRate:b.sampleRate});for(let ch=0;ch<b.numberOfChannels;ch++)x.copyToChannel(b.getChannelData(ch).subarray(s0,s1),ch)}
     if(!x){const s0=Math.floor(a*b.sampleRate),s1=Math.min(b.length,Math.ceil(e*b.sampleRate)),chs=[];for(let ch=0;ch<b.numberOfChannels;ch++)chs.push(b.getChannelData(ch).slice(s0,s1));
       const y=denoise140(chs);x=new AudioBuffer({length:Math.max(1,s1-s0),numberOfChannels:y.length,sampleRate:b.sampleRate});y.forEach((d,ch)=>x.copyToChannel(d,ch));DN140.set(dk,x)}
     if(Math.abs(sp-1)>=1e-3)x=stretch139(x,0,x.duration,sp,off);
-    const s=off.createBufferSource(),gn=off.createGain();s.buffer=x;gn.gain.value=c.vol/100;s.connect(gn).connect(inp);s.start(st[i],0,Math.min(x.duration,total-st[i]));n++}
+    const s=off.createBufferSource(),gn=off.createGain(),len=Math.min(x.duration,total-st[i]);s.buffer=x;gn.gain.value=c.vol/100;
+    if(typeof vkOn141==="function"&&vkOn141(c)&&len>.05){const N=Math.max(2,Math.ceil(len*50)),cv=new Float32Array(N);for(let q=0;q<N;q++)cv[q]=c.vol/100*clamp(edxMo(c,q/(N-1)*len).vk/100,0,2);try{gn.gain.setValueCurveAtTime(cv,st[i],len)}catch(err){}}   // (v141: volume keyframes)
+    s.connect(gn).connect(inp);s.start(st[i],0,len);n++}
   return n?await off.startRendering():null}
-mix139=(o=>async function(total){if(!S.ed.clean140||S.ed.clipSound===false)return o.apply(this,arguments);
+mix139=(o=>async function(total){const clean=!!S.ed.clean140;if((!clean&&!(typeof vkOn141==="function"&&S.ed.clips.some(vkOn141)))||S.ed.clipSound===false)return o.apply(this,arguments);
   const keep=S.ed.clipSound;let p;S.ed.clipSound=false;try{p=o.apply(this,arguments)}finally{S.ed.clipSound=keep}   // (the music, voice-over and sounds as before: the clips' sound is read before its first pause)
-  const rest=await p;let voice=null;try{voice=await vcClips140(total)}catch(e){console.warn("v140 voice cleanup:",e);return o.apply(this,arguments)}
+  const rest=await p;let voice=null;try{voice=await vcClips140(total,clean)}catch(e){console.warn("v140 voice cleanup:",e);return o.apply(this,arguments)}
   if(!voice)return rest;if(!rest)return voice;for(let ch=0;ch<rest.numberOfChannels;ch++){const d=rest.getChannelData(ch),v=voice.getChannelData(Math.min(ch,voice.numberOfChannels-1));for(let k=0;k<d.length&&k<v.length;k++)d[k]+=v[k]}return rest})(mix139);
 
 // ---- 5. subtitle files (.srt / .vtt): bring them in, or save the captions as one
@@ -16647,6 +16659,145 @@ renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="edit"){co
 .clean140{margin:0 0 10px}.lut140 .gl i{display:block;width:100%;height:100%;min-height:26px;border-radius:8px}
 .hsl140b{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 6px}.hsl140b button{width:30px;height:30px;border-radius:50%;border:2px solid transparent;background:var(--c);box-shadow:inset 0 0 0 2px var(--panel);padding:0;position:relative}
 .hsl140b button[aria-pressed="true"]{border-color:var(--text)}.hsl140b button.on::after{content:"";position:absolute;right:-2px;top:-2px;width:8px;height:8px;border-radius:50%;background:var(--text)}`;document.head.appendChild(st)})();
+
+/* ================= v141: THE EDITOR, COMBINED (part 2) =================
+   More of the three open editors' ideas, in our own code: OpenCut (MIT) — sound waveforms on the timeline, snapping, keyframes on
+   any setting, masks with soft edges, shapes; DonkeyCut (Apache-2.0) — a wide font library.
+   1. Waveforms: every clip with sound, the music, the voice-over and each sound effect show their sound on the timeline.
+   2. Snapping: while you drag or trim on the timeline, the edge snaps to the playhead, clip edges and other items (a line shows
+      where); the magnet in the toolbar turns it off.
+   3. Keyframes for opacity and volume (Motion & zoom): fade a clip in or out, duck or raise its sound — in the preview and the export.
+   4. Layers: an oval shape and a soft edge for any shape.
+   5. 38 more fonts (Arabic and Latin) and 8 shapes (rectangle, circle, triangle, star, arrow, line, speech bubble, heart) with
+      fill, outline, size, width, rotation, opacity, corners and words inside. */
+// ---- 1. waveforms
+const WF141=new Map(),DEC141={ctx:null};
+async function decode141(key,m){if(AUD139.has(key))return AUD139.get(key);let b=null;
+  try{const ctx=DEC141.ctx||(DEC141.ctx=new OfflineAudioContext(1,1,48000)),blob=m.file instanceof Blob?m.file:await(await fetch(m.url||m.el.currentSrc||m.el.src)).blob();
+    if(blob.size<=300*1024*1024)b=await ctx.decodeAudioData(await blob.arrayBuffer())}catch(e){b=null}
+  AUD139.set(key,b);return b}
+// the loudest sample in each 1/50 s — enough for a picture of the sound at any zoom
+async function wfGet141(key,getBuf){const v=WF141.get(key);if(v!==undefined)return v==="busy"?null:v;WF141.set(key,"busy");
+  try{const b=await getBuf();if(!b||!b.length){WF141.set(key,null);return null}const R=50,n=Math.max(1,Math.ceil(b.duration*R)),p=new Float32Array(n),step=b.sampleRate/R,chs=[];
+    for(let c=0;c<b.numberOfChannels;c++)chs.push(b.getChannelData(c));
+    for(let i=0;i<n;i++){let m=0;const a=Math.floor(i*step),e=Math.min(b.length,Math.floor((i+1)*step));for(const d of chs)for(let k=a;k<e;k+=2){const x=d[k]<0?-d[k]:d[k];if(x>m)m=x}p[i]=m}
+    let mx=0;for(const x of p)if(x>mx)mx=x;const o={R,p,dur:b.duration,mx:mx||1};WF141.set(key,o);return o}
+  catch(e){WF141.set(key,null);return null}}
+function wfSvg141(o,from,to,W,loop){const n=Math.max(1,Math.min(1200,Math.floor(W/3))),h=16;let d="";
+  for(let i=0;i<n;i++){let a=from+(to-from)*i/n;const span=(to-from)/n;if(loop&&o.dur>0)a%=o.dur;const i0=Math.max(0,Math.floor(a*o.R)),i1=Math.max(i0+1,Math.ceil((a+span)*o.R));let m=0;
+    for(let k=i0;k<i1&&k<o.p.length;k++)if(o.p[k]>m)m=o.p[k];const y=Math.max(.5,m/o.mx*h/2);d+="M"+(i*3+1.5).toFixed(1)+" "+(h/2-y).toFixed(1)+"V"+(h/2+y).toFixed(1)}
+  return'<svg class="wf141" viewBox="0 0 '+n*3+" "+h+'" preserveAspectRatio="none" aria-hidden="true"><path d="'+d+'"/></svg>'}
+function paintWf141(){if(S.view!=="edit")return;const E=S.ed,z=E.zoom,tot=edTotal(),want=[];
+  const put=(b,key,get,from,to,loop)=>{if(!b||b.querySelector(".wf141"))return;const o=WF141.get(key);if(o&&o!=="busy"){const w=parseFloat(b.style.width)||b.getBoundingClientRect().width;if(w>4)b.insertAdjacentHTML("beforeend",wfSvg141(o,from,to,w,loop))}else if(o===undefined)want.push([key,get])};
+  document.querySelectorAll("#tlin .blk.v[data-clip]").forEach(b=>{const c=E.clips.find(x=>x.id===b.dataset.clip),m=c&&clipMedia(c);if(!m||m.type!=="video"||!(c.vol>0)||!(m.url||(m.el&&m.el.src)))return;const key=m.url||m.el.src;put(b,key,()=>decode141(key,m),c.in,c.out)});
+  const mu=M.edMusic,mb=document.querySelector('#tlin .trk[data-trk="a"] .blk.a');if(mu&&mb&&(mu.url||(mu.el&&mu.el.src))){const key="mu:"+(mu.url||mu.el.src);put(mb,key,()=>decode141(key,mu),0,Math.max(.1,tot),true)}
+  const vo=M.edVoice;if(vo&&(vo.url||(vo.el&&vo.el.src))){const tr=[...document.querySelectorAll("#tlin .trk")].find(t=>(t.querySelector(".tn")||{}).textContent==="🎙"),vb=tr&&tr.querySelector(".blk.a");
+    if(vb){const key="vo:"+(vo.url||vo.el.src),w=parseFloat(vb.style.width)||0;put(vb,key,()=>decode141(key,vo),0,Math.max(.1,w/z))}}
+  document.querySelectorAll('#tlin .blk[data-edxsel^="sx:"]').forEach(b=>{const it=(E.sfx||[]).find(x=>"sx:"+x.id===b.dataset.edxsel);if(!it)return;const key="sx:"+(it.n==="file"?it.id:it.n);
+    put(b,key,()=>edxBuffer(it),0,Math.max(.05,(parseFloat(b.style.width)||20)/z))});
+  if(want.length&&!WF141.t)WF141.t=setTimeout(async()=>{WF141.t=null;for(const[key,get]of want)await wfGet141(key,get);paintWf141()},120)}
+renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="edit")try{paintWf141()}catch(e){}return r})(renderView);
+
+// ---- 2. snapping
+const ICON_MAG141='<path d="M6 4v7a6 6 0 0 0 12 0V4"/><path d="M10 4v7a2 2 0 0 0 4 0V4"/><path d="M6 8h4M14 8h4"/>';
+function snapPts141(skip){const E=S.ed,st=edStarts(),pts=[0,ED.t];if(!E.clips.includes(skip))pts.push(edTotal());   // (a clip's own trim moves the end of the timeline)E.clips.forEach((c,i)=>{if(c===skip)return;pts.push(st[i],st[i]+clipDur(c))});
+  for(const arr of[E.texts,E.infos,E.vfx,E.layers,E.regions])(arr||[]).forEach(x=>{if(x!==skip&&x&&isFinite(x.start)){pts.push(x.start,x.end)}});(E.sfx||[]).forEach(x=>{if(x!==skip)pts.push(x.t)});
+  if(E.caps&&E.caps.on)(E.caps.words||[]).forEach(w=>pts.push(w.s));return pts.filter(p=>isFinite(p))}
+function snap141(D,it,k){if(S.ed.snap141===false){line141(null);return}const z=S.ed.zoom,th=8/z,pts=snapPts141(it);let best=null;
+  const near=(cur,apply)=>{for(const p of pts){const d=Math.abs(p-cur);if(d<th&&(!best||d<best.d))best={d,p,apply}}};
+  if(k==="sfx")near(it.t,p=>{it.t=+Math.max(0,p).toFixed(2)});
+  else if(k==="clip"){if(D.mode==="r"){const i=S.ed.clips.indexOf(it),st=edStarts()[i],m=M["c_"+it.id],max=m&&m.type==="video"&&isFinite(m.el.duration)?m.el.duration:1e9;
+    near(st+clipDur(it),p=>{const out=+(it.in+(p-st)*(it.speed||1)).toFixed(2);if(out>it.in+.2&&out<=max+.01)it.out=out})}}
+  else{const len=it.end-it.start;if(D.mode==="m"){near(it.start,p=>{if(p>=0){it.start=+p.toFixed(2);it.end=+(p+len).toFixed(2)}});near(it.end,p=>{if(p-len>=0){it.end=+p.toFixed(2);it.start=+(p-len).toFixed(2)}})}
+    else if(D.mode==="l")near(it.start,p=>{if(p<it.end-.2)it.start=+p.toFixed(2)});else near(it.end,p=>{if(p>it.start+.2)it.end=+p.toFixed(2)})}
+  if(best){best.apply(best.p);line141(best.p)}else line141(null)}
+function line141(p){const tl=$("#tlin");if(!tl)return;let l=tl.querySelector(".snap141");if(p==null){if(l)l.remove();return}
+  if(!l){l=document.createElement("div");l.className="snap141";tl.appendChild(l)}l.style.left=(40+p*S.ed.zoom).toFixed(1)+"px"}
+edToolbar=(o=>function(){const h=o.apply(this,arguments),on=S.ed.snap141!==false;
+  return h.replace('<span class="savedot"',tb("snap141",ICON_MAG141,L("Snap","التصاق"),'aria-pressed="'+on+'"')+'<span class="savedot"')})(edToolbar);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="snap141"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
+  S.ed.snap141=S.ed.snap141===false;persist();renderView();toast(S.ed.snap141!==false?L("Snapping on — edges stick to the playhead and other items.","الالتصاق مفعّل — تلتصق الحواف بالمؤشر والعناصر الأخرى."):L("Snapping off","الالتصاق متوقف"),{type:"info"})},true);
+
+// ---- 3. keyframes for opacity and volume
+edxMo=(o=>function(c,tl){const r=o.apply(this,arguments),kf=c&&c.mo&&c.mo.kf;let op=100,vk=100;
+  if(kf&&kf.length){const g=(q,key)=>q[key]??100;if(kf.length===1||tl<=kf[0].t){op=g(kf[0],"o");vk=g(kf[0],"vk")}else if(tl>=kf[kf.length-1].t){const q=kf[kf.length-1];op=g(q,"o");vk=g(q,"vk")}
+    else{let i=0;while(i<kf.length-2&&kf[i+1].t<tl)i++;const a=kf[i],b=kf[i+1],k=(EDX_EASE[c.mo.ease]||EDX_EASE.smooth)(clamp((tl-a.t)/Math.max(1e-6,b.t-a.t),0,1));op=g(a,"o")+(g(b,"o")-g(a,"o"))*k;vk=g(a,"vk")+(g(b,"vk")-g(a,"vk"))*k}}
+  r.o=op;r.vk=vk;return r})(edxMo);
+const opOn141=c=>!!(c&&c.mo&&c.mo.kf&&c.mo.kf.some(k=>k.o!=null&&k.o<100)),vkOn141=c=>!!(c&&c.mo&&c.mo.kf&&c.mo.kf.some(k=>k.vk!=null&&k.vk!==100));
+// opacity: the clip drawn see-through over black (a fade to or from black); inside a cross-fade the two multiply
+drawFit=(o=>function(ctx,m,ow,oh,lt,filter){if(S.view!=="edit"||!ctx||!ctx.canvas||ctx.canvas.id!=="wk")return o.apply(this,arguments);const c=edxClipOf(m,lt);if(!opOn141(c))return o.apply(this,arguments);
+  const a=clamp(edxMo(c,clamp((lt-c.in)/(c.speed||1),0,clipDur(c))).o/100,0,1);if(a>=.999)return o.apply(this,arguments);
+  if(ctx.globalAlpha>=.999){ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation="source-over";ctx.filter="none";ctx.fillStyle="#000";ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);ctx.restore()}
+  const g0=ctx.globalAlpha;ctx.globalAlpha=g0*a;try{return o.apply(this,arguments)}finally{ctx.globalAlpha=g0}})(drawFit);
+// volume: the playing clip follows its keys in the preview (the export: the mix, v140's vcClips140)
+syncClipMedia=(o=>function(i,lt,playing){const r=o.apply(this,arguments),c=S.ed.clips[i],m=c&&M["c_"+c.id];
+  if(m&&m.type==="video"&&vkOn141(c)){const st=edStarts()[i]||0;m.el.volume=clamp((c.vol||0)/100*edxMo(c,clamp(ED.t-st,0,clipDur(c))).vk/100,0,1)}return r})(syncClipMedia);
+EDX_PANELS.motion=(o=>function(){const h=o.apply(this,arguments),c=edxPick();if(!c)return h;const v=edxMo(c,edxLocal(c)),m=clipMedia(c),k=h.indexOf(">"+L("Keyframes","الإطارات المفتاحية")),i=k<0?-1:h.lastIndexOf('<span class="lbl"',k);if(i<0)return h;
+  return h.slice(0,i)+edxSlider("mo.o",L("Opacity","الشفافية"),Math.round(v.o),0,100,1,"%")+(m&&m.type==="video"?edxSlider("mo.vk",L("Volume","مستوى الصوت"),Math.round(v.vk),0,200,1,"%"):"")+
+    '<p class="small dim" style="margin:4px 0 0">'+L("Opacity and volume are keyframed like the rest: set one at a moment, move the playhead, set another — it changes smoothly between them.","الشفافية ومستوى الصوت لهما إطارات مفتاحية مثل البقية: اضبط قيمة عند لحظة، حرّك المؤشر، اضبط أخرى — تتغير بنعومة بينهما.")+"</p>"+h.slice(i)})(EDX_PANELS.motion);
+
+// ---- 4. layers: an oval and a soft edge
+EDX_PANELS.layers=(o=>function(){let h=o.apply(this,arguments);const Ly=(S.ed.layers||[]).find(x=>x.id===S.ed.selLayer);if(!Ly)return h;
+  const k=h.indexOf('data-act="edx-ly-shape" data-v="circle"');if(k<0)return h;const j=h.indexOf("</div>",k);if(j<0)return h;
+  return h.slice(0,j)+'<button data-act="edx-ly-shape" data-v="oval" aria-pressed="'+(Ly.shape==="oval")+'">'+esc(L("Oval","بيضاوي"))+"</button></div>"+edxSlider("ly.feather",L("Soft edge","حافة ناعمة"),Ly.feather||0,0,100,1,"%")+h.slice(j+6)})(EDX_PANELS.layers);
+
+// ---- 5. fonts and shapes
+FONTS.push(["Readex Pro","ar","sans",[400,700]],["Noto Sans Arabic","ar","sans",[400,700,900]],["Alexandria","ar","sans",[400,700,900]],["Baloo Bhaijaan 2","ar","display",[400,700,800]],
+  ["Playpen Sans Arabic","ar","hand",[400,700]],["Zain","ar","sans",[400,700,900]],["Lateef","ar","serif",[400,700]],["Vibes","ar","display",[400]],["Blaka","ar","display",[400]],["Reem Kufi Fun","ar","display",[400,700]],
+  ["Ruwudu","ar","serif",[400,700]],["Alkalami","ar","serif",[400]],["Qahiri","ar","display",[400]],["Gulzar","ar","serif",[400]],
+  ["Raleway","lat","sans",[400,700,900]],["Nunito","lat","sans",[400,700,900]],["Work Sans","lat","sans",[400,700,900]],["Manrope","lat","sans",[400,700,800]],["Outfit","lat","sans",[400,700,900]],
+  ["Sora","lat","sans",[400,700,800]],["Plus Jakarta Sans","lat","sans",[400,700,800]],["Lexend","lat","sans",[400,700,900]],["Barlow Condensed","lat","sans",[400,700,900]],["Kanit","lat","sans",[400,700,900]],
+  ["Quicksand","lat","sans",[400,700]],["Fredoka","lat","display",[400,700]],["Teko","lat","display",[400,700]],["Bangers","lat","display",[400]],["Luckiest Guy","lat","display",[400]],["Russo One","lat","display",[400]],
+  ["Staatliches","lat","display",[400]],["Unbounded","lat","display",[400,700,900]],["Merriweather","lat","serif",[400,700,900]],["EB Garamond","lat","serif",[400,700,800]],["Cinzel","lat","serif",[400,700,900]],
+  ["Kaushan Script","lat","hand",[400]],["Shadows Into Light","lat","hand",[400]],["Fira Code","lat","mono",[400,700]]);
+const SH141=[["rect","Rectangle","مستطيل"],["circle","Circle","دائرة"],["triangle","Triangle","مثلث"],["star","Star","نجمة"],["arrow","Arrow","سهم"],["line","Line","خط"],["bubble","Speech bubble","فقاعة كلام"],["heart","Heart","قلب"]];
+const SHI141={rect:'<rect x="3" y="6" width="18" height="12" rx="2"/>',circle:'<circle cx="12" cy="12" r="8"/>',triangle:'<path d="M12 4l9 16H3z"/>',star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+  arrow:'<path d="M3 10h11V6l7 6-7 6v-4H3z"/>',line:'<path d="M4 12h16" stroke-width="3"/>',bubble:'<path d="M4 5h16v10H10l-5 4v-4H4z"/>',heart:'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>'};
+const shSize141=it=>{const ar=it.ar||(["rect","arrow","bubble","line"].includes(it.sh)?1.7:1);return ar};
+function shPath141(c,sh,w,h,it){c.beginPath();if(sh==="circle")c.ellipse(0,0,w/2,h/2,0,0,Math.PI*2);
+  else if(sh==="triangle"){c.moveTo(0,-h/2);c.lineTo(w/2,h/2);c.lineTo(-w/2,h/2);c.closePath()}
+  else if(sh==="star"){const R=Math.min(w,h)/2,r=R*.45;for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,q=i%2?r:R;c.lineTo(Math.cos(a)*q*w/Math.min(w,h),Math.sin(a)*q*h/Math.min(w,h))}c.closePath()}
+  else if(sh==="arrow"){const hd=Math.min(h,w*.45);[[-w/2,-h*.2],[w/2-hd,-h*.2],[w/2-hd,-h/2],[w/2,0],[w/2-hd,h/2],[w/2-hd,h*.2],[-w/2,h*.2]].forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.closePath()}
+  else if(sh==="bubble"){const r=Math.min(w,h)*.18,bh=h*.78,x0=-w/2,y0=-h/2,x1=w/2,y1=y0+bh;c.moveTo(x0+r,y0);c.lineTo(x1-r,y0);c.arcTo(x1,y0,x1,y0+r,r);c.lineTo(x1,y1-r);c.arcTo(x1,y1,x1-r,y1,r);
+    c.lineTo(x0+w*.42,y1);c.lineTo(x0+w*.18,h/2);c.lineTo(x0+w*.28,y1);c.lineTo(x0+r,y1);c.arcTo(x0,y1,x0,y1-r,r);c.lineTo(x0,y0+r);c.arcTo(x0,y0,x0+r,y0,r);c.closePath()}
+  else if(sh==="heart"){const s=w/2,t=h/2;c.moveTo(0,t*.85);c.bezierCurveTo(-s*1.25,-t*.05,-s*.75,-t*1.15,0,-t*.5);c.bezierCurveTo(s*.75,-t*1.15,s*1.25,-t*.05,0,t*.85);c.closePath()}
+  else{const r=Math.min(w,h)*clamp((it.rad??12)/100,0,.5);if(c.roundRect)c.roundRect(-w/2,-h/2,w,h,r);else c.rect(-w/2,-h/2,w,h)}}
+function shDraw141(ctx,W,H,t,it){if(t<it.start||t>it.end)return;const lt=t-it.start,len=it.end-it.start,an=it.anim!=="none",out=an?clamp((len-lt)/.3,0,1):1,U=Math.min(W,H)*(it.k||1),ar=shSize141(it),sh=it.sh||"rect";
+  const w=U*.36*Math.sqrt(ar),h=sh==="line"?Math.max(2,U*.006*(+it.lw||3)):U*.36/Math.sqrt(ar),cx=it.x*W,cy=it.y*H,s=an?Math.max(.001,backOut131(clamp(lt/.45,0,1))):1,ac=it.accent||"#CFE13E";
+  ctx.save();ctx.globalAlpha=out*clamp((it.op??100)/100,0,1);ctx.translate(cx,cy);ctx.rotate((it.rot||0)*Math.PI/180);ctx.scale(s,s);
+  if(sh==="line"){ctx.beginPath();ctx.lineCap="round";ctx.lineWidth=h;ctx.strokeStyle=ac;ctx.moveTo(-w/2+h/2,0);ctx.lineTo(w/2-h/2,0);ctx.stroke()}
+  else{shPath141(ctx,sh,w,h,it);if(it.fill!=="none"){ctx.fillStyle=ac;ctx.fill()}const lw=+it.lw||0;if(lw>0||it.fill==="none"){ctx.lineWidth=U*.004*Math.max(lw,2);ctx.strokeStyle=it.line||"#ffffff";ctx.lineJoin="round";ctx.stroke()}}
+  if(it.t1&&sh!=="line"){const F=fitF(ctx,it.t1,700,U*.055,w*.78);ctx.font=infoFont(700,F);ctx.textAlign="center";ctx.textBaseline="middle";ctx.direction=isRtl(it.t1)?"rtl":"ltr";
+    ctx.fillStyle=it.fill==="none"?(it.line||"#ffffff"):onAcc131(ac);ctx.fillText(it.t1,0,sh==="bubble"?-h*.11:sh==="triangle"?h*.15:0)}
+  ctx.restore();(ED.hit=ED.hit||[]).push({k:"info",id:it.id,x:cx-w/2,y:cy-h/2,w,h:Math.max(h,U*.04),cx,cy})}
+edInfoDraw=(o=>function(ctx,W,H,t){const E=S.ed,all=E.infos||[];if(!all.some(x=>x.type==="sh141"))return o.apply(this,arguments);
+  E.infos=all.filter(x=>x.type!=="sh141");try{o.apply(this,arguments)}finally{E.infos=all}for(const it of all)if(it.type==="sh141"){try{shDraw141(ctx,W,H,t,it)}catch(e){console.warn("v141 shape",e)}}})(edInfoDraw);
+const shAdd141=k=>SH141.some(x=>x[0]===k)&&infoAdd131({type:"sh141",sh:k,accent:k==="line"?"#ffffff":"#CFE13E",line:"#ffffff",lw:k==="line"?3:0,op:100,rot:0,rad:12,y:.5,anim:"in"});
+VIEWS.edit=(o=>function(){let h=o.apply(this,arguments);const E=S.ed;if(E.tab!=="info")return h.replace(/(<div class="blk ix[^"]*"[^>]*>)sh141(<\/div>)/g,"$1"+esc(L("Shape","شكل"))+"$2");
+  h=h.replace(/(<div class="blk ix[^"]*"[^>]*>)sh141(<\/div>)/g,"$1"+esc(L("Shape","شكل"))+"$2");
+  const lab='<span class="lbl">'+esc(L("Infographics","إنفوجرافيك"))+"</span>",i=h.indexOf(lab);
+  const add='<span class="lbl">'+esc(L("Shapes","الأشكال"))+'</span><div class="st131g sh141g">'+SH141.map(x=>'<button type="button" class="sh141t" data-act="sh141-add" data-v="'+x[0]+'" aria-label="'+esc(L(x[1],x[2]))+'" title="'+esc(L(x[1],x[2]))+'">'+svg(SHI141[x[0]])+"</button>").join("")+"</div>";
+  if(i>=0)h=h.slice(0,i)+add+h.slice(i);
+  const p=edPick(),si=p&&p.k==="info"&&edItem(p);
+  if(si&&si.type==="sh141"){const col=(k,v)=>'<label class="colorin">'+(k==="line"?L("Outline","الإطار"):L("Fill","التعبئة"))+' <input type="color" data-sh141="'+k+'" value="'+esc(v)+'"></label>',
+      sl=(k,label,val,min,max)=>'<label class="ctrl"><span>'+label+'</span><input type="range" min="'+min+'" max="'+max+'" step="1" value="'+val+'" data-sh141="'+k+'" data-out="osh141'+k+'"><output id="osh141'+k+'">'+val+"</output></label>";
+    const more='<span class="lbl">'+esc(L("Shape","الشكل"))+'</span><div class="st131g sm sh141g">'+SH141.map(x=>'<button type="button" class="sh141t" data-act="sh141-set" data-v="'+x[0]+'" aria-pressed="'+(si.sh===x[0])+'" aria-label="'+esc(L(x[1],x[2]))+'">'+svg(SHI141[x[0]])+"</button>").join("")+"</div>"+
+      '<div class="row" style="margin-top:10px;gap:14px;flex-wrap:wrap">'+col("accent",si.accent||"#CFE13E")+col("line",si.line||"#ffffff")+'<label class="laisw"><input type="checkbox" data-act="sh141-fill"'+(si.fill==="none"?"":" checked")+"><span>"+L("Filled","مُعبّأ")+"</span></label></div>"+
+      sl("lw",si.sh==="line"?L("Thickness","السماكة"):L("Outline width","عرض الإطار"),+si.lw||0,0,12)+(si.sh==="circle"||si.sh==="star"||si.sh==="heart"||si.sh==="triangle"||si.sh==="line"?"":sl("ar",L("Width","العرض"),Math.round(shSize141(si)*100),30,400))+
+      sl("rot",L("Rotation","الدوران"),si.rot||0,-180,180)+sl("op",L("Opacity","الشفافية"),si.op??100,0,100)+(si.sh==="rect"?sl("rad",L("Corners","الزوايا"),si.rad??12,0,50):"");
+    h=h.replace(/(<input dir="auto" data-ib="t1" value="[^"]*">)/,"$1"+more).replace(/(<label class="lbl">)[^<]*(<\/label><input dir="auto" data-ib="t1")/,"$1"+esc(L("Words inside (optional)","كلمات داخله (اختياري)"))+"$2")}
+  return h})(VIEWS.edit);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="sh141-add"],[data-act="sh141-set"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();
+  if(a.dataset.act==="sh141-add")return void shAdd141(a.dataset.v);const it=edItem(edPick());if(!it||it.type!=="sh141")return;it.sh=a.dataset.v;if(it.sh==="line"&&!(+it.lw))it.lw=3;persist();renderView()},true);
+document.addEventListener("input",e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.sh141||S.view!=="edit")return;const it=edItem(edPick());if(!it||it.type!=="sh141")return;const k=t.dataset.sh141;
+  it[k]=t.type==="color"?t.value:k==="ar"?+t.value/100:+t.value;const out=t.dataset.out&&$("#"+t.dataset.out);if(out)out.textContent=t.value;clearTimeout(PV._p);PV._p=setTimeout(persist,400)});
+document.addEventListener("change",e=>{const t=e.target;if(!t||!t.dataset||t.dataset.act!=="sh141-fill")return;const it=edItem(edPick());if(!it||it.type!=="sh141")return;if(t.checked)delete it.fill;else it.fill="none";persist();renderView()});
+
+(()=>{const st=document.createElement("style");st.textContent=`#tlin .blk{overflow:hidden}#tlin .blk .wf141{position:absolute;left:0;right:0;bottom:1px;width:100%;height:48%;pointer-events:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;vector-effect:non-scaling-stroke;opacity:.5}
+#tlin .blk .wf141 path{vector-effect:non-scaling-stroke}#tlin .snap141{position:absolute;top:0;bottom:0;width:0;border-left:1.5px dashed var(--lime,#9CD245);z-index:6;pointer-events:none}
+.edbar .tb[data-act="snap141"][aria-pressed="false"]{opacity:.55}.edbar .tb[data-act="snap141"][aria-pressed="true"] svg{color:var(--lime-ink)}
+#main .sh141t{display:grid;place-items:center;height:44px;border-radius:10px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);cursor:pointer;padding:0}
+#main .sh141t svg{width:24px;height:24px;fill:currentColor;fill-opacity:.25}#main .sh141t:hover,#main .sh141t[aria-pressed="true"]{border-color:var(--lime)}#main .st131g.sm .sh141t{height:38px}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;
