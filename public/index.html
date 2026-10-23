@@ -16799,6 +16799,100 @@ document.addEventListener("change",e=>{const t=e.target;if(!t||!t.dataset||t.dat
 #main .sh141t{display:grid;place-items:center;height:44px;border-radius:10px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);cursor:pointer;padding:0}
 #main .sh141t svg{width:24px;height:24px;fill:currentColor;fill-opacity:.25}#main .sh141t:hover,#main .sh141t[aria-pressed="true"]{border-color:var(--lime)}#main .st131g.sm .sh141t{height:38px}`;document.head.appendChild(st)})();
 
+/* ================= v142: THE NEW EDITOR PAGE =================
+   The editor page is drawn in one piece now — the old page had grown out of 37 layers, each pasting its part into the one before
+   (and some moving parts of the page after it was drawn), which is where overlaps and odd jumps came from. Now:
+   · a top bar (format · Projects · Export video);
+   · the preview with play, time and zoom — on a phone it stays pinned at the top;
+   · the toolbar and the timeline;
+   · the tools in eight groups (Media · AI · Edit · Text · Audio · Color · Effects · Export), the open group's tabs, its settings —
+     beside the preview on a computer, under the timeline on a phone (the groups in a bar at the foot, above the menu).
+   Tapping an item on the timeline opens its settings (a text → Text, a layer → Layers, a sound → Sound effects …).
+   The tools' settings and the timeline are still made by the old page's code (OLDED142) and taken from it here; v143 rebuilds
+   them too and deletes that code. */
+const OLDED142=VIEWS.edit;
+const G142=[["media","Media","الوسائط","upload",["media"]],["ai","AI","الذكاء","spark",["ai140","ai"]],["edit","Edit","تحرير","edit",["clip","motion","track"]],
+  ["text","Text","النص","font",["text","words","info","logo"]],["audio","Audio","الصوت","music",["audio","sfx"]],["color","Color","الألوان","grade",["color","look"]],
+  ["fx","Effects","المؤثرات","vfx",["vfx","erase","layers","3d"]],["export","Export","التصدير","download",["export"]]];
+const T142={media:["Add media","إضافة وسائط"],ai140:["AI tools","أدوات الذكاء"],ai:["AI edit","تعديل بالذكاء"],clip:["Clip","المقطع"],motion:["Motion & zoom","الحركة والتقريب"],track:["Tracking","التتبّع"],
+  text:["Text","النص"],words:["Captions","الترجمة"],info:["Graphics","الرسوم"],logo:["Logo","الشعار"],audio:["Music & voice","الموسيقى والصوت"],sfx:["Sound effects","المؤثرات الصوتية"],
+  color:["Color & LUT","الألوان وLUT"],look:["Adjust","الضبط"],vfx:["Weather & light","الطقس والإضاءة"],erase:["Erase & blur","مسح وتمويه"],layers:["Layers & keying","طبقات وكروما"],"3d":["3D","ثلاثي الأبعاد"],export:["Export","التصدير"]};
+const grp142=t=>(G142.find(g=>g[4].includes(t))||G142[2])[0];
+UI139.push("last142");
+function media142(){const E=S.ed;
+  return'<p class="small mute" style="margin-top:0">'+L("Add videos and pictures to the timeline — from this device, the camera or your library.","أضف فيديوهات وصوراً إلى الخط الزمني — من هذا الجهاز أو الكاميرا أو مكتبتك.")+"</p>"+addBar()+
+    (E.clips.length?'<span class="lbl">'+L("On the timeline","على الخط الزمني")+" · "+E.clips.length+'</span><div class="edxlist">'+E.clips.map((c,i)=>'<button class="edxrow" data-act="clip142" data-v="'+c.id+'" aria-pressed="'+(c.id===E.sel)+'"><span>'+ic(clipMedia(c)&&clipMedia(c).type==="image"?"image":"video")+(i+1)+" · "+esc(clipName(c))+'</span><span class="mono dim" dir="ltr">'+clipDur(c).toFixed(1)+"s</span></button>").join("")+"</div>":"")}
+VIEWS.edit=function(){if(HIST.i<0)histPush();try{edxInit()}catch(e){}const E=S.ed;if(!E.tab||!T142[E.tab])E.tab="clip";
+  // the old page, only to take the tools' settings and the timeline from it (see the note above)
+  const tpl=document.createElement("template");tpl.innerHTML=OLDED142();const q=s=>tpl.content.querySelector(s),out=e=>e?e.outerHTML:"";
+  // the preview keeps its size while the page is drawn again (the same size the player gives it), so nothing under it jumps
+  const wk=q("#wk");if(wk){const F=fmt(),k=(ED.hq||1080)/Math.max(F[2],F[3]),r=v=>ED.hq?Math.round(v*k/2)*2:Math.round(v*k);wk.setAttribute("width",r(F[2]));wk.setAttribute("height",r(F[3]))}
+  const fb=q(".fmtbtn"),fbn=fb&&fb.querySelector("b");if(fbn){fb.setAttribute("title",fbn.textContent);fb.setAttribute("aria-label",L("Format","المقاس")+": "+fbn.textContent)}
+  const tabsEl=q('.tabs[role="tablist"]'),box=tabsEl&&tabsEl.parentElement,have=["media","ai140"];
+  if(tabsEl)tabsEl.querySelectorAll('[data-set="ed.tab"]').forEach(b=>{if(!have.includes(b.dataset.val))have.push(b.dataset.val)});if(!have.includes(E.tab))E.tab="clip";
+  let panel="";if(box){box.querySelectorAll(":scope>.cat140,:scope>.tabs").forEach(x=>x.remove());panel=box.innerHTML}
+  if(E.tab==="media")panel=media142();
+  else if(E.tab==="ai140")panel='<div class="edcmd142">'+out(q(".edcmdx"))+"</div>"+panel;
+  else if(E.tab==="audio")panel='<div class="row" style="gap:8px;margin:0 0 12px"><button class="btn sm" data-act="ed-rec"'+(REC.on?' aria-pressed="true"':"")+">"+ic("mic")+(M.edVoice&&REC.on?L("Stop","إيقاف"):L("Record voice","سجّل صوتك"))+'</button><label class="btn sm" style="position:relative">'+ic("music")+L("Add music or a voice file","أضف موسيقى أو ملف صوت")+'<input type="file" accept="audio/*" data-edaudio="edMusic" style="position:absolute;inset:0;opacity:0;cursor:pointer" aria-label="'+esc(L("Add music or a voice file","أضف موسيقى أو ملف صوت"))+'"></label></div>'+panel;
+  const g=grp142(E.tab);(E.last142=E.last142||{})[g]=E.tab;
+  const miss=E.clips.filter(c=>c.src.k==="upload"&&!M["c_"+c.id]&&!(S.mediaKeys||{})["c_"+c.id]).length;
+  const rail=G142.filter(x=>x[4].some(t=>have.includes(t))).map(x=>'<button type="button" role="tab" data-act="cat142" data-v="'+x[0]+'" aria-pressed="'+(x[0]===g)+'">'+ic(x[3])+"<span>"+L(x[1],x[2])+"</span></button>").join("");
+  const subs=have.map(t=>'<button data-set="ed.tab" data-val="'+t+'" aria-pressed="'+(E.tab===t)+'"'+(grp142(t)===g?"":" data-h142")+">"+esc(L(...(T142[t]||[t,t])))+"</button>").join("");
+  const one=G142.find(x=>x[0]===g)[4].filter(t=>have.includes(t)).length<2;
+  return'<div class="view ne142">'+(miss?'<div style="margin-bottom:12px">'+note(miss+L(" clip(s) need their file again — select the clip and upload it."," مقطع يحتاج ملفه من جديد — اختر المقطع وارفعه مرة أخرى."))+"</div>":"")+
+    '<div class="ne-top"><h1 class="ne-h">'+L("Video editor","محرر الفيديو")+'</h1><div class="ne-act">'+out(q(".fmtbtn"))+out(q(".pj139b"))+out(q(".edout"))+"</div></div>"+
+    '<div class="ne-body"><nav class="ne-rail" role="tablist" aria-label="'+esc(L("Editor tools","أدوات المحرر"))+'">'+rail+"</nav>"+
+    '<section class="ne-stage">'+out(q(".edstage"))+out(q(".transport"))+'<div class="ne-cmd">'+out(q(".edcmd"))+out(q("#edplan91"))+"</div></section>"+
+    '<section class="ne-tl">'+out(q(".edbar"))+out(q(".tlwrap"))+"</section>"+
+    '<section class="ne-side"><div class="tabs ne-sub'+(one?" one142":"")+'" role="tablist">'+subs+'</div><div class="ne-panel" data-tab="'+esc(E.tab)+'">'+panel+"</div></section></div></div>"};
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="cat142"],[data-act="clip142"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();const E=S.ed;
+  if(a.dataset.act==="clip142"){edSetPick("clip",a.dataset.v);E.tab="clip";persist();renderView();return}
+  const gr=G142.find(x=>x[0]===a.dataset.v);if(!gr)return;const have=[...document.querySelectorAll('.ne-sub [data-set="ed.tab"]')].map(b=>b.dataset.val),last=(E.last142||{})[gr[0]];
+  E.tab=last&&have.includes(last)&&grp142(last)===gr[0]?last:(gr[4].find(t=>have.includes(t))||gr[4][0]);persist();renderView();
+  // on a phone the settings come up right under the pinned preview (where the preview stays once the page scrolls)
+  if(innerWidth<768){const s=document.querySelector(".ne-side"),m=$("#main"),st=document.querySelector(".ne142 .edstage");if(s&&m&&st){const cs=getComputedStyle(st),
+    under=cs.position==="sticky"?m.getBoundingClientRect().top+(parseFloat(cs.top)||0)+st.offsetHeight:st.getBoundingClientRect().bottom;m.scrollTop+=s.getBoundingClientRect().top-under-6}}},true);
+// tapping an item on the timeline opens its settings (when the tab open now isn't one of its own)
+const OWN142={clip:["clip","motion","track","color","look","ai","ai140","export","media"],text:["text"],layer:["layers"],sfx:["sfx"],region:["erase"],info:["info"],vfx:["vfx"]};
+window.addEventListener("click",e=>{if(S.view!=="edit"||TLX.dragDone)return;const b=e.target.closest&&e.target.closest("#tlin .blk");if(!b)return;const inf=typeof blkInfo==="function"?blkInfo(b):null;if(!inf)return;
+  const k=inf.k,E=S.ed,own=OWN142[k]||[];if(own.length&&!own.includes(E.tab)){E.tab=own[0];setTimeout(()=>{persist();renderView()},0)}});
+// drawing the editor again never moves the page: it keeps its height while it is drawn (so a menu or a picked item stays where it was)
+renderView=(o=>function(){const m=S.view==="edit"&&$("#main");if(!m||!m.scrollTop)return o.apply(this,arguments);const sc=m.scrollTop,pb=m.style.paddingBottom;m.style.paddingBottom=(m.clientHeight+sc)+"px";
+  try{return o.apply(this,arguments)}finally{m.style.paddingBottom=pb;if(Math.abs(m.scrollTop-sc)>1)m.scrollTop=sc}})(renderView);
+
+(()=>{const st=document.createElement("style");st.textContent=`
+.ne142 .ne-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px}
+.ne142 .ne-h{display:flex;align-items:center;gap:10px;margin:0;font-size:24px}.ne142 .ne-h svg{width:22px;height:22px;color:var(--lime-ink)}
+.ne142 .ne-act{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ne142 .ne-body{display:grid;grid-template-columns:78px minmax(320px,400px) minmax(0,1fr);grid-template-areas:"rail side stage" "rail side tl";gap:14px;align-items:start}
+.ne142 .ne-rail{grid-area:rail;position:sticky;top:76px;display:flex;flex-direction:column;gap:6px}
+.ne142 .ne-rail button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 4px 8px;border:1px solid transparent;border-radius:14px;background:transparent;color:var(--mute);font-size:11.5px;font-weight:600;line-height:1.15;min-width:0}
+.ne142 .ne-rail button svg{width:21px;height:21px}.ne142 .ne-rail button span{max-width:100%;text-align:center;overflow-wrap:anywhere;hyphens:auto}   /* (a long word in any language wraps, never cut) */
+.ne142 .ne-rail button:hover{background:var(--panel2);color:var(--text)}
+.ne142 .ne-rail button[aria-pressed="true"]{color:var(--text);background:color-mix(in srgb,var(--lime) 13%,var(--panel2));border-color:color-mix(in srgb,var(--lime) 55%,transparent)}
+.ne142 .ne-stage{grid-area:stage;min-width:0}.ne142 .ne-stage .edstage{margin:0}.ne142 .ne-stage .transport{margin-top:8px}
+.ne142 .ne-tl{grid-area:tl;min-width:0;border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:8px 10px 10px}
+.ne142 .ne-tl .edbar{margin:0 0 8px}.ne142 .ne-tl .edbar .tb>span{min-height:14px}   /* (the price turns into a credit icon a moment later; the row keeps its height) */
+.ne142 .ne-side{grid-area:side;min-width:0;position:sticky;top:76px;max-height:calc(100vh - 92px);overflow:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:12px}
+.ne142 .ne-sub{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}.ne142 .ne-sub [data-h142]{display:none!important}.ne142 .ne-sub.one142{display:none}
+.ne142 .ne-panel{min-width:0}.ne142 .ne-panel>.edxpanel,.ne142 .ne-panel>.edpanel71{margin:0}
+.ne142 .edcmd142{margin:0 0 14px}.ne142 .edcmd142 .edcmdx{margin:0;display:flex;flex-wrap:wrap;gap:6px}
+.ne142 .ne-cmd{margin-top:8px}.ne142 .ne-cmd .edcmd{margin:0}.ne142 .ne-cmd .edplan91:empty{display:none}
+@media (max-width:1023px){.ne142 .ne-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"stage" "tl" "rail" "side";align-items:stretch}
+  .ne142 .ne-rail{position:static;top:auto;flex-direction:row;overflow-x:auto;scrollbar-width:none}.ne142 .ne-rail button{flex:1 0 auto;min-width:64px}
+  .ne142 .ne-side{position:static;max-height:none;overflow:visible}}
+@media (max-width:767px){.ne142 .ne-top{margin:0 0 8px;gap:6px}#main .view.ne142 .ne-h{flex:1 1 100%;font-size:18px;line-height:1.2;gap:8px;min-width:0}#main .view.ne142 .ne-h .tchip90{width:28px;height:28px;margin-block:-2px}
+  .ne142 .ne-act{flex:1 1 100%;justify-content:space-between;flex-wrap:nowrap;min-width:0}
+  #main .ne142 .ne-act>.fmtbtn{flex:1 1 0;min-width:0;width:auto;padding:6px 10px}#main .ne142 .ne-act>.fmtbtn>span:nth-child(2){min-width:0}#main .ne142 .ne-act>.fmtbtn b{display:none}#main .ne142 .ne-act>.fmtbtn small{display:block;font-size:12.5px;color:var(--text);overflow-wrap:anywhere}   /* (on a phone the size, never a cut-off name; the name is the button's label) */
+  .ne142 .ne-act>.edout{flex:none;padding-inline:12px}.ne142 .edcmd142 .edcmdx{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.ne142 .edcmd142 .edcmdx .chip{flex:none;white-space:nowrap}
+  .ne142 .ne-body{display:flex;flex-direction:column;align-items:stretch;gap:10px}.ne142 .ne-body>*{min-width:0;max-width:100%}.ne142 .ne-stage{display:contents}
+  .ne142 .ne-stage .edstage{order:1}.ne142 .ne-stage .transport{order:2;margin-top:0}.ne142 .ne-cmd{order:3;margin-top:0}.ne142 .ne-tl{order:4}.ne142 .ne-side{order:5}
+  .ne142 .ne-rail{position:fixed;top:auto;left:0;right:0;bottom:var(--bn140,56px);z-index:9;margin:0;padding:5px 6px;gap:2px;background:color-mix(in srgb,var(--panel) 94%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+  .ne142 .ne-rail button{flex:1 1 0;min-width:42px;padding:5px 0 4px;font-size:10px;gap:2px}.ne142 .ne-rail button svg{width:18px;height:18px}
+  .ne142 .ne-side{border:0;background:none;padding:0}.ne142 .ne-tl{padding:6px 6px 8px}
+  .view.ne142{padding-bottom:calc(var(--bn140,56px) + 84px)}}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

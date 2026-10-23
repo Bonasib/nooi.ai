@@ -40,17 +40,17 @@ async def editor(p):
     await E(SETUP); await pg.wait_for_function("S.ed.clips.length===1&&(()=>{const m=M['c_'+S.ed.clips[0].id];return m&&m.el&&m.el.complete&&m.el.naturalWidth>0})()", timeout=20000)
     # ---- 1. the groups
     g = await E("""()=>{S.ed.tab='clip';renderView();const vis=[...document.querySelectorAll('.tabs [data-set="ed.tab"]')].filter(b=>b.offsetParent!==null).map(b=>b.dataset.val);
-      return{cats:[...document.querySelectorAll('.cat140 button')].map(b=>b.textContent.trim()),pressed:document.querySelector('.cat140 [aria-pressed="true"]')?.dataset.v,vis,all:document.querySelectorAll('.tabs [data-set="ed.tab"]').length}}""")
+      return{cats:[...document.querySelectorAll('.ne-rail button')].map(b=>b.textContent.trim()),pressed:document.querySelector('.ne-rail [aria-pressed="true"]')?.dataset.v,vis,all:document.querySelectorAll('.tabs [data-set="ed.tab"]').length}}""")
     out["groups"] = g
-    chk("the tools in eight groups (AI · Clip · Text · Audio · Color · Effects · Layers · Export), Clip picked", g["cats"] == ["AI", "Clip", "Text", "Audio", "Color", "Effects", "Layers", "Export"] and g["pressed"] == "clip", g)
-    chk("…only the Clip group's tabs show; every tab is still there to reach (18 with AI tools)", set(g["vis"]) <= {"clip", "motion", "track"} and "clip" in g["vis"] and g["all"] >= 18, g)
+    chk("the tools in eight groups (Media · AI · Edit · Text · Audio · Color · Effects · Export — v142's page), Edit picked for the Clip tab", g["cats"] == ["Media", "AI", "Edit", "Text", "Audio", "Color", "Effects", "Export"] and g["pressed"] == "edit", g)
+    chk("…only the Edit group's tabs show; every tab is still there to reach (19 with Media and AI tools)", set(g["vis"]) <= {"clip", "motion", "track"} and "clip" in g["vis"] and g["all"] >= 19, g)
     seq = []
-    for v in ("color", "audio", "export", "ai", "clip"):
-        await pg.click(f'.cat140 [data-v="{v}"]'); await pg.wait_for_timeout(80)
+    for v in ("color", "audio", "export", "ai", "edit"):
+        await pg.click(f'.ne-rail [data-v="{v}"]'); await pg.wait_for_timeout(80)
         seq.append(await E("()=>[S.ed.tab,[...document.querySelectorAll('.tabs [data-set=\"ed.tab\"]')].filter(b=>b.offsetParent!==null).map(b=>b.dataset.val)]"))
     out["groups_seq"] = seq
     chk("…a group opens its first tab (Color → Color & VFX, Audio → Audio, AI → AI tools); Export has no sub-row", seq[0][0] == "color" and set(seq[0][1]) == {"color", "look"} and seq[1][0] == "audio" and seq[2][0] == "export" and seq[2][1] == [] and seq[3][0] == "ai140", seq)
-    await E("()=>{S.ed.tab='motion';renderView()}"); await pg.click('.cat140 [data-v="text"]'); await pg.click('.cat140 [data-v="clip"]')
+    await E("()=>{S.ed.tab='motion';renderView()}"); await pg.click('.ne-rail [data-v="text"]'); await pg.click('.ne-rail [data-v="edit"]')
     chk("…and comes back to the tab you were on in it (Motion & zoom)", await E("()=>S.ed.tab") == "motion")
     # ---- 2. pro colour on the graphics card
     await E("()=>{S.ed.tab='color';renderView()}")
@@ -162,14 +162,14 @@ async def phone(p):
     await pg.goto(f"http://localhost:{PORT}/"); await pg.wait_for_function("typeof API!=='undefined'&&API.mode==='server'", timeout=15000)
     await E(SETUP); await pg.wait_for_timeout(800)
     r = []
-    for v in ("ai", "clip", "color", "text", "audio", "fx", "layers", "export"):
-        await E(f"()=>{{const b=document.querySelector('.cat140 [data-v=\"{v}\"]');b.scrollIntoView({{inline:'center',block:'nearest'}});b.click()}}"); await pg.wait_for_timeout(120)
-        r.append(await E("()=>{const c=document.querySelector('.cat140'),cr=c.getBoundingClientRect();return{tab:S.ed.tab,sticky:getComputedStyle(c).position,over:document.documentElement.scrollWidth-innerWidth,h:Math.round(cr.height)}}"))
+    for v in ("ai", "edit", "color", "text", "audio", "fx", "media", "export"):
+        await E(f"()=>{{const b=document.querySelector('.ne-rail [data-v=\"{v}\"]');b.scrollIntoView({{inline:'center',block:'nearest'}});b.click()}}"); await pg.wait_for_timeout(120)
+        r.append(await E("()=>{const c=document.querySelector('.ne-rail'),cr=c.getBoundingClientRect();return{tab:S.ed.tab,sticky:getComputedStyle(c).position,over:document.documentElement.scrollWidth-innerWidth,h:Math.round(cr.height)}}"))
     out["phone"] = r
     chk("phone: every group opens from the bar at the foot, no sideways page scroll", [x["tab"] for x in r][:3] == ["ai140", "clip", "color"] and all(x["sticky"] == "fixed" and x["over"] <= 1 and x["h"] < 70 for x in r), r)
     await E("()=>{S.ed.tab='ai140';renderView()}"); await pg.wait_for_timeout(300)
-    pin = await E("""()=>{const m=document.getElementById('main'),q=s=>{const r=document.querySelector(s).getBoundingClientRect();return[Math.round(r.top),Math.round(r.bottom)]};const a=q('.cat140');m.scrollTop=m.scrollHeight;
-      const last=[...document.querySelectorAll('.edxpanel .ai140c')].pop().getBoundingClientRect();return{before:a,cat:q('.cat140'),nav:q('.bottomnav'),stage:q('.edstage'),last:Math.round(last.bottom),edsh:parseInt(getComputedStyle(document.documentElement).getPropertyValue('--edsh'))}}""")
+    pin = await E("""()=>{const m=document.getElementById('main'),q=s=>{const r=document.querySelector(s).getBoundingClientRect();return[Math.round(r.top),Math.round(r.bottom)]};const a=q('.ne-rail');m.scrollTop=m.scrollHeight;
+      const last=[...document.querySelectorAll('.edxpanel .ai140c')].pop().getBoundingClientRect();return{before:a,cat:q('.ne-rail'),nav:q('.bottomnav'),stage:q('.edstage'),last:Math.round(last.bottom),edsh:parseInt(getComputedStyle(document.documentElement).getPropertyValue('--edsh'))}}""")
     out["phone_pin"] = pin
     chk("phone: the groups sit in a bar just above the bottom menu, scrolled or not; the preview stays pinned at the top (its height followed)", pin["before"] == pin["cat"] and abs(pin["cat"][1] - pin["nav"][0]) <= 2 and pin["stage"][0] <= 60 and abs(pin["edsh"] - (pin["stage"][1] - pin["stage"][0])) <= 3, pin)
     chk("…and the last tool can be scrolled up above that bar", pin["last"] <= pin["cat"][0], pin)

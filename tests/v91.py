@@ -120,8 +120,10 @@ async def editor(b):
       return {tb,sheet:!!g,job:j&&[j.dur,j.aspect,j.meta.extNoJoin134===1||j.meta.start===true,/^Extended/.test(j.title)],after:j&&EDP[j.id]&&EDP[j.id].after===c.id}}""")
     ok(r["tb"] and any(ch.isdigit() for ch in r["tb"]) and r["job"] == [5, "16:9", True, True] and r["after"], f"{tag}: Extend shot — price shown, 5 s from the last frame in the clip's own shape (v94: a 1280×720 clip stays 16:9 in a TikTok project), lands after the clip {r}")
     await E("()=>{$('#modalRoot').innerHTML='';$('#edcmdq').value='';S.edCmd='';renderView();scrollTo(0,0)}"); await pg.wait_for_timeout(300)
-    r = await E("()=>{const l=document.querySelector('.view .lede'),ch=[...document.querySelectorAll('.edcmdx .chip')].map(c=>Math.round(c.getBoundingClientRect().top));return {lede:l?getComputedStyle(l).display:'none',rows:new Set(ch).size,sw:document.documentElement.scrollWidth}}")
-    ok(r["lede"] == "none" and r["rows"] == 1 and r["sw"] <= 390, f"{tag}: compact phone header, no sideways scroll {r}")
+    # (v142: the new editor page has a slim header — the title, then format, projects and export on one row; the AI command chips sit in the AI tools group, one row)
+    r = await E("""async()=>{S.ed.tab='ai140';renderView();await new Promise(r=>setTimeout(r,150));const l=document.querySelector('.view .lede'),t=document.querySelector('.ne-top'),ch=[...document.querySelectorAll('.edcmdx .chip')].filter(c=>c.getBoundingClientRect().width>1).map(c=>Math.round(c.getBoundingClientRect().top));
+      return {lede:l?getComputedStyle(l).display:'none',top:t?Math.round(t.getBoundingClientRect().height):-1,chips:ch.length,rows:new Set(ch).size,sw:document.documentElement.scrollWidth}}""")
+    ok(r["lede"] == "none" and 0 < r["top"] <= 84 and r["chips"] > 0 and r["rows"] == 1 and r["sw"] <= 390, f"{tag}: compact phone header, chips in one row, no sideways scroll {r}")
     ok(not errs, f"{tag}: page errors {errs[:3]}"); await ctx.close()
 
 async def sketch(b):

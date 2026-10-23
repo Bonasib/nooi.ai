@@ -62,7 +62,7 @@ async def main():
                 for t in tabs:
                     await E(f"()=>{{S.ed.tab='{t}';S.ed.sel=S.ed.clips[0]&&S.ed.clips[0].id;if(!S.ed.texts.length)document.querySelector('[data-act=ed-addtext]')?.click();S.ed.selText=S.ed.texts[0]&&S.ed.texts[0].id;S.ed.tab='{t}';ED.playing=false;renderView()}}")
                     await pg.wait_for_timeout(150)
-                    out["clicks"] += await click_all(pg, ".edgrid>.panel:last-child", errs, f"{w}:edit:{t}", 60 if w > 800 else 35)
+                    out["clicks"] += await click_all(pg, ".ne-side", errs, f"{w}:edit:{t}", 60 if w > 800 else 35)
                     await E("()=>{ED.playing=false;if(!S.ed.clips.length)S.ed.clips.push({id:uid(),src:{k:'demo',kind:'scene',seed:11},in:0,out:5,speed:1,trans:'cut',vol:100})}")
                 # play through every clip with all effects on
                 await E("()=>{const c=S.ed.clips[0];if(c){c.vfx={shake:1,pulse:1,rgb:1,glow:1,radial:1,pixel:1,mirror:1,strobe:1,invert:1,comic:1,vhs:1,leak:1};c.cg={look:'teal',exp:10,temp:30};c.trans='glitch';c.mo={kf:[{t:0,s:1,x:0,y:0,r:0},{t:1,s:1.5,x:.1,y:0,r:10}],ease:'smooth'}}S.ed.tab='clip';renderView();for(let t=0;t<edTotal();t+=.25){ED.t=t;edTick(performance.now())}}")
