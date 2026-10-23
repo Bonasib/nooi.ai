@@ -152,7 +152,8 @@ app.post("/v1/scan136", requireUser, wrap(async (req, res) => {
     const ref = "hear." + uid(); if (hearPrice) hold(req.user.uid, hearPrice, "Hear what is said · " + String((o.job && o.job.title) || "video").slice(0, 40), ref);
     try { const r = await transcribeFile(file, lang); s = withWords136({ ...s, sounds: [...(s.sounds || [])] }, r.lines || []); fs.writeFileSync(scanCache136(file, lang), JSON.stringify(s)); if (hearPrice) settle(req.user.uid, ref); }
     catch (e) { if (hearPrice) release(req.user.uid, ref); throw Object.assign(new Error("The words couldn't be heard — nothing was charged."), { code: 502, errorAr: "تعذّر سماع الكلام — لم يُخصم شيء." }); } }
-  res.json({ ...s, image: o.image, src: o.url, job: o.job ? o.job.id : null, hearPrice, canHear: !o.image && sttReady() });
+  const { err, ...rest } = s;   // (why the agents couldn't look — the owner's to fix — is shown to staff only)
+  res.json({ ...rest, ...(err ? { failed: true, ...(staff ? { why: err } : {}) } : {}), image: o.image, src: o.url, job: o.job ? o.job.id : null, hearPrice, canHear: !o.image && sttReady() });
 }));
 app.post("/v1/replace136/quote", requireUser, wrap(async (req, res) => res.json(await replaceQuote136(req.user, req.body || {}))));
 // v136: a film that came out with a part missing — make the missing parts again (the price is on the card: publicJob partial136.again)

@@ -175,7 +175,7 @@ export function kieInput(model, p) {
   const refs = p.model === "mcswap" || p.meta?.swap93 ? [] : refsOf130(p), refsOn = refs.length > 0 && takesRefs130(m);
   const img0 = startImg(p) || (refs.length && !refsOn ? refs[0].url : undefined), img = img0 ? absUrl(img0) : undefined, end = inp.vEnd ? absUrl(inp.vEnd) : undefined, dur = Math.round(+p.dur || 5), audio = !!(p.meta?.audio);
   const prompt = refs.length && !refsOn ? tagWords130(fullPrompt(p), refs, (i) => refs[i].tag) || PICTURE_WORDS.video : fullPrompt(p) || (img0 ? PICTURE_WORDS.video : "");
-  if (refsOn) { const r = seedanceRefs130(fullPrompt(p), refs.map((x) => ({ ...x, url: absUrl(x.url) })), { start: startImg(p) ? img : undefined, end });
+  if (refsOn) { const r = seedanceRefs130(fullPrompt(p), refs.map((x) => ({ ...x, url: absUrl(x.url) })), { start: startImg(p) ? img : undefined, end, style: !p.meta?.styleChosen136 });
     return drop({ prompt: r.prompt, reference_image_urls: r.pics, generate_audio: audio, resolution: pickRes(p, ["480p", "720p", "1080p", "4k"], "720p"), aspect_ratio: snapAR(p.aspect, ["1:1", "4:3", "3:4", "16:9", "9:16", "21:9"]), duration: clamp(dur, 4, 15), web_search: false }); }
   // Motion Control: the character in the photo performs the movement of the video (orientation: follow the video or the photo)
   // the engine needs a prompt: the client's words (if any) plus what Motion Control is for

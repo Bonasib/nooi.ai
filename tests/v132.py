@@ -238,7 +238,7 @@ async def page(b):
     # the home box: 2 minutes with a chosen engine
     await E("()=>{go('home');S.hf=S.hf||{};S.hf.tab='video';S.hf.vModel='kling30';S.hf.dur=60;renderAll()}"); await pg.wait_for_timeout(500)
     hb = await E("()=>{hfDurSheet();const r=document.getElementById('hfdr'),n=document.getElementById('hfdn');return{max:+r.max,cap:+n.max,note:(document.getElementById('hfdnote')||{}).textContent,ok:hfDurOK(120)}}")
-    chk("home box: up to 2 minutes with any engine, the parts explained", hb["max"] == 120 and hb["cap"] == 120 and "4 connected parts" in hb["note"] and hb["ok"], hb)
+    chk("home box: up to 2 minutes with any engine, the parts explained", hb["max"] == 120 and hb["cap"] == 120 and ("4 connected parts" in hb["note"] or "4 shots at the same time" in hb["note"]) and hb["ok"], hb)
     await E("()=>{$('#modalRoot').innerHTML=''}")
     # the 9 agents' film as one continuous video
     n0 = len(stats()["reqs"])

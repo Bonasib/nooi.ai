@@ -95,7 +95,7 @@ class H(BaseHTTPRequestHandler):
                     {"kind": "person", "name": "the man in the red coat", "en": "a man in a red coat walking slowly", "frames": [0, 1], "best": 0, "box": [0.3, 0.2, 0.3, 0.6]},
                     {"kind": "vehicle", "name": "the white car", "en": "a white car parked on the right", "frames": [2, 3], "best": 2, "box": [0.6, 0.5, 0.3, 0.3]}],
                     "sounds": [{"id": "s1", "kind": "music", "name": "a steady tone, like music"}]})}]})
-            if "continuity supervisor. The pictures come in pairs" in text:
+            if "nooi's continuity supervisor" in text:
                 n = len(re.findall(r"\n\d+\. ", text)) or 1
                 return self.send({"content": [{"type": "text", "text": json.dumps({"checks": [{"n": i + 1, "done": True, "other": False, "note": "Changed, nothing else moved"} for i in range(n)]})}]})
             return self.send({"content": [{"type": "text", "text": "{}"}]})

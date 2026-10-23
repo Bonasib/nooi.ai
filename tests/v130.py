@@ -108,7 +108,7 @@ if H:
     ok(H["k"].get("image_urls") == ["https://n.example/media/g.png"] and "#" not in H["k"].get("prompt", "") and "girl drinks the cold can" in H["k"].get("prompt", ""), f"another engine (by an Admin model id): starts from the first picture, the names read as words {H['k']}")
     ok(H["plain"].get("first_frame_url") == "https://n.example/media/f.png" and "reference_image_urls" not in H["plain"], f"a plain Seedance video with a first frame is as before {H['plain']}")
     ok("@Video1" in H["swap"].get("prompt", "") and len(H["swap"].get("reference_image_urls") or []) == 1, f"Replace the person doesn't take the Video page's pictures {H['swap'].get('reference_image_urls')}")
-    ok(H["none"]["prompt"].startswith("A natural, realistic video with @Image1, @Image2, @Image3."), f"pictures and no words: the engine is still told what to do {H['none']['prompt'][:120]}")
+    ok(H["none"]["prompt"].startswith("A video with @Image1, @Image2, @Image3, moving naturally.") and "exactly the visual style of these pictures" in H["none"]["prompt"], f"pictures and no words: the engine is still told what to do, in the pictures' own style {H['none']['prompt'][:200]}")
     ok(H["kling"].get("code") == 400 and "Seedance" in H["kling"].get("msg", "") and "Seedance" in (H["kling"].get("ar") or "") and "لم يُخصم" in (H["kling"].get("ar") or ""), f"another engine is refused with the reason, in Arabic too {H['kling']}")
     ok(H["seven"].get("code") == 400 and "6" in H["seven"].get("msg", ""), f"more than 6 pictures refused {H['seven']}")
     ok(H["parts"].get("ok") and H["parts"]["meta"]["partModels"] == ["seedance20", "seedance25", "seedance20"], f"a long video by the agents: every part on Seedance {H['parts']}")

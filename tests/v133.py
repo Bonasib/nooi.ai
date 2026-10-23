@@ -258,7 +258,7 @@ async def page(b):
     chk("…in Arabic too", "8 أجزاء متصلة" in ar and "كل جزء 8 ث" in ar and "الوصلات" in ar, ar)
     hb = await E("()=>{go('home');S.hf=S.hf||{};S.hf.tab='video';S.hf.dur=120;const p=hfStudio('a fox runs through the snow',120);S.hf.vModel='veo31';return{n:p&&p.n,per:p&&p.per,models:p&&p.shots.map(s=>s.m),note:hfDurNote(120,120)}}")
     out["home"] = hb
-    chk("home box: nooi Auto plans 2 minutes in 8 parts of 15 s (it was cut at 6); a chosen engine's own parts", hb["n"] == 8 and hb["per"] == 15 and len(hb["models"]) == 8 and "15 connected parts" in hb["note"], hb)
+    chk("home box: nooi Auto plans 2 minutes in 8 parts of 15 s (it was cut at 6); a chosen engine's own parts", hb["n"] == 8 and hb["per"] == 15 and len(hb["models"]) == 8 and ("15 connected parts" in hb["note"] or "15 shots at the same time" in hb["note"]), hb)
     # a 30 s video on Veo from nooi Studio: 4 parts, its matched joins shown when opened
     await E("()=>{go('video');S.draft.model='veo31';S.draft.dur=30;S.draft.prompt='A paper boat drifts down a rainy street';renderView()}"); await pg.wait_for_timeout(400)
     await pg.locator('#main [data-act="gen-video"]').click(); await pg.wait_for_timeout(800)
