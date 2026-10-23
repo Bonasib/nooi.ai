@@ -15817,6 +15817,207 @@ API.req=(o=>async function(p){const r=await o.apply(this,arguments);try{const m=
 .ew135 textarea{width:100%;margin:0 0 8px}.ew135 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
 `;document.head.appendChild(st)})();
 
+/* ================= v136: FILMS MADE FASTER AND NEVER LOST · THE AGENTS WORK IN ORDER · PICTURES, CLIPS AND CHARACTERS AT THE TOP OF THE BOX · REPLACE THINGS =================
+   · A long film was made part after part, each waiting for the one before (six parts of Kling 3.0 took over an hour), and one part that
+     failed lost the whole film. Now the agents draw the first picture of every shot, all shots are made at the same time, and a part
+     that can't be made leaves the film with the parts that were: only they are charged, and the card offers to make the missing part
+     again (its price first).
+   · The agents work one after another: whoever's step it is works, the ones before show ✓ — before, only the Director and the
+     Cinematographer moved while a video was made. Their row stays inside the box on a phone (it wraps and shrinks to fit).
+   · The prompt box: the start frame, the pictures to use (#), a clip to start from and the characters sit in a row at the top of the box,
+     the words below; typing # lists the pictures inside the box. The Agent tab is gone (the agents work inside Video and Image), and the
+     nooi chip says what it is: nooi Auto — the agents pick the engine for every shot.
+   · Replace things: what is in a video or a picture (people, animals, vehicles, buildings, objects, writing — and its sounds) listed by
+     the analysis agents; pick what changes and to what; priced first; the Continuity supervisor checks the result. */
+// ---- 1. a film: every shot at the same time; a part that couldn't be made doesn't lose the film
+API.req=(o=>async function(p){const r=await o.apply(this,arguments);try{const m=/^\/v1\/jobs\/([A-Za-z0-9_-]+)$/.exec(String(p));
+  if(m&&r&&r.id){const j=S.jobs.find(x=>x.remote===r.id);if(j){j.partial136=r.partial136||null;j.fast136=!!r.fast136}}}catch(e){}return r})(API.req);
+line132=(o=>function(j){if(j&&j.kind==="video"&&!["complete","failed"].includes(j.status)){const p=j.parts108;
+  if(j.stage==="frames")return L("Drawing the first picture of every shot — then every shot is made at the same time…","رسم الصورة الأولى لكل لقطة — ثم تُصنع كل اللقطات في الوقت نفسه…");
+  if(j.stage==="again")return L("Making the missing part again — the film comes back whole…","إعادة صنع الجزء الناقص — يعود الفيلم كاملاً…");
+  if(j.fast136&&p&&p[1]>1&&j.stage!=="join")return L(p[0]+" of "+p[1]+" shots ready — all made at the same time","جاهز "+p[0]+" من "+p[1]+" لقطات — تُصنع كلها في الوقت نفسه")}
+  return o.apply(this,arguments)})(line132);
+function partial136(j){const q=j&&j.status==="complete"&&j.partial136;if(!q||!Array.isArray(q.missing)||!q.missing.length)return"";
+  const n=q.missing.join(", "),one=q.missing.length===1,a=q.again;
+  const t=L((one?"Part "+n:"Parts "+n)+" of "+q.of+" couldn't be made"+(q.reason?" ("+q.reason+")":"")+" — your film has the other "+q.made+" ("+q.secs+" s), and only they were charged.",
+    (one?"تعذّر صنع الجزء ":"تعذّر صنع الأجزاء ")+n+" من "+q.of+" — فيلمك فيه الأجزاء الأخرى ("+q.made+"، "+q.secs+" ث)، وخُصم ثمنها فقط.");
+  return'<div class="pa136" dir="auto"><p class="small">'+ic("info","width:14px;height:14px;flex:none")+"<span>"+esc(t)+"</span></p>"+(a&&API.mode==="server"?'<button type="button" class="btn sm" data-act="again136" data-id="'+esc(j.id)+'">'+ic("refresh")+
+    esc(one?L("Make part "+n+" again","أعد صنع الجزء "+n):L("Make the missing parts again","أعد صنع الأجزاء الناقصة"))+(crFree()||!(+a.price)?"":'<span class="cost">'+(+a.price)+"</span>")+"</button>":"")+"</div>"}
+card98=(o=>function(j){const h=o.apply(this,arguments),t=partial136(j);return t?h.replace('<div class="gp98"',t+'<div class="gp98"'):h})(card98);
+previewCol=(o=>function(g){const h=o.apply(this,arguments),t=partial136(g);return t?h.replace('<div class="pipe"',t+'<div class="pipe"'):h})(previewCol);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="again136"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
+  const j=S.jobs.find(x=>x.id===a.dataset.id),q=j&&j.partial136;if(!j||!q||!j.remote||a.disabled)return;
+  if(!crFree()&&q.again&&S.credits<(+q.again.price||0)){toast(L("Not enough credits for this.","الرصيد لا يكفي لهذه العملية."));return}
+  a.disabled=true;try{const r=await API.req("/v1/jobs/"+j.remote+"/again136",{json:{}});Object.assign(j,{status:"rendering",stage:r.stage||"again",progress:r.progress||.05,partial136:null,parts108:r.partsTotal?[r.partsDone||0,r.partsTotal]:j.parts108});
+    if(typeof loadMe==="function")loadMe();persist();statusChanged();renderAll();toast(L("Making it again — the film comes back whole.","تجري إعادة الصنع — سيعود الفيلم كاملاً."),{type:"ok"})}
+  catch(x){a.disabled=false;toast(S.lang==="ar"&&x.errorAr?x.errorAr:String(x.message||x))}},true);
+
+// ---- 2. the agents work one after another (whoever's step it is works; the ones before show ✓)
+const ORD136=()=>HF_BOT_IDS.slice(),ST136=new Map();
+// which agent's step a job is at: the planning (Quill, Nova, Max), the first pictures (Lumi), the making (Lumi, Lyra, Echo), the joining (Remy)
+function step136(j){if(!j||!["video","image"].includes(j.kind))return null;const el=(Date.now()-(j.created||Date.now()))/1000,st=j.stage||"",p=+j.progress||0;let s;
+  if(j.kind==="image")s=el<2?"writer":el<4?"casting":"cine";
+  else if(st==="plan")s=el<5?"writer":el<10?"casting":"director";
+  else if(st==="frames"||st==="again")s="cine";
+  else if(st==="join")s="editor";
+  else if(st==="lips"||st==="voice")s="voice";
+  else if(st==="sound")s="sound";
+  else s=el<3?"writer":el<6?"casting":el<9?"director":p<.45?"cine":p<.65?"voice":p<.85?"sound":"editor";
+  const ord=ORD136(),k=Math.max(ord.indexOf(s),ST136.get(j.id)??-1);ST136.set(j.id,k);return ord[k]||s}   // (never back)
+const live136=()=>S.jobs.filter(j=>["queued","rendering"].includes(j.status)&&(j.kind==="video"||j.kind==="image"));
+busyBots=(o=>function(){const set=o.apply(this,arguments),act=live136();
+  act.forEach(j=>(JOB_BOTS[j.kind]||[]).forEach(b=>{if(set[b]>1)set[b]--;else delete set[b]}));   // (not the Director and the Cinematographer all the time)
+  act.forEach(j=>{const s=step136(j);if(s)set[s]=(set[s]||0)+1});return set})(busyBots);
+// ✓ on the agents before the step a film is at (the newest one being made)
+setInterval(()=>{const act=live136(),j=act[act.length-1],s=j&&step136(j),ord=ORD136(),k=s?ord.indexOf(s):-1;
+  document.querySelectorAll(".botstrip .sbot").forEach(el=>{const i=ord.indexOf(el.dataset.bot),d=k>0&&i>=0&&i<k&&!el.classList.contains("on");if(el.classList.contains("done136")===d)return;
+    el.classList.toggle("done136",d);const sv=el.querySelector("svg.bot");if(sv){sv.classList.toggle("st-done",d);if(d)sv.classList.remove("st-idle");else if(!el.classList.contains("on"))sv.classList.add("st-idle")}})},700);
+// the row in the box: the planning shows Quill, Nova and Max (a picture: Quill and Nova); then each agent's turn follows the work, Duke and Iris last
+const AG136={defer:false};
+agShow=(o=>function(id,note){if(AG136.defer){const img=S.hf.tab==="image",ord=img?AG_ROLES.image:ORD136();if(ord.indexOf(id)>ord.indexOf(img?"casting":"director")){if(note)AG.note[id]=note;return}}return o.apply(this,arguments)})(agShow);
+hfSend=(o=>async function(){const t=S.hf.tab;AG136.defer=(t==="video"||t==="image")&&hfBotsOn();try{return await o.apply(this,arguments)}finally{AG136.defer=false}})(hfSend);
+agWatch=(o=>function(run,ids){const n=ids.length;if(!n)return o.apply(this,arguments);clearInterval(AG.watch);
+  const kindOf=ids.map(id=>S.jobs.find(x=>x.id===id)).filter(Boolean),img=kindOf.length&&kindOf.every(j=>j.kind==="image"),ord=img?AG_ROLES.image.slice():ORD136();let hi=ord.indexOf(img?"casting":"director"),fin=0;
+  const to=k=>{hi=Math.max(hi,k);AG.shown=ord.slice(0,hi+1);AG.done={};ord.slice(0,hi).forEach(id=>AG.done[id]=true);AG.cur=ord[hi];agPaint()};
+  const tick=()=>{if(AG.run!==run){clearInterval(AG.watch);return}const js=ids.map(id=>S.jobs.find(x=>x.id===id)).filter(Boolean),live=js.filter(j=>!["complete","failed"].includes(j.status));
+    if(live.length){const ks=live.map(j=>{const s=step136(j);return s?ord.indexOf(s):-1}).filter(k=>k>=0);const k=Math.min(...(ks.length?ks:[hi]),ord.indexOf("producer")-1);if(k>hi||!AG.cur)to(Math.max(k,hi));return}
+    // all in: Duke settles the credits, then Iris checks the results
+    if(!fin){fin=1;to(ord.indexOf("producer"));return}
+    if(fin===1){fin=2;AG.note.proof=L("is checking "+js.length+" result"+(js.length>1?"s":""),"تراجع "+js.length+" نتيجة");to(ord.indexOf("proof"));return}
+    clearInterval(AG.watch);AG.watch=0;AG.done={};ord.forEach(id=>AG.done[id]=true);AG.shown=ord.slice();AG.cur=null;AG.busy=false;const ok=js.filter(j=>j.status==="complete").length;
+    AG.summary=ok===js.length?L("Done — Iris checked "+ok+" result"+(ok>1?"s":"")+". Approve the ones you like and the agents learn from it.","تم — راجعت "+agName("proof")+" "+ok+" نتيجة. اعتمد ما يعجبك ويتعلم الوكلاء منه."):L(ok+" of "+js.length+" ready — failed ones were refunded.",ok+" من "+js.length+" جاهزة — أُعيد رصيد ما فشل.");agPaint()};
+  tick();AG.watch=setInterval(tick,1200)})(agWatch);
+
+// ---- 3. the prompt box: what to use, at the top of the box; # lists the pictures inside the box
+{const i=HF_TABS.findIndex(x=>x[0]==="agent");if(i>=0)HF_TABS.splice(i,1);if(S.hf&&S.hf.tab==="agent"){S.hf.tab="video";persist()}}   // (the agents work inside Video and Image)
+hfMRow=(o=>function(t){return o.apply(this,arguments).replace(/(<button class="hfmi nooi[^"]*" data-act="hfx-nooi"[^>]*title=")[^"]*("[^>]*>[\s\S]*?)<b>nooi<\/b>/,(m,a,b)=>a+esc(L("nooi Auto — 9 AI agents pick the best engine for every shot and make every second. Pick an engine yourself with Model.","nooi تلقائي — 9 وكلاء ذكاء اصطناعي يختارون أفضل محرك لكل لقطة ويصنعون كل ثانية. أو اختر المحرك بنفسك من «النموذج»."))+b+"<b>"+L("nooi Auto","nooi تلقائي")+"</b>")})(hfMRow);
+const HP136={open:false,i:0,from:0,to:0,list:[]};
+function top136(t,ref,chr){const tile=(cls,inner,extra)=>'<span class="t136 '+cls+'"'+(extra||"")+">"+inner+"</span>";let h=ref||"";
+  if(t==="video"){const R=refs130(),u=used130(S.hf.prompt);
+    h+=R.map(r=>'<span class="t136 pic'+(u.has(r.tag.toLowerCase())?" used":"")+'" data-s136="'+r.s+'"><button type="button" class="t136p" data-hf136ins="'+r.s+'" title="'+esc(L("Put #"+r.tag+" in the words","ضع #"+r.tag+" في الوصف"))+'"><img src="'+esc(M[r.s].url)+'" alt=""></button><small dir="auto">#'+esc(r.tag)+'</small><button type="button" class="t136x" data-act="kf-rm" data-k="'+r.s+'" aria-label="'+esc(L("Remove","إزالة"))+'">'+ic("x")+"</button></span>").join("");
+    if(R.length<REF130.length)h+='<label class="t136 add" title="'+esc(L("Pictures to use — people, products, places. Type # to put one in the words.","صور للاستخدام — أشخاص، منتجات، أماكن. اكتب # لوضع إحداها في الوصف."))+'">'+ic("image")+"<small>"+L("Picture","صورة")+'</small><input type="file" accept="image/*" multiple data-ref130 data-hf136 aria-label="'+esc(L("Add pictures to use","أضف صوراً للاستخدام"))+'"></label>';
+    h+='<button type="button" class="t136 add" data-act="hf136-clip" title="'+esc(L("Start where one of your videos ends","ابدأ من حيث ينتهي أحد فيديوهاتك"))+'">'+ic("video")+"<small>"+L("Clip","مقطع")+"</small></button>"}
+  return'<div class="hft136" role="group" aria-label="'+esc(L("What to use","ما يُستخدم"))+'">'+h+(chr||"")+"</div>"}
+hfBox=(o=>function(){let h=o();const t=S.hf.tab;if(h.indexOf('<div class="hfmain">')<0||(t!=="video"&&t!=="image"&&t!=="avatar"))return h;let ref="",chr="";
+  h=h.replace(/<span class="hfrefw">[\s\S]*?<\/button><\/span>/,m=>{ref=m;return""});
+  if(!ref)h=h.replace(/<label class="hfref[\s\S]*?<\/label>/,m=>{ref=m;return""});
+  h=h.replace(/<button type="button" class="ch87b"[\s\S]*?<\/button>/,m=>{chr=m;return""});
+  if(S.hf.clip136&&M.hfRef&&ref)ref=ref.replace('class="hfref has"','class="hfref has clip136"');
+  return h.replace('<div class="hfmain">','<div class="hfmain v136">'+top136(t,ref,chr)+(HP136.open&&t==="video"?hpList136():""))})(hfBox);
+// adding pictures from the box: the engine takes pictures (nooi Auto and Seedance do); from the # list, the name goes in the words
+let HFADD136=null;
+document.addEventListener("change",e=>{const t=e.target;if(!t.matches||!t.matches("input[data-ref130][data-hf136]"))return;const q=$("#hfq"),H=S.hf;if(q)H.prompt=q.value;let sw="";
+  if(!REFOK130.includes(H.vModel)){H.vModel=REFOK130.find(x=>x!=="auto"&&MODELS[x])||"auto";sw=H.vModel}S.draft.model=H.vModel;   // (so the Video page's engine note isn't shown here)
+  HFADD136={n:refs130().length,hash:t.hasAttribute("data-hash136"),sw}},true);
+document.addEventListener("change",e=>{const t=e.target;if(!HFADD136||!t.matches||!t.matches("input[data-ref130][data-hf136]"))return;const a=HFADD136;HFADD136=null;const R=refs130(),add=R.slice(a.n);if(!add.length)return;
+  if(a.sw)toast(L(hfModelName("video",a.sw)+" is the engine now — it uses your pictures.","صار "+hfModelName("video",a.sw)+" هو المحرك — فهو يستخدم صورك."),{type:"ok"});
+  HP136.open=false;persist();renderView();const q=$("#hfq");if(q&&a.hash)put130(q,add[0].tag,HP136.from,HP136.to)});
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-hf136ins]");if(!b)return;e.preventDefault();const r=refs130().find(x=>x.s===b.dataset.hf136ins),q=$("#hfq");if(r&&q)put130(q,r.tag)});
+document.addEventListener("mousedown",e=>{if(e.target.closest&&e.target.closest("[data-hp136],[data-hf136ins]"))e.preventDefault()});
+// "#" in the box's words: the pictures, inside the box
+function hpList136(){const L2=HP136.list;return'<div class="hp136" id="hp136" role="listbox" aria-label="'+esc(L("Pictures","الصور"))+'">'+(L2.length?L2.map((r,i)=>'<button type="button" class="hp136o" role="option" id="hp136-'+i+'" data-hp136="'+i+'" aria-selected="'+(i===HP136.i)+'"><img src="'+esc(M[r.s].url)+'" alt=""><b dir="auto">#'+esc(r.tag)+"</b></button>").join(""):
+  '<label class="hp136o add" role="option" id="hp136-0" aria-selected="true">'+ic("plus")+"<b>"+esc(L("Add a picture to name with #","أضف صورة لتسميتها بـ #"))+'</b><input type="file" accept="image/*" multiple data-ref130 data-hf136 data-hash136></label>')+"</div>"}
+function hpPaint136(){const old=$("#hp136"),top=document.querySelector(".hfmain.v136 .hft136");if(!HP136.open){if(old)old.remove();return}const h=hpList136();if(old)old.outerHTML=h;else if(top)top.insertAdjacentHTML("afterend",h);
+  const q=$("#hfq");if(q){q.setAttribute("aria-controls","hp136");q.setAttribute("aria-expanded","true");q.setAttribute("aria-activedescendant","hp136-"+HP136.i)}}
+function hpClose136(){if(!HP136.open)return;HP136.open=false;hpPaint136();const q=$("#hfq");if(q){q.setAttribute("aria-expanded","false");q.removeAttribute("aria-activedescendant")}}
+function hash136(ta){if(S.hf.tab!=="video"){hpClose136();return}const c=ta.selectionStart,v=ta.value;if(c==null||c!==ta.selectionEnd){hpClose136();return}
+  const m=/(?:^|[^\p{L}\p{N}_])#([\p{L}\p{N}_]{0,20})$/u.exec(v.slice(0,c));if(!m){hpClose136();return}
+  const q=m[1].toLowerCase(),R=refs130(),list=R.filter(r=>r.tag.toLowerCase().startsWith(q));if(R.length&&!list.length){hpClose136();return}
+  Object.assign(HP136,{open:true,from:c-m[1].length-1,to:c,list});HP136.i=Math.min(HP136.i,Math.max(0,list.length-1));hpPaint136()}
+function hpPick136(i){const q=$("#hfq"),r=HP136.list[i];if(!q||!r)return;const f=HP136.from,t=HP136.to;hpClose136();put130(q,r.tag,f,t)}
+document.addEventListener("input",e=>{if(e.target&&e.target.id==="hfq")hash136(e.target)});
+document.addEventListener("click",e=>{if(e.target&&e.target.id==="hfq")hash136(e.target);const o=e.target.closest&&e.target.closest("[data-hp136]");if(o){e.preventDefault();hpPick136(+o.dataset.hp136)}});
+document.addEventListener("keydown",e=>{if(!e.target||e.target.id!=="hfq"||!HP136.open)return;const n=HP136.list.length;
+  if(e.key==="Escape"){e.preventDefault();e.stopPropagation();hpClose136();return}if(!n)return;
+  if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();HP136.i=(HP136.i+(e.key==="ArrowDown"?1:n-1))%n;hpPaint136();return}
+  if(e.key==="Enter"||e.key==="Tab"){e.preventDefault();e.stopPropagation();hpPick136(HP136.i)}},true);
+document.addEventListener("pointerdown",e=>{if(HP136.open&&!(e.target.closest&&e.target.closest("#hp136,#hfq")))hpClose136()},true);
+// a clip: the video starts where one of your videos ends (its last frame is the start frame)
+function clipSheet136(){const vs=S.jobs.filter(j=>j.kind==="video"&&j.status==="complete"&&mediaUrl(j)).reverse().slice(0,24);
+  hfSheet(L("Start from a clip","ابدأ من مقطع"),vs.length?'<p class="small mute" style="margin:0 0 10px">'+esc(L("The new video starts on the last frame of the clip you pick — the same people, place and light.","يبدأ الفيديو الجديد من آخر إطار في المقطع الذي تختاره — الأشخاص والمكان والضوء أنفسهم."))+'</p><div class="cl136">'+
+    vs.map(j=>'<button type="button" class="cl136i" data-act="hf136-cl" data-id="'+esc(j.id)+'">'+thumb("j:"+j.id,{dur:j.dur})+'<small dir="auto">'+esc(String(typeof shown88==="function"?shown88(j):j.title||j.prompt||"").slice(0,40))+"</small></button>").join("")+"</div>"
+    :'<p class="mute">'+esc(L("Your videos appear here once you've made one.","تظهر فيديوهاتك هنا بعد أن تصنع أحدها."))+"</p>")}
+async function lastFrame136(url){return await new Promise((ok,no)=>{const v=document.createElement("video");v.muted=true;v.playsInline=true;v.preload="auto";v.crossOrigin="anonymous";let done=0;
+  const fail=()=>{if(!done){done=1;no(new Error("frame"))}};setTimeout(fail,20000);v.onerror=fail;
+  v.onloadedmetadata=()=>{v.currentTime=Math.max(0,(isFinite(v.duration)?v.duration:0)-.06)};
+  v.onseeked=()=>{try{const c=document.createElement("canvas");c.width=v.videoWidth;c.height=v.videoHeight;c.getContext("2d").drawImage(v,0,0);c.toBlob(b=>{done=1;b?ok(b):no(new Error("frame"))},"image/jpeg",.92)}catch(e){fail()}};v.src=url})}
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="hf136-clip"],[data-act="hf136-cl"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
+  if(a.dataset.act==="hf136-clip"){const q=$("#hfq");if(q)S.hf.prompt=q.value;clipSheet136();return}
+  const j=S.jobs.find(x=>x.id===a.dataset.id);if(!j)return;a.disabled=true;
+  try{const b=await lastFrame136(mediaUrl(j));loadSlot("hfRef",new File([b],"clip-end.jpg",{type:"image/jpeg"}));S.hf.clip136=j.id;$("#modalRoot").innerHTML="";persist();setTimeout(renderView,120);toast(L("The video starts where this clip ends.","يبدأ الفيديو من حيث ينتهي هذا المقطع."),{type:"ok"})}
+  catch(x){a.disabled=false;toast(L("This clip's last frame couldn't be read.","تعذّرت قراءة آخر إطار في هذا المقطع."))}},true);
+document.addEventListener("change",e=>{if(e.target.dataset&&e.target.dataset.hfslot==="hfRef"&&S.hf)S.hf.clip136=null},true);
+(()=>{const st=document.createElement("style");st.textContent=`
+.pa136{margin:6px 8px 0;padding:8px 10px;border-radius:12px;background:color-mix(in srgb,#f5b942 12%,var(--panel2));border:1px solid color-mix(in srgb,#f5b942 35%,var(--line));display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.pa136 p{margin:0;display:flex;gap:6px;align-items:flex-start;line-height:1.4}.pa136 .btn .cost{margin-inline-start:6px}
+.agstrip{flex-wrap:wrap;row-gap:6px;column-gap:5px;min-width:0;max-width:100%;box-sizing:border-box}
+.agstrip .agb{width:min(32px,calc((100% - 40px) / 9));height:auto;aspect-ratio:1;flex:none}.agstrip .agb svg{width:100%;height:100%}
+.agstrip .agnote{flex:1 1 100%;padding-inline-start:0}
+.botstrip .sbot.done136 .sav{position:relative}.botstrip .sbot.done136 .sav::after{content:"✓";position:absolute;bottom:2px;inset-inline-end:2px;width:18px;height:18px;border-radius:50%;background:var(--forest,#2f7d4f);color:#fff;font:700 11px/18px var(--sans);text-align:center}
+.hfmain.v136{flex-direction:column;align-items:stretch;gap:8px}.hfmain.v136 #hfq{width:100%}
+.hft136{display:flex;gap:8px;align-items:center;overflow-x:auto;scrollbar-width:none;padding:7px 4px 2px;margin:-7px -4px 0}.hft136::-webkit-scrollbar{display:none}
+.hft136 .hfref,.hft136 .hfrefw{flex:none}.hft136 .hfref{width:54px;height:54px;transform:none;border-radius:12px}.hft136 .hfref>svg{width:16px;height:16px}.hft136 .hfref.clip136::after{content:"";position:absolute;inset:auto 4px 4px auto;width:10px;height:10px;border-radius:2px;background:var(--lime)}
+.t136{position:relative;flex:none;width:54px;height:54px;border-radius:12px;display:grid;place-items:center;align-content:center;gap:2px;color:var(--mute);background:var(--panel2);border:1px dashed var(--line2);cursor:pointer;padding:0;font:inherit}
+.t136.add input{position:absolute;inset:0;opacity:0;cursor:pointer}.t136 svg{width:16px;height:16px}.t136 small{font-size:10.5px;line-height:1.1;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t136.pic{border:2px solid transparent;background:none;align-content:start}.t136.pic.used{border-color:var(--lime)}.t136p{width:100%;height:100%;padding:0;border:0;border-radius:10px;overflow:hidden;background:none;cursor:pointer}.t136p img{width:100%;height:100%;object-fit:cover;display:block}
+.t136.pic small{position:absolute;inset:auto 0 0 0;background:rgba(0,0,0,.62);color:#fff;border-radius:0 0 10px 10px;padding:1px 3px;text-align:center;max-width:none}
+.t136x{position:absolute;top:-6px;inset-inline-end:-6px;width:22px;height:22px;border-radius:50%;border:2px solid var(--panel);background:rgba(0,0,0,.75);color:#fff;display:grid;place-items:center;padding:0;cursor:pointer;z-index:2}.t136x svg{width:11px;height:11px}
+.hft136 .ch87b{flex:none;margin-inline-start:auto}
+.hp136{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:6px;border-radius:12px;background:var(--panel2);border:1px solid var(--line)}
+.hp136o{flex:none;display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--text);cursor:pointer;font:inherit;font-size:13px;position:relative}
+.hp136o img{width:30px;height:30px;border-radius:50%;object-fit:cover}.hp136o[aria-selected="true"]{border-color:var(--lime);background:color-mix(in srgb,var(--lime) 14%,var(--panel))}.hp136o.add input{position:absolute;inset:0;opacity:0;cursor:pointer}.hp136o.add{padding-inline-start:10px}
+.hfmrow .hfmi svg,.hfcost svg{width:16px!important;height:16px!important}.hfstf span svg,.hflearn svg{width:14px!important;height:14px!important}.hfstplan.bots{border-radius:12px!important}   /* (the Video tab is the box's first tab now: its chips in v90's sizes) */
+.ct136{display:flex;gap:10px;align-items:flex-start;margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);cursor:pointer}.ct136 input{margin-top:3px;flex:none;width:18px;height:18px;accent-color:var(--lime)}.ct136 span{display:flex;flex-direction:column;gap:2px;min-width:0}.ct136 small{color:var(--mute);font-size:12px;line-height:1.4}
+.cl136{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}.cl136i{display:flex;flex-direction:column;gap:4px;padding:0;border:0;background:none;color:var(--text);cursor:pointer;text-align:start;font:inherit}.cl136i small{font-size:12px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:767px){.hftabs{grid-template-columns:repeat(${HF_TABS.length},minmax(0,1fr))!important}}
+`;document.head.appendChild(st)})();
+// ---- 4. nooi Studio's box: the folded box never flashes open; what to use sits at the top, the words below
+// (seen on the owner's phone: every time the page was drawn again — every few seconds while a video is made — the folded box was drawn
+// open and slid shut again, half see-through over the videos; a box drawn again now starts the way it already was)
+fold134=(o=>function(){const d=document.querySelector("#main .dock98"),fresh=!!(d&&!d.querySelector(".fd134"));if(fresh)d.classList.add("nt136");const r=o.apply(this,arguments);
+  if(fresh){void d.offsetHeight;requestAnimationFrame(()=>requestAnimationFrame(()=>d.classList.remove("nt136")))}return r})(fold134);
+function decorate136(){if(S.view!=="video")return;const ta=document.getElementById("dprompt"),pn=ta&&ta.closest(".cz98"),main=pn&&pn.querySelector(":scope>.cz98m");if(!main)return;
+  let row=pn.querySelector(":scope>.rf130");if(!row){main.insertAdjacentHTML("beforebegin",'<div class="rf130" role="group" aria-label="'+esc(L("What to use","ما يُستخدم"))+'"></div>');row=pn.querySelector(":scope>.rf130")}
+  row.classList.add("rf136");
+  const add=pn.querySelector(".add98");if(add&&add.parentElement!==row){row.prepend(add);row.querySelector(".rf130a")?.remove()}   // (the + gives pictures, the first frame and the end frame)
+  if(!row.querySelector('[data-act="vd136-clip"]'))row.insertAdjacentHTML("beforeend",'<button type="button" class="t136 add" data-act="vd136-clip" title="'+esc(L("Start where one of your videos ends","ابدأ من حيث ينتهي أحد فيديوهاتك"))+'">'+ic("video")+"<small>"+L("Clip","مقطع")+"</small></button>");
+  const ch=pn.querySelector("label.char98");if(ch&&ch.parentElement!==row)row.appendChild(ch);
+  const ls=pn.querySelector("#sec93-length");if(ls&&!ls.querySelector(".ct136"))ls.insertAdjacentHTML("beforeend",ct136());
+  const h=row.querySelector(".rf130h");if(h)row.appendChild(h)}
+renderView=(o=>function(){const r=o.apply(this,arguments);try{decorate136()}catch(e){console.warn("v136",e)}return r})(renderView);
+// the words keep the cursor when the page is drawn again while you type (a picture that finished uploading drew the box again and
+// took the cursor away — the next key, Enter on the # list, went nowhere)
+renderView=(o=>function(){const a=document.activeElement,id=a&&(a.id==="hfq"||a.id==="dprompt")?a.id:null,s=id?[a.selectionStart,a.selectionEnd]:null;const r=o.apply(this,arguments);
+  if(id){const t=document.getElementById(id);if(t&&t!==a&&document.activeElement!==t){try{t.focus({preventScroll:true});if(s[0]!=null)t.setSelectionRange(Math.min(s[0],t.value.length),Math.min(s[1],t.value.length))}catch(e){}}}return r})(renderView);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="vd136-clip"],[data-act="vd136-cl"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
+  if(a.dataset.act==="vd136-clip"){const ta=$("#dprompt");if(ta)S.draft.prompt=ta.value;clipSheet136();document.querySelectorAll('#modalRoot [data-act="hf136-cl"]').forEach(b=>b.dataset.act="vd136-cl");return}
+  const j=S.jobs.find(x=>x.id===a.dataset.id);if(!j)return;a.disabled=true;
+  try{const b=await lastFrame136(mediaUrl(j));loadSlot("vStart",new File([b],"clip-end.jpg",{type:"image/jpeg"}));S.draft.startJob=null;$("#modalRoot").innerHTML="";persist();setTimeout(renderView,120);toast(L("The video starts where this clip ends.","يبدأ الفيديو من حيث ينتهي هذا المقطع."),{type:"ok"})}
+  catch(x){a.disabled=false;toast(L("This clip's last frame couldn't be read.","تعذّرت قراءة آخر إطار في هذا المقطع."))}},true);
+// (and after the page is opened again: the list of jobs carries the same notes)
+API.req=(o=>async function(p){const r=await o.apply(this,arguments);try{if(String(p)==="/v1/jobs"&&r&&Array.isArray(r.jobs))setTimeout(()=>{let ch=0;r.jobs.forEach(x=>{const j=S.jobs.find(y=>y.remote===x.id);if(!j)return;const q=x.partial136||null;
+  if(JSON.stringify(j.partial136||null)!==JSON.stringify(q)){j.partial136=q;ch=1}if(x.fast136)j.fast136=true;if(x.extCut136&&!j.extCut136){j.extCut136=true;ch=1}});if(ch&&["video","home"].includes(S.view))renderView()},0)}catch(e){}return r})(API.req);
+// a long video: the shots at the same time (the default, faster) or one continuous take (every part from the last frame of the one before)
+const ct136=()=>'<label class="ct136"><input type="checkbox" data-ct136'+(S.draft.cont136?" checked":"")+'><span><b>'+esc(L("One continuous take","لقطة واحدة متصلة"))+"</b><small>"+esc(S.draft.cont136?L("Every part starts on the last frame of the one before — slower: the parts are made one after another.","كل جزء يبدأ من آخر إطار في الذي قبله — أبطأ: تُصنع الأجزاء واحداً بعد الآخر."):L("Off: every shot is made at the same time from its own first picture, joined with clean cuts — much faster.","متوقف: تُصنع كل اللقطات في الوقت نفسه، كل لقطة من صورتها الأولى، وتُوصل بقطع نظيف — أسرع بكثير."))+"</small></span></label>";
+document.addEventListener("change",e=>{const t=e.target;if(!t.matches||!t.matches("input[data-ct136]"))return;S.draft.cont136=!!t.checked;persist();const sm=t.closest(".ct136").querySelector("small"),h=ct136(),d=document.createElement("div");d.innerHTML=h;if(sm)sm.textContent=d.querySelector("small").textContent;
+  const n=$("#hfdnote");if(n&&typeof hfDurNote==="function")n.innerHTML=hfDurNote(S.hf.dur,capDur132())});
+addJob=(o=>function(j){if(j&&j.kind==="video"&&S.draft.cont136&&(+j.dur||0)>15&&!(j.meta&&(j.meta.merge135||j.meta.edit135||j.meta.extend132)))j.meta=Object.assign({},j.meta,{continuous:true});return o.apply(this,arguments)})(addJob);
+hfDurNote=(o=>function(v,cap){const h=o.apply(this,arguments),m=/(\d+) connected parts/.exec(h)||/(\d+) أجزاء متصلة/.exec(h);if(!m||S.draft.cont136)return h;const n=m[1];
+  return L("The agents make "+n+" shots at the same time, each from its own first picture — one video at the end, in about the time of one shot.","يصنع الوكلاء "+n+" لقطات في الوقت نفسه، كل لقطة من صورتها الأولى — فيديو واحد في النهاية، في وقت لقطة واحدة تقريباً.")})(hfDurNote);
+hfDurSheet=(o=>function(){const r=o.apply(this,arguments);const p=document.querySelector("#modalRoot .durpop");if(p&&!p.querySelector(".ct136"))(p.querySelector("#hfdnote")||p.lastElementChild).insertAdjacentHTML("afterend",ct136());return r})(hfDurSheet);
+// an Extend whose engine couldn't continue the shot even when made again: joined with a clean cut (said on the card)
+API.req=(o=>async function(p){const r=await o.apply(this,arguments);try{const m=/^\/v1\/jobs\/([A-Za-z0-9_-]+)$/.exec(String(p));if(m&&r&&r.id&&r.extCut136){const j=S.jobs.find(x=>x.remote===r.id);if(j)j.extCut136=true}}catch(e){}return r})(API.req);
+previewCol=(o=>function(g){const h=o.apply(this,arguments);return g&&g.extCut136&&g.status==="complete"?h.replace('<div class="pipe"','<p class="small mute">'+ic("info","width:14px;height:14px;vertical-align:-2px")+" "+esc(L("The engine couldn't continue this exact shot, even when made again — the new part follows with a clean cut.","تعذّر على المحرك إكمال اللقطة نفسها حتى بعد إعادة الصنع — يأتي الجزء الجديد بقطع نظيف."))+'</p><div class="pipe"'):h})(previewCol);
+(()=>{const st=document.createElement("style");st.textContent=`
+#main .dock98.nt136,#main .dock98.nt136 *{transition:none!important;animation:none!important}
+#main .cz98 .rf130.rf136{display:flex;align-items:flex-start;gap:8px;overflow-x:auto;scrollbar-width:none;padding:7px 4px 4px;margin:-7px -4px 6px;flex-wrap:nowrap}#main .cz98 .rf136::-webkit-scrollbar{display:none}
+#main .cz98 .rf136 .add98{flex:none;width:54px!important;height:54px!important;border-radius:12px!important;margin:0!important}
+#main .cz98 .rf136 .t136{flex:none}
+#main .cz98 .rf136 label.char98{flex:none;margin-inline-start:auto;align-self:center}
+#main .cz98 .rf136 .rf130h{flex:none;align-self:center;max-width:120px;white-space:normal}
+#main .cz98 .opt93{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
+[dir="rtl"] #main .cz98 .opt93{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 28px),transparent)}
+`;document.head.appendChild(st)})();
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

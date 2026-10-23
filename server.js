@@ -6,7 +6,7 @@ import path from "path";
 import fs from "fs";
 import { requireUser, firebaseWebConfig } from "./lib/auth.js";
 import { user, save, uid } from "./lib/store.js";
-import { createJob, publicJob } from "./lib/jobs.js";
+import { createJob, publicJob, againParts136 } from "./lib/jobs.js";
 import { analyzeSite } from "./lib/site.js";
 import { MEDIA_DIR, publicUrl, localPath, download } from "./lib/media.js";
 import { PROVIDERS } from "./providers/index.js";
@@ -139,6 +139,8 @@ app.post("/v1/edit135/quote", requireUser, wrap(async (req, res) => {
   res.json({ total: isStaff(req.user) ? 0 : editPrice135(plan, basePrice("video", "mcswap") ?? 30), secs: plan.secs, parts: plan.parts.length, from: plan.from, to: plan.to, dur: Math.round(info.dur * 10) / 10,
     short: info.dur < 4, long: plan.secs > EDIT_MAX135 + 0.01, ready: !!(ek && String(ek).startsWith("kie@")) });
 }));
+// v136: a film that came out with a part missing — make the missing parts again (the price is on the card: publicJob partial136.again)
+app.post("/v1/jobs/:id/again136", requireUser, wrap(async (req, res) => res.json(publicJob(againParts136(req.user, req.params.id), isStaff(req.user)))));
 app.get("/v1/config", (_, res) => res.json({
   firebase: firebaseWebConfig(), localAI: { tfUrl: fs.existsSync(TF_DIR + "/transformers.min.js") ? "/vendor/transformers/transformers.min.js" : null, ortBase: fs.existsSync(ORT_DIR) ? "/vendor/ort/" : null, modelsHost: process.env.MODELS_DIR ? "/models/" : null, models: platform().localModels || {} }, emailCode: canSendSignInLinks() && emailConfigured(), kieRoutes: kieRoutes(),
   llm: llmConfigured() ? { on: true } : null,   // (which provider and model: the owner's "Test connection" only — this reply is public)

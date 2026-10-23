@@ -218,7 +218,7 @@ async def main():
         await pg.set_input_files("#hp130 input[data-hash130]", D + "/shop.png"); await pg.wait_for_timeout(700)
         e1 = await E("()=>({v:document.getElementById('dprompt').value,names:[...document.querySelectorAll('#main .rf130 [data-ref130n]')].map(i=>i.value)})")
         out["hashAdd"] = [e0, e1]
-        ok(e0 == {"add": True, "strip": False} and e1["v"] == "A shop #image1 " and e1["names"] == ["image1"], f"'#' with no pictures: add one, its name goes in the words {out['hashAdd']}")
+        ok(e0 == {"add": True, "strip": True} and e1["v"] == "A shop #image1 " and e1["names"] == ["image1"], f"'#' with no pictures: add one, its name goes in the words {out['hashAdd']}")
         # the frames show in the strip too
         await pg.click("#main .cz98 .add98"); await pg.set_input_files("#am130 input[data-kf='vStart']", D + "/frame.png"); await pg.wait_for_timeout(700)
         fr = await E("()=>({labels:[...document.querySelectorAll('#main .rf130 .rf130f figcaption')].map(x=>x.textContent),M:!!M.vStart,len:document.querySelector('[data-o93=length] .o93v')?.textContent})")

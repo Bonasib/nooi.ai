@@ -44,7 +44,7 @@ async def run(b, W, H, lang, tag):
     t0 = await E(TW, "hfq"); await pg.wait_for_timeout(5200); t1 = await E(TW, "hfq")
     out[tag]["home typing"] = [t0, t1]; out[tag]["ex"] = ex
     ok(not t0["on"] and not t0["text"], f"{tag}: the box's own hint shows first {t0}")
-    ok(t1["on"] and t1["text"] and any(x.startswith(t1["text"]) for x in ex["agent"]) and t1["val"] == "" and bool(t1["ph"]) and t1["inside"] and t1["dir"] == ("rtl" if lang == "ar" else "ltr"),
+    ok(t1["on"] and t1["text"] and any(x.startswith(t1["text"]) for x in ex["video"]) and t1["val"] == "" and bool(t1["ph"]) and t1["inside"] and t1["dir"] == ("rtl" if lang == "ar" else "ltr"),
        f"{tag}: then example ideas are typed where the hint is — the box stays empty, its own hint kept {t1}")
     await pg.click("#hfq"); await pg.wait_for_timeout(200); t2 = await E(TW, "hfq")
     ok(not t2["on"] and not t2["text"], f"{tag}: clicking into the box stops them {t2}")
