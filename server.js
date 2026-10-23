@@ -369,6 +369,18 @@ app.delete("/v1/tokens/:id", requireUser, (req, res) => { revokeToken(req.user.u
 app.get("/v1/jobs", requireUser, (req, res) => res.json({ jobs: Object.values(user(req.user.uid).jobs).sort((a, b) => b.created - a.created).slice(0, 100).map(publicJob) }));
 app.get("/v1/assets", requireUser, (req, res) => { const k = req.query.kind; res.json({ assets: Object.values(user(req.user.uid).jobs).filter((j) => j.status === "done" && j.url && (!k || j.kind === k)).sort((a, b) => b.created - a.created).slice(0, 100).map((j) => ({ id: j.id, kind: j.kind, title: j.title, url: j.url })) }); });
 app.post("/v1/assets", requireUser, (req, res) => { const U = user(req.user.uid); const id = uid(); U.jobs[id] = { id, kind: req.body.kind || "3d", status: "done", progress: 1, url: req.body.url, title: req.body.title || "Imported", created: Date.now(), payload: {} }; save(); res.json({ id }); });
+// v140: a clip you uploaded to the editor becomes one of your videos (or pictures) on the server, so the AI tools — extend, edit with
+// words, replace things, voices & sound, dubbing — can work on it. Only a file you uploaded yourself; the same file gives the same one back.
+app.post("/v1/clips140", requireUser, (req, res) => {
+  const U = user(req.user.uid), b = req.body || {}, pub0 = (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "");
+  const url = String(b.url || "").replace(pub0, "").replace(/^https?:\/\/[^/]+(?=\/media\/)/, ""), name = path.basename(url);
+  if (!/^\/media\/[A-Za-z0-9._-]+$/.test(url) || !(U.uploads || []).includes(name) || !fs.existsSync(path.join(MEDIA_DIR, name)))
+    return res.status(400).json({ error: "Only a clip you uploaded can be used here.", errorAr: "يمكن استخدام مقطع رفعته أنت فقط هنا." });
+  const kind = /\.(png|jpe?g|webp|gif|avif)$/i.test(name) ? "image" : "video";
+  let j = Object.values(U.jobs || {}).find((x) => x.clip140 && x.url === url && x.kind === kind);
+  if (!j) { const id = uid(); j = U.jobs[id] = { id, kind, status: "done", progress: 1, url, title: String(b.title || "My clip").slice(0, 80), created: Date.now(), payload: { prompt: "" }, clip140: true, ...(+b.dur > 0 ? { dur: Math.round(+b.dur * 10) / 10 } : {}) }; save(); }
+  res.json({ id: j.id, kind: j.kind, url: j.url, title: j.title, dur: j.dur || 0 });
+});
 
 // ---- Live AI sketch (realtime engine, credits per rendered frame) → lib/sketch.js
 

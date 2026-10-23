@@ -20,3 +20,13 @@ editors. The server's drag copy (`lib/scrub131.js`) uses the ffmpeg already on t
 | What | From | Licence | In nooi |
 |---|---|---|---|
 | Frame-exact video decoding and encoding in the browser (WebCodecs), MP4/WebM writing | [mediabunny](https://github.com/Vanilagy/mediabunny) 1.62.1 (npm `mediabunny`) | MPL-2.0 — used unmodified; its licence and source are in `node_modules/mediabunny` | Served as it is from `/vendor/mediabunny.mjs` (`server.js`); used by the editor's frame-by-frame export (`edRender139` in `public/index.html`). No mediabunny file is changed. |
+
+## Video editor, combined (v140)
+
+No code was copied. These three open editors were read for ideas only, and each idea was written again in nooi's own code:
+
+| Idea | Seen in | Licence | In nooi |
+|---|---|---|---|
+| Tools in a few groups; subtitle files in and out (.srt / .vtt) | [OpenCut](https://github.com/OpenCut-app/OpenCut) | MIT | `G140`, `subsIn140` / `subsOut140` |
+| Every AI tool in one place; LUT (.cube) and colour-by-colour (HSL) grading | [DonkeyCut](https://github.com/DonkeyCut/Donkey) | Apache-2.0 | `panel140`, `cube140`, `grade140` (own WebGL shader, own built-in looks) |
+| One switch that cleans up voices | [Concat](https://github.com/jub0t/Concat) | AGPL-3.0 — idea only, none of its code | `vcBuild140` (Web Audio filters), `denoise140` (own spectral gate and FFT) |

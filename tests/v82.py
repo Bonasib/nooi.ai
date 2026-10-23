@@ -97,7 +97,7 @@ async def browser_checks(p):
         await pg.wait_for_timeout(500); return ctx, pg
     COLLECT = r"""(v)=>{const vis=e=>{const r=e.getBoundingClientRect();if(r.width<2||r.height<2)return false;const cs=getComputedStyle(e);return cs.visibility!=='hidden'&&cs.display!=='none'&&+cs.opacity>0.05};
       const h1=[...document.querySelectorAll('#main h1')].filter(vis).map(h=>h.textContent.trim());
-      const big=[...document.querySelectorAll('#main svg')].filter(vis).map(s=>{const r=s.getBoundingClientRect();return [Math.round(r.width),Math.round(r.height),(s.parentElement.className.baseVal??s.parentElement.className)+'']}).filter(x=>x[0]>44&&x[1]>44&&!/plane|bot|crew|nmark|logo|brand|hero|stage|thumb|tpl|art|world|face|empty/i.test(x[2]));
+      const big=[...document.querySelectorAll('#main svg')].filter(vis).map(s=>{const r=s.getBoundingClientRect();return [Math.round(r.width),Math.round(r.height),(s.parentElement.className.baseVal??s.parentElement.className)+'']}).filter(x=>x[0]>44&&x[1]>44&&!/plane|bot|crew|nmark|logo|brand|hero|stage|thumb|tpl|art|world|face|empty|^sav$/i.test(x[2]));
       const emoji=[...document.querySelectorAll('#side,#bottomnav,#main')].flatMap(r=>[...r.querySelectorAll('button,a,.tile,.chip,.nav')]).filter(vis).map(e=>e.textContent).filter(t=>/\p{Extended_Pictographic}/u.test(t)||/[\u{1F1E6}-\u{1F1FF}]/u.test(t)).slice(0,3);
       const txt=document.querySelector('#main').innerText;
       return {view:S.view,h1,name:name82(S.view),big,emoji,fake:/Encoding prompt|Denoising|ترميز الوصف/.test(txt)&&!/Enhance|التحسين/.test(name82(S.view)||''),admin:/Admin →|الإدارة ←/.test(txt),

@@ -16339,6 +16339,315 @@ VIEWS.edit=(o=>function(){const h=o.apply(this,arguments);if(API.mode!=="server"
 (()=>{const st=document.createElement("style");st.textContent=`.pj139l{display:grid;gap:8px;margin-top:14px}.pj139i{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:12px}.pj139i.on{border-color:var(--lime,#CFE13E)}
 .pj139t{flex:1;min-width:0;display:grid}.pj139t b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pj139t small{color:var(--mute,#888)}@media(max-width:560px){.pj139b span{display:none}}`;document.head.appendChild(st)})();
 
+/* ================= v140: THE EDITOR, COMBINED (part 1) =================
+   The best ideas of three open editors, written here in our own code: OpenCut (MIT) — the tools in a few clear groups, subtitle
+   files; DonkeyCut (Apache-2.0) — every AI tool in one place, LUT and colour-by-colour grading; Concat (AGPL — its ideas only, none
+   of its code) — one switch that cleans up voices.
+   1. Eight groups (AI · Clip · Text · Audio · Color · Effects · Layers · Export) instead of eighteen tabs in one row.
+   2. AI tools: every AI feature for the clip you picked, in one place, each with its price before anything is made. A clip you
+      uploaded goes onto your account first (once), so extend, edit with words, replace things, voices & sound and dubbing work on it.
+   3. Pro colour: film LUTs (built in, or your own .cube file) and hue · saturation · lightness for each colour, drawn by the
+      graphics card in the preview and in the export; kept in the edit (and in projects on your account).
+   4. Clean up voices: clearer speech in the preview (less rumble and mud, more presence, even level); in the export also less
+      background noise.
+   5. Subtitle files: bring in an .srt / .vtt, or save the captions as .srt / .vtt. */
+// ---- 1. the groups
+const G140=[["ai","AI","الذكاء","spark",["ai140","ai"]],["clip","Clip","المقطع","edit",["clip","motion","track"]],["text","Text","النص","font",["text","words","info","logo"]],
+  ["audio","Audio","الصوت","music",["audio","sfx"]],["color","Color","الألوان","grade",["color","look"]],["fx","Effects","المؤثرات","vfx",["vfx","erase"]],
+  ["layers","Layers","الطبقات","layers",["layers","3d"]],["export","Export","التصدير","download",["export"]]];
+const grp140=t=>(G140.find(g=>g[4].includes(t))||G140[5])[0];
+UI139.push("last140","band140");
+VIEWS.edit=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string")return h;const E=S.ed;
+  h=h.replace(/(<div class="tabs" role="tablist">)([\s\S]*?)(<\/div>)/,(m0,a,btns,b)=>{
+    if(!btns.includes('data-val="ai140"'))btns='<button data-set="ed.tab" data-val="ai140" aria-pressed="'+(E.tab==="ai140")+'">'+L("AI tools","أدوات الذكاء")+"</button>"+btns;
+    const g=grp140(E.tab),vals=[...btns.matchAll(/data-set="ed\.tab" data-val="([^"]+)"/g)].map(x=>x[1]);(E.last140=E.last140||{})[g]=E.tab;let n=0;
+    btns=btns.replace(/<button data-set="ed\.tab" data-val="([^"]+)"/g,(m,v)=>grp140(v)===g?(n++,m):m+" data-h140");
+    const cats='<div class="cat140" role="tablist" aria-label="'+esc(L("Editor tools","أدوات المحرر"))+'">'+G140.filter(x=>x[4].some(t=>vals.includes(t))).map(x=>'<button type="button" role="tab" data-act="cat140" data-v="'+x[0]+'" aria-pressed="'+(x[0]===g)+'">'+ic(x[3])+"<span>"+L(x[1],x[2])+"</span></button>").join("")+"</div>";
+    return cats+a.replace('class="tabs"','class="tabs t140'+(n<2?" one140":"")+'"')+btns+b+(E.tab==="audio"?'<div class="clean140">'+cleanSw140()+"</div>":"")});
+  return h})(VIEWS.edit);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="cat140"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
+  const g=G140.find(x=>x[0]===a.dataset.v);if(!g)return;const E=S.ed,have=[...document.querySelectorAll('.tabs [data-set="ed.tab"]')].map(b=>b.dataset.val),last=(E.last140||{})[g[0]];
+  E.tab=last&&have.includes(last)&&grp140(last)===g[0]?last:(g[4].find(t=>have.includes(t))||g[4][0]);persist();renderView()},true);
+
+// ---- 2. AI tools
+// the clip as one of your videos (or pictures) on the server — the AI tools work on those
+async function base140(c){if(!c)return null;let j=c.src&&c.src.k==="job"?S.jobs.find(x=>x.id===c.src.job):null;if(!j&&c.srv140)j=S.jobs.find(x=>x.id===c.srv140);
+  if(j&&j.remote&&j.status==="complete")return j;if(j&&c.src.k==="job"){toast(L("This clip can be used once it is finished on the server.","يمكن استخدام هذا المقطع بعد اكتماله على الخادم."));return null}
+  const m=clipMedia(c);if(!m||!["video","image"].includes(m.type)){toast(L("This clip has no file to work on.","لا يوجد ملف لهذا المقطع.")); return null}
+  try{let url=m._srv139||(isSrv139(m.url)?m.url:"")||(m.el&&isSrv139(m.el.src)?m.el.src:"");
+    if(!url&&m.file instanceof Blob){toast(L("Putting the clip on your account…","يُرفع المقطع إلى حسابك…"),{type:"info"});url=(await API.upload(m.file,m.name||m.file.name||"clip")).url||"";if(url)m._srv139=url}
+    if(!url){toast(L("This clip's file isn't on this device any more — add it again.","ملف هذا المقطع لم يعد على هذا الجهاز — أضفه مرة أخرى."),{type:"warn"});return null}
+    const r=await API.req("/v1/clips140",{json:{url:String(url).replace(location.origin,""),title:clipName(c),dur:m.type==="video"?srcDur(m):0}});
+    let nj=S.jobs.find(x=>x.remote===r.id);if(!nj){nj={id:uid(),remote:r.id,kind:r.kind,status:"complete",progress:1,resultUrl:r.url,title:r.title,prompt:"",created:Date.now(),seed:hashStr(r.id),pal:PALS[hashStr(r.id)%PALS.length],
+      dur:Math.max(1,Math.round(r.dur||(m.type==="video"?srcDur(m):3))),aspect:S.ed.format==="reels"?"9:16":"16:9",art:"scene",meta:{clip140:true}};S.jobs.push(nj)}
+    c.srv140=nj.id;persist();return nj}
+  catch(e){toast(L("Couldn't put the clip on your account: ","تعذّر رفع المقطع إلى حسابك: ")+(S.lang==="ar"&&e.errorAr?e.errorAr:e.message||e),{type:"warn"});return null}}
+const price140=p=>'<span class="ai140p">'+(p===0?L("Free","مجاناً"):p==null?L("Priced first","يُسعَّر أولاً"):ic("coin")+p)+"</span>";
+const card140=(icon,title,desc,price,body)=>'<div class="ai140c"><div class="ai140h">'+ic(icon)+"<b>"+title+"</b>"+price140(price)+"</div><p>"+desc+"</p>"+(body||"")+"</div>";
+const go140=(v,label,dis,cls)=>'<button class="btn sm'+(cls?" "+cls:"")+'" data-act="ai140" data-v="'+v+'"'+(dis?" disabled":"")+">"+label+"</button>";
+function panel140(){const c=edxPick(),srv=API.mode==="server",m=c&&clipMedia(c),vid=!!m&&m.type==="video",F=PRICE_TABLE.fixed,no=!c;
+  const langs=[["ar","العربية"],["en","English"],["fr","Français"],["es","Español"],["tr","Türkçe"],["ur","اردو"],["hi","हिन्दी"],["id","Bahasa Indonesia"],["de","Deutsch"],["zh","中文"],["ru","Русский"],["pt","Português"]];
+  return'<p class="small mute" style="margin-top:0">'+L("Every AI tool for this edit. Pick a clip on the timeline, then a tool — the price shows before anything is made.","كل أدوات الذكاء لهذا المونتاج. اختر مقطعاً من الخط الزمني ثم أداة — يظهر السعر قبل أن يُصنع أي شيء.")+"</p>"+
+    (c?'<div class="ai140sel">'+ic(vid?"video":"image")+"<span>"+esc(clipName(c))+" · "+clipDur(c).toFixed(1)+L("s","ث")+"</span></div>":edxNoClip())+
+    (srv?"":'<p class="small mute">'+L("The AI tools that make or change video run on your nooi server.","أدوات الذكاء التي تصنع الفيديو أو تغيّره تعمل على خادم nooi.")+"</p>")+
+    '<span class="lbl">'+L("Change the video","غيّر الفيديو")+'</span><div class="ai140g">'+
+      card140("extend91",L("Extend this shot","مدّ هذه اللقطة"),L("Continues the shot from its last frame — the same people, place and light.","يكمل اللقطة من آخر إطار — الأشخاص والمكان والإضاءة نفسها."),c?edExtCost91(c):null,'<button class="btn sm primary" data-act="ed-extend91" data-paid="1"'+(no?" disabled":"")+">"+ic("extend91")+L("Extend","مدّ")+"</button>")+
+      card140("wand",L("Edit with words","التعديل بالكلمات"),L("Say what changes — “her coat is red”, “it's snowing” — for the clip or some seconds of it.","قل ما يتغيّر — «معطفها أحمر»، «الثلج يتساقط» — للمقطع أو ثوانٍ منه."),null,go140("words",L("Edit with words…","التعديل بالكلمات…"),no||!vid))+
+      card140("users",L("Replace things","استبدال الأشياء"),L("Lists what is in the clip — people, cars, objects, sounds — and swaps the ones you pick.","يعرض ما في المقطع — أشخاص، سيارات، أشياء، أصوات — ويستبدل ما تختاره."),null,go140("replace",L("Replace things…","استبدال الأشياء…"),no))+
+      card140("edit",L("AI edit a frame","تعديل إطار بالذكاء"),L("Pause on a moment and describe the change; it lands after the clip or replaces it.","أوقف عند لحظة وصِف التغيير؛ يُضاف بعد المقطع أو يحل محله."),null,go140("aiedit",L("Open AI edit","افتح التعديل بالذكاء"),false))+"</div>"+
+    '<span class="lbl">'+L("Voice & sound","الصوت والمؤثرات")+'</span><div class="ai140g">'+
+      card140("mic",L("AI voice-over","تعليق صوتي بالذكاء"),L("Type the words, pick man · woman · boy · girl; it is placed at the playhead.","اكتب الكلمات واختر رجل · امرأة · ولد · بنت؛ يوضع عند المؤشر."),F.voice,'<button class="btn sm" data-act="edai-vo">'+ic("mic")+L("Make a voice-over…","اصنع تعليقاً…")+"</button>")+
+      card140("voice",L("Voices & sound for this clip","أصوات ومؤثرات لهذا المقطع"),L("The agents add dialogue, sounds and music that fit what happens, with lips that follow.","يضيف الوكلاء حواراً وأصواتاً وموسيقى تناسب ما يحدث، مع شفاه تتبع الكلام."),null,go140("snd",L("Voices & sound…","الأصوات والمؤثرات…"),no||!vid))+
+      card140("sfx",L("Sound effect from words","مؤثر صوتي من الكلمات"),L("Describe it; it lands at the playhead.","صِفه؛ يوضع عند المؤشر."),F.sfx,'<div class="row"><input type="text" id="edaisfx" dir="auto" placeholder="'+esc(L("door slam, rain on a window…","صفق باب، مطر على النافذة…"))+'"><button class="btn sm" data-act="edai-sfx">'+L("Make","اصنع")+"</button></div>")+
+      card140("music",L("Music for this video","موسيقى لهذا الفيديو"),L("As long as your edit; it goes on the music track.","بطول المونتاج؛ توضع في مسار الموسيقى."),F.music,'<div class="row"><input type="text" id="edaimu" dir="auto" placeholder="'+esc(L("calm piano, upbeat pop…","بيانو هادئ، بوب حماسي…"))+'"><button class="btn sm" data-act="edai-mu">'+L("Make","اصنع")+"</button></div>")+
+      card140("denoise",L("Clean up voices","تنقية الأصوات"),L("Clearer speech in the clips: less rumble, more presence, even level — and less background noise in the export.","كلام أوضح في المقاطع: هدير أقل وحضور أكثر ومستوى متوازن — وضجيج خلفية أقل في التصدير."),0,cleanSw140())+"</div>"+
+    '<span class="lbl">'+L("Languages","اللغات")+'</span><div class="ai140g">'+
+      card140("captions",L("Auto captions","ترجمة تلقائية"),L("Captions that follow the speech word by word — made on your device.","ترجمة تتبع الكلام كلمة بكلمة — تُصنع على جهازك."),0,go140("caps",L("Make captions","اصنع الترجمة"),no))+
+      card140("globe",L("Translate captions & text","ترجم الترجمة والنصوص"),L("Into another language, keeping the timing.","إلى لغة أخرى مع الحفاظ على التوقيت."),null,'<div class="row"><select id="edtrl" aria-label="'+esc(L("Language","اللغة"))+'">'+langs.map(x=>'<option value="'+x[0]+'">'+x[1]+"</option>").join("")+'</select><button class="btn sm" data-act="edai-tr">'+L("Translate","ترجم")+'</button></div><label class="row small" style="gap:6px;margin-top:2px"><input type="checkbox" id="edtrtx" checked> '+L("Also the text on screen","والنصوص على الشاشة أيضاً")+"</label>")+
+      card140("voice",L("Dub into another language","دبلجة إلى لغة أخرى"),L("The same voices speak another language; the captions follow.","الأصوات نفسها تتكلم لغة أخرى؛ وتتبعها الترجمة."),null,go140("dub",L("Dub this clip…","دبلج هذا المقطع…"),no||!vid))+
+      card140("char",L("Lip-sync","مزامنة الشفاه"),L("A face in this clip says your words or your audio.","وجه في هذا المقطع يقول كلماتك أو صوتك."),F.lipsync,go140("lips",L("Lip-sync this clip…","زامن شفاه هذا المقطع…"),no))+"</div>"}
+EDX_PANELS.ai140=panel140;
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="ai140"]');if(!a||a.disabled)return;e.preventDefault();e.stopImmediatePropagation();
+  const v=a.dataset.v,E=S.ed;
+  if(v==="aiedit"){E.tab="ai";persist();renderView();return}
+  const c=edxPick();if(!c){toast(L("Add a clip to the timeline first.","أضف مقطعاً إلى الخط الزمني أولاً."));return}
+  if(v==="caps"){E.tab="words";persist();renderView();setTimeout(()=>{const b=document.querySelector('[data-act="edx-cap-auto"]');if(b&&!b.disabled)b.click()},60);return}
+  const m=clipMedia(c),vid=!!m&&m.type==="video";
+  if(v==="lips"){if(!m||!["video","image"].includes(m.type)){toast(L("Pick a video or picture clip with a face.","اختر مقطع فيديو أو صورة فيه وجه."));return}
+    // (a copy of the clip's file of its own: the Lip sync page may let go of it without touching the editor)
+    M.lsV={type:m.type,url:m.file instanceof Blob?URL.createObjectURL(m.file):(m.url||(m.el&&(m.el.currentSrc||m.el.src))),file:m.file,name:m.name||clipName(c),_srv139:m._srv139};persist();go("voice");
+    setTimeout(()=>{const b=document.querySelector('[data-act="lipsync"]');if(b)b.scrollIntoView({block:"center",behavior:"smooth"})},150);
+    toast(L("Type what they say (or add the voice), then press Lip sync.","اكتب ما يقوله (أو أضف الصوت) ثم اضغط «مزامنة الشفاه»."),{type:"info",ms:5000});return}
+  if(API.mode!=="server"){toast(L("This AI tool runs on your nooi server.","تعمل أداة الذكاء هذه على خادم nooi."),{type:"info"});return}
+  if(["words","snd","dub"].includes(v)&&!vid){toast(L("This works on video clips.","يعمل هذا على مقاطع الفيديو."));return}
+  a.disabled=true;let b=null;try{b=await base140(c)}finally{a.disabled=false}if(!b)return;
+  if(v==="words")editSheet135(b,{clip:c.id});else if(v==="replace")rpSheet136(b,{clip:c.id});else if(v==="snd")snd134Sheet(b,{clip:c.id});
+  else if(v==="dub"){S.subs.src={k:"job",job:b.id};S.subs.tab="dub";persist();go("subs");toast(L("Pick the languages and press Dub the video","اختر اللغات واضغط «دبلج الفيديو»"),{type:"ok"})}},true);
+
+// ---- 3. pro colour: film LUTs and colour by colour, on the graphics card
+const LUTS140=[["warm","Warm film","فيلم دافئ"],["cool","Cool film","فيلم بارد"],["teal","Teal & orange","تيل وبرتقالي"],["bleach","Bleach bypass","تبييض"],["cross","Cross process","معالجة متقاطعة"],
+  ["matte","Matte fade","باهت ناعم"],["golden","Golden hour","الساعة الذهبية"],["night","Day for night","ليل من نهار"],["mono","Rich mono","أبيض وأسود غني"],["vivid","Vivid","حيوي"]];
+const HSL140=[["red","Red","أحمر","#ff453a",0],["orange","Orange","برتقالي","#ff9f0a",30],["yellow","Yellow","أصفر","#ffd60a",58],["green","Green","أخضر","#30d158",120],
+  ["aqua","Aqua","سماوي","#40c8e0",182],["blue","Blue","أزرق","#0a84ff",222],["purple","Purple","بنفسجي","#a05cf0",272],["magenta","Magenta","أرجواني","#ff2d92",322]];
+// the built-in looks, each a small colour formula turned into a 17-point LUT
+function lutFn140(k){const lum=(r,g,b)=>.2126*r+.7152*g+.0722*b,sat=(c,s)=>{const l=lum(...c);return c.map(x=>l+(x-l)*s)},sc=(x,k)=>x+(x*x*(3-2*x)-x)*k;
+  const F={warm:c=>{c=sat(c,.95);return[sc(c[0],.3)*1.03+.02,sc(c[1],.3)+.01,sc(c[2],.3)*.9+.03]},
+    cool:c=>{c=sat(c,.9);return[sc(c[0],.25)*.94+.01,sc(c[1],.25)*.99+.015,sc(c[2],.25)*1.04+.03]},
+    teal:c=>{const l=lum(...c),t=1-l;c=[c[0]-.07*t+.07*l,c[1]+.015*t+.02*l,c[2]+.07*t-.08*l];c=sat(c,1.12);return c.map(x=>sc(x,.2))},
+    bleach:c=>{const l=lum(...c);c=c.map(x=>{const o=l<.5?2*x*l:1-2*(1-x)*(1-l);return x+(o-x)*.6});c=sat(c,.5);return c.map(x=>sc(x,.35))},
+    cross:c=>sat([sc(c[0],.5),sc(c[1],.35)*1.02,.12+c[2]*.72],1.15),
+    matte:c=>sat(c.map(x=>.08+sc(x,.15)*.86),.85),
+    golden:c=>{c=[c[0]*1.06+.02,c[1]+.01,c[2]*.82];return sat(c,1.05).map(x=>sc(x,.2))},
+    night:c=>{c=sat(c,.35);return[sc(c[0]*.55*.75,.2),sc(c[1]*.65*.75,.2),sc((c[2]*.85+.04)*.75,.2)]},
+    mono:c=>{const l=sc(lum(...c),.4);return[l*1.03,l,l*.94]},
+    vivid:c=>sat(c,1.4).map(x=>sc(x,.25))};return F[k]||null}
+const LUTC140={};
+function lutData140(id){if(!id||id==="none")return null;if(id in LUTC140)return LUTC140[id];let r=null;
+  if(id.startsWith("b:")){const f=lutFn140(id.slice(2));if(f){const n=17,d=new Uint8Array(n*n*n*3);for(let b=0;b<n;b++)for(let g=0;g<n;g++)for(let q=0;q<n;q++){const o=f([q/(n-1),g/(n-1),b/(n-1)]),i=((b*n+g)*n+q)*3;for(let k=0;k<3;k++)d[i+k]=Math.round(clamp(o[k],0,1)*255)}r={n,d}}}
+  else{const u=(S.ed.luts140||{})[id];if(u&&u.d){try{const s=atob(u.d),d=new Uint8Array(s.length);for(let i=0;i<s.length;i++)d[i]=s.charCodeAt(i);if(d.length===u.n*u.n*u.n*3)r={n:u.n,d}}catch(e){}}}
+  return LUTC140[id]=r}
+// a .cube file → at most 17 points a side (what the picture needs, small enough to keep in the edit)
+function cube140(text){let n=0,title="";const v=[];
+  for(const raw of String(text).split(/\r?\n/)){const s=raw.trim();if(!s||s[0]==="#")continue;const p=s.split(/\s+/),k=p[0].toUpperCase();
+    if(k==="TITLE"){title=s.slice(5).trim().replace(/^"|"$/g,"").slice(0,40);continue}if(k==="LUT_3D_SIZE"){n=+p[1];continue}if(k==="LUT_1D_SIZE")throw new Error("1d");if(/^[A-Z_]/.test(k))continue;if(p.length>=3)v.push(+p[0],+p[1],+p[2])}
+  if(!(n>=2&&n<=256)||v.length<n*n*n*3||v.slice(0,n*n*n*3).some(x=>!isFinite(x)))throw new Error("bad");
+  const to=Math.min(n,17),at=(q,g,b,k)=>v[((b*n+g)*n+q)*3+k],d=new Uint8Array(to*to*to*3);
+  for(let b=0;b<to;b++)for(let g=0;g<to;g++)for(let q=0;q<to;q++){const fq=q/(to-1)*(n-1),fg=g/(to-1)*(n-1),fb=b/(to-1)*(n-1),q0=Math.floor(fq),g0=Math.floor(fg),b0=Math.floor(fb),q1=Math.min(n-1,q0+1),g1=Math.min(n-1,g0+1),b1=Math.min(n-1,b0+1),dq=fq-q0,dg=fg-g0,db=fb-b0;
+    for(let k=0;k<3;k++){const c00=at(q0,g0,b0,k)*(1-dq)+at(q1,g0,b0,k)*dq,c10=at(q0,g1,b0,k)*(1-dq)+at(q1,g1,b0,k)*dq,c01=at(q0,g0,b1,k)*(1-dq)+at(q1,g0,b1,k)*dq,c11=at(q0,g1,b1,k)*(1-dq)+at(q1,g1,b1,k)*dq;
+      d[((b*to+g)*to+q)*3+k]=Math.round(clamp((c00*(1-dg)+c10*dg)*(1-db)+(c01*(1-dg)+c11*dg)*db,0,1)*255)}}
+  return{n:to,d,title}}
+const hslOn140=g=>!!g&&!!g.hsl&&Object.values(g.hsl).some(a=>a&&(a[0]||a[1]||a[2]));
+const need140=c=>{const g=c&&c.cg;return!!g&&((g.lut&&g.lut!=="none"&&(g.lutAmt??100)>0&&!!lutData140(g.lut))||hslOn140(g))};
+const GL140={no:false,gl:null};
+function gl140(){if(GL140.gl)return GL140.gl;if(GL140.no)return null;
+  try{const cv=document.createElement("canvas"),gl=cv.getContext("webgl",{premultipliedAlpha:false,preserveDrawingBuffer:true,antialias:false});if(!gl)throw new Error("no WebGL");
+    const sh=(t,s)=>{const x=gl.createShader(t);gl.shaderSource(x,s);gl.compileShader(x);if(!gl.getShaderParameter(x,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(x));return x};
+    const p=gl.createProgram();gl.attachShader(p,sh(gl.VERTEX_SHADER,"attribute vec2 p;varying vec2 v;void main(){gl_Position=vec4(p,0.,1.);v=.5*(p+1.);}"));
+    gl.attachShader(p,sh(gl.FRAGMENT_SHADER,`#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+varying vec2 v;uniform sampler2D img,lut;uniform float n,amt,useLut,useHsl;uniform vec3 adj[8];uniform float cen[8];
+vec3 rgb2hsl(vec3 c){float mx=max(c.r,max(c.g,c.b)),mn=min(c.r,min(c.g,c.b)),l=(mx+mn)*.5,d=mx-mn,h=0.,s=0.;
+  if(d>1e-5){s=l>.5?d/(2.-mx-mn):d/(mx+mn);if(mx==c.r)h=(c.g-c.b)/d+(c.g<c.b?6.:0.);else if(mx==c.g)h=(c.b-c.r)/d+2.;else h=(c.r-c.g)/d+4.;h/=6.;}return vec3(h,s,l);}
+float h2r(float p,float q,float t){if(t<0.)t+=1.;if(t>1.)t-=1.;if(t<1./6.)return p+(q-p)*6.*t;if(t<.5)return q;if(t<2./3.)return p+(q-p)*(2./3.-t)*6.;return p;}
+vec3 hsl2rgb(vec3 h){if(h.y<=0.)return vec3(h.z);float q=h.z<.5?h.z*(1.+h.y):h.z+h.y-h.z*h.y,p=2.*h.z-q;return vec3(h2r(p,q,h.x+1./3.),h2r(p,q,h.x),h2r(p,q,h.x-1./3.));}
+vec3 look(vec3 c){c=clamp(c,0.,1.);float b=c.b*(n-1.),b0=floor(b),b1=min(b0+1.,n-1.),x=c.r*(n-1.)+.5,y=(c.g*(n-1.)+.5)/n,W=n*n;
+  return mix(texture2D(lut,vec2((x+b0*n)/W,y)).rgb,texture2D(lut,vec2((x+b1*n)/W,y)).rgb,b-b0);}
+void main(){vec4 px=texture2D(img,v);vec3 c=px.rgb;
+  if(useHsl>.5){vec3 h=rgb2hsl(c);float dh=0.,ds=0.,dl=0.,ws=smoothstep(.03,.18,h.y);
+    for(int i=0;i<8;i++){float d=abs(h.x-cen[i]);d=min(d,1.-d);float w=clamp(1.-d/.11,0.,1.);w=w*w*(3.-2.*w)*ws;dh+=w*adj[i].x;ds+=w*adj[i].y;dl+=w*adj[i].z;}
+    h.x=fract(h.x+dh);h.y=clamp(h.y*(1.+ds),0.,1.);h.z=clamp(h.z+dl*.3,0.,1.);c=hsl2rgb(h);}
+  if(useLut>.5)c=mix(c,look(c),amt);
+  gl_FragColor=vec4(c,px.a);}`));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p));
+    const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+    const mk=()=>{const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);[[gl.TEXTURE_MIN_FILTER,gl.LINEAR],[gl.TEXTURE_MAG_FILTER,gl.LINEAR],[gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE],[gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE]].forEach(([k,x])=>gl.texParameteri(gl.TEXTURE_2D,k,x));return t};
+    const img=mk(),lut=mk();gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,1,1,0,gl.RGB,gl.UNSIGNED_BYTE,new Uint8Array(3));   // (never an empty texture on the LUT unit)
+    const U={};["img","lut","n","amt","useLut","useHsl","adj","cen"].forEach(k=>U[k]=gl.getUniformLocation(p,k));
+    cv.addEventListener("webglcontextlost",ev=>{ev.preventDefault();GL140.gl=null},false);
+    Object.assign(GL140,{cv,gl,p,buf,img,lut,U,key:"",n:2});return gl}
+  catch(e){console.warn("v140 colour pass:",e);GL140.no=true;return null}}
+function grade140(src,w,h,c){const gl=gl140();if(!gl)return null;const G=GL140,g=c.cg||{},cv=G.cv;if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}
+  gl.viewport(0,0,w,h);gl.useProgram(G.p);gl.bindBuffer(gl.ARRAY_BUFFER,G.buf);const loc=gl.getAttribLocation(G.p,"p");gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  const L3=g.lut&&g.lut!=="none"&&(g.lutAmt??100)>0?lutData140(g.lut):null;gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);
+  if(L3&&G.key!==g.lut){const n=L3.n,W=n*n,s=new Uint8Array(W*n*3);for(let b=0;b<n;b++)for(let y=0;y<n;y++)for(let q=0;q<n;q++){const a=((b*n+y)*n+q)*3,t=(y*W+b*n+q)*3;s[t]=L3.d[a];s[t+1]=L3.d[a+1];s[t+2]=L3.d[a+2]}
+    gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,G.lut);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,W,n,0,gl.RGB,gl.UNSIGNED_BYTE,s);G.key=g.lut;G.n=n}
+  gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,G.img);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,src);
+  gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,G.lut);
+  gl.uniform1i(G.U.img,0);gl.uniform1i(G.U.lut,1);gl.uniform1f(G.U.n,G.n);gl.uniform1f(G.U.amt,L3?clamp((g.lutAmt??100)/100,0,1):0);gl.uniform1f(G.U.useLut,L3?1:0);
+  const H=g.hsl||{},adj=[];HSL140.forEach(b=>{const a=H[b[0]]||[0,0,0];adj.push((+a[0]||0)/360,(+a[1]||0)/100,(+a[2]||0)/100)});
+  gl.uniform3fv(G.U.adj,new Float32Array(adj));gl.uniform1fv(G.U.cen,new Float32Array(HSL140.map(b=>b[4]/360)));gl.uniform1f(G.U.useHsl,hslOn140(g)?1:0);
+  gl.drawArrays(gl.TRIANGLES,0,3);return cv}
+// each clip with a LUT or colour-by-colour is graded right after it is drawn (in the preview and the export); a clip drawn faded
+// (a cross-fade) is drawn and graded on a canvas of its own first, so the clip under it isn't graded twice
+drawFit=(o=>function(ctx,m,ow,oh,lt,filter){
+  if(S.view!=="edit"||GL140.no||!ctx||!ctx.canvas||ctx.canvas.id!=="wk")return o.apply(this,arguments);const c=edxClipOf(m,lt);if(!c||!need140(c))return o.apply(this,arguments);
+  const cv=ctx.canvas,W=cv.width,H=cv.height;
+  if(ctx.globalAlpha>=.999&&ctx.globalCompositeOperation==="source-over"){const r=o.apply(this,arguments),out=grade140(cv,W,H,c);
+    if(out){ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation="copy";ctx.filter="none";ctx.drawImage(out,0,0,W,H);ctx.restore()}return r}
+  const O=GL140.o||(GL140.o=Object.assign(document.createElement("canvas"),{id:"wk"}));if(O.width!==W||O.height!==H){O.width=W;O.height=H}
+  const ox=O.getContext("2d");ox.setTransform(1,0,0,1,0,0);ox.globalAlpha=1;ox.globalCompositeOperation="source-over";ox.clearRect(0,0,W,H);ox.setTransform(ctx.getTransform());
+  const r=o.call(this,ox,m,ow,oh,lt,filter),out=grade140(O,W,H,c);ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.filter="none";ctx.drawImage(out||O,0,0,W,H);ctx.restore();return r})(drawFit);
+// the colour tab: film LUTs (built in · your own .cube) and colour by colour
+const SW140={};
+function swatch140(id){if(id in SW140)return SW140[id];const L3=lutData140(id);if(!L3)return SW140[id]="var(--panel3)";const n=L3.n,
+  at=(r,g,b)=>{const q=x=>Math.round(clamp(x,0,1)*(n-1)),i=((q(b)*n+q(g))*n+q(r))*3;return"rgb("+L3.d[i]+","+L3.d[i+1]+","+L3.d[i+2]+")"};
+  return SW140[id]="linear-gradient(90deg,"+[[.12,.12,.14],[.86,.62,.5],[.25,.55,.3],[.3,.55,.85],[.95,.92,.85]].map(c=>at(...c)).join(",")+")"}
+EDX_PANELS.color=(o=>function(){const h=o.apply(this,arguments),c=edxPick();if(!c)return h;const g=c.cg||{},cur=g.lut||"none",band=S.ed.band140||"red",a=(g.hsl&&g.hsl[band])||[0,0,0];
+  const lut=(id,name)=>'<button class="tile lut140" data-act="lut140" data-v="'+esc(id)+'" aria-pressed="'+(cur===id)+'"><span class="gl"><i style="background:'+(id==="none"?"var(--panel3)":swatch140(id))+'"></i></span><span class="lb">'+esc(name)+"</span></button>";
+  const mine=Object.entries(S.ed.luts140||{});
+  const hs=(i,label,val,min,max)=>'<label class="ctrl"><span>'+label+'</span><input type="range" min="'+min+'" max="'+max+'" step="1" value="'+val+'" data-hsl140="'+i+'" data-out="oh140'+i+'"><output id="oh140'+i+'">'+val+"</output></label>";
+  return h+'<span class="lbl">'+L("Film LUTs","أنماط LUT السينمائية")+'</span><div class="tiles">'+lut("none",L("None","بدون"))+LUTS140.map(x=>lut("b:"+x[0],L(x[1],x[2]))).join("")+mine.map(([id,u])=>lut(id,u.name||"LUT")).join("")+"</div>"+
+    '<div class="row" style="margin-top:8px"><label class="btn sm" style="position:relative">'+ic("upload")+L("Import a .cube LUT","استورد ملف ‎.cube")+'<input type="file" accept=".cube,.CUBE" data-lut140="1" aria-label="'+esc(L("Import a .cube LUT","استورد ملف ‎.cube"))+'" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label>'+
+    (cur.startsWith("u:")?'<button class="btn sm ghost danger" data-act="lut140-del">'+ic("trash")+L("Remove this LUT","احذف هذا النمط")+"</button>":"")+"</div>"+
+    (cur!=="none"?edxSlider("cg.lutAmt",L("LUT strength","قوة النمط"),g.lutAmt??100,0,100,1,"%"):"")+
+    '<span class="lbl">'+L("Colour by colour","لوناً بلون")+'</span><div class="hsl140b" role="radiogroup" aria-label="'+esc(L("Colour","اللون"))+'">'+HSL140.map(b=>{const x=g.hsl&&g.hsl[b[0]],on=x&&(x[0]||x[1]||x[2]);return'<button type="button" data-act="hsl140-band" data-v="'+b[0]+'" aria-pressed="'+(band===b[0])+'" aria-label="'+esc(L(b[1],b[2]))+'" title="'+esc(L(b[1],b[2]))+'" style="--c:'+b[3]+'"'+(on?' class="on"':"")+"></button>"}).join("")+"</div>"+
+    hs(0,L("Hue","درجة اللون"),a[0]||0,-30,30)+hs(1,L("Saturation","التشبع"),a[1]||0,-100,100)+hs(2,L("Lightness","الإضاءة"),a[2]||0,-100,100)+
+    (hslOn140(g)?'<button class="btn sm ghost" data-act="hsl140-reset">'+ic("refresh")+L("Reset colours","إعادة ضبط الألوان")+"</button>":"")+
+    (GL140.no?'<p class="small mute">'+L("This device can't show LUTs and colour-by-colour in the preview.","هذا الجهاز لا يعرض أنماط LUT والألوان في المعاينة.")+"</p>":"")})(EDX_PANELS.color);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="lut140"],[data-act="lut140-del"],[data-act="hsl140-band"],[data-act="hsl140-reset"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();
+  const E=S.ed,c=edxPick(),act=a.dataset.act;if(act==="hsl140-band"){E.band140=a.dataset.v;renderView();return}if(!c)return;c.cg=c.cg||{};
+  if(act==="lut140"){const v=a.dataset.v;if(v==="none")delete c.cg.lut;else{c.cg.lut=v;if(c.cg.lutAmt==null)c.cg.lutAmt=100}}
+  else if(act==="lut140-del"){const id=c.cg.lut;if(id&&id.startsWith("u:")){E.clips.forEach(x=>{if(x.cg&&x.cg.lut===id)delete x.cg.lut});if(E.luts140)delete E.luts140[id];delete LUTC140[id];delete SW140[id];GL140.key=""}}
+  else if(act==="hsl140-reset")delete c.cg.hsl;
+  persist();renderView()},true);
+document.addEventListener("input",e=>{const t=e.target;if(!t||!t.dataset||t.dataset.hsl140==null||S.view!=="edit")return;const c=edxPick();if(!c)return;const E=S.ed,band=E.band140||"red";
+  c.cg=c.cg||{};c.cg.hsl=c.cg.hsl||{};const a=c.cg.hsl[band]=(c.cg.hsl[band]||[0,0,0]).slice();a[+t.dataset.hsl140]=+t.value;const out=$("#"+t.dataset.out);if(out)out.textContent=t.value;
+  clearTimeout(GL140.pt);GL140.pt=setTimeout(persist,400)});
+document.addEventListener("change",async e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.lut140||!t.files||!t.files[0])return;const f=t.files[0],c=edxPick();t.value="";if(!c)return;
+  if(f.size>12*1024*1024){toast(L("That LUT file is too big (over 12 MB).","ملف LUT كبير جداً (أكثر من 12 ميغابايت)."),{type:"warn"});return}
+  try{const L3=cube140(await f.text());let s="";for(let i=0;i<L3.d.length;i+=8192)s+=String.fromCharCode.apply(null,L3.d.subarray(i,i+8192));
+    const E=S.ed,id="u:"+uid();E.luts140=E.luts140||{};if(Object.keys(E.luts140).length>=8){toast(L("An edit keeps up to 8 of your LUTs — remove one first.","يحتفظ المونتاج بـ 8 أنماط كحد أقصى — احذف واحداً أولاً."),{type:"warn"});return}
+    E.luts140[id]={name:L3.title||f.name.replace(/\.cube$/i,"").slice(0,40),n:L3.n,d:btoa(s)};c.cg=c.cg||{};c.cg.lut=id;c.cg.lutAmt=100;persist();renderView();toast(L("LUT added and applied to this clip.","أُضيف النمط وطُبّق على هذا المقطع."),{type:"ok"})}
+  catch(err){toast(err.message==="1d"?L("Only 3D LUTs (.cube with LUT_3D_SIZE) can be used.","يمكن استخدام أنماط LUT ثلاثية الأبعاد فقط (‎.cube مع LUT_3D_SIZE)."):L("That file isn't a .cube LUT that can be read.","هذا الملف ليس ملف ‎.cube يمكن قراءته."),{type:"warn"})}});
+
+// ---- 4. clean up voices
+const cleanSw140=()=>'<label class="laisw"><input type="checkbox" data-act="clean140"'+(S.ed.clean140?" checked":"")+"><span>"+L("Clean up voices in the clips","نقِّ الأصوات في المقاطع")+"</span></label>";
+const VC140={on:new WeakSet(),chain:null,ctx:null};
+function vcChain140(A){if(VC140.chain&&VC140.ctx===A)return VC140.chain;VC140.ctx=A;return VC140.chain=vcBuild140(A)}
+function vcBuild140(A){const f=(type,fr,q,gain)=>{const x=A.createBiquadFilter();x.type=type;x.frequency.value=fr;if(q!=null)x.Q.value=q;if(gain!=null)x.gain.value=gain;return x};
+  // rumble out · less mud · more presence · a little less hiss · an even level
+  const hp=f("highpass",85,.7),mud=f("peaking",280,1,-3),pr=f("peaking",3200,.9,3.5),air=f("highshelf",9000,null,-1.5),cp=A.createDynamicsCompressor(),mk=A.createGain();
+  // (the browser's compressor lifts everything by its own make-up gain; the last step takes most of it back, so a quiet room
+  // stays quiet and the voice keeps about its level — the loud moments are what come down)
+  cp.threshold.value=-18;cp.knee.value=10;cp.ratio.value=3;cp.attack.value=.005;cp.release.value=.25;mk.gain.value=.8;
+  hp.connect(mud);mud.connect(pr);pr.connect(air);air.connect(cp);cp.connect(mk);mk.connect(A.destination);return hp}
+const safe140=el=>{const s=String(el.currentSrc||el.src||"");return /^(blob:|data:)/.test(s)||el.crossOrigin!=null||(()=>{try{return new URL(s,location.href).origin===location.origin}catch(e){return false}})()};
+function vcRoute140(el,on){if(!el||on===VC140.on.has(el))return;if(on&&!safe140(el))return;
+  try{const n=audioNode(el);n.disconnect();if(on){n.connect(vcChain140(audioCtx));VC140.on.add(el)}else{n.connect(audioCtx.destination);VC140.on.delete(el)}}catch(e){}}
+// (the sound of a clip goes through the browser's audio engine only once that engine is running — a tap starts it)
+document.addEventListener("pointerdown",()=>{if(S.view!=="edit"||!S.ed||!S.ed.clean140)return;try{if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==="suspended")audioCtx.resume().catch(()=>{})}catch(e){}},true);
+syncClipMedia=(o=>function(i,lt,playing){const r=o.apply(this,arguments);const on=!!(S.ed&&S.ed.clean140);
+  if((on||VC140.any)&&audioCtx&&audioCtx.state==="running"){VC140.any=on;S.ed.clips.forEach(c=>{const m=M["c_"+c.id];if(m&&m.type==="video")vcRoute140(m.el,on)})}return r})(syncClipMedia);
+document.addEventListener("change",e=>{const t=e.target;if(!t||!t.dataset||t.dataset.act!=="clean140")return;S.ed.clean140=!!t.checked;
+  try{if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==="suspended")audioCtx.resume().catch(()=>{})}catch(err){}
+  if(t.checked)VC140.any=true;persist();document.querySelectorAll('[data-act="clean140"]').forEach(x=>{x.checked=t.checked});
+  toast(t.checked?L("Voices cleaned up — the export also lowers background noise.","تمت تنقية الأصوات — ويخفض التصدير ضجيج الخلفية أيضاً."):L("Voices as they were.","الأصوات كما كانت."),{type:"ok"})});
+// the export: the clips' sound through the same steps, plus less background noise (a spectral gate measured on the quietest moments)
+function fft140(re,im,inv){const n=re.length;for(let i=1,j=0;i<n;i++){let b=n>>1;for(;j&b;b>>=1)j^=b;j^=b;if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t}}
+  for(let len=2;len<=n;len<<=1){const ang=(inv?2:-2)*Math.PI/len,wr=Math.cos(ang),wi=Math.sin(ang),hl=len>>1;for(let i=0;i<n;i+=len){let cr=1,ci=0;for(let k=0;k<hl;k++){const a=i+k,b=a+hl,xr=re[b]*cr-im[b]*ci,xi=re[b]*ci+im[b]*cr;re[b]=re[a]-xr;im[b]=im[a]-xi;re[a]+=xr;im[a]+=xi;const t=cr*wr-ci*wi;ci=cr*wi+ci*wr;cr=t}}}
+  if(inv)for(let i=0;i<n;i++){re[i]/=n;im[i]/=n}}
+function denoise140(chs){const N=1024,Hh=N/2,len=chs[0].length,B=N/2+1;if(len<N*8)return chs;
+  const win=new Float32Array(N);for(let i=0;i<N;i++)win[i]=Math.sqrt(.5-.5*Math.cos(2*Math.PI*i/N));   // (√Hann in and out: at half overlap they add back to 1)
+  const pad=chs.map(x=>{const p=new Float32Array(len+2*N);p.set(x,N);return p}),F=Math.floor((len+N)/Hh)+1;
+  // the quietest tenth of the moments tells what the noise sounds like
+  const en=new Float32Array(F);for(let f=0;f<F;f++){let e=0;for(const p of pad)for(let i=0;i<N;i+=4){const s=p[f*Hh+i]||0;e+=s*s}en[f]=e}
+  const order=[...en.keys()].filter(f=>en[f]>0).sort((a,b)=>en[a]-en[b]),quiet=order.slice(0,Math.max(4,Math.floor(order.length*.1)));if(!quiet.length)return chs;
+  const nRms=Math.sqrt(quiet.reduce((a,f)=>a+en[f],0)/quiet.length/(N/4)/pad.length);if(nRms<1e-4)return chs;   // (already quiet: below −80 dB, nothing to take away)
+  const noise=new Float32Array(B),re=new Float32Array(N),im=new Float32Array(N);
+  for(const f of quiet)for(const p of pad){re.fill(0);im.fill(0);for(let i=0;i<N;i++)re[i]=(p[f*Hh+i]||0)*win[i];fft140(re,im,false);for(let k=0;k<B;k++)noise[k]+=Math.hypot(re[k],im[k])/quiet.length/pad.length}
+  const out=pad.map(p=>new Float32Array(p.length)),R=pad.map(()=>new Float32Array(N)),I=pad.map(()=>new Float32Array(N)),g=new Float32Array(B),prev=new Float32Array(B).fill(1),mag=new Float32Array(B);
+  for(let f=0;f<F;f++){const o=f*Hh;if(o+N>pad[0].length)break;mag.fill(0);
+    pad.forEach((p,c)=>{const r=R[c],q=I[c];q.fill(0);for(let i=0;i<N;i++)r[i]=p[o+i]*win[i];fft140(r,q,false);for(let k=0;k<B;k++)mag[k]+=Math.hypot(r[k],q[k])/pad.length});
+    for(let k=0;k<B;k++){const x=Math.max(.15,1-1.6*noise[k]/(mag[k]+1e-9));g[k]=Math.max(x,prev[k]*.6)}
+    for(let k=0;k<B;k++){const s=(g[Math.max(0,k-1)]+g[k]+g[Math.min(B-1,k+1)])/3;prev[k]=g[k];g[k]=s}
+    pad.forEach((p,c)=>{const r=R[c],q=I[c];for(let k=0;k<B;k++){r[k]*=g[k];q[k]*=g[k];if(k&&k<N/2){r[N-k]=r[k];q[N-k]=-q[k]}}fft140(r,q,true);const y=out[c];for(let i=0;i<N;i++)y[o+i]+=r[i]*win[i]})}
+  return out.map(y=>y.subarray(N,N+len))}
+const DN140=new Map();
+async function vcClips140(total){const SR=48000,off=new OfflineAudioContext(2,Math.max(1,Math.ceil(total*SR)),SR),st=edStarts(),inp=vcBuild140(off);let n=0;
+  for(let i=0;i<S.ed.clips.length;i++){const c=S.ed.clips[i],m=clipMedia(c);if(!m||m.type!=="video"||!c.vol)continue;const key=m.url||(m.el&&m.el.src);
+    let b=AUD139.get(key);if(b===undefined){try{const blob=m.file instanceof Blob?m.file:await(await fetch(m.url||m.el.currentSrc||m.el.src)).blob();b=await off.decodeAudioData(await blob.arrayBuffer())}catch(e){b=null}AUD139.set(key,b)}
+    if(!b)continue;const sp=c.speed||1,a=Math.min(c.in,b.duration),e=Math.min(c.out,b.duration);if(e-a<.02)continue;
+    const dk=key+"|"+a.toFixed(3)+"|"+e.toFixed(3);let x=DN140.get(dk);
+    if(!x){const s0=Math.floor(a*b.sampleRate),s1=Math.min(b.length,Math.ceil(e*b.sampleRate)),chs=[];for(let ch=0;ch<b.numberOfChannels;ch++)chs.push(b.getChannelData(ch).slice(s0,s1));
+      const y=denoise140(chs);x=new AudioBuffer({length:Math.max(1,s1-s0),numberOfChannels:y.length,sampleRate:b.sampleRate});y.forEach((d,ch)=>x.copyToChannel(d,ch));DN140.set(dk,x)}
+    if(Math.abs(sp-1)>=1e-3)x=stretch139(x,0,x.duration,sp,off);
+    const s=off.createBufferSource(),gn=off.createGain();s.buffer=x;gn.gain.value=c.vol/100;s.connect(gn).connect(inp);s.start(st[i],0,Math.min(x.duration,total-st[i]));n++}
+  return n?await off.startRendering():null}
+mix139=(o=>async function(total){if(!S.ed.clean140||S.ed.clipSound===false)return o.apply(this,arguments);
+  const keep=S.ed.clipSound;let p;S.ed.clipSound=false;try{p=o.apply(this,arguments)}finally{S.ed.clipSound=keep}   // (the music, voice-over and sounds as before: the clips' sound is read before its first pause)
+  const rest=await p;let voice=null;try{voice=await vcClips140(total)}catch(e){console.warn("v140 voice cleanup:",e);return o.apply(this,arguments)}
+  if(!voice)return rest;if(!rest)return voice;for(let ch=0;ch<rest.numberOfChannels;ch++){const d=rest.getChannelData(ch),v=voice.getChannelData(Math.min(ch,voice.numberOfChannels-1));for(let k=0;k<d.length&&k<v.length;k++)d[k]+=v[k]}return rest})(mix139);
+
+// ---- 5. subtitle files (.srt / .vtt): bring them in, or save the captions as one
+function subsIn140(text){const out=[],ts=s=>{const m=String(s).trim().match(/^(?:(\d+):)?(\d{1,2}):(\d{2})[.,](\d{1,3})$/);return m?(+(m[1]||0))*3600+(+m[2])*60+(+m[3])+(+m[4].padEnd(3,"0"))/1000:NaN};
+  for(const b of String(text).replace(/^﻿/,"").replace(/\r/g,"").split(/\n\s*\n/)){const ls=b.split("\n"),k=ls.findIndex(l=>l.includes("-->"));if(k<0)continue;const[a,z]=ls[k].split("-->"),s=ts(a),e=ts(String(z).trim().split(/\s+/)[0]);if(!(e>s))continue;
+    const txt=ls.slice(k+1).join(" ").replace(/<[^>]+>/g,"").replace(/\{\\[^}]*\}/g,"").replace(/\s+/g," ").trim();if(txt)out.push({s,e,text:txt})}
+  return out}
+function subsOut140(kind){const W=(S.ed.caps&&S.ed.caps.words)||[],cues=[];let cur=null;
+  W.forEach(w=>{if(!cur||w.s-cur.e>.6||cur.ws.length>=7||(cur.ws.join(" ")+" "+w.w).length>42){cur={s:w.s,e:w.e,ws:[]};cues.push(cur)}cur.ws.push(w.w);cur.e=w.e});
+  const tc=t=>{const ms=Math.round(Math.max(0,t)*1000),h=Math.floor(ms/3600000),m=Math.floor(ms/60000)%60,s=Math.floor(ms/1000)%60,r=ms%1000,p=(x,n)=>String(x).padStart(n,"0");return p(h,2)+":"+p(m,2)+":"+p(s,2)+(kind==="vtt"?".":",")+p(r,3)};
+  return(kind==="vtt"?"WEBVTT\n\n":"")+cues.map((c,i)=>(kind==="vtt"?"":(i+1)+"\n")+tc(c.s)+" --> "+tc(c.e)+"\n"+c.ws.join(" ")+"\n").join("\n")}
+EDX_PANELS.words=(o=>function(){const n=((S.ed.caps&&S.ed.caps.words)||[]).length;
+  return o.apply(this,arguments)+'<span class="lbl">'+L("Subtitle files","ملفات الترجمة")+'</span><div class="row"><label class="btn sm" style="position:relative">'+ic("upload")+L("Import .srt / .vtt","استورد ‎.srt / .vtt")+'<input type="file" accept=".srt,.vtt,text/vtt,application/x-subrip" data-srt140="1" aria-label="'+esc(L("Import .srt / .vtt","استورد ‎.srt / .vtt"))+'" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label>'+
+    '<button class="btn sm" data-act="srt140" data-v="srt"'+(n?"":" disabled")+">"+ic("download")+L("Save .srt","احفظ ‎.srt")+'</button><button class="btn sm" data-act="srt140" data-v="vtt"'+(n?"":" disabled")+">"+ic("download")+L("Save .vtt","احفظ ‎.vtt")+"</button></div>"})(EDX_PANELS.words);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="srt140"]');if(!a||a.disabled)return;e.preventDefault();e.stopImmediatePropagation();const k=a.dataset.v==="vtt"?"vtt":"srt";
+  saveFile((S.ed.title||"captions").replace(/[^\w؀-ۿ -]+/g,"").trim().slice(0,40)+"."+k,new Blob([subsOut140(k)],{type:k==="vtt"?"text/vtt":"application/x-subrip"}))},true);
+document.addEventListener("change",async e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.srt140||!t.files||!t.files[0])return;const f=t.files[0];t.value="";
+  if(f.size>5*1024*1024){toast(L("That subtitle file is too big.","ملف الترجمة كبير جداً."),{type:"warn"});return}
+  const cues=subsIn140(await f.text());if(!cues.length){toast(L("No subtitles could be read in that file.","لم تُقرأ أي ترجمة في هذا الملف."),{type:"warn"});return}
+  const E=S.ed;E.caps.words=cues.flatMap(c=>edxSpread(c.text,c.s,c.e));E.caps.on=true;persist();renderView();toast(L(cues.length+" subtitle lines added — they show on the video.","أُضيف "+cues.length+" سطر ترجمة — تظهر على الفيديو."),{type:"ok"})});
+
+// (phones: the groups sit in a bar at the foot of the screen, above the menu, where the thumb is; the preview stays pinned at
+// the top — its height is followed as it changes, e.g. when the video has loaded: it was measured once, so what was pinned under
+// it slid behind it)
+const RO140={el:null,ro:null};
+renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="edit"){const bn=document.querySelector(".bottomnav");document.documentElement.style.setProperty("--bn140",(bn&&getComputedStyle(bn).display!=="none"?bn.offsetHeight:0)+"px")}
+  if(S.view==="edit"&&window.ResizeObserver){const s=document.querySelector(".edstage");
+  if(s&&s!==RO140.el){RO140.ro=RO140.ro||new ResizeObserver(es=>{if(innerWidth<768)for(const e of es)document.documentElement.style.setProperty("--edsh",Math.round(e.target.getBoundingClientRect().height)+"px")});
+    if(RO140.el)RO140.ro.unobserve(RO140.el);RO140.el=s;RO140.ro.observe(s)}}return r})(renderView);
+(()=>{const st=document.createElement("style");st.textContent=`.cat140{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 10px}
+.cat140 button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px 6px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--mute);font-size:11.5px;font-weight:600;line-height:1.15;min-width:0}
+.cat140 button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cat140 button svg{width:19px;height:19px}
+.cat140 button[aria-pressed="true"]{color:var(--text);border-color:var(--lime);background:color-mix(in srgb,var(--lime) 13%,var(--panel2))}
+.tabs.t140 [data-h140]{display:none!important}.tabs.one140{display:none!important}
+@media (max-width:767px){.edgrid .panel.edtools72>.cat140{display:flex;overflow-x:auto;scrollbar-width:none;position:fixed;left:0;right:0;bottom:var(--bn140,56px);z-index:9;margin:0;padding:5px 6px;gap:2px;
+   background:color-mix(in srgb,var(--panel) 94%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+ .edgrid .panel.edtools72>.cat140::-webkit-scrollbar{display:none}.edgrid .panel.edtools72>.cat140 button{flex:1 1 0;min-width:44px;padding:5px 0 4px;font-size:10px;letter-spacing:-.1px;gap:2px;background:transparent;border-color:transparent}.edgrid .panel.edtools72>.cat140 button span{text-overflow:clip}
+ .edgrid .panel.edtools72>.cat140 button[aria-pressed="true"]{background:color-mix(in srgb,var(--lime) 14%,transparent);border-color:color-mix(in srgb,var(--lime) 55%,transparent)}.edgrid .panel.edtools72>.cat140 button svg{width:18px;height:18px}
+ .edgrid .panel.edtools72>.tabs.t140{position:static;padding-top:2px;margin-bottom:10px}
+ .edgrid:has(.cat140),.view:has(.cat140){padding-bottom:calc(var(--bn140,56px) + 80px)}}
+.ai140g{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.ai140c{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--panel2);display:flex;flex-direction:column;gap:6px;min-width:0}
+.ai140h{display:flex;align-items:center;gap:8px}.ai140h>svg{width:18px;height:18px;color:var(--lime-ink);flex:none}.ai140h b{flex:1;min-width:0;font-size:13.5px}
+.ai140p{font:600 11px/1 var(--mono);padding:4px 7px;border-radius:999px;background:var(--panel3);color:var(--mute);white-space:nowrap;display:inline-flex;gap:3px;align-items:center}.ai140p svg{width:12px;height:12px}
+.ai140c p{margin:0;font-size:12px;color:var(--mute);line-height:1.4}.ai140c .row{gap:6px;flex-wrap:nowrap}.ai140c input[type=text],.ai140c select{flex:1;min-width:0}.ai140c .btn{align-self:flex-start}
+.ai140sel{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--mute);margin:0 0 4px}.ai140sel svg{width:15px;height:15px;flex:none}.ai140sel span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.clean140{margin:0 0 10px}.lut140 .gl i{display:block;width:100%;height:100%;min-height:26px;border-radius:8px}
+.hsl140b{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 6px}.hsl140b button{width:30px;height:30px;border-radius:50%;border:2px solid transparent;background:var(--c);box-shadow:inset 0 0 0 2px var(--panel);padding:0;position:relative}
+.hsl140b button[aria-pressed="true"]{border-color:var(--text)}.hsl140b button.on::after{content:"";position:absolute;right:-2px;top:-2px;width:8px;height:8px;border-radius:50%;background:var(--text)}`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
