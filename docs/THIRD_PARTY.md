@@ -32,3 +32,5 @@ No code was copied. These three open editors were read for ideas only, and each 
 | One switch that cleans up voices | [Concat](https://github.com/jub0t/Concat) | AGPL-3.0 — idea only, none of its code | `vcBuild140` (Web Audio filters), `denoise140` (own spectral gate and FFT) |
 | Sound waveforms on the timeline, snapping, keyframes on any setting, masks with soft edges, shapes (v141) | OpenCut | MIT | `paintWf141`, `snap141`, `edxMo` opacity/volume, `lySoft141`, `shDraw141` |
 | A wide font library (v141) | DonkeyCut | Apache-2.0 | 38 more Google Fonts in `FONTS` |
+| Generated shots beside the timeline; an assistant that edits by chat and keeps the conversation; guides over the preview (thirds, centre, safe margins, short-video keep-out) (v143) | DonkeyCut | Apache-2.0 | `media143`, `chat143`, `guides143` |
+| The editor's layout — add panel on the left, details of the selection on the right, timeline across the bottom; on a phone a tool bar that turns into the selected clip's tools (v143) | CapCut (closed product) | Not open source — the common layout and public feature names only; no code, artwork or wording | `VIEWS.edit` (v143), `CTX143` |

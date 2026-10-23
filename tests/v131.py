@@ -95,7 +95,7 @@ async def phone(b):
     c0 = await E("()=>S.ed.clips[0].id")
     # the tool row: whole words
     await E("(id)=>{edSetPick('clip',id);S.ed.tab='clip';renderView()}", c0); await pg.wait_for_timeout(300)
-    bar = await E("""()=>[...document.querySelectorAll('#main .edbar .tb')].filter(t=>t.offsetParent).map(t=>{const s=t.querySelector('span')||t,r=document.createRange();r.selectNodeContents(s);const rs=[...r.getClientRects()].filter(x=>x.width>1).sort((a,b)=>a.top-b.top);let n=0,bot=-1e9;for(const x of rs){if(x.top>=bot-2){n++;bot=x.bottom}else bot=Math.max(bot,x.bottom)}return{t:s.textContent.trim(),lines:n}})""")
+    bar = await E("""()=>[...document.querySelectorAll('#main .edbar .tb,#main .e-bar button')].filter(t=>t.offsetParent||getComputedStyle(t.closest('.e-bar')||t).position==='fixed').map(t=>{const s=t.querySelector('span')||t,r=document.createRange();r.selectNodeContents(s);const rs=[...r.getClientRects()].filter(x=>x.width>1).sort((a,b)=>a.top-b.top);let n=0,bot=-1e9;for(const x of rs){if(x.top>=bot-2){n++;bot=x.bottom}else bot=Math.max(bot,x.bottom)}return{t:s.textContent.trim(),lines:n}})""")
     res["bar"] = bar; chk("tool row: every label on one line", bar and all(x["lines"] == 1 for x in bar), bar)
     # a tap on the picture while it plays
     await E("()=>{ED.t=0;ED.playing=true}"); await pg.wait_for_timeout(400)
@@ -254,7 +254,7 @@ async def arabic(b):
     await setup(pg, "ar"); cdp = await ctx.new_cdp_session(pg)
     c0 = await E("()=>S.ed.clips[0].id")
     await E("(id)=>{edSetPick('clip',id);S.ed.tab='clip';renderView()}", c0); await pg.wait_for_timeout(300)
-    bar = await E("""()=>[...document.querySelectorAll('#main .edbar .tb')].filter(t=>t.offsetParent).map(t=>{const s=t.querySelector('span')||t,r=document.createRange();r.selectNodeContents(s);const rs=[...r.getClientRects()].filter(x=>x.width>1).sort((a,b)=>a.top-b.top);let n=0,bot=-1e9;for(const x of rs){if(x.top>=bot-2){n++;bot=x.bottom}else bot=Math.max(bot,x.bottom)}return{t:s.textContent.trim(),lines:n}})""")
+    bar = await E("""()=>[...document.querySelectorAll('#main .edbar .tb,#main .e-bar button')].filter(t=>t.offsetParent||getComputedStyle(t.closest('.e-bar')||t).position==='fixed').map(t=>{const s=t.querySelector('span')||t,r=document.createRange();r.selectNodeContents(s);const rs=[...r.getClientRects()].filter(x=>x.width>1).sort((a,b)=>a.top-b.top);let n=0,bot=-1e9;for(const x of rs){if(x.top>=bot-2){n++;bot=x.bottom}else bot=Math.max(bot,x.bottom)}return{t:s.textContent.trim(),lines:n}})""")
     chk("Arabic: tool row labels on one line", bar and all(x["lines"] == 1 for x in bar), bar)
     await E("()=>{S.ed.tab='info';renderView()}"); await pg.wait_for_function("IC131.d", timeout=8000)
     a = await E("""()=>{const i=bnAdd131('sale');const s=stAdd131('star');s.t1='جديد';S.ed.pick=null;i.start=s.start=0;i.end=s.end=6;ED.playing=false;ED.t=2;edTick(performance.now());

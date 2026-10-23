@@ -113,17 +113,17 @@ async def editor(b):
     ok(not bad, f"{tag}: Arabic commands {bad}"); ok(await E("window.__runs.length") == 0, f"{tag}: none of the free commands went to the AI {await E('window.__runs')}")
     await E(SET, "en"); await pg.wait_for_timeout(300)
     r = await E("""async()=>{const E=S.ed;E.format='tiktok';E.tab='clip';const c=E.clips[0];E.sel=c.id;edSetPick('clip',c.id);renderView();await new Promise(r=>setTimeout(r,100));
-      const tb=(document.querySelector('.edbar [data-act="ed-extend91"]')||{}).textContent;document.querySelector('.ext91 [data-act="ed-extend91"]').click();
+      const tb=(document.querySelector('.edbar [data-act="ed-extend91"],.e-bar [data-act="ed-extend91"]')||{}).textContent;document.querySelector('.ext91 [data-act="ed-extend91"]').click();
       for(let k=0;k<30&&!document.querySelector('#modalRoot [data-act="ext132-go"]');k++)await new Promise(r=>setTimeout(r,100));   // (v134: the Extend sheet — same movement or another angle — then Extend)
       const g=document.querySelector('#modalRoot [data-act="ext132-go"]');if(g)g.click();
       for(let k=0;k<40&&!S.jobs.find(x=>x.meta&&x.meta.edCmd==='extend');k++)await new Promise(r=>setTimeout(r,100));const j=S.jobs.find(x=>x.meta&&x.meta.edCmd==='extend');
       return {tb,sheet:!!g,job:j&&[j.dur,j.aspect,j.meta.extNoJoin134===1||j.meta.start===true,/^Extended/.test(j.title)],after:j&&EDP[j.id]&&EDP[j.id].after===c.id}}""")
     ok(r["tb"] and any(ch.isdigit() for ch in r["tb"]) and r["job"] == [5, "16:9", True, True] and r["after"], f"{tag}: Extend shot — price shown, 5 s from the last frame in the clip's own shape (v94: a 1280×720 clip stays 16:9 in a TikTok project), lands after the clip {r}")
     await E("()=>{$('#modalRoot').innerHTML='';$('#edcmdq').value='';S.edCmd='';renderView();scrollTo(0,0)}"); await pg.wait_for_timeout(300)
-    # (v142: the new editor page has a slim header — the title, then format, projects and export on one row; the AI command chips sit in the AI tools group, one row)
-    r = await E("""async()=>{S.ed.tab='ai140';renderView();await new Promise(r=>setTimeout(r,150));const l=document.querySelector('.view .lede'),t=document.querySelector('.ne-top'),ch=[...document.querySelectorAll('.edcmdx .chip')].filter(c=>c.getBoundingClientRect().width>1).map(c=>Math.round(c.getBoundingClientRect().top));
+    # (v143: the editor's slim header — the title and the project name, then format, projects and export on one row; the AI command chips sit with the assistant, one row)
+    r = await E("""async()=>{S.ed.tab='chat143';renderView();await new Promise(r=>setTimeout(r,150));const l=document.querySelector('.view .lede'),t=document.querySelector('.e-top'),ch=[...document.querySelectorAll('.edcmdx .chip')].filter(c=>c.getBoundingClientRect().width>1).map(c=>Math.round(c.getBoundingClientRect().top));
       return {lede:l?getComputedStyle(l).display:'none',top:t?Math.round(t.getBoundingClientRect().height):-1,chips:ch.length,rows:new Set(ch).size,sw:document.documentElement.scrollWidth}}""")
-    ok(r["lede"] == "none" and 0 < r["top"] <= 84 and r["chips"] > 0 and r["rows"] == 1 and r["sw"] <= 390, f"{tag}: compact phone header, chips in one row, no sideways scroll {r}")
+    ok(r["lede"] == "none" and 0 < r["top"] <= 96 and r["chips"] > 0 and r["rows"] == 1 and r["sw"] <= 390, f"{tag}: compact phone header, chips in one row, no sideways scroll {r}")
     ok(not errs, f"{tag}: page errors {errs[:3]}"); await ctx.close()
 
 async def sketch(b):

@@ -23,7 +23,7 @@ SETUP = """async()=>{S.langAsked=true;document.getElementById('langsug')?.remove
  go('edit');renderAll()}"""
 SCROLL = """(sel)=>{const all=document.querySelectorAll(sel),el=all[all.length-1];if(!el)return null;let e=el.parentElement;while(e&&!(e.scrollHeight>e.clientHeight+5&&/(auto|scroll)/.test(getComputedStyle(e).overflowY)))e=e.parentElement;e=e||document.scrollingElement;
  const st=document.querySelector('.edstage');const top=(st&&getComputedStyle(st).position==='sticky')?st.getBoundingClientRect().bottom+20:120;e.style.scrollBehavior='auto';e.scrollTop+=el.getBoundingClientRect().top-top;
- const bar=el.closest('.edbar');if(bar&&bar.scrollWidth>bar.clientWidth){const r=el.getBoundingClientRect(),br=bar.getBoundingClientRect();bar.scrollLeft+=r.left-br.left-(br.width-r.width)/2}return 1}"""   # (v131: the tool row scrolls sideways on a phone)
+ const bar=el.closest('.edbar,.e-bar');if(bar&&bar.scrollWidth>bar.clientWidth){const r=el.getBoundingClientRect(),br=bar.getBoundingClientRect();bar.scrollLeft+=r.left-br.left-(br.width-r.width)/2}return 1}"""   # (v131: the tool row scrolls sideways on a phone; v143: so does the phone's tool bar at the foot)
 RECT = "(s)=>{const a=document.querySelectorAll(s),x=a[a.length-1].getBoundingClientRect();return [x.x,x.y,x.width,x.height]}"
 WRAP = "()=>{const r=document.querySelector('.tlwrap').getBoundingClientRect();return [r.left,r.right]}"
 
@@ -62,6 +62,7 @@ async def run(p, w, mob, fails, out):
     for act, fn in [("ed-split", lambda a, b: b["n"] == a["n"] + 1), ("ed-dup", lambda a, b: b["n"] == a["n"] + 1), ("ed-move", lambda a, b: b["order"] != a["order"]), ("ed-del", lambda a, b: b["n"] == a["n"] - 1), ("ed-undo", lambda a, b: b["n"] == a["n"] + 1), ("ed-redo", lambda a, b: b["n"] == a["n"] - 1)]:
         a = await snap(); await tap(f"[data-act={act}]:not([disabled])"); b2 = await snap(); check(act, fn(a, b2), [a["n"], b2["n"]])
     await E("()=>{S.ed.sel=S.ed.clips[0].id;S.ed.tab='clip';renderView()}"); await pg.wait_for_timeout(300)
+    await E("()=>{edSetPick('clip',S.ed.clips[0].id);renderView();const b=document.querySelector('.e-bar [data-act=\"ps143\"][data-v=\"clip\"]');if(b)b.click()}"); await pg.wait_for_timeout(300)   # (v143: on a phone the clip's Edit tool opens its settings)
     res = await E("""()=>{const set=(b,v)=>{const i=document.querySelector('[data-bind="'+b+'"]');if(!i)return 0;i.value=v;i.dispatchEvent(new Event('input',{bubbles:true}));i.dispatchEvent(new Event('change',{bubbles:true}));return 1};const c=S.ed.clips[0];set('edclip.in',1);set('edclip.out',4);set('edclip.vol',50);return [+c.in,+c.out,+c.vol]}""")
     check("trim & volume", res == [1, 4, 50], res)
     sp = await E("()=>{const b=[...document.querySelectorAll('[data-set=\"edclip.speed\"]')].find(x=>x.dataset.val==='2');if(!b)return 0;b.click();return +S.ed.clips[0].speed}"); check("speed", sp == 2, sp)

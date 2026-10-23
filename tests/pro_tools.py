@@ -14,7 +14,7 @@ MOCK = """()=>{laiCall=async(msg,onp)=>{if(onp)onp({status:'running'});const t=m
  if(t==='asr')return{text:'hello world',chunks:[{start:0,end:.5,text:'hello'},{start:.5,end:1,text:'world'}]};
  if(t==='bg'){return new Promise(r=>{const c=document.createElement('canvas');c.width=c.height=32;c.toBlob(b=>r({blob:b}),'image/png')})}
  throw new Error('unmocked '+t)};S.localAI=true}"""
-SKIP = {"sc-gen", "sc-av", "sc-one", "sc-retry", "hf-send", "xp-dl", "ed-export", "ed-publish", "s3d-turntable", "eng-try", "edx-aishot", "logout", "signout", "adm-send", "adm-test",
+SKIP = {"lt143", "ls143", "dt143", "ps143", "desel143", "pclose143", "sc-gen", "sc-av", "sc-one", "sc-retry", "hf-send", "xp-dl", "ed-export", "ed-publish", "s3d-turntable", "eng-try", "edx-aishot", "logout", "signout", "adm-send", "adm-test",
         "nw-go", "nw-video", "nw-glb", "nw-real", "nw-use", "nw-full", "nw-del"}   # the 3D World: no paid jobs, downloads or full screen in a click test
 
 CLICK_JS = """async ([sel, cap, skip]) => { let n = 0;
@@ -56,13 +56,14 @@ async def main():
                 await E(MOCK)
                 # editor: every tab, every control
                 await E("()=>{go('edit');PJ.fresh('edit');S.ed.clips.push({id:uid(),src:{k:'demo',kind:'scene',seed:11},in:0,out:5,speed:1,trans:'cut',vol:100},{id:uid(),src:{k:'demo',kind:'green',seed:12},in:0,out:5,speed:1,trans:'cut',vol:100});S.ed.sel=S.ed.clips[0].id;S.ed.caps.words=edxSpread('one two three four',0.2,2.5);S.ed.caps.on=true;S.ed.sfx=[{id:'s1',n:'pop',t:1,vol:100}];S.ed.regions=[{id:'r1',kind:'blur',shape:'rect',box:{x:.5,y:.5,w:.2,h:.1},start:0,end:4,amt:10}];renderView()}")
-                tabs = await E("()=>[...document.querySelectorAll('.tabs [data-set=\"ed.tab\"]')].map(b=>b.dataset.val)")
+                # (v143: every panel of the editor — the add panels on the left, the details on the right / the phone's sheet)
+                tabs = ["media", "audio", "sfx", "text", "info", "logo", "vfx", "erase", "layers", "trans143", "words", "color", "look", "chat143", "ai140", "ai", "3d", "clip", "motion", "track", "export"]
                 out["checks"][f"{w}:tabs"] = len(tabs)
                 if w < 800: tabs = [t for t in tabs if t in ("clip", "text", "motion", "color", "sfx", "words", "erase", "layers")]
                 for t in tabs:
                     await E(f"()=>{{S.ed.tab='{t}';S.ed.sel=S.ed.clips[0]&&S.ed.clips[0].id;if(!S.ed.texts.length)document.querySelector('[data-act=ed-addtext]')?.click();S.ed.selText=S.ed.texts[0]&&S.ed.texts[0].id;S.ed.tab='{t}';ED.playing=false;renderView()}}")
                     await pg.wait_for_timeout(150)
-                    out["clicks"] += await click_all(pg, ".ne-side", errs, f"{w}:edit:{t}", 60 if w > 800 else 35)
+                    out["clicks"] += await click_all(pg, f'.ed143 .e-body[data-tab="{t}"]', errs, f"{w}:edit:{t}", 60 if w > 800 else 35)
                     await E("()=>{ED.playing=false;if(!S.ed.clips.length)S.ed.clips.push({id:uid(),src:{k:'demo',kind:'scene',seed:11},in:0,out:5,speed:1,trans:'cut',vol:100})}")
                 # play through every clip with all effects on
                 await E("()=>{const c=S.ed.clips[0];if(c){c.vfx={shake:1,pulse:1,rgb:1,glow:1,radial:1,pixel:1,mirror:1,strobe:1,invert:1,comic:1,vhs:1,leak:1};c.cg={look:'teal',exp:10,temp:30};c.trans='glitch';c.mo={kf:[{t:0,s:1,x:0,y:0,r:0},{t:1,s:1.5,x:.1,y:0,r:10}],ease:'smooth'}}S.ed.tab='clip';renderView();for(let t=0;t<edTotal();t+=.25){ED.t=t;edTick(performance.now())}}")
