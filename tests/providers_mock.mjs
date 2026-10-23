@@ -34,7 +34,7 @@ res = mkRes(); queue = [resp(429, "slow")]; await streamTTS(res, { text: "hi" })
 res = mkRes(); queue = [resp(200, new Uint8Array([1, 2, 3, 4]))]; await streamTTS(res, { text: "hi" });
 ok(res.hdr["Content-Type"] === "audio/mpeg" && res.chunks.length && !JSON.stringify(res.hdr).includes(KEY), "stream: audio streamed through the backend, no key in headers");
 const U = (plan) => ({ plan, planUntil: Date.now() + 1e8, jobs: {} }); const can = (plan, dur) => { try { P.checkEntitlement(U(plan), { kind: "video", model: "auto", dur }); return true; } catch { return false; } };
-ok(can("basic", 10) && !can("basic", 20) && can("pro", 20) && !can("pro", 30) && can("studio", 30), "durations: Basic 10 s · Pro 20 s · Studio 30 s enforced on the server");
+ok(can("basic", 30) && !can("basic", 31) && can("pro", 60) && !can("pro", 61) && can("studio", 120) && !can("studio", 121), "durations: Basic 30 s · Pro 1 min · Studio 2 min (v132) enforced on the server");
 
 // OpenAI GPT Image: refuses without a model id, saves PNG on success, maps a rejected key
 const { gptImage } = await import(ROOT + "/providers/images2.js"); st.saveCfg("providers", "openai", { apiKey: "sk-openai-test-000" });

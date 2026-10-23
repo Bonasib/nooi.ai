@@ -24,7 +24,9 @@ stop)
   stop_preview; echo "✅ Preview removed — the live site was not touched."; exit 0 ;;
 promote)
   [ -f "$ZIPKEEP" ] || { echo "No preview package — start one first: bash $0 /root/nooi-update.zip"; exit 1; }
-  if command -v nooi-update >/dev/null; then nooi-update "$ZIPKEEP"; else bash "$APP/deploy/update.sh" "$ZIPKEEP"; fi
+  # v138: with the update steps of the version being put live (they know its needs), else the installed ones
+  if [ -f "$STG/deploy/update.sh" ]; then bash "$STG/deploy/update.sh" "$ZIPKEEP"
+  elif command -v nooi-update >/dev/null; then nooi-update "$ZIPKEEP"; else bash "$APP/deploy/update.sh" "$ZIPKEEP"; fi
   # v110: the preview is removed once its version is live — left running, it did the live site's work a second time on the
   # same server (and slowed it down)
   stop_preview; echo "✅ The previewed version is now live, and the preview was removed."; exit 0 ;;
@@ -39,6 +41,7 @@ CERT="$ETC/letsencrypt/live/$DOMAIN"; [ -f "$CERT/fullchain.pem" ] || CERT="$(ls
 echo "▶ 1/5 unpacking the new version into $STG"
 TMP="$(mktemp -d)"; unzip -q "$ZIP" -d "$TMP"; NEW="$(find "$TMP" -maxdepth 2 -name server.js -printf '%h\n' | head -1)"
 [ -n "$NEW" ] || { echo "server.js not found in the package"; exit 1; }
+chmod 755 "$TMP" "$NEW"   # (v138: mktemp's root-only folder is not copied onto the preview's folder)
 cp "$ZIP" "$ZIPKEEP"; mkdir -p "$STG"
 rsync -a --delete --exclude data --exclude media --exclude .env --exclude node_modules "$NEW"/ "$STG"/; rm -rf "$TMP"
 

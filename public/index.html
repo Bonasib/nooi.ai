@@ -5961,7 +5961,7 @@ document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.c
   if(a.dataset.act==="h-maint"){const k=a.dataset.k,on=statusOf(k)!=="maintenance";if(API.mode==="server"){try{await API.req("/v1/admin/providers/"+k+"/maintenance",{method:"PUT",json:{on}});PSTATUS[k]=on?"maintenance":"online"}catch(err){}}else{DEMO_STATUS[k]=on?"maintenance":"online"}renderView()}});
 /* ---- clear messages when something goes wrong ---- */
 // (v124: read when it is shown, in the reader's language — made once at load it stayed in the language the page opened in)
-const ERR_F124=()=>({gone:L("This result is no longer in your account — it may have been deleted on another device.","هذه النتيجة لم تعد في حسابك — ربما حُذفت من جهاز آخر."),auth:L("The AI provider rejected our key — support has been notified. Your credits were refunded.","رفض مزوّد الذكاء مفتاحنا — تم إبلاغ الدعم وأُعيد رصيدك."),rate:L("High demand right now — we retried automatically. Please try again in a minute.","ضغط عالٍ حالياً — أعدنا المحاولة تلقائياً. حاول بعد دقيقة."),provider:L("The AI provider is temporarily unavailable. Your credits were refunded.","مزوّد الذكاء غير متاح مؤقتاً، وأُعيد رصيدك."),network:L("We couldn't reach the AI provider. Your credits were refunded.","تعذّر الوصول لمزوّد الذكاء، وأُعيد رصيدك."),quota:L("The provider account is out of quota — support has been notified.","نفد رصيد حساب المزوّد — تم إبلاغ الدعم."),input:L("The provider couldn't process this request. Try rephrasing or another model.","لم يتمكن المزوّد من معالجة الطلب. أعد الصياغة أو جرّب نموذجاً آخر.")});
+const ERR_F124=()=>({gone:L("This result is no longer in your account — it may have been deleted on another device.","هذه النتيجة لم تعد في حسابك — ربما حُذفت من جهاز آخر."),auth:L("The AI provider rejected our key — support has been notified. Your credits were refunded.","رفض مزوّد الذكاء مفتاحنا — تم إبلاغ الدعم وأُعيد رصيدك."),rate:L("High demand right now — we retried automatically. Please try again in a minute.","ضغط عالٍ حالياً — أعدنا المحاولة تلقائياً. حاول بعد دقيقة."),provider:L("The AI provider is temporarily unavailable. Your credits were refunded.","مزوّد الذكاء غير متاح مؤقتاً، وأُعيد رصيدك."),network:L("We couldn't reach the AI provider. Your credits were refunded.","تعذّر الوصول لمزوّد الذكاء، وأُعيد رصيدك."),quota:L("The AI engine can't take new work right now — the site's team has been told. Nothing was charged; please try again a little later.","لا يستطيع محرّك الذكاء قبول أعمال جديدة الآن — أُبلغ فريق الموقع. لم يُخصم شيء؛ حاول مجدداً بعد قليل."),input:L("The provider couldn't process this request. Try rephrasing or another model.","لم يتمكن المزوّد من معالجة الطلب. أعد الصياغة أو جرّب نموذجاً آخر.")});
 const ERR_MSG=new Proxy({},{get:(_,k)=>ERR_F124()[k],has:(_,k)=>k in ERR_F124()});
 const notified=new Set();setInterval(()=>{S.jobs.forEach(j=>{if(j.status==="failed"&&!notified.has(j.id)&&Date.now()-(j.created||0)<3600e3){notified.add(j.id);notifyFail81(j)}})},1500);
 API.req=(orig=>async function(p,o){try{return await orig.call(API,p,o)}catch(e){const st=e.status||+(String(e.message).match(/\b(401|403|429|500|502|503|504)\b/)||[])[1]||0;if(st===429)e.message=ERR_MSG.rate;else if(st>=500)e.message=ERR_MSG.provider;throw e}})(API.req);
@@ -16143,6 +16143,25 @@ previewCol=(o=>function(g){const h=o.apply(this,arguments),r=g&&g.status==="comp
 .rp136f{padding:8px 10px;border-radius:10px;background:color-mix(in srgb,#f5b942 12%,var(--panel2));border:1px solid color-mix(in srgb,#f5b942 35%,var(--line))}
 .rp136seg [data-act="rp136-cdel"]{padding:4px 8px}.rp136seg [data-act="rp136-cdel"] svg{width:12px;height:12px}
 `;document.head.appendChild(st)})();
+/* ================= v138: an AI engine that ran out of credits is said at once to staff ================= */
+// (the server: lib/alert138.js — GET /v1/me gives staff alerts138 {engine:{since,last,count}}): a red line at the top of Admin with
+// how many jobs failed and since when, and once a visit a short note on any page. Customers only see the calm sentence (quota).
+SRV81["The AI engine can't take new work right now — the site's team has been told. Your credits were refunded; please try again a little later."]="quota";
+let AL138=null;
+function hm138(t){const d=new Date(t);return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
+function line138(){if(!AL138)return"";const n=AL138.count||1,at=hm138(AL138.since);
+  return'<div class="al138" role="alert">'+ic("warn","width:18px;height:18px;flex:none")+'<div><b>'+L("The AI engine account is out of credits","نفد رصيد حساب محرّك الذكاء")+"</b><br>"+
+    L(n+(n===1?" job":" jobs")+" failed since "+at+" — customers were not charged. Top up the engine account, then tap Test all under Models → Connections & live status.",
+      "فشل "+n+" من الأعمال منذ "+at+" — لم يُخصم شيء من العملاء. اشحن رصيد حساب المحرّك، ثم اضغط «اختبر الكل» في النماذج ← الاتصالات والحالة المباشرة.")+"</div></div>"}
+async function alerts138(){if(API.mode!=="server"||!S.user)return;try{const r=await API.req("/v1/me"),a=(r&&r.alerts138)||{},e=Object.entries(a).find(([,v])=>v&&v.type==="quota"),was=AL138?AL138.last:0;
+  AL138=e?Object.assign({key:e[0]},e[1]):null;
+  if(AL138&&AL138.last!==was){if(S.view==="admin")renderView();let seen="";try{seen=sessionStorage.getItem("al138")||""}catch(_){}
+    if(seen!==String(AL138.since)){try{sessionStorage.setItem("al138",String(AL138.since))}catch(_){}toast(L("The AI engine account is out of credits — see Admin.","نفد رصيد حساب محرّك الذكاء — راجع لوحة الإدارة."),{type:"warn"})}}
+  else if(!AL138&&was&&S.view==="admin")renderView()}catch(_){}}
+VIEWS.admin=(o=>function(){const h=o.apply(this,arguments);return AL138&&typeof h==="string"?h.replace('<div class="admtabs">',()=>line138()+'<div class="admtabs">'):h})(VIEWS.admin);
+setTimeout(alerts138,2500);setInterval(alerts138,120000);
+(()=>{const st=document.createElement("style");st.textContent=`.al138{display:flex;gap:10px;align-items:flex-start;margin:10px 0 14px;padding:12px 14px;border-radius:12px;background:color-mix(in srgb,#e5484d 14%,transparent);border:1px solid color-mix(in srgb,#e5484d 55%,transparent);font-size:14px;line-height:1.45}.al138 svg{color:#e5484d;margin-top:1px}`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

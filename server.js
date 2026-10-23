@@ -48,6 +48,7 @@ import { registerAgents } from "./lib/agents.js";
 import { registerV88 } from "./lib/v88.js";   // v88: prompts in English for the engines, poster frames, deleting results
 import { registerScrub131 } from "./lib/scrub131.js";   // v131: a light copy of a clip for dragging the editor's playhead
 import { startKeepMedia } from "./lib/v89.js";   // v89: results that still point at an engine's (expiring) link are kept here
+import "./lib/alert138.js";   // v138: an engine out of credits is said at once (Admin, staff line, one email)
 import "./lib/intent.js";   // v96: the page's choices (style, camera move, type, motion, what to avoid, voice-over) reach the engine as words
 import "./lib/words100.js";   // v100: a picture with no words gets plain words for the engine (Kling 3.0 refused "prompt is required")
 // a stray error in some background task is logged — it never takes the whole site down (every request in flight would fail
