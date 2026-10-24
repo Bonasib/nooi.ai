@@ -27,7 +27,7 @@ ACTIONS = [
     ("drag", "async()=>{ED.playing=false;for(let i=0;i<40;i++){ED.t=(i*0.1)%4;await new Promise(q=>setTimeout(q,50))}}"),
     ("still", "()=>{ED.playing=false}"),
     ("end slider", "async()=>{const r=[...document.querySelectorAll('#main input[type=range]')][1];for(let i=0;i<5;i++){r.value=String(4-i*0.4);r.dispatchEvent(new Event('input',{bubbles:true}));await new Promise(q=>setTimeout(q,120))}r.dispatchEvent(new Event('change',{bubbles:true}))}"),
-    ("speed", "()=>{const b=[...document.querySelectorAll('#main button')].find(x=>x.textContent.trim()==='0.5×');b.click()}"),
+    ("speed", "async()=>{S.ed.tab='speed145';renderView();await new Promise(q=>setTimeout(q,150));const b=[...document.querySelectorAll('#main button')].find(x=>x.textContent.trim()==='0.5×');b.click()}"),   # (v145: the clip's speed has its own tab)
     ("cut", "async()=>{S.ed.clips[0].speed=1;const c={id:uid(),src:{k:'job',job:'c1'},in:1,out:3,speed:1,trans:'cut',vol:100};S.ed.clips.push(c);renderView();await new Promise(q=>setTimeout(q,400));ED.t=3.2;ED.playing=true}"),
 ]
 

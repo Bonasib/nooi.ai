@@ -2865,9 +2865,9 @@ const tiny=document.createElement("canvas");const tctx=tiny.getContext("2d");
 function drawSrcAt(ctx,m,x,y,w,h,lt){if(m.type==="proc"){ctx.save();ctx.translate(x,y);if(m.kind==="green")drawGreen(ctx,w,h,lt);else drawScene(ctx,w,h,m.seed,m.pal||S.story.palette,lt);ctx.restore()}else ctx.drawImage(m.el,x,y,w,h)}
 function drawFit(ctx,m,ow,oh,lt,filter){
   if(!srcReady(m)){ctx.fillStyle="#111";ctx.fillRect(0,0,ow,oh);ctx.fillStyle="#888";ctx.font="500 "+Math.round(oh*.03)+"px Geist, sans-serif";ctx.textAlign="center";ctx.fillText(L("Media missing — re-upload this clip","الملف غير موجود — أعد رفع هذا المقطع"),ow/2,oh/2);ctx.textAlign="start";return}
-  const sw=srcW(m),sh=srcH(m),cover=Math.max(ow/sw,oh/sh),contain=Math.min(ow/sw,oh/sh),mode=S.ed.fit;
+  const sw=srcW(m),sh=srcH(m),cover=Math.max(ow/sw,oh/sh),contain=Math.min(ow/sw,oh/sh),cv0=CUR145&&CUR145.cv145,cm=cv0&&cv0.mode,mode=cm==="color"||cm==="pic"?"fit":cm||S.ed.fit;   // (v145: the clip's own canvas)
   if(mode==="blur"){tiny.width=48;tiny.height=Math.max(2,Math.round(48*sh/sw));drawSrcAt(tctx,m,0,0,tiny.width,tiny.height,lt);ctx.filter="brightness(.55) saturate(1.2)";const dw=sw*cover,dh=sh*cover;ctx.drawImage(tiny,(ow-dw)/2,(oh-dh)/2,dw,dh);ctx.filter="none"}
-  else{ctx.fillStyle="#000";ctx.fillRect(0,0,ow,oh)}
+  else if(!(cm==="pic"&&cvPic145(ctx,ow,oh))){ctx.fillStyle=cm==="color"?(cv0.col||"#000"):"#000";ctx.fillRect(0,0,ow,oh)}
   const s=mode==="fill"?cover:contain,dw=sw*s,dh=sh*s;ctx.filter=filter||"none";drawSrcAt(ctx,m,(ow-dw)/2,(oh-dh)/2,dw,dh,lt);ctx.filter="none";
 }
 function syncClipMedia(i,lt,playing){
@@ -3876,7 +3876,7 @@ const _vacc2=VIEWS.account;VIEWS.account=()=>_vacc2().replace('<button class="bt
 document.addEventListener("click",e=>{const a=e.target.closest('[data-act="media-clear"]');if(!a)return;IDB.clear();S.mediaKeys={};persist();toast(L("Saved uploads cleared","تم مسح الملفات المحفوظة"))});
 /* 5) Guard: editor clips whose upload is gone show a re-upload button */
 const _ve5=VIEWS.edit;VIEWS.edit=()=>{const miss=S.ed.clips.filter(c=>c.src.k==="upload"&&!M["c_"+c.id]&&!(S.mediaKeys||{})["c_"+c.id]);let h=_ve5();if(miss.length)h=h.replace('<div class="edgrid">','<div style="margin-bottom:12px">'+note(miss.length+L(" clip(s) need their file again — select the clip and upload it."," مقطع يحتاج ملفه من جديد — اختر المقطع وارفعه مرة أخرى."))+'</div><div class="edgrid">');
-  const sc=S.ed.clips.find(c=>c.id===S.ed.sel);if(sc&&S.ed.tab==="clip"&&sc.src.k==="upload"&&!M["c_"+sc.id])h=h.replace('<span class="lbl">'+L("Speed","السرعة")+"</span>",'<label class="drop" style="margin:8px 0">'+ic("upload")+"<div>"+L("Re-upload ","أعد رفع ")+esc(sc.src.name||"")+'</div><input type="file" accept="video/*,image/*" data-reclip="'+sc.id+'"></label><span class="lbl">'+L("Speed","السرعة")+"</span>");return h};
+  return h};
 document.addEventListener("change",e=>{const el=e.target;if(el.dataset&&el.dataset.reclip&&el.files&&el.files[0]){const id=el.dataset.reclip;loadSlot("c_"+id,el.files[0]);const m=M["c_"+id];if(m&&m.type==="video"){m.el.loop=false;m.el.pause()}const c=S.ed.clips.find(x=>x.id===id);if(c)c.src.name=el.files[0].name;persist();renderView()}});
 edAddFiles=(orig=>function(files){orig(files);S.ed.clips.forEach(c=>{const k="c_"+c.id;const m=M[k];if(m&&m.file&&!(S.mediaKeys||{})[k]){S.mediaKeys=S.mediaKeys||{};S.mediaKeys[k]={name:m.name,type:m.file.type||""};IDB.put(k,m.file)}});persist()})(edAddFiles);
 setTimeout(restoreMedia,400);
@@ -6638,10 +6638,11 @@ drawFit=(o=>function(ctx,m,ow,oh,lt,filter){
   const out=next&&EDX_TRS.includes(c.trans)&&d-tl<Wo?1-(d-tl)/Wo:0,inn=prev&&EDX_TRS.includes(prev.trans)&&tl<Wi?1-tl/Wi:0;
   const tr=(k,type)=>{if(!k)return;const e=ease144(k);if(type==="zoom"){s*=1+e*(out?1.6:.8);blur+=e*8}else if(type==="whip"){x+=(out?-1:1)*e*.7;blur+=e*14}else if(type==="spin"){r+=(out?1:-1)*e*Math.PI*.5;s*=1+e*.5;blur+=e*5}else if(type==="flash")q.flash=Math.max(q.flash||0,e);else if(type==="glitch")q.glitch=Math.max(q.glitch||0,k);else if(type==="blurx")blur+=e*18};
   if(out)tr(out,c.trans);if(inn)tr(inn,prev.trans);
+  {const A=typeof anim145==="function"&&anim145(c,tl,d);if(A){s*=A.s;x+=A.x;y+=A.y;r+=A.r;blur+=A.b}}   // (v145: animations in & out)
   const cf=edxClipFilter(c),f=[filter&&filter!=="none"?filter:"",cf,blur>.3?"blur("+blur.toFixed(1)+"px)":""].filter(Boolean).join(" ")||"none";
   const moved=s!==1||x||y||r||(c.mo&&(c.mo.fh||c.mo.fv));
   ctx.save();if(moved){if(s<1||x||y||r){ctx.fillStyle="#000";ctx.fillRect(0,0,ow,oh)}ctx.translate(ow/2+x*ow,oh/2+y*oh);ctx.rotate(r);ctx.scale(s*(c.mo&&c.mo.fh?-1:1),s*(c.mo&&c.mo.fv?-1:1));ctx.translate(-ow/2,-oh/2)}
-  o(ctx,(typeof edxSmooth==="function"&&edxSmooth(c,m,lt))||m,ow,oh,lt,f);ctx.restore();
+  CUR145=c;try{o(ctx,(typeof edxSmooth==="function"&&edxSmooth(c,m,lt))||m,ow,oh,lt,f)}finally{CUR145=null}ctx.restore();
   if(c.trans==="wipe"&&out&&next){const nm=clipMedia(next);if(nm){ctx.save();ctx.beginPath();const w=ow*out*out*(3-2*out);if(S.lang&&RTL_LANGS_EDX.includes(S.lang))ctx.rect(ow-w,0,w,oh);else ctx.rect(0,0,w,oh);ctx.clip();o(ctx,nm,ow,oh,next.in,filter);ctx.restore()}}
   if(Object.keys(v).some(k=>v[k])||q.flash||q.glitch||(c.cg&&c.cg.look&&c.cg.look!=="none"))edxPost(ctx,ow,oh,c,tl,q)})(drawFit);
 /* ---------- erase · blur · pixelate regions (static or following a tracked object) ---------- */
@@ -6878,10 +6879,6 @@ const EDX_PANELS={motion:edxMotionPanel,color:edxColorPanel,sfx:edxSfxPanel,word
 VIEWS.edit=(o=>()=>{edxInit();let h=o();const E=S.ed,pps=E.zoom;
   h=h.replace(/(<div class="tabs" role="tablist">[\s\S]*?)(<\/div>)/,(m0,a,b)=>a+EDX_TABS.map(x=>'<button data-set="ed.tab" data-val="'+x[0]+'" aria-pressed="'+(E.tab===x[0])+'">'+L(x[1],x[2])+"</button>").join("")+b);
   if(EDX_PANELS[E.tab])h=h.replace(/(<div class="tabs" role="tablist">[\s\S]*?<\/div>)/,"$1"+'<div class="edxpanel">'+EDX_PANELS[E.tab]()+"</div>");
-  /* clip tab: precision edits + pro transitions */
-  if(E.tab==="clip"&&edxSel()){const c=edxSel();
-    h=h.replace('<span class="lbl">'+L("Transition to next","الانتقال للتالي")+"</span>",'<span class="lbl">'+L("Precision edit","تحرير دقيق")+'</span><div class="row"><button class="btn sm" data-act="edx-trim" data-v="in" title="Q">'+ic("trimL")+L("Trim start here","قص البداية هنا")+'</button><button class="btn sm" data-act="edx-trim" data-v="out" title="W">'+ic("trimR")+L("Trim end here","قص النهاية هنا")+'</button><button class="btn sm" data-act="edx-freeze" title="F">'+ic("freeze")+L("Freeze frame","تجميد الإطار")+"</button></div>"+'<span class="lbl">'+L("Transition to next","الانتقال للتالي")+"</span>");
-    h=h.replace(/(<button class="(?:chip|tile)" data-set="edclip\.trans" data-val="slide"[^>]*>[\s\S]*?<\/button>)/,(m0)=>m0+EDX_TR.map(x=>'<button class="tile" data-set="edclip.trans" data-val="'+x[0]+'" aria-pressed="'+(c.trans===x[0])+'"><span class="gl">'+svg(ICONS[x[0]==="zoom"?"motion":x[0]==="wipe"?"erase":x[0]==="whip"?"next":x[0]==="spin"?"refresh":"vfx"]||I.refresh)+'</span><span class="lb">'+esc(L(x[1],x[2]))+"</span></button>").join(""))}
   /* text tab: effects & word animations */
   const tx=E.texts.find(t=>t.id===E.selText);
   if(E.tab==="text"&&tx&&!tx.kind){const add='<span class="lbl">'+L("Text effect","تأثير النص")+'</span><div class="tiles">'+EDX_TFX.map(x=>edxTile("edx-tfx",x[0],x[1],x[2],x[3],(tx.efx||"none")===x[0])).join("")+"</div>"+
@@ -7062,16 +7059,7 @@ async function edxAiShot(){const c=edxSel();if(!c){toast(L("Select a clip first.
     loadSlot("vStart",new File([a],"start-frame.jpg",{type:"image/jpeg"}));loadSlot("vEnd",new File([b],"end-frame.jpg",{type:"image/jpeg"}));S.draft.startJob=null;persist();go("video");toast(L("Start and end frames are set — describe the move between them and generate.","تم ضبط إطاري البداية والنهاية — صِف الحركة بينهما ثم ولّد."))}
   catch(e){toast(String(e.message||e))}finally{uiPill("")}}
 /* the Clip tab: slow motion, ramps, smoothing, frames */
-VIEWS.edit=(o=>()=>{let h=o();const E=S.ed,c=edxSel();if(E.tab!=="clip"||!c)return h;const m=clipMedia(c),isV=m&&m.type!=="image",sm=EDX.sm[c.id],fps=(sm&&sm.fps)||30;
-  if(isV&&c.smooth&&c.smooth!=="off"&&(!sm||(!sm.busy&&(!sm.ready||sm.key!==edxSmKey(c)))))setTimeout(()=>edxSmBuild(c),0);
-  const cur=c.slowTo||c.speed||1;
-  const blk='<span class="lbl">'+L("Slow motion","الحركة البطيئة")+'</span><div class="tiles">'+EDX_SLOW.map(x=>'<button class="tile" data-act="edx-slow" data-v="'+x[0]+'" aria-pressed="'+(Math.abs(cur-x[0])<1e-3)+'"><span class="gl"><b class="mono" style="font-size:12px">'+x[3]+'</b></span><span class="lb">'+esc(L(x[1],x[2]))+"</span></button>").join("")+"</div>"+
-    (isV?'<span class="lbl">'+L("Speed ramp","منحنى السرعة")+"</span>"+edxSeg("edx-ramp",EDX_RAMPS,c.ramp||"none")+
-      '<span class="lbl">'+L("Smooth frames","نعومة الإطارات")+"</span>"+edxSeg("edx-smooth",[["off","Off","إيقاف"],["blend","Frame blending","مزج الإطارات"],["flow","Optical flow","التدفق البصري"]],c.smooth||"off")+
-      (c.smooth&&c.smooth!=="off"?'<div class="bar" style="height:6px;margin-top:8px"><i id="smbar" style="width:'+Math.round(((sm&&sm.prog)||0)*100)+'%"></i></div><p class="small dim" style="margin:4px 0 0">'+(sm&&sm.ready?L("Ready · ","جاهز · ")+sm.frames.length+L(" frames read — in-between frames are created as it plays."," إطاراً — تُنشأ الإطارات الوسيطة أثناء التشغيل."):L("Reading the clip's frames…","قراءة إطارات المقطع…"))+"</p>":""):"")+
-    '<span class="lbl">'+L("Start & end frame","إطار البداية والنهاية")+'</span><div class="small mono" dir="ltr" style="margin-bottom:6px">'+L("Start","البداية")+" "+edxTC(c.in,fps)+" · "+L("End","النهاية")+" "+edxTC(c.out,fps)+'</div><div class="row"><button class="btn sm" data-act="edx-step" data-v="-1" aria-label="'+L("Back 1 frame","إطار للخلف")+'" title=",">'+ic("prev")+L("1 frame","إطار")+'</button><button class="btn sm" data-act="edx-step" data-v="1" aria-label="'+L("Forward 1 frame","إطار للأمام")+'" title=".">'+L("1 frame","إطار")+ic("next")+'</button><button class="btn sm" data-act="edx-trim" data-v="in" title="I">'+ic("trimL")+L("Set start frame","اضبط إطار البداية")+'</button><button class="btn sm" data-act="edx-trim" data-v="out" title="O">'+ic("trimR")+L("Set end frame","اضبط إطار النهاية")+"</button></div>"+
-    '<button class="btn sm" style="margin-top:8px" data-act="edx-aishot">'+ic("wand")+L("New AI shot from these start & end frames","لقطة ذكاء جديدة من إطاري البداية والنهاية")+"</button>";
-  const anchor='<span class="lbl">'+L("Precision edit","تحرير دقيق")+"</span>";return h.includes(anchor)?h.replace(anchor,blk+anchor):h})(VIEWS.edit);
+// (v145: the clip's speed, slow motion, ramp, smooth frames and start & end frame are drawn by speed145() / clipEdit145())
 document.addEventListener("click",e=>{if(S.view!=="edit")return;const a=e.target.closest&&e.target.closest("[data-act]");if(!a)return;const act=a.dataset.act;if(!["edx-slow","edx-ramp","edx-smooth","edx-step","edx-aishot"].includes(act))return;e.stopImmediatePropagation();const c=edxSel(),v=a.dataset.v;
   if(act==="edx-step"){ED.playing=false;ED.t=clamp(ED.t+(+v)/((c&&EDX.sm[c.id]&&EDX.sm[c.id].fps)||30),0,edTotal());return}
   if(act==="edx-aishot"){edxAiShot();return}if(!c)return;
@@ -12757,9 +12745,7 @@ async function edExtend91(c){if(!c){toast(L("Add a clip first.","أضف مقطع
 edUseJob=(o=>async function(j,opt){const r=await o(j,opt),x=j&&EXT91[j.id];if(x){delete EXT91[j.id];const c=S.ed.clips.find(q=>q.id===x);if(r&&c){c.trans="cut";persist();if(S.view==="edit")renderView()}}return r})(edUseJob);
 edToolbar=(o=>function(){const h=o(),c=S.ed.clips.find(x=>x.id===S.ed.sel);
   return h.replace(/(<button class="tb" data-act="ed-move" data-d="1")/,tb("ed-extend91",ICONS.extend91,L("Extend","مدّ")+(c?" · "+edExtCost91(c)+" cr":""),(c?"":"disabled ")+'data-paid="1"')+"$1")})(edToolbar);
-VIEWS.edit=(o=>function(){let h=o();const E=S.ed;if(E.tab!=="clip")return h;const c=E.clips.find(x=>x.id===E.sel);if(!c)return h;
-  const card='<span class="lbl">'+L("Extend with AI","المدّ بالذكاء الاصطناعي")+'</span><div class="ext91"><p class="small dim" style="margin:0">'+L("Continues this shot from its own last frame — the same people, place, light and camera, one continuous take — and puts the next seconds right after it, with the clip's look. Type what happens next in the prompt box: “extend: he opens the door”.","يكمل هذه اللقطة من آخر إطار فيها — الأشخاص والمكان والضوء والكاميرا نفسها، لقطة واحدة متصلة — ويضع الثواني التالية بعدها مباشرة بنفس مظهر المقطع. اكتب ما يحدث بعدها في مربع الوصف: «مدّ: يفتح الباب».")+'</p><button class="btn sm primary" data-act="ed-extend91">'+ic("extend91")+L("Extend shot · ","مدّ اللقطة · ")+(/^(veo|ltx23)/.test(edExtModel91(c))?8:5)+L("s","ث")+'<span class="cost">'+edExtCost91(c)+" cr</span></button></div>";
-  return h.replace('<span class="lbl">'+L("Precision edit","تحرير دقيق")+"</span>",card+"$&")})(VIEWS.edit);
+// (v145: the Extend card is drawn by clipEdit145())
 document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="ed-extend91"]');if(!a||a.disabled)return;e.stopImmediatePropagation();const E=S.ed;edExtend91(E.clips.find(x=>x.id===E.sel)||edSelClip())},true);
 
 /* ---- AI commands, InVideo-style: say what to change. Edits the editor can do itself run at once, free, with undo
@@ -15268,8 +15254,6 @@ VIEWS.edit=(o=>function(){let h=o.apply(this,arguments);const E=S.ed;
   if(E.clips.some(c=>GLIDS131.has(c.trans))||E.tab==="clip")glLoad131();
   if((E.infos||[]).some(x=>x.type==="bn131"||x.type==="st131")||E.tab==="info")icLoad131();
   h=h.replace(/(<div class="blk ix[^"]*"[^>]*>)st131(<\/div>)/g,"$1"+esc(L("Sticker","ملصق"))+"$2");
-  if(E.tab==="clip"){const k=h.lastIndexOf('data-set="edclip.trans"');if(k>0){const j=h.indexOf("</button>",k);const c=S.ed.clips.find(x=>x.id===E.sel);
-    if(j>0)h=h.slice(0,j+9)+GLT131.map(x=>'<button class="tile gl131" data-set="edclip.trans" data-val="'+x[0]+'" aria-pressed="'+(!!c&&c.trans===x[0])+'"><span class="gl">'+svg('<rect x="3" y="6" width="9" height="12" rx="1.5"/><rect x="12" y="6" width="9" height="12" rx="1.5" opacity=".45"/><path d="M12 4v16" stroke-dasharray="2 2"/>')+'</span><span class="lb">'+esc(L(x[1],x[2]))+"</span></button>").join("")+h.slice(j+9)}}
   if(E.tab==="text"){const tx=E.texts.find(t=>t.id===E.selText),k=h.lastIndexOf('data-act="edx-tan"');if(tx&&k>0){const j=h.indexOf("</div>",h.indexOf("</button>",k));
     if(j>0)h=h.slice(0,j+6)+'<span class="lbl">'+esc(L("Motions","الحركات"))+'</span><div class="tiles ac131">'+Object.entries(AC131).map(([k2,d])=>'<button class="tile" data-act="ac131" data-v="'+k2+'" aria-pressed="'+(tx.anim==="ac_"+k2)+'"><span class="gl">'+svg(ICONS.motion||"")+'</span><span class="lb">'+esc(L(d[0][0],d[0][1]))+"</span></button>").join("")+"</div>"+h.slice(j+6)}}
   if(E.tab==="info"){const add='<span class="lbl" style="margin-top:0">'+esc(L("Banners","البانرات"))+'</span><div class="bn131g">'+BN131.map(b=>'<button type="button" class="bn131t" data-act="bn131-add" data-v="'+b[0]+'"><span class="bn131i" style="--ac:'+b[4]+";--fg:"+onAcc131(b[4])+'">'+icSvg131(b[3])+"</span><span>"+esc(L(b[1][0],b[1][1]))+"</span></button>").join("")+"</div>"+
@@ -16604,10 +16588,10 @@ async function vcClips140(total,clean=true){const SR=48000,off=new OfflineAudioC
       const y=denoise140(chs);x=new AudioBuffer({length:Math.max(1,s1-s0),numberOfChannels:y.length,sampleRate:b.sampleRate});y.forEach((d,ch)=>x.copyToChannel(d,ch));DN140.set(dk,x)}
     if(Math.abs(sp-1)>=1e-3)x=stretch139(x,0,x.duration,sp,off);
     const s=off.createBufferSource(),gn=off.createGain(),len=Math.min(x.duration,total-st[i]);s.buffer=x;gn.gain.value=c.vol/100;
-    if(typeof vkOn141==="function"&&vkOn141(c)&&len>.05){const N=Math.max(2,Math.ceil(len*50)),cv=new Float32Array(N);for(let q=0;q<N;q++)cv[q]=c.vol/100*clamp(edxMo(c,q/(N-1)*len).vk/100,0,2);try{gn.gain.setValueCurveAtTime(cv,st[i],len)}catch(err){}}   // (v141: volume keyframes)
-    s.connect(gn).connect(inp);s.start(st[i],0,len);n++}
+    {const vkc=typeof vkOn141==="function"&&vkOn141(c),fd=(+c.afi||0)>0||(+c.afo||0)>0;if((vkc||fd)&&len>.05){const N=Math.max(2,Math.ceil(len*50)),cv=new Float32Array(N);for(let q=0;q<N;q++){const tq=q/(N-1)*len;cv[q]=c.vol/100*(vkc?clamp(edxMo(c,tq).vk/100,0,2):1)*(fd?fade145(c,tq,len):1)}try{gn.gain.setValueCurveAtTime(cv,st[i],len)}catch(err){}}}   // (v141: volume keyframes · v145: fades)
+    s.connect(gn);const fx=typeof vcFx145==="function"&&vcFx145(off,c.vc145);if(fx){gn.connect(fx.inp);fx.out.connect(inp)}else gn.connect(inp);s.start(st[i],0,len);n++}   // (v145: the voice changer)
   return n?await off.startRendering():null}
-mix139=(o=>async function(total){const clean=!!S.ed.clean140;if((!clean&&!(typeof vkOn141==="function"&&S.ed.clips.some(vkOn141)))||S.ed.clipSound===false)return o.apply(this,arguments);
+mix139=(o=>async function(total){const clean=!!S.ed.clean140;if((!clean&&!(typeof vkOn141==="function"&&S.ed.clips.some(vkOn141))&&!(typeof fx145==="function"&&fx145()))||S.ed.clipSound===false)return o.apply(this,arguments);
   const keep=S.ed.clipSound;let p;S.ed.clipSound=false;try{p=o.apply(this,arguments)}finally{S.ed.clipSound=keep}   // (the music, voice-over and sounds as before: the clips' sound is read before its first pause)
   const rest=await p;let voice=null;try{voice=await vcClips140(total,clean)}catch(e){console.warn("v140 voice cleanup:",e);return o.apply(this,arguments)}
   if(!voice)return rest;if(!rest)return voice;for(let ch=0;ch<rest.numberOfChannels;ch++){const d=rest.getChannelData(ch),v=voice.getChannelData(Math.min(ch,voice.numberOfChannels-1));for(let k=0;k<d.length&&k<v.length;k++)d[k]+=v[k]}return rest})(mix139);
@@ -16864,8 +16848,7 @@ function media143(){const E=S.ed,jobs=S.jobs.filter(j=>j.status==="complete"&&(j
 // Transitions: the clip's "into the next clip" tiles, on their own
 function trans143(){const E=S.ed,i=E.clips.findIndex(c=>c.id===E.sel);if(i<0)return'<p class="small mute e-hint">'+L("Select a clip on the timeline — its transition plays into the next clip.","اختر مقطعاً على الخط الزمني — انتقاله يُعرض إلى المقطع التالي.")+"</p>";
   if(i===E.clips.length-1)return'<p class="small mute e-hint">'+L("The last clip has no next clip. Select an earlier clip, or add another one.","آخر مقطع ليس بعده مقطع. اختر مقطعاً قبله أو أضف مقطعاً آخر.")+"</p>";
-  const tpl=document.createElement("template");tpl.innerHTML=pane143("clip");const tiles=[...tpl.content.querySelectorAll('[data-set="edclip.trans"]')].map(b=>b.outerHTML);
-  return'<p class="small mute e-hint">'+L("From clip ","من المقطع ")+(i+1)+L(" into clip "," إلى المقطع ")+(i+2)+" — "+L("tap one to use it.","اضغط واحداً لاستعماله.")+'</p><div class="tiles e-trans">'+tiles.join("")+"</div>"}
+  return'<p class="small mute e-hint">'+L("From clip ","من المقطع ")+(i+1)+L(" into clip "," إلى المقطع ")+(i+2)+" — "+L("tap one to use it.","اضغط واحداً لاستعماله.")+"</p>"+transTiles145(E.clips[i],"e-trans")}
 // the assistant (DonkeyCut idea): a conversation kept with the project — what you asked and what it did
 function chat143(chips){const E=S.ed,log=(E.chat143||[]).slice(-30);
   return'<div class="e-chat" aria-live="polite">'+(log.length?log.map(m=>'<div class="e-msg'+(m.me?" me":"")+'" dir="auto">'+esc(m.t)+"</div>").join(""):
@@ -16929,14 +16912,14 @@ VIEWS.edit=function(){if(HIST.i<0)histPush();try{edxInit()}catch(e){}const E=S.e
     const snap='<button type="button" data-act="snap141" aria-pressed="'+snapOn+'">'+snapSvg+"<span>"+L("Snap","التصاق")+"</span></button>";
     let bar;if(kind){const set=kind==="clip"?CTX143.clip:["text","info","vfx"].includes(kind)?CTX143.item:["music","cap"].includes(kind)?CTX143.only:CTX143.solo;
       bar='<button type="button" class="e-back" data-act="desel143" aria-label="'+esc(L("Back","رجوع"))+'">'+ic("back143")+"</button>"+set.map(x=>{if(x[0]==="a"){const[a,v]=x[1].split(":"),pr=a==="ed-extend91"&&q('.edbar [data-act="ed-extend91"] span');return'<button type="button" data-act="'+a+'"'+(v?(a==="ed-move"?' data-d="':' data-v="')+v+'"':"")+(pr?' data-paid="1"':"")+">"+ic(x[4])+"<span>"+(pr?pr.innerHTML:L(x[2],x[3]))+"</span></button>"}
-        const p=x[1]||KIND143[kind][0];return btn("ps143",p,x[2],x[3],x[4],!shut&&E.tab===p.split("#")[0]&&x[1]!=="clip#vol"&&x[1]!=="clip#speed")}).join("")+snap}
+        const p=x[1]||KIND143[kind][0];return btn("ps143",p,x[2],x[3],x[4],!shut&&E.tab===p.split("#")[0]&&!x[1].includes("#"))}).join("")+snap}
     else bar=TABS143.map(x=>btn("lt143",x[0],x[1],x[2],x[3],!shut&&!inDet&&x[0]===lt)).join("")+btn("ps143","export","Project","المشروع","tools",!shut&&E.tab==="export")+snap;
     html=top+'<div class="e-app">'+player+tl+sheet+'<nav class="e-bar'+(kind?" ctx":"")+'" role="toolbar" aria-label="'+esc(kind?L("Tools for the selection","أدوات العنصر المحدد"):L("Editor tools","أدوات المحرر"))+'">'+bar+"</nav></div>"}
   return'<div class="view ed143 '+(desk?"desk":"mob")+'">'+(miss?'<div style="margin-bottom:10px">'+note(miss+L(" clip(s) need their file again — select the clip and upload it."," مقطع يحتاج ملفه من جديد — اختر المقطع وارفعه مرة أخرى."))+"</div>":"")+html+"</div>"};
 // on a phone the sheet comes up right under the pinned preview (where the preview stays once the page scrolls), at its section
 function showSheet143(anchor){if(desk143())return;requestAnimationFrame(()=>{const s=document.querySelector(".ed143 .e-sheet"),m=$("#main"),st=document.querySelector(".ed143 .edstage");if(!s||!m||!st)return;const cs=getComputedStyle(st),
   under=cs.position==="sticky"?m.getBoundingClientRect().top+(parseFloat(cs.top)||0)+st.offsetHeight:st.getBoundingClientRect().bottom;m.scrollTop+=s.getBoundingClientRect().top-under-6;
-  if(anchor){const b=s.querySelector(".e-body");let el=null;if(anchor==="speed")el=[...b.querySelectorAll(".lbl")].find(x=>/speed|السرعة/i.test(x.textContent));else if(anchor==="vol")el=b.querySelector('[data-bind="edclip.vol"]');
+  if(anchor){const b=s.querySelector(".e-body");let el=null;if(anchor==="speed")el=[...b.querySelectorAll(".lbl")].find(x=>/speed|السرعة/i.test(x.textContent));else if(anchor==="vol")el=b.querySelector('[data-bind="edclip.vol"]');else el=b.querySelector('[data-anc="'+anchor+'"]');
     if(el)m.scrollTop+=el.getBoundingClientRect().top-s.getBoundingClientRect().top-56}})}
 document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="lt143"],[data-act="ls143"],[data-act="dt143"],[data-act="ps143"],[data-act="desel143"],[data-act="pclose143"],[data-act="lib143"],[data-act="clip143"],[data-act="guides143"],[data-act="fs143"]');
   if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();const E=S.ed,v=a.dataset.v,act=a.dataset.act;
@@ -17378,6 +17361,232 @@ body.dnd144s #modalRoot{visibility:hidden}
 .bg144gt{display:flex;flex-direction:column;gap:4px;padding:5px;border-radius:12px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);font:inherit;font-size:12px;cursor:pointer}
 .bg144gt span{display:block;height:38px;border-radius:8px}.bg144gt[aria-pressed="true"]{border-color:var(--lime);box-shadow:0 0 0 1px var(--lime)}
 .voice144{margin-top:10px}
+`;document.head.appendChild(st)})();
+
+/* ================= v145: THE CLIP'S SETTINGS, REBUILT CLEAN · NEW CLIP TOOLS =================
+   Stage 3 of docs/EDITOR_PLAN.md. A selected clip's details are written again as their own panels — none of them is cut out of
+   the old page any more (pane143 returns them directly): Edit (trim, start & end frame, split, freeze, crop & rotate, the canvas
+   behind it, reverse, replace, extend with AI, transition to the next clip) · Speed (speed, custom speed, slow motion, speed
+   ramp, smooth frames) · Animation (in and out) · Audio (volume, fades, voice changer, extract audio, clean up, isolate) — then
+   Motion, Background and Tracking as before. The old page's clip panel and its wrappers are taken out.
+   New clip tools: crop (an aspect or free, zoom and position) · rotate 90° · canvas behind a clip that doesn't fill the frame
+   (fill, fit, blur, a colour or a picture) · animations in and out · audio fades in and out · voice changer (deep, high,
+   chipmunk, robot, echo, radio, phone, big hall — in the preview and the export) · reverse (made on the server, free) ·
+   replace the clip (a file or one of your videos, its length, effects and transition kept) · extract audio (the clip's sound
+   onto its own track). */
+Object.assign(ICONS,{crop145:'<path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/>',rot145:'<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>',
+  rev145:'<path d="M9 7L4 12l5 5"/><path d="M20 12H5"/><path d="M15 5v14" stroke-dasharray="2 2"/>',rep145:'<path d="M4 7h12l-3-3M20 17H8l3 3"/>',
+  xa145:'<rect x="3" y="4" width="13" height="10" rx="1.5"/><path d="M9 18v-3M20 9v11M17 14v6M14 17v3"/>',cv145:'<rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="8" width="10" height="8" rx="1"/>',
+  an145:'<path d="M4 12h3M17 12h3"/><rect x="8" y="7" width="8" height="10" rx="1.5"/><path d="M2 8l3 4-3 4M22 8l-3 4 3 4"/>',
+  vc145:'<path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/><path d="M19 4l2-1M19 7h2"/>',
+  fade145:'<path d="M3 18L10 6h4l7 12"/><path d="M3 18h18"/>'});
+KIND143.clip.splice(1,0,"speed145","anim145","audio145");
+Object.assign(N143,{clip:["Edit","تحرير"],speed145:["Speed","السرعة"],anim145:["Animation","دخول وخروج"],audio145:["Audio","الصوت"]});
+// the clip's own tools on a phone
+CTX143.clip=[["s","clip","Edit","تحرير","edit"],["a","ed-split","Split","قص","split"],["s","speed145","Speed","السرعة","clock"],["s","audio145","Volume","الصوت","speaker"],["s","anim145","Animation","دخول وخروج","an145"],
+  ["s","motion","Motion","الحركة","motion"],["s","color","Filters","الفلاتر","grade"],["s","trans143","Transition","الانتقال","trans143"],["s","clip#crop","Crop","اقتصاص","crop145"],["a","rot145:90","Rotate","تدوير","rot145"],
+  ["a","rev145","Reverse","عكس","rev145"],["a","edx-freeze","Freeze","تجميد","freeze"],["a","edx-flip:fh","Mirror","مرآة","mirror"],["a","ed-dup","Duplicate","تكرار","copy"],["a","ed-move:-1","Earlier","للخلف","back143"],
+  ["a","ed-move:1","Later","للأمام","arrow"],["a","ed-extend91","Extend","مدّ","extend91"],["s","bg144","Background","الخلفية","bg144"],["s","clip#replace","Replace","استبدال","rep145"],["a","xa145","Extract audio","استخراج الصوت","xa145"],
+  ["s","track","Tracking","التتبّع","track"],["s","ai140","AI","الذكاء","spark"],["a","ed-del","Delete","حذف","trash"]];
+var CUR145=null;   // (the clip being drawn: the canvas behind it)
+const P145=new Set(["clip","speed145","anim145","audio145"]);
+
+/* ---------- crop · rotate 90° ---------- */
+const CROPS145=[["free","Free","حر",0],["16:9","16:9","16:9",16/9],["9:16","9:16","9:16",9/16],["1:1","1:1","1:1",1],["4:5","4:5","4:5",.8],["4:3","4:3","4:3",4/3]];
+// the part of the source shown: the largest rect of the aspect, made smaller by the zoom, moved by the position
+function cropRect145(c,sw,sh){const C=c.crop;if(!C)return null;const A=(CROPS145.find(x=>x[0]===C.ar)||CROPS145[0])[3];let bw=sw,bh=sh;
+  if(A){if(sw/sh>A)bw=sh*A;else bh=sw/A}const z=clamp(+C.z||1,1,4),w=bw/z,h=bh/z,cx=sw/2+clamp(+C.x||0,-1,1)*(sw-w)/2,cy=sh/2+clamp(+C.y||0,-1,1)*(sh-h)/2;
+  return{x:cx-w/2,y:cy-h/2,w,h}}
+const xform145=c=>!!(c&&((c.crop&&(c.crop.ar!=="free"||(+c.crop.z||1)>1.001))||((c.rot||0)%360)));
+edxSmooth=(o=>function(c,m,lt){const r=o.apply(this,arguments);if(!xform145(c)||!m)return r;const src=r||m,el=src.el;if(!el)return r;
+  const sw=el.videoWidth||el.naturalWidth||el.width,sh=el.videoHeight||el.naturalHeight||el.height;if(!sw||!sh)return r;
+  const R=cropRect145(c,sw,sh)||{x:0,y:0,w:sw,h:sh},rot=(((c.rot||0)%360)+360)%360,side=rot===90||rot===270,k=Math.min(1,1920/Math.max(R.w,R.h)),w=Math.max(2,Math.round(R.w*k)),h=Math.max(2,Math.round(R.h*k));
+  const cv=edxCv("crop145",side?h:w,side?w:h),x=cv.getContext("2d");x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation="source-over";x.filter="none";x.clearRect(0,0,cv.width,cv.height);
+  x.translate(cv.width/2,cv.height/2);x.rotate(rot*Math.PI/180);x.drawImage(el,R.x,R.y,R.w,R.h,-w/2,-h/2,w,h);x.setTransform(1,0,0,1,0,0);
+  cv.readyState=4;cv.videoWidth=cv.width;cv.videoHeight=cv.height;return{type:"video",el:cv,url:m.url,name:m.name}})(edxSmooth);
+// the canvas behind a clip: a picture (drawn by the plain drawFit when the clip's canvas is "picture")
+function cvPic145(ctx,ow,oh){const c=CUR145,p=c&&M["cvp_"+c.id];if(!p||!srcReady(p))return false;const pw=srcW(p),ph=srcH(p),s=Math.max(ow/pw,oh/ph);ctx.fillStyle="#000";ctx.fillRect(0,0,ow,oh);drawSrcAt(ctx,p,(ow-pw*s)/2,(oh-ph*s)/2,pw*s,ph*s,0);return true}
+slots139=(o=>function(){const k=o();S.ed.clips.forEach(c=>{if(c.cv145&&M["cvp_"+c.id])k.push("cvp_"+c.id)});return k})(slots139);
+
+/* ---------- animations in and out ---------- */
+const AN145=[["none","None","بدون"],["fade","Fade","تلاشي"],["zoomin","Zoom in","تكبير"],["zoomout","Zoom out","تصغير"],["slidel","Slide left","انزلاق يسار"],["slider","Slide right","انزلاق يمين"],
+  ["slideu","Slide up","انزلاق للأعلى"],["slided","Slide down","انزلاق للأسفل"],["spin","Spin","دوران"],["blur","Blur","ضبابية"],["pop","Pop","قفزة"],["rise","Rise","صعود"]];
+const ANG145={none:"M5 12h14",fade:"M4 18L12 6l8 12",zoomin:"M12 8v8M8 12h8M5 5h4M5 5v4M19 19h-4M19 19v-4",zoomout:"M8 12h8M9 5H5v4M15 19h4v-4",slidel:"M19 12H5M10 7l-5 5 5 5",slider:"M5 12h14M14 7l5 5-5 5",
+  slideu:"M12 19V5M7 10l5-5 5 5",slided:"M12 5v14M7 14l5 5 5-5",spin:"M20 12a8 8 0 1 1-3-6.2M20 4v5h-5",blur:"M4 9h16M4 12h16M4 15h16",pop:"M12 4l2.5 5 5.5.8-4 3.9.9 5.5L12 16.6 7.1 19.2l.9-5.5-4-3.9 5.5-.8z",rise:"M12 20V8M6 14l6-6 6 6M5 4h14"};
+// how far the clip is from its place (k: 1 = all the way out, 0 = in place) → scale, position, turn, blur, see-through
+function anim145(c,tl,d){if(!c)return null;let k=0,A=null;
+  const dur=x=>clamp(+(x&&x.d)||.5,.1,Math.max(.1,Math.min(3,d/2)));
+  if(c.ain&&c.ain.k&&c.ain.k!=="none"){const D=dur(c.ain);if(tl<D){k=1-ease144(tl/D);A=c.ain.k}}
+  if(!A&&c.aout&&c.aout.k&&c.aout.k!=="none"){const D=dur(c.aout);if(d-tl<D){k=1-ease144((d-tl)/D);A=c.aout.k}}
+  if(!A||k<=0)return null;const r={s:1,x:0,y:0,r:0,b:0,a:1};
+  if(A==="fade")r.a=1-k;else if(A==="zoomin"){r.s=1-.35*k;r.a=1-k}else if(A==="zoomout"){r.s=1+.45*k;r.a=1-k}
+  else if(A==="slidel")r.x=-k;else if(A==="slider")r.x=k;else if(A==="slideu")r.y=k;else if(A==="slided")r.y=-k;
+  else if(A==="spin"){r.r=k*Math.PI*.6;r.s=1-.45*k;r.a=1-k}else if(A==="blur"){r.b=k*26;r.a=1-.6*k}
+  else if(A==="pop"){r.s=k>0?Math.max(.05,.45+.55*backOut131(1-k)):1;r.a=Math.min(1,(1-k)*2.2)}else if(A==="rise"){r.y=.16*k;r.a=1-k}
+  return r}
+// the see-through part (scale, position, turn and blur are added where the clip is drawn, with its motion)
+drawFit=(o=>function(ctx,m,ow,oh,lt,filter){if(S.view!=="edit"||!ctx||!ctx.canvas||ctx.canvas.id!=="wk")return o.apply(this,arguments);const c=edxClipOf(m,lt);
+  if(!c||!((c.ain&&c.ain.k&&c.ain.k!=="none")||(c.aout&&c.aout.k&&c.aout.k!=="none")))return o.apply(this,arguments);
+  const d=clipDur(c),A=anim145(c,clamp((lt-c.in)/(c.speed||1),0,d),d);if(!A||A.a>=.999)return o.apply(this,arguments);
+  if(ctx.globalAlpha>=.999){ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation="source-over";ctx.filter="none";ctx.fillStyle="#000";ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);ctx.restore()}
+  const g0=ctx.globalAlpha;ctx.globalAlpha=g0*clamp(A.a,0,1);try{return o.apply(this,arguments)}finally{ctx.globalAlpha=g0}})(drawFit);
+
+/* ---------- the clip's sound: fades and the voice changer (preview here; the export in vcClips140) ---------- */
+const VC145=[["none","Off","إيقاف","x"],["deep","Deep","عميق","voice"],["high","High","حاد","voice"],["chipmunk","Chipmunk","سنجاب","voice"],["robot","Robot","روبوت","cube"],["echo","Echo","صدى","wave"],
+  ["radio","Radio","راديو","speaker"],["phone","Phone call","مكالمة","speaker"],["hall","Big hall","قاعة كبيرة","music"]];
+const fade145=(c,t,len)=>{const fi=+c.afi||0,fo=+c.afo||0;return clamp(Math.min(1,fi>0?t/fi:1,fo>0?(len-t)/fo:1),0,1)};
+const fx145=()=>S.ed.clips.some(c=>(+c.afi||0)>0||(+c.afo||0)>0||(c.vc145&&c.vc145!=="none"));
+// a pitch shifter from two delay lines read faster or slower in turns (each fades out when it jumps back): works live and offline
+function pitch145(A,st){const r=Math.pow(2,st/12),T=.1,maxD=Math.max(.001,T*Math.abs(1-r)),SR=A.sampleRate,N=Math.max(64,Math.round(T*SR)),inp=A.createGain(),out=A.createGain();
+  const saw=A.createBuffer(1,N,SR),env=A.createBuffer(1,N,SR),sd=saw.getChannelData(0),ed=env.getChannelData(0);
+  for(let i=0;i<N;i++){const p=i/N;sd[i]=r<1?p:1-p;ed[i]=Math.pow(Math.sin(Math.PI*p),2)}
+  for(const off of [0,T/2]){const d=A.createDelay(1);d.delayTime.value=0;const ds=A.createBufferSource();ds.buffer=saw;ds.loop=true;const dg=A.createGain();dg.gain.value=maxD;ds.connect(dg);dg.connect(d.delayTime);
+    const es=A.createBufferSource();es.buffer=env;es.loop=true;const eg=A.createGain();eg.gain.value=0;es.connect(eg.gain);inp.connect(d);d.connect(eg);eg.connect(out);const t0=A.currentTime;ds.start(t0,off);es.start(t0,off)}
+  return{inp,out}}
+function ir145(A,sec,decay){const n=Math.round(sec*A.sampleRate),b=A.createBuffer(2,n,A.sampleRate);for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,decay)}return b}
+const curve145=k=>{const n=1024,a=new Float32Array(n);for(let i=0;i<n;i++){const x=i/(n-1)*2-1;a[i]=(1+k)*x/(1+k*Math.abs(x))}return a};
+function vcFx145(A,k){if(!k||k==="none")return null;const g=v=>{const x=A.createGain();if(v!=null)x.gain.value=v;return x},inp=g(),out=g();
+  if(k==="deep"||k==="high"||k==="chipmunk"){const p=pitch145(A,{deep:-5,high:4,chipmunk:9}[k]);inp.connect(p.inp);p.out.connect(out)}
+  else if(k==="robot"){const ring=g(0),o=A.createOscillator();o.frequency.value=56;o.connect(ring.gain);o.start(A.currentTime);inp.connect(ring);const d=A.createDelay(.1);d.delayTime.value=.011;const fb=g(.4);ring.connect(out);ring.connect(d);d.connect(fb);fb.connect(d);d.connect(out)}
+  else if(k==="echo"){const d=A.createDelay(1.5);d.delayTime.value=.28;const fb=g(.42),wet=g(.55);inp.connect(out);inp.connect(d);d.connect(fb);fb.connect(d);d.connect(wet);wet.connect(out)}
+  else if(k==="radio"||k==="phone"){const ph=k==="phone",hp=A.createBiquadFilter(),lp=A.createBiquadFilter(),ws=A.createWaveShaper(),gg=g(ph?1.25:1.1);hp.type="highpass";hp.frequency.value=ph?400:260;lp.type="lowpass";lp.frequency.value=ph?3200:4800;ws.curve=curve145(ph?2.5:4);
+    inp.connect(hp);hp.connect(lp);lp.connect(ws);ws.connect(gg);gg.connect(out)}
+  else if(k==="hall"){const cv=A.createConvolver();cv.buffer=ir145(A,2.6,2.4);const wet=g(.5);inp.connect(out);inp.connect(cv);cv.connect(wet);wet.connect(out)}
+  else return null;
+  return{inp,out}}
+const VR145=new WeakMap();
+function vcRoute145(el,k,clean){const cur=VR145.get(el),want=k&&k!=="none"?k:"";if((cur?cur.k:"")===want&&(!cur||cur.clean===clean))return;if(!want&&!cur)return;if(!safe140(el))return;
+  try{const n=audioNode(el);n.disconnect();if(cur&&cur.fx)try{cur.fx.out.disconnect()}catch(e){}const dest=clean?vcChain140(audioCtx):audioCtx.destination;
+    if(want){const fx=vcFx145(audioCtx,want);n.connect(fx.inp);fx.out.connect(dest);VR145.set(el,{k:want,clean,fx})}else{n.connect(dest);VR145.delete(el)}
+    if(clean)VC140.on.add(el);else VC140.on.delete(el)}catch(e){}}
+syncClipMedia=(o=>function(i,lt,playing){const r=o.apply(this,arguments),E=S.ed,c=E&&E.clips[i],m=c&&M["c_"+c.id];if(!m||m.type!=="video"||!m.el)return r;
+  if((+c.afi||0)>0||(+c.afo||0)>0){const st=edStarts()[i]||0,d=clipDur(c);m.el.volume=clamp(m.el.volume*fade145(c,clamp(ED.t-st,0,d),d),0,1)}
+  if(audioCtx&&audioCtx.state==="running"&&(c.vc145&&c.vc145!=="none"||VR145.has(m.el)))vcRoute145(m.el,c.vc145,!!E.clean140);return r})(syncClipMedia);
+document.addEventListener("pointerdown",()=>{if(S.view!=="edit"||!S.ed||!S.ed.clips.some(c=>c.vc145&&c.vc145!=="none"))return;try{if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==="suspended")audioCtx.resume().catch(()=>{})}catch(e){}},true);
+
+/* ---------- extract audio · replace · reverse ---------- */
+function wav145(b){const nc=Math.min(2,b.numberOfChannels),n=b.length,SR=b.sampleRate,buf=new ArrayBuffer(44+n*nc*2),v=new DataView(buf),w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};
+  w(0,"RIFF");v.setUint32(4,36+n*nc*2,true);w(8,"WAVE");w(12,"fmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,nc,true);v.setUint32(24,SR,true);v.setUint32(28,SR*nc*2,true);v.setUint16(32,nc*2,true);v.setUint16(34,16,true);w(36,"data");v.setUint32(40,n*nc*2,true);
+  const ch=Array.from({length:nc},(_,k)=>b.getChannelData(k));let o=44;for(let i=0;i<n;i++)for(let k=0;k<nc;k++){const s=clamp(ch[k][i],-1,1);v.setInt16(o,s<0?s*32768:s*32767,true);o+=2}return new Blob([buf],{type:"audio/wav"})}
+async function xa145(c){const E=S.ed;if(!c){toast(L("Select a clip first.","اختر مقطعاً أولاً."));return}const m=clipMedia(c);if(!m||m.type!=="video"){toast(L("This clip has no sound to take out.","لا يوجد صوت في هذا المقطع لاستخراجه."));return}
+  try{uiPill("🎵 "+L("Taking the sound out…","استخراج الصوت…"));edxBus();const blob=m.file instanceof Blob?m.file:await(await fetch(m.url||m.el.currentSrc||m.el.src)).blob();
+    let b=null;try{b=await audioCtx.decodeAudioData(await blob.arrayBuffer())}catch(e){b=null}if(!b){toast(L("This clip has no sound to take out.","لا يوجد صوت في هذا المقطع لاستخراجه."));return}
+    const a=Math.min(c.in,b.duration),e=Math.min(c.out,b.duration);if(e-a<.05){toast(L("This part of the clip has no sound.","هذا الجزء من المقطع بلا صوت."));return}
+    const s0=Math.floor(a*b.sampleRate),s1=Math.min(b.length,Math.ceil(e*b.sampleRate));let x=new AudioBuffer({length:Math.max(1,s1-s0),numberOfChannels:b.numberOfChannels,sampleRate:b.sampleRate});
+    for(let ch=0;ch<b.numberOfChannels;ch++)x.copyToChannel(b.getChannelData(ch).subarray(s0,s1),ch);
+    const sp=c.speed||1;if(Math.abs(sp-1)>=1e-3)x=stretch139(x,0,x.duration,sp,{createBuffer:(nc,len,sr)=>new AudioBuffer({numberOfChannels:nc,length:len,sampleRate:sr})});
+    const i=E.clips.indexOf(c),it={id:uid(),n:"file",name:L("Sound · ","الصوت · ")+clipName(c),t:+edStarts()[i].toFixed(2),vol:c.vol||100};
+    loadSlot("sx_"+it.id,new File([wav145(x)],"sound-"+c.id+".wav",{type:"audio/wav"}));E.sfx=E.sfx||[];E.sfx.push(it);E.selSfx=it.id;if(c.vol)c.vol144=c.vol;c.vol=0;
+    edxBuffer(it).then(()=>{if(S.view==="edit")renderView()});persist();renderView();toast(L("The sound is on its own track under the clip — the clip itself is now silent.","الصوت في مساره تحت المقطع — والمقطع نفسه صامت الآن."),{type:"ok"})}
+  catch(e){toast(L("Couldn't take the sound out: ","تعذّر استخراج الصوت: ")+(e.message||e),{type:"warn"})}finally{uiPill("")}}
+// a new picture for the clip: its length, effects, look, motion and transition stay
+function rep145(c,o){if(!c)return;const E=S.ed,len=Math.max(.2,c.out-c.in);delete M["c_"+c.id];delete M["rv0_"+c.id];delete c.src0;c.rev=false;delete BG144[c.id];c.in=0;c.auto=false;
+  if(o.file){c.src={k:"upload",name:o.file.name};loadSlot("c_"+c.id,o.file);const m=M["c_"+c.id];c.out=len;
+    if(m.type==="video"){m.el.loop=false;m.el.pause();m.el.addEventListener("loadedmetadata",()=>{if(isFinite(m.el.duration)&&m.el.duration>0){c.out=+Math.min(m.el.duration,len).toFixed(2);persist();renderView()}},{once:true})}}
+  else if(o.job){const j=o.job;c.src={k:"job",job:j.id};c.out=j.kind==="image"?len:+Math.min(len,Math.max(.5,+j.dur||len)).toFixed(2)}
+  $("#modalRoot").innerHTML="";persist();renderView();toast(L("Clip replaced — its length, effects and transition stay.","استُبدل المقطع — بقي طوله ومؤثراته وانتقاله."),{type:"ok"})}
+function repSheet145(){const jobs=S.jobs.filter(j=>j.status==="complete"&&(j.kind==="video"||j.kind==="image")&&mediaUrl(j)).sort((a,b)=>(b.created||0)-(a.created||0)).slice(0,60);
+  hfSheet(L("Replace with one of yours","استبدل بواحد من أعمالك"),jobs.length?'<div class="e-lib rep145g">'+jobs.map(j=>'<button type="button" class="e-libi" data-act="rep145-pick" data-v="'+esc(j.id)+'">'+thumb("j:"+j.id,{ar:"16/9",dur:j.kind==="video"?(+j.dur||null):null})+'<span class="e-libn" dir="auto">'+esc(String(j.title||j.prompt||"").slice(0,48))+"</span></button>").join("")+"</div>"
+    :'<p class="small mute">'+L("What you make on nooi shows here.","ما تصنعه على nooi يظهر هنا.")+"</p>")}
+// reverse: the part on the timeline played backwards, made on the server (free); again → the clip as it was
+async function rev145(c){const E=S.ed;if(!c)return;
+  if(c.rev&&c.src0){M["c_"+c.id]=M["rv0_"+c.id];if(!M["c_"+c.id])delete M["c_"+c.id];delete M["rv0_"+c.id];Object.assign(c,{src:c.src0.src,in:c.src0.in,out:c.src0.out});delete c.src0;c.rev=false;delete BG144[c.id];persist();renderView();toast(L("Plays forwards again","يُعرض للأمام مجدداً"),{type:"ok"});return}
+  const m=clipMedia(c);if(!m||m.type!=="video"){toast(L("Reverse works on video clips.","العكس يعمل على مقاطع الفيديو."));return}
+  if(API.mode!=="server"){toast(L("Reverse is made on your nooi server.","يُصنع العكس على خادم nooi."),{type:"info"});return}
+  const b=await base140(c);if(!b)return;const url=String(b.resultUrl||mediaUrl(b)||"").replace(location.origin,"");
+  try{uiPill("⏪ "+L("Reversing the clip…","عكس المقطع…"));const r=await API.req("/v1/edit145/reverse",{json:{url,from:+c.in.toFixed(3),to:+c.out.toFixed(3),title:clipName(c)}});
+    const nj={id:uid(),remote:r.id,kind:"video",status:"complete",progress:1,resultUrl:r.url,title:r.title,prompt:"",created:Date.now(),seed:hashStr(r.id),pal:PALS[hashStr(r.id)%PALS.length],dur:Math.max(1,Math.round(r.dur||1)),aspect:"16:9",art:"scene",meta:{clip140:true,rev145:1}};S.jobs.push(nj);
+    c.src0={src:c.src,in:c.in,out:c.out};M["rv0_"+c.id]=M["c_"+c.id];delete M["c_"+c.id];c.src={k:"job",job:nj.id};c.in=0;c.out=+(+r.dur).toFixed(2);c.rev=true;delete BG144[c.id];
+    persist();renderView();toast(L("Reversed — it plays backwards. Tap Reverse again to undo.","عُكس — يُعرض للخلف. اضغط «عكس» مرة أخرى للتراجع."),{type:"ok"})}
+  catch(e){toast(String(e.message||e),{type:"warn"})}finally{uiPill("")}}
+
+/* ---------- the panels ---------- */
+const sec145=(id,title,body)=>'<div class="e145s" data-anc="'+id+'"><span class="lbl">'+title+"</span>"+body+"</div>";
+const tbtn145=(attrs,on,glyph,label)=>'<button type="button" class="tile" '+attrs+' aria-pressed="'+!!on+'"><span class="gl">'+glyph+'</span><span class="lb">'+esc(label)+"</span></button>";
+function transTiles145(c,cls){glLoad131();const list=[["cut","Cut","قطع"],["fade","Crossfade","تلاشي"],["dip","Dip to black","للأسود"],["slide","Slide","انزلاق"]].concat(EDX_TR,GLT131);
+  return'<div class="tiles'+(cls?" "+cls:"")+'">'+list.map(x=>{const R=reg84("transition",x[0]);return tbtn145('data-set="edclip.trans" data-val="'+x[0]+'"',c.trans===x[0],R&&R[4]?svg(R[4]):svg(ICONS.trans143),L(x[1],x[2]))}).join("")+"</div>"}
+function clipEdit145(){const c=edxSel();if(!c)return'<p class="mute small">'+L("Tap a clip on the timeline to trim it, change its speed, sound and transition.","اضغط على مقطع في الخط الزمني لقصه وتغيير سرعته وصوته وانتقاله.")+"</p>";
+  const E=S.ed,m=clipMedia(c),isV=!!m&&m.type==="video",sd=isV?Math.max(srcDur(m)||0,c.out):c.out,fps=(EDX.sm[c.id]&&EDX.sm[c.id].fps)||30,miss=c.src.k==="upload"&&!M["c_"+c.id],C=c.crop||{},rot=(((c.rot||0)%360)+360)%360,V=c.cv145||{},mo=c.mo||{};
+  let h='<div class="e145h">'+ic(isV?"video":"image")+'<b dir="auto">'+esc(clipName(c))+'</b><span class="mono dim" dir="ltr">'+clipDur(c).toFixed(1)+"s</span>"+(c.rev?'<span class="e145t">'+L("Reversed","معكوس")+"</span>":"")+"</div>";
+  if(miss)h+='<label class="drop" style="margin:8px 0">'+ic("upload")+"<div>"+L("Re-upload ","أعد رفع ")+esc(c.src.name||"")+'</div><input type="file" accept="video/*,image/*" data-reclip="'+c.id+'"></label>';
+  h+=sec145("trim",L("Trim","القص"),(isV?slider("edclip.in",L("Start","البداية"),+c.in.toFixed(1),0,Math.max(.1,sd-.1),.1,"s")+slider("edclip.out",L("End","النهاية"),+c.out.toFixed(1),.2,Math.max(.2,sd),.1,"s"):slider("edclip.out",L("Show for","مدة العرض"),+c.out.toFixed(1),.5,15,.5,"s"))+
+    (isV?'<div class="small mono e145tc" dir="ltr">'+L("Start","البداية")+" "+edxTC(c.in,fps)+" · "+L("End","النهاية")+" "+edxTC(c.out,fps)+"</div>":"")+
+    '<div class="row e145r"><button class="btn sm" data-act="edx-step" data-v="-1" aria-label="'+esc(L("Back 1 frame","إطار للخلف"))+'" title=",">'+ic("prev")+L("1 frame","إطار")+'</button><button class="btn sm" data-act="edx-step" data-v="1" aria-label="'+esc(L("Forward 1 frame","إطار للأمام"))+'" title=".">'+L("1 frame","إطار")+ic("next")+"</button>"+
+    '<button class="btn sm" data-act="edx-trim" data-v="in" title="I">'+ic("trimL")+L("Set start frame","اضبط إطار البداية")+'</button><button class="btn sm" data-act="edx-trim" data-v="out" title="O">'+ic("trimR")+L("Set end frame","اضبط إطار النهاية")+"</button></div>"+
+    '<div class="row e145r"><button class="btn sm" data-act="ed-split">'+ic("split")+L("Split at playhead","قص عند المؤشر")+'</button><button class="btn sm" data-act="edx-freeze" title="F">'+ic("freeze")+L("Freeze frame","تجميد الإطار")+"</button>"+
+    (isV?'<button class="btn sm" data-act="edx-aishot">'+ic("wand")+L("New AI shot from these start & end frames","لقطة ذكاء جديدة من إطاري البداية والنهاية")+"</button>":"")+"</div>");
+  h+=sec145("crop",L("Crop & rotate","الاقتصاص والتدوير"),'<div class="seg e145crop">'+CROPS145.map(x=>'<button type="button" data-act="crop145" data-v="'+x[0]+'" aria-pressed="'+((C.ar||"")===x[0]||(!c.crop&&x[0]==="free"))+'">'+esc(L(x[1],x[2]))+"</button>").join("")+"</div>"+
+    (c.crop?'<label class="ctrl"><span>'+L("Zoom into the crop","تكبير داخل الاقتصاص")+'</span><input type="range" min="1" max="4" step=".05" value="'+(+C.z||1)+'" data-crop145="z"><output>'+(+C.z||1).toFixed(2)+'×</output></label>'+
+      '<label class="ctrl"><span>'+L("Left ↔ right","يسار ↔ يمين")+'</span><input type="range" min="-1" max="1" step=".02" value="'+(+C.x||0)+'" data-crop145="x"></label>'+
+      '<label class="ctrl"><span>'+L("Up ↕ down","أعلى ↕ أسفل")+'</span><input type="range" min="-1" max="1" step=".02" value="'+(+C.y||0)+'" data-crop145="y"></label>':"")+
+    '<div class="row e145r"><button class="btn sm" data-act="rot145" data-v="-90" aria-label="'+esc(L("Turn left 90°","تدوير لليسار 90°"))+'">'+ic("rot145")+L("Left 90°","يسار 90°")+'</button><button class="btn sm" data-act="rot145" data-v="90" aria-label="'+esc(L("Turn right 90°","تدوير لليمين 90°"))+'"><span class="e145fl">'+ic("rot145")+"</span>"+L("Right 90°","يمين 90°")+"</button>"+
+    '<button class="btn sm" data-act="edx-flip" data-v="fh" aria-pressed="'+!!mo.fh+'">'+ic("mirror")+L("Mirror","مرآة")+'</button><button class="btn sm" data-act="edx-flip" data-v="fv" aria-pressed="'+!!mo.fv+'">'+L("Flip upside down","قلب رأسي")+"</button>"+
+    ((c.crop||rot)?'<button class="btn sm ghost" data-act="crop145" data-v="reset">'+L("Reset","إعادة ضبط")+"</button>":"")+'</div><p class="small dim e-hint">'+(rot?L("Turned ","مُدار ")+rot+"° · ":"")+L("The clip keeps its place on the timeline; only what you see changes.","يبقى المقطع في مكانه على الخط الزمني؛ يتغير ما تراه فقط.")+"</p>");
+  const cm=V.mode||"auto";
+  h+=sec145("canvas",L("Canvas behind the clip","الخلفية خلف المقطع"),'<div class="seg e145cv">'+[["auto",L("As the project","كالمشروع")],["fill",L("Fill","ملء")],["fit",L("Fit","احتواء")],["blur",L("Blur","تمويه")],["color",L("Colour","لون")],["pic",L("Picture","صورة")]].map(x=>'<button type="button" data-act="cv145" data-v="'+x[0]+'" aria-pressed="'+(cm===x[0])+'">'+x[1]+"</button>").join("")+"</div>"+
+    (cm==="color"?'<div class="row" style="gap:6px;margin-top:8px">'+["#000000","#ffffff","#CFE13E","#4dc3ff","#ff5a5f","#ffd36a","#1b2a6b","#2dd4a8"].map(col=>'<button type="button" class="swc'+((V.col||"#000000")===col?" on":"")+'" data-act="cv145c" data-v="'+col+'" style="background:'+col+'" aria-label="'+col+'"></button>').join("")+"</div>":"")+
+    (cm==="pic"?'<label class="btn sm" style="position:relative;margin-top:8px">'+ic("image")+(M["cvp_"+c.id]?L("Change the picture","غيّر الصورة"):L("Add a picture","أضف صورة"))+'<input type="file" accept="image/*" data-cv145pic="1" style="position:absolute;inset:0;opacity:0;cursor:pointer" aria-label="'+esc(L("Add a picture","أضف صورة"))+'"></label>':"")+
+    '<p class="small dim e-hint">'+L("Shows where the clip doesn't fill the frame (another shape, or turned).","يظهر حيث لا يملأ المقطع الإطار (شكل آخر أو مُدار).")+"</p>");
+  h+=sec145("replace",L("Reverse & replace","العكس والاستبدال"),'<div class="row e145r">'+(isV||c.rev?'<button class="btn sm" data-act="rev145" aria-pressed="'+!!c.rev+'">'+ic("rev145")+(c.rev?L("Play forwards again","اعرضه للأمام"):L("Reverse","عكس"))+"</button>":"")+
+    '<label class="btn sm" style="position:relative">'+ic("rep145")+L("Replace with a file","استبدل بملف")+'<input type="file" accept="video/*,image/*" data-rep145="1" style="position:absolute;inset:0;opacity:0;cursor:pointer" aria-label="'+esc(L("Replace with a file","استبدل بملف"))+'"></label>'+
+    '<button class="btn sm" data-act="rep145-lib">'+ic("rep145")+L("Replace with one of yours","استبدل بواحد من أعمالك")+'</button></div><p class="small dim e-hint">'+L("Reverse is made on the server, free. Replacing keeps the clip's length, effects, look and transition.","يُصنع العكس على الخادم مجاناً. الاستبدال يبقي طول المقطع ومؤثراته ومظهره وانتقاله.")+"</p>");
+  if(isV)h+=sec145("extend",L("Extend with AI","المدّ بالذكاء الاصطناعي"),'<div class="ext91"><p class="small dim" style="margin:0">'+L("Continues this shot from its own last frame — the same people, place, light and camera, one continuous take — and puts the next seconds right after it, with the clip's look. Type what happens next in the prompt box: “extend: he opens the door”.","يكمل هذه اللقطة من آخر إطار فيها — الأشخاص والمكان والضوء والكاميرا نفسها، لقطة واحدة متصلة — ويضع الثواني التالية بعدها مباشرة بنفس مظهر المقطع. اكتب ما يحدث بعدها في مربع الوصف: «مدّ: يفتح الباب».")+'</p><button class="btn sm primary" data-act="ed-extend91">'+ic("extend91")+L("Extend shot · ","مدّ اللقطة · ")+(/^(veo|ltx23)/.test(edExtModel91(c))?8:5)+L("s","ث")+'<span class="cost">'+edExtCost91(c)+" cr</span></button></div>");
+  const i=E.clips.indexOf(c);if(i<E.clips.length-1)h+=sec145("trans",L("Transition to next","الانتقال للتالي"),transTiles145(c));
+  return h}
+function speed145(){const c=edxSel();if(!c)return clipEdit145();const m=clipMedia(c),isV=!!m&&m.type==="video",sm=EDX.sm[c.id],cur=c.slowTo||c.speed||1;
+  let h=sec145("speed",L("Speed","السرعة"),chips("edclip.speed",[[.25,"0.25×"],[.5,"0.5×"],[1,"1×"],[1.5,"1.5×"],[2,"2×"],[4,"4×"]],c.speed,{num:1})+slider("edclip.speed",L("Custom speed","سرعة مخصصة"),+(+c.speed||1).toFixed(2),.1,8,.05,"×"));
+  h+=sec145("slow",L("Slow motion","الحركة البطيئة"),'<div class="tiles">'+EDX_SLOW.map(x=>'<button class="tile" data-act="edx-slow" data-v="'+x[0]+'" aria-pressed="'+(Math.abs(cur-x[0])<1e-3)+'"><span class="gl"><b class="mono" style="font-size:12px">'+x[3]+'</b></span><span class="lb">'+esc(L(x[1],x[2]))+"</span></button>").join("")+"</div>");
+  if(isV){h+=sec145("ramp",L("Speed ramp","منحنى السرعة"),edxSeg("edx-ramp",EDX_RAMPS,c.ramp||"none"));
+    h+=sec145("smooth",L("Smooth frames","نعومة الإطارات"),edxSeg("edx-smooth",[["off","Off","إيقاف"],["blend","Frame blending","مزج الإطارات"],["flow","Optical flow","التدفق البصري"]],c.smooth||"off")+
+      (c.smooth&&c.smooth!=="off"?'<div class="bar" style="height:6px;margin-top:8px"><i id="smbar" style="width:'+Math.round(((sm&&sm.prog)||0)*100)+'%"></i></div><p class="small dim" style="margin:4px 0 0">'+(sm&&sm.ready?L("Ready · ","جاهز · ")+sm.frames.length+L(" frames read — in-between frames are created as it plays."," إطاراً — تُنشأ الإطارات الوسيطة أثناء التشغيل."):L("Reading the clip's frames…","قراءة إطارات المقطع…"))+"</p>":""))}
+  return h}
+function animTiles145(w,cur){return'<div class="tiles an145g">'+AN145.map(x=>tbtn145('data-act="an145" data-w="'+w+'" data-v="'+x[0]+'"',(cur||"none")===x[0],svg('<path d="'+ANG145[x[0]]+'"/>'),L(x[1],x[2]))).join("")+"</div>"}
+function anim145p(){const c=edxSel();if(!c)return clipEdit145();const ai=c.ain||{},ao=c.aout||{},dmax=Math.max(.1,Math.min(3,clipDur(c)/2));
+  const dl=(w,o)=>o.k&&o.k!=="none"?'<label class="ctrl"><span>'+L("Length","المدة")+'</span><input type="range" min=".1" max="'+dmax.toFixed(1)+'" step=".1" value="'+Math.min(dmax,+o.d||.5).toFixed(1)+'" data-an145d="'+w+'"><output>'+Math.min(dmax,+o.d||.5).toFixed(1)+"s</output></label>":"";
+  return'<p class="small mute e-hint">'+L("How the clip comes in and goes out. Tap one to see it.","كيف يدخل المقطع ويخرج. اضغط واحدة لتراها.")+"</p>"+sec145("ain",L("In","الدخول"),animTiles145("in",ai.k)+dl("in",ai))+sec145("aout",L("Out","الخروج"),animTiles145("out",ao.k)+dl("out",ao))}
+function audio145(){const c=edxSel();if(!c)return clipEdit145();const m=clipMedia(c),isV=!!m&&m.type==="video";
+  if(!isV)return'<p class="small mute e-hint">'+L("A picture has no sound. Add music or a voice in Audio.","الصورة بلا صوت. أضف موسيقى أو صوتاً من «الصوت».")+"</p>";
+  const vc=c.vc145||"none";
+  return sec145("vol",L("Volume","الصوت"),slider("edclip.vol",L("Clip volume","صوت المقطع"),c.vol,0,100,1,"%")+slider("edclip.afi",L("Fade in","ظهور تدريجي"),+(+c.afi||0).toFixed(1),0,5,.1,"s")+slider("edclip.afo",L("Fade out","اختفاء تدريجي"),+(+c.afo||0).toFixed(1),0,5,.1,"s"))+
+    sec145("voice",L("Voice changer","مغيّر الصوت"),'<div class="tiles vc145g">'+VC145.map(x=>tbtn145('data-act="vc145" data-v="'+x[0]+'"',vc===x[0],ic(x[3]),L(x[1],x[2]))).join("")+'</div><p class="small dim e-hint">'+L("In the preview and the export.","في المعاينة والتصدير.")+"</p>")+
+    sec145("more",L("More","المزيد"),'<div class="row e145r"><button class="btn sm" data-act="xa145">'+ic("xa145")+L("Extract audio","استخراج الصوت")+'</button><button class="btn sm" data-act="ls143" data-v="aiaudio144">'+ic("iso144")+L("Isolate the voice (AI)…","اعزل الصوت (بالذكاء)…")+"</button></div>"+cleanSw140())}
+pane143=(o=>function(tab,nopick){if(P145.has(tab)&&!nopick){const E=S.ed,keep=E.tab;E.tab=tab;try{return tab==="clip"?clipEdit145():tab==="speed145"?speed145():tab==="anim145"?anim145p():audio145()}finally{E.tab=keep}}
+  return o.apply(this,arguments)})(pane143);
+// smooth frames are read when they are on (the old page did it while its clip panel was shown)
+VIEWS.edit=(o=>function(){const h=o.apply(this,arguments),c=edxSel();
+  if(c&&c.smooth&&c.smooth!=="off"){const m=clipMedia(c),sm=EDX.sm[c.id];if(m&&m.type!=="image"&&(!sm||(!sm.busy&&(!sm.ready||sm.key!==edxSmKey(c)))))setTimeout(()=>edxSmBuild(c),0)}return h})(VIEWS.edit);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="crop145"],[data-act="rot145"],[data-act="cv145"],[data-act="cv145c"],[data-act="rev145"],[data-act="rep145-lib"],[data-act="rep145-pick"],[data-act="xa145"],[data-act="an145"],[data-act="vc145"]');
+  if(!a||S.view!=="edit"||a.disabled)return;e.preventDefault();e.stopImmediatePropagation();const E=S.ed,act=a.dataset.act,v=a.dataset.v;
+  if(act==="rep145-pick"){const j=S.jobs.find(x=>x.id===v);rep145(E.clips.find(x=>x.id===E.sel),{job:j});return}
+  const c=edxSel()||edxPick();if(!c){toast(L("Select a clip first.","اختر مقطعاً أولاً."));return}
+  if(act==="crop145"){if(v==="reset"){delete c.crop;c.rot=0}else if(v==="free"){if(c.crop){c.crop.ar="free"}}else c.crop=Object.assign({z:1,x:0,y:0},c.crop||{},{ar:v});
+    if(c.crop&&c.crop.ar==="free"&&(+c.crop.z||1)<=1.001)delete c.crop;persist();renderView();return}
+  if(act==="rot145"){c.rot=((((c.rot||0)+(+v||90))%360)+360)%360;persist();renderView();toast(L("Turned ","مُدار ")+c.rot+"°",{type:"ok"});return}
+  if(act==="cv145"){c.cv145=Object.assign({},c.cv145||{},{mode:v});if(v==="auto")delete c.cv145;persist();renderView();return}
+  if(act==="cv145c"){c.cv145=Object.assign({},c.cv145||{},{mode:"color",col:v});persist();renderView();return}
+  if(act==="rev145"){a.disabled=true;Promise.resolve(rev145(c)).finally(()=>{a.disabled=false});return}
+  if(act==="rep145-lib"){repSheet145();return}
+  if(act==="xa145"){xa145(c);return}
+  if(act==="an145"){const w=a.dataset.w,key=w==="in"?"ain":"aout";if(v==="none")delete c[key];else c[key]={k:v,d:(c[key]&&c[key].d)||.5};
+    if(v!=="none"){const st=edStarts()[E.clips.indexOf(c)],D=Math.min(3,(c[key].d||.5));ED.t=w==="in"?st:Math.max(st,st+clipDur(c)-D-.6);ED.playing=true;ED.last=0}persist();renderView();return}
+  if(act==="vc145"){c.vc145=v;if(v==="none")delete c.vc145;try{if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==="suspended")audioCtx.resume().catch(()=>{})}catch(err){}persist();renderView();
+    if(v!=="none"){const st=edStarts()[E.clips.indexOf(c)];ED.t=st;ED.playing=true;ED.last=0}return}},true);
+document.addEventListener("input",e=>{const t=e.target;if(!t.dataset||S.view!=="edit")return;const c=edxSel();if(!c)return;
+  if(t.dataset.crop145){c.crop=c.crop||{ar:"free",z:1,x:0,y:0};c.crop[t.dataset.crop145]=+t.value;const out=t.parentElement.querySelector("output");if(out&&t.dataset.crop145==="z")out.textContent=(+t.value).toFixed(2)+"×";clearTimeout(PV._c145);PV._c145=setTimeout(persist,300)}
+  if(t.dataset.an145d){const key=t.dataset.an145d==="in"?"ain":"aout";if(c[key]){c[key].d=+t.value;const out=t.parentElement.querySelector("output");if(out)out.textContent=(+t.value).toFixed(1)+"s";clearTimeout(PV._a145);PV._a145=setTimeout(persist,300)}}});
+document.addEventListener("change",e=>{const t=e.target;if(!t.dataset||S.view!=="edit"||!t.files||!t.files[0])return;const c=edxSel();if(!c)return;
+  if(t.dataset.rep145){rep145(c,{file:t.files[0]});return}
+  if(t.dataset.cv145pic){loadSlot("cvp_"+c.id,t.files[0]);c.cv145=Object.assign({},c.cv145||{},{mode:"pic"});persist();renderView()}});
+
+(()=>{const st=document.createElement("style");st.textContent=`
+.e145h{display:flex;align-items:center;gap:8px;margin:0 0 4px;font-size:13px;min-width:0}.e145h svg{width:16px;height:16px;flex:none;color:var(--mute)}.e145h b{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:600}
+.e145t{font:600 10.5px/1 var(--mono);padding:3px 6px;border-radius:999px;background:color-mix(in srgb,var(--lime) 22%,transparent);color:var(--lime-ink)}
+.e145s{padding:2px 0 6px;border-bottom:1px solid var(--line);margin-bottom:6px}.e145s:last-child{border-bottom:0}
+.e145r{gap:6px;flex-wrap:wrap;margin:8px 0 0}.e145tc{margin:6px 0 0}
+.e145crop,.e145cv{flex-wrap:wrap}.e145fl{display:inline-flex;transform:scaleX(-1)}
+.an145g .gl svg,.vc145g .gl svg{width:20px;height:20px}
+.rep145g{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+.ed143.mob .e-bar button span{max-width:none;white-space:nowrap}   /* (the bar scrolls sideways: a two-word tool keeps its words on one line) */
 `;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */

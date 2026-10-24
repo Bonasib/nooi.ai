@@ -47,7 +47,8 @@ import { registerVss, vssServer } from "./lib/vss.js";
 import { registerLocalize, locEngines } from "./lib/localize.js";
 import { registerAgents } from "./lib/agents.js";
 import { registerV88 } from "./lib/v88.js";   // v88: prompts in English for the engines, poster frames, deleting results
-import { registerScrub131 } from "./lib/scrub131.js";   // v131: a light copy of a clip for dragging the editor's playhead
+import { registerScrub131 } from "./lib/scrub131.js";
+import { registerEdit145 } from "./lib/edit145.js";   // v145: the editor's Reverse (a clip's part backwards, made here, free)   // v131: a light copy of a clip for dragging the editor's playhead
 import { startKeepMedia } from "./lib/v89.js";   // v89: results that still point at an engine's (expiring) link are kept here
 import "./lib/alert138.js";   // v138: an engine out of credits is said at once (Admin, staff line, one email)
 import "./lib/intent.js";   // v96: the page's choices (style, camera move, type, motion, what to avoid, voice-over) reach the engine as words
@@ -310,7 +311,7 @@ registerAgents(app);
 registerMotion(app);
 registerSketch(app);
 registerWorld(app);
-registerV88(app, requireUser); startKeepMedia(); registerScrub131(app, requireUser);
+registerV88(app, requireUser); startKeepMedia(); registerScrub131(app, requireUser); registerEdit145(app, requireUser);
 registerIngest(app);
 registerExplore(app); registerShowcase(app); registerGifts(app); registerInvoices(app);
 // Low-latency voice preview (ElevenLabs stream, key never leaves the server)

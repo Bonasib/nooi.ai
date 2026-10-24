@@ -72,7 +72,7 @@ async def desktop(b, lang):
     chk(f"{tag}: rail · add panel · player · details, the timeline across the bottom", order and x["tl"][1] >= x["player"][3] - 2 and abs((x["tl"][0] if not rtl else x["tl"][2]) - (x["assets"][0] if not rtl else x["assets"][2])) <= 2, x)
     chk(f"{tag}: the editor fits the window (no page scroll to reach the timeline)", x["app"][3] <= r["vh"] + 1, [x["app"], r["vh"]])
     chk(f"{tag}: the page title", r["title"] and r["title"].strip() in ("Video editor", "محرر الفيديو"), r["title"])
-    chk(f"{tag}: the selected clip's details: Edit · Motion · Background · Tracking", r["det"] == "clip" and r["dsub"] == ["clip", "motion", "bg144", "track"], [r["det"], r["dsub"]])
+    chk(f"{tag}: the selected clip's details: Edit · Speed · Animation · Audio · Motion · Background · Tracking", r["det"] == "clip" and r["dsub"] == ["clip", "speed145", "anim145", "audio145", "motion", "bg144", "track"], [r["det"], r["dsub"]])   # (v145)
     # ---- 2. every add tool: its panels, the clip's details stay
     res = {}
     for v in RAIL:
@@ -145,11 +145,11 @@ async def phone(b, lang):
     await pg.touchscreen.tap(bb["x"] + 30, bb["y"] + bb["height"] / 2); await pg.wait_for_timeout(500)
     c = await E("()=>({ctx:document.querySelector('.e-bar').classList.contains('ctx'),tools:[...document.querySelectorAll('.e-bar button')].map(b=>b.dataset.v||b.dataset.act),sheet:!!document.querySelector('.e-sheet'),kind:kind143()})")
     out[tag + "_ctx"] = c
-    want = ["desel143", "clip", "ed-split", "clip#speed", "clip#vol", "motion", "color", "trans143", "edx-freeze", "fh", "ed-dup", "ed-move", "ed-move", "ed-extend91", "bg144", "track", "ai140", "ed-del", "snap141"]   # (v144: Background)
+    want = ["desel143", "clip", "ed-split", "speed145", "audio145", "anim145", "motion", "color", "trans143", "clip#crop", "90", "rev145", "edx-freeze", "fh", "ed-dup", "ed-move", "ed-move", "ed-extend91", "bg144", "clip#replace", "xa145", "track", "ai140", "ed-del", "snap141"]   # (v144: Background · v145: Speed/Volume/Animation tabs, Crop, Rotate, Reverse, Replace, Extract audio)
     chk(f"{tag}: a tap on a clip shows its own tools at the foot (Split, Speed, Volume, Motion, Filters, Transition, Freeze, Mirror, Duplicate, Earlier, Later, Extend, Background, Tracking, AI, Delete)", c["ctx"] and c["kind"] == "clip" and c["tools"] == want and not c["sheet"], c)
-    await E("()=>{const b=document.querySelector('.e-bar [data-v=\"clip#speed\"]');b.scrollIntoView({inline:'center'});b.click()}"); await pg.wait_for_timeout(600)
+    await E("()=>{const b=document.querySelector('.e-bar [data-v=\"speed145\"]');b.scrollIntoView({inline:'center'});b.click()}"); await pg.wait_for_timeout(600)
     sp = await E("()=>{const s=document.querySelector('.e-sheet'),st=document.querySelector('.edstage').getBoundingClientRect(),l=[...s.querySelectorAll('.lbl')].find(x=>/speed|السرعة/i.test(x.textContent));return{tab:S.ed.tab,lbl:l?Math.round(l.getBoundingClientRect().top):null,under:Math.round(st.bottom),bar:Math.round(document.querySelector('.e-bar').getBoundingClientRect().top)}}")
-    chk(f"{tag}: Speed opens the clip's settings at Speed, under the pinned preview", sp["tab"] == "clip" and sp["lbl"] is not None and sp["under"] <= sp["lbl"] < sp["bar"] - 40, sp)
+    chk(f"{tag}: Speed opens the clip's Speed settings, under the pinned preview", sp["tab"] == "speed145" and sp["lbl"] is not None and sp["under"] <= sp["lbl"] < sp["bar"] - 40, sp)
     fh0 = await E("()=>!!(edSelClip().mo&&edSelClip().mo.fh)"); n0 = await E("()=>S.ed.clips.length")
     await E("()=>{const b=document.querySelector('.e-bar [data-act=\"edx-flip\"]');b.scrollIntoView({inline:'center'});b.click()}"); await pg.wait_for_timeout(200)
     await E("()=>{const b=document.querySelector('.e-bar [data-act=\"ed-dup\"]');b.scrollIntoView({inline:'center'});b.click()}"); await pg.wait_for_timeout(200)

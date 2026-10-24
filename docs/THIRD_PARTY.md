@@ -38,3 +38,6 @@ No code was copied. These three open editors were read for ideas only, and each 
 | News tickers (a band with a label and crawling headlines) (v144) | TV news graphics in general | A common broadcast convention — no one's design copied | `TK144`, `tkDraw144` |
 | Smootherstep easing for transitions, 6t⁵ − 15t⁴ + 10t³ (v144) | Ken Perlin's "improved noise" (2002) | A published mathematical formula | `ease144` |
 | Removing a background on the device (v144) | the on-device AI model already in nooi (`laiModels().bg`, see the on-device AI rows) | as listed there | `bgRun144` (sampled frames, nearest mask per frame) |
+| A pitch shifter from two delay lines whose delay ramps, each faded out as it jumps back (v145) | Chris Wilson's "Jungle" Web Audio demo | MIT — the method only, our own code | `pitch145` |
+| Clip tools by name — crop, rotate, canvas, animations in & out, fades, voice changer, reverse, replace, extract audio (v145) | CapCut (closed product) | Public feature names only; no code, artwork or wording | `clipEdit145`, `anim145`, `vcFx145`, `rev145`, `rep145`, `xa145` |
+| Reversing in short pieces joined last-first (bounded memory) (v145) | ffmpeg's own `reverse` / `areverse` filters (LGPL/GPL tool, run as a program) | used as a separate program, not linked | `lib/edit145.js` |

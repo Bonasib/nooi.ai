@@ -42,7 +42,7 @@ async def editor(p):
     g = await E("""()=>{edSetPick('clip',S.ed.clips[0].id);S.ed.tab='clip';renderView();const sub=s=>[...document.querySelectorAll(s+' .e-sub button')].map(b=>b.dataset.v);
       return{cats:[...document.querySelectorAll('.e-rail button')].map(b=>b.dataset.v),det:sub('.e-details'),dtab:document.querySelector('.e-details .e-body')?.dataset.tab,pressed:document.querySelector('.e-details .e-sub [aria-pressed="true"]')?.dataset.v}}""")
     out["groups"] = g
-    chk("the add tools on the rail (Media · Audio · Text · Stickers · Effects · Transitions · Captions · Filters · AI) and the clip's details (Edit · Motion · Background · Tracking)", g["cats"] == ["media", "audio", "text", "stickers", "effects", "trans", "captions", "filters", "ai"] and g["det"] == ["clip", "motion", "bg144", "track"] and g["dtab"] == "clip" and g["pressed"] == "clip", g)
+    chk("the add tools on the rail (Media · Audio · Text · Stickers · Effects · Transitions · Captions · Filters · AI) and the clip's details (Edit · Speed · Animation · Audio · Motion · Background · Tracking)", g["cats"] == ["media", "audio", "text", "stickers", "effects", "trans", "captions", "filters", "ai"] and g["det"] == ["clip", "speed145", "anim145", "audio145", "motion", "bg144", "track"] and g["dtab"] == "clip" and g["pressed"] == "clip", g)
     seq = []
     for v in ("filters", "audio", "ai", "effects"):
         await pg.click(f'.e-rail [data-v="{v}"]'); await pg.wait_for_timeout(80)

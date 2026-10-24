@@ -63,7 +63,9 @@ async def run(p, w, mob, fails, out):
         a = await snap(); await tap(f"[data-act={act}]:not([disabled])"); b2 = await snap(); check(act, fn(a, b2), [a["n"], b2["n"]])
     await E("()=>{S.ed.sel=S.ed.clips[0].id;S.ed.tab='clip';renderView()}"); await pg.wait_for_timeout(300)
     await E("()=>{edSetPick('clip',S.ed.clips[0].id);renderView();const b=document.querySelector('.e-bar [data-act=\"ps143\"][data-v=\"clip\"]');if(b)b.click()}"); await pg.wait_for_timeout(300)   # (v143: on a phone the clip's Edit tool opens its settings)
-    res = await E("""()=>{const set=(b,v)=>{const i=document.querySelector('[data-bind="'+b+'"]');if(!i)return 0;i.value=v;i.dispatchEvent(new Event('input',{bubbles:true}));i.dispatchEvent(new Event('change',{bubbles:true}));return 1};const c=S.ed.clips[0];set('edclip.in',1);set('edclip.out',4);set('edclip.vol',50);return [+c.in,+c.out,+c.vol]}""")
+    # (v145: trim in Edit, the clip's volume in Audio, its speed in Speed)
+    res = await E("""async()=>{const set=(b,v)=>{const i=document.querySelector('[data-bind="'+b+'"]');if(!i)return 0;i.value=v;i.dispatchEvent(new Event('input',{bubbles:true}));i.dispatchEvent(new Event('change',{bubbles:true}));return 1};const c=S.ed.clips[0];set('edclip.in',1);set('edclip.out',4);
+      S.ed.tab='audio145';renderView();await new Promise(r=>setTimeout(r,150));set('edclip.vol',50);S.ed.tab='speed145';renderView();await new Promise(r=>setTimeout(r,150));return [+c.in,+c.out,+c.vol]}""")
     check("trim & volume", res == [1, 4, 50], res)
     sp = await E("()=>{const b=[...document.querySelectorAll('[data-set=\"edclip.speed\"]')].find(x=>x.dataset.val==='2');if(!b)return 0;b.click();return +S.ed.clips[0].speed}"); check("speed", sp == 2, sp)
     a = await snap(); await E("()=>{S.ed.tab='text';renderView()}"); await tap("[data-act=ed-addtext]"); b2 = await snap(); check("add text", b2["texts"] == a["texts"] + 1, b2)

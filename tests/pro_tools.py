@@ -14,7 +14,7 @@ MOCK = """()=>{laiCall=async(msg,onp)=>{if(onp)onp({status:'running'});const t=m
  if(t==='asr')return{text:'hello world',chunks:[{start:0,end:.5,text:'hello'},{start:.5,end:1,text:'world'}]};
  if(t==='bg'){return new Promise(r=>{const c=document.createElement('canvas');c.width=c.height=32;c.toBlob(b=>r({blob:b}),'image/png')})}
  throw new Error('unmocked '+t)};S.localAI=true}"""
-SKIP = {"lt143", "ls143", "dt143", "ps143", "desel143", "pclose143", "sc-gen", "sc-av", "sc-one", "sc-retry", "hf-send", "xp-dl", "ed-export", "ed-publish", "s3d-turntable", "eng-try", "edx-aishot", "logout", "signout", "adm-send", "adm-test",
+SKIP = {"rev145", "bg144-run", "iso144", "aa144", "lt143", "ls143", "dt143", "ps143", "desel143", "pclose143", "sc-gen", "sc-av", "sc-one", "sc-retry", "hf-send", "xp-dl", "ed-export", "ed-publish", "s3d-turntable", "eng-try", "edx-aishot", "logout", "signout", "adm-send", "adm-test",
         "nw-go", "nw-video", "nw-glb", "nw-real", "nw-use", "nw-full", "nw-del"}   # the 3D World: no paid jobs, downloads or full screen in a click test
 
 CLICK_JS = """async ([sel, cap, skip]) => { let n = 0;
@@ -57,9 +57,9 @@ async def main():
                 # editor: every tab, every control
                 await E("()=>{go('edit');PJ.fresh('edit');S.ed.clips.push({id:uid(),src:{k:'demo',kind:'scene',seed:11},in:0,out:5,speed:1,trans:'cut',vol:100},{id:uid(),src:{k:'demo',kind:'green',seed:12},in:0,out:5,speed:1,trans:'cut',vol:100});S.ed.sel=S.ed.clips[0].id;S.ed.caps.words=edxSpread('one two three four',0.2,2.5);S.ed.caps.on=true;S.ed.sfx=[{id:'s1',n:'pop',t:1,vol:100}];S.ed.regions=[{id:'r1',kind:'blur',shape:'rect',box:{x:.5,y:.5,w:.2,h:.1},start:0,end:4,amt:10}];renderView()}")
                 # (v143: every panel of the editor — the add panels on the left, the details on the right / the phone's sheet)
-                tabs = ["media", "audio", "sfx", "text", "info", "logo", "vfx", "erase", "layers", "trans143", "words", "color", "look", "chat143", "ai140", "ai", "3d", "clip", "motion", "track", "export"]
+                tabs = ["media", "audio", "sfx", "text", "info", "logo", "vfx", "erase", "layers", "trans143", "words", "color", "look", "chat143", "ai140", "ai", "3d", "clip", "speed145", "anim145", "audio145", "motion", "bg144", "track", "aiaudio144", "export"]   # (v144/v145: the new panels)
                 out["checks"][f"{w}:tabs"] = len(tabs)
-                if w < 800: tabs = [t for t in tabs if t in ("clip", "text", "motion", "color", "sfx", "words", "erase", "layers")]
+                if w < 800: tabs = [t for t in tabs if t in ("clip", "speed145", "audio145", "text", "motion", "color", "sfx", "words", "erase", "layers")]
                 for t in tabs:
                     await E(f"()=>{{S.ed.tab='{t}';S.ed.sel=S.ed.clips[0]&&S.ed.clips[0].id;if(!S.ed.texts.length)document.querySelector('[data-act=ed-addtext]')?.click();S.ed.selText=S.ed.texts[0]&&S.ed.texts[0].id;S.ed.tab='{t}';ED.playing=false;renderView()}}")
                     await pg.wait_for_timeout(150)

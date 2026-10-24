@@ -22,7 +22,7 @@ GO = "(v)=>{document.getElementById('modalRoot').innerHTML='';go(v);renderAll()}
 EDIT = """async(tab)=>{if(!S.jobs.find(j=>j.id==='ed_va')){const now=Date.now(),mk=(id,kind,url,dur)=>({id,kind,status:'complete',prompt:id,title:id,created:now,progress:1,pal:PALS[0],seed:7,dur,aspect:'16:9',resultUrl:url});
   S.jobs.push(mk('ed_va','video','/media/a.webm',4),mk('ed_img','image','/media/img.jpg',0));PJ.fresh('edit');S.cur.edit=null;edxInit();S.ed.sfx=[];
   for(const id of ['ed_va','ed_img'])await edUseJob(S.jobs.find(j=>j.id===id),{stay:true,quiet:true,t:1})}
- document.getElementById('modalRoot').innerHTML='';go('edit');renderAll();await new Promise(r=>setTimeout(r,300));S.ed.sel=S.ed.clips[1].id;S.ed.tab=tab;renderView()}"""
+ document.getElementById('modalRoot').innerHTML='';go('edit');renderAll();await new Promise(r=>setTimeout(r,300));S.ed.sel=S.ed.clips[tab==='clip'?0:1].id;S.ed.tab=tab;renderView()}"""   # (v145: a transition is shown for a clip with a next one)
 # the old buttons of each field (they stay on the page, hidden, so every handler works as before)
 SEL = {"format": '[data-set="draft.aspect"],[data-set="img.aspect"],[data-set="story.aspect"],[data-set="cin.aspect"],[data-set="crew.brief.aspect"],[data-set="rec83.aspect"],[data-set="ss83.aspect"],[data-act="drw-ar"],[data-act="ugc-fmt"]',
   "camera": '[data-set="cin.cam"]', "lens": '[data-set="cin.lens"],[data-set="cin.focal"],[data-set="cin.ap"]',
