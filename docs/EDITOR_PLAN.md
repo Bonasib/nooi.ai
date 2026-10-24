@@ -32,4 +32,6 @@ CapCut is a closed product (only its public feature list and the common editor l
 5. **v147 — AI extras** (done): background removal on the AI engine as an option (frames on contact sheets of nine, price first), auto reframe (the crop follows what moves), stabilise (on the server, free), remove silences, the assistant's @time, @range, @selection, @clip and @marker.
 6. **v148 — the last Concat ideas** (done, asked by the owner after v147): AI agents (Claude, ChatGPT, any MCP client) edit the projects on the account and the open editor shows their changes live; several timelines in one project (empty or a copy, rename, delete); a brush to keep or remove parts of the cut-out.
 
+7. **v149 — what the owner found on a phone** (done): captions that never overlap and cover the whole edit, translation on the device first (browser translator / on-device model) with the server as backup, the edit saved to the account by itself and followed on other devices (asks when both changed), a pinned play row, touch stops playback, sticker groups, sound effects that preview before Add, sizes on one line, Invert/Comic/Lightning/Dust fixed, voices and sounds for the whole edit as separate tracks.
+
 Each stage: tests, related suites, commit, push, report with the update commands; nothing goes live before the owner approves it on the preview.

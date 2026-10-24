@@ -39,10 +39,10 @@ async function probe(cfg = {}) {
 // precision per task: WebGPU runs fp16/fp32 (q4 decoder for Whisper), the CPU path uses 8-bit models
 function dtypeFor(task) {
   if (task === "asr") return device === "webgpu" ? { encoder_model: fp16 ? "fp16" : "fp32", decoder_model_merged: "q4" } : "q8";
-  if (task === "tts") return device === "webgpu" ? "fp32" : "q8";
+  if (task === "tts" || task === "translate") return device === "webgpu" ? "fp32" : "q8";
   return device === "webgpu" ? (fp16 ? "fp16" : "fp32") : "q8";
 }
-const TASK = { asr: "automatic-speech-recognition", tts: "text-to-audio", bg: "background-removal", upscale: "image-to-image", depth: "depth-estimation", depthraw: "depth-estimation" };
+const TASK = { translate: "translation", asr: "automatic-speech-recognition", tts: "text-to-audio", bg: "background-removal", upscale: "image-to-image", depth: "depth-estimation", depthraw: "depth-estimation" };
 
 async function getPipe(task, model, report) {
   const key = task + "|" + model;
@@ -108,6 +108,8 @@ async function run(task, model, input, opts, report) {
     const out = await pipe(input.audio, { return_timestamps: input.words ? "word" : true, chunk_length_s: 30, stride_length_s: 5, task: "transcribe", ...(input.language ? { language: input.language } : {}) });
     return { text: out.text, chunks: (out.chunks || []).map((c) => ({ start: c.timestamp?.[0] ?? 0, end: c.timestamp?.[1] ?? null, text: c.text })) };
   }
+  // captions translated here (v149): a pair model (Opus-MT) or a many-language one (M2M-100) with its language codes
+  if (task === "translate") { const out = await pipe(input.texts, { ...(input.src ? { src_lang: input.src } : {}), ...(input.tgt ? { tgt_lang: input.tgt } : {}), max_new_tokens: 256 }); return { texts: (Array.isArray(out) ? out : [out]).map((o) => String((o && o.translation_text) || "")) }; }
   if (task === "tts") { const out = await pipe(input.text); const a = Array.isArray(out) ? out[0] : out; return { blob: a.toBlob(), seconds: a.data.length / a.sampling_rate }; }
   // image tasks take a Blob; the pipeline reads it through an object URL
   const url = URL.createObjectURL(input.blob);

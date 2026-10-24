@@ -103,8 +103,8 @@ def projects_api():
     doc = {"v": 1, "ed": {"clips": [{"id": "c1", "src": {"k": "job", "job": "x"}, "in": 0, "out": 4, "speed": 2}, {"id": "c2", "src": {"k": "upload"}, "in": 1, "out": 4, "speed": 1}], "texts": [], "format": "reels"}, "media": {}}
     r = api("/v1/projects/abc123x", {"name": "My edit", "doc": doc}, "PUT")
     chk("projects: saved on the server with its length, clips and format", r.get("id") == "abc123x" and r.get("dur") == 5 and r.get("clips") == 2 and r.get("format") == "reels", r)
-    l = api("/v1/projects"); g = api("/v1/projects/abc123x")
-    chk("…listed, and read back as it was", [p["id"] for p in l.get("projects", [])] == ["abc123x"] and g.get("doc") == doc and g.get("name") == "My edit", [l, g.get("name")])
+    l = api("/v1/projects"); g = api("/v1/projects/abc123x")   # (newest first — the edit open in the browser above went to the account by itself too, v149)
+    chk("…listed, and read back as it was", [p["id"] for p in l.get("projects", [])][:1] == ["abc123x"] and g.get("doc") == doc and g.get("name") == "My edit", [l, g.get("name")])
     bad = [api("/v1/projects/a!", {"doc": doc}, "PUT").get("_status"), api("/v1/projects/abc123y", {"doc": {"x": 1}}, "PUT").get("_status"),
            api("/v1/projects/abc123y", {"doc": {"ed": {"clips": [], "pad": "x" * (4 * 1024 * 1024 + 10)}}}, "PUT").get("_status")]
     chk("…a bad id, a document that isn't a project, a 4 MB+ one: refused", bad == [400, 400, 413], bad)

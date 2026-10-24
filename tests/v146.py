@@ -168,7 +168,7 @@ async def phone(b, lang):
     pa = await E("()=>({n:S.ed.texts.length,g:S.ed.groups146.length,st:S.ed.texts.slice(2).map(t=>t.start)})")
     chk(f"{tag}: Paste puts the copied group at the playhead", pa["n"] == 4 and pa["g"] == 2 and abs(min(pa["st"]) - 9) < .05, pa)
     # a long press on a text: Copy and Select more are in its menu
-    await E("()=>{edSetPick(null);S.ed.ms146=[];S.ed.groups146=[];renderView()}"); await scrollto(pg, '[data-textl="t1"]')
+    await E("()=>{edSetPick(null);S.ed.ms146=[];S.ed.groups146=[];renderView();document.querySelectorAll('.toast').forEach(t=>t.classList.remove('show'))}"); await scrollto(pg, '[data-textl="t1"]')   # (the "Pasted" message gone first — it can sit over the timeline)
     r = await E("()=>{const b=document.querySelector('#tlin [data-textl=\"t1\"]').getBoundingClientRect();return[b.left+b.width/2,b.top+b.height/2]}")
     cdp = await ctx.new_cdp_session(pg)
     await cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": r[0], "y": r[1]}]}); await pg.wait_for_timeout(800)

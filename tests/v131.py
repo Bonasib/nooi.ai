@@ -7,7 +7,7 @@
 #  · a long press (or a right click) opens the menu of a clip, a text, a banner, the picture, a video you made; its actions work;
 #    a finger that moves is a drag, not a menu
 #  · 22 transitions (gl-transitions) compile and draw the next clip; 20 text motions (Animate.css) move the text; 15 looks
-#    (after CSSgram) colour the picture; 10 banners and 36 stickers (Material Symbols) are added, styled and drawn — in Arabic too
+#    (after CSSgram) colour the picture; 10 banners and 36+ stickers in groups (Material Symbols) are added, styled and drawn — in Arabic too
 #  · Grok Imagine 1.5 (it starts from a picture) is offered only when a picture is attached
 # Run: python3 tests/v131.py
 import asyncio, json, os, subprocess, sys, tempfile, time, urllib.request
@@ -221,11 +221,12 @@ async def phone(b):
     res["looks"] = l; chk("a look colours the picture", sum(abs(x - y) for x, y in zip(l["a"], l["b"])) > 40 and l["b"] != l["f"], l)
     # banners and stickers with Material Symbols
     await E("()=>{S.ed.tab='info';S.ed.pick=null;renderView()}"); await pg.wait_for_function("IC131.d", timeout=8000); await E("()=>renderView()"); await pg.wait_for_timeout(200)
-    g = await E("()=>({bn:document.querySelectorAll('#main .bn131t').length,st:document.querySelectorAll('#main .st131t').length,path:(document.querySelector('#main .bn131t svg path')||{getAttribute:()=>''}).getAttribute('d').length,label:[...document.querySelectorAll('#main .lbl')].map(x=>x.textContent).filter(x=>/Banners|Stickers/.test(x))})")
-    res["bnPanel"] = g; chk("10 banners and 36 stickers in the Infographics tab, with their icons", g["bn"] == 10 and g["st"] == 36 and g["path"] > 20 and len(g["label"]) == 2, g)
+    g = await E("()=>({bn:document.querySelectorAll('#main .bn131t').length,st:document.querySelectorAll('#main .st131t').length,path:(document.querySelector('#main .bn131t svg path')||{getAttribute:()=>''}).getAttribute('d').length,label:[...document.querySelectorAll('#main .lbl')].map(x=>x.textContent).filter(x=>/Banners|Stickers/.test(x)),grp:document.querySelectorAll('#main [data-act=stg149]').length,all:ST131.length})")
+    # (v149: the stickers come in groups — one group's tiles at a time, 36 and more in all)
+    res["bnPanel"] = g; chk("10 banners and the stickers (in groups) in the Infographics tab, with their icons", g["bn"] == 10 and g["grp"] == 7 and g["st"] >= 6 and g["all"] >= 36 and g["path"] > 20 and len(g["label"]) == 2, g)
     await pg.locator('#main .bn131t[data-v="sub"]').tap(); await pg.wait_for_timeout(300)
     it = await E("()=>{const i=(S.ed.infos||[]).find(x=>x.type==='bn131');return i&&{id:i.id,t1:i.t1,t2:i.t2,st:i.st,pick:S.ed.pick,t2f:(document.querySelector('#main [data-ib=\"t2\"]')||{}).value,chips:document.querySelectorAll('#main [data-act=\"bn131-st\"]').length,icons:document.querySelectorAll('#main [data-act=\"ic131-set\"]').length}}")
-    res["banner"] = it; chk("add a banner: picked, its words, style and icon to change", it and it["t1"] == "Subscribe" and it["pick"]["id"] == it["id"] and it["t2f"] == "New videos every week" and it["chips"] == 8 and it["icons"] == 36, it)
+    res["banner"] = it; chk("add a banner: picked, its words, style and icon to change", it and it["t1"] == "Subscribe" and it["pick"]["id"] == it["id"] and it["t2f"] == "New videos every week" and it["chips"] == 8 and it["icons"] >= 36, it)
     if it:
         await pg.locator('#main [data-act="bn131-st"][data-v="news"]').tap(); await pg.wait_for_timeout(200)
         await pg.locator('#main [data-act="ic131-set"][data-v="bolt"]').scroll_into_view_if_needed(); await pg.locator('#main [data-act="ic131-set"][data-v="bolt"]').tap(); await pg.wait_for_timeout(200)
