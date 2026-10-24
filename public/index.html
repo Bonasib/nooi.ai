@@ -3835,7 +3835,7 @@ const IDB={db:null,async open(){if(this.db)return this.db;return this.db=await n
 const KEEP_SLOTS=["bgFg","bgBg","gTgt","gRef","mc","edMusic","subV","s3dImg","lsV","lsA","eRef","vStart","vEnd","iRef","fin"];
 const _loadSlot=loadSlot;
 loadSlot=function(slot,file){_loadSlot(slot,file);if(KEEP_SLOTS.includes(slot)||slot.startsWith("c_")){S.mediaKeys=S.mediaKeys||{};S.mediaKeys[slot]={name:file.name,type:file.type||""};IDB.put(slot,file);persist()}};
-async function restoreMedia(){const keys=Object.keys(S.mediaKeys||{});let n=0;for(const k of keys){if(M[k])continue;if(k.startsWith("c_")&&!S.ed.clips.some(c=>"c_"+c.id===k)){IDB.del(k);delete S.mediaKeys[k];continue}const b=await IDB.get(k);if(!b){delete S.mediaKeys[k];continue}const info=S.mediaKeys[k];const f=b instanceof File?b:new File([b],info.name||k,{type:info.type||b.type||""});_loadSlot(k,f);if(M[k]&&M[k].type==="video"&&k.startsWith("c_")){M[k].el.loop=false;M[k].el.pause()}if(k==="subV"&&M.subV)M.subV.el.loop=false;n++}
+async function restoreMedia(){const keys=Object.keys(S.mediaKeys||{});let n=0;for(const k of keys){if(M[k])continue;if(k.startsWith("c_")&&!allClips148().some(c=>"c_"+c.id===k)){IDB.del(k);delete S.mediaKeys[k];continue}const b=await IDB.get(k);if(!b){delete S.mediaKeys[k];continue}const info=S.mediaKeys[k];const f=b instanceof File?b:new File([b],info.name||k,{type:info.type||b.type||""});_loadSlot(k,f);if(M[k]&&M[k].type==="video"&&k.startsWith("c_")){M[k].el.loop=false;M[k].el.pause()}if(k==="subV"&&M.subV)M.subV.el.loop=false;n++}
   if(n){persist();if(S.user)setTimeout(()=>renderView(),300)}}
 document.addEventListener("click",e=>{const a=e.target.closest('[data-act="slot-clear"],[data-act="subs-clear"],[data-act="s3d-clear"],[data-act="ed-del"]');if(!a)return;const k=a.dataset.act==="slot-clear"?a.dataset.slot:a.dataset.act==="subs-clear"?"subV":a.dataset.act==="s3d-clear"?"s3dImg":("c_"+S.ed.sel);if(S.mediaKeys&&S.mediaKeys[k]){delete S.mediaKeys[k];IDB.del(k);persist()}},true);
 /* 2) Editor: undo / redo, keyboard shortcuts, drag-to-scrub, save status */
@@ -8531,7 +8531,7 @@ function edPickDraw(ctx,W,H){const p=edPick();if(!p||!["text","logo","info"].inc
   ctx.fillStyle="#ff5a5f";ctx.beginPath();ctx.arc(b.x-6,b.y-6,r,0,7);ctx.fill();ctx.fillStyle="#fff";ctx.fillText("×",b.x-6,b.y-6);ctx.restore();b.handle={x:b.x+b.w+6,y:b.y+b.h+6,r:r*1.6};b.del={x:b.x-6,y:b.y-6,r:r*1.6}}
 /* --- 3) tap / drag / pinch on the preview: select, move, resize, delete --- */
 const PV={drag:null,pts:new Map()};
-const pvTools=()=>!["erase","layers","motion","track"].includes(S.ed.tab);
+const pvTools=()=>!["erase","layers","motion","track"].includes(S.ed.tab)&&!(S.ed.tab==="bg144"&&S.ed.bgBrush148);   // (v148: the brush paints on the preview)
 const cvPt=(cv,e)=>{const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)*cv.width/r.width,y:(e.clientY-r.top)*cv.height/r.height}};
 function edGetXY(p,b){const it=edItem(p),cv=$("#wk");if(!it||!cv)return null;if(p.k==="logo"){if(it.x==null){it.x=b.cx/cv.width;it.y=b.cy/cv.height}return it}if(it.x==null){it.x=b.cx/cv.width;it.y=b.cy/cv.height}return it}
 window.addEventListener("pointerdown",e=>{if(S.view!=="edit"||!e.target||e.target.id!=="wk"||!pvTools())return;const cv=e.target,P=cvPt(cv,e);PV.pts.set(e.pointerId,P);e.stopImmediatePropagation();e.preventDefault();ED.playing=false;
@@ -16233,7 +16233,7 @@ async function save139(auto){if(API.mode!=="server"||!S.user||PJ139.busy)return 
   if(!S.ed.clips.length&&!(S.ed.texts||[]).length){if(!auto)toast(L("Add a clip first.","أضف مقطعاً أولاً."),{type:"warn"});return null}
   PJ139.busy=true;try{if(!S.ed.srv139)S.ed.srv139=(uid()+uid()).toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,14);
     const{doc,local}=await doc139(!auto),key=JSON.stringify(doc);if(auto&&key===PJ139.key)return null;
-    const name=S.ed.title||PJ.name("edit"),r=await API.req("/v1/projects/"+S.ed.srv139,{method:"PUT",json:{name,doc}});
+    const name=S.ed.title||PJ.name("edit"),r=await API.req("/v1/projects/"+S.ed.srv139,{method:"PUT",json:{name,doc,opN:S.ed.opN148==null?1e12:S.ed.opN148}});   // (v148: the agents' changes this editor has seen)
     PJ139.key=key;PJ139.at=r.updated||Date.now();PJ139.local=local;PJ139.list=null;
     if(!auto)toast(local?L("Saved to your account — "+local+" file(s) couldn't go up; they stay on this device.","حُفظ في حسابك — تعذّر رفع "+local+" ملف؛ بقيت على هذا الجهاز."):L("Saved to your account — open it on any device from Projects.","حُفظ في حسابك — افتحه من أي جهاز عبر المشاريع."),{type:local?"warn":"ok"});
     return r}
@@ -16246,7 +16246,7 @@ function slotUrl139(k,x){const url=x.url;let m;
   m._srv139=url;M[k]=m;return m}
 async function open139(id){if(API.mode!=="server")return;
   try{const r=await API.req("/v1/projects/"+id),d=r.doc||{};PJ.saveCurrent("edit");   // (the work open now stays in this device's projects)
-    Object.assign(S.ed,d.ed||{},{sel:null,selText:null,tab:"clip",srv139:id});if(d.look)S.tools.edit=d.look;
+    Object.assign(S.ed,{seq148:null},d.ed||{},{sel:null,selText:null,tab:"clip",srv139:id});if(d.look)S.tools.edit=d.look;
     for(const[k,x]of Object.entries(d.media||{}))if(x&&x.url&&!x.local)slotUrl139(k,x);
     S.ed.clips.forEach(c=>{if(c.src&&c.src.k==="job"&&!S.jobs.some(j=>j.id===c.src.job)&&c.src.url139){delete M["c_"+c.id];slotUrl139("c_"+c.id,{url:c.src.url139,type:/\.(png|jpe?g|webp|gif|avif)(\?|$)/i.test(c.src.url139)?"image":"video",name:""})}});
     S.cur.edit=null;HIST.stack=[];HIST.i=-1;ED.t=0;try{edxInit()}catch(e){}PJ139.at=r.updated||0;try{PJ139.key=JSON.stringify((await doc139(false)).doc)}catch(e){}PJ139.local=Object.values(d.media||{}).filter(x=>x&&x.local).length;
@@ -16840,7 +16840,7 @@ VIEWS.edit=function(){if(HIST.i<0)histPush();try{edxInit()}catch(e){}const E=S.e
   const top='<div class="e-top"><h1 class="e-h">'+L("Video editor","محرر الفيديو")+'</h1><input class="e-name" data-bind="ed.title" value="'+esc(E.title||"")+'" placeholder="'+esc(L("Untitled project","مشروع بلا اسم"))+'" aria-label="'+esc(L("Project name","اسم المشروع"))+'" dir="auto" maxlength="80">'+
     '<div class="e-act">'+out(q(".fmtbtn"))+out(q(".pj139b"))+out(q(".edout"))+"</div></div>";
   const player='<section class="e-player">'+out(q(".edstage"))+out(tr)+'<div class="e-cmd">'+out(q(".edcmd"))+out(q("#edplan91"))+"</div></section>";
-  const tl='<section class="e-tl">'+(desk?bar146:"")+tlh146+"</section>";
+  const tl='<section class="e-tl">'+(desk?bar146.replace('<span class="savedot"',seqRow148()+'<span class="savedot"'):seqMany148()?seqRow148():"")+tlh146+"</section>";   // (v148: the project's timelines — at the end of the tool row on a computer, a row of their own on a phone)
   const kname=kind?L(...KN143[kind]):L("Project","المشروع"),desel=kind?'<button type="button" class="e-x" data-act="desel143" aria-label="'+esc(L("Deselect","إلغاء التحديد"))+'" title="'+esc(L("Deselect","إلغاء التحديد"))+'">×</button>':"";
   let html;
   if(desk){
@@ -17090,6 +17090,7 @@ edxSmooth=(o=>function(c,m,lt){const r=o.apply(this,arguments),B=c&&c.bg144;if(!
   const fr=BG144[c.id].frames;let f=fr[0];for(const g of fr)if(Math.abs(g.t-lt)<Math.abs(f.t-lt))f=g;
   const k=Math.min(1,1280/Math.max(sw,sh)),w=Math.round(sw*k),h=Math.round(sh*k),sub=edxCv("bg144s",w,h),y=sub.getContext("2d");
   y.globalCompositeOperation="source-over";y.filter="none";y.clearRect(0,0,w,h);y.drawImage(el,0,0,w,h);y.globalCompositeOperation="destination-in";y.drawImage(f.cut,0,0,w,h);y.globalCompositeOperation="source-over";
+  if(Array.isArray(B.brush148)&&B.brush148.length)brush148(y,el,w,h,B);   // (v148: the strokes of the brush)
   const cv=edxCv("bg144",w,h),x=cv.getContext("2d");x.globalCompositeOperation="source-over";x.globalAlpha=1;x.filter="none";
   const pic=M["bgp_"+c.id],gr=BGG144.find(g=>g[0]===B.grad);
   if(B.mode==="blur"){x.filter="blur("+Math.max(4,Math.round(w*.025))+"px) brightness(.85)";x.drawImage(el,-w*.05,-h*.05,w*1.1,h*1.1);x.filter="none"}
@@ -17737,7 +17738,7 @@ function mbar146(snap){const E=S.ed,n=sel146().length,mk=E.selMk146&&marks146().
 // (copy and select more go in before Delete, which stays last)
 const ctxIns146=(h,k)=>{const d='<button type="button" data-act="ed-del"',x=ctx146(k);return h.includes(d)?h.replace(d,x+d):h+x};
 const ctx146=k=>k==="music"?pb146("bt146","beat146","Beat marks","نقاط الإيقاع",'aria-pressed="'+beatOn146()+'"'):K146[k]?pb146("cp146","copy146","Copy","نسخ")+pb146("msm146","ms146","Select more","تحديد المزيد",'aria-pressed="'+!!S.ed.msMode146+'"'):"";
-const nob146=()=>pb146("mk146-add","mk146","Marker","علامة")+(cbHas146()?pb146("pa146","paste146","Paste","لصق"):"");
+const nob146=()=>pb146("mk146-add","mk146","Marker","علامة")+(cbHas146()?pb146("pa146","paste146","Paste","لصق"):"")+pb146("seq148-menu","seq148","Timelines","الخطوط الزمنية");   // (v148)
 
 // ---- 8. the buttons and the keys
 document.addEventListener("click",e=>{if(S.view!=="edit"||!e.target.closest)return;const a=e.target.closest('[data-act="cp146"],[data-act="pa146"],[data-act="gp146"],[data-act="ug146"],[data-act="ms146-del"],[data-act="ms146-clr"],[data-act="msm146"],[data-act="mk146-add"],[data-act="mk146-del"],[data-act="mk146-go"],[data-act="mk146-x"],[data-act="bt146"]');
@@ -17996,6 +17997,221 @@ chat143=(o=>function(chips){return o.apply(this,arguments).replace('<p class="sm
 .at147>button{display:inline-flex;align-items:baseline;gap:6px;max-width:100%;padding:5px 10px;border-radius:999px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);font-size:12px;cursor:pointer;min-height:32px}
 .at147>button b{font:600 12px var(--mono,monospace);color:var(--lime-ink,var(--lime))}.at147>button span{color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
 `;document.head.appendChild(st)})();
+/* ================= v148: AI AGENTS EDIT THE PROJECT · SEVERAL TIMELINES · A BRUSH FOR THE CUT-OUT ================= */
+// Three ideas from Concat's feature list (its list only — none of its code, see docs/THIRD_PARTY.md), built in nooi's own code:
+// 1. an AI agent (Claude, ChatGPT or any MCP client connected in Integrations) edits a project kept on the account, and its changes
+//    show up live in the editor that has the project open (the operations of lib/edit148.js, applied here by the same rules);
+// 2. several timelines in one project (other cuts or sizes of the same edit), each with its own clips, texts, sounds and size;
+// 3. the cut-out of Remove background mended with a brush: paint on the preview to keep what was cut away or remove what was left.
+Object.assign(ICONS,{seq148:'<rect x="3" y="5" width="12" height="4" rx="1"/><rect x="7" y="11" width="14" height="4" rx="1"/><path d="M3 19h8"/>',
+  dn148:'<path d="M7 10l5 5 5-5"/>',
+  brush148:'<path d="M14.5 4.5l5 5-8.5 8.5-5-5z"/><path d="M6 13l-2.5 2.5a2.1 2.1 0 0 0 3 3L9 16"/>',
+  agent148:'<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4"/><circle cx="12" cy="3.5" r="1"/><circle cx="9.5" cy="13" r="1.2"/><circle cx="14.5" cy="13" r="1.2"/>'});
+UI139.push("opN148","bgBrush148","bgBrushR148");
+
+// ---- 1. what an AI agent changes in this project shows up here
+const AG148={busy:false,down:0,next:0};
+// one operation, by the same rules as applyOp148 on the server (applying it twice changes nothing); it goes to the timeline it
+// was made for (the one open when the project was last saved)
+function op148(op){const E=S.ed,a=op.args||{},q=E.seq148,s=op.tl&&q&&q.cur!==op.tl&&Array.isArray(q.list)?q.list.find(x=>x.id===op.tl):null,ed=s&&s.data?s.data:E;
+  if(!Array.isArray(ed.clips))ed.clips=[];if(!Array.isArray(ed.texts))ed.texts=[];
+  switch(op.op){
+    case"clip_add":{if(ed.clips.some(c=>c.id===a.id))return false;const c={id:a.id,src:{k:"upload",name:String(a.name||"clip").slice(0,80)},in:a.in,out:a.out,speed:1,trans:"cut",vol:100};
+      ed.clips.splice(a.at==null?ed.clips.length:clamp(+a.at||0,0,ed.clips.length),0,c);if(a.url&&!M["c_"+a.id])slotUrl139("c_"+a.id,{url:a.url,type:a.type,name:c.src.name});return true}
+    case"clip_trim":{const c=ed.clips.find(x=>x.id===a.id);if(!c)return false;for(const k of["in","out","speed","vol"])if(a[k]!=null)c[k]=a[k];return true}
+    case"clip_remove":{const n=ed.clips.length;ed.clips=ed.clips.filter(x=>x.id!==a.id);if(ed.sel===a.id)ed.sel=null;return ed.clips.length!==n}
+    case"clip_move":{const i=ed.clips.findIndex(x=>x.id===a.id);if(i<0)return false;const[c]=ed.clips.splice(i,1);ed.clips.splice(clamp(+a.to||0,0,ed.clips.length),0,c);return true}
+    case"text_add":{if(ed.texts.some(t=>t.id===a.id))return false;ed.texts.push({id:a.id,text:a.text,start:a.start,end:a.end,pos:a.pos,style:a.style,size:7,anim:"pop"});return true}
+    case"text_edit":{if(a.remove){const n=ed.texts.length;ed.texts=ed.texts.filter(t=>t.id!==a.id);if(ed.selText===a.id)ed.selText=null;return ed.texts.length!==n}
+      const t=ed.texts.find(x=>x.id===a.id);if(!t)return false;for(const k of["text","start","end","pos"])if(a[k]!=null)t[k]=a[k];return true}
+    case"marker_add":{if(!Array.isArray(ed.marks146))ed.marks146=[];if(ed.marks146.some(m=>m.id===a.id))return false;ed.marks146.push({id:a.id,t:a.t,n:a.n||""});ed.marks146.sort((x,y)=>x.t-y.t);return true}
+    case"format_set":{if(!FORMATS.some(f=>f[0]===a.format))return false;ed.format=a.format;return true}}
+  return false}
+function opSay148(op){const a=op.args||{},q=s=>L("“","«")+String(s||"").slice(0,40)+L("”","»");
+  switch(op.op){case"clip_add":return L("added ","أضاف ")+q(a.name);case"clip_trim":return L("changed a clip","غيّر مقطعاً");case"clip_remove":return L("removed a clip","أزال مقطعاً");case"clip_move":return L("moved a clip","نقل مقطعاً");
+    case"text_add":return L("added the text ","أضاف النص ")+q(a.text);case"text_edit":return a.remove?L("removed a text","أزال نصاً"):L("changed a text","غيّر نصاً");case"marker_add":return L("added a marker","أضاف علامة");
+    case"format_set":{const f=FORMATS.find(x=>x[0]===a.format);return L("changed the size to ","غيّر المقاس إلى ")+(f?f[1]:a.format)}}return""}
+// every few seconds while a project on the account is open here: the operations made since the last ones seen
+async function poll148(){const E=S.ed;if(AG148.busy||Date.now()<AG148.next||API.mode!=="server"||!S.user||!E||!E.srv139||S.view!=="edit"||document.hidden||PJ139.busy||R139.on||ED.rec)return;
+  if(AG148.down||BR148.d||$("#modalRoot").innerHTML||CM131.el||document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName)&&document.activeElement.type!=="range")return;   // (not in the middle of a drag, a stroke, a menu or typing)
+  AG148.busy=true;const id=E.srv139;
+  try{const known=E.opN148!=null,r=await API.req("/v1/projects/"+id+"/ops?after="+(known?E.opN148:1e12));if(S.ed!==E||E.srv139!==id)return;   // (another project was opened meanwhile)
+    if(!known){E.opN148=+r.seq||0;return}
+    const ops=(r.ops||[]).filter(x=>x.n>E.opN148);if(!ops.length)return;const said=[];
+    for(const op of ops){try{if(op148(op))said.push(opSay148(op))}catch(e){}E.opN148=Math.max(E.opN148,+op.n||0)}
+    if(!said.length){persist();return}
+    tidy146();try{edxInit()}catch(e){}if(E.sel&&!E.clips.some(c=>c.id===E.sel))E.sel=null;const p=edPick();if(p&&!edItem(p))edSetPick(null);
+    const msg=L("Your AI agent ","وكيلك الذكي ")+[...new Set(said)].join(L(", ","، "));E.chat143=(E.chat143||[]).slice(-40);E.chat143.push({t:msg});
+    persist();renderView();toast(msg,{type:"info",ms:5000})}
+  catch(e){AG148.next=Date.now()+30000}finally{AG148.busy=false}}
+setInterval(()=>{poll148().catch(()=>{})},4000);
+window.addEventListener("pointerdown",()=>{AG148.down++},true);
+const up148=()=>{AG148.down=0};window.addEventListener("pointerup",up148,true);window.addEventListener("pointercancel",up148,true);
+// opening a project from the account: the operations made so far are in what comes back (asked first, so none falls between)
+open139=(o=>async function(id){let seq=null;try{if(API.mode==="server")seq=+(await API.req("/v1/projects/"+id+"/ops?after=1000000000000")).seq||0}catch(e){}
+  const r=await o.apply(this,arguments);if(S.ed&&S.ed.srv139===id&&seq!=null){S.ed.opN148=seq;persist()}return r})(open139);
+// what the assistant panel says about agents
+chat143=(o=>function(){const h=o.apply(this,arguments);if(API.mode!=="server"||typeof h!=="string")return h;
+  return h+'<p class="small mute e-hint ag148">'+ic("agent148")+"<span>"+L("Claude, ChatGPT and other AI agents can edit this project too — connect one in ","يستطيع Claude وChatGPT ووكلاء الذكاء الآخرون تعديل هذا المشروع أيضاً — اربط أحدهم من ")+
+    '<button type="button" data-go="integrations">'+L("Integrations","التكاملات")+"</button>"+L(". Their changes show up here as they make them.",". تظهر تغييراتهم هنا أثناء عملهم.")+"</span></p>"})(chat143);
+// the editor's tools on the Integrations page
+const TOOLS148=["nooi_editor_projects","nooi_timeline_read","nooi_preview_frame","nooi_clip_add","nooi_clip_trim","nooi_clip_move","nooi_clip_remove","nooi_text_add","nooi_text_edit","nooi_marker_add","nooi_format_set"];
+VIEWS.integrations=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="string"||h.includes("nooi_timeline_read"))return h;const i=h.indexOf('<code dir="ltr">nooi_credits</code>'),j=i<0?-1:h.indexOf("</p></div>",i);if(j<0)return h;
+  const add='<h3 style="margin-top:16px">'+L("In the video editor","في محرر الفيديو")+'</h3><div class="toolnames">'+TOOLS148.map(n=>'<code dir="ltr">'+n+"</code>").join("")+'</div><p class="small dim" style="margin:8px 0 0">'+
+    L("Your assistant reads a project's timeline, looks at a frame, adds your videos and pictures, trims and moves clips, adds texts and markers and changes the size — an editor that has the project open shows each change at once. Try: “Open my Holiday project, put the beach clip first, cut it to 4 seconds and add the title Summer 2026 at the top.”",
+      "يقرأ مساعدك الخط الزمني للمشروع، وينظر إلى إطار، ويضيف فيديوهاتك وصورك، ويقصّ المقاطع وينقلها، ويضيف النصوص والعلامات ويغيّر المقاس — ويُظهر المحرر المفتوح على المشروع كل تغيير فوراً. جرّب: «افتح مشروع العطلة، وضع مقطع الشاطئ أولاً، وقصّه إلى 4 ثوانٍ، وأضف العنوان صيف 2026 في الأعلى».")+"</p>";
+  return h.slice(0,j+4)+add+h.slice(j+4)})(VIEWS.integrations);
+
+// ---- 2. several timelines in one project: each its own clips, texts, sounds, effects, overlays, captions, markers and size (the
+// music, the voice-over and the colour look belong to the project). The one open lives in S.ed as before; the others wait in
+// E.seq148.list[].data and change places with it when you switch. A project with one timeline has no seq148 at all.
+const SEQF148=["clips","texts","sfx","vfx","infos","layers","regions","caps","format","fit","marks146","groups146"];
+const SQ148={ren:null,lp:null,fired:0};
+const seqName148=n=>L("Timeline ","الخط الزمني ")+n;
+function seqQ148(make){const E=S.ed;let q=E&&E.seq148;if(q&&Array.isArray(q.list)&&q.list.length&&q.list.some(x=>x.id===q.cur))return q;if(!make||!E)return null;
+  const id=uid();q=E.seq148={cur:id,list:[{id,name:seqName148(1),data:null}]};return q}
+// every clip of the project, in all its timelines (their files stay while any timeline uses them)
+function allClips148(){const E=S.ed,a=E&&Array.isArray(E.clips)?E.clips.slice():[],q=E&&E.seq148;if(q&&Array.isArray(q.list))for(const s of q.list)if(s.id!==q.cur&&s.data&&Array.isArray(s.data.clips))a.push(...s.data.clips);return a}
+const seqNow148=()=>{const E=S.ed,o={};for(const k of SEQF148)if(E[k]!==undefined)o[k]=JSON.parse(JSON.stringify(E[k]));return o};
+function seqBlank148(){const E=S.ed;return{clips:[],texts:[],sfx:[],vfx:[],infos:[],layers:[],regions:[],caps:Object.assign({},E.caps||{},{on:false,words:[]}),format:E.format,fit:E.fit,marks146:[],groups146:[]}}
+function seqLoad148(d){const E=S.ed,b=seqBlank148();for(const k of SEQF148)E[k]=d&&d[k]!==undefined?d[k]:b[k]}
+function nextNum148(q){let n=q.list.length;for(const s of q.list){const m=/(\d+)\s*$/.exec(s.name||"");if(m)n=Math.max(n,+m[1])}return n+1}
+// the files a timeline's items use, copied for the copy of the timeline (each item has its own id there)
+const PRE148=["c_","ly_","sx_","bgp_","cvp_","st0_"];
+function dupMed148(o,n){for(const p of PRE148){const m=M[p+o];if(!m)continue;
+    if(m.type==="video"&&m.url&&m.el&&p!=="st0_"){const v=cloneVideo(m);v.el.loop=!!m.el.loop;v.el.crossOrigin=m.el.crossOrigin||null;if(m._srv139)v._srv139=m._srv139;M[p+n]=v}else M[p+n]=m;
+    if(m.file&&S.mediaKeys&&S.mediaKeys[p+o]){S.mediaKeys[p+n]=Object.assign({},S.mediaKeys[p+o]);try{IDB.put(p+n,m.file)}catch(e){}}if(EDX.buf&&EDX.buf[p+o])EDX.buf[p+n]=EDX.buf[p+o]}
+  if(BG144[o])BG144[n]=BG144[o]}
+function reid148(d){const map={},nid=(k,x)=>{const n=uid();map[k+":"+x.id]=n;dupMed148(x.id,n);x.id=n};
+  for(const[k,f]of Object.entries(K146))for(const x of d[f]||[])nid(k,x);for(const m of d.marks146||[])m.id=uid();
+  d.groups146=(d.groups146||[]).map(g=>({id:uid(),keys:g.keys.map(k=>{const n=map[k];return n?kk146(k)[0]+":"+n:null}).filter(Boolean)})).filter(g=>g.keys.length>1)}
+// a clip made on this site that this device doesn't list: played from the address kept with it
+function jobUrl148(clips){for(const c of clips||[])if(c.src&&c.src.k==="job"&&!S.jobs.some(j=>j.id===c.src.job)&&c.src.url139&&!(M["c_"+c.id]&&M["c_"+c.id]._srv139))
+  slotUrl139("c_"+c.id,{url:c.src.url139,type:/\.(png|jpe?g|webp|gif|avif)(\?|$)/i.test(c.src.url139)?"image":"video",name:""})}
+function seqPause148(){ED.playing=false;for(const c of S.ed.clips){const m=M["c_"+c.id];if(m&&m.el&&m.el.pause)try{m.el.pause()}catch(e){}}}
+// after a switch: nothing selected, the playhead at the start, a fresh undo (the steps of one timeline don't undo the other)
+function seqFresh148(){const E=S.ed;MS146.mod=null;edSetPick(null);Object.assign(E,{sel:null,selText:null,selSfx:null,selLayer:null,selReg:null,selMk146:null,ms146:[],msMode146:false,aux143:null});
+  if(!home143(E.tab))E.tab=((E.ls143||{})[E.lt143])||"media";jobUrl148(E.clips);ED.t=0;HIST.stack=[];HIST.i=-1;try{edxInit()}catch(e){}persist();renderView()}
+function seqGo148(id){const q=seqQ148(false);if(!q||id===q.cur)return false;const to=q.list.find(x=>x.id===id);if(!to||!to.data)return false;
+  seqPause148();const from=q.list.find(x=>x.id===q.cur);from.data=seqNow148();seqLoad148(to.data);to.data=null;q.cur=id;SQ148.ren=null;seqFresh148();
+  toast(L("Now editing ","تعدّل الآن ")+L("“","«")+to.name+L("”","»"),{type:"info"});return true}
+// a new timeline: empty, or a copy of one (the copy is edited freely; the other stays as it was)
+function seqNew148(from){const q=seqQ148(true);if(q.list.length>=12){toast(L("A project holds up to 12 timelines.","يتسع المشروع لـ 12 خطاً زمنياً."),{type:"warn"});return false}
+  const cur=q.list.find(x=>x.id===q.cur),src=from?q.list.find(x=>x.id===from):null;let d;
+  if(src){d=src.id===q.cur?seqNow148():JSON.parse(JSON.stringify(src.data||{}));reid148(d)}else d=seqBlank148();
+  seqPause148();cur.data=seqNow148();const id=uid(),name=src?(src.name+" · "+L("copy","نسخة")).slice(0,40):seqName148(nextNum148(q));
+  q.list.splice(q.list.indexOf(src||cur)+1,0,{id,name,data:null});seqLoad148(d);q.cur=id;SQ148.ren=null;seqFresh148();
+  toast(src?L("Copied into a new timeline — change it freely; the other one stays as it was.","نُسخ إلى خط زمني جديد — غيّره بحرية؛ ويبقى الآخر كما كان."):L("A new empty timeline — add clips to it.","خط زمني جديد فارغ — أضف إليه مقاطع."),{type:"ok"});return true}
+function seqDel148(id){const q=seqQ148(false);if(!q||q.list.length<2)return false;const i=q.list.findIndex(x=>x.id===id);if(i<0)return false;
+  if(id===q.cur){const nb=q.list[i+1]||q.list[i-1];seqGo148(nb.id)}const s=q.list.splice(q.list.findIndex(x=>x.id===id),1)[0];
+  // (its own files go too — every item has an id of its own, so no other timeline uses them)
+  for(const[,f]of Object.entries(K146))for(const x of(s.data&&s.data[f])||[])for(const p of PRE148){const k=p+x.id;if(M[k]&&M[k].el&&M[k].el.pause)try{M[k].el.pause()}catch(e){}delete M[k];if(S.mediaKeys&&S.mediaKeys[k]){delete S.mediaKeys[k];try{IDB.del(k)}catch(e){}}}
+  persist();renderView();toast(L("Timeline deleted","حُذف الخط الزمني"),{type:"ok"});return true}
+// one menu for the project's timelines: the one open (ticked), the others to open, a new one (empty or a copy), rename, delete
+function seqMenu148(x,y){const q=seqQ148(false),list=q?q.list:[{id:"",name:seqName148(1)}],cur=q?q.cur:"",c=list.find(t=>t.id===cur)||list[0],qt=n=>L("“","«")+n+L("”","»"),items=[];
+  for(const s of list)items.push(s.id===c.id?{icon:"check143",label:s.name+" · "+L("open now","مفتوح الآن"),fn:()=>{}}:{icon:"seq148",label:L("Open ","افتح ")+qt(s.name),fn:()=>seqGo148(s.id)});
+  items.push({icon:"plus",label:L("New empty timeline","خط زمني جديد فارغ"),fn:()=>seqNew148(null)});
+  items.push({icon:"copy146",label:L("Copy of ","نسخة من ")+qt(c.name),fn:()=>seqNew148(seqQ148(true).cur)});
+  items.push({icon:"edit",label:L("Rename ","أعد تسمية ")+qt(c.name),fn:()=>{SQ148.ren=seqQ148(true).cur;renderView()}});
+  if(list.length>1)items.push({icon:"trash",label:L("Delete ","احذف ")+qt(c.name),danger:1,fn:()=>cmOpen131([{icon:"trash",label:L("Delete ","احذف ")+qt(c.name),danger:1,fn:()=>seqDel148(c.id)},{icon:"back143",label:L("Keep it","أبقِه"),fn:()=>{}}],x,y,L("Delete this timeline? Its clips, texts and sounds go with it.","حذف هذا الخط الزمني؟ تُحذف مقاطعه ونصوصه وأصواته معه."))});
+  cmOpen131(items,x,y,L("Timelines","الخطوط الزمنية"))}
+// the button: the open timeline's name (and how many the project has) — at the end of the tool row on a computer; on a phone a
+// row of its own once the project has more than one, and Timelines in the tool bar at the foot
+function seqRow148(){const q=seqQ148(false),n=q?q.list.length:1,c=q?q.list.find(x=>x.id===q.cur):{id:"",name:seqName148(1)};
+  const b=SQ148.ren?'<input class="seq148n" data-seq148n="'+esc(SQ148.ren)+'" value="'+esc(c.name)+'" maxlength="40" dir="auto" aria-label="'+esc(L("Timeline name","اسم الخط الزمني"))+'">':
+    '<button type="button" class="seq148b" data-act="seq148-menu" aria-haspopup="menu" aria-label="'+esc(L("Timelines","الخطوط الزمنية")+": "+c.name)+'" title="'+esc(L("Timelines — open another, make a new one, rename","الخطوط الزمنية — افتح آخر، أنشئ جديداً، أعد التسمية"))+'">'+ic("seq148")+'<span dir="auto">'+esc(c.name)+"</span>"+(n>1?"<b>"+n+"</b>":"")+ic("dn148")+"</button>";
+  return'<div class="seq148">'+b+"</div>"}
+const seqMany148=()=>{const q=seqQ148(false);return!!(q&&q.list.length>1)||!!SQ148.ren};
+const at148=e=>{const r=e.getBoundingClientRect();return[r.left+r.width/2,r.bottom]};
+document.addEventListener("click",e=>{if(S.view!=="edit"||!e.target.closest)return;const a=e.target.closest('[data-act="seq148-menu"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const[x,y]=at148(a);seqMenu148(x,y)},true);
+// renaming in place: Enter or leaving the box keeps the name, Escape keeps the old one
+const ren148=(el,keep)=>{const q=seqQ148(true),s=q.list.find(x=>x.id===el.dataset.seq148n);SQ148.ren=null;if(s&&keep){const v=String(el.value||"").trim().slice(0,40);if(v)s.name=v}persist();if(S.view==="edit")renderView()};
+document.addEventListener("keydown",e=>{const el=e.target;if(!el||!el.dataset||el.dataset.seq148n==null)return;if(e.key==="Enter"){e.preventDefault();ren148(el,true)}else if(e.key==="Escape"){e.preventDefault();ren148(el,false)}e.stopPropagation()},true);
+document.addEventListener("focusout",e=>{const el=e.target;if(el&&el.dataset&&el.dataset.seq148n!=null&&SQ148.ren)ren148(el,true)},true);
+renderView=(o=>function(){const r=o.apply(this,arguments);if(SQ148.ren&&S.view==="edit"){const el=document.querySelector("[data-seq148n]");if(el&&document.activeElement!==el){el.focus({preventScroll:true});el.select()}}return r})(renderView);
+// the other timelines' files go to the account with the project, and their made-here clips carry their address (as v139 does
+// for the open one); a device that opens the project has them all
+slots139=(o=>function(){const k=o(),q=S.ed&&S.ed.seq148;if(!q||!Array.isArray(q.list))return k;
+  for(const s of q.list){const d=s.id!==q.cur&&s.data;if(!d)continue;(d.clips||[]).forEach(c=>{if(c.src&&c.src.k!=="job"&&c.src.k!=="demo")k.push("c_"+c.id);["bgp_","cvp_"].forEach(p=>k.push(p+c.id))});
+    (d.layers||[]).forEach(l=>k.push("ly_"+l.id));(d.sfx||[]).forEach(x=>{if(x.n==="file")k.push("sx_"+x.id)})}
+  return[...new Set(k)].filter(x=>M[x])})(slots139);
+doc139=(o=>async function(){const r=await o.apply(this,arguments),q=r&&r.doc&&r.doc.ed&&r.doc.ed.seq148;if(q&&Array.isArray(q.list))for(const s of q.list)for(const c of(s.data&&s.data.clips)||[])
+  if(c.src&&c.src.k==="job"){const j=S.jobs.find(x=>x.id===c.src.job),u=j&&mediaUrl(j);if(u)c.src.url139=String(u).replace(location.origin,"")}return r})(doc139);
+// a clip whose file came from the account (opened from Projects, or added by an agent) keeps that address on itself, so the page
+// opened again finds it (v139 kept it only in memory: such a clip asked for its file again after a reload)
+slotUrl139=(o=>function(k,x){const m=o.apply(this,arguments);if(/^c_/.test(k)&&x&&x.url){const c=allClips148().find(y=>"c_"+y.id===k);if(c&&c.src&&c.src.k==="upload")c.src.srv148={url:String(x.url).replace(location.origin,""),type:x.type}}return m})(slotUrl139);
+function srvBack148(){if(!S.ed)return;for(const c of allClips148())if(c.src&&c.src.k==="upload"&&c.src.srv148&&c.src.srv148.url&&!M["c_"+c.id]&&!(S.mediaKeys||{})["c_"+c.id])
+  slotUrl139("c_"+c.id,{url:c.src.srv148.url,type:c.src.srv148.type||"video",name:c.src.name||""})}
+VIEWS.edit=(o=>function(){try{srvBack148()}catch(e){}return o.apply(this,arguments)})(VIEWS.edit);
+
+// ---- 3. the cut-out mended with a brush. Keep paints back what the AI cut away, Remove cuts away what it left; each stroke goes
+// over the ones before. Strokes are kept on the clip in the picture's own 0–1 positions, so they fit every frame, the export and
+// a new removal (on this device or on the AI engine).
+const BR148={d:null,hv:null,hvT:0},MAP148={};
+const brushOn148=()=>S.view==="edit"&&!!S.ed&&S.ed.tab==="bg144"&&!!S.ed.bgBrush148;
+// (called by the background step of v144 with the subject already cut out on y — the frame's own pixels are on el)
+function brush148(y,el,w,h,B){const mx=Math.max(w,h);let t=null,tx=null;
+  const line=(x,s)=>{const p=s.p;x.beginPath();x.moveTo(p[0][0]*w,p[0][1]*h);if(p.length===1)x.lineTo(p[0][0]*w+.01,p[0][1]*h);for(let i=1;i<p.length;i++)x.lineTo(p[i][0]*w,p[i][1]*h)};
+  for(const s of B.brush148){if(!s||!Array.isArray(s.p)||!s.p.length)continue;const lw=Math.max(1,2*(+s.r||.03)*mx);
+    if(s.m==="cut"){y.globalCompositeOperation="destination-out";y.lineCap=y.lineJoin="round";y.lineWidth=lw;y.strokeStyle="#000";line(y,s);y.stroke()}
+    else{if(!t){t=edxCv("br148",w,h);tx=t.getContext("2d")}tx.globalCompositeOperation="source-over";tx.clearRect(0,0,w,h);tx.lineCap=tx.lineJoin="round";tx.lineWidth=lw;tx.strokeStyle="#000";line(tx,s);tx.stroke();
+      tx.globalCompositeOperation="source-in";tx.drawImage(el,0,0,w,h);tx.globalCompositeOperation="source-over";y.globalCompositeOperation="source-over";y.drawImage(t,0,0)}}
+  y.globalCompositeOperation="source-over"}
+// where the selected clip's picture was drawn on the preview (its crop and turn, and the place and size on the canvas), so a
+// touch on the preview finds its point in the picture
+edxSmooth=(o=>function(c,m,lt){const r=o.apply(this,arguments);if(c&&m&&c.bg144&&c.bg144.on&&S.ed&&S.ed.bgBrush148&&c.id===S.ed.sel&&!ED.hq){const sw=srcW(m),sh=srcH(m);
+    MAP148[c.id]={obj:r||m,sw,sh,crop:xform145(c)?{R:cropRect145(c,sw,sh,lt)||{x:0,y:0,w:sw,h:sh},rot:(((c.rot||0)%360)+360)%360}:null,T:null,at:0}}return r})(edxSmooth);
+drawSrcAt=(o=>function(ctx,m,x,y,w,h){const c=CUR145,R=c&&MAP148[c.id];if(R&&R.obj===m&&ctx.canvas&&ctx.canvas.id==="wk"){R.T=ctx.getTransform();R.box=[x,y,w,h];R.at=performance.now()}return o.apply(this,arguments)})(drawSrcAt);
+// a point of the preview (a pointer event) → the point of the clip's picture, 0–1 across and down (null: not drawn just now)
+function srcPt148(c,e){const R=MAP148[c.id],cv=$("#wk");if(!R||!R.T||!cv||performance.now()-R.at>800)return null;const P=cvPt(cv,e),I=R.T.inverse(),u=I.a*P.x+I.c*P.y+I.e,v=I.b*P.x+I.d*P.y+I.f,b=R.box;
+  let a=(u-b[0])/b[2],d=(v-b[1])/b[3];
+  if(R.crop){const Q=R.crop.R,th=R.crop.rot*Math.PI/180,side=R.crop.rot===90||R.crop.rot===270,CW=side?Q.h:Q.w,CH=side?Q.w:Q.h,dx=(a-.5)*CW,dy=(d-.5)*CH;
+    const rx=dx*Math.cos(th)+dy*Math.sin(th),ry=-dx*Math.sin(th)+dy*Math.cos(th);a=(Q.x+(rx/Q.w+.5)*Q.w)/R.sw;d=(Q.y+(ry/Q.h+.5)*Q.h)/R.sh}
+  return[+clamp(a,-.02,1.02).toFixed(4),+clamp(d,-.02,1.02).toFixed(4)]}
+// the brush works on the clip under the playhead: when the selected clip isn't there, the playhead goes to it
+function onClip148(c){const E=S.ed,i=E.clips.indexOf(c);if(i<0)return;const s=edStarts()[i],d=clipDur(c);if(ED.t>=s&&ED.t<s+d-.01)return;ED.playing=false;ED.t=+(s+d/2).toFixed(2)}
+window.addEventListener("pointerdown",e=>{if(!brushOn148()||e.button>0||!e.target||e.target.id!=="wk")return;const c=S.ed.clips.find(x=>x.id===S.ed.sel);if(!c||!c.bg144||!c.bg144.on||!bgReady144(c))return;
+  e.stopImmediatePropagation();e.preventDefault();if(CM131.lp){clearTimeout(CM131.lp.tm);CM131.lp=null}ED.playing=false;
+  const p=srcPt148(c,e);if(!p){onClip148(c);return}const B=c.bg144;if(!Array.isArray(B.brush148))B.brush148=[];if(B.brush148.length>=200)B.brush148.shift();
+  const s={m:S.ed.bgBrush148==="cut"?"cut":"keep",r:+(clamp(+S.ed.bgBrushR148||6,1,30)/200).toFixed(4),p:[p]};B.brush148.push(s);BR148.d={id:e.pointerId,c,s};try{e.target.setPointerCapture(e.pointerId)}catch(_){}},true);
+window.addEventListener("pointermove",e=>{if(!brushOn148())return;const D=BR148.d,cv=$("#wk");if(cv&&(D||e.target===cv)){BR148.hv=cvPt(cv,e);BR148.hvT=performance.now()}
+  if(!D||e.pointerId!==D.id)return;e.stopImmediatePropagation();const p=srcPt148(D.c,e),q=D.s.p[D.s.p.length-1];if(p&&D.s.p.length<800&&Math.hypot(p[0]-q[0],p[1]-q[1])>.003)D.s.p.push(p)},true);
+const brEnd148=e=>{const D=BR148.d;if(!D||e.pointerId!==D.id)return;e.stopImmediatePropagation();BR148.d=null;persist();if(S.view==="edit")renderView()};
+window.addEventListener("pointerup",brEnd148,true);window.addEventListener("pointercancel",brEnd148,true);
+window.addEventListener("pointerout",e=>{if(e.target&&e.target.id==="wk"&&!BR148.d)BR148.hv=null},true);
+window.addEventListener("click",e=>{if(brushOn148()&&e.target&&e.target.id==="wk"){e.preventDefault();e.stopImmediatePropagation()}},true);
+window.addEventListener("contextmenu",e=>{if(brushOn148()&&e.target&&e.target.id==="wk"){e.preventDefault();e.stopImmediatePropagation()}},true);
+// the brush's ring on the preview where the pointer is (the size it paints, in its colour: lime keeps, red removes)
+edTick=(o=>function(now){o.apply(this,arguments);if(!brushOn148()||ED.rec||ED.hq)return;const h=BR148.hv;if(!h||(!BR148.d&&performance.now()-BR148.hvT>2500))return;
+  const c=S.ed.clips.find(x=>x.id===S.ed.sel),R=c&&MAP148[c.id],cv=$("#wk");if(!R||!R.T||!R.box||!cv)return;const side=R.crop&&(R.crop.rot===90||R.crop.rot===270),ew=R.crop?(side?R.crop.R.h:R.crop.R.w):R.sw;
+  const k=Math.hypot(R.T.a,R.T.b)*R.box[2]/Math.max(1,ew),rad=Math.max(3,clamp(+S.ed.bgBrushR148||6,1,30)/200*Math.max(R.sw,R.sh)*k),x=cv.getContext("2d");
+  x.save();x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation="source-over";x.filter="none";x.lineWidth=Math.max(2,cv.width/540);
+  x.strokeStyle="rgba(0,0,0,.55)";x.beginPath();x.arc(h.x,h.y,rad+x.lineWidth,0,7);x.stroke();x.strokeStyle=S.ed.bgBrush148==="cut"?"#ff5a5f":"#CFE13E";x.beginPath();x.arc(h.x,h.y,rad,0,7);x.stroke();x.restore()})(edTick);
+// the brush in the background panel (once the background is removed)
+function brushUI148(c){const E=S.ed,B=c.bg144,n=(B.brush148||[]).length,md=E.bgBrush148||"";
+  return'<div class="br148"><span class="lbl">'+L("Fix the cut-out with a brush","أصلح القصّ بالفرشاة")+'</span><p class="small mute e-hint">'+L("Paint on the preview. Keep brings back what was cut away by mistake; Remove takes away what was left. Each stroke counts on every frame of this clip and in the export.","ارسم على المعاينة. «أبقِ» يعيد ما قُصّ خطأً، و«أزل» يحذف ما بقي. كل خط يُطبَّق على كل إطارات هذا المقطع وفي التصدير.")+"</p>"+
+    '<div class="seg br148m">'+[["",L("Off","إيقاف")],["keep",L("Keep","أبقِ")],["cut",L("Remove","أزل")]].map(x=>'<button type="button" data-act="br148" data-v="'+x[0]+'" aria-pressed="'+(md===x[0])+'">'+(x[0]?ic("brush148"):"")+x[1]+"</button>").join("")+"</div>"+
+    (md?slider("ed.bgBrushR148",L("Brush size","حجم الفرشاة"),clamp(+E.bgBrushR148||6,1,30),2,24,1,"%"):"")+
+    (n?'<div class="row br148r"><button type="button" class="btn sm ghost" data-act="br148-undo">'+L("Undo the last stroke","تراجع عن آخر خط")+'</button><button type="button" class="btn sm ghost danger" data-act="br148-clr">'+L("Clear the brush","امسح الفرشاة")+" ("+n+")</button></div>":"")+"</div>"}
+EDX_PANELS.bg144=(o=>function(){const h=o.apply(this,arguments),c=edxPick();if(typeof h!=="string"||!c||!c.bg144||!c.bg144.on||!bgReady144(c))return h;return h+brushUI148(c)})(EDX_PANELS.bg144);
+document.addEventListener("click",e=>{if(S.view!=="edit"||!e.target.closest)return;const a=e.target.closest('[data-act="br148"],[data-act="br148-clr"],[data-act="br148-undo"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
+  const E=S.ed,c=edxPick();if(a.dataset.act==="br148"){E.bgBrush148=a.dataset.v||null;if(E.bgBrush148&&c){onClip148(c);toast(E.bgBrush148==="cut"?L("Paint over what should go.","ارسم فوق ما يجب أن يُزال."):L("Paint over what should stay.","ارسم فوق ما يجب أن يبقى."),{type:"info"})}}
+  else if(c&&c.bg144&&Array.isArray(c.bg144.brush148)){if(a.dataset.act==="br148-clr")c.bg144.brush148=[];else c.bg144.brush148.pop()}
+  persist();renderView()},true);
+
+(()=>{const st=document.createElement("style");st.textContent=`
+.seq148{display:flex;align-items:center;gap:6px;padding:6px 8px 2px;overflow-x:auto;scrollbar-width:none;min-height:40px}.seq148::-webkit-scrollbar{display:none}
+.seq148b{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:32px;max-width:240px;padding:4px 10px 4px 12px;border-radius:999px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);font-size:12px;cursor:pointer}
+.seq148b span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.seq148b svg{width:15px;height:15px;flex:none}.seq148b svg:last-child{width:13px;height:13px;color:var(--mute)}
+.seq148b b{font-weight:600;font-size:11px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--lime) 22%,var(--panel3,var(--panel2)));color:var(--text)}
+.seq148n{flex:none;width:170px;min-height:32px;padding:4px 12px;border-radius:999px;font-size:12px}
+.edbar .seq148{flex:0 1 auto;min-width:0;margin-inline-start:auto;padding:0 2px 0 8px;min-height:0;align-self:center}
+.ag148{display:flex;gap:8px;align-items:flex-start;margin-top:10px}.ag148>svg{width:16px;height:16px;flex:none;margin-top:1px}
+.ag148 button{background:none;border:0;padding:0;font:inherit;color:var(--lime-ink,var(--lime));text-decoration:underline;cursor:pointer}
+.br148{margin-top:14px;padding-top:12px;border-top:1px solid var(--line2)}.br148m{margin:4px 0 8px}.br148m button{display:inline-flex;align-items:center;justify-content:center;gap:5px}.br148m svg{width:15px;height:15px}
+.br148r{flex-wrap:wrap;gap:6px;margin-top:6px}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

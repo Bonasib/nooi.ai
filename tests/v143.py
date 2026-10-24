@@ -136,7 +136,7 @@ async def phone(b, lang):
     out[tag + "_page"] = r
     foot = r["bn"][1] if r["bn"] else r["vh"]
     chk(f"{tag}: the tool bar is fixed at the foot, just above the site's bar", r["pos"] == "fixed" and abs(r["bar"][3] - foot) <= 2 and not r["ctx"], r)
-    chk(f"{tag}: the add tools, the project and the magnet on the bar", r["tools"] == RAIL + ["export", "mk146-add", "snap141"], r["tools"])
+    chk(f"{tag}: the add tools, the project and the magnet on the bar", r["tools"] == RAIL + ["export", "mk146-add", "seq148-menu", "snap141"], r["tools"])   # (v148: Timelines)
     chk(f"{tag}: CapCut's play row: no separate tool row, undo and redo beside play", r["edbar"] == 0 and r["undo"], [r["edbar"], r["undo"]])
     chk(f"{tag}: preview, play row, prompt bar, timeline, settings — in that order; the preview pinned", r["order"] == sorted(r["order"]) and min(r["order"]) >= 0 and r["sticky"] == "sticky", r["order"])
     chk(f"{tag}: a slim header with the page title; no sideways scroll", r["title"].strip() in ("Video editor", "محرر الفيديو") and r["top"][3] - r["top"][1] <= 96 and r["sw"] <= 390, [r["top"], r["sw"]])
