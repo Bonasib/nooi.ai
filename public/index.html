@@ -18475,6 +18475,284 @@ setInterval(()=>{const J=S.sdj149;if(!J||!S.ed)return;for(const id of Object.key
 .sd149w{margin:4px 0 8px;flex-wrap:wrap}.sd149r{margin:0 0 8px}.sd149r select{width:auto;max-width:200px}.sd149who{margin:0 0 8px;flex-wrap:wrap}.sd149who>button{flex:1 1 auto;min-width:0}.sd149s{margin:6px 0}
 `;document.head.appendChild(st)})();
 
+/* ================= v150: MOTION ADS · THE MIXER ================= */
+// The owner's example: an ad made of animated scenes (a logo that lights up, light trails, a phone screen, a big number, a
+// leaderboard, a video call, a map of skills joined by glowing lines, words one after another, an end card) over several picture
+// tracks, cut to music, with a mixer and level meters. Here: the same kinds of scenes as graphics on the timeline (type "mg150",
+// drawn by the page — preview and export alike — every word, number, colour and length editable); the AI builds a whole ad from a
+// short brief (the server's text AI, or the plan in public/editor150/plan.js with no AI at all — free either way), cut to the
+// music's beat with whooshes at the cuts; AI agents can do the same through the connector; and a mixer for the sound.
+// Our own drawings and code — nothing taken from the example or any other product.
+Object.assign(ICONS,{mg150:'<path d="M3 17c4-1 5-9 9-9s5 8 9 7"/><circle cx="12" cy="8" r="2"/><path d="M5 5l1.5 1.5M19 5l-1.5 1.5M12 2v2"/>',
+  mix150:'<path d="M6 3v18M12 3v18M18 3v18"/><rect x="4" y="13" width="4" height="3" rx="1"/><rect x="10" y="7" width="4" height="3" rx="1"/><rect x="16" y="15" width="4" height="3" rx="1"/>'});
+const MG150=[["logo","Logo reveal","كشف الشعار"],["trail","Light trails","مسارات ضوئية"],["phone","Phone screen","شاشة هاتف"],["counter","Big number","رقم كبير"],["board","Leaderboard","لوحة الصدارة"],
+  ["call","Video call","مكالمة فيديو"],["nodes","Skill map","خريطة المهارات"],["words","Big words","كلمات كبيرة"],["end","End card","البطاقة الختامية"]];
+const MGN150=Object.fromEntries(MG150.map(x=>[x[0],[x[1],x[2]]]));
+IXN146.mg150=["Motion scene","مشهد متحرك"];
+const AD150={mod:null,busy:false};
+const mod150=()=>AD150.mod||(AD150.mod=import("/editor150/plan.js").catch(e=>{AD150.mod=null;throw e}));
+// colours
+const rgb150=h=>{const m=/^#?([0-9a-f]{6})$/i.exec(String(h||""));const n=m?parseInt(m[1],16):0x7cff4f;return[n>>16&255,n>>8&255,n&255]};
+const rgba150=(h,a)=>{const c=rgb150(h);return"rgba("+c[0]+","+c[1]+","+c[2]+","+a+")"};
+const dark150=(h,k)=>{const c=rgb150(h);return"rgb("+c.map(v=>Math.round(v*k)).join(",")+")"};
+const PAL150=["#58CC02","#1CB0F6","#CE82FF","#FFC800","#FF4B4B","#2DD4A8"];
+const items150=it=>(Array.isArray(it.items)?it.items:String(it.items||"").split(/\s*\|\s*/)).map(x=>String(x).trim()).filter(Boolean).slice(0,6);
+const rn150=(i,s)=>hsh(i+1,s||0);
+// a glowing line: the first p (0–1) of a path, a soft wide glow, the line and a white core, a bright head
+function neon150(ctx,pts,p,ac,w){if(p<=0||pts.length<2)return;const d=[0];for(let i=1;i<pts.length;i++)d.push(d[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));
+  const L=d[d.length-1]*clamp(p,0,1);ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);let hx=pts[0][0],hy=pts[0][1];
+  for(let i=1;i<pts.length;i++){if(d[i]<=L){ctx.lineTo(pts[i][0],pts[i][1]);hx=pts[i][0];hy=pts[i][1]}else{const f=(L-d[i-1])/Math.max(1e-6,d[i]-d[i-1]);hx=pts[i-1][0]+(pts[i][0]-pts[i-1][0])*f;hy=pts[i-1][1]+(pts[i][1]-pts[i-1][1])*f;ctx.lineTo(hx,hy);break}}
+  ctx.save();ctx.lineCap="round";ctx.lineJoin="round";ctx.shadowColor=ac;ctx.shadowBlur=w*6;ctx.strokeStyle=rgba150(ac,.35);ctx.lineWidth=w*3;ctx.stroke();ctx.shadowBlur=w*3;ctx.strokeStyle=ac;ctx.lineWidth=w;ctx.stroke();
+  ctx.shadowBlur=0;ctx.strokeStyle="rgba(255,255,255,.85)";ctx.lineWidth=w*.35;ctx.stroke();if(p<1){ctx.shadowColor=ac;ctx.shadowBlur=w*8;ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(hx,hy,w*1.4,0,7);ctx.fill()}ctx.restore()}
+const bez150=(a,b,c,d,n)=>{const o=[];for(let i=0;i<=(n||40);i++){const t=i/(n||40),u=1-t;o.push([u*u*u*a[0]+3*u*u*t*b[0]+3*u*t*t*c[0]+t*t*t*d[0],u*u*u*a[1]+3*u*u*t*b[1]+3*u*t*t*c[1]+t*t*t*d[1]])}return o};
+function rr150(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+function txt150(ctx,s,x,y,w,px,col,maxW,al,glow){if(!s)return 0;const F=fitF(ctx,s,w,px,maxW);ctx.font=infoFont(w,F);ctx.textAlign=al||"center";ctx.textBaseline="middle";ctx.direction=isRtl(s)?"rtl":"ltr";
+  if(glow){ctx.shadowColor=glow;ctx.shadowBlur=F*.5}ctx.fillStyle=col;ctx.fillText(s,x,y);ctx.shadowBlur=0;return ctx.measureText(s).width}
+// the dark background with the accent's glow and slow specks of light
+function bg150(ctx,W,H,ac,t){ctx.save();const g=ctx.createRadialGradient(W/2,H*.42,0,W/2,H*.42,Math.hypot(W,H)*.62);g.addColorStop(0,dark150(ac,.2));g.addColorStop(.5,"#06100a");g.addColorStop(1,"#010302");
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);const U=Math.min(W,H);for(let i=0;i<28;i++){const x=(rn150(i,1)*W+t*U*.012*(rn150(i,2)-.5)*4+W)%W,y=(rn150(i,3)*H-t*U*.01*(.4+rn150(i,4))+H*9)%H,a=.05+.12*Math.abs(Math.sin(t*.8+i));
+    ctx.fillStyle=rgba150(ac,a.toFixed(3));ctx.beginPath();ctx.arc(x,y,U*.0025*(1+rn150(i,5)*1.5),0,7);ctx.fill()}ctx.restore()}
+// the scenes — drawn round the middle of the picture (0,0); o = {W,H,U,lt,len,ac,it}
+const SC150={
+  logo(ctx,o){const{U,lt,ac,it}=o,R=U*.12,s=lt<.55?Math.max(.001,backOut131(clamp(lt/.55,0,1))):1+.015*Math.sin((lt-.55)*3),bp=clamp((lt-.12)/.75,0,1),dark=dark150(ac,.1);
+    if(bp>0&&bp<1){ctx.save();ctx.lineCap="round";ctx.shadowColor=ac;ctx.shadowBlur=U*.02;for(let i=0;i<14;i++){const a=i/14*Math.PI*2+.2,r0=R*1.15+U*.3*ezo(bp),r1=r0+U*.12*(1-bp)*(.6+rn150(i,7));
+      ctx.strokeStyle=rgba150(ac,(1-bp).toFixed(3));ctx.lineWidth=U*.006;ctx.beginPath();ctx.moveTo(Math.cos(a)*r0,Math.sin(a)*r0);ctx.lineTo(Math.cos(a)*r1,Math.sin(a)*r1);ctx.stroke()}ctx.restore()}
+    ctx.save();ctx.scale(s,s);ctx.shadowColor=ac;ctx.shadowBlur=U*.09;ctx.fillStyle=ac;ctx.beginPath();ctx.arc(0,-U*.05,R,0,7);ctx.fill();ctx.shadowBlur=0;
+    if(it.ic)icDraw131(ctx,it.ic,0,-U*.05,R*1.15,dark);else txt150(ctx,(String(it.t1||"n").trim()[0]||"n").toUpperCase(),0,-U*.05,800,R*1.2,dark,R*1.6);ctx.restore();
+    const tp=clamp((lt-.45)/.45,0,1);if(tp>0&&it.t1){ctx.save();ctx.globalAlpha*=ezo(tp);const y=R+U*.06+(1-ezo(tp))*U*.05,w=txt150(ctx,it.t1,0,y,800,U*.13,ac,o.W*.86,"center",ac);
+      const up=clamp((lt-.9)/.5,0,1);if(up>0)neon150(ctx,[[-w/2,y+U*.085],[w/2,y+U*.085]],ezo(up),ac,U*.005);if(it.t2)txt150(ctx,it.t2,0,y+U*.15,500,U*.042,"rgba(255,255,255,.8)",o.W*.86);ctx.restore()}
+    return{w:U*.9,h:U*.7}},
+  trail(ctx,o){const{W,H,U,lt,len,ac}=o,hw=W/2,hh=H/2;for(let i=0;i<3;i++){const p=ezo(clamp((lt-i*.15)/(Math.max(.6,len*.75)),0,1)),c=i===1?"#ffffff":ac;
+      neon150(ctx,bez150([-hw*1.1,hh*(.7-.3*i)],[-hw*.2,-hh*(.55+.1*i)],[hw*.25,hh*(.6-.25*i)],[hw*1.1,-hh*(.25+.2*i)],60),p,i===1?ac:c,U*(.007-.0015*i))}
+    if(o.it.t1){const tp=clamp((lt-len*.45)/.4,0,1);if(tp>0){ctx.save();ctx.globalAlpha*=ezo(tp);txt150(ctx,o.it.t1,0,0,700,U*.07,"#fff",W*.8,"center",ac);ctx.restore()}}return{w:U*.6,h:U*.3}},
+  phone(ctx,o){const{H,U,lt,ac,it}=o,Ph=Math.min(H*.8,U*1.45),Pw=Ph*.49,e=ezo(clamp(lt/.6,0,1)),rtl=isRtl(it.t1||(items150(it)[0]||""));
+    ctx.save();ctx.translate(0,(1-e)*H*.6);ctx.rotate((-5+3*e)*Math.PI/180);const x0=-Pw/2,y0=-Ph/2,r=Pw*.14;
+    rr150(ctx,x0,y0,Pw,Ph,r);ctx.fillStyle="#0a0f0c";ctx.fill();const per=2*(Pw+Ph);ctx.save();ctx.setLineDash([per*clamp(lt/1.1,0,1),per]);ctx.shadowColor=ac;ctx.shadowBlur=U*.03;ctx.strokeStyle=ac;ctx.lineWidth=U*.006;rr150(ctx,x0,y0,Pw,Ph,r);ctx.stroke();ctx.restore();
+    rr150(ctx,-Pw*.12,y0+Ph*.025,Pw*.24,Ph*.022,Ph*.011);ctx.fillStyle="#000";ctx.fill();
+    txt150(ctx,it.t1||"",0,y0+Ph*.12,700,Pw*.075,"#fff",Pw*.84);
+    if(it.t2){ctx.save();const bx=x0+Pw*.08,by=y0+Ph*.18;rr150(ctx,bx,by,Pw*.84,Ph*.12,Pw*.05);ctx.fillStyle="#141b17";ctx.fill();ctx.strokeStyle="rgba(255,255,255,.12)";ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle=ac;ctx.beginPath();ctx.arc(rtl?bx+Pw*.84-Pw*.09:bx+Pw*.09,by+Ph*.06,Pw*.055,0,7);ctx.fill();
+    txt150(ctx,it.t2,rtl?bx+Pw*.84-Pw*.18:bx+Pw*.18,by+Ph*.06,500,Pw*.055,"rgba(255,255,255,.85)",Pw*.6,rtl?"right":"left");ctx.restore()}
+    const its=items150(it),fs=Pw*.062;ctx.font=infoFont(600,fs);let cx=0,row=0;const rows=[[]];
+    its.forEach(w=>{const cw=ctx.measureText(w).width+fs*1.4;if(cx+cw>Pw*.84&&rows[row].length){rows.push([]);row++;cx=0}rows[row].push([w,cw]);cx+=cw+fs*.5});
+    let k=0;rows.forEach((rw,ri)=>{const tot=rw.reduce((a,x)=>a+x[1],0)+fs*.5*(rw.length-1);let x=rtl?tot/2:-tot/2;rw.forEach(([w,cw])=>{const pp=clamp((lt-.7-k*.18)/.35,0,1);k++;if(pp<=0){x+=(rtl?-1:1)*(cw+fs*.5);return}
+      const cxm=rtl?x-cw/2:x+cw/2,cy=y0+Ph*.45+ri*fs*2.4;ctx.save();ctx.translate(cxm,cy);const sc=Math.max(.001,backOut131(pp));ctx.scale(sc,sc);rr150(ctx,-cw/2,-fs*.95,cw,fs*1.9,fs*.5);ctx.fillStyle="#1b2420";ctx.fill();
+      ctx.strokeStyle="rgba(255,255,255,.2)";ctx.lineWidth=1.5;ctx.stroke();txt150(ctx,w,0,0,600,fs,"#fff",cw);ctx.restore();x+=(rtl?-1:1)*(cw+fs*.5)})});
+    const on=lt>o.len*.62;rr150(ctx,x0+Pw*.1,y0+Ph*.84,Pw*.8,Ph*.075,Ph*.03);ctx.fillStyle=on?ac:"#26302b";if(on){ctx.shadowColor=ac;ctx.shadowBlur=U*.03}ctx.fill();ctx.shadowBlur=0;
+    txt150(ctx,rtl?"تحقّق":"CHECK",0,y0+Ph*.8775,800,Pw*.055,on?dark150(ac,.12):"rgba(255,255,255,.5)",Pw*.7);ctx.restore();return{w:Pw,h:Ph}},
+  counter(ctx,o){const{W,U,lt,ac,it}=o,ic=it.ic||"local_fire_department",fire=/fire|whatshot/.test(ic),col=fire?"#FFA41B":ac,val=+it.val||0,
+      n=Math.round(val*ezo(clamp((lt-.15)/1.1,0,1))),num=n.toLocaleString("en-US"),I=U*.3,F=fitF(ctx,num,800,U*.2,W*.45);ctx.font=infoFont(800,F);const nw=ctx.measureText(num).width,lw=it.t1?fitF(ctx,it.t1,600,U*.05,W*.45):0;
+    const gw=I+U*.04+Math.max(nw,U*.36),x0=-gw/2,s=Math.max(.001,backOut131(clamp(lt/.45,0,1)))*(1+.035*Math.sin(lt*9));
+    ctx.save();ctx.translate(x0+I/2,0);ctx.scale(s,s);ctx.shadowColor=col;ctx.shadowBlur=U*.08;icDraw131(ctx,ic,0,0,I,col);ctx.shadowBlur=0;if(fire)icDraw131(ctx,ic,0,I*.12,I*.45,"#FFE066");ctx.restore();
+    const tx=x0+I+U*.04;ctx.save();const g=ctx.createLinearGradient(0,-F/2,0,F/2);g.addColorStop(0,fire?"#FFD84D":"#fff");g.addColorStop(1,col);ctx.font=infoFont(800,F);ctx.textAlign="left";ctx.textBaseline="middle";ctx.direction="ltr";
+    ctx.shadowColor=col;ctx.shadowBlur=F*.35;ctx.fillStyle=g;ctx.fillText(num,tx,-U*.04);ctx.restore();
+    if(it.t1)txt150(ctx,it.t1,tx,U*.075,600,U*.05,"rgba(255,255,255,.88)",W*.45,"left");
+    const dots=7,dr=U*.018;for(let i=0;i<dots;i++){const on=lt>.6+i*.14,x=tx+dr+i*dr*2.8,y=U*.15;ctx.beginPath();ctx.arc(x,y,dr,0,7);ctx.fillStyle=on?col:"rgba(255,255,255,.15)";if(on){ctx.shadowColor=col;ctx.shadowBlur=dr*2}ctx.fill();ctx.shadowBlur=0}
+    return{w:gw,h:U*.45}},
+  board(ctx,o){const{W,H,U,lt,len,ac,it}=o;let rows=items150(it).map(x=>{const m=/^(.*?)[:：]\s*([\d,.]+)\s*$/.exec(x);return m?{n:m[1].trim(),p:+m[2].replace(/,/g,"")}:{n:x,p:0}});
+    if(!rows.length)rows=[{n:"A",p:300},{n:"B",p:200},{n:"You",p:100}];const fm=rows.findIndex(r=>/^(you|me|أنت|انت)$/i.test(r.n)),mi=fm>=0?fm:rows.length-1;
+    const rh=Math.min(U*.085,H*.62/(rows.length+2)),cw=Math.min(W*.66,U*1.05),hd=rh*1.9,ch=hd+rows.length*rh+rh*.4,x0=-cw/2,y0=-ch/2,rise=ezo(clamp((lt-len*.45)/(len*.35),0,1)),rtl=isRtl(rows.map(r=>r.n).join("")+(it.t1||""));
+    rr150(ctx,x0,y0,cw,ch,U*.03);ctx.fillStyle="rgba(8,14,11,.92)";ctx.fill();ctx.save();ctx.shadowColor=ac;ctx.shadowBlur=U*.03;ctx.strokeStyle=rgba150(ac,.6);ctx.lineWidth=U*.004;rr150(ctx,x0,y0,cw,ch,U*.03);ctx.stroke();ctx.restore();
+    icDraw131(ctx,it.ic||"diamond",0,y0+hd*.3,rh*.75,"#4DD7FF");txt150(ctx,it.t1||"",0,y0+hd*.62,700,rh*.38,"#fff",cw*.8);if(it.t2)txt150(ctx,it.t2,0,y0+hd*.85,500,rh*.24,"rgba(255,255,255,.6)",cw*.8);
+    const top=rows.slice().sort((a,b)=>b.p-a.p)[0].p;
+    rows.forEach((r,i)=>{const isMe=i===mi,slot=isMe?mi-(mi)*rise:(i<mi?i+rise:i),pp=clamp((lt-.25-i*.08)/.4,0,1);if(pp<=0)return;const y=y0+hd+slot*rh+rh/2,sx=(1-ezo(pp))*cw*.4*(rtl?-1:1);
+      ctx.save();ctx.globalAlpha*=ezo(pp);ctx.translate(sx,0);if(isMe){rr150(ctx,x0+rh*.25,y-rh*.42,cw-rh*.5,rh*.84,rh*.25);ctx.fillStyle=rgba150(ac,.16);ctx.fill();ctx.shadowColor=ac;ctx.shadowBlur=U*.02;ctx.strokeStyle=ac;ctx.lineWidth=U*.003;ctx.stroke();ctx.shadowBlur=0}
+      const rank=Math.round(slot)+1,sgn=rtl?-1:1,lx=rtl?-x0-rh*.6:x0+rh*.6;txt150(ctx,String(rank),lx,y,700,rh*.34,"rgba(255,255,255,.6)",rh);ctx.fillStyle=PAL150[i%PAL150.length];ctx.beginPath();ctx.arc(lx+sgn*rh*.75,y,rh*.28,0,7);ctx.fill();
+      txt150(ctx,r.n,lx+sgn*rh*1.2,y,isMe?800:600,rh*.36,isMe?ac:"#fff",cw*.5,rtl?"right":"left");const pts=isMe?Math.round(r.p+(top+20-r.p)*rise):r.p;
+      txt150(ctx,pts.toLocaleString("en-US")+" XP",rtl?x0+rh*.5:-x0-rh*.5,y,600,rh*.3,"rgba(255,255,255,.75)",cw*.3,rtl?"left":"right");ctx.restore()});
+    return{w:cw,h:ch}},
+  call(ctx,o){const{W,U,lt,len,ac,it}=o,cw=Math.min(W*.82,U*1.25),ch=cw*.62,x0=-cw/2,y0=-ch/2,e=ezo(clamp(lt/.45,0,1)),rtl=isRtl((it.t1||"")+(it.t2||""));
+    ctx.save();ctx.globalAlpha*=e;ctx.translate(0,(1-e)*U*.08);rr150(ctx,x0,y0,cw,ch,U*.035);ctx.fillStyle="rgba(8,14,11,.94)";ctx.fill();ctx.save();ctx.shadowColor=ac;ctx.shadowBlur=U*.03;ctx.strokeStyle=rgba150(ac,.55);ctx.lineWidth=U*.004;rr150(ctx,x0,y0,cw,ch,U*.035);ctx.stroke();ctx.restore();
+    const hb=ch*.12;ctx.fillStyle="#FF4B4B";ctx.beginPath();ctx.arc(x0+hb*.7,y0+hb*.7,hb*.16,0,7);ctx.fill();txt150(ctx,rtl?"مكالمة فيديو":"Video call",x0+hb*1.05,y0+hb*.7,600,hb*.32,"rgba(255,255,255,.75)",cw*.4,"left");
+    txt150(ctx,"0:"+String(12+Math.floor(lt)).padStart(2,"0"),-x0-hb*.6,y0+hb*.7,600,hb*.32,"rgba(255,255,255,.6)",cw*.2,"right");
+    const ar=ch*.2,ay=-ch*.05;for(let k=0;k<2;k++){const q=((lt*.7+k*.5)%1);ctx.strokeStyle=rgba150(ac,(.5*(1-q)).toFixed(3));ctx.lineWidth=U*.004;ctx.beginPath();ctx.arc(0,ay,ar*(1+q*.6),0,7);ctx.stroke()}
+    ctx.save();ctx.shadowColor=ac;ctx.shadowBlur=U*.05;ctx.fillStyle=ac;ctx.beginPath();ctx.arc(0,ay,ar,0,7);ctx.fill();ctx.restore();icDraw131(ctx,it.ic||"mood",0,ay,ar*1.25,dark150(ac,.1));
+    const bub=(s,side,pp,fill,col)=>{if(!s||pp<=0)return;ctx.save();ctx.globalAlpha*=ezo(pp);const F=fitF(ctx,s,600,ch*.055,cw*.26);ctx.font=infoFont(600,F);const bw=Math.min(cw*.31,ctx.measureText(s).width+F*1.6),bh=F*2.1,bx=side<0?x0+cw*.05:-x0-cw*.05-bw,by=y0+ch*.22+(side<0?0:bh*1.3);
+      rr150(ctx,bx,by,bw,bh,bh*.45);ctx.fillStyle=fill;ctx.fill();txt150(ctx,s,bx+bw/2,by+bh/2,600,F,col,bw-F);ctx.restore()};
+    bub(it.t1,rtl?1:-1,clamp((lt-.5)/.35,0,1),"rgba(255,255,255,.12)","#fff");bub(it.t2,rtl?-1:1,clamp((lt-len*.5)/.35,0,1),ac,dark150(ac,.1));
+    const wy=ch*.33,pts=[];for(let i=0;i<=80;i++){const x=x0+cw*.08+cw*.84*i/80,env=Math.sin(Math.PI*i/80);pts.push([x,wy+env*ch*.06*(Math.sin(i*.55+lt*9)*.6+Math.sin(i*.23-lt*5)*.4)*(.4+.6*Math.abs(Math.sin(lt*2.3)))])}
+    neon150(ctx,pts,1,ac,U*.004);ctx.restore();return{w:cw,h:ch}},
+  nodes(ctx,o){const{W,H,U,lt,ac,it}=o,its=items150(it).length?items150(it):["A","B","C"],n=its.length,gap=Math.min(W*.86/n,U*.34),R=Math.min(U*.075,gap*.32),oy=H*.5,ics=it.ics||[];
+    its.forEach((lab,i)=>{const x=(i-(n-1)/2)*gap,y=-U*.08-Math.abs(i-(n-1)/2)*U*.025,p=ezo(clamp((lt-.1-i*.14)/.75,0,1));
+      neon150(ctx,bez150([x*.25,oy],[x*.3,oy*.4],[x,y+R*3],[x,y+R],30),p,ac,U*.005);if(p<1)return;const pp=clamp((lt-.85-i*.14)/.35,0,1),col=PAL150[i%PAL150.length],s=Math.max(.001,backOut131(pp));
+      ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.shadowColor=col;ctx.shadowBlur=R*1.2;ctx.fillStyle=col;ctx.beginPath();ctx.arc(0,0,R,0,7);ctx.fill();ctx.shadowBlur=0;icDraw131(ctx,ics[i]||"star",0,0,R*1.1,"#fff");
+      if(i===0)for(let k=0;k<6;k++){const a=lt*1.3+k*Math.PI/3;ctx.fillStyle=PAL150[(k+1)%PAL150.length];ctx.beginPath();ctx.arc(Math.cos(a)*R*1.75,Math.sin(a)*R*1.75,R*.17,0,7);ctx.fill()}ctx.restore();
+      if(pp>.4){ctx.save();ctx.globalAlpha*=clamp((pp-.4)/.6,0,1);txt150(ctx,lab,x,y+R*1.75,600,U*.036,"#fff",gap*.95);ctx.restore()}});
+    return{w:gap*n,h:U*.5}},
+  words(ctx,o){const{W,U,lt,len,ac,it}=o,two=!!it.t2,ph=two?clamp((lt-len*.42)/.35,0,1):0,a=ezo(clamp(lt/.35,0,1)),s1=1.25-.25*a;
+    ctx.save();ctx.globalAlpha*=a;ctx.translate(0,-U*.11*ezo(ph));ctx.scale(s1*(1-.35*ezo(ph)),s1*(1-.35*ezo(ph)));const w1=txt150(ctx,it.t1||"",0,0,800,U*.16,"#fff",W*.86,"center",ac);ctx.restore();
+    const up=clamp((lt-.3)/.6,0,1);if(!two&&up>0)neon150(ctx,[[-w1/2,U*.11],[w1/2,U*.11]],ezo(up),ac,U*.006);
+    if(two&&ph>0){ctx.save();ctx.globalAlpha*=ezo(ph);const y=U*.06+(1-ezo(ph))*U*.06,w2=txt150(ctx,it.t2,0,y,800,U*.12,ac,W*.86,"center",ac);const up2=clamp((lt-len*.42-.25)/.5,0,1);if(up2>0)neon150(ctx,[[-w2/2,y+U*.09],[w2/2,y+U*.09]],ezo(up2),"#fff",U*.004);ctx.restore()}
+    return{w:W*.8,h:U*.4}},
+  end(ctx,o){const{W,H,U,lt,ac,it}=o,a=ezo(clamp(lt/.6,0,1));ctx.save();ctx.globalAlpha*=a;const g=ctx.createRadialGradient(0,0,0,0,0,U*.6);g.addColorStop(0,rgba150(ac,.12));g.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=g;ctx.fillRect(-W/2,-H/2,W,H);
+    const R=U*.075;ctx.shadowColor=ac;ctx.shadowBlur=U*.06;ctx.fillStyle=ac;ctx.beginPath();ctx.arc(0,-U*.14,R,0,7);ctx.fill();ctx.shadowBlur=0;
+    if(it.ic)icDraw131(ctx,it.ic,0,-U*.14,R*1.15,dark150(ac,.1));else txt150(ctx,(String(it.t1||"n").trim()[0]||"n").toUpperCase(),0,-U*.14,800,R*1.2,dark150(ac,.1),R*1.6);
+    txt150(ctx,it.t1||"",0,-U*.01,800,U*.1,ac,W*.8,"center",ac);if(it.t2)txt150(ctx,it.t2,0,U*.09,600,U*.048,"#fff",W*.8);
+    const its=items150(it);if(its[0])txt150(ctx,its[0],0,H/2-U*.05,500,U*.022,"rgba(255,255,255,.5)",W*.9);ctx.restore();return{w:U*.8,h:U*.45}}};
+function mgDraw150(ctx,W,H,t,it){if(t<it.start||t>it.end)return;const lt=t-it.start,len=Math.max(.2,it.end-it.start),ac=it.accent||"#7CFF4F",U=Math.min(W,H),k=it.k||1,out=it.anim==="none"?1:clamp((len-lt)/.3,0,1);
+  ctx.save();if(it.bg!=="none")bg150(ctx,W,H,ac,t);ctx.globalAlpha=out;const cx=W/2+((it.x??.5)-.5)*W,cy=H/2+((it.y??.5)-.5)*H;ctx.translate(cx,cy);ctx.scale(k,k);
+  let r={w:U*.6,h:U*.4};try{r=(SC150[it.sc]||SC150.words)(ctx,{W:W/k,H:H/k,U,lt:it.anim==="none"?Math.max(lt,9):lt,len,ac,it})||r}catch(e){console.warn("v150 scene",e)}ctx.restore();
+  const w=Math.min(W,r.w*k),h=Math.min(H,r.h*k);(ED.hit=ED.hit||[]).push({k:"info",id:it.id,x:cx-w/2,y:cy-h/2,w,h,cx,cy})}
+// the motion scenes go under the other graphics (banners, stickers, infographics), in their order on the timeline
+edInfoDraw=(o=>function(ctx,W,H,t){const E=S.ed,all=E.infos||[];if(!all.some(x=>x.type==="mg150"))return o.apply(this,arguments);if(!IC131.d)icLoad131();
+  for(const it of all)if(it.type==="mg150")try{mgDraw150(ctx,W,H,t,it)}catch(e){console.warn("v150",e)}
+  E.infos=all.filter(x=>x.type!=="mg150");try{o.apply(this,arguments)}finally{E.infos=all}})(edInfoDraw);
+// the ad's own background clip (dark, the accent's glow) — a clip that needs no file, so an ad can start from nothing
+const isBg150=m=>m&&m.type==="proc"&&m.kind==="mg150";
+drawSrcAt=(o=>function(ctx,m,x,y,w,h,lt){if(!isBg150(m))return o.apply(this,arguments);ctx.save();ctx.translate(x,y);bg150(ctx,w,h,m.ac||"#7CFF4F",lt||0);ctx.restore()})(drawSrcAt);
+drawSrc=(o=>function(ctx,m,w,h){if(!isBg150(m))return o.apply(this,arguments);bg150(ctx,w,h,m.ac||"#7CFF4F",srcTime(m))})(drawSrc);
+clipMedia=(o=>function(c){const m=o.apply(this,arguments);if(m&&c&&c.src&&c.src.k==="demo"&&c.src.kind==="mg150"&&!m._mg150){m._mg150=1;m.ac=c.src.ac;m.name=L("Ad background","خلفية الإعلان");
+  const sz=i=>{const cv=$("#wk"),F=fmt();return cv&&cv.width?(i?cv.height:cv.width):(F&&F[2+i])||(i?1920:1080)};Object.defineProperty(m,"w",{get:()=>sz(0),configurable:true});Object.defineProperty(m,"h",{get:()=>sz(1),configurable:true})}
+  if(m&&m._mg150)m.ac=c.src.ac;return m})(clipMedia);
+
+// ---- 1. a scene by hand: tiles in Graphics & stickers (tap, or hold and drag onto the timeline or the picture); its settings
+function mgAdd150(sc,o){const E=S.ed;E.infos=E.infos||[];if(typeof histPush==="function")try{histPush()}catch(e){}const s=Math.min(ED.t,Math.max(0,edTotal()-1)),ar=S.lang==="ar";
+  const def={logo:{t1:"nooi"},trail:{},phone:{t1:L("Translate this sentence","ترجم هذه الجملة"),items:ar?"أريد | فنجان | قهوة":"I | want | a | coffee"},counter:{val:369,t1:L("day streak","يوماً متتالياً"),ic:"local_fire_department"},
+    board:{t1:L("Diamond League","الدوري الماسي"),t2:L("Top 3 win a trophy","أفضل ثلاثة يفوزون بكأس"),items:(ar?["مايا:1340","عمر:1270","لوسيا:1200","أنت:1060"]:["Maya:1340","Omar:1270","Lucia:1200","You:1060"]).join(" | "),ic:"diamond"},
+    call:{t1:L("Hi! How was your day?","مرحباً! كيف كان يومك؟"),t2:L("Great, thanks!","رائع، شكراً!"),ic:"mood"},nodes:{items:ar?"اللغات | الرياضيات | الموسيقى | الشطرنج":"Languages | Math | Music | Chess"},
+    words:{t1:L("One","واحد"),t2:L("Every skill.","لكل المهارات.")},end:{t1:"nooi",t2:L("Start today","ابدأ اليوم")}}[sc]||{};
+  const it=Object.assign({id:uid(),type:"mg150",sc,start:+s.toFixed(2),end:+(s+3).toFixed(2),x:.5,y:.5,k:1,anim:"in",bg:"dark",accent:(S.ad150&&S.ad150.col)||"#7CFF4F",t1:"",t2:"",items:"",val:""},def,o||{});
+  icons150(it);E.infos.push(it);edSetPick("info",it.id);E.tab="info";ED.t=it.start;persist();renderView();return it}
+// the icon of each node, from its words (languages → a globe, music → a note …)
+function icons150(it){if(it.sc!=="nodes")return;const its=items150(it),f=AD150.f;it.ics=its.map((x,i)=>f?f(x,i):(it.ics&&it.ics[i])||"star");if(!f)mod150().then(m=>{AD150.f=m.iconFor150;it.ics=items150(it).map((x,i)=>m.iconFor150(x,i));persist()}).catch(()=>{})}
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="edi-add"][data-v^="mg150:"],[data-act="mg150-sc"],[data-act="mg150-bg"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();
+  const v=a.dataset.v;if(a.dataset.act==="edi-add"){mgAdd150(v.slice(6));return}const it=edItem(edPick());if(!it||it.type!=="mg150")return;if(typeof histPush==="function")try{histPush()}catch(e2){}
+  if(a.dataset.act==="mg150-sc"){it.sc=v;icons150(it)}else it.bg=v;persist();renderView()},true);
+document.addEventListener("input",e=>{const t=e.target;if(!t||!t.dataset||t.dataset.ib!=="items")return;const it=edItem(edPick());if(it&&it.type==="mg150")icons150(it)});
+VIEWS.edit=(o=>function(){let h=o.apply(this,arguments);const E=S.ed;if(typeof h!=="string"||E.tab!=="info")return h;
+  const tiles='<span class="lbl" style="margin-top:0">'+esc(L("Motion scenes","مشاهد متحركة"))+'</span><div class="mg150g">'+MG150.map(x=>'<button type="button" class="mg150t" data-act="edi-add" data-v="mg150:'+x[0]+'"><span class="mg150i mg150-'+x[0]+'"></span><span>'+esc(L(x[1],x[2]))+"</span></button>").join("")+"</div>";
+  h=h.replace(/<span class="lbl" style="margin-top:0">/,tiles+'<span class="lbl">');
+  const si=edPick()&&edPick().k==="info"&&edItem(edPick());if(!si||si.type!=="mg150")return h;
+  const lab={phone:["Words on the screen (separate with |)","كلمات على الشاشة (افصل بـ |)"],board:["Names and points (Name:points | …; “You” is lit)","الأسماء والنقاط (اسم:نقاط | …؛ «أنت» مضاءة)"],nodes:["Things on the map (separate with |)","العناصر على الخريطة (افصل بـ |)"],end:["Small print at the bottom","سطر صغير في الأسفل"]}[si.sc];
+  const t2l={logo:["Tagline","الشعار النصي"],phone:["Bubble","فقاعة الكلام"],board:["Under the title","تحت العنوان"],call:["The reply","الرد"],words:["Second line","السطر الثاني"],end:["Call to action","دعوة لاتخاذ إجراء"],counter:null,trail:null,nodes:null}[si.sc];
+  const more='<span class="lbl">'+esc(L("Scene","المشهد"))+'</span><div class="chips mg150c">'+MG150.map(x=>'<button type="button" class="chip" data-act="mg150-sc" data-v="'+x[0]+'" aria-pressed="'+(si.sc===x[0])+'">'+esc(L(x[1],x[2]))+"</button>").join("")+"</div>"+
+    (t2l?'<label class="lbl">'+esc(L(t2l[0],t2l[1]))+'</label><input dir="auto" data-ib="t2" value="'+esc(si.t2||"")+'">':"")+
+    (lab?'<label class="lbl">'+esc(L(lab[0],lab[1]))+'</label><input dir="auto" data-ib="items" value="'+esc(Array.isArray(si.items)?si.items.join(" | "):si.items||"")+'">':"")+
+    (si.sc==="counter"?'<label class="lbl">'+esc(L("Number","الرقم"))+'</label><input type="number" data-ib="val" value="'+esc(si.val||"")+'">':"")+
+    '<span class="lbl">'+esc(L("Background","الخلفية"))+'</span><div class="seg"><button type="button" data-act="mg150-bg" data-v="dark" aria-pressed="'+(si.bg!=="none")+'">'+esc(L("Its own (dark, glowing)","خاصة به (داكنة مضيئة)"))+'</button><button type="button" data-act="mg150-bg" data-v="none" aria-pressed="'+(si.bg==="none")+'">'+esc(L("Over the video","فوق الفيديو"))+"</button></div>"+
+    (["logo","counter","board","call","end"].includes(si.sc)?'<span class="lbl">'+esc(L("Icon","الأيقونة"))+'</span><div class="st131g sm">'+ST131.map(s=>'<button type="button" class="st131t" data-act="ic131-set" data-v="'+s[0]+'" aria-pressed="'+(si.ic===s[0])+'" aria-label="'+esc(s[0].replace(/_/g," "))+'">'+icSvg131(s[0])+"</button>").join("")+"</div>":"");
+  return h.replace(/(<input dir="auto" data-ib="t1" value="[^"]*">)/,"$1"+more)})(VIEWS.edit);
+
+// ---- 2. a whole ad from a brief: the plan (the server's text AI, else the page's own plan), a timeline of its own, the
+// scenes cut to the music's beat (when there is music), whooshes at the cuts — free
+S.ad150=Object.assign({brand:"",msg:"",col:"#7CFF4F",len:20},S.ad150||{});
+const COL150=["#7CFF4F","#1CB0F6","#FFC800","#FF4B4B","#CE82FF","#2DD4A8","#FF7A1A","#FFFFFF"];
+// the beats of the music on the timeline (the music loops from the start)
+function beatsAt150(total){const b=S.ed.beats146;if(!b||!b.on||!Array.isArray(b.t)||!b.t.length||!M.edMusic)return null;const d=+b.dur||0,o=[];for(let k=0;k<=(d>0?Math.ceil(total/d):0);k++)for(const x of b.t){const y=x+k*(d||0);if(y<=total+.6)o.push(y)}return o.sort((a,c)=>a-c)}
+// scene edges on the nearest beat (within 0.45 s), every scene at least 1 s
+function snap150(edges,beats){if(!beats||!beats.length)return edges;const o=edges.slice();for(let i=1;i<o.length-1;i++){let best=o[i],bd=.45;for(const b of beats){const d=Math.abs(b-o[i]);if(d<bd&&b-o[i-1]>=1&&o[i+1]-b>=1){bd=d;best=b}}o[i]=+best.toFixed(2)}return o}
+async function plan150(b){if(API.mode==="server"&&S.user){try{const r=await API.req("/v1/motion150/plan",{json:b});if(r&&Array.isArray(r.scenes)&&r.scenes.length>=2)return{scenes:r.scenes,by:r.by||"ai"}}catch(e){}}
+  const m=await mod150();return{scenes:m.plan150(b),by:"local"}}
+function build150(scenes,o){const E0=S.ed;if(typeof histPush==="function")try{histPush()}catch(e){}
+  if(E0.clips.length||(E0.texts||[]).length||(E0.infos||[]).length){if(!seqNew148())return false;const q=S.ed.seq148,cur=q&&q.list.find(x=>x.id===q.cur);if(cur)cur.name=(L("Ad · ","إعلان · ")+(o.brand||"nooi")).slice(0,40)}
+  const E=S.ed;E.infos=E.infos||[];E.sfx=E.sfx||[];let edges=[0];scenes.forEach(s=>edges.push(+(edges[edges.length-1]+s.dur).toFixed(2)));const total=edges[edges.length-1];edges=snap150(edges,beatsAt150(total));
+  E.clips.push({id:uid(),src:{k:"demo",kind:"mg150",ac:o.col,name:"Motion ad background"},in:0,out:+Math.min(60,total).toFixed(2),speed:1,trans:"cut",vol:0});
+  scenes.forEach((s,i)=>{const it={id:uid(),type:"mg150",sc:s.sc,start:edges[i],end:edges[i+1],x:.5,y:.5,k:1,anim:"in",bg:"dark",accent:o.col,t1:s.t1||"",t2:s.t2||"",items:(s.items||[]).join(" | "),val:s.val==null?"":String(s.val),ic:s.ic||null,ad150:1};
+    if(s.sc==="nodes"&&AD150.f)it.ics=(s.items||[]).map((x,j)=>AD150.f(x,j));E.infos.push(it);
+    if(i>0)E.sfx.push({id:uid(),n:"whoosh",t:+Math.max(0,edges[i]-.18).toFixed(2),vol:55,ad150:1});
+    if(s.sc==="logo"||s.sc==="counter")E.sfx.push({id:uid(),n:"impact",t:+(edges[i]+.35).toFixed(2),vol:60,ad150:1});
+    if(s.sc==="board")E.sfx.push({id:uid(),n:"ding",t:+(edges[i]+(edges[i+1]-edges[i])*.8).toFixed(2),vol:50,ad150:1})});
+  E.sel=null;edSetPick(null);ED.t=0;ED.playing=false;persist();renderView();return true}
+// scenes already on the timeline → their edges on the music's beat (after music was added), the whooshes with them
+function rebeat150(){const E=S.ed,sc=(E.infos||[]).filter(x=>x.type==="mg150").sort((a,b)=>a.start-b.start);if(sc.length<2)return 0;const total=Math.max(edTotal(),sc[sc.length-1].end),bt=beatsAt150(total);if(!bt)return-1;
+  if(typeof histPush==="function")try{histPush()}catch(e){}const ed=[sc[0].start].concat(sc.map(x=>x.end)),nw=snap150(ed,bt);let n=0;
+  sc.forEach((x,i)=>{const s=nw[i],e=nw[i+1];if(Math.abs(s-x.start)>.01||Math.abs(e-x.end)>.01)n++;const old=x.start;x.start=s;x.end=e;(E.sfx||[]).forEach(f=>{if(f.ad150&&Math.abs(f.t-(old-.18))<.05)f.t=+Math.max(0,s-.18).toFixed(2)})});persist();renderView();return n}
+async function go150(){if(AD150.busy)return;const a=S.ad150;if(!String(a.msg||"").trim()&&!String(a.brand||"").trim()){toast(L("Say what the ad is about first.","اكتب موضوع الإعلان أولاً."),{type:"warn"});return}
+  AD150.busy=true;renderView();try{const m=await mod150();AD150.f=m.iconFor150;const r=await plan150({brand:a.brand,msg:a.msg,len:a.len,lang:S.lang});const sc=m.clean150(r.scenes,a.len);
+    if(sc.length<2)throw new Error(L("The plan came back empty.","عادت الخطة فارغة."));if(build150(sc,a))toast(L("Your ad is on its own timeline — "+sc.length+" scenes. Tap a scene to change its words, colour or length.","إعلانك في خط زمني خاص به — "+sc.length+" مشاهد. اضغط مشهداً لتغيير كلماته أو لونه أو طوله."),{type:"ok"})}
+  catch(e){toast(L("Couldn't build the ad: ","تعذّر بناء الإعلان: ")+(S.lang==="ar"&&e.errorAr?e.errorAr:(e.message||e)),{type:"warn"})}finally{AD150.busy=false;renderView()}}
+function adPanel150(){const a=S.ad150,E=S.ed,sc=(E.infos||[]).filter(x=>x.type==="mg150").sort((x,y)=>x.start-y.start),beats=!!beatsAt150(10);
+  return'<p class="small mute" style="margin-top:0">'+esc(L("Describe the ad — the AI builds it as animated scenes (logo, light trails, a phone screen, big numbers, a leaderboard, a call, a map of skills, words, an end card) on a timeline of its own, cut to your music's beat. Free. Every scene can be changed after.","صِف الإعلان — يبنيه الذكاء مشاهد متحركة (شعار، مسارات ضوئية، شاشة هاتف، أرقام كبيرة، لوحة صدارة، مكالمة، خريطة مهارات، كلمات، بطاقة ختامية) في خط زمني خاص به، على إيقاع موسيقاك. مجاناً. ويمكن تغيير كل مشهد بعدها."))+"</p>"+
+    '<label class="lbl" for="ad150b">'+esc(L("Brand or product","العلامة أو المنتج"))+'</label><input id="ad150b" dir="auto" data-ad150="brand" value="'+esc(a.brand||"")+'" placeholder="'+esc(L("e.g. nooi","مثال: nooi"))+'">'+
+    '<label class="lbl" for="ad150m">'+esc(L("What should it say?","ماذا يقول الإعلان؟"))+'</label><textarea id="ad150m" rows="4" dir="auto" data-ad150="msg" placeholder="'+esc(L("e.g. Learn any skill in 5 minutes a day. Keep a 369-day streak and climb the league with friends. Talk to a tutor on a video call. Pick from: languages, math, music, chess. One app. Every skill.","مثال: تعلّم أي مهارة في 5 دقائق يومياً. حافظ على سلسلة 369 يوماً ونافس أصدقاءك في الدوري. تحدّث مع مدرّس في مكالمة فيديو. اختر: اللغات، الرياضيات، الموسيقى، الشطرنج. تطبيق واحد. كل المهارات."))+'">'+esc(a.msg||"")+"</textarea>"+
+    '<span class="lbl">'+esc(L("Colour","اللون"))+'</span><div class="row" style="gap:6px">'+COL150.map(c=>'<button type="button" class="swc'+(a.col===c?" on":"")+'" data-act="ad150-col" data-v="'+c+'" style="background:'+c+'" aria-label="'+c+'"></button>').join("")+"</div>"+
+    '<span class="lbl">'+esc(L("Length","المدة"))+'</span><div class="seg">'+[15,20,30,45,60].map(n=>'<button type="button" data-act="ad150-len" data-v="'+n+'" aria-pressed="'+(+a.len===n)+'">'+n+L("s","ث")+"</button>").join("")+"</div>"+
+    '<div class="row" style="margin-top:12px;gap:8px;flex-wrap:wrap"><button type="button" class="btn primary" data-act="ad150-go"'+(AD150.busy?" disabled":"")+">"+ic("mg150")+esc(AD150.busy?L("Building…","جارٍ البناء…"):L("Build the ad","ابنِ الإعلان"))+'</button>'+price140(0)+"</div>"+
+    (M.edMusic?"":'<p class="small mute">'+esc(L("Add music (Audio) and the scenes follow its beat — or use “Fit to the beat” after.","أضف موسيقى (الصوت) فتتبع المشاهد إيقاعها — أو استخدم «على الإيقاع» بعدها."))+"</p>")+
+    (sc.length?'<span class="lbl">'+esc(L("Scenes on this timeline","المشاهد في هذا الخط الزمني"))+'</span><div class="chips ad150l">'+sc.map(x=>'<button type="button" class="chip" data-act="ad150-pick" data-v="'+x.id+'">'+esc(mmss(x.start)+" · "+L(...(MGN150[x.sc]||["Scene","مشهد"])))+"</button>").join("")+"</div>"+
+      '<button type="button" class="btn sm" style="margin-top:8px" data-act="ad150-beat"'+(beats?"":" disabled")+">"+ic("music")+esc(L("Fit to the beat","على الإيقاع"))+"</button>":"")}
+TABS143.find(x=>x[0]==="ai")[4].splice(1,0,"ad150");
+TABS143.find(x=>x[0]==="audio")[4].push("mix150");
+Object.assign(N143,{ad150:["Motion ad","إعلان متحرك"],mix150:["Mixer","المكسر"]});
+EDX_PANELS.ad150=adPanel150;
+document.addEventListener("input",e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.ad150)return;S.ad150[t.dataset.ad150]=t.value;clearTimeout(AD150.t);AD150.t=setTimeout(persist,400)});
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act^="ad150-"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();const v=a.dataset.v,act=a.dataset.act;
+  if(act==="ad150-go")return void go150();if(act==="ad150-col"){S.ad150.col=v;persist();renderView();return}if(act==="ad150-len"){S.ad150.len=+v;persist();renderView();return}
+  if(act==="ad150-pick"){const it=(S.ed.infos||[]).find(x=>x.id===v);if(it){edSetPick("info",it.id);ED.t=it.start;S.ed.tab="info";renderView()}return}
+  if(act==="ad150-beat"){const n=rebeat150();toast(n<0?L("Add music first — the scenes follow its beat.","أضف موسيقى أولاً — تتبع المشاهد إيقاعها."):L("On the beat — "+n+" scene edge(s) moved.","على الإيقاع — تحرّكت حواف "+n+" مشهد."),{type:n<0?"warn":"ok"})}},true);
+// an AI agent's motion ad or scene (lib/motion150.js), seen live in the open editor
+op148=(o=>function(op){if(op.op!=="motion_add")return o.apply(this,arguments);const E=S.ed,a=op.args||{},q=E.seq148,s=op.tl&&q&&q.cur!==op.tl&&Array.isArray(q.list)?q.list.find(x=>x.id===op.tl):null,ed=s&&s.data?s.data:E;
+  if(!Array.isArray(ed.clips))ed.clips=[];ed.infos=ed.infos||[];ed.sfx=ed.sfx||[];let n=0;if(a.bg&&!ed.clips.some(c=>c.id===a.bg.id)){ed.clips.push({id:a.bg.id,src:{k:"demo",kind:"mg150",ac:a.bg.ac,name:"Motion ad background"},in:0,out:a.bg.out,speed:1,trans:"cut",vol:0});n++}
+  for(const it of a.infos||[])if(!ed.infos.some(x=>x.id===it.id)){if(it.sc==="nodes"&&AD150.f)it.ics=items150(it).map((x,j)=>AD150.f(x,j));ed.infos.push(it);n++}
+  for(const f of a.sfx||[])if(!ed.sfx.some(x=>x.id===f.id)){ed.sfx.push(f);n++}return n>0})(op148);
+
+// ---- 3. the mixer: clips, music, voice-over, sound effects and the master — a fader and a level meter each, mute; the same mix in
+// the preview and the export
+const MX150=[["clips","Clips","المقاطع","video"],["music","Music","الموسيقى","music"],["voice","Voice-over","التعليق","mic"],["sfx","Effects","المؤثرات","sfx"],["master","Master","الرئيسي","mix150"]];
+const mixOf150=()=>Object.assign({clips:100,sfx:100,master:100,mute:{}},S.ed.mix150||{});
+function fader150(k){const E=S.ed,m=mixOf150();return k==="music"?(E.musicVol??80):k==="voice"?(E.voiceVol??100):+m[k]}
+function bus150(k){const m=mixOf150(),mute=m.mute||{};if(mute[k]||mute.master)return 0;const ms=(+m.master)/100;return k==="master"?ms:k==="clips"||k==="sfx"?ms*(+m[k])/100:ms}
+syncClipMedia=(o=>function(i,lt,playing){const r=o.apply(this,arguments);const E=S.ed;if(!E||!E.mix150)return r;try{
+  const gc=bus150("clips"),c=E.clips[i],m=c&&M["c_"+c.id];if(gc!==1&&m&&m.type==="video"&&m.el)m.el.volume=clamp(m.el.volume*gc,0,1);
+  if(gc!==1)(E.layers||[]).forEach(Ly=>{const lm=M["ly_"+Ly.id];if(lm&&lm.type==="video"&&lm.el&&Ly.sound)lm.el.volume=clamp((Ly.vol??100)/100*gc,0,1)});
+  const mu=M.edMusic;if(mu&&mu.el)mu.el.volume=clamp((E.musicVol??80)/100*bus150("music"),0,1);
+  const vo=M.edVoice;if(vo&&vo.el)vo.el.volume=clamp((E.voiceVol??100)/100*bus150("voice"),0,1);
+  if(EDX.bus)EDX.bus.gain.value=bus150("sfx")}catch(e){}return r})(syncClipMedia);
+// the export's mix: each source's level times its fader and the master, only while it is mixed
+mix139=(o=>async function(total){const E=S.ed;if(!E.mix150)return o.apply(this,arguments);const keep={clips:E.clips.map(c=>c.vol),mv:E.musicVol,vv:E.voiceVol,sfx:(E.sfx||[]).map(x=>x.vol),ly:(E.layers||[]).map(x=>x.vol)},gc=bus150("clips"),gs=bus150("sfx");
+  E.clips.forEach(c=>{c.vol=(c.vol||0)*gc});E.musicVol=(E.musicVol??80)*bus150("music");E.voiceVol=(E.voiceVol??100)*bus150("voice");(E.sfx||[]).forEach(x=>{x.vol=(x.vol??100)*gs});(E.layers||[]).forEach(x=>{x.vol=(x.vol??100)*gc});
+  try{return await o.apply(this,arguments)}finally{E.clips.forEach((c,i)=>{c.vol=keep.clips[i]});E.musicVol=keep.mv;E.voiceVol=keep.vv;(E.sfx||[]).forEach((x,i)=>{x.vol=keep.sfx[i]});(E.layers||[]).forEach((x,i)=>{x.vol=keep.ly[i]})}})(mix139);
+// the meters read the sound's own peaks (the waveforms of v141) at the playhead, times the fader — no extra sound graph
+const MT150={raf:0,pk:{}};
+function lvl150(k){const E=S.ed,t=ED.t,at=(key,m,x,loop)=>{const w=WF141.get(key);if(w===undefined&&m){wfGet141(key,()=>decode141(key,m));return 0}if(!w||w==="busy")return 0;let y=x;if(loop&&w.dur>0)y=x%w.dur;if(y<0||y>w.dur)return 0;return w.p[Math.min(w.p.length-1,Math.floor(y*w.R))]||0};
+  if(k==="clips"){if(!E.clips.length||E.clipSound===false)return 0;const st=edStarts();let i=st.findIndex((s,j)=>t>=s&&t<s+clipDur(E.clips[j]));if(i<0)return 0;const c=E.clips[i],m=clipMedia(c);if(!m||m.type!=="video"||!(c.vol>0))return 0;
+    const key=m.url||(m.el&&m.el.src);return key?at(key,m,c.in+(t-st[i])*(c.speed||1))*(c.vol/100)*bus150("clips"):0}
+  if(k==="music"){const mu=M.edMusic;if(!mu)return 0;const key="mu:"+(mu.url||(mu.el&&mu.el.src));return at(key,mu,t,true)*(E.musicVol??80)/100*bus150("music")}
+  if(k==="voice"){const vo=M.edVoice;if(!vo)return 0;const key="vo:"+(vo.url||(vo.el&&vo.el.src));return at(key,vo,t)*(E.voiceVol??100)/100*bus150("voice")}
+  if(k==="sfx"){let mx=0;for(const it of E.sfx||[]){if(t<it.t)continue;const key="sx:"+(it.n==="file"?it.id:it.n),w=WF141.get(key);if(w===undefined){wfGet141(key,()=>edxBuffer(it));continue}if(!w||w==="busy"||t>it.t+w.dur)continue;mx=Math.max(mx,at(key,null,t-it.t)*(it.vol??100)/100)}return mx*bus150("sfx")}
+  return Math.min(1.2,Math.hypot(lvl150("clips"),lvl150("music"),lvl150("voice"),lvl150("sfx")))}
+const db150=v=>v>0?clamp((20*Math.log10(v)+48)/48,0,1):0;
+function meter150(){MT150.raf=0;const rows=document.querySelectorAll(".mx150r");if(!rows.length||S.view!=="edit")return;rows.forEach(r=>{const k=r.dataset.k,v=db150(lvl150(k)),pk=MT150.pk[k]=Math.max(v,(MT150.pk[k]||0)-.012),b=r.querySelector(".mx150m i"),p=r.querySelector(".mx150m b");
+  if(b)b.style.width=(v*100).toFixed(1)+"%";if(p)p.style.insetInlineStart="calc("+(pk*100).toFixed(1)+"% - 2px)";if(b)b.classList.toggle("hot",v>.92)});MT150.raf=requestAnimationFrame(meter150)}
+function mixPanel150(){const m=mixOf150(),mute=m.mute||{};if(!MT150.raf)MT150.raf=requestAnimationFrame(meter150);
+  return'<p class="small mute" style="margin-top:0">'+esc(L("The level of each kind of sound — the same in the preview and the exported video. Play to see the meters move.","مستوى كل نوع من الصوت — نفسه في المعاينة والفيديو المُصدَّر. شغّل لترى المؤشرات تتحرك."))+'</p><div class="mx150">'+
+    MX150.map(([k,en,ar,icn])=>{const v=Math.round(fader150(k));return'<div class="mx150r'+(k==="master"?" mst":"")+'" data-k="'+k+'"><span class="mx150n">'+ic(icn)+"<b>"+esc(L(en,ar))+'</b></span><div class="mx150m" aria-hidden="true"><i></i><b></b></div>'+
+      '<input type="range" min="0" max="100" step="1" value="'+v+'" data-mx150="'+k+'" aria-label="'+esc(L(en,ar))+'"><span class="mono mx150v">'+v+'</span><button type="button" class="btn sm ghost mx150x" data-act="mx150-mute" data-v="'+k+'" aria-pressed="'+!!mute[k]+'" aria-label="'+esc(L("Mute ","كتم ")+L(en,ar))+'">M</button></div>'}).join("")+
+    '</div><button type="button" class="btn sm ghost" style="margin-top:8px" data-act="mx150-reset">'+ic("refresh")+esc(L("Reset the mix","إعادة المزج"))+"</button>"}
+EDX_PANELS.mix150=mixPanel150;
+document.addEventListener("input",e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.mx150)return;const k=t.dataset.mx150,v=clamp(+t.value,0,100),E=S.ed;
+  if(k==="music")E.musicVol=v;else if(k==="voice")E.voiceVol=v;else{E.mix150=mixOf150();E.mix150[k]=v}if(!E.mix150)E.mix150=mixOf150();const s=t.parentElement&&t.parentElement.querySelector(".mx150v");if(s)s.textContent=String(v);clearTimeout(MT150.t);MT150.t=setTimeout(persist,400)});
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="mx150-mute"],[data-act="mx150-reset"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();const E=S.ed;
+  if(a.dataset.act==="mx150-reset"){E.mix150={clips:100,sfx:100,master:100,mute:{}};E.musicVol=80;E.voiceVol=100}else{E.mix150=mixOf150();E.mix150.mute=Object.assign({},E.mix150.mute);E.mix150.mute[a.dataset.v]=!E.mix150.mute[a.dataset.v]}persist();renderView()},true);
+(()=>{const st=document.createElement("style");st.textContent=`
+.mg150g{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;margin-bottom:6px}
+.mg150t{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 4px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg);font-size:12px;line-height:1.2;text-align:center;cursor:pointer;min-height:84px}
+.mg150t:hover{border-color:var(--acc,#7CFF4F)}
+.mg150i{width:100%;height:40px;border-radius:8px;background:radial-gradient(circle at 50% 45%,#16301c,#050a07 70%);position:relative;overflow:hidden}
+.mg150i::after{content:"";position:absolute;inset:0;background-repeat:no-repeat}
+.mg150-logo::after{background:radial-gradient(circle at 50% 50%,#7CFF4F 0 7px,transparent 8px)}
+.mg150-trail::after{background:linear-gradient(160deg,transparent 45%,#7CFF4F 47%,#bfffa0 48%,transparent 50%)}
+.mg150-phone::after{inset:5px 40%;border:2px solid #7CFF4F;border-radius:4px}
+.mg150-counter::after{content:"369";color:#FFA41B;font:800 16px/40px system-ui;text-align:center;text-shadow:0 0 6px #FFA41B}
+.mg150-board::after{inset:6px 28%;background:repeating-linear-gradient(#ffffff40 0 3px,transparent 3px 6px);border-radius:3px}
+.mg150-call::after{inset:9px 34%;border-radius:50%;background:#7CFF4F;box-shadow:0 0 8px #7CFF4F}
+.mg150-nodes::after{background:radial-gradient(circle at 25% 40%,#58CC02 0 4px,transparent 5px),radial-gradient(circle at 50% 30%,#1CB0F6 0 4px,transparent 5px),radial-gradient(circle at 75% 40%,#CE82FF 0 4px,transparent 5px)}
+.mg150-words::after{content:"Aa";color:#fff;font:800 18px/40px system-ui;text-align:center;text-shadow:0 0 6px #7CFF4F}
+.mg150-end::after{content:"";inset:12px 44%;border-radius:50%;background:#7CFF4F}
+.ad150l{margin-top:4px}
+.mx150{display:flex;flex-direction:column;gap:8px}
+.mx150r{display:grid;grid-template-columns:minmax(96px,1.1fr) minmax(60px,1fr) minmax(80px,1.4fr) 30px 34px;align-items:center;gap:8px}
+.mx150r.mst{border-top:1px solid var(--line);padding-top:8px}
+.mx150n{display:flex;align-items:center;gap:6px;min-width:0}.mx150n b{font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mx150n svg{width:16px;height:16px;flex:none}
+.mx150m{position:relative;height:8px;border-radius:4px;background:color-mix(in srgb,var(--fg) 12%,transparent);overflow:hidden}
+.mx150m i{position:absolute;inset-block:0;inset-inline-start:0;width:0;background:linear-gradient(90deg,#2dd4a8,#7CFF4F 70%,#FFC800 88%,#FF4B4B);border-radius:4px}
+.mx150m b{position:absolute;inset-block:0;width:2px;inset-inline-start:-4px;background:var(--fg);opacity:.7}
+.mx150r input[type=range]{width:100%;min-width:0}
+.mx150v{font-size:12px;text-align:end}
+.mx150x{min-width:30px;padding:2px 0}.mx150x[aria-pressed="true"]{background:#FF4B4B;color:#fff;border-color:#FF4B4B}
+@media (max-width:420px){.mx150r{grid-template-columns:minmax(100px,1.25fr) minmax(32px,.6fr) minmax(70px,1.2fr) 26px 30px;gap:6px}}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

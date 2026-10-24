@@ -141,7 +141,7 @@ async def phone(b, lang):
     chk(f"{tag}: preview, play row, prompt bar, timeline, settings — in that order; the preview pinned", r["order"] == sorted(r["order"]) and min(r["order"]) >= 0 and r["sticky"] == "sticky", r["order"])
     chk(f"{tag}: a slim header with the page title; no sideways scroll", r["title"].strip() in ("Video editor", "محرر الفيديو") and r["top"][3] - r["top"][1] <= 96 and r["sw"] <= 390, [r["top"], r["sw"]])
     # a tap on a clip: the clip's own tools
-    await E("()=>document.querySelector('#tlin .blk[data-clip]').scrollIntoView({block:'center'})"); await pg.wait_for_timeout(150); bb = await pg.locator("#tlin .blk[data-clip]").first.bounding_box()   # (in the middle: the tool bar at the foot covers the bottom)
+    await E("()=>document.querySelector('#tlin .blk[data-clip]').scrollIntoView({block:'center'})"); await pg.wait_for_timeout(700); bb = await pg.locator("#tlin .blk[data-clip]").first.bounding_box()   # (in the middle: the tool bar at the foot covers the bottom · v149: after the pinned preview has finished resizing)
     await pg.touchscreen.tap(bb["x"] + 30, bb["y"] + bb["height"] / 2); await pg.wait_for_timeout(500)
     c = await E("()=>({ctx:document.querySelector('.e-bar').classList.contains('ctx'),tools:[...document.querySelectorAll('.e-bar button')].map(b=>b.dataset.v||b.dataset.act),sheet:!!document.querySelector('.e-sheet'),kind:kind143()})")
     out[tag + "_ctx"] = c

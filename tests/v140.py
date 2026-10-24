@@ -48,7 +48,8 @@ async def editor(p):
         await pg.click(f'.e-rail [data-v="{v}"]'); await pg.wait_for_timeout(80)
         seq.append(await E("()=>[S.ed.tab,[...document.querySelectorAll('.e-assets .e-sub button')].map(b=>b.dataset.v),document.querySelector('.e-details .e-body')?.dataset.tab]"))
     out["groups_seq"] = seq
-    chk("…a tool opens its first panel (Filters → Filters & color, Audio → Music & voice, AI → Assistant) and the clip's details stay", seq[0][0] == "color" and seq[0][1] == ["color", "look"] and seq[1][0] == "audio" and seq[2][0] == "chat143" and seq[2][1] == ["chat143", "ai140", "ai", "3d"] and all(x[2] == "clip" for x in seq), seq)
+    # (v150: AI has Motion ad after the Assistant; Audio has the Mixer last)
+    chk("…a tool opens its first panel (Filters → Filters & color, Audio → Music & voice, AI → Assistant) and the clip's details stay", seq[0][0] == "color" and seq[0][1] == ["color", "look"] and seq[1][0] == "audio" and seq[2][0] == "chat143" and seq[2][1] == ["chat143", "ad150", "ai140", "ai", "3d"] and all(x[2] == "clip" for x in seq), seq)
     await pg.click('.e-assets .e-sub [data-v="layers"]'); await pg.click('.e-rail [data-v="text"]'); await pg.click('.e-rail [data-v="effects"]')
     chk("…and comes back to the panel you were on in it (Overlays)", await E("()=>S.ed.tab") == "layers")
     # ---- 2. pro colour on the graphics card
