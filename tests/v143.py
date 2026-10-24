@@ -136,7 +136,7 @@ async def phone(b, lang):
     out[tag + "_page"] = r
     foot = r["bn"][1] if r["bn"] else r["vh"]
     chk(f"{tag}: the tool bar is fixed at the foot, just above the site's bar", r["pos"] == "fixed" and abs(r["bar"][3] - foot) <= 2 and not r["ctx"], r)
-    chk(f"{tag}: the add tools, the project and the magnet on the bar", r["tools"] == RAIL + ["export", "snap141"], r["tools"])
+    chk(f"{tag}: the add tools, the project and the magnet on the bar", r["tools"] == RAIL + ["export", "mk146-add", "snap141"], r["tools"])
     chk(f"{tag}: CapCut's play row: no separate tool row, undo and redo beside play", r["edbar"] == 0 and r["undo"], [r["edbar"], r["undo"]])
     chk(f"{tag}: preview, play row, prompt bar, timeline, settings — in that order; the preview pinned", r["order"] == sorted(r["order"]) and min(r["order"]) >= 0 and r["sticky"] == "sticky", r["order"])
     chk(f"{tag}: a slim header with the page title; no sideways scroll", r["title"].strip() in ("Video editor", "محرر الفيديو") and r["top"][3] - r["top"][1] <= 96 and r["sw"] <= 390, [r["top"], r["sw"]])
@@ -145,7 +145,7 @@ async def phone(b, lang):
     await pg.touchscreen.tap(bb["x"] + 30, bb["y"] + bb["height"] / 2); await pg.wait_for_timeout(500)
     c = await E("()=>({ctx:document.querySelector('.e-bar').classList.contains('ctx'),tools:[...document.querySelectorAll('.e-bar button')].map(b=>b.dataset.v||b.dataset.act),sheet:!!document.querySelector('.e-sheet'),kind:kind143()})")
     out[tag + "_ctx"] = c
-    want = ["desel143", "clip", "ed-split", "speed145", "audio145", "anim145", "motion", "color", "trans143", "clip#crop", "90", "rev145", "edx-freeze", "fh", "ed-dup", "ed-move", "ed-move", "ed-extend91", "bg144", "clip#replace", "xa145", "track", "ai140", "ed-del", "snap141"]   # (v144: Background · v145: Speed/Volume/Animation tabs, Crop, Rotate, Reverse, Replace, Extract audio)
+    want = ["desel143", "clip", "ed-split", "speed145", "audio145", "anim145", "motion", "color", "trans143", "clip#crop", "90", "rev145", "edx-freeze", "fh", "ed-dup", "ed-move", "ed-move", "ed-extend91", "bg144", "clip#replace", "xa145", "track", "ai140", "cp146", "msm146", "ed-del", "snap141"]   # (v146: Copy, Select more · v144: Background · v145: Speed/Volume/Animation tabs, Crop, Rotate, Reverse, Replace, Extract audio)
     chk(f"{tag}: a tap on a clip shows its own tools at the foot (Split, Speed, Volume, Motion, Filters, Transition, Freeze, Mirror, Duplicate, Earlier, Later, Extend, Background, Tracking, AI, Delete)", c["ctx"] and c["kind"] == "clip" and c["tools"] == want and not c["sheet"], c)
     await E("()=>{const b=document.querySelector('.e-bar [data-v=\"speed145\"]');b.scrollIntoView({inline:'center'});b.click()}"); await pg.wait_for_timeout(600)
     sp = await E("()=>{const s=document.querySelector('.e-sheet'),st=document.querySelector('.edstage').getBoundingClientRect(),l=[...s.querySelectorAll('.lbl')].find(x=>/speed|السرعة/i.test(x.textContent));return{tab:S.ed.tab,lbl:l?Math.round(l.getBoundingClientRect().top):null,under:Math.round(st.bottom),bar:Math.round(document.querySelector('.e-bar').getBoundingClientRect().top)}}")

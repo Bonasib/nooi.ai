@@ -580,12 +580,9 @@ html[dir="rtl"] .lpticker>div{animation-name:tickr}@keyframes tickr{to{transform
   .tlin{min-height:128px;padding-left:34px}
   .trk{height:34px}
   .blk{line-height:24px}
-  .edtools{gap:6px}
-  .edtools .btn{flex:1 1 auto}
   .fmtbtn{width:100%}
   .view>.spread>h1{flex:1 1 100%}
 }
-.edtools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
 .transport .tc{white-space:nowrap}
 .fmtbtn svg{width:16px;height:16px;flex:none}
 .btn.big{white-space:normal;flex-wrap:wrap;text-align:center;line-height:1.35}
@@ -626,7 +623,6 @@ html[dir="rtl"] .lpticker>div{animation-name:tickr}@keyframes tickr{to{transform
 .demob b{color:#F5C518;font-weight:600}
 .demob .dp{color:#9CD245}
 .demob[hidden]{display:none}
-.trkhint{position:absolute;inset-inline-start:8px;top:50%;transform:translateY(-50%);font-size:11.5px;color:var(--dim);pointer-events:none;white-space:nowrap}
 .trk[data-trk]{cursor:copy;border-radius:6px}
 .trk[data-trk]:hover{background:color-mix(in srgb,var(--lime) 5%,transparent)}
 .thumb .m{font-family:var(--sans);letter-spacing:0;font-size:10.5px}
@@ -2922,17 +2918,14 @@ function edTick(now){
 function edStarts(){let s=0;return S.ed.clips.map(c=>{const r=s;s+=clipDur(c);return r})}
 VIEWS.edit=()=>{
   const E=S.ed,F=fmt(),total=edTotal(),pps=E.zoom,st=edStarts(),selC=E.clips.find(c=>c.id===E.sel),selT=E.texts.find(t=>t.id===E.selText);
-  const ruler=Array.from({length:Math.ceil(total)+2},(_,s)=>s%(pps<25?5:1)===0?'<span style="left:'+(s*pps)+'px">'+s+"s</span>":"").join("");
-  const tl='<div class="tlwrap" dir="ltr"><div class="tlin" id="tlin" style="width:'+(total*pps+120)+'px"><div class="ruler">'+ruler+'</div><div class="trk"><span class="tn">V</span>'+E.clips.map((c,i)=>'<div class="blk v" data-clip="'+c.id+'" aria-current="'+(E.sel===c.id)+'" style="left:'+(st[i]*pps)+"px;width:"+Math.max(18,clipDur(c)*pps-2)+'px">'+esc(clipName(c))+"</div>").join("")+'</div><div class="trk"><span class="tn">T</span>'+E.texts.map(t=>'<div class="blk t" data-textl="'+t.id+'" aria-current="'+(E.selText===t.id)+'" style="left:'+(t.start*pps)+"px;width:"+Math.max(18,(t.end-t.start)*pps-2)+'px">'+esc(t.text)+"</div>").join("")+'</div><div class="trk"><span class="tn">♪</span>'+(M.edMusic?'<div class="blk a" style="left:0;width:'+Math.max(40,total*pps)+'px">'+esc(M.edMusic.name)+"</div>":"")+'</div><div class="ph" id="ph" style="left:'+(40+ED.t*pps)+'px"></div></div></div>';
   const tabs=[["clip","Clip","المقطع"],["text","Text","النصوص"],["look","Adjust & effects","الضبط والمؤثرات"],["audio","Audio","الصوت"],["ai","AI edit","تعديل بالذكاء"],["export","Export","التصدير"]];
   let insp="";const T=S.tools.edit,fx=T.fx||{};
-  if(E.tab==="clip"){if(selC){const m=clipMedia(selC);const sd=m?Math.max(srcDur(m),selC.out):selC.out;insp='<div class="small mute" style="margin-bottom:8px">'+esc(clipName(selC))+"</div>"+(m&&m.type!=="image"?slider("edclip.in",L("Start","البداية"),+selC.in.toFixed(1),0,Math.max(.1,sd-.1),.1,"s")+slider("edclip.out",L("End","النهاية"),+selC.out.toFixed(1),.2,Math.max(.2,sd),.1,"s"):slider("edclip.out",L("Show for","مدة العرض"),+selC.out.toFixed(1),.5,15,.5,"s"))+'<span class="lbl">'+L("Speed","السرعة")+"</span>"+chips("edclip.speed",[[.25,"0.25×"],[.5,"0.5×"],[1,"1×"],[1.5,"1.5×"],[2,"2×"],[4,"4×"]],selC.speed,{num:1})+slider("edclip.vol",L("Clip volume","صوت المقطع"),selC.vol,0,100,1,"%")+'<span class="lbl">'+L("Transition to next","الانتقال للتالي")+"</span>"+chips("edclip.trans",[["cut","Cut","قطع"],["fade","Crossfade","تلاشي"],["dip","Dip to black","للأسود"],["slide","Slide","انزلاق"]],selC.trans)+'<div class="row" style="margin-top:14px"><button class="btn sm" data-act="ed-split">'+ic("split")+L("Split at playhead","قص عند المؤشر")+'</button><button class="btn sm" data-act="ed-move" data-d="-1">'+ic("prev")+'</button><button class="btn sm" data-act="ed-move" data-d="1">'+ic("next")+'</button><button class="btn sm" data-act="ed-dup">'+ic("plus")+L("Duplicate","تكرار")+'</button><button class="btn sm ghost danger" data-act="ed-del">'+ic("trash")+"</button></div>"}else insp='<p class="mute small">'+L("Tap a clip on the timeline to trim it, change speed, volume and transition.","اضغط على مقطع في الخط الزمني لقصه وتغيير سرعته وصوته وانتقاله.")+"</p>"}
-  else if(E.tab==="text"){insp='<button class="btn sm primary" data-act="ed-addtext">'+ic("text")+L("Add text","أضف نصاً")+"</button>"+(selT?'<label class="lbl">'+L("Text","النص")+'</label><input type="text" data-bind="edtext.text" value="'+esc(selT.text)+'">'+slider("edtext.start",L("Appears","يظهر عند"),+selT.start.toFixed(1),0,Math.max(.5,total),.1,"s")+slider("edtext.end",L("Disappears","يختفي عند"),+selT.end.toFixed(1),.2,Math.max(.5,total),.1,"s")+'<span class="lbl">'+L("Position","الموضع")+"</span>"+chips("edtext.pos",[["top","Top","أعلى"],["center","Center","وسط"],["bottom","Bottom","أسفل"]],selT.pos)+'<span class="lbl">'+L("Style","النمط")+"</span>"+chips("edtext.style",[["caption","Social caption","ترجمة سوشال"],["clean","Clean","بسيط"],["serif","Editorial","تحريري"],["bold","Highlight","مميز"],["box","Boxed","بصندوق"]],selT.style)+'<span class="lbl">'+L("Animation","الحركة")+"</span>"+chips("edtext.anim",[["none","None","بدون"],["fade","Fade","تلاشي"],["pop","Pop","ظهور مفاجئ"],["slide","Slide up","انزلاق"],["type","Typewriter","كتابة آلية"]],selT.anim)+slider("edtext.size",L("Size","الحجم"),selT.size,3,14,.5,"%")+'<button class="btn sm ghost danger" style="margin-top:10px" data-act="ed-deltext">'+ic("trash")+L("Delete text","حذف النص")+"</button>":'<p class="mute small" style="margin-top:10px">'+L("Titles, captions and calls to action. Each text has its own timing and animation.","عناوين وترجمات ودعوات للإجراء. لكل نص توقيت وحركة خاصة.")+"</p>")}
+  if(E.tab==="text"){insp='<button class="btn sm primary" data-act="ed-addtext">'+ic("text")+L("Add text","أضف نصاً")+"</button>"+(selT?'<label class="lbl">'+L("Text","النص")+'</label><input type="text" data-bind="edtext.text" value="'+esc(selT.text)+'">'+slider("edtext.start",L("Appears","يظهر عند"),+selT.start.toFixed(1),0,Math.max(.5,total),.1,"s")+slider("edtext.end",L("Disappears","يختفي عند"),+selT.end.toFixed(1),.2,Math.max(.5,total),.1,"s")+'<span class="lbl">'+L("Position","الموضع")+"</span>"+chips("edtext.pos",[["top","Top","أعلى"],["center","Center","وسط"],["bottom","Bottom","أسفل"]],selT.pos)+'<span class="lbl">'+L("Style","النمط")+"</span>"+chips("edtext.style",[["caption","Social caption","ترجمة سوشال"],["clean","Clean","بسيط"],["serif","Editorial","تحريري"],["bold","Highlight","مميز"],["box","Boxed","بصندوق"]],selT.style)+'<span class="lbl">'+L("Animation","الحركة")+"</span>"+chips("edtext.anim",[["none","None","بدون"],["fade","Fade","تلاشي"],["pop","Pop","ظهور مفاجئ"],["slide","Slide up","انزلاق"],["type","Typewriter","كتابة آلية"]],selT.anim)+slider("edtext.size",L("Size","الحجم"),selT.size,3,14,.5,"%")+'<button class="btn sm ghost danger" style="margin-top:10px" data-act="ed-deltext">'+ic("trash")+L("Delete text","حذف النص")+"</button>":'<p class="mute small" style="margin-top:10px">'+L("Titles, captions and calls to action. Each text has its own timing and animation.","عناوين وترجمات ودعوات للإجراء. لكل نص توقيت وحركة خاصة.")+"</p>")}
   else if(E.tab==="look"){insp=slider("tools.edit.bri",L("Brightness","السطوع"),T.bri,40,160,1,"%")+slider("tools.edit.con",L("Contrast","التباين"),T.con,40,160,1,"%")+slider("tools.edit.sat",L("Saturation","التشبع"),T.sat,0,200,1,"%")+slider("tools.edit.hue",L("Hue","درجة اللون"),T.hue,-180,180,1,"°")+slider("tools.edit.blur",L("Blur","التمويه"),T.blur,0,10,.5,"px")+'<span class="lbl">'+L("Effects","المؤثرات")+'</span><div class="toggles">'+EFFECTS.map(e=>'<button class="chip" data-toggle="tools.edit.fx.'+e[0]+'" aria-pressed="'+!!fx[e[0]]+'">'+L(e[1],e[2])+"</button>").join("")+'</div><div class="row" style="margin-top:12px"><button class="btn sm" data-go="grade">'+ic("grade")+L("Advanced color grading","تدريج ألوان متقدم")+'</button><button class="btn sm" data-go="bg">'+ic("bg")+L("Green screen","الكروما")+'</button><button class="btn sm ghost" data-act="reset-edit">'+ic("refresh")+L("Reset","إعادة ضبط")+"</button></div>"}
   else if(E.tab==="audio"){insp='<span class="lbl">'+L("Background music","موسيقى الخلفية")+"</span>"+mediaSlot("edMusic","audio/*",L("Upload music or a voiceover","ارفع موسيقى أو تعليقاً صوتياً"))+slider("ed.musicVol",L("Music volume","مستوى الموسيقى"),E.musicVol,0,100,1,"%")+'<div class="row" style="margin-top:10px"><button class="chip" data-toggle="ed.clipSound" aria-pressed="'+E.clipSound+'">'+L("Keep original clip sound","الاحتفاظ بصوت المقاطع")+'</button></div><div class="row" style="margin-top:12px"><button class="btn sm" data-go="voice">'+ic("music")+L("Generate music or voiceover","ولّد موسيقى أو تعليقاً")+"</button></div>"}
   else if(E.tab==="ai"){insp='<p class="mute small" style="margin-top:0">'+L("Pause on a moment, capture it, and describe the change. Add a reference image or video to guide it.","أوقف عند لحظة، التقطها، وصِف التغيير. أضف صورة أو فيديو مرجعياً للتوجيه.")+'</p><button class="btn sm" data-act="capture">'+ic("frame")+L("Capture current frame","التقط الإطار الحالي")+"</button>"+(M.capture?'<img src="'+M.capture+'" alt="" style="width:100%;border-radius:8px;margin-top:10px;display:block">':"")+'<span class="lbl">'+L("Apply to","التطبيق على")+"</span>"+chips("tools.edit.emode",[["frame","This frame","هذا الإطار"],["after","From here on","من هنا فصاعداً"],["clip","Whole clip","المقطع كاملاً"]],T.emode)+'<textarea data-bind="tools.edit.eprompt" style="min-height:64px;margin-top:10px" placeholder="'+esc(L("“Make it night”, “add snow”, “replace the car with a horse”","«اجعلها ليلاً»، «أضف ثلجاً»، «استبدل السيارة بحصان»"))+'">'+esc(T.eprompt)+'</textarea><div style="margin-top:8px">'+mediaSlot("eRef","image/*,video/*",L("Reference image or video","صورة أو فيديو مرجعي"))+"</div>"+slider("tools.edit.strength",L("Strength","القوة"),T.strength,10,100)+'<button class="btn primary big" style="margin-top:10px" data-act="apply-edit">'+ic("wand")+L("Apply edit","طبّق التعديل")+'<span class="cost">10 cr</span></button>'}
   else if(E.tab==="export"){const over=F[5]&&total>F[5];insp='<span class="lbl" style="margin-top:0">'+L("Platform & size","المنصة والمقاس")+'</span><div class="fmtgrid">'+FORMATS.map(f=>'<button class="fmt" data-set="ed.format" data-val="'+f[0]+'" aria-pressed="'+(E.format===f[0])+'">'+esc(f[1])+"<small>"+f[2]+"×"+f[3]+"</small></button>").join("")+'</div><span class="lbl">'+L("Fill the frame","ملء الإطار")+"</span>"+chips("ed.fit",[["blur","Blurred background","خلفية ضبابية"],["fill","Crop to fill","قص لملء الإطار"],["fit","Fit with bars","ملاءمة مع أشرطة"]],E.fit)+'<div class="row" style="margin-top:10px"><button class="chip" data-toggle="ed.safe" aria-pressed="'+E.safe+'">'+L("Show app safe zones","إظهار مناطق واجهة التطبيق")+"</button></div>"+(over?'<div style="margin-top:10px">'+note(L("This edit is "+Math.round(total)+"s. For "+F[1]+" we recommend keeping it under "+F[5]+"s.","مدة هذا المونتاج "+Math.round(total)+" ثانية. ننصح لـ "+F[1]+" بأن يكون أقل من "+F[5]+" ثانية."))+"</div>":"")+'<button class="btn primary big" style="margin-top:14px" id="recbtn" data-act="ed-export" '+(E.clips.length?"":"disabled")+">"+ic("download")+L("Export for ","صدّر لـ ")+esc(F[1])+'</button><div class="row" style="margin-top:8px"><button class="btn sm" data-act="snap" data-n="nooi-cover">'+ic("image")+L("Save cover image","حفظ صورة الغلاف")+'</button><button class="btn sm" data-act="ed-publish" '+(E.lastExport?"":"disabled")+">"+ic("send")+L("Schedule this export","جدول هذا التصدير")+'</button></div><p class="small dim">'+L("Export records in real time with sound, so a 30-second edit takes 30 seconds.","التصدير يسجّل بالوقت الحقيقي مع الصوت، فالمونتاج ذو 30 ثانية يستغرق 30 ثانية.")+"</p>"}
-  return'<div class="view"><div class="spread"><h1>'+L("Video editor","محرر الفيديو")+'</h1><div class="row"><select data-bind="ed.format" data-rerender="1" style="width:auto" aria-label="'+L("Format","المقاس")+'">'+FORMATS.map(f=>'<option value="'+f[0]+'" '+(E.format===f[0]?"selected":"")+">"+esc(f[1])+" · "+f[2]+"×"+f[3]+"</option>").join("")+'</select></div></div><p class="lede">'+L("Arrange clips on the timeline, add text, music and effects, then export in the exact size each platform needs.","رتّب المقاطع على الخط الزمني، وأضف النصوص والموسيقى والمؤثرات، ثم صدّر بالمقاس الدقيق لكل منصة.")+'</p><div class="edgrid"><div><div class="panel pad"><div class="edstage"><canvas id="wk"></canvas></div><div class="transport"><button class="btn sm" data-act="ed-play">'+ic(ED.playing?"pause":"play")+'</button><span class="tc" id="tc" style="text-align:start">'+mmss(ED.t)+" / "+mmss(total)+'</span><div style="flex:1"></div><button class="btn sm ghost" data-act="ed-zoom" data-z="-1" aria-label="'+L("Zoom out","تصغير")+'">−</button><button class="btn sm ghost" data-act="ed-zoom" data-z="1" aria-label="'+L("Zoom in","تكبير")+'">+</button></div>'+tl+
+  return'<div class="view"><div class="spread"><h1>'+L("Video editor","محرر الفيديو")+'</h1><div class="row"><select data-bind="ed.format" data-rerender="1" style="width:auto" aria-label="'+L("Format","المقاس")+'">'+FORMATS.map(f=>'<option value="'+f[0]+'" '+(E.format===f[0]?"selected":"")+">"+esc(f[1])+" · "+f[2]+"×"+f[3]+"</option>").join("")+'</select></div></div><p class="lede">'+L("Arrange clips on the timeline, add text, music and effects, then export in the exact size each platform needs.","رتّب المقاطع على الخط الزمني، وأضف النصوص والموسيقى والمؤثرات، ثم صدّر بالمقاس الدقيق لكل منصة.")+'</p><div class="edgrid"><div><div class="panel pad"><div class="edstage"><canvas id="wk"></canvas></div><div class="transport"><button class="btn sm" data-act="ed-play">'+ic(ED.playing?"pause":"play")+'</button><span class="tc" id="tc" style="text-align:start">'+mmss(ED.t)+" / "+mmss(total)+'</span><div style="flex:1"></div><button class="btn sm ghost" data-act="ed-zoom" data-z="-1" aria-label="'+L("Zoom out","تصغير")+'">−</button><button class="btn sm ghost" data-act="ed-zoom" data-z="1" aria-label="'+L("Zoom in","تكبير")+'">+</button></div>'+
   '<div class="row" style="margin-top:12px"><label class="btn sm" style="position:relative">'+ic("upload")+L("Add clips","أضف مقاطع")+'<input type="file" accept="video/*,image/*" multiple data-addclip="1" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label><select id="edlib" style="width:auto;max-width:220px" aria-label="'+L("Add from library","أضف من المكتبة")+'"><option value="">'+L("+ From library…","+ من المكتبة…")+"</option>"+S.jobs.filter(j=>j.status==="complete"&&["video","image","edit","finish","bg","mocap","lipsync","export","dub"].includes(j.kind)).slice(-40).reverse().map(j=>'<option value="'+j.id+'">'+esc(KIND(j)+" · "+(j.title||j.prompt).slice(0,40))+"</option>").join("")+'</select><button class="btn sm ghost" data-act="ed-demo">'+ic("play")+L("Demo clip","مقطع تجريبي")+"</button></div></div></div>"+
   '<div class="panel pad"><div class="tabs" role="tablist">'+tabs.map(x=>'<button data-set="ed.tab" data-val="'+x[0]+'" aria-pressed="'+(E.tab===x[0])+'">'+L(x[1],x[2])+"</button>").join("")+"</div>"+insp+"</div></div></div>";
 };
@@ -3848,9 +3841,6 @@ document.addEventListener("click",e=>{const a=e.target.closest('[data-act="slot-
 /* 2) Editor: undo / redo, keyboard shortcuts, drag-to-scrub, save status */
 const HIST={stack:[],i:-1,lock:false};
 let saveT=0;const _persist=persist;persist=function(){_persist();if(S&&S.view==="edit")try{histPush()}catch(e){}   /* (v93: a save while the page starts — before the editor's undo is ready — left the whole page empty when the editor was the last page open) */saveT=Date.now();const d=$("#edsaved");if(d)d.textContent=L("Saved","محفوظ")};
-const _ve4=VIEWS.edit;VIEWS.edit=()=>{if(HIST.i<0)histPush();let h=_ve4();
-  const tools='<div class="edtools"><button class="btn sm" id="edundo" data-act="ed-undo" '+(HIST.i<=0?"disabled":"")+' aria-label="'+L("Undo","تراجع")+'">'+svg('<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>')+L("Undo","تراجع")+'</button><button class="btn sm" id="edredo" data-act="ed-redo" '+(HIST.i>=HIST.stack.length-1?"disabled":"")+' aria-label="'+L("Redo","إعادة")+'">'+svg('<path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/>')+L("Redo","إعادة")+'</button><span class="savedot" id="edsaved">'+L("Saved","محفوظ")+'</span><span class="small dim lphide" style="margin-inline-start:auto"><span class="kbd">Space</span> '+L("play","تشغيل")+' · <span class="kbd">S</span> '+L("split","قص")+' · <span class="kbd">←→</span> '+L("frame","إطار")+' · <span class="kbd">⌘Z</span> '+L("undo","تراجع")+"</span></div>";
-  return h.replace('<div class="tlwrap" dir="ltr">',tools+'<div class="tlwrap" dir="ltr">')};
 document.addEventListener("click",e=>{const a=e.target.closest("[data-act]");if(!a)return;if(a.dataset.act==="ed-undo")histGo(-1);if(a.dataset.act==="ed-redo")histGo(1)});
 document.addEventListener("keydown",e=>{if(S.view!=="edit"||!S.user||$("#modalRoot").innerHTML)return;const tg=e.target;if(tg&&/INPUT|TEXTAREA|SELECT/.test(tg.tagName)&&tg.type!=="range")return;const k=e.key,mod=e.metaKey||e.ctrlKey;
   if(mod&&k.toLowerCase()==="z"){e.preventDefault();histGo(e.shiftKey?1:-1);return}if(mod&&k.toLowerCase()==="y"){e.preventDefault();histGo(1);return}
@@ -3948,7 +3938,6 @@ const _ve6=VIEWS.edit;
 VIEWS.edit=()=>{let h=_ve6();
   h=h.replace('<div class="edstage"><canvas id="wk"></canvas></div>','<div class="edstage"><canvas id="wk"></canvas></div>'+frameBar());
   h=h.replace(/<div class="row" style="margin-top:12px"><label class="btn sm" style="position:relative">[\s\S]*?data-act="ed-demo">[\s\S]*?<\/button><\/div>/,'<div class="side-h" style="margin:14px 0 8px">'+L("Add clips","أضف مقاطع")+"</div>"+addBar());
-  if(M.edVoice)h=h.replace(/(<div class="trk"><span class="tn">♪<\/span>[\s\S]*?<\/div>)(<div class="ph")/,(m0,a,b)=>a+'<div class="trk"><span class="tn">🎙</span><div class="blk a" style="left:0;width:'+Math.max(40,Math.min(edTotal(),M.edVoice.el.duration||edTotal())*S.ed.zoom)+'px;background:color-mix(in srgb,var(--forest) 22%,var(--panel3))">'+esc(M.edVoice.name||L("Voice","الصوت"))+"</div></div>"+b);
   if(S.ed.tab==="audio")h=h.replace('<div class="row" style="margin-top:10px"><button class="chip" data-toggle="ed.clipSound"','<span class="lbl">'+L("Voiceover","التعليق الصوتي")+"</span>"+(M.edVoice?'<div class="slot"><div class="pv" style="display:grid;place-items:center;color:var(--lime)">'+ic("mic","width:18px")+'</div><div class="nm">'+esc(M.edVoice.name)+'</div><button class="iconbtn" style="color:var(--text);background:none;border-color:var(--line2)" data-act="slot-clear" data-slot="edVoice" aria-label="'+L("Remove","إزالة")+'">'+ic("x")+"</button></div>"+slider("ed.voiceVol",L("Voice volume","مستوى الصوت"),S.ed.voiceVol,0,100,1,"%"):'<div class="hbar">'+hTile(svg(ICONS.mic),L("Record voice","سجّل صوتك"),'data-act="ed-rec"')+hTile(svg(ICONS.upload),L("Upload voice","ارفع تعليقاً"),'style="position:relative"','label').replace("</label>",'<input type="file" accept="audio/*" data-edaudio="edVoice"></label>')+"</div>")+'<div class="row" style="margin-top:10px"><button class="chip" data-toggle="ed.clipSound"');
   return h};
 /* audio inputs */
@@ -3979,8 +3968,6 @@ edTick=(orig=>function(now){orig(now);const b=$("#demob");if(!b)return;let show=
   if(b.hidden===show)b.hidden=!show;if(show&&b.dataset.p!==pr){b.dataset.p=pr;b.querySelector(".dp").textContent="«"+pr.slice(0,110)+"»"}})(_edT);
 const _ve7=VIEWS.edit;VIEWS.edit=()=>{let h=_ve7();
   h=h.replace('<div class="edstage"><canvas id="wk"></canvas>','<div class="edstage"><canvas id="wk"></canvas><div class="demob" id="demob" hidden><b>● '+L("Demo preview","معاينة تجريبية")+"</b><span>"+L("This is a placeholder scene — the real video for your prompt is rendered by WAN 3.0 once it's connected.","هذا مشهد مؤقت — الفيديو الحقيقي لوصفك يولّده WAN 3.0 بعد الربط.")+'</span><span class="dp"></span></div>');
-  h=h.replace('<div class="trk"><span class="tn">T</span>','<div class="trk" data-trk="t"><span class="tn">T</span>'+(S.ed.texts.length?"":'<span class="trkhint">+ '+L("Tap to add text","اضغط لإضافة نص")+"</span>"));
-  h=h.replace('<div class="trk"><span class="tn">♪</span>','<div class="trk" data-trk="a"><span class="tn">♪</span>'+(M.edMusic?"":'<span class="trkhint">+ '+L("Tap to add music","اضغط لإضافة موسيقى")+"</span>"));
   return h};
 document.addEventListener("click",e=>{const tr=e.target.closest&&e.target.closest("[data-trk]");if(!tr||e.target.closest(".blk"))return;const tl=$("#tlin");if(!tl)return;e.stopImmediatePropagation();const r=tl.getBoundingClientRect();const t=clamp((e.clientX-r.left-40)/S.ed.zoom,0,Math.max(0,edTotal()-.5));
   if(tr.dataset.trk==="t"){ED.t=t;const tx={id:uid(),text:L("Your text","نصك هنا"),start:t,end:Math.min(Math.max(t+2.5,t+.5),Math.max(edTotal(),t+.5)),pos:"bottom",style:"caption",size:7,anim:"pop"};S.ed.texts.push(tx);S.ed.selText=tx.id;S.ed.tab="text";persist();renderView();setTimeout(()=>{const i=document.querySelector('[data-bind="edtext.text"]');if(i){i.focus();i.select()}},60)}
@@ -4421,14 +4408,7 @@ const _rt2=rootFor;rootFor=function(p){const[r,...rest]=p.split(".");if(r==="fp"
 /* ================= v15: EDITOR TOOLBAR (direction-safe), FOLLOWING PLAYHEAD, COMPACT TILES ================= */
 delete NUMLBL["edclip.speed"];delete NUMLBL["tools.edit.speed"];
 const tb=(act,icon,label,extra)=>'<button class="tb" data-act="'+act+'" '+(extra||"")+' aria-label="'+esc(label)+'" title="'+esc(label)+'">'+svg(icon)+"<span>"+esc(label)+"</span></button>";
-function edToolbar(){const sel=S.ed.clips.find(c=>c.id===S.ed.sel);const i=sel?S.ed.clips.indexOf(sel):-1;const dis=b=>b?"disabled":"";
-  return'<div class="edbar" dir="ltr" role="toolbar" aria-label="'+L("Timeline tools","أدوات الخط الزمني")+'">'+
-  tb("ed-undo",'<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>',L("Undo","تراجع"),'id="edundo" '+dis(HIST.i<=0))+tb("ed-redo",'<path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/>',L("Redo","إعادة"),'id="edredo" '+dis(HIST.i>=HIST.stack.length-1))+'<i class="sep"></i>'+
-  tb("ed-move",'<path d="M15 6l-6 6 6 6"/>',L("Earlier","للخلف"),'data-d="-1" '+dis(i<=0))+tb("ed-split",ICONS.split,L("Split","قص"),dis(!sel))+tb("ed-dup",'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',L("Duplicate","تكرار"),dis(!sel))+tb("ed-move",'<path d="M9 6l6 6-6 6"/>',L("Later","للأمام"),'data-d="1" '+dis(i<0||i>=S.ed.clips.length-1))+tb("ed-del",ICONS.trash,L("Delete","حذف"),'data-danger="1" '+dis(!sel))+
-  '<span class="savedot" id="edsaved">'+L("Saved","محفوظ")+"</span></div>"}
 const _ve8=VIEWS.edit;VIEWS.edit=()=>{let h=_ve8();
-  h=h.replace(/<div class="edtools">[\s\S]*?<\/div>(?=<div class="tlwrap")/,edToolbar());
-  h=h.replace(/<div class="row" style="margin-top:14px"><button class="btn sm" data-act="ed-split">[\s\S]*?data-act="ed-del">[\s\S]*?<\/button><\/div>/,"");
   h=h.replace(/(<div class="transport"><button class="btn sm" data-act="ed-play">)/,'<div class="transport" dir="ltr"><button class="btn sm" data-act="ed-play">').replace('<div class="transport" dir="ltr"><div class="transport"','<div class="transport" dir="ltr"');
   return h};
 /* the playhead always stays on screen and moves with the frame */
@@ -6885,13 +6865,6 @@ VIEWS.edit=(o=>()=>{edxInit();let h=o();const E=S.ed,pps=E.zoom;
       ((tx.efx&&tx.efx!=="none")||1?'<label class="colorin" style="margin-top:8px">'+L("Second color","اللون الثاني")+' <input type="color" data-edxtc="hl" value="'+esc(tx.hl||"#ff4ecd")+'"></label>':"")+
       '<span class="lbl">'+L("Word animations","حركات الكلمات")+'</span><div class="tiles">'+EDX_TAN.map(x=>edxTile("edx-tan",x[0],x[1],x[2],x[3],tx.anim===x[0])).join("")+"</div>";
     const k=h.indexOf('data-act="ed-deltext"');if(k>0){const i=h.lastIndexOf("<button",k);const j=h.lastIndexOf('<div class="row"',i);const at=j>0&&i-j<200?j:i;h=h.slice(0,at)+add+h.slice(at)}else h=h.replace('<div class="edxpanel">','<div class="edxpanel">'+add)}
-  /* timeline rows */
-  const rows=[];const blk=(cls,sel,l,w,label,on)=>'<div class="blk '+cls+'" data-edxsel="'+sel+'" aria-current="'+!!on+'" style="left:'+(l*pps).toFixed(1)+"px;width:"+Math.max(14,w*pps-2).toFixed(1)+'px">'+esc(label)+"</div>";
-  if(E.layers.length)rows.push('<div class="trk"><span class="tn">L</span>'+E.layers.map(x=>blk("ly","ly:"+x.id,x.start,x.end-x.start,x.name||L("Layer","طبقة"),x.id===E.selLayer)).join("")+"</div>");
-  if(E.regions.length)rows.push('<div class="trk"><span class="tn">◌</span>'+E.regions.map(x=>blk("rg","rg:"+x.id,x.start,x.end-x.start,{erase:L("Erase","مسح"),blur:L("Blur","تمويه"),pixel:L("Pixelate","بكسلة"),black:L("Black box","مربع أسود")}[x.kind]||"",x.id===E.selReg)).join("")+"</div>");
-  if(E.caps.on&&E.caps.words.length){const w=E.caps.words;rows.push('<div class="trk"><span class="tn">CC</span>'+blk("cc","cc:1",w[0].s,w[w.length-1].e-w[0].s,L("Captions","الترجمة")+" · "+w.length,E.tab==="words")+"</div>")}
-  if(E.sfx.length)rows.push('<div class="trk"><span class="tn">FX</span>'+E.sfx.map(x=>blk("sx","sx:"+x.id,x.t,edxSfxDur(x),edxSfxName(x),x.id===E.selSfx)).join("")+"</div>");
-  if(rows.length){const k=h.indexOf('<div class="ph" id="ph"');if(k>0)h=h.slice(0,k)+rows.join("")+h.slice(k)}
   if(["erase","layers","motion"].includes(E.tab))h=h.replace('<div class="edstage">','<div class="edstage tracking">');
   return h})(VIEWS.edit);
 /* ---------- actions ---------- */
@@ -8479,7 +8452,6 @@ window.addEventListener("click",e=>{if(S.view!=="edit")return;const tl=e.target.
   if(!e.target.closest(".blk")){e.stopImmediatePropagation();e.preventDefault()}},true);
 /* the editor page: real "+" buttons instead of "tap the track to add", no demo clip, sliders read left→right like the timeline */
 VIEWS.edit=(o=>function(){let h=o();
-  h=h.replace(/<span class="trkhint">\+ [^<]*<\/span>/,'<button class="trkadd" data-k="t">'+ic("plus")+L("Text","نص")+"</button>").replace(/<span class="trkhint">\+ [^<]*<\/span>/,'<button class="trkadd" data-k="a">'+ic("plus")+L("Music","موسيقى")+"</button>");
   h=h.replace(/<button[^>]*data-act="ed-demo"[^>]*>[\s\S]*?<\/button>/g,"");
   return h})(VIEWS.edit);
 /* preview: say "Loading…" while a clip loads; "missing" only when the file really can't be read; a result still being made says so */
@@ -8652,13 +8624,6 @@ function infoFont(w,px){return w+" "+Math.round(px)+"px 'Geist','IBM Plex Sans A
 /* --- 8) the editor page: Effects and Infographics tabs, their timeline rows, panels for both, AI sound, AI captions translation, AI voice-over --- */
 VIEWS.edit=(o=>function(){let h=o();const E=S.ed;E.vfx=E.vfx||[];E.infos=E.infos||[];const z=E.zoom,p=edPick();
   h=h.replace(/(<div class="tabs" role="tablist">)/,'$1<button data-set="ed.tab" data-val="vfx" aria-pressed="'+(E.tab==="vfx")+'">'+L("Effects","المؤثرات")+'</button><button data-set="ed.tab" data-val="info" aria-pressed="'+(E.tab==="info")+'">'+L("Infographics","إنفوجرافيك")+"</button>");
-  const lanes=arr=>{const L0=[];arr.slice().sort((x,y)=>x.start-y.start).forEach(v=>{let l=L0.find(q=>q[q.length-1].end<=v.start+.01);if(!l){l=[];L0.push(l)}l.push(v)});return L0};
-  const vxBlk=v=>'<div class="blk vx" data-vx="'+v.id+'" aria-current="false" style="left:'+(v.start*z).toFixed(1)+"px;width:"+Math.max(14,(v.end-v.start)*z-2).toFixed(1)+'px">'+esc(L(...(VFX.find(x=>x[0]===v.kind)||["","",""]).slice(1,3)))+"</div>",
-    ixBlk=v=>'<div class="blk ix" data-ix="'+v.id+'" aria-current="false" style="left:'+(v.start*z).toFixed(1)+"px;width:"+Math.max(14,(v.end-v.start)*z-2).toFixed(1)+'px">'+esc(v.t1||v.type)+"</div>";
-  const rows=lanes(E.vfx).map((l,i)=>'<div class="trk"><span class="tn">'+(i?"":"VX")+"</span>"+l.map(vxBlk).join("")+"</div>").join("")+lanes(E.infos).map((l,i)=>'<div class="trk"><span class="tn">'+(i?"":"IN")+"</span>"+l.map(ixBlk).join("")+"</div>").join("");
-  if(rows){const k=h.indexOf('<div class="ph" id="ph"');if(k>0)h=h.slice(0,k)+rows+h.slice(k)}
-  /* the one picked item gets the drag handles */
-  if(p){const at={text:'data-textl="',clip:'data-clip="',vfx:'data-vx="',info:'data-ix="',layer:'data-edxsel="ly:',region:'data-edxsel="rg:',sfx:'data-edxsel="sx:'}[p.k];if(at)h=h.replace(new RegExp('class="blk ([^"]*)"( '+at.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+p.id+'")'),'class="blk $1 pk"$2')}
   let panel="";
   if(E.tab==="vfx"){const sv=p&&p.k==="vfx"&&edItem(p);
     panel='<p class="small mute" style="margin:0 0 8px">'+L("Tap an effect to add it at the playhead. Drag it on the timeline; drag its edges to set when it starts and ends. Or type it in the prompt bar: “add rain and lightning”.","اضغط مؤثراً لإضافته عند المؤشر. اسحبه على الخط الزمني، واسحب طرفيه لضبط البداية والنهاية. أو اكتبه في شريط الوصف: «أضف مطراً وبرقاً».")+'</p><div class="vfxgrid">'+VFX.map(v=>'<button class="vfxt" data-act="edv-add" data-v="'+v[0]+'"><span>'+v[3]+"</span>"+esc(L(v[1],v[2]))+"</button>").join("")+"</div>"+
@@ -8735,7 +8700,7 @@ setInterval(async()=>{for(const id of Object.keys(VOP)){const j=S.jobs.find(x=>x
     edxInit();const it={id:uid(),n:"file",name:d.name,t:+d.t.toFixed(2),vol:100};loadSlot("sx_"+it.id,f);S.ed.sfx.push(it);edSetPick("sfx",it.id);edxBuffer(it).then(()=>{if(S.view==="edit")renderView()});persist();if(S.view==="edit")renderView();toast(L("Voice-over added at ","أُضيف التعليق عند ")+mmss(d.t),{type:"ok"})}
   catch(err){toast(L("Couldn't add the voice-over: ","تعذّرت إضافة التعليق: ")+(err.message||err),{type:"warn"})}}},1500);
 /* undo / redo also cover effects, infographics and the logo's place */
-const snap71=()=>{const o=JSON.parse(edxSnap());o.vfx=S.ed.vfx||[];o.infos=S.ed.infos||[];o.bxy=[S.brand.x,S.brand.y,S.brand.size,S.brand.video];return JSON.stringify(o)};
+const snap71=()=>{const o=JSON.parse(edxSnap());o.vfx=S.ed.vfx||[];o.infos=S.ed.infos||[];o.bxy=[S.brand.x,S.brand.y,S.brand.size,S.brand.video];o.marks146=S.ed.marks146||[];o.groups146=S.ed.groups146||[];return JSON.stringify(o)};
 function histPush(){if(HIST.lock||!S.ed)return;const s=snap71();if(HIST.stack[HIST.i]===s)return;HIST.stack=HIST.stack.slice(0,HIST.i+1);HIST.stack.push(s);if(HIST.stack.length>60)HIST.stack.shift();HIST.i=HIST.stack.length-1;const u=$("#edundo"),r=$("#edredo");if(u)u.disabled=HIST.i<=0;if(r)r.disabled=true}
 histGo=(o=>function(d){o(d);const st=HIST.stack[HIST.i];if(!st)return;try{const x=JSON.parse(st);S.ed.vfx=x.vfx||[];S.ed.infos=x.infos||[];if(x.bxy){[S.brand.x,S.brand.y]=x.bxy;if(x.bxy[2])S.brand.size=x.bxy[2];if(x.bxy[3]!=null)S.brand.video=x.bxy[3]}const p=edPick();if(p&&!edItem(p))S.ed.pick=null;renderView()}catch(e){}})(histGo);
 (()=>{const st=document.createElement("style");st.textContent=`
@@ -8789,15 +8754,7 @@ renderView=(o=>function(){const m=$("#main"),sc=m?m.scrollTop:0;o();if(m&&Math.a
 
 /* --- 2) sound effects, layers and blur boxes get their own lanes, so none hides another --- */
 function lanes72(items){const L0=[];items.slice().sort((a,b)=>a.s-b.s).forEach(v=>{let l=L0.find(q=>q[q.length-1].e<=v.s+.01);if(!l){l=[];L0.push(l)}l.push(v)});return L0}
-function relane72(h,tn,cls,items){const head='<div class="trk"><span class="tn">'+tn+"</span>",i=h.indexOf(head);if(i<0||items.length<2)return h;
-  const re=new RegExp('<div class="blk '+cls+'"[^>]*data-edxsel="'+cls+':([^"]+)"[^>]*>[^<]*</div>',"g");let j=i+head.length,blocks={};let m;re.lastIndex=j;
-  while((m=re.exec(h))&&m.index===j){blocks[m[1]]=m[0];j=re.lastIndex}
-  if(h.substr(j,6)!=="</div>")return h;const ls=lanes72(items.filter(x=>blocks[x.id]));if(ls.length<2)return h;
-  return h.slice(0,i)+ls.map((l,k)=>'<div class="trk"><span class="tn">'+(k?"":tn)+"</span>"+l.map(x=>blocks[x.id]).join("")+"</div>").join("")+h.slice(j+6)}
 VIEWS.edit=(o=>()=>{let h=o();const E=S.ed;
-  try{h=relane72(h,"FX","sx",(E.sfx||[]).map(x=>({id:x.id,s:x.t,e:x.t+edxSfxDur(x)})));
-    h=relane72(h,"L","ly",(E.layers||[]).map(x=>({id:x.id,s:x.start,e:x.end})));
-    h=relane72(h,"◌","rg",(E.regions||[]).map(x=>({id:x.id,s:x.start,e:x.end})))}catch(e){}
   if(E.tab==="vfx")h=h.replace('<div class="vfxgrid">',vfxAiBox()+'<div class="vfxgrid">');
   return h})(VIEWS.edit);
 
@@ -12721,12 +12678,6 @@ window.addEventListener("click",e=>{if(S.view!=="edit"||!e.target.closest)return
   persist();renderView()},true);
 /* keyframe marks on the clip in the timeline, and a moving stripe while a shot is being extended */
 const EXT91={};   // job id → the clip being extended
-VIEWS.edit=(o=>function(){let h=o();const E=S.ed;if(!E||!Array.isArray(E.clips))return h;const pps=E.zoom,busy={};
-  for(const id of Object.keys(EXT91)){const j=S.jobs.find(x=>x.id===id);if(j&&j.status!=="complete"&&j.status!=="failed")busy[EXT91[id]]=1;else if(!j||j.status==="failed")delete EXT91[id]}
-  E.clips.forEach(c=>{const kf=c.mo&&c.mo.kf,on=kf&&(kf.length>1||c.mo.anim);if(!on&&!busy[c.id])return;
-    const add=(on?kf.map(k=>'<i class="kfm91" style="left:'+(k.t*pps).toFixed(1)+'px"></i>').join(""):"")+(busy[c.id]?'<b class="ext91p">+5'+L("s","ث")+"</b>":"");
-    h=h.replace(new RegExp('(data-clip="'+String(c.id).replace(/[^\w-]/g,"")+'"[^>]*>)'),"$1"+add)});
-  return h})(VIEWS.edit);
 
 /* ---- extend a shot: the clip's last frame becomes the first frame of a new 5-second shot that continues it, placed right after ---- */
 function edAspect91(kind){const f=fmt(),r=f[2]/f[3];return r<.7?"9:16":r<1.15?(kind==="image"&&r<.9?"4:5":"1:1"):"16:9"}
@@ -12743,8 +12694,6 @@ async function edExtend91(c){if(!c){toast(L("Add a clip first.","أضف مقطع
   if(!j)return false;EXT91[j.id]=c.id;EDP[j.id]={it:"extend",after:c.id,t:ED.t};S.edCmd="";persist();renderView();
   toast(L("Extending the shot — the next 5 seconds land right after it.","تُمدّ اللقطة — ستُضاف الثواني الخمس التالية بعدها مباشرة."),{type:"info",ms:4500});return true}
 edUseJob=(o=>async function(j,opt){const r=await o(j,opt),x=j&&EXT91[j.id];if(x){delete EXT91[j.id];const c=S.ed.clips.find(q=>q.id===x);if(r&&c){c.trans="cut";persist();if(S.view==="edit")renderView()}}return r})(edUseJob);
-edToolbar=(o=>function(){const h=o(),c=S.ed.clips.find(x=>x.id===S.ed.sel);
-  return h.replace(/(<button class="tb" data-act="ed-move" data-d="1")/,tb("ed-extend91",ICONS.extend91,L("Extend","مدّ")+(c?" · "+edExtCost91(c)+" cr":""),(c?"":"disabled ")+'data-paid="1"')+"$1")})(edToolbar);
 // (v145: the Extend card is drawn by clipEdit145())
 document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="ed-extend91"]');if(!a||a.disabled)return;e.stopImmediatePropagation();const E=S.ed;edExtend91(E.clips.find(x=>x.id===E.sel)||edSelClip())},true);
 
@@ -13457,7 +13406,6 @@ async function csvAdd93(file){let rows=[];try{rows=csv93(await file.text())}catc
 document.addEventListener("change",e=>{const t=e.target;if(!t||!t.dataset)return;if(t.dataset.ipic93!=null&&t.files&&t.files[0]){picAdd93(t.files[0]);t.value=""}else if(t.dataset.icsv93!=null&&t.files&&t.files[0]){csvAdd93(t.files[0]);t.value=""}});
 document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="ipic-frame"]');if(!a)return;const p=edPick(),si=p&&p.k==="info"&&edItem(p);if(!si)return;si.frame=a.dataset.v;persist();renderView()});
 VIEWS.edit=(o=>function(){let h=o();const E=S.ed;
-  (E.infos||[]).forEach(it=>{if(it.type==="pic"&&!it.t1)h=h.replace(new RegExp('(data-ix="'+it.id+'"[^>]*>)pic(</div>)'),"$1"+esc(L("Picture","صورة"))+"$2")});
   if(E.tab==="info"){const mine='<div class="mine93"><label class="btn sm">'+ic("image")+L("Your picture or logo","صورتك أو شعارك")+'<input type="file" accept="image/*" data-ipic93="1" style="display:none"></label>'+
       '<label class="btn sm">'+ic("grid")+L("Numbers from a file","أرقام من ملف")+'<input type="file" accept=".csv,.tsv,.txt,text/csv,text/plain" data-icsv93="1" style="display:none"></label><span class="small mute">'+L("CSV from Excel or Google Sheets: name, number on each row.","CSV من Excel أو Google Sheets: اسم، رقم في كل صف.")+"</span></div>";
     h=h.replace('<div class="vfxgrid"><button class="vfxt" data-act="edi-add"',mine+'<div class="vfxgrid"><button class="vfxt" data-act="edi-add"');
@@ -15253,7 +15201,6 @@ const stAdd131=n=>{const s=ST131.find(x=>x[0]===n);if(s)return infoAdd131({type:
 VIEWS.edit=(o=>function(){let h=o.apply(this,arguments);const E=S.ed;
   if(E.clips.some(c=>GLIDS131.has(c.trans))||E.tab==="clip")glLoad131();
   if((E.infos||[]).some(x=>x.type==="bn131"||x.type==="st131")||E.tab==="info")icLoad131();
-  h=h.replace(/(<div class="blk ix[^"]*"[^>]*>)st131(<\/div>)/g,"$1"+esc(L("Sticker","ملصق"))+"$2");
   if(E.tab==="text"){const tx=E.texts.find(t=>t.id===E.selText),k=h.lastIndexOf('data-act="edx-tan"');if(tx&&k>0){const j=h.indexOf("</div>",h.indexOf("</button>",k));
     if(j>0)h=h.slice(0,j+6)+'<span class="lbl">'+esc(L("Motions","الحركات"))+'</span><div class="tiles ac131">'+Object.entries(AC131).map(([k2,d])=>'<button class="tile" data-act="ac131" data-v="'+k2+'" aria-pressed="'+(tx.anim==="ac_"+k2)+'"><span class="gl">'+svg(ICONS.motion||"")+'</span><span class="lb">'+esc(L(d[0][0],d[0][1]))+"</span></button>").join("")+"</div>"+h.slice(j+6)}}
   if(E.tab==="info"){const add='<span class="lbl" style="margin-top:0">'+esc(L("Banners","البانرات"))+'</span><div class="bn131g">'+BN131.map(b=>'<button type="button" class="bn131t" data-act="bn131-add" data-v="'+b[0]+'"><span class="bn131i" style="--ac:'+b[4]+";--fg:"+onAcc131(b[4])+'">'+icSvg131(b[3])+"</span><span>"+esc(L(b[1][0],b[1][1]))+"</span></button>").join("")+"</div>"+
@@ -16684,7 +16631,8 @@ renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="edit")try
 
 // ---- 2. snapping
 const ICON_MAG141='<path d="M6 4v7a6 6 0 0 0 12 0V4"/><path d="M10 4v7a2 2 0 0 0 4 0V4"/><path d="M6 8h4M14 8h4"/>';
-function snapPts141(skip){const E=S.ed,st=edStarts(),pts=[0,ED.t];if(!E.clips.includes(skip))pts.push(edTotal());   // (a clip's own trim moves the end of the timeline)E.clips.forEach((c,i)=>{if(c===skip)return;pts.push(st[i],st[i]+clipDur(c))});
+function snapPts141(skip){const E=S.ed,st=edStarts(),pts=[0,ED.t];if(!E.clips.includes(skip))pts.push(edTotal());   // (a clip's own trim moves the end of the timeline)
+  E.clips.forEach((c,i)=>{if(c===skip)return;pts.push(st[i],st[i]+clipDur(c))});
   for(const arr of[E.texts,E.infos,E.vfx,E.layers,E.regions])(arr||[]).forEach(x=>{if(x!==skip&&x&&isFinite(x.start)){pts.push(x.start,x.end)}});(E.sfx||[]).forEach(x=>{if(x!==skip)pts.push(x.t)});
   if(E.caps&&E.caps.on)(E.caps.words||[]).forEach(w=>pts.push(w.s));return pts.filter(p=>isFinite(p))}
 function snap141(D,it,k){if(S.ed.snap141===false){line141(null);return}const z=S.ed.zoom,th=8/z,pts=snapPts141(it);let best=null;
@@ -16697,8 +16645,6 @@ function snap141(D,it,k){if(S.ed.snap141===false){line141(null);return}const z=S
   if(best){best.apply(best.p);line141(best.p)}else line141(null)}
 function line141(p){const tl=$("#tlin");if(!tl)return;let l=tl.querySelector(".snap141");if(p==null){if(l)l.remove();return}
   if(!l){l=document.createElement("div");l.className="snap141";tl.appendChild(l)}l.style.left=(40+p*S.ed.zoom).toFixed(1)+"px"}
-edToolbar=(o=>function(){const h=o.apply(this,arguments),on=S.ed.snap141!==false;
-  return h.replace('<span class="savedot"',tb("snap141",ICON_MAG141,L("Snap","التصاق"),'aria-pressed="'+on+'"')+'<span class="savedot"')})(edToolbar);
 document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="snap141"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
   S.ed.snap141=S.ed.snap141===false;persist();renderView();toast(S.ed.snap141!==false?L("Snapping on — edges stick to the playhead and other items.","الالتصاق مفعّل — تلتصق الحواف بالمؤشر والعناصر الأخرى."):L("Snapping off","الالتصاق متوقف"),{type:"info"})},true);
 
@@ -16757,8 +16703,7 @@ function shDraw141(ctx,W,H,t,it){if(t<it.start||t>it.end)return;const lt=t-it.st
 edInfoDraw=(o=>function(ctx,W,H,t){const E=S.ed,all=E.infos||[];if(!all.some(x=>x.type==="sh141"))return o.apply(this,arguments);
   E.infos=all.filter(x=>x.type!=="sh141");try{o.apply(this,arguments)}finally{E.infos=all}for(const it of all)if(it.type==="sh141"){try{shDraw141(ctx,W,H,t,it)}catch(e){console.warn("v141 shape",e)}}})(edInfoDraw);
 const shAdd141=k=>SH141.some(x=>x[0]===k)&&infoAdd131({type:"sh141",sh:k,accent:k==="line"?"#ffffff":"#CFE13E",line:"#ffffff",lw:k==="line"?3:0,op:100,rot:0,rad:12,y:.5,anim:"in"});
-VIEWS.edit=(o=>function(){let h=o.apply(this,arguments);const E=S.ed;if(E.tab!=="info")return h.replace(/(<div class="blk ix[^"]*"[^>]*>)sh141(<\/div>)/g,"$1"+esc(L("Shape","شكل"))+"$2");
-  h=h.replace(/(<div class="blk ix[^"]*"[^>]*>)sh141(<\/div>)/g,"$1"+esc(L("Shape","شكل"))+"$2");
+VIEWS.edit=(o=>function(){let h=o.apply(this,arguments);const E=S.ed;if(E.tab!=="info")return h;
   const lab='<span class="lbl">'+esc(L("Infographics","إنفوجرافيك"))+"</span>",i=h.indexOf(lab);
   const add='<span class="lbl">'+esc(L("Shapes","الأشكال"))+'</span><div class="st131g sh141g">'+SH141.map(x=>'<button type="button" class="sh141t" data-act="sh141-add" data-v="'+x[0]+'" aria-label="'+esc(L(x[1],x[2]))+'" title="'+esc(L(x[1],x[2]))+'">'+svg(SHI141[x[0]])+"</button>").join("")+"</div>";
   if(i>=0)h=h.slice(0,i)+add+h.slice(i);
@@ -16877,14 +16822,16 @@ VIEWS.edit=function(){if(HIST.i<0)histPush();try{edxInit()}catch(e){}const E=S.e
   const LT=TABS143.find(x=>x[0]===lt),ls=(E.ls143=E.ls143||{});let sub=LT[4].includes(E.tab)&&E.tab!==dk?E.tab:LT[4].includes(ls[lt])?ls[lt]:LT[4][0];ls[lt]=sub;
   // the page frame from the old page: preview, play row, prompt bar, tool row, timeline, format, projects, export
   const tpl=document.createElement("template");tpl.innerHTML=OLDED142();const q=s=>tpl.content.querySelector(s),out=e=>e?e.outerHTML:"";
+  // (v146: the timeline and its tool row are drawn by tl146() and edbar146())
+  const bar146=edbar146(),tlh146=tl146(),bt146=document.createElement("template");bt146.innerHTML=bar146;const qb=s=>bt146.content.querySelector(s);
   // the preview keeps its size while the page is drawn again (the same size the player gives it), so nothing under it jumps
   const wk=q("#wk");if(wk){const F=fmt(),k=(ED.hq||1080)/Math.max(F[2],F[3]),r=v=>ED.hq?Math.round(v*k/2)*2:Math.round(v*k);wk.setAttribute("width",r(F[2]));wk.setAttribute("height",r(F[3]))}
   const fb=q(".fmtbtn"),fbn=fb&&fb.querySelector("b");if(fbn){fb.setAttribute("title",fbn.textContent);fb.setAttribute("aria-label",L("Format","المقاس")+": "+fbn.textContent)}
   const st=q(".edstage");if(st)st.insertAdjacentHTML("beforeend",guides143());
   const tr=q(".transport"),zm=tr&&tr.querySelector('[data-act="ed-zoom"]');if(zm){const gm=E.guides143&&E.guides143!=="off";
     zm.insertAdjacentHTML("beforebegin",'<button class="btn sm ghost" data-act="guides143" aria-pressed="'+gm+'" aria-label="'+esc(L("Guides","خطوط الإرشاد"))+'" title="'+esc(L("Guides","خطوط الإرشاد"))+'">'+ic("guides143")+'</button><button class="btn sm ghost" data-act="fs143" aria-label="'+esc(L("Full screen","ملء الشاشة"))+'" title="'+esc(L("Full screen","ملء الشاشة"))+'">'+ic("expand")+"</button>")}
-  const chips=out(q(".edcmdx")),snapSvg=(q('.edbar [data-act="snap141"] svg')||{}).outerHTML||ic("track"),snapOn=E.snap141!==false;
-  if(!desk&&tr){const ud=["ed-undo","ed-redo"].map(a=>{const b=q('.edbar [data-act="'+a+'"]');if(!b)return"";b.className="btn sm ghost";const sp=b.querySelector("span");if(sp)sp.remove();return b.outerHTML}).join("");
+  const chips=out(q(".edcmdx")),snapSvg=(qb('.edbar [data-act="snap141"] svg')||{}).outerHTML||ic("track"),snapOn=E.snap141!==false;
+  if(!desk&&tr){const ud=["ed-undo","ed-redo"].map(a=>{const b=qb('.edbar [data-act="'+a+'"]');if(!b)return"";b.className="btn sm ghost";const sp=b.querySelector("span");if(sp)sp.remove();return b.outerHTML}).join("");
     tr.querySelector('[data-act="ed-zoom"]').insertAdjacentHTML("beforebegin",ud)}
   const body=t=>t==="media"?media143():t==="trans143"?trans143():t==="chat143"?chat143(chips):t==="audio"?
     '<div class="row e-rec"><button class="btn sm" data-act="ed-rec"'+(REC.on?' aria-pressed="true"':"")+">"+ic("mic")+(M.edVoice&&REC.on?L("Stop","إيقاف"):L("Record voice","سجّل صوتك"))+'</button><label class="btn sm" style="position:relative">'+ic("music")+L("Add music or a voice file","أضف موسيقى أو ملف صوت")+'<input type="file" accept="audio/*" data-edaudio="edMusic" style="position:absolute;inset:0;opacity:0;cursor:pointer" aria-label="'+esc(L("Add music or a voice file","أضف موسيقى أو ملف صوت"))+'"></label></div>'+pane143("audio",true)
@@ -16893,7 +16840,7 @@ VIEWS.edit=function(){if(HIST.i<0)histPush();try{edxInit()}catch(e){}const E=S.e
   const top='<div class="e-top"><h1 class="e-h">'+L("Video editor","محرر الفيديو")+'</h1><input class="e-name" data-bind="ed.title" value="'+esc(E.title||"")+'" placeholder="'+esc(L("Untitled project","مشروع بلا اسم"))+'" aria-label="'+esc(L("Project name","اسم المشروع"))+'" dir="auto" maxlength="80">'+
     '<div class="e-act">'+out(q(".fmtbtn"))+out(q(".pj139b"))+out(q(".edout"))+"</div></div>";
   const player='<section class="e-player">'+out(q(".edstage"))+out(tr)+'<div class="e-cmd">'+out(q(".edcmd"))+out(q("#edplan91"))+"</div></section>";
-  const tl='<section class="e-tl">'+(desk?out(q(".edbar")):"")+out(q(".tlwrap"))+"</section>";
+  const tl='<section class="e-tl">'+(desk?bar146:"")+tlh146+"</section>";
   const kname=kind?L(...KN143[kind]):L("Project","المشروع"),desel=kind?'<button type="button" class="e-x" data-act="desel143" aria-label="'+esc(L("Deselect","إلغاء التحديد"))+'" title="'+esc(L("Deselect","إلغاء التحديد"))+'">×</button>':"";
   let html;
   if(desk){
@@ -16906,14 +16853,14 @@ VIEWS.edit=function(){if(HIST.i<0)histPush();try{edxInit()}catch(e){}const E=S.e
       box143("e-details",dk==="export"?L("Project","المشروع"):kname,dk==="export"||!kind?["export"]:KIND143[kind],dk,"dt143",det,desel)+tl+"</div>"}
   else{
     // phone: the panel you work in (a details panel of the selection, or an add panel) as a sheet under the timeline
-    const shut=E.pclosed143===E.tab,prj=E.tab==="export",inDet=prj||!!kind&&KIND143[kind].includes(E.tab),key=inDet?E.tab:sub,subs=prj?["export"]:inDet?KIND143[kind]:LT[4],title=prj?L("Project","المشروع"):inDet?kname:L(LT[1],LT[2]);
+    const shut=E.pclosed143===E.tab||sel146().length>1,prj=E.tab==="export",inDet=prj||!!kind&&KIND143[kind].includes(E.tab),key=inDet?E.tab:sub,subs=prj?["export"]:inDet?KIND143[kind]:LT[4],title=prj?L("Project","المشروع"):inDet?kname:L(LT[1],LT[2]);
     const sheet=shut?"":box143("e-sheet",title,subs,key,inDet?"dt143":"ls143",inDet?pane143(key):body(key),'<button type="button" class="e-ok" data-act="pclose143" aria-label="'+esc(L("Done","تم"))+'">'+ic("check143")+"</button>");
     const btn=(a,v,l1,l2,i,on)=>'<button type="button" data-act="'+a+'" data-v="'+esc(v)+'"'+(on?' aria-pressed="true"':"")+">"+ic(i)+"<span>"+L(l1,l2)+"</span></button>";
     const snap='<button type="button" data-act="snap141" aria-pressed="'+snapOn+'">'+snapSvg+"<span>"+L("Snap","التصاق")+"</span></button>";
-    let bar;if(kind){const set=kind==="clip"?CTX143.clip:["text","info","vfx"].includes(kind)?CTX143.item:["music","cap"].includes(kind)?CTX143.only:CTX143.solo;
-      bar='<button type="button" class="e-back" data-act="desel143" aria-label="'+esc(L("Back","رجوع"))+'">'+ic("back143")+"</button>"+set.map(x=>{if(x[0]==="a"){const[a,v]=x[1].split(":"),pr=a==="ed-extend91"&&q('.edbar [data-act="ed-extend91"] span');return'<button type="button" data-act="'+a+'"'+(v?(a==="ed-move"?' data-d="':' data-v="')+v+'"':"")+(pr?' data-paid="1"':"")+">"+ic(x[4])+"<span>"+(pr?pr.innerHTML:L(x[2],x[3]))+"</span></button>"}
-        const p=x[1]||KIND143[kind][0];return btn("ps143",p,x[2],x[3],x[4],!shut&&E.tab===p.split("#")[0]&&!x[1].includes("#"))}).join("")+snap}
-    else bar=TABS143.map(x=>btn("lt143",x[0],x[1],x[2],x[3],!shut&&!inDet&&x[0]===lt)).join("")+btn("ps143","export","Project","المشروع","tools",!shut&&E.tab==="export")+snap;
+    let bar=mbar146(snap);if(bar){}else if(kind){const set=kind==="clip"?CTX143.clip:["text","info","vfx"].includes(kind)?CTX143.item:["music","cap"].includes(kind)?CTX143.only:CTX143.solo;
+      bar='<button type="button" class="e-back" data-act="desel143" aria-label="'+esc(L("Back","رجوع"))+'">'+ic("back143")+"</button>"+ctxIns146(set.map(x=>{if(x[0]==="a"){const[a,v]=x[1].split(":"),pr=a==="ed-extend91"&&qb('.edbar [data-act="ed-extend91"] span');return'<button type="button" data-act="'+a+'"'+(v?(a==="ed-move"?' data-d="':' data-v="')+v+'"':"")+(pr?' data-paid="1"':"")+">"+ic(x[4])+"<span>"+(pr?pr.innerHTML:L(x[2],x[3]))+"</span></button>"}
+        const p=x[1]||KIND143[kind][0];return btn("ps143",p,x[2],x[3],x[4],!shut&&E.tab===p.split("#")[0]&&!x[1].includes("#"))}).join(""),kind)+snap}
+    else bar=TABS143.map(x=>btn("lt143",x[0],x[1],x[2],x[3],!shut&&!inDet&&x[0]===lt)).join("")+btn("ps143","export","Project","المشروع","tools",!shut&&E.tab==="export")+nob146()+snap;
     html=top+'<div class="e-app">'+player+tl+sheet+'<nav class="e-bar'+(kind?" ctx":"")+'" role="toolbar" aria-label="'+esc(kind?L("Tools for the selection","أدوات العنصر المحدد"):L("Editor tools","أدوات المحرر"))+'">'+bar+"</nav></div>"}
   return'<div class="view ed143 '+(desk?"desk":"mob")+'">'+(miss?'<div style="margin-bottom:10px">'+note(miss+L(" clip(s) need their file again — select the clip and upload it."," مقطع يحتاج ملفه من جديد — اختر المقطع وارفعه مرة أخرى."))+"</div>":"")+html+"</div>"};
 // on a phone the sheet comes up right under the pinned preview (where the preview stays once the page scrolls), at its section
@@ -17230,7 +17177,7 @@ mix139=(o=>async function(total){const E=S.ed,mu=M.edMusic;if(!E.duck144||!mu||!
 VIEWS.edit=(o=>function(){const h=o.apply(this,arguments),E=S.ed;
   // a clip whose background was removed before the page was opened again: removed again (on this device, free)
   if(laiOn())E.clips.forEach(c=>{if(c.bg144&&c.bg144.on&&!BG144[c.id]){const m=clipMedia(c);if(m&&["video","image"].includes(m.type))setTimeout(()=>bgRun144(c,true),400)}});
-  return h.replace(/(<div class="blk ix[^"]*"[^>]*>)tk144(<\/div>)/g,"$1"+esc(L("Ticker","شريط أخبار"))+"$2")})(VIEWS.edit);
+  return h})(VIEWS.edit);
 pane143=(o=>function(tab,nopick){let h=o.apply(this,arguments);const E=S.ed;
   if(tab==="info"){const i=h.indexOf('<div class="bn131g">'),j=i>=0?h.indexOf("</div>",i):-1;
     if(j>0){const add='<span class="lbl">'+esc(L("News tickers","أشرطة الأخبار"))+'</span><div class="tk144g">'+TK144.map(b=>'<button type="button" class="tk144t" data-act="tk144-add" data-v="'+b[0]+'"><span class="tk144i" style="--ac:'+b[4]+";--bg:"+b[5]+";--fg:"+onAcc131(b[5])+";--af:"+onAcc131(b[4])+'"><b>'+esc(L(b[2][0],b[2][1]))+'</b><i dir="auto">'+esc(L(b[3][0],b[3][1]))+"</i></span><span>"+esc(L(b[1][0],b[1][1]))+"</span></button>").join("")+"</div>";
@@ -17589,6 +17536,258 @@ document.addEventListener("change",e=>{const t=e.target;if(!t.dataset||S.view!==
 .ed143.mob .e-bar button span{max-width:none;white-space:nowrap}   /* (the bar scrolls sideways: a two-word tool keeps its words on one line) */
 `;document.head.appendChild(st)})();
 
+/* ================= v146: THE TIMELINE, WRITTEN AGAIN IN ONE PIECE · SEVERAL SELECTED · GROUPS · COPY & PASTE · MARKERS · BEATS ================= */
+// The old page drew the timeline in pieces: the first page, then about fifteen later additions that each changed its text to add
+// a lane, a label, a mark or the tool row. Now one function draws it from the project, with the same marks as before, so
+// dragging, trimming, snapping, waveforms, the long-press menu, drag & drop and the selection work as they did. New with it:
+// several items selected at once (Shift or Ctrl/⌘ + click, or "Select more"), groups that move together, copy & paste (between
+// projects too, on this device), markers on the ruler and beat marks from the music — edges snap to both.
+Object.assign(ICONS,{copy146:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
+  paste146:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v3H9z"/><path d="M9 11h6M9 15h4"/>',
+  group146:'<rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="2.5 2.5"/><rect x="6.5" y="7" width="5" height="10" rx="1"/><rect x="13.5" y="7" width="4" height="10" rx="1"/>',
+  ungroup146:'<rect x="3" y="7" width="7" height="10" rx="1.5"/><rect x="14" y="7" width="7" height="10" rx="1.5"/><path d="M12 4v3M12 17v3"/>',
+  mk146:'<path d="M6 21V4"/><path d="M6 4h11l-2.5 4L17 12H6"/>',beat146:'<path d="M3 12h3l2-6 3 12 3-9 2 3h5"/>',
+  ms146:'<rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/><path d="M5.3 7l1.3 1.3L9 5.6M15.3 17l1.3 1.3 2.4-2.7"/><path d="M15 5h4M5 17h4"/>',
+  clr146:'<path d="M6 6l12 12M18 6L6 18"/>',mkprev146:'<path d="M15 6l-6 6 6 6"/><path d="M19 6v12"/>',mknext146:'<path d="M9 6l6 6-6 6"/><path d="M5 6v12"/>'});
+UI139.push("ms146","msMode146","selMk146");
+// the kinds of things on the timeline, and where each is kept in the project
+const K146={clip:"clips",text:"texts",info:"infos",vfx:"vfx",layer:"layers",region:"regions",sfx:"sfx"};
+const MEDP146={clip:"c_",layer:"ly_",sfx:"sx_"};   // (their own files, kept beside the project under these names)
+const MS146={mod:null,t:0},MK146={d:null},BT146={busy:false};
+let CB146=null;try{const s=localStorage.getItem("nooi.cb146"),o=s&&JSON.parse(s);if(o&&Array.isArray(o.items)&&o.items.length)CB146=o}catch(e){}
+function arr146(k){const E=S.ed,n=K146[k];if(!n||!E)return[];if(!Array.isArray(E[n]))E[n]=[];return E[n]}
+function it146(key){const i=String(key).indexOf(":");return i<0?null:arr146(key.slice(0,i)).find(x=>x.id===key.slice(i+1))||null}
+const kk146=key=>{const i=key.indexOf(":");return[key.slice(0,i),key.slice(i+1)]};
+function cur146(){const p=edPick();return p&&K146[p.k]&&edItem(p)?p.k+":"+p.id:null}
+// what is selected: every item when several are, else the one picked
+function sel146(){const ms=((S.ed&&S.ed.ms146)||[]).filter(it146);if(ms.length>1)return ms;const c=cur146();return c?[c]:[]}
+const grpOf146=key=>((S.ed&&S.ed.groups146)||[]).find(g=>g.keys.includes(key))||null;
+function tidy146(){const E=S.ed;E.groups146=(E.groups146||[]).map(g=>({id:g.id,keys:g.keys.filter(it146)})).filter(g=>g.keys.length>1);E.ms146=(E.ms146||[]).filter(it146);if(E.ms146.length<2)E.ms146=[]}
+const isGrp146=()=>{const s=sel146();return s.length>1&&((S.ed.groups146||[]).some(g=>g.keys.length===s.length&&g.keys.every(k=>s.includes(k))))};
+const cbHas146=()=>!!(CB146&&CB146.items&&CB146.items.length);
+function marks146(){const E=S.ed;if(!Array.isArray(E.marks146))E.marks146=[];return E.marks146}
+// the beats of the music on the timeline (the music repeats when it is shorter than the edit, so do its beats)
+function beatsNow146(){const E=S.ed,b=E&&E.beats146,mu=M.edMusic;if(!b||!b.on||!mu||b.name!==(mu.name||"")||!(b.dur>0))return[];const tot=edTotal(),out=[];
+  for(let o=0;o<tot&&out.length<4000;o+=b.dur)for(const t of b.t){const x=o+t;if(x>tot)break;out.push(+x.toFixed(2))}return out}
+
+// ---- 1. one selection, of one item or several
+edSetPick=(o=>function(k,id){const E=S.ed,prev=E&&E.clips?cur146():null,r=o.apply(this,arguments);if(!E||!E.clips)return r;
+  const key=k&&K146[k]&&id!=null?k+":"+id:null,m=MS146.mod&&performance.now()-MS146.t<2500?MS146.mod:null;MS146.mod=null;let ms=(E.ms146||[]).filter(it146);
+  if(!key){E.ms146=[];return r}
+  E.selMk146=null;
+  if((TLX.dragDone||m==="keep")&&ms.includes(key))return r;   // (a drag of the selection, or its menu, keeps it)
+  const g=grpOf146(key),mine=g?g.keys:[key];
+  if(m==="add"||E.msMode146){if(!ms.length&&prev&&prev!==key)ms=(grpOf146(prev)||{keys:[prev]}).keys.slice();
+    if(ms.includes(key)&&ms.length>1){ms=ms.filter(x=>!mine.includes(x));const last=ms[ms.length-1];if(last){const[k2,i2]=kk146(last);o.call(this,k2,i2)}else o.call(this,null)}   // (a second tap takes it out again)
+    else ms=[...new Set(ms.concat(mine))];
+    E.ms146=ms.length>1?ms:[];return r}
+  E.ms146=mine.length>1?mine.slice():[];return r})(edSetPick);
+// Shift, Ctrl or ⌘ held while touching an item adds it to the selection (or takes it out)
+window.addEventListener("pointerdown",e=>{if(S.view!=="edit"||!e.target.closest||!e.target.closest("#tlin .blk"))return;MS146.mod=e.shiftKey||e.ctrlKey||e.metaKey?"add":null;MS146.t=performance.now()},true);
+function selAll146(){const E=S.ed,keys=[];for(const k of Object.keys(K146))for(const x of arr146(k))keys.push(k+":"+x.id);if(!keys.length)return;const[k0,i0]=kk146(keys[0]);MS146.mod=null;edSetPick(k0,i0);E.ms146=keys.length>1?keys:[];persist();renderView()}
+// dragging one of the selection moves all of it (clips keep their order on the clip track; the rest move by the same time)
+snap141=(o=>function(D,it,k){o.apply(this,arguments);try{drag146(D,it,k)}catch(e){}})(snap141);
+const blkSel146=key=>{const[k,id]=kk146(key),q=s=>document.querySelector("#tlin "+s);return k==="clip"?q('[data-clip="'+id+'"]'):k==="text"?q('[data-textl="'+id+'"]'):k==="info"?q('[data-ix="'+id+'"]'):k==="vfx"?q('[data-vx="'+id+'"]'):q('[data-edxsel="'+{layer:"ly",region:"rg",sfx:"sx"}[k]+":"+id+'"]')};
+function drag146(D,it,k){if(D.mode!=="m"||k==="clip")return;const me=k+":"+it.id,ms=sel146();if(ms.length<2||!ms.includes(me))return;const z=S.ed.zoom;
+  if(!D.o146)D.o146=ms.filter(x=>x!==me&&!x.startsWith("clip:")).map(x=>{const[kk]=kk146(x),ob=it146(x);return{x,ob,kk,s:kk==="sfx"?ob.t:ob.start,e:kk==="sfx"?ob.t:ob.end}});
+  const now=k==="sfx"?it.t:it.start;let d=now-D.s0;const lo=Math.min(...D.o146.map(r=>r.s));if(lo+d<0){d=-lo;if(k==="sfx")it.t=+(D.s0+d).toFixed(2);else{const len=it.end-it.start;it.start=+(D.s0+d).toFixed(2);it.end=+(it.start+len).toFixed(2)}D.b.style.left=((k==="sfx"?it.t:it.start)*z).toFixed(1)+"px"}
+  for(const r of D.o146){if(r.kk==="sfx")r.ob.t=+(r.s+d).toFixed(2);else{r.ob.start=+(r.s+d).toFixed(2);r.ob.end=+(r.e+d).toFixed(2)}const b=blkSel146(r.x);if(b)b.style.left=((r.kk==="sfx"?r.ob.t:r.ob.start)*z).toFixed(1)+"px"}}
+function del146(keys,quiet){const E=S.ed;keys=keys||sel146();if(!keys.length)return false;let n=0;
+  for(const key of keys){const[k,id]=kk146(key),a=arr146(k),j=a.findIndex(x=>x.id===id);if(j>=0){a.splice(j,1);n++}}
+  if(!E.clips.some(c=>c.id===E.sel))E.sel=null;MS146.mod=null;edSetPick(null);E.ms146=[];E.msMode146=false;tidy146();persist();renderView();
+  if(!quiet)toast(n===1?L("Deleted","حُذف"):L(n+" items deleted",n+" عناصر حُذفت"),{type:"ok"});return true}
+
+// ---- 2. groups: picked together, moved together
+function group146(){const keys=sel146(),E=S.ed;if(keys.length<2){toast(L("Select two or more items to group them.","حدّد عنصرين أو أكثر لتجميعها."));return}
+  E.groups146=(E.groups146||[]).map(g=>({id:g.id,keys:g.keys.filter(k=>!keys.includes(k))})).filter(g=>g.keys.length>1);E.groups146.push({id:uid(),keys:keys.slice()});E.ms146=keys.slice();E.msMode146=false;persist();renderView();
+  toast(L("Grouped — they are picked and moved together.","جُمّعت — تُحدَّد وتتحرك معاً."),{type:"ok"})}
+function ungroup146(){const keys=sel146(),E=S.ed,n=(E.groups146||[]).length;E.groups146=(E.groups146||[]).filter(g=>!g.keys.some(k=>keys.includes(k)));
+  if(E.groups146.length===n){toast(L("This isn't a group.","هذه ليست مجموعة."));return}persist();renderView();toast(L("Ungrouped","فُكّ التجميع"),{type:"ok"})}
+
+// ---- 3. copy & paste (Ctrl/⌘ C, X, V): pasted at the playhead; clips go in after the clip under the playhead
+function copy146(quiet){const keys=sel146();if(!keys.length){toast(L("Select something on the timeline first.","حدّد شيئاً في الخط الزمني أولاً."));return false}
+  let t0=Infinity;const items=keys.map(key=>{const[k]=kk146(key),ob=it146(key),r={k,o:JSON.parse(JSON.stringify(ob))};if(k!=="clip")t0=Math.min(t0,k==="sfx"?ob.t:ob.start);
+    const pre=MEDP146[k];if(pre&&(k!=="sfx"||ob.n==="file")){const m=M[pre+ob.id];if(m)r.med={m,mk:S.mediaKeys&&S.mediaKeys[pre+ob.id]?Object.assign({},S.mediaKeys[pre+ob.id]):null,buf:k==="sfx"&&EDX.buf?EDX.buf[pre+ob.id]:null}}return r});
+  CB146={t0:isFinite(t0)?t0:0,grp:isGrp146(),items};
+  // (kept on this device for the next project too — without the files, which stay in this page's memory)
+  try{localStorage.setItem("nooi.cb146",JSON.stringify({t0:CB146.t0,grp:CB146.grp,items:items.filter(x=>!x.med&&!(x.k==="clip"&&x.o.src&&x.o.src.k==="upload")).map(x=>({k:x.k,o:x.o}))}))}catch(e){}
+  if(!quiet)toast(items.length===1?L("Copied — paste it with Ctrl/⌘ V or Paste.","نُسخ — الصقه بـ Ctrl/⌘ V أو «لصق»."):L(items.length+" items copied — paste them with Ctrl/⌘ V or Paste.","نُسخت "+items.length+" عناصر — الصقها بـ Ctrl/⌘ V أو «لصق»."),{type:"ok"});
+  if(S.view==="edit")renderView();return true}
+function med146(r,pre,nw){const x=r.med;if(!x)return;const m=x.m;M[pre+nw]=m.type==="video"&&m.url?cloneVideo(m):m;
+  if(x.mk&&m.file){(S.mediaKeys=S.mediaKeys||{})[pre+nw]=Object.assign({},x.mk);try{IDB.put(pre+nw,m.file)}catch(e){}}if(x.buf&&EDX.buf)EDX.buf[pre+nw]=x.buf}
+function paste146(){if(!cbHas146()){toast(L("Nothing copied yet.","لم يُنسخ شيء بعد."));return false}const E=S.ed,C=CB146,keys=[],at=ED.t,d=at-C.t0;
+  let ci=E.clips.length?edAt(Math.min(at,Math.max(0,edTotal()-.001))).i+1:0;
+  for(const r of C.items){if(r.k==="clip"&&r.o.src&&r.o.src.k==="upload"&&!r.med)continue;const o=JSON.parse(JSON.stringify(r.o));o.id=uid();
+    if(r.k==="clip"){E.clips.splice(ci++,0,o);med146(r,"c_",o.id)}
+    else{if(r.k==="sfx")o.t=+Math.max(0,o.t+d).toFixed(2);else{const len=o.end-o.start;o.start=+Math.max(0,o.start+d).toFixed(2);o.end=+(o.start+len).toFixed(2)}
+      arr146(r.k).push(o);if(r.k==="layer")med146(r,"ly_",o.id);if(r.k==="sfx"&&o.n==="file")med146(r,"sx_",o.id)}
+    keys.push(r.k+":"+o.id)}
+  if(!keys.length){toast(L("The copied clip's file isn't on this page any more — add the clip again.","ملف المقطع المنسوخ لم يعد في هذه الصفحة — أضف المقطع مرة أخرى."));return false}
+  if(C.grp&&keys.length>1)(E.groups146=E.groups146||[]).push({id:uid(),keys:keys.slice()});
+  const[k0,i0]=kk146(keys[keys.length-1]);MS146.mod=null;edSetPick(k0,i0);E.ms146=keys.length>1?keys:[];E.msMode146=false;persist();renderView();
+  toast(keys.length===1?L("Pasted at ","أُلصق عند ")+mmss(at):L(keys.length+" items pasted at ","أُلصقت "+keys.length+" عناصر عند ")+mmss(at),{type:"ok"});return true}
+
+// ---- 4. markers on the ruler: M adds one at the playhead, [ and ] jump between them, drag one to move it
+function mkAdd146(t){const a=marks146();t=+clamp(t==null?ED.t:t,0,Math.max(0,edTotal())).toFixed(2);const near=a.find(m=>Math.abs(m.t-t)<.05);
+  if(near){S.ed.selMk146=near.id;renderView();toast(L("There is a marker here already.","توجد علامة هنا بالفعل."));return}
+  const m={id:uid(),t,n:""};a.push(m);a.sort((x,y)=>x.t-y.t);MS146.mod=null;edSetPick(null);S.ed.selMk146=m.id;persist();renderView();toast(L("Marker added at ","أُضيفت علامة عند ")+mmss(t),{type:"ok"})}
+function mkDel146(id){const E=S.ed,a=marks146(),i=a.findIndex(m=>m.id===id);if(i<0)return;a.splice(i,1);E.selMk146=null;persist();renderView();toast(L("Marker deleted","حُذفت العلامة"),{type:"ok"})}
+function mkGo146(d){const a=marks146();if(!a.length){toast(L("No markers yet — press M or tap Marker to add one at the playhead.","لا علامات بعد — اضغط M أو «علامة» لإضافة واحدة عند المؤشر."));return}
+  const t=ED.t,m=d>0?a.find(x=>x.t>t+.02):a.slice().reverse().find(x=>x.t<t-.02);if(!m)return;ED.playing=false;ED.t=m.t;MS146.mod=null;edSetPick(null);S.ed.selMk146=m.id;renderView()}
+// (markers and beats are places the edges stick to as well)
+snapPts141=(o=>function(skip){const pts=o.apply(this,arguments);if(!S.ed)return pts;for(const m of marks146())if(m!==skip)pts.push(m.t);for(const t of beatsNow146())pts.push(t);return pts})(snapPts141);
+function snapT146(t,skip){if(S.ed.snap141===false)return null;const th=8/S.ed.zoom;let best=null;for(const p of snapPts141(skip))if(p!==t){const d=Math.abs(p-t);if(d<th&&(!best||d<best.d))best={d,p}}line141(best?best.p:null);return best?best.p:null}
+window.addEventListener("pointerdown",e=>{if(S.view!=="edit"||e.button>0)return;const b=e.target.closest&&e.target.closest("#tlin .mk146");if(!b)return;e.stopImmediatePropagation();e.preventDefault();
+  const m=marks146().find(x=>x.id===b.dataset.mk146);if(!m)return;MK146.d={id:e.pointerId,m,b,x0:e.clientX,t0:m.t,moved:false};try{b.setPointerCapture(e.pointerId)}catch(_){}},true);
+window.addEventListener("pointermove",e=>{const D=MK146.d;if(!D||e.pointerId!==D.id)return;e.stopImmediatePropagation();const dx=e.clientX-D.x0;if(!D.moved&&Math.abs(dx)<5)return;D.moved=true;
+  let t=clamp(D.t0+dx/S.ed.zoom,0,Math.max(0,edTotal()));const sn=snapT146(t,D.m);if(sn!=null)t=sn;D.m.t=+t.toFixed(2);const z=S.ed.zoom;D.b.style.left=(D.m.t*z).toFixed(1)+"px";
+  const ln=document.querySelector('#tlin .mkl146[data-mkl="'+D.m.id+'"]');if(ln)ln.style.left=(40+D.m.t*z).toFixed(1)+"px";const tc=$("#tc");if(tc)tc.textContent=mmss(D.m.t)},true);
+const mkEnd146=e=>{const D=MK146.d;if(!D||e.pointerId!==D.id)return;MK146.d=null;e.stopImmediatePropagation();line141(null);if(!D.moved){ED.playing=false;ED.t=D.m.t}
+  marks146().sort((x,y)=>x.t-y.t);MS146.mod=null;edSetPick(null);S.ed.selMk146=D.m.id;persist();renderView()};
+window.addEventListener("pointerup",mkEnd146,true);window.addEventListener("pointercancel",mkEnd146,true);
+document.addEventListener("input",e=>{const i=e.target&&e.target.dataset&&e.target.dataset.mk146n;if(i==null)return;const m=marks146().find(x=>x.id===i);if(m){m.n=String(e.target.value||"").slice(0,40);persist()}});
+document.addEventListener("change",e=>{if(e.target&&e.target.dataset&&e.target.dataset.mk146n!=null&&S.view==="edit")renderView()});
+
+// ---- 5. beat marks: the beat found in the music on this device (onsets of the sound's loudness, the tempo where they repeat
+// best, then each beat nudged onto the onset near it, so the marks follow the music rather than a ruler)
+function beats146(b){const sr=b.sampleRate,hop=Math.max(1,Math.round(sr/100)),n=Math.floor(b.length/hop);if(n<300)return null;const chs=[];
+  for(let c=0;c<Math.min(2,b.numberOfChannels);c++)chs.push(b.getChannelData(c));
+  const en=new Float32Array(n);for(let i=0;i<n;i++){let s=0;const a=i*hop,e=a+hop;for(const d of chs)for(let k=a;k<e;k+=2){const x=d[k];s+=x*x}en[i]=Math.log(1+2e3*s/hop)}
+  const on=new Float32Array(n);let acc=0;const W=50;
+  for(let i=1;i<n;i++){const d=en[i]-en[i-1];on[i]=d>0?d:0}
+  const ons=new Float32Array(n);for(let i=0;i<n;i++){acc+=on[i];if(i>=W)acc-=on[i-W];ons[i]=Math.max(0,on[i]-acc/Math.min(i+1,W))}   // (loud and quiet parts count alike)
+  let best=null;for(let lag=33;lag<=100;lag++){let s=0;for(let i=lag;i<n;i++)s+=ons[i]*ons[i-lag];s/=n-lag;const bpm=6000/lag,sc=s*Math.exp(-.5*Math.pow(Math.log2(bpm/120)/1.2,2));if(!best||sc>best.sc)best={sc,lag}}
+  if(!best||!(best.sc>0))return null;const lag=best.lag;
+  let ph=0,pb=-1;for(let p=0;p<lag;p++){let s=0;for(let i=p;i<n;i+=lag)s+=ons[i];if(s>pb){pb=s;ph=p}}
+  const t=[],win=Math.max(2,Math.round(lag*.12));let i=ph,gaps=0;
+  while(i<n){let bi=i,bv=0;for(let j=Math.max(0,i-win);j<=Math.min(n-1,i+win);j++){const v=ons[j]*(1-.5*Math.abs(j-i)/(win+1));if(v>bv){bv=v;bi=j}}if(!bv){bi=i;gaps++}t.push(+(bi/100).toFixed(2));i=bi+lag}
+  // the tempo from the beats found (a finer number than one step of the search)
+  const span=t.length>2?(t[t.length-1]-t[0])/(t.length-1):lag/100;return{t,bpm:Math.round(60/span),steady:gaps<t.length*.5}}
+async function beatFind146(){const mu=M.edMusic;if(!mu){toast(L("Add music first — the beat marks follow the music.","أضف موسيقى أولاً — نقاط الإيقاع تتبع الموسيقى."));return}
+  if(BT146.busy)return;BT146.busy=true;uiPill("♪ "+L("Finding the beat…","البحث عن الإيقاع…"));
+  try{const key="mu:"+(mu.url||(mu.el&&mu.el.src)||mu.name),b=await decode141(key,mu);const r=b&&b.length?beats146(b):null;if(!r||r.t.length<2||!r.steady)throw new Error("nobeat");
+    S.ed.beats146={on:true,t:r.t,bpm:r.bpm,dur:+b.duration.toFixed(3),name:mu.name||""};persist();if(S.view==="edit")renderView();
+    toast(L("Beat marks added · "+r.bpm+" beats a minute. Edges snap to them.","أُضيفت نقاط الإيقاع · "+r.bpm+" نبضة في الدقيقة. تلتصق الحواف بها."),{type:"ok"})}
+  catch(e){toast(L("Couldn't find a steady beat in this music.","تعذّر إيجاد إيقاع ثابت في هذه الموسيقى."))}finally{BT146.busy=false;uiPill("")}}
+function beatTog146(){const E=S.ed,b=E.beats146,mu=M.edMusic;if(b&&mu&&b.name===(mu.name||"")&&b.t&&b.t.length){b.on=!b.on;persist();renderView();toast(b.on?L("Beat marks shown","إظهار نقاط الإيقاع"):L("Beat marks hidden","إخفاء نقاط الإيقاع"),{type:"info"});return}beatFind146()}
+const beatOn146=()=>beatsNow146().length>0;
+function beatRow146(){if(!M.edMusic)return"";const b=S.ed.beats146,on=beatOn146();
+  return'<div class="bt146r"><button type="button" class="btn sm" data-act="bt146" aria-pressed="'+on+'">'+ic("beat146")+L("Beat marks","نقاط الإيقاع")+'</button><span class="small mute">'+
+    (on?esc(L(b.bpm+" beats a minute · edges snap to the beat",b.bpm+" نبضة في الدقيقة · تلتصق الحواف بالإيقاع")):esc(L("Marks each beat of the music on the ruler.","تضع علامة على كل نبضة من الموسيقى في المسطرة.")))+"</span></div>"}
+pane143=(o=>function(tab){const h=o.apply(this,arguments);return tab==="audio"&&typeof h==="string"?beatRow146()+h:h})(pane143);
+
+// ---- 6. the timeline
+const IXN146={pic:["Picture","صورة"],st131:["Sticker","ملصق"],sh141:["Shape","شكل"],tk144:["Ticker","شريط أخبار"],bn131:["Banner","بانر"]};
+function busy146(){const b={};for(const id of Object.keys(EXT91)){const j=S.jobs.find(x=>x.id===id);if(j&&j.status!=="complete"&&j.status!=="failed")b[EXT91[id]]=1;else if(!j||j.status==="failed")delete EXT91[id]}return b}
+function tl146(){const E=S.ed,z=E.zoom,tot=edTotal(),st=edStarts(),p=edPick(),sel=sel146(),ms=new Set(sel.length>1?sel:[]),gk=new Set((E.groups146||[]).flatMap(g=>g.keys)),busy=busy146();
+  const on=(k,id)=>(p&&p.k===k&&p.id===id?" pk":"")+(ms.has(k+":"+id)?" ms146":"")+(gk.has(k+":"+id)?" gp146":""),gb=(k,id)=>gk.has(k+":"+id)?'<i class="gpb146" aria-hidden="true"></i>':"";
+  const trk=(tn,body,attr)=>'<div class="trk"'+(attr||"")+'><span class="tn">'+tn+"</span>"+body+"</div>";
+  const pack=(arr,s,e)=>lanes72(arr.map(x=>({s:s(x),e:e(x),x}))).map(l=>l.map(v=>v.x));
+  const rows=(tn,arr,s,e,f)=>arr&&arr.length?pack(arr,s,e).map((l,i)=>trk(i?"":tn,l.map(f).join(""))).join(""):"";
+  const bx=(k,id,cls,attr,l,w,label,cur)=>'<div class="blk '+cls+on(k,id)+'" '+attr+' aria-current="'+!!cur+'" style="left:'+(l*z).toFixed(1)+"px;width:"+Math.max(14,w*z-2).toFixed(1)+'px">'+esc(label)+gb(k,id)+"</div>";
+  const add=(k,l1,l2)=>'<button class="trkadd" data-k="'+k+'">'+ic("plus")+L(l1,l2)+"</button>";
+  const mk=marks146(),beats=beatsNow146();
+  const ruler=Array.from({length:Math.ceil(tot)+2},(_,s)=>s%(z<25?5:1)===0?'<span style="left:'+(s*z)+'px">'+s+"s</span>":"").join("")+
+    beats.map(t=>'<i class="bt146" style="left:'+(t*z).toFixed(1)+'px"></i>').join("")+
+    mk.map((m,i)=>'<button type="button" class="mk146" data-mk146="'+m.id+'" aria-pressed="'+(E.selMk146===m.id)+'" style="left:'+(m.t*z).toFixed(1)+'px" aria-label="'+esc(L("Marker ","علامة ")+(i+1)+" · "+mmss(m.t)+(m.n?" · "+m.n:""))+'" title="'+esc((m.n||L("Marker ","علامة ")+(i+1))+" · "+mmss(m.t))+'"><span>'+(i+1)+"</span></button>").join("");
+  const V=E.clips.map((c,i)=>{const kf=c.mo&&c.mo.kf,an=kf&&(kf.length>1||c.mo.anim),marks=(an?kf.map(k=>'<i class="kfm91" style="left:'+(k.t*z).toFixed(1)+'px"></i>').join(""):"")+(busy[c.id]?'<b class="ext91p">+5'+L("s","ث")+"</b>":"");
+    return'<div class="blk v'+on("clip",c.id)+'" data-clip="'+c.id+'" aria-current="'+(E.sel===c.id)+'" style="left:'+(st[i]*z)+"px;width:"+Math.max(18,clipDur(c)*z-2)+'px">'+marks+esc(clipName(c))+gb("clip",c.id)+"</div>"}).join("");
+  const T=E.texts.map(t=>'<div class="blk t'+on("text",t.id)+'" data-textl="'+t.id+'" aria-current="'+(E.selText===t.id)+'" style="left:'+(t.start*z)+"px;width:"+Math.max(18,(t.end-t.start)*z-2)+'px">'+esc(t.text)+gb("text",t.id)+"</div>").join("");
+  const mu=M.edMusic,vo=M.edVoice,w=E.caps&&E.caps.on&&E.caps.words&&E.caps.words.length?E.caps.words:null;
+  const ixn=v=>v.t1||(IXN146[v.type]?L(...IXN146[v.type]):v.type),vxn=v=>L(...(VFX.find(x=>x[0]===v.kind)||["","",""]).slice(1,3));
+  const RGN={erase:["Erase","مسح"],blur:["Blur","تمويه"],pixel:["Pixelate","بكسلة"],black:["Black box","مربع أسود"]};
+  return'<div class="tlwrap" dir="ltr"><div class="tlin" id="tlin" style="width:'+(tot*z+120)+'px"><div class="ruler">'+ruler+"</div>"+
+    trk("V",V)+trk("T",(E.texts.length?"":add("t","Text","نص"))+T,' data-trk="t"')+
+    trk("♪",mu?'<div class="blk a" style="left:0;width:'+Math.max(40,tot*z)+'px">'+esc(mu.name)+"</div>":add("a","Music","موسيقى"),' data-trk="a"')+
+    (vo?trk("🎙",'<div class="blk a" style="left:0;width:'+Math.max(40,Math.min(tot,(vo.el&&vo.el.duration)||tot)*z)+'px;background:color-mix(in srgb,var(--forest) 22%,var(--panel3))">'+esc(vo.name||L("Voice","الصوت"))+"</div>"):"")+
+    rows("L",E.layers,x=>x.start,x=>x.end,x=>bx("layer",x.id,"ly",'data-edxsel="ly:'+x.id+'"',x.start,x.end-x.start,x.name||L("Layer","طبقة"),x.id===E.selLayer))+
+    rows("◌",E.regions,x=>x.start,x=>x.end,x=>bx("region",x.id,"rg",'data-edxsel="rg:'+x.id+'"',x.start,x.end-x.start,RGN[x.kind]?L(...RGN[x.kind]):"",x.id===E.selReg))+
+    (w?trk("CC",'<div class="blk cc" data-edxsel="cc:1" aria-current="'+(E.tab==="words")+'" style="left:'+(w[0].s*z).toFixed(1)+"px;width:"+Math.max(14,(w[w.length-1].e-w[0].s)*z-2).toFixed(1)+'px">'+esc(L("Captions","الترجمة")+" · "+w.length)+"</div>"):"")+
+    rows("FX",E.sfx,x=>x.t,x=>x.t+edxSfxDur(x),x=>bx("sfx",x.id,"sx",'data-edxsel="sx:'+x.id+'"',x.t,edxSfxDur(x),edxSfxName(x),x.id===E.selSfx))+
+    rows("VX",E.vfx,x=>x.start,x=>x.end,x=>bx("vfx",x.id,"vx",'data-vx="'+x.id+'"',x.start,x.end-x.start,vxn(x),p&&p.k==="vfx"&&p.id===x.id))+
+    rows("IN",E.infos,x=>x.start,x=>x.end,x=>bx("info",x.id,"ix",'data-ix="'+x.id+'"',x.start,x.end-x.start,ixn(x),p&&p.k==="info"&&p.id===x.id))+
+    mk.map(m=>'<i class="mkl146" data-mkl="'+m.id+'" style="left:'+(40+m.t*z).toFixed(1)+'px"></i>').join("")+
+    '<div class="ph" id="ph" style="left:'+(40+ED.t*z)+'px"></div></div></div>'}
+
+// ---- 7. the tool row above the timeline (on a computer): it changes with what is selected
+function edbar146(){const E=S.ed,c=E.clips.find(x=>x.id===E.sel),i=c?E.clips.indexOf(c):-1,dis=b=>b?"disabled":"",sel=sel146(),n=sel.length,mk=E.selMk146&&marks146().find(m=>m.id===E.selMk146);
+  let mid;
+  if(n>1)mid='<span class="msn146" role="status">'+esc(L(n+" selected",n+" محدد"))+"</span>"+(isGrp146()?tb("ug146",ICONS.ungroup146,L("Ungroup","فك التجميع")):tb("gp146",ICONS.group146,L("Group","تجميع")))+
+    tb("ms146-del",ICONS.trash,L("Delete","حذف"),'data-danger="1"')+tb("ms146-clr",ICONS.clr146,L("Clear","إلغاء"));
+  else if(mk)mid='<label class="mk146e"><span>'+L("Marker","علامة")+'</span><input data-mk146n="'+mk.id+'" value="'+esc(mk.n||"")+'" placeholder="'+esc(L("Name at ","اسم عند ")+mmss(mk.t))+'" maxlength="40" dir="auto"></label>'+
+    tb("mk146-go",ICONS.mkprev146,L("Previous","السابقة"),'data-d="-1"')+tb("mk146-go",ICONS.mknext146,L("Next","التالية"),'data-d="1"')+tb("mk146-del",ICONS.trash,L("Delete","حذف"),'data-danger="1"');
+  else mid=tb("ed-move",'<path d="M15 6l-6 6 6 6"/>',L("Earlier","للخلف"),'data-d="-1" '+dis(i<=0))+tb("ed-split",ICONS.split,L("Split","قص"),dis(!c))+
+    tb("ed-dup",'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',L("Duplicate","تكرار"),dis(!c))+
+    tb("ed-extend91",ICONS.extend91,L("Extend","مدّ")+(c?" · "+edExtCost91(c)+" cr":""),(c?"":"disabled ")+'data-paid="1"')+
+    tb("ed-move",'<path d="M9 6l6 6-6 6"/>',L("Later","للأمام"),'data-d="1" '+dis(i<0||i>=E.clips.length-1))+tb("ed-del",ICONS.trash,L("Delete","حذف"),'data-danger="1" '+dis(!c));
+  return'<div class="edbar" dir="ltr" role="toolbar" aria-label="'+L("Timeline tools","أدوات الخط الزمني")+'">'+
+    tb("ed-undo",'<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>',L("Undo","تراجع"),'id="edundo" '+dis(HIST.i<=0))+tb("ed-redo",'<path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/>',L("Redo","إعادة"),'id="edredo" '+dis(HIST.i>=HIST.stack.length-1))+'<i class="sep"></i>'+
+    mid+'<i class="sep"></i>'+tb("cp146",ICONS.copy146,L("Copy","نسخ"),dis(!n))+tb("pa146",ICONS.paste146,L("Paste","لصق"),dis(!cbHas146()))+tb("mk146-add",ICONS.mk146,L("Marker","علامة"))+
+    tb("msm146",ICONS.ms146,L("Select more","تحديد المزيد"),'aria-pressed="'+!!E.msMode146+'"')+tb("snap141",ICON_MAG141,L("Snap","التصاق"),'aria-pressed="'+(E.snap141!==false)+'"')+
+    '<span class="savedot" id="edsaved">'+L("Saved","محفوظ")+"</span></div>"}
+// the same tools on a phone's bar at the foot
+const pb146=(act,icon,l1,l2,extra)=>'<button type="button" data-act="'+act+'"'+(extra?" "+extra:"")+">"+ic(icon)+"<span>"+L(l1,l2)+"</span></button>";
+function mbar146(snap){const E=S.ed,n=sel146().length,mk=E.selMk146&&marks146().find(m=>m.id===E.selMk146);
+  if(n>1)return'<button type="button" class="e-back" data-act="ms146-clr" aria-label="'+esc(L("Clear the selection","إلغاء التحديد"))+'">'+ic("back143")+'</button><span class="msn146" role="status">'+esc(L(n+" selected",n+" محدد"))+"</span>"+
+    (isGrp146()?pb146("ug146","ungroup146","Ungroup","فك التجميع"):pb146("gp146","group146","Group","تجميع"))+pb146("cp146","copy146","Copy","نسخ")+(cbHas146()?pb146("pa146","paste146","Paste","لصق"):"")+
+    pb146("msm146","ms146","Select more","تحديد المزيد",'aria-pressed="'+!!E.msMode146+'"')+pb146("ms146-del","trash","Delete","حذف")+snap;
+  if(mk&&!edPick())return'<button type="button" class="e-back" data-act="mk146-x" aria-label="'+esc(L("Back","رجوع"))+'">'+ic("back143")+'</button><label class="mk146e"><span>'+L("Marker","علامة")+'</span><input data-mk146n="'+mk.id+'" value="'+esc(mk.n||"")+'" placeholder="'+esc(mmss(mk.t))+'" maxlength="40" dir="auto" aria-label="'+esc(L("Marker name","اسم العلامة"))+'"></label>'+
+    pb146("mk146-go","mkprev146","Previous","السابقة",'data-d="-1"')+pb146("mk146-go","mknext146","Next","التالية",'data-d="1"')+pb146("mk146-del","trash","Delete","حذف");
+  return null}
+// (copy and select more go in before Delete, which stays last)
+const ctxIns146=(h,k)=>{const d='<button type="button" data-act="ed-del"',x=ctx146(k);return h.includes(d)?h.replace(d,x+d):h+x};
+const ctx146=k=>k==="music"?pb146("bt146","beat146","Beat marks","نقاط الإيقاع",'aria-pressed="'+beatOn146()+'"'):K146[k]?pb146("cp146","copy146","Copy","نسخ")+pb146("msm146","ms146","Select more","تحديد المزيد",'aria-pressed="'+!!S.ed.msMode146+'"'):"";
+const nob146=()=>pb146("mk146-add","mk146","Marker","علامة")+(cbHas146()?pb146("pa146","paste146","Paste","لصق"):"");
+
+// ---- 8. the buttons and the keys
+document.addEventListener("click",e=>{if(S.view!=="edit"||!e.target.closest)return;const a=e.target.closest('[data-act="cp146"],[data-act="pa146"],[data-act="gp146"],[data-act="ug146"],[data-act="ms146-del"],[data-act="ms146-clr"],[data-act="msm146"],[data-act="mk146-add"],[data-act="mk146-del"],[data-act="mk146-go"],[data-act="mk146-x"],[data-act="bt146"]');
+  if(!a||a.disabled)return;e.preventDefault();e.stopImmediatePropagation();const E=S.ed,act=a.dataset.act;
+  if(act==="cp146")copy146();else if(act==="pa146")paste146();else if(act==="gp146")group146();else if(act==="ug146")ungroup146();else if(act==="ms146-del")del146();
+  else if(act==="ms146-clr"){E.ms146=[];E.msMode146=false;persist();renderView()}
+  else if(act==="msm146"){E.msMode146=!E.msMode146;const c=cur146();if(E.msMode146&&c&&!(E.ms146||[]).length)E.ms146=[c];if(!E.msMode146&&(E.ms146||[]).length<2)E.ms146=[];persist();renderView();
+    toast(E.msMode146?L("Tap items on the timeline to add them to the selection.","اضغط عناصر في الخط الزمني لإضافتها إلى التحديد."):L("Select more is off","توقف تحديد المزيد"),{type:"info"})}
+  else if(act==="mk146-add")mkAdd146();else if(act==="mk146-del")mkDel146(E.selMk146);else if(act==="mk146-go")mkGo146(+a.dataset.d||1);
+  else if(act==="mk146-x"){E.selMk146=null;persist();renderView()}else if(act==="bt146")beatTog146()},true);
+window.addEventListener("keydown",e=>{if(S.view!=="edit"||!S.user||!S.ed||$("#modalRoot").innerHTML)return;const tg=e.target;if(tg&&(/INPUT|TEXTAREA|SELECT/.test(tg.tagName)&&tg.type!=="range"||tg.isContentEditable))return;
+  const k=String(e.key||"").toLowerCase(),mod=e.metaKey||e.ctrlKey,E=S.ed,n=sel146().length,stop=()=>{e.preventDefault();e.stopImmediatePropagation()};
+  if(mod&&!e.altKey){if(String(getSelection&&getSelection()||""))return;
+    if(k==="c"&&n){stop();copy146();return}if(k==="x"&&n){stop();if(copy146(true)){del146(null,true);toast(L("Cut — paste it with Ctrl/⌘ V.","قُصّ — الصقه بـ Ctrl/⌘ V."),{type:"ok"})}return}
+    if(k==="v"&&cbHas146()){stop();paste146();return}if(k==="g"){stop();e.shiftKey?ungroup146():group146();return}if(k==="a"){stop();selAll146();return}return}
+  if(e.altKey||e.repeat)return;
+  if(k==="m"&&!e.shiftKey){stop();mkAdd146();return}if(k==="["||k==="]"){stop();mkGo146(k==="]"?1:-1);return}
+  if((k==="delete"||k==="backspace")&&(n>1||(E.selMk146&&!cur146()))){stop();if(n>1)del146();else mkDel146(E.selMk146);return}
+  if(k==="escape"&&(n>1||E.msMode146||E.selMk146)&&!CM131.el){stop();E.ms146=[];E.msMode146=false;E.selMk146=null;persist();renderView()}},true);
+// the long-press (or right-click) menu: for a selection of several, what works on all of them; for one, copy, paste and select more
+edMenu131=(o=>function(k,id){const E=S.ed,key=K146[k]?k+":"+id:null;let ms=(E.ms146||[]).filter(it146);const g=key&&grpOf146(key);
+  if(key&&g&&!(ms.length>1&&ms.includes(key))){ms=g.keys.slice();E.ms146=ms}
+  if(key&&ms.length>1&&ms.includes(key)){MS146.mod="keep";MS146.t=performance.now();edSetPick(k,id);const n=ms.length;
+    return[{icon:"copy146",label:L("Copy "+n+" items","انسخ "+n+" عناصر"),fn:()=>copy146()},isGrp146()?{icon:"ungroup146",label:L("Ungroup","فك التجميع"),fn:ungroup146}:{icon:"group146",label:L("Group","تجميع"),fn:group146},
+      {icon:"ms146",label:L("Select only this","حدّد هذا فقط"),fn:()=>{E.ms146=[];E.msMode146=false;persist();renderView()}},{icon:"trash",label:L("Delete "+n+" items","احذف "+n+" عناصر"),danger:1,fn:()=>del146()}]}
+  const items=o.apply(this,arguments);if(!items)return items;
+  if(k==="music")items.splice(1,0,{icon:"beat146",label:beatOn146()?L("Hide the beat marks","أخفِ نقاط الإيقاع"):L("Beat marks","نقاط الإيقاع"),fn:beatTog146});
+  else if(key){const ex=[{icon:"copy146",label:L("Copy","نسخ"),fn:()=>copy146()}];if(cbHas146())ex.push({icon:"paste146",label:L("Paste at the playhead","الصق عند المؤشر"),fn:paste146});
+    ex.push({icon:"ms146",label:L("Select more","تحديد المزيد"),fn:()=>{E.msMode146=true;E.ms146=[key];persist();renderView();toast(L("Tap items on the timeline to add them to the selection.","اضغط عناصر في الخط الزمني لإضافتها إلى التحديد."),{type:"info"})}});
+    const di=items.findIndex(x=>x.danger);items.splice(di<0?items.length:di,0,...ex)}
+  return items})(edMenu131);
+// undo / redo bring markers and groups back too
+histGo=(o=>function(d){o.apply(this,arguments);const st=HIST.stack[HIST.i];if(!st)return;try{const x=JSON.parse(st);if(Array.isArray(x.marks146))S.ed.marks146=x.marks146;if(Array.isArray(x.groups146))S.ed.groups146=x.groups146;tidy146();renderView()}catch(e){}})(histGo);
+// a project opened, made or deleted: its selection starts empty
+renderView=(o=>function(){if(S.view==="edit"&&S.ed&&S.ed.clips)try{tidy146();if(S.ed.selMk146&&!marks146().some(m=>m.id===S.ed.selMk146))S.ed.selMk146=null}catch(e){}return o.apply(this,arguments)})(renderView);
+(()=>{const st=document.createElement("style");st.textContent=`
+#tlin .blk.ms146{box-shadow:inset 0 0 0 2px var(--lime,#9CD245),0 0 0 1px rgba(0,0,0,.25)}
+#tlin .blk .gpb146{position:absolute;top:3px;right:4px;width:8px;height:8px;border:1.5px solid currentColor;border-radius:2px;box-shadow:3px -3px 0 -1.5px currentColor;opacity:.8;pointer-events:none}
+.ruler .mk146{position:absolute;top:0;width:18px;height:18px;margin:0;padding:0;border:0;background:none;cursor:ew-resize;z-index:5;touch-action:none;color:#1a1300;font:700 9px/1 var(--mono,monospace)}
+.ruler .mk146::before{content:"";position:absolute;left:0;top:0;bottom:-2px;width:2px;background:#ffb020;border-radius:1px}
+.ruler .mk146 span{position:absolute;left:2px;top:1px;min-width:12px;height:12px;padding:0 2px;box-sizing:border-box;border-radius:0 4px 4px 0;background:#ffb020;display:flex;align-items:center;justify-content:center}
+.ruler .mk146[aria-pressed="true"] span,.ruler .mk146[aria-pressed="true"]::before{background:var(--lime,#9CD245)}.ruler .mk146:focus-visible{outline:2px solid var(--text);outline-offset:1px}
+#tlin .mkl146{position:absolute;top:20px;bottom:0;width:0;border-left:1px dashed color-mix(in srgb,#ffb020 70%,transparent);pointer-events:none;z-index:1}
+.ruler .bt146{position:absolute;bottom:0;width:1.5px;height:6px;margin-left:-.75px;background:color-mix(in srgb,var(--lime,#9CD245) 75%,var(--text));border-radius:1px;pointer-events:none}
+.edbar .msn146{align-self:center;flex:none;font-size:12px;font-weight:700;padding:0 8px;white-space:nowrap}
+.edbar .mk146e,.e-bar .mk146e{display:flex;align-items:center;gap:6px;flex:none;padding:0 6px;font-size:11px;font-weight:600;white-space:nowrap}.edbar .mk146e input,.e-bar .mk146e input{width:150px;height:30px;padding:4px 8px;font-size:12px}
+.e-bar .mk146e input{width:120px}.e-bar .msn146{align-self:center;flex:none;font-size:12px;font-weight:700;padding:0 6px;white-space:nowrap}
+.edbar .tb[data-act="msm146"][aria-pressed="true"] svg,.e-bar [data-act="msm146"][aria-pressed="true"] svg,.e-bar [data-act="bt146"][aria-pressed="true"] svg{color:var(--lime-ink,var(--lime))}
+.bt146r{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px}.bt146r .btn[aria-pressed="true"]{border-color:var(--lime);color:var(--text)}
+`;document.head.appendChild(st)})();
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
