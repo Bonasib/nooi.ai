@@ -6698,7 +6698,7 @@ async function edxBuffer(it){const k=it.n==="file"?"sx_"+it.id:it.n;if(EDX.buf[k
   EDX.buf[k]=(async()=>{if(it.n!=="file")return edxSynth(it.n);const m=M["sx_"+it.id];if(!m||!m.file)return null;edxBus();return await audioCtx.decodeAudioData(await m.file.arrayBuffer())})();
   try{return await EDX.buf[k]}catch(e){delete EDX.buf[k];return null}}
 async function edxPlaySfx(it,off){const b=await edxBuffer(it);if(!b)return;const bus=edxBus();if(audioCtx.state==="suspended")await audioCtx.resume().catch(()=>{});const s=audioCtx.createBufferSource(),g=audioCtx.createGain();s.buffer=b;g.gain.value=clamp((it.vol??100)/100,0,2);s.connect(g).connect(bus);s.start(0,Math.max(0,off||0))}
-const edxSfxName=it=>it.n==="file"?(it.name||L("Sound","صوت")):L(...(EDX_SFX.find(x=>x[0]===it.n)||["",it.n,it.n]).slice(1));
+const edxSfxName=it=>it.n==="file"?(it.name||L("Sound","صوت")):L(...(EDX_SFX.find(x=>x[0]===String(it.n).split(":")[0])||["",it.n,it.n]).slice(1));   // (v152: "pluck:3" is a Pluck)
 const edxSfxDur=it=>{const k=it.n==="file"?"sx_"+it.id:it.n,b=EDX.buf[k];return b&&b.duration?b.duration:.6};
 /* every SFX is mixed into the export too */
 edExport=(o=>async function(){if(!(S.ed.sfx||[]).length)return o();edxBus();const cv=$("#wk");
@@ -18974,6 +18974,325 @@ html.studio151 .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 #tlin .blk.v.th151[aria-current="true"]{border-color:#fff}
 #tlin .trk:has(>.blk.sx){height:24px;margin:3px 0}#tlin .trk:has(>.blk.sx) .blk{line-height:15px;font-size:10.5px;padding:3px 6px;border-radius:5px}
 @media (max-width:1023px){#tlin .trk:has(>.blk.v){height:40px}}
+`;document.head.appendChild(st)})();
+
+/* ================= v152: FRAMES · CREATIVE FILTERS · NEW CUTS · CAMERA · TEXT MOTION · SOUNDS · THE EDITOR'S AGENTS ================= */
+/* What the owner asked us to take from OpenMontage (AGPL — ideas from its public description only, none of its code read),
+   cinetic (MIT) and Cutia (MIT), where nooi didn't have it yet — our own code, our own drawings:
+   - Frames for the whole video (polaroid, card, phone, old TV, film strip, neon, viewfinder, vintage, comic, border, double line);
+   - creative filters on the graphics card (duotones, colour pop, halftone, posterize, sketch, thermal, night vision);
+   - 15 more cuts (wipes and slides in four directions, iris, bands, collapse to a dot, horizon rise, polarity flip, zoom out,
+     pixel dissolve) and 8 more camera moves (breathing zoom, pull-back reveal, push with a roll, impact kick, drift, crane down,
+     handheld, whip in);
+   - 6 more text motions (scramble decode, mask rise, blur rise, one-word slam, slice glitch, tracking in);
+   - 12 more sounds and a free sound pass (calm · crisp · minimal) that places sounds on the film's own moments;
+   - the editor's agents: the assistant's expert roles (a director who runs story → design → editing → audio, as Cutia's director
+     does) and a review — a critic's read with one-tap fixes (cinetic's review loop) — also offered to AI agents as tools.
+   The review and the sound pass are in public/editor152/studio.js, shared with the server (lib/review152.js). */
+const ST152={mod:null,rv:null,busy:false};
+const mod152=()=>ST152.mod||(ST152.mod=import("/editor152/studio.js").catch(e=>{ST152.mod=null;throw e}));
+const k152=(s,i)=>{let h=2166136261;s=String(s)+"|"+i;for(let j=0;j<s.length;j++){h^=s.charCodeAt(j);h=Math.imul(h,16777619)}return((h>>>0)%10000)/10000};   // (a steady "random" number)
+
+// ---- 1. frames: one for the whole video, drawn over the picture and the overlays, under the words
+const FR152=[["none","None","بدون"],["polaroid","Polaroid","بولارويد"],["card","Card","بطاقة"],["phone","Phone","جوال"],["tv","Old TV","تلفاز قديم"],["film","Film strip","شريط فيلم"],
+  ["neon","Neon","نيون"],["finder","Viewfinder","عدسة كاميرا"],["vintage","Vintage","عتيق"],["comic","Comic panel","لوحة مصورة"],["border","Border","حد"],["double","Double line","خط مزدوج"]];
+const FRC152=["#ffffff","#CFE13E","#ff4fa3","#4dc3ff","#ffb020","#111111"];
+const FRI152={none:'<circle cx="12" cy="12" r="8"/><path d="M6.5 17.5l11-11"/>',polaroid:'<rect x="5" y="3.5" width="14" height="17" rx="1"/><rect x="7" y="5.5" width="10" height="9"/>',card:'<rect x="4" y="5" width="16" height="14" rx="3.5"/><rect x="2" y="3" width="20" height="18" rx="2" stroke-dasharray="2 2"/>',
+  phone:'<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 5h3"/>',tv:'<rect x="3" y="6" width="18" height="13" rx="2.5"/><rect x="5.5" y="8.5" width="10" height="8" rx="2"/><path d="M8 3l4 3 4-3M18.5 10v.01M18.5 13v.01"/>',
+  film:'<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 8h18M3 16h18M6 5.5v1M10 5.5v1M14 5.5v1M18 5.5v1M6 17.5v1M10 17.5v1M14 17.5v1M18 17.5v1"/>',neon:'<rect x="4" y="5" width="16" height="14" rx="3"/><rect x="6.5" y="7.5" width="11" height="9" rx="1.5" stroke-dasharray="1 2"/>',
+  finder:'<path d="M3 8V4h4M21 8V4h-4M3 16v4h4M21 16v4h-4"/><circle cx="7" cy="8" r="1"/><path d="M11 12h2M12 11v2"/>',vintage:'<rect x="3" y="4" width="18" height="16" rx="6"/><path d="M8 9l.01.01M15 14l.01.01M11 16l.01.01"/>',
+  comic:'<rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 11h9V3M12 11v10"/>',border:'<rect x="3" y="3" width="18" height="18" rx="1"/><rect x="6" y="6" width="12" height="12"/>',double:'<rect x="3" y="3" width="18" height="18" rx="1"/><rect x="5.5" y="5.5" width="13" height="13" rx="1"/>'};
+function rr152(c,x,y,w,h,r){c.beginPath();if(c.roundRect)c.roundRect(x,y,w,h,r);else c.rect(x,y,w,h)}
+function frame152(ctx,W,H,t){const F=S.ed.fr152;if(!F||!F.id||F.id==="none")return;const id=F.id,col=F.col||(id==="neon"?"#ff4fa3":"#ffffff"),U=Math.min(W,H);
+  const copy=()=>{const A=edxCv("fr152a",W,H),a=A.getContext("2d");a.setTransform(1,0,0,1,0,0);a.globalAlpha=1;a.globalCompositeOperation="copy";a.drawImage(ctx.canvas,0,0);a.globalCompositeOperation="source-over";return A};
+  // (the picture made smaller inside the frame; behind it, the same picture blurred and darkened)
+  const inset=(x,y,w,h,r,bg)=>{const A=copy();ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.filter="blur("+Math.round(U*.03)+"px) brightness(55%)";ctx.drawImage(A,-U*.05,-U*.05,W+U*.1,H+U*.1);ctx.filter="none";
+    if(bg){ctx.fillStyle=bg;ctx.fillRect(0,0,W,H)}return{A,draw:(dx,dy,dw,dh,rad)=>{ctx.save();rr152(ctx,dx,dy,dw,dh,rad||0);ctx.clip();const k=Math.max(dw/W,dh/H);ctx.drawImage(A,dx+(dw-W*k)/2,dy+(dh-H*k)/2,W*k,H*k);ctx.restore()},end:()=>ctx.restore()}};
+  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";ctx.filter="none";
+  try{
+  if(id==="polaroid"){const I=inset();const m=U*.05,cw=Math.min(W*.86,(H*.86-m*3.2+m)*(W/H)+m*2),ch=Math.min(H*.86,cw*H/W*.9+m*2.2),cx=W/2,cy=H/2;ctx.translate(cx,cy);ctx.rotate(-.025);
+    ctx.shadowColor="rgba(0,0,0,.5)";ctx.shadowBlur=U*.04;ctx.shadowOffsetY=U*.012;ctx.fillStyle=F.col&&F.col!=="#ffffff"?F.col:"#f6f3ea";ctx.fillRect(-cw/2,-ch/2,cw,ch);ctx.shadowColor="transparent";
+    I.draw(-cw/2+m,-ch/2+m,cw-2*m,ch-m*3.4,0);I.end()}
+  else if(id==="card"){const I=inset();const mx=W*.07,my=H*.07,r=U*.045;ctx.shadowColor="rgba(0,0,0,.55)";ctx.shadowBlur=U*.05;ctx.shadowOffsetY=U*.015;ctx.fillStyle="#000";rr152(ctx,mx,my,W-2*mx,H-2*my,r);ctx.fill();ctx.shadowColor="transparent";
+    I.draw(mx,my,W-2*mx,H-2*my,r);ctx.strokeStyle="rgba(255,255,255,.18)";ctx.lineWidth=Math.max(1,U*.003);rr152(ctx,mx,my,W-2*mx,H-2*my,r);ctx.stroke();I.end()}
+  else if(id==="phone"){const I=inset();const ph=H*.9,pw=Math.min(W*.9,ph*.49),x=(W-pw)/2,y=(H-ph)/2,b=pw*.045,r=pw*.13;ctx.shadowColor="rgba(0,0,0,.6)";ctx.shadowBlur=U*.05;ctx.fillStyle="#0d0e10";rr152(ctx,x,y,pw,ph,r);ctx.fill();ctx.shadowColor="transparent";
+    ctx.strokeStyle="#3a3d44";ctx.lineWidth=b*.35;rr152(ctx,x+b*.2,y+b*.2,pw-b*.4,ph-b*.4,r*.96);ctx.stroke();I.draw(x+b,y+b,pw-2*b,ph-2*b,r*.78);ctx.fillStyle="#0d0e10";rr152(ctx,x+pw/2-pw*.14,y+b+pw*.02,pw*.28,pw*.07,pw*.035);ctx.fill();I.end()}
+  else if(id==="tv"){const I=inset("#000");const bw=W*.9,bh=H*.84,x=(W-bw)/2,y=(H-bh)/2,r=U*.05;const g=ctx.createLinearGradient(0,y,0,y+bh);g.addColorStop(0,"#3b2a1d");g.addColorStop(1,"#21160e");ctx.fillStyle=g;rr152(ctx,x,y,bw,bh,r);ctx.fill();
+    const sx=x+bw*.05,sy=y+bh*.07,sw=bw*.74,sh=bh*.86;I.draw(sx,sy,sw,sh,U*.07);const v=ctx.createRadialGradient(sx+sw/2,sy+sh/2,Math.min(sw,sh)*.3,sx+sw/2,sy+sh/2,Math.max(sw,sh)*.62);v.addColorStop(0,"rgba(0,0,0,0)");v.addColorStop(1,"rgba(0,0,0,.65)");
+    ctx.save();rr152(ctx,sx,sy,sw,sh,U*.07);ctx.clip();ctx.fillStyle=v;ctx.fillRect(sx,sy,sw,sh);ctx.globalAlpha=.12;ctx.fillStyle="#000";for(let yy=sy;yy<sy+sh;yy+=3)ctx.fillRect(sx,yy,sw,1);ctx.restore();
+    ctx.fillStyle="#120c07";[.3,.55].forEach(k=>{ctx.beginPath();ctx.arc(x+bw*.895,y+bh*k,Math.min(bw,bh)*.045,0,7);ctx.fill()});ctx.fillStyle="#2a1d13";for(let k=0;k<5;k++)ctx.fillRect(x+bw*.85,y+bh*(.72+k*.035),bw*.09,bh*.012);I.end()}
+  else if(id==="film"){const bh=H*.085,hw=U*.03,hh=bh*.42,gap=hw*1.9,off=(t*U*.35)%gap;ctx.fillStyle="#0b0b0b";ctx.fillRect(0,0,W,bh);ctx.fillRect(0,H-bh,W,bh);ctx.fillStyle="#e9e4d8";
+    for(let x=-gap+off;x<W+gap;x+=gap){rr152(ctx,x,(bh-hh)/2,hw,hh,hw*.25);ctx.fill();rr152(ctx,x,H-bh+(bh-hh)/2,hw,hh,hw*.25);ctx.fill()}}
+  else if(id==="neon"){const m=U*.04,r=U*.05,fl=.85+.15*Math.sin(t*23)*Math.sin(t*7.1);ctx.globalAlpha=fl;ctx.strokeStyle=col;ctx.shadowColor=col;ctx.lineWidth=U*.012;
+    for(const b of [U*.06,U*.025]){ctx.shadowBlur=b;rr152(ctx,m,m,W-2*m,H-2*m,r);ctx.stroke()}ctx.shadowBlur=0;ctx.strokeStyle="rgba(255,255,255,.85)";ctx.lineWidth=U*.004;rr152(ctx,m,m,W-2*m,H-2*m,r);ctx.stroke()}
+  else if(id==="finder"){const m=U*.06,l=U*.09,lw=Math.max(2,U*.006);ctx.strokeStyle="#fff";ctx.lineWidth=lw;ctx.shadowColor="rgba(0,0,0,.5)";ctx.shadowBlur=U*.008;ctx.beginPath();
+    [[m,m,1,1],[W-m,m,-1,1],[m,H-m,1,-1],[W-m,H-m,-1,-1]].forEach(([x,y,sx,sy])=>{ctx.moveTo(x,y+sy*l);ctx.lineTo(x,y);ctx.lineTo(x+sx*l,y)});ctx.moveTo(W/2-U*.03,H/2);ctx.lineTo(W/2+U*.03,H/2);ctx.moveTo(W/2,H/2-U*.03);ctx.lineTo(W/2,H/2+U*.03);ctx.stroke();
+    const fs=Math.round(U*.04);ctx.font="700 "+fs+"px ui-monospace,Menlo,monospace";ctx.textBaseline="middle";ctx.fillStyle="#fff";ctx.textAlign="left";ctx.fillText("REC",m+l*.35+fs*.9,m+l*.55);if(Math.floor(t*2)%2===0){ctx.fillStyle="#ff3b30";ctx.beginPath();ctx.arc(m+l*.35+fs*.3,m+l*.55,fs*.3,0,7);ctx.fill()}
+    const s=Math.max(0,t),tc=String(Math.floor(s/3600)).padStart(2,"0")+":"+String(Math.floor(s/60)%60).padStart(2,"0")+":"+String(Math.floor(s)%60).padStart(2,"0")+":"+String(Math.floor((s%1)*25)).padStart(2,"0");
+    ctx.fillStyle="#fff";ctx.textAlign="right";ctx.fillText(tc,W-m-l*.35,m+l*.55);ctx.textAlign="left";ctx.fillText("4K · 25p",m+l*.35,H-m-l*.55);const bx=W-m-l*.35-fs*1.6,by=H-m-l*.55-fs*.3;ctx.strokeRect(bx,by,fs*1.4,fs*.6);ctx.fillRect(bx+fs*.1,by+fs*.1,fs*.9,fs*.4)}
+  else if(id==="vintage"){const g=ctx.createRadialGradient(W/2,H/2,U*.35,W/2,H/2,Math.hypot(W,H)*.58);g.addColorStop(0,"rgba(30,18,8,0)");g.addColorStop(1,"rgba(30,18,8,.82)");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation="destination-out";ctx.globalCompositeOperation="source-over";const fr=Math.floor(t*12);ctx.fillStyle="rgba(255,250,235,.55)";for(let i=0;i<14;i++){const a=k152(fr,i),b=k152(fr,i+50);if(a<.6){ctx.beginPath();ctx.arc(a/.6*W,b*H,U*(.001+k152(fr,i+90)*.003),0,7);ctx.fill()}}
+    if(k152(fr,7)<.5){ctx.strokeStyle="rgba(255,248,230,.35)";ctx.lineWidth=Math.max(1,U*.0015);const x=k152(fr,8)*W;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+U*.01,H);ctx.stroke()}
+    ctx.strokeStyle="rgba(15,9,4,.95)";ctx.lineWidth=U*.03;rr152(ctx,-U*.005,-U*.005,W+U*.01,H+U*.01,U*.09);ctx.stroke()}
+  else if(id==="comic"){const I=inset("#fbf7ec");const m=U*.045;ctx.fillStyle="rgba(0,0,0,.12)";for(let y=0;y<H;y+=U*.018)for(let x=(y/(U*.018))%2?U*.009:0;x<W;x+=U*.018){ctx.beginPath();ctx.arc(x,y,U*.0035,0,7);ctx.fill()}
+    I.draw(m,m,W-2*m,H-2*m,0);ctx.strokeStyle="#111";ctx.lineWidth=U*.012;ctx.strokeRect(m,m,W-2*m,H-2*m);I.end()}
+  else if(id==="border"){const b=U*.035;ctx.fillStyle=col;ctx.fillRect(0,0,W,b);ctx.fillRect(0,H-b,W,b);ctx.fillRect(0,0,b,H);ctx.fillRect(W-b,0,b,H)}
+  else if(id==="double"){ctx.strokeStyle=col;ctx.lineWidth=Math.max(2,U*.006);const m1=U*.03,m2=U*.05;ctx.strokeRect(m1,m1,W-2*m1,H-2*m1);ctx.lineWidth=Math.max(1,U*.003);ctx.strokeRect(m2,m2,W-2*m2,H-2*m2)}
+  }finally{ctx.restore()}}
+overlayVignette=(o=>function(ctx,w,h,amt){const r=o.apply(this,arguments);if(S.view==="edit"&&ctx.canvas&&ctx.canvas.id==="wk"&&S.ed.clips.length){try{frame152(ctx,w,h,ED.t)}catch(e){}}return r})(overlayVignette);
+function frPanel152(){const F=S.ed.fr152||{},cur=F.id||"none",col=F.col||"";
+  return'<p class="small mute e-hint">'+esc(L("A frame around the whole video — the words and captions stay on top.","إطار حول الفيديو كله — تبقى الكلمات والترجمة فوقه."))+'</p><div class="tiles fr152g">'+
+    FR152.map(f=>'<button type="button" class="tile" data-act="fr152" data-v="'+f[0]+'" aria-pressed="'+(cur===f[0])+'"><span class="gl ic151">'+svg(FRI152[f[0]])+'</span><span class="lb">'+esc(L(f[1],f[2]))+"</span></button>").join("")+"</div>"+
+    (["neon","border","double","polaroid"].includes(cur)?'<span class="lbl">'+esc(L("Colour","اللون"))+'</span><div class="row fr152c">'+FRC152.map(c=>'<button type="button" class="sw152" data-act="fr152-col" data-v="'+c+'" style="background:'+c+'" aria-pressed="'+(col===c)+'" aria-label="'+c+'"></button>').join("")+"</div>":"")}
+
+// ---- 2. creative filters on the graphics card (each clip its own; an amount)
+const F152=[["duo_night","Night duotone","ثنائي ليلي",1,["#0b1d51","#5ee7ff"]],["duo_sunset","Sunset duotone","ثنائي الغروب",1,["#2d0b4e","#ff9a3c"]],["duo_mint","Mint duotone","ثنائي النعناع",1,["#0b2e2a","#b8ffda"]],["duo_rose","Rose duotone","ثنائي وردي",1,["#3a0b1f","#ffb3c7"]],
+  ["pop_red","Colour pop · red","إبراز الأحمر",2,0],["pop_blue","Colour pop · blue","إبراز الأزرق",2,.6],["pop_green","Colour pop · green","إبراز الأخضر",2,.33],["pop_yellow","Colour pop · yellow","إبراز الأصفر",2,.14],
+  ["halftone","Halftone","نقاط طباعة",3],["poster","Posterize","ملصق",4],["sketch","Sketch","رسم بالقلم",5],["thermal","Thermal","حراري",6],["night","Night vision","رؤية ليلية",7]];
+const FD152={duo_night:["Shadows navy, lights cyan — one colour world.","الظلال كحلية والإضاءة سماوية — عالم بلونين."],duo_sunset:["Purple shadows, orange lights.","ظلال بنفسجية وإضاءة برتقالية."],duo_mint:["Deep green to mint.","أخضر داكن إلى نعناعي."],duo_rose:["Wine to rose.","نبيذي إلى وردي."],
+  pop_red:["Everything grey but the reds.","كل شيء رمادي إلا الأحمر."],pop_blue:["Everything grey but the blues.","كل شيء رمادي إلا الأزرق."],pop_green:["Everything grey but the greens.","كل شيء رمادي إلا الأخضر."],pop_yellow:["Everything grey but the yellows.","كل شيء رمادي إلا الأصفر."],
+  halftone:["Printed dots, like a magazine.","نقاط طباعة كالمجلات."],poster:["Flat bands of colour.","طبقات لون مسطحة."],sketch:["A pencil drawing of the shot.","رسم بالقلم للقطة."],thermal:["A heat camera.","كاميرا حرارية."],night:["Green night vision with grain.","رؤية ليلية خضراء بحبيبات."]};
+const GL152={no:false,gl:null};
+function gl152(){if(GL152.gl)return GL152.gl;if(GL152.no)return null;
+  try{const cv=document.createElement("canvas"),gl=cv.getContext("webgl",{premultipliedAlpha:false,preserveDrawingBuffer:true,antialias:false});if(!gl)throw new Error("no WebGL");
+    const sh=(t,s)=>{const x=gl.createShader(t);gl.shaderSource(x,s);gl.compileShader(x);if(!gl.getShaderParameter(x,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(x));return x};
+    const p=gl.createProgram();gl.attachShader(p,sh(gl.VERTEX_SHADER,"attribute vec2 p;varying vec2 v;void main(){gl_Position=vec4(p,0.,1.);v=.5*(p+1.);}"));
+    gl.attachShader(p,sh(gl.FRAGMENT_SHADER,`precision mediump float;varying vec2 v;uniform sampler2D img;uniform float mode,amt,time,hue;uniform vec3 c1,c2;uniform vec2 res;
+float lum(vec3 c){return dot(c,vec3(.299,.587,.114));}
+vec3 hsv(vec3 c){vec4 K=vec4(0.,-1./3.,2./3.,-1.);vec4 p=mix(vec4(c.bg,K.wz),vec4(c.gb,K.xy),step(c.b,c.g));vec4 q=mix(vec4(p.xyw,c.r),vec4(c.r,p.yzx),step(p.x,c.r));float d=q.x-min(q.w,q.y);return vec3(abs(q.z+(q.w-q.y)/(6.*d+1e-10)),d/(q.x+1e-10),q.x);}
+float L(vec2 o){return lum(texture2D(img,v+o/res).rgb);}
+void main(){vec4 px=texture2D(img,v);vec3 c=px.rgb,o=c;float l=lum(c);
+  if(mode<1.5){o=mix(c1,c2,smoothstep(.04,.96,l));}
+  else if(mode<2.5){vec3 h=hsv(c);float d=abs(h.x-hue);d=min(d,1.-d);float k=(1.-smoothstep(.05,.11,d))*smoothstep(.15,.32,h.y)*smoothstep(.08,.2,h.z);o=mix(vec3(l),min(c*1.1,1.),k);}
+  else if(mode<3.5){float s=max(5.,res.y/110.);vec2 q=v*res;vec2 cell=(floor(q/s)+.5)*s;vec3 cc=texture2D(img,cell/res).rgb;float r=(1.-lum(cc))*s*.66;float k=1.-smoothstep(r-.8,r+.8,length(q-cell));o=mix(vec3(.97,.96,.92),cc*.75,k);}
+  else if(mode<4.5){o=floor(c*4.+.5)/4.;}
+  else if(mode<5.5){float gx=-L(vec2(-1.,1.))-2.*L(vec2(-1.,0.))-L(vec2(-1.,-1.))+L(vec2(1.,1.))+2.*L(vec2(1.,0.))+L(vec2(1.,-1.));float gy=-L(vec2(-1.,-1.))-2.*L(vec2(0.,-1.))-L(vec2(1.,-1.))+L(vec2(-1.,1.))+2.*L(vec2(0.,1.))+L(vec2(1.,1.));
+    float e=smoothstep(.06,.42,length(vec2(gx,gy)));o=vec3(.97,.96,.93)*(1.-e*.92)*(.9+.1*l);}
+  else if(mode<6.5){vec3 a=vec3(0.,0.,.25),b=vec3(.55,0.,.65),d=vec3(1.,.15,0.),f=vec3(1.,.88,0.);o=l<.33?mix(a,b,l/.33):l<.66?mix(b,d,(l-.33)/.33):mix(d,f,(l-.66)/.34);if(l>.9)o=mix(o,vec3(1.),(l-.9)*10.);}
+  else{float n=fract(sin(dot(floor(v*res)+floor(time*30.),vec2(12.9898,78.233)))*43758.5453);float sc=.86+.14*sin(v.y*res.y*1.4);o=vec3(.12,1.,.3)*(l*1.5+.04)*sc+(n-.5)*.14;o*=smoothstep(.9,.35,length(v-.5));}
+  gl_FragColor=vec4(mix(c,clamp(o,0.,1.),amt),px.a);}`));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p));
+    const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+    const img=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,img);[[gl.TEXTURE_MIN_FILTER,gl.LINEAR],[gl.TEXTURE_MAG_FILTER,gl.LINEAR],[gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE],[gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE]].forEach(([k,x])=>gl.texParameteri(gl.TEXTURE_2D,k,x));
+    const U={};["img","mode","amt","time","hue","c1","c2","res"].forEach(k=>U[k]=gl.getUniformLocation(p,k));cv.addEventListener("webglcontextlost",ev=>{ev.preventDefault();GL152.gl=null},false);
+    Object.assign(GL152,{cv,gl,p,buf,img,U});return gl}
+  catch(e){console.warn("v152 filters:",e);GL152.no=true;return null}}
+const hex152=h=>{const n=parseInt(String(h).slice(1),16);return[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255]};
+function fx152(src,w,h,id,amt,t){const F=F152.find(x=>x[0]===id),gl=F&&gl152();if(!gl)return null;const G=GL152,cv=G.cv;if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}
+  gl.viewport(0,0,w,h);gl.useProgram(G.p);gl.bindBuffer(gl.ARRAY_BUFFER,G.buf);const loc=gl.getAttribLocation(G.p,"p");gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,G.img);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,src);
+  gl.uniform1i(G.U.img,0);gl.uniform1f(G.U.mode,F[3]);gl.uniform1f(G.U.amt,clamp(amt,0,1));gl.uniform1f(G.U.time,t||0);gl.uniform1f(G.U.hue,F[3]===2?F[4]:0);gl.uniform2f(G.U.res,w,h);
+  const[a,b]=F[3]===1?F[4]:["#000000","#ffffff"];gl.uniform3fv(G.U.c1,hex152(a));gl.uniform3fv(G.U.c2,hex152(b));gl.drawArrays(gl.TRIANGLES,0,3);return cv}
+// (the same way as the v140 colour pass: the clip's picture right after it is drawn; a faded one is drawn on a canvas of its own first)
+drawFit=(o=>function(ctx,m,ow,oh,lt,filter){
+  if(S.view!=="edit"||GL152.no||!ctx||!ctx.canvas||ctx.canvas.id!=="wk")return o.apply(this,arguments);const c=edxClipOf(m,lt);if(!c||!c.f152||c.f152==="none")return o.apply(this,arguments);
+  const cv=ctx.canvas,W=cv.width,H=cv.height,amt=(c.f152a??100)/100;
+  if(ctx.globalAlpha>=.999&&ctx.globalCompositeOperation==="source-over"){const r=o.apply(this,arguments),out=fx152(cv,W,H,c.f152,amt,ED.t);
+    if(out){ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation="copy";ctx.filter="none";ctx.drawImage(out,0,0,W,H);ctx.restore()}return r}
+  const O=GL152.o||(GL152.o=Object.assign(document.createElement("canvas"),{id:"wk"}));if(O.width!==W||O.height!==H){O.width=W;O.height=H}
+  const ox=O.getContext("2d");ox.setTransform(1,0,0,1,0,0);ox.globalAlpha=1;ox.globalCompositeOperation="source-over";ox.clearRect(0,0,W,H);ox.setTransform(ctx.getTransform());
+  const r=o.call(this,ox,m,ow,oh,lt,filter),out=fx152(O,W,H,c.f152,amt,ED.t);ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.filter="none";ctx.drawImage(out||O,0,0,W,H);ctx.restore();return r})(drawFit);
+// the tiles: each shows the clip itself through that filter
+function fxTiles152(){const c=edxPick();if(!c)return"";const cur=c.f152||"none";
+  return'<span class="lbl">'+esc(L("Creative filters","فلاتر إبداعية"))+'</span><div class="tiles f152g">'+[["none","None","بدون"]].concat(F152).map(f=>'<button type="button" class="tile" data-act="f152" data-v="'+f[0]+'" aria-pressed="'+(cur===f[0])+'" title="'+esc(FD152[f[0]]?L(...FD152[f[0]]):"")+'"><span class="gl lkw151"><canvas class="lk152" width="96" height="60" data-f152="'+f[0]+'" aria-hidden="true"></canvas></span><span class="lb">'+esc(L(f[1],f[2]))+"</span></button>").join("")+"</div>"+
+    (cur!=="none"?edxSlider("f152a",L("Amount","المقدار"),Math.round(c.f152a??100),0,100,1,"%"):"")}
+function fxThumbs152(v){const cs=[...v.querySelectorAll("canvas.lk152")].filter(x=>!x.dataset.done);if(!cs.length)return;let src=null;
+  try{const c=edxPick(),m=c&&clipMedia(c),el=m&&m.el;if(el&&(m.type==="image"?el.naturalWidth:el.readyState>=2&&el.videoWidth))src=el}catch(e){}if(!src){const wk=$("#wk");if(wk&&wk.width)src=wk}if(!src)return;
+  const T=edxCv("lk152s",96,60),tx=T.getContext("2d"),sw=src.videoWidth||src.naturalWidth||src.width,sh=src.videoHeight||src.naturalHeight||src.height,k=Math.max(96/sw,60/sh);tx.drawImage(src,(96-sw*k)/2,(60-sh*k)/2,sw*k,sh*k);
+  cs.forEach(cv=>{const id=cv.dataset.f152,out=id==="none"?T:fx152(T,96,60,id,1,0);try{cv.getContext("2d").drawImage(out||T,0,0)}catch(e){}cv.dataset.done="1"})}
+
+// ---- 3. more cuts: the next clip's first picture and this one, put together in 2D
+const TR152=[["wipe_l","Wipe left","مسح لليسار"],["wipe_r","Wipe right","مسح لليمين"],["wipe_u","Wipe up","مسح لأعلى"],["wipe_d","Wipe down","مسح لأسفل"],["slide_l","Slide left","انزلاق لليسار"],["slide_r","Slide right","انزلاق لليمين"],
+  ["slide_u","Slide up","انزلاق لأعلى"],["slide_d","Slide down","انزلاق لأسفل"],["iris","Iris","قزحية"],["bands","Bands","أشرطة"],["dot","Collapse to a dot","انكماش لنقطة"],["rise","Horizon rise","صعود الأفق"],
+  ["flip","Polarity flip","انعكاس الألوان"],["zoomout","Zoom out","ابتعاد"],["dissolve","Pixel dissolve","ذوبان بكسلي"]];
+const TRI152={wipe_l:'<rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M13 5v14"/><path d="M10 12H5M7 10l-2 2 2 2"/>',wipe_r:'<rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M11 5v14"/><path d="M14 12h5M17 10l2 2-2 2"/>',
+  wipe_u:'<rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 13h18"/><path d="M12 11V7M10 9l2-2 2 2"/>',wipe_d:'<rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 11h18"/><path d="M12 13v4M10 15l2 2 2-2"/>',
+  slide_l:'<rect x="1.5" y="6" width="10" height="12" rx="1.5"/><rect x="12.5" y="6" width="10" height="12" rx="1.5"/><path d="M9 12H4"/>',slide_r:'<rect x="1.5" y="6" width="10" height="12" rx="1.5"/><rect x="12.5" y="6" width="10" height="12" rx="1.5"/><path d="M15 12h5"/>',
+  slide_u:'<rect x="6" y="1.5" width="12" height="10" rx="1.5"/><rect x="6" y="12.5" width="12" height="10" rx="1.5"/><path d="M12 9V4"/>',slide_d:'<rect x="6" y="1.5" width="12" height="10" rx="1.5"/><rect x="6" y="12.5" width="12" height="10" rx="1.5"/><path d="M12 15v5"/>',
+  iris:'<rect x="3" y="5" width="18" height="14" rx="1.5"/><circle cx="12" cy="12" r="4"/>',bands:'<path d="M3 6h14M3 10h18M3 14h11M3 18h16"/>',dot:'<rect x="3" y="5" width="18" height="14" rx="1.5" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="1.8"/>',
+  rise:'<rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 14c3-2 15-2 18 0"/><path d="M12 12V8M10 10l2-2 2 2"/>',flip:'<rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M12 5v14"/><path d="M5 12h5" opacity=".5"/>',
+  zoomout:'<rect x="3" y="5" width="18" height="14" rx="1.5"/><rect x="8" y="9" width="8" height="6" rx="1"/><path d="M6 7l2 2M18 7l-2 2M6 17l2-2M18 17l-2-2"/>',dissolve:'<path d="M4 5h3v3H4zM10 5h3v3h-3zM16 8h3v3h-3zM7 11h3v3H7zM13 14h3v3h-3zM4 17h3v3H4zM17 17h3v3h-3z"/>'};
+const TRID152=new Set(TR152.map(x=>x[0]));
+function trCompose152(id,ctx,A,B,p,W,H){const d=x=>ctx.drawImage(x,0,0,W,H),e=ease144(p);ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.filter="none";ctx.globalCompositeOperation="source-over";
+  const clip=(x,y,w,h)=>{ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();d(B);ctx.restore()};
+  try{if(id==="wipe_l"){d(A);clip(W*(1-e),0,W*e+1,H)}else if(id==="wipe_r"){d(A);clip(0,0,W*e,H)}else if(id==="wipe_u"){d(A);clip(0,H*(1-e),W,H*e+1)}else if(id==="wipe_d"){d(A);clip(0,0,W,H*e)}
+    else if(id.startsWith("slide_")){const dx={slide_l:-1,slide_r:1}[id]||0,dy={slide_u:-1,slide_d:1}[id]||0;ctx.fillStyle="#000";ctx.fillRect(0,0,W,H);ctx.drawImage(A,dx*W*e,dy*H*e,W,H);ctx.drawImage(B,-dx*W*(1-e),-dy*H*(1-e),W,H)}
+    else if(id==="iris"){d(A);ctx.beginPath();ctx.arc(W/2,H/2,e*Math.hypot(W,H)/2,0,7);ctx.clip();d(B)}
+    else if(id==="bands"){d(A);const n=6,bh=H/n;for(let i=0;i<n;i++){const q=clamp((p-i*.07)/.6,0,1),w=W*ease144(q);ctx.save();ctx.beginPath();i%2?ctx.rect(W-w,i*bh,w+1,bh+1):ctx.rect(0,i*bh,w,bh+1);ctx.clip();d(B);ctx.restore()}}
+    else if(id==="dot"){ctx.fillStyle="#000";ctx.fillRect(0,0,W,H);const R=Math.hypot(W,H)/2;ctx.beginPath();if(p<.5)ctx.arc(W/2,H/2,Math.max(1,R*ease144(1-p*2)),0,7);else ctx.arc(W/2,H/2,Math.max(1,R*ease144(p*2-1)),0,7);ctx.clip();d(p<.5?A:B)}
+    else if(id==="rise"){d(A);ctx.fillStyle="rgba(0,0,0,"+(.6*e).toFixed(3)+")";ctx.fillRect(0,0,W,H);ctx.drawImage(B,0,H*(1-e),W,H)}
+    else if(id==="flip"){if(p<.5){d(A);if(p>.3){ctx.globalAlpha=clamp((p-.3)/.2,0,1);ctx.filter="invert(1)";d(A)}}else{ctx.globalAlpha=1;d(B);if(p<.7){ctx.globalAlpha=clamp((.7-p)/.2,0,1);ctx.filter="invert(1)";d(B)}}}
+    else if(id==="zoomout"){const sb=1.15-.15*e;ctx.drawImage(B,W*(1-sb)/2,H*(1-sb)/2,W*sb,H*sb);const sa=1-.35*e;ctx.globalAlpha=1-e;ctx.drawImage(A,W*(1-sa)/2,H*(1-sa)/2,W*sa,H*sa)}
+    else if(id==="dissolve"){d(A);const gw=64,gh=Math.max(8,Math.round(64*H/W)),M2=edxCv("tr152m",gw,gh),mx=M2.getContext("2d"),id2=mx.createImageData(gw,gh);
+      for(let i=0;i<gw*gh;i++){const on=k152("dsv",i)<p;id2.data[i*4+3]=on?255:0}mx.putImageData(id2,0,0);const T=edxCv("tr152b",W,H),tx=T.getContext("2d");tx.globalCompositeOperation="copy";tx.drawImage(B,0,0,W,H);
+      tx.globalCompositeOperation="destination-in";tx.imageSmoothingEnabled=false;tx.drawImage(M2,0,0,W,H);tx.imageSmoothingEnabled=true;tx.globalCompositeOperation="source-over";d(T)}
+    else d(A)}finally{ctx.restore()}}
+drawFit=(o=>function(ctx,m,ow,oh,lt,filter){if(S.view!=="edit"||!ctx||!ctx.canvas||ctx.canvas.id!=="wk")return o.apply(this,arguments);const c=edxClipOf(m,lt);if(!c||!TRID152.has(c.trans))return o.apply(this,arguments);
+  const cl=S.ed.clips,nx=cl[cl.indexOf(c)+1];if(!nx)return o.apply(this,arguments);const d=clipDur(c),tl=clamp((lt-c.in)/(c.speed||1),0,d),Wd=trW144(c,nx),p=d-tl<Wd?clamp(1-(d-tl)/Wd,0,1):0;
+  const r=o.apply(this,arguments),nm=clipMedia(nx);if(d-tl<Wd+1.5&&nm&&nm.type==="video")ff131(nx,nm);if(!p||!nm)return r;
+  const ff=nm.type==="video"?ff131(nx,nm):null;if(nm.type==="video"&&!ff)return r;const W=ctx.canvas.width,H=ctx.canvas.height;
+  const B=edxCv("tr152next",W,H),bx=B.getContext("2d");bx.setTransform(1,0,0,1,0,0);bx.globalAlpha=1;bx.globalCompositeOperation="source-over";bx.fillStyle="#000";bx.fillRect(0,0,W,H);
+  const el=nm.el,ty=nm.type;if(ff){nm.el=ff;nm.type="image"}try{o.call(this,bx,nm,ow,oh,nx.in,filter)}catch(e){}finally{nm.el=el;nm.type=ty}
+  const A=edxCv("tr152cur",W,H),ax=A.getContext("2d");ax.setTransform(1,0,0,1,0,0);ax.globalCompositeOperation="copy";ax.drawImage(ctx.canvas,0,0);ax.globalCompositeOperation="source-over";
+  trCompose152(c.trans,ctx,A,B,p,W,H);return r})(drawFit);
+transTiles145=(o=>function(c,cls){let h=o.apply(this,arguments);if(typeof h!=="string")return h;const k=h.lastIndexOf("</div>");if(k<0)return h;
+  const more=TR152.map(x=>tbtn145('data-set="edclip.trans" data-val="'+x[0]+'"',c.trans===x[0],svg(TRI152[x[0]]),L(x[1],x[2]))).join("");return h.slice(0,k)+more+h.slice(k)})(transTiles145);
+Object.assign(PKV84.transition=PKV84.transition||{},{wipe_l:["","","A line sweeps to the left, the next shot behind it.","خط يمسح لليسار وخلفه اللقطة التالية."],wipe_r:["","","A line sweeps to the right.","خط يمسح لليمين."],wipe_u:["","","The next shot rises from the bottom edge.","اللقطة التالية تصعد من الحافة السفلى."],
+  wipe_d:["","","The next shot comes down from the top.","اللقطة التالية تنزل من الأعلى."],slide_l:["","","Both shots slide left together.","اللقطتان تنزلقان لليسار معاً."],slide_r:["","","Both shots slide right together.","اللقطتان تنزلقان لليمين معاً."],
+  slide_u:["","","Both shots slide up.","اللقطتان تنزلقان لأعلى."],slide_d:["","","Both shots slide down.","اللقطتان تنزلقان لأسفل."],iris:["","","A circle opens from the middle.","دائرة تنفتح من المنتصف."],bands:["","","Bands sweep in one after another.","أشرطة تمسح الواحد تلو الآخر."],
+  dot:["","","The shot shrinks to a dot, the next one grows from it.","اللقطة تنكمش لنقطة والتالية تكبر منها."],rise:["","","The next shot rises like a horizon over a darkening frame.","اللقطة التالية تصعد كأفق فوق صورة تعتم."],
+  flip:["","","A flash of inverted colours swaps the shots.","وميض بألوان معكوسة يبدّل اللقطتين."],zoomout:["","","This shot pulls away to reveal the next.","هذه اللقطة تبتعد لتكشف التالية."],dissolve:["","","The next shot appears pixel by pixel.","اللقطة التالية تظهر بكسلاً بكسلاً."]});
+
+// ---- 4. more camera moves (keyframes, like the others: change them after if you like)
+const CAM152=[["breathe","Breathing zoom","تقريب يتنفس","motion"],["pullback","Pull-back reveal","كشف بالابتعاد","motion"],["pushroll","Push with a roll","دفع مع ميلان","refresh"],["kick","Impact kick here","ارتجاج ضربة هنا","vfx"],
+  ["drift","Drift","انجراف","motion"],["crane","Crane down","رافعة لأسفل","motion"],["handheld","Handheld","تصوير باليد","motion"],["whipin","Whip in","دخول خاطف","next"]];
+function camKf152(c,p){const d=+clipDur(c).toFixed(2),tl=edxLocal(c),k=(t,s,x,y,r)=>({t:+clamp(t,0,d).toFixed(2),s:+s.toFixed(3),x:+(x||0).toFixed(3),y:+(y||0).toFixed(3),r:+(r||0).toFixed(2)});
+  if(p==="breathe"){const o=[];for(let t=0,i=0;t<=d+.001;t+=.9,i++)o.push(k(t,i%2?1.06:1,0,0,0));return o}
+  if(p==="pullback")return[k(0,1.6,0,0,0),k(Math.min(d,1.4),1,0,0,0),k(d,1,0,0,0)];
+  if(p==="pushroll")return[k(0,1,0,0,-3),k(d,1.3,0,0,3)];
+  if(p==="kick"){const a=Math.max(0,tl);return[k(0,1),k(a,1),k(a+.05,1.08,.02,-.015,1),k(a+.12,1.04,-.015,.01,-.6),k(a+.2,1.02,.006,0,.2),k(a+.32,1),k(d,1)].filter((x,i,l)=>i===0||x.t>l[i-1].t)}
+  if(p==="drift")return[k(0,1.12,-.03,.02,0),k(d,1.12,.03,-.02,0)];
+  if(p==="crane")return[k(0,1.18,0,.08,0),k(d,1.08,0,-.02,0)];
+  if(p==="handheld"){const o=[];for(let t=0,i=0;t<=d+.001;t+=.4,i++)o.push(k(t,1.07,(k152(c.id,i)-.5)*.02,(k152(c.id,i+99)-.5)*.02,(k152(c.id,i+199)-.5)*.8));return o}
+  if(p==="whipin")return[k(0,1.1,.6,0,0),k(Math.min(d,.28),1.1,0,0,0),k(Math.min(d,.45),1,0,0,0),k(d,1)].filter((x,i,l)=>i===0||x.t>l[i-1].t);return null}
+edxZoomPreset=(o=>function(c,p){const kf=CAM152.some(x=>x[0]===p)&&camKf152(c,p);if(!kf)return o.apply(this,arguments);c.mo=c.mo||{kf:[],ease:"smooth"};c.mo.kf=kf;c.mo.ease=p==="pullback"||p==="whipin"?"out":"smooth";c.mo.anim=kf.length>1})(edxZoomPreset);
+// (the clip's Motion panel as it is drawn now — with v141's opacity and volume keyframes — gets the tiles before "Reset")
+EDX_PANELS.motion=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string")return h;const i=h.indexOf('data-act="edx-zoom" data-v="reset"');if(i<0)return h;const b=h.lastIndexOf("<button",i);if(b<0)return h;
+  return h.slice(0,b)+CAM152.map(p=>edxTile("edx-zoom",p[0],p[1],p[2],p[3],false)).join("")+h.slice(b)})(EDX_PANELS.motion);
+Object.assign(P151,{breathe:'<circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="8" stroke-dasharray="2 2"/>',pullback:'<rect x="8" y="8" width="8" height="8" rx="1"/><path d="M8 8L4 4M16 8l4-4M8 16l-4 4M16 16l4 4"/>',pushroll:'<rect x="5" y="6" width="14" height="12" rx="1.5" transform="rotate(-8 12 12)"/><path d="M12 10v4M10 12h4"/>',
+  kick:'<path d="M4 12h3l2-5 3 10 2-5h6"/><path d="M19 7l2-2M19 17l2 2"/>',drift:'<path d="M4 16c4 0 6-8 16-8"/><path d="M17 6l3 2-2 3"/>',crane:'<path d="M5 20V5h10"/><path d="M15 5v9"/><rect x="12.5" y="14" width="5" height="4" rx="1"/>',
+  handheld:'<path d="M7 20v-6l-2-3 3-5 4 1 3-2 3 4-2 5v6"/>',whipin:'<path d="M3 12h11M6 8h8M6 16h8"/><path d="M14 12l4-4v8z"/>'});
+setIc151=(o=>function(b,p){if(b&&b.dataset&&b.dataset.act==="edx-zoom"&&P151[b.dataset.v])return o.call(this,b,P151[b.dataset.v]);return o.apply(this,arguments)})(setIc151);
+after151=(o=>function(){o.apply(this,arguments);const v=document.querySelector("#main .view.ed143");if(!v)return;v.querySelectorAll('[data-act="edx-zoom"]').forEach(b=>{if(P151[b.dataset.v])setIc151(b,P151[b.dataset.v])});fxThumbs152(v)})(after151);
+
+// ---- 5. more text motions (cinetic's typography ideas, drawn our own way)
+const TM152=[["scramble","Scramble decode","فك التشفير",.9],["maskrise","Mask rise","صعود من قناع",.6],["blurrise","Blur rise","صعود ضبابي",.7],["slam","One-word slam","كلمة بكلمة بقوة",0],["slice","Slice glitch","شرائح متقطعة",.45],["tracking","Tracking in","تقارب الحروف",.9]];
+const TMI152={scramble:'<path d="M4 7h4M4 12h7M4 17h3"/><path d="M14 6l6 6-6 6"/>',maskrise:'<path d="M4 16h16"/><path d="M8 13V8h8v5"/><path d="M12 6V3"/>',blurrise:'<path d="M5 15h14" stroke-dasharray="1 2"/><path d="M7 11h10M9 7h6"/>',slam:'<path d="M6 5h12v4H6z"/><path d="M9 13h6M10 17h4"/><path d="M4 5l-1-2M20 5l1-2"/>',
+  slice:'<path d="M4 7h10M7 11h13M4 15h9M8 19h10"/>',tracking:'<path d="M3 12h4M17 12h4M9 8v8M15 8v8"/><path d="M5 10l-2 2 2 2M19 10l2 2-2 2"/>'};
+const TML152={c:null};
+drawTextLayer=(o=>function(ctx,tx,ow,oh,t){const an=String(tx.anim||"");if(!an.startsWith("t152_")||t<tx.start||t>tx.end)return o.apply(this,arguments);const id=an.slice(5),def=TM152.find(x=>x[0]===id),plain=Object.assign({},tx,{anim:"none"});
+  if(!def)return o.call(this,ctx,plain,ow,oh,t);const lt=t-tx.start,len=tx.end-tx.start,txt=String(tx.text||"");
+  if(id==="slam"){const ws=txt.split(/\s+/).filter(Boolean),pw=ws.length>1?Math.min(.42,len*.6/ws.length):0;if(!pw||lt>=pw*ws.length)return o.call(this,ctx,plain,ow,oh,t);
+    const i=Math.floor(lt/pw),q=(lt-i*pw)/pw,sc=q<.25?1.45-.45*ease144(q/.25):1;return o.call(this,ctx,Object.assign({},plain,{text:ws[i],size:(+tx.size||7)*1.5*sc}),ow,oh,t)}
+  const D=def[3],u=clamp(lt/D,0,1);if(u>=1)return o.call(this,ctx,plain,ow,oh,t);const e=ease144(u);
+  if(id==="scramble"){const ar=/[؀-ۿ]/.test(txt),set=ar?"ابتثجحخدذرزسشصضطظعغفقكلمنهوي":"ABCDEFGHJKLMNPQRSTUVWXYZ0123456789#%&",n=txt.length,fr=Math.floor(lt*24);
+    const s=[...txt].map((ch,i)=>/\s/.test(ch)||u>=(i+1)/n*.85?ch:set[Math.floor(k152(fr,i)*set.length)]).join("");return o.call(this,ctx,Object.assign({},plain,{text:s}),ow,oh,t)}
+  if(id==="tracking"){ctx.save();try{ctx.globalAlpha=ctx.globalAlpha*clamp(u*1.6,0,1);if("letterSpacing" in ctx)ctx.letterSpacing=((1-e)*.55).toFixed(3)+"em";return o.call(this,ctx,plain,ow,oh,t)}finally{ctx.restore()}}
+  if(!TML152.c||TML152.c.width!==ow||TML152.c.height!==oh){TML152.c=document.createElement("canvas");TML152.c.width=ow;TML152.c.height=oh}const Lc=TML152.c,lx=Lc.getContext("2d");lx.setTransform(1,0,0,1,0,0);lx.globalAlpha=1;lx.filter="none";lx.clearRect(0,0,ow,oh);
+  const n0=(ED.hit||[]).length,r=o.call(this,lx,plain,ow,oh,t),b=(ED.hit||[]).slice(n0).reverse().find(x=>x.k==="text"&&x.id===tx.id)||{cx:ow/2,cy:oh*.78,w:ow*.6,h:oh*.08};
+  ctx.save();ctx.setTransform(1,0,0,1,0,0);try{
+  if(id==="maskrise"){const pad=b.h*.25;ctx.beginPath();ctx.rect(0,b.cy-b.h/2-pad,ow,b.h+pad*2);ctx.clip();ctx.drawImage(Lc,0,(1-e)*(b.h+pad))}
+  else if(id==="blurrise"){ctx.globalAlpha*=e;ctx.filter="blur("+((1-e)*b.h*.18).toFixed(1)+"px)";ctx.drawImage(Lc,0,(1-e)*b.h*.35)}
+  else if(id==="slice"){const n=7,top=b.cy-b.h/2-b.h*.2,hh=(b.h*1.4)/n,k=1-e;for(let i=0;i<n;i++){const dx=(k152(Math.floor(lt*30),i)-.5)*b.w*.35*k;ctx.drawImage(Lc,0,top+i*hh,ow,hh,dx,top+i*hh,ow,hh)}
+    if(k>.3){ctx.globalAlpha=.5*k;ctx.globalCompositeOperation="screen";ctx.filter="hue-rotate(180deg)";ctx.drawImage(Lc,b.w*.02*k,0)}}
+  }finally{ctx.restore()}return r})(drawTextLayer);
+function tmTiles152(tx){return'<span class="lbl">'+esc(L("Title motions","حركات العناوين"))+'</span><div class="tiles tm152">'+TM152.map(m=>'<button type="button" class="tile" data-act="tm152" data-v="'+m[0]+'" aria-pressed="'+(tx.anim==="t152_"+m[0])+'"><span class="gl ic151">'+svg(TMI152[m[0]])+'</span><span class="lb">'+esc(L(m[1],m[2]))+"</span></button>").join("")+"</div>"}
+
+// ---- 6. more sounds (each made on the device, free) and the sound pass
+EDX_SFX.push(["tick","Tick","تكة"],["tock","Tock","طقة"],["pluck","Pluck","نقرة وتر"],["bell","Bell","جرس"],["thump","Thump","دقة"],["snap","Snap","طقطقة"],["key","Key press","مفتاح"],["swell","Air swell","هبة هواء"],["subdrop","Sub drop","هبوط عميق"],["sparkle","Sparkle","لمعان"],["zip","Zip","سحّاب"],["paper","Paper","ورق"]);
+const PENTA152=[392,440,493.88,587.33,659.25];
+edxSynth=(o=>async function(n){const[base,arg]=String(n).split(":");const len={tick:.08,tock:.12,pluck:1.2,bell:2,thump:.4,snap:.08,key:.12,swell:1.1,subdrop:1.4,sparkle:.8,zip:.35,paper:.45}[base];if(!len)return o.apply(this,arguments);
+  const sr=44100,ac=new OfflineAudioContext(1,Math.ceil(sr*len),sr),out=ac.createGain();out.connect(ac.destination);out.gain.value=.9;
+  const nb=ac.createBuffer(1,Math.ceil(sr*len),sr),nd=nb.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
+  const env=(g,t0,a,d,peak)=>{g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(peak,t0+a);g.gain.exponentialRampToValueAtTime(.0005,t0+a+d)};
+  const osc=(type,f0,f1,t0,a,d,peak)=>{const x=ac.createOscillator(),g=ac.createGain();x.type=type;x.frequency.setValueAtTime(f0,t0);x.frequency.exponentialRampToValueAtTime(Math.max(1,f1),t0+a+d);env(g,t0,a,d,peak);x.connect(g).connect(out);x.start(t0);x.stop(t0+a+d+.02)};
+  const noise=(ft,f0,f1,t0,a,d,peak,Q)=>{const s=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();s.buffer=nb;f.type=ft;f.Q.value=Q||1;f.frequency.setValueAtTime(f0,t0);f.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t0+a+d);env(g,t0,a,d,peak);s.connect(f).connect(g).connect(out);s.start(t0);s.stop(t0+a+d+.02)};
+  ({tick:()=>{noise("highpass",4500,4500,0,.001,.025,.7);osc("sine",2400,2200,0,.001,.03,.3)},tock:()=>{noise("bandpass",900,700,0,.001,.06,.8,3);osc("sine",620,560,0,.001,.07,.4)},
+    pluck:()=>{const f=PENTA152[(+arg||0)%5];osc("sine",f,f,0,.002,1.05,.7);osc("sine",f*2.76,f*2.76,0,.002,.25,.18);osc("triangle",f*2,f*2,0,.002,.4,.08)},
+    bell:()=>{[[1,.6,1.9],[2,.25,1.2],[2.4,.18,1],[3,.12,.8],[4.2,.08,.5]].forEach(([m,a,d])=>osc("sine",784*m,784*m,0,.003,d,a))},
+    thump:()=>{osc("sine",120,45,0,.004,.3,1);noise("lowpass",500,120,0,.002,.06,.5)},snap:()=>{noise("highpass",2600,2600,0,.0005,.02,.9);noise("bandpass",1400,1200,.004,.001,.03,.5,2)},
+    key:()=>{noise("bandpass",3200,2800,0,.0008,.012,.7,2);noise("bandpass",1300,1100,.012,.0008,.025,.6,2);osc("sine",190,150,.01,.002,.05,.35)},
+    swell:()=>noise("bandpass",220,1600,0,.6,.45,.8,.9),subdrop:()=>osc("sine",72,28,0,.03,1.3,1),
+    sparkle:()=>{for(let i=0;i<9;i++){const f=2400+Math.random()*2800,t0=i*.07+Math.random()*.03;osc("sine",f,f*1.01,t0,.002,.18,.25)}},
+    zip:()=>noise("bandpass",900,5200,0,.02,.3,.8,3),paper:()=>{for(let t=0;t<.38;t+=.02+Math.random()*.03)noise("bandpass",2500+Math.random()*2500,2000,t,.003,.04,.25+Math.random()*.35,1.2)}})[base]();
+  const b=await ac.startRendering(),d=b.getChannelData(0);let pk=0;for(let i=0;i<d.length;i++)pk=Math.max(pk,Math.abs(d[i]));if(pk>.9)for(let i=0;i<d.length;i++)d[i]*=.9/pk;return b})(edxSynth);   // (never above full scale)
+Object.assign(P151,{tick:'<path d="M12 4v4M12 16v4"/><circle cx="12" cy="12" r="2.5"/>',tock:'<rect x="7" y="7" width="10" height="10" rx="2"/><path d="M12 3v2M12 19v2"/>',pluck:'<path d="M6 20V8c0-3 3-4 6-4s6 1 6 4v12"/><path d="M9 20V9M12 20V8M15 20V9"/>',
+  bell:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/><path d="M3 9a9 9 0 0 1 2-4M21 9a9 9 0 0 0-2-4"/>',thump:'<circle cx="12" cy="14" r="5"/><path d="M12 3v4M7 6l2 2M17 6l-2 2"/>',snap:'<path d="M7 17l5-10 5 10"/><path d="M5 7l2 2M19 7l-2 2M12 3v2"/>',
+  key:'<rect x="5" y="7" width="14" height="11" rx="2.5"/><rect x="8" y="9.5" width="8" height="5" rx="1"/>',swell:'<path d="M3 15c3 0 4-6 9-6s6 6 9 6"/><path d="M3 19h18"/>',subdrop:'<path d="M12 4v13M7 12l5 5 5-5"/><path d="M5 21h14"/>',
+  sparkle:'<path d="M12 3v5M12 16v5M3 12h5M16 12h5"/><path d="M6.5 6.5l2.5 2.5M15 15l2.5 2.5M6.5 17.5L9 15M15 9l2.5-2.5"/>',zip:'<path d="M12 3v18"/><path d="M9 6h3M12 9h3M9 12h3M12 15h3"/><rect x="9" y="17" width="6" height="4" rx="1"/>',paper:'<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h5"/>'});
+const SP152=[["calm","Calm","هادئ","Soft plucks on the words, air swells at the cuts, a bell at the end.","نقرات ناعمة مع الكلمات، هبات هواء عند القطعات، جرس في النهاية."],
+  ["crisp","Crisp","حاد","Ticks on the words, whooshes at the cuts, pops on the graphics, an impact at the end.","تكات مع الكلمات، ووش عند القطعات، فرقعة مع الرسوم، ارتطام في النهاية."],
+  ["minimal","Minimal","بسيط","Almost nothing — a deep drop on the big moment and at the end.","شبه لا شيء — هبوط عميق في اللحظة الكبرى وفي النهاية."]];
+function spBox152(){const n=(S.ed.sfx||[]).filter(x=>x.sp152).length;
+  return'<div class="sp152"><span class="lbl">'+esc(L("Sound pass — sounds on every moment, by the film itself","تمريرة الصوت — أصوات على كل لحظة من الفيلم نفسه"))+'</span><div class="tiles sp152g">'+SP152.map(p=>'<button type="button" class="tile" data-act="sp152" data-v="'+p[0]+'" title="'+esc(L(p[3],p[4]))+'"><span class="gl ic151">'+svg(P151[p[0]==="calm"?"swell":p[0]==="crisp"?"whoosh":"subdrop"])+'</span><span class="lb">'+esc(L(p[1],p[2]))+"</span></button>").join("")+"</div>"+
+    '<p class="small mute e-hint">'+esc(L("Free. It reads the cuts, the words, the graphics and the last card; run it again to change it.","مجاني. يقرأ القطعات والكلمات والرسوم والبطاقة الأخيرة؛ أعد تشغيله لتغييره."))+"</p>"+
+    (n?'<button type="button" class="btn sm ghost" data-act="sp152-clear">'+ic("trash")+esc(L("Remove the pass's "+n+" sounds","احذف "+n+" من أصوات التمريرة"))+"</button>":"")+"</div>"}
+async function soundPass152(preset,noHist){const m=await mod152();if(!noHist&&histPush)histPush();const E=S.ed;E.sfx=(E.sfx||[]).filter(x=>!x.sp152);const add=m.soundPass152(E,preset,()=>uid());E.sfx.push(...add);
+  persist();renderView();toast(L(add.length+" sounds placed on the film's moments.","وُضع "+add.length+" صوت على لحظات الفيلم."),{type:"ok"});for(const it of add){try{await edxBuffer(it)}catch(e){}}if(S.view==="edit")renderView();return add.length}
+
+// ---- 7. the editor's agents: expert roles (a director runs them all, in order) and the review
+const RL152=[["director","Director","المخرج","Runs every expert in order: story, design, editing, sound.","يشغّل كل الخبراء بالترتيب: القصة، التصميم، المونتاج، الصوت."],["story","Story","القصة","The hook in the first seconds, the last line, the length.","الافتتاحية في الثواني الأولى، السطر الأخير، الطول."],
+  ["design","Design","التصميم","Words you can read, nothing on top of each other, sizes and fonts.","كلمات تُقرأ، لا تداخل، الأحجام والخطوط."],["editing","Editing","المونتاج","Long still holds, clips that flash by, too many kinds of cut.","لقطات ثابتة طويلة، مقاطع تمر كوميض، أنواع قطع كثيرة."],
+  ["audio","Sound","الصوت","Music, the voice over it, sounds at the cuts, captions.","الموسيقى، الصوت فوقها، أصوات القطعات، الترجمة."]];
+const RLI152={director:'<path d="M4 8h16v11H4z"/><path d="M4 8l3-4h3l-3 4M10 8l3-4h3l-3 4"/>',story:'<path d="M5 4h10l4 4v12H5z"/><path d="M8 11h8M8 15h5"/>',design:'<circle cx="12" cy="12" r="8"/><circle cx="9" cy="10" r="1.3"/><circle cx="14" cy="9" r="1.3"/><circle cx="15.5" cy="13.5" r="1.3"/>',
+  editing:'<circle cx="6" cy="7" r="2.5"/><circle cx="6" cy="17" r="2.5"/><path d="M8 8.5L20 16M8 15.5L20 8"/>',audio:'<path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>'};
+const SEVN152={P0:["Must fix","يجب إصلاحه"],P1:["Fix","أصلحه"],P2:["Polish","تحسين"]};
+function hasVoice152(){return!!M.edVoice||(S.ed.sfx||[]).some(x=>x.voice)}
+async function review152(){const m=await mod152(),F=fmt(),E=S.ed;ST152.rv=m.review152(E,{w:F[2],h:F[3],music:!!M.edMusic,voice:hasVoice152(),lang:S.lang,name:E.title||""});ST152.at=Date.now();return ST152.rv}
+function rvPanel152(){const E=S.ed,role=E.role152||"director",R=RL152.find(x=>x[0]===role)||RL152[0],rv=ST152.rv;
+  const roles='<div class="tiles rl152g">'+RL152.map(r=>'<button type="button" class="tile" data-act="rl152" data-v="'+r[0]+'" aria-pressed="'+(r[0]===role)+'" title="'+esc(L(r[3],r[4]))+'"><span class="gl ic151">'+svg(RLI152[r[0]])+'</span><span class="lb">'+esc(L(r[1],r[2]))+"</span></button>").join("")+"</div>";
+  let body='<p class="small mute e-hint">'+esc(L(R[3],R[4]))+'</p><button type="button" class="btn primary" data-act="rv152-go"'+(ST152.busy?" disabled":"")+">"+ic("spark")+esc(L("Review my video","راجع الفيديو"))+'</button><span class="small mute" style="margin-inline-start:8px">'+esc(L("Free · on this device","مجاني · على هذا الجهاز"))+"</span>";
+  if(rv){const list=ST152.mod&&ST152.modv?ST152.modv.forRole152(rv,role):rv.issues.filter(x=>role==="director"||x.lens===role),fixable=list.filter(x=>x.fix&&x.fix.op!=="open");
+    body+='<div class="rv152h"><b class="rv152s" data-ship="'+rv.ship+'">'+rv.score+'</b><span>'+esc(rv.ship?L("Ready to share — the rest is polish.","جاهز للنشر — والباقي تحسينات."):L("Fix the marked ones before you share it.","أصلح المعلَّم قبل النشر."))+"</span></div>"+
+      (list.length?'<div class="rv152l">'+list.map(x=>'<div class="rv152i" data-sev="'+x.sev+'"><button type="button" class="rv152t" data-act="rv152-seek" data-v="'+x.t+'" dir="ltr">'+mmss(x.t)+'</button><span class="rv152b">'+esc(L(...SEVN152[x.sev]))+" · "+esc(L(...(RL152.find(r=>r[0]===x.lens)||RL152[0]).slice(1,3)))+'</span><p dir="auto">'+esc(S.lang==="ar"?x.ar:x.en)+"</p>"+
+        (x.fix?'<button type="button" class="btn sm" data-act="rv152-fix" data-v="'+esc(x.id)+'">'+ic(x.fix.op==="open"?"arrow":"check143")+esc(L(x.fix.en,x.fix.ar))+"</button>":"")+"</div>").join("")+"</div>"
+       :'<p class="small" style="margin:10px 0 0">'+esc(L("Nothing to fix from this expert's side.","لا شيء للإصلاح من جهة هذا الخبير."))+"</p>")+
+      (fixable.length>1?'<button type="button" class="btn sm" style="margin-top:10px" data-act="rv152-all">'+ic("check143")+esc(L("Fix all "+fixable.length,"أصلح الكل ("+fixable.length+")"))+"</button>":"")}
+  return roles+body}
+async function fix152(issue,noHist){if(!issue||!issue.fix)return false;const E=S.ed,f=issue.fix;if(f.op==="open"){const T=TABS143.find(x=>x[4].includes(f.args.tab));E.tab=f.args.tab;if(T)E.lt143=T[0];E.pclosed143=null;renderView();return true}
+  const m=await mod152();if(f.op==="sound_pass"){await soundPass152(f.args.preset,noHist);return true}if(!noHist&&histPush)histPush();const ok=m.applyFix152(E,f,f.op==="text_add"?()=>uid():null);return ok}
+EDX_PANELS.rv152=rvPanel152;EDX_PANELS.fr152=frPanel152;
+TABS143.find(x=>x[0]==="ai")[4].splice(1,0,"rv152");TABS143.find(x=>x[0]==="effects")[4].push("fr152");
+Object.assign(N143,{rv152:["Review","المراجعة"],fr152:["Frames","الإطارات"]});
+// the assistant: the expert roles at its top; each gives its own examples
+const RX152={story:[["Add a title at the start","أضف عنواناً في البداية"],["Make it 30 seconds","اجعله 30 ثانية"]],design:[["Captions on","أظهر الترجمة"],["Make the selected clip night","اجعل المقطع المحدد ليلاً"]],
+  editing:[["Fade transitions between all clips","انتقالات تلاشي بين كل المقاطع"],["Slow motion","حركة بطيئة"]],audio:[["Music quieter","اخفض الموسيقى"],["Add calm oud music","أضف موسيقى عود هادئة"]]};
+chat143=(o=>function(chips){const E=S.ed,role=E.role152||"director",h=o.apply(this,arguments);
+  const bar='<div class="rl152a" role="radiogroup" aria-label="'+esc(L("Expert","الخبير"))+'">'+RL152.map(r=>'<button type="button" class="chip" role="radio" data-act="rl152" data-v="'+r[0]+'" aria-checked="'+(r[0]===role)+'" title="'+esc(L(r[3],r[4]))+'">'+svg(RLI152[r[0]])+esc(L(r[1],r[2]))+"</button>").join("")+"</div>";
+  const ex=role!=="director"&&RX152[role]?'<div class="edcmdx rx152">'+RX152[role].map(x=>'<button class="chip" data-act="edcmd-ex" data-v="'+esc(L(x[0],x[1]))+'">'+esc(L(x[0],x[1]))+"</button>").join("")+"</div>":"";
+  return bar+h+ex+'<button type="button" class="btn sm" style="margin-top:8px" data-act="rv152-open">'+ic("spark")+esc(L("Review as the "+L(...(RL152.find(r=>r[0]===role)||RL152[0]).slice(1,3)).toLowerCase(),"راجِع بعين "+L(...(RL152.find(r=>r[0]===role)||RL152[0]).slice(1,3))))+"</button>"})(chat143);
+
+// ---- the panels and the tiles' clicks
+EDX_PANELS.color=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string")return h;const k=h.indexOf('<div class="tiles">'),e=k<0?-1:h.indexOf("</div>",h.indexOf('data-act="edx-look"',k));return e<0?h+fxTiles152():h.slice(0,e+6)+fxTiles152()+h.slice(e+6)})(EDX_PANELS.color);
+EDX_PANELS.sfx=(o=>function(){const h=o.apply(this,arguments);return typeof h==="string"?spBox152()+h:h})(EDX_PANELS.sfx);
+VIEWS.edit=(o=>function(){let h=o.apply(this,arguments);const E=S.ed;if(typeof h!=="string"||E.tab!=="text")return h;const tx=E.texts.find(t=>t.id===E.selText);if(!tx)return h;
+  const k=h.indexOf('class="tiles ac131"'),e=k<0?-1:h.indexOf("</div>",k);return e<0?h:h.slice(0,e+6)+tmTiles152(tx)+h.slice(e+6)})(VIEWS.edit);
+window.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="fr152"],[data-act="fr152-col"],[data-act="f152"],[data-act="tm152"],[data-act="sp152"],[data-act="sp152-clear"],[data-act="rl152"],[data-act="rv152-go"],[data-act="rv152-fix"],[data-act="rv152-all"],[data-act="rv152-seek"],[data-act="rv152-open"]');
+  if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();const E=S.ed,v=a.dataset.v,act=a.dataset.act;
+  if(act==="fr152"){E.fr152=Object.assign({},E.fr152,{id:v});if(!E.fr152.col)delete E.fr152.col;persist();renderView();return}
+  if(act==="fr152-col"){E.fr152=Object.assign({},E.fr152,{col:v});persist();renderView();return}
+  if(act==="f152"){const c=edxPick();if(!c)return;c.f152=v==="none"?undefined:v;if(c.f152&&c.f152a==null)c.f152a=100;persist();renderView();return}
+  if(act==="tm152"){const tx=E.texts.find(t=>t.id===E.selText);if(!tx)return;tx.anim=tx.anim==="t152_"+v?"none":"t152_"+v;if(tx.anim!=="none"){ED.t=clamp(tx.start,0,Math.max(0,edTotal()-.01));ED.playing=true}persist();renderView();return}
+  if(act==="sp152"){if(!E.clips.length){toast(L("Add clips first.","أضف مقاطع أولاً."));return}await soundPass152(v);return}
+  if(act==="sp152-clear"){histPush&&histPush();E.sfx=(E.sfx||[]).filter(x=>!x.sp152);persist();renderView();return}
+  if(act==="rl152"){E.role152=v;persist();if(ST152.rv)await review152();renderView();return}
+  if(act==="rv152-open"){E.tab="rv152";E.lt143="ai";E.pclosed143=null;ST152.busy=true;renderView();try{await review152()}finally{ST152.busy=false}renderView();return}
+  if(act==="rv152-go"){ST152.busy=true;renderView();try{await review152()}finally{ST152.busy=false}renderView();return}
+  if(act==="rv152-seek"){ED.playing=false;ED.t=clamp(+v,0,Math.max(0,edTotal()-.01));renderView();return}
+  if(act==="rv152-fix"){const it=ST152.rv&&ST152.rv.issues.find(x=>x.id===v);if(!it)return;const ok=await fix152(it);persist();if(it.fix.op!=="open"){await review152();renderView();toast(ok?L("Fixed.","تم الإصلاح."):L("Nothing to change.","لا شيء للتغيير."),{type:ok?"ok":"warn"})}return}
+  // (fix, look again, fix what the fixes brought — a caption given time to read now on top of another — up to three rounds, one undo)
+  if(act==="rv152-all"){const m=await mod152(),role=E.role152||"director",seen=new Set();let n=0;histPush&&histPush();
+    for(let r=0;r<3;r++){const list=(ST152.rv?m.forRole152(ST152.rv,role):[]).filter(x=>x.fix&&x.fix.op!=="open"&&!seen.has(x.id));if(!list.length)break;for(const it of list){seen.add(it.id);if(await fix152(it,true))n++}await review152()}
+    persist();renderView();toast(L(n+" fixed.","أُصلح "+n+"."),{type:"ok"});return}},true);
+// (the filter amount slider: the editor's own slider handler shows the number and saves; this sets it on the clip)
+document.addEventListener("input",e=>{const t=e.target;if(!t||!t.dataset||t.dataset.edx!=="f152a"||S.view!=="edit")return;const c=edxPick();if(c)c.f152a=+t.value},true);
+mod152().then(m=>{ST152.modv=m}).catch(()=>{});
+// an AI agent's review fix or sound pass (lib/review152.js), seen live in the open editor
+op148=(o=>function(op){if(!["review_fix","sound_pass","style_set"].includes(op.op))return o.apply(this,arguments);const m=ST152.modv;if(!m){mod152().then(()=>{op148(op);persist();if(S.view==="edit")renderView()}).catch(()=>{});return false}
+  const E=S.ed,a=op.args||{},q=E.seq148,s=op.tl&&q&&q.cur!==op.tl&&Array.isArray(q.list)?q.list.find(x=>x.id===op.tl):null,ed=s&&s.data?s.data:E;
+  if(op.op==="sound_pass")return m.applyFix152(ed,{op:"sound_pass",args:a});if(op.op==="style_set")return m.applyStyle152(ed,a);let n=0;for(const f of a.fixes||[])if(m.applyFix152(ed,f))n++;return n>0})(op148);
+
+(()=>{const st=document.createElement("style");st.textContent=`
+.ed143 .fr152c{gap:8px;flex-wrap:wrap}.ed143 .sw152{width:30px;height:30px;border-radius:50%;border:2px solid var(--line2);padding:0}.ed143 .sw152[aria-pressed="true"]{outline:2px solid var(--lime);outline-offset:2px}
+.ed143 .f152g .tile,.ed143 .tm152 .tile{min-width:0}.ed143 .lk152{display:block;width:100%;height:100%}
+.ed143 [data-act="fr152"]{--c151:#5eead4}.ed143 [data-act="tm152"]{--c151:#fbbf24}.ed143 [data-act="sp152"]{--c151:#ff6b9a}.ed143 [data-act="rl152"]{--c151:#a78bfa}
+.ed143 .sp152{margin:0 0 12px;padding:0 0 10px;border-bottom:1px solid var(--line)}.ed143 .sp152 .lbl{margin-top:0}
+.ed143 .rl152a{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 10px}.ed143 .rl152a::-webkit-scrollbar{display:none}.ed143 .rl152a .chip{flex:none;display:inline-flex;align-items:center;gap:5px}.ed143 .rl152a .chip svg{width:15px;height:15px}
+.ed143 .rl152a .chip[aria-checked="true"]{background:color-mix(in srgb,var(--lime) 16%,var(--panel2));border-color:var(--lime);color:var(--text)}
+.ed143 .rx152{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0}
+.ed143 .rv152h{display:flex;align-items:center;gap:10px;margin:14px 0 8px}.ed143 .rv152s{display:grid;place-items:center;width:46px;height:46px;border-radius:50%;font-size:16px;border:3px solid #f59e0b;flex:none}.ed143 .rv152s[data-ship="true"]{border-color:var(--lime)}
+.ed143 .rv152l{display:flex;flex-direction:column;gap:8px}.ed143 .rv152i{border:1px solid var(--line2);border-radius:12px;padding:9px 11px;background:var(--panel2)}.ed143 .rv152i p{margin:4px 0 8px;font-size:13px;line-height:1.4}
+.ed143 .rv152i[data-sev="P0"]{border-color:#ef4444}.ed143 .rv152i[data-sev="P1"]{border-color:#f59e0b}
+.ed143 .rv152t{border:0;background:var(--panel3);color:var(--text);border-radius:8px;padding:2px 7px;font:600 11.5px/1.4 var(--mono,ui-monospace,monospace);margin-inline-end:6px}.ed143 .rv152b{font-size:11.5px;color:var(--mute);font-weight:600}
 `;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */

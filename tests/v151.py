@@ -1,7 +1,7 @@
 # v151: the studio — the phone editor like the big apps (CapCut, LumaFusion, Filmora, Premiere Rush). On a phone or tablet the
 # editor is the whole screen (no site header, menu bar or footer; a slim top bar with back, the name, size, projects and Export;
 # the page itself never scrolls), a tool opens a panel in the lower half (the timeline a strip above it, the prompt bar resting),
-# every choice a picture tile with its own icon (18 sounds, weather & light, graphics, motion presets) and the looks drawn from the
+# every choice a picture tile with its own icon (30 sounds since v152, weather & light, graphics, motion presets) and the looks drawn from the
 # clip itself — no drop-down chips in the editor; the timeline with a coloured icon per lane (the lane's letter kept for screen
 # readers), the clip's picture along the video lane, slim sound lanes, a ruler that stays at the top; a panel and the timeline keep
 # their place when the editor is drawn again; words never cut in two on the choice buttons; back leaves the editor and the site's
@@ -76,7 +76,7 @@ async def phone(b, lang):
     chk(f"{tag}: a tool's panel takes the lower half — the player stays, the timeline a strip above it, the prompt bar rests", s["sheet"] and s["sheet"][0] < s["vh"] * .62 and s["sheet"][1] <= s["bar"][0] + 1 and s["tl"][1] <= s["sheet"][0] + 1 and s["tl"][1] - s["tl"][0] >= 60 and s["stage"][0] < s["tl"][0] and s["cmd"] == "none" and "sh151" in s["cls"] and s["body"][2] == "auto", s)
     # ---- 3. the tiles: every sound its own icon; no drop-down chips anywhere in the editor
     t = await E("""()=>{const bs=[...document.querySelectorAll('.e-sheet [data-act="edx-sfx-add"]')];return {n:bs.length,uniq:new Set(bs.map(b=>(b.querySelector('.ic151')||{innerHTML:''}).innerHTML)).size,ic:bs.filter(b=>b.querySelector('.ic151 svg')).length,chips:document.querySelectorAll('#main .ed143 .pk84c').length}}""")
-    chk(f"{tag}: 18 sounds, each with its own drawn icon", t["n"] == 18 and t["ic"] == 18 and t["uniq"] == 18, t)
+    chk(f"{tag}: 30 sounds (v152: 12 more), each with its own drawn icon", t["n"] == 30 and t["ic"] == 30 and t["uniq"] == 30, t)
     # (a sheet that is scrolled stays where it is when the editor is drawn again)
     k = await E("()=>{const b=document.querySelector('.e-sheet .e-body');b.scrollTop=90;renderView();const c=document.querySelector('.e-sheet .e-body');return [c.scrollTop,c===b]}")
     chk(f"{tag}: the panel keeps its place when the editor is drawn again", abs(k[0] - 90) <= 2 and not k[1], k)
@@ -143,7 +143,7 @@ async def desktop(b):
     chk("computer: the site as before (its header, no studio frame); the same picture tiles and lane icons; no chips", not r["studio"] and r["head"] != "none" and r["looks"] >= 11 and r["chips"] == 0 and r["lanes"] >= 3 and not r["back"], r)
     await E("()=>{edSetPick(null);S.ed.lt143='audio';S.ed.tab='sfx';renderView()}"); await pg.wait_for_timeout(250)
     n = await E("()=>document.querySelectorAll('.e-assets [data-act=\"edx-sfx-add\"] .ic151 svg').length")
-    chk("computer: the sound tiles with their own icons", n == 18, n)
+    chk("computer: the sound tiles with their own icons", n == 30, n)
     await scan(pg, "computer", [("sounds", "()=>{S.ed.lt143='audio';S.ed.tab='sfx';renderView()}"), ("effects", "()=>{S.ed.lt143='effects';S.ed.tab='vfx';renderView()}"), ("filters", "()=>{S.ed.lt143='filters';S.ed.tab='color';renderView()}")])
     # ---- a clip with no sound: not "couldn't be read"
     s = await E("""async()=>{const f=async(u,n)=>new File([await (await fetch(u)).blob()],n,{type:n.endsWith('.mp4')?'video/mp4':'video/webm'});const r={};
