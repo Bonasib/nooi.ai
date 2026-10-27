@@ -18,8 +18,9 @@ async function json(r) {
 }
 export function falInput(model, p) {
   const inp = p.inputs || {}, prod = inp.mcProd ? abs(inp.mcProd) : null, target = inp.mcWho ? abs(inp.mcWho) : null;
-  return { prompt: seedanceSwapWords({ keep: p.meta?.mcKeep, prod: !!prod, target: !!target, where: p.meta?.swapWhere, who: p.meta?.swapWho, scene: p.meta?.mcScene }),
-    image_urls: [abs(inp.mcChar), ...(target ? [target] : []), ...(prod ? [prod] : [])], video_urls: [abs(inp.mcMove)],
+  const face = inp.mcFace ? abs(inp.mcFace) : null;   // (v154)
+  return { prompt: seedanceSwapWords({ keep: p.meta?.mcKeep, prod: !!prod, target: !!target, where: p.meta?.swapWhere, who: p.meta?.swapWho, scene: p.meta?.mcScene, face: !!face }),
+    image_urls: [abs(inp.mcChar), ...(target ? [target] : []), ...(prod ? [prod] : []), ...(face ? [face] : [])], video_urls: [abs(inp.mcMove)],
     resolution: p.meta?.swapFast ? "480p" : "720p", duration: String(clamp(p.dur, 4, 15)), aspect_ratio: "auto", generate_audio: false };
 }
 // v117: Sync Lipsync 2 Pro — the lips of a video matched to a voice (video_url + audio_url; the video keeps its length: cut_off)

@@ -70,7 +70,7 @@ import { registerSketch, rtEngine } from "./lib/sketch.js";
 import { registerWorld } from "./lib/world.js";
 import { registerIngest } from "./lib/ingest.js";
 import { nvReady, nvCfg, nvOn } from "./providers/nvidia.js";
-import { cbSig, findJob, pollOne, speedAdvice, setSwapRes, setSwapEngine, setLipsEngine } from "./lib/jobs.js";
+import { cbSig, findJob, pollOne, speedAdvice, setSwapRes, setSwapEngine, setLipsEngine, setHold154 } from "./lib/jobs.js";
 import { setPace } from "./lib/line124.js";
 import { safetyInfo, setSafety } from "./lib/safety126.js";
 import { labelInfo, setLabels, setAiMark, labelExport } from "./lib/label127.js";
@@ -290,6 +290,7 @@ const pricingRows = () => Object.entries(ENGINE_COST).flatMap(([g, m]) => Object
 app.get("/v1/admin/speed", requireUser, async (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); try { res.json(await speedAdvice()); } catch (e) { res.status(500).json({ error: e.message }); } });   // (v110: with what slows jobs, in words)
 app.post("/v1/admin/speed/swapres", requireUser, requireAdmin("providers.manage"), (req, res) => { try { res.json({ swapRes: setSwapRes(String(req.body?.res || "").toUpperCase() === "768P" ? "768P" : "2K") }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v112: Replace the person 2K / 768P
 app.post("/v1/admin/speed/swapengine", requireUser, requireAdmin("providers.manage"), (req, res) => { try { res.json({ swapEngine: setSwapEngine(String(req.body?.engine || "").toLowerCase()) }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v114: Seedance 2.0 / MiniMax H3
+app.post("/v1/admin/speed/hold154", requireUser, requireAdmin("providers.manage"), (req, res) => { try { res.json({ hold154: setHold154(req.body?.on !== false) }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v154: the swap holds to the end
 app.post("/v1/admin/speed/pace", requireUser, requireAdmin("providers.manage"), (req, res) => { try { const p = setPace(String(req.body?.engine || "kie"), req.body?.pace); res.json({ pace: p ? p.n + "/" + p.per / 1000 : null }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v124: the engine's limit (after its support raised it)
 app.post("/v1/admin/speed/lipsengine", requireUser, requireAdmin("providers.manage"), (req, res) => { try { res.json({ lipsEngine: setLipsEngine(String(req.body?.engine || "").toLowerCase()) }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v117: Volcengine / Sync Lipsync 2 Pro
 app.post("/v1/admin/speed/look", requireUser, requireAdmin("providers.manage"), (req, res) => { try { res.json(setLookBy(String(req.body?.by || ""))); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v129: the text AI look — Claude or the site's text AI

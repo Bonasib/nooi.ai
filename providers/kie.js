@@ -88,7 +88,10 @@ const one = (v, n) => String(v || "").replace(/[\r\n"]+/g, " ").replace(/\s{2,}/
 // the default for a server (and the tests written for H3)
 // v116: Seedance 2.0 Fast is the default (the quicker tier of the same model), and fal.ai a second provider with its own queue
 // (providers/fal.js — routed in providers/extra.js; here it falls back to Seedance 2.0 Fast)
-export const SWAP_MODELS = { seedancefast: "bytedance/seedance-2-fast", seedance: "bytedance/seedance-2", h3: "minimax-h3/reference-to-video" };
+// v154: Wan 2.2 Animate Replace follows the person frame by frame (their pose and face in every frame) — an engine of its own, and the
+// one a swap is made again on when the check sees the old person come back (lib/jobs.js)
+export const SWAP_MODELS = { seedancefast: "bytedance/seedance-2-fast", seedance: "bytedance/seedance-2", h3: "minimax-h3/reference-to-video", wan: "wan/2-2-animate-replace" };
+export const TRACK_MODEL = SWAP_MODELS.wan;
 export const SWAP_ENGINES = [...Object.keys(SWAP_MODELS), "fal"];
 export const swapEngine = () => { const v = String(platformS().swapEngine || process.env.SWAP_ENGINE || "seedancefast").toLowerCase(); return SWAP_ENGINES.includes(v) ? v : "seedancefast"; };
 const swapModel = () => SWAP_MODELS[swapEngine()] || SWAP_MODELS.seedancefast;
@@ -104,7 +107,7 @@ export const swapWords = ({ keep, prod, target, where, who, scene } = {}) => {
     ...(prod ? [`<Subject ${ps}> is the product in <Video 1>, exactly as shown in <Picture ${pp}>.`] : []),
     "<Video 1> is the source video for the target video edit.",
     "",
-    `summary: [video editing] The target video is an edited version of <Video 1>. ${old} is replaced by <Subject 1> in every frame: the same place in the frame, the same movements, gestures, hand positions, expressions and lip movement, with the face, hair, body and clothes of <Subject 1>.` +
+    `summary: [video editing] The target video is an edited version of <Video 1>. ${old} is replaced by <Subject 1> in every frame from the first to the last — the replaced person never appears again, even when they turn away, move fast or come back into view: the same place in the frame, the same movements, gestures, hand positions, expressions and lip movement, with the face, hair, body and clothes of <Subject 1>.` +
       (target ? " Every other person in <Video 1> stays exactly as they are." : "") + " Everything else stays exactly as in <Video 1>.",
     "",
     "retention_analysis:",
@@ -123,11 +126,15 @@ export const swapWords = ({ keep, prod, target, where, who, scene } = {}) => {
 };
 // v114: the swap on Seedance 2.0 — its references are named in the words: @Image1 the new person (@Image2 the person to replace
 // among several, then the product), @Video1 the client's video
-export const seedanceSwapWords = ({ keep, prod, target, where, who, scene } = {}) => {
-  const k = one(keep, 200), w = one(where || who, 160), pi = target ? 3 : 2, sl = sceneLines(scene);
+export const seedanceSwapWords = ({ keep, prod, target, where, who, scene, face } = {}) => {
+  const k = one(keep, 200), w = one(where || who, 160), pi = target ? 3 : 2, fi = pi + (prod ? 1 : 0), sl = sceneLines(scene);
   return [
     `Replace ${target ? "the person shown in @Image2" + (w ? " (" + w + ")" : "") : "the person"} in @Video1 with the person in @Image1. @Video1 is the video to edit; everything except that person stays exactly as it is in @Video1.`,
     "The new person has the face, hair, skin tone, body shape and clothes of the person in @Image1, clearly the same face in every frame — never the face of the person being replaced.",
+    ...(face ? [`@Image${fi} is the same new person's face up close: copy that face exactly — the eye shape and colour, eyebrows, nose, lips, jaw and chin, skin texture, freckles and marks.`] : []),
+    // v154: the old person must never come back after the first frames, and the face must look real
+    "From the very first frame to the very last frame the replaced person is the new person — follow their face and body through every frame: when they turn, move fast, step out of view and come back, or are partly hidden. The person being replaced never appears again, not even for a moment.",
+    "The face looks real: natural skin with fine texture and pores, real eye moisture and reflections, natural teeth and hair strands — no smoothing, no plastic, doll-like or cartoon look; the face has the same sharpness, grain and noise as the rest of @Video1.",
     "The new person is exactly where the replaced person is and copies their performance frame by frame: the same body movement, hand gestures, head turns and tilts, facial expressions, lip movement, gaze, eye movement and natural blinks, at the same moments.",
     "The light of @Video1 falls on the new person the same way: the same direction, colour and softness, with the same shadows and reflections.",
     ...(sl.length ? [sl.join(" ")] : []),
@@ -191,8 +198,9 @@ export function kieInput(model, p) {
   // product moves to Image 3; the words say where that person is in this part)
   if (/^bytedance\/seedance-2/.test(m) && (p.model === "mcswap" || p.meta?.swap93)) {   // v114
     const prod = inp.mcProd ? absUrl(inp.mcProd) : null, target = inp.mcWho ? absUrl(inp.mcWho) : null;
-    return drop({ prompt: seedanceSwapWords({ keep: p.meta?.mcKeep, prod: !!prod, target: !!target, where: p.meta?.swapWhere, who: p.meta?.swapWho, scene: p.meta?.mcScene }),
-      reference_image_urls: [absUrl(inp.mcChar || img0), ...(target ? [target] : []), ...(prod ? [prod] : [])], reference_video_urls: [absUrl(inp.mcMove)],
+    const face = inp.mcFace ? absUrl(inp.mcFace) : null;   // (v154: the new person's face up close, last)
+    return drop({ prompt: seedanceSwapWords({ keep: p.meta?.mcKeep, prod: !!prod, target: !!target, where: p.meta?.swapWhere, who: p.meta?.swapWho, scene: p.meta?.mcScene, face: !!face }),
+      reference_image_urls: [absUrl(inp.mcChar || img0), ...(target ? [target] : []), ...(prod ? [prod] : []), ...(face ? [face] : [])], reference_video_urls: [absUrl(inp.mcMove)],
       generate_audio: false, resolution: /fast/.test(m) ? (p.meta?.swapFast ? "480p" : "720p") : p.meta?.swapFast ? "720p" : "1080p", aspect_ratio: "adaptive", duration: clamp(dur, 4, 15), web_search: false });
   }
   if (/^minimax-h3\/reference-to-video/.test(m)) {

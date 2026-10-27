@@ -89,6 +89,7 @@ try:
     c0 = credits(); n0 = len(mock("/stats")["reqs"]); l0 = len(mock("/stats")["llm"]); j = api("/v1/jobs", {**SWAP, "cid": "a1"}); why = refused(j)
     look = mock("/stats")["llm"][l0:]; out["three"] = [j.get("_status"), why, c0, credits(), tasks(n0), look]
     ok("shows 3 people" in str(why) and wait(lambda: credits() == c0, 10) and not tasks(n0), f"a photo with 3 people: refused with the reason, nothing charged or sent {out['three']}")
+    look = [x for x in look if x["look"]]   # (v154: the face found in the photo is a call of its own)
     ok(look and look[0]["look"] and look[0]["imgs"] == 4, f"the AI saw the photo and three frames of the video {look}")
     # 2) no person in the video, sure → refused
     mock("/plan", {"look": {"photo_people": 1, "video_people": 0, "video_person": "none", "sure": True}})

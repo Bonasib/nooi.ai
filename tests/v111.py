@@ -89,7 +89,7 @@ def checks():
     d = wait(lambda: (lambda x: x if x.get("status") in ("done", "failed") else None)(api("/v1/jobs/" + jid, None, None)), 120) or {}
     s = mock("/stats"); t = d.get("times") or {}
     out["swap"] = {"status": d.get("status"), "error": d.get("error"), "times": t, "llm": s["llm"], "most": s["most"], "states": sorted(set(s["states"]))}
-    ok(d.get("status") == "done" and sorted(s["llm"]) == ["look", "part", "pick"] and s["most"] >= 2, f"the text AI looks at the photo and the video while it follows the person (side by side, not one after another) {out['swap']}")
+    ok(d.get("status") == "done" and sorted(x for x in s["llm"] if x != "other") == ["look", "part", "pick"] and s["most"] >= 2, f"the text AI looks at the photo and the video while it follows the person (side by side, not one after another) {out['swap']}")
     ok(t.get("look", 99) < 4.2, f"…so its step takes the time of the longer of the two, not of all three answers (1.5 s each) {t}")
     ok(3 <= t.get("queue", 0) <= 9 and 2 <= t.get("making", 0) <= 7, f"the engine's time in two: waiting in its line ~4 s, making it ~3 s {t}")
     # a refusal is the same one as before: the photo's problem first, even if the following also found nothing
