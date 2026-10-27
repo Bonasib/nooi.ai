@@ -147,7 +147,7 @@ async def phone(b, lang):
       const plain=shot('none',2),res={};for(const m of ['scramble','maskrise','blurrise','slam','slice','tracking']){const a=shot('t152_'+m,.15),z=shot('t152_'+m,2);res[m]=[a.h!==plain.h,z.h===plain.h,Math.round(a.s/Math.max(1,plain.s)*100)]}
       return {n:bs.length,ic:bs.filter(b=>b.querySelector('svg')).length,after,an,res}}""")
     out[tag + "_titles"] = tm
-    chk(f"{tag}: Text → 6 title motions with icons, after the Animate.css ones; tapping one sets it", tm["n"] == 6 and tm["ic"] == 6 and tm["after"] and tm["an"] == "t152_scramble", tm)
+    chk(f"{tag}: Text → 8 title motions (6 + v153's 2) with icons, after the Animate.css ones; tapping one sets it", tm["n"] == 8 and tm["ic"] == 8 and tm["after"] and tm["an"] == "t152_scramble", tm)
     chk(f"{tag}: each title motion draws its own picture at the start and ends on the plain text", all(v[0] and v[1] for v in tm["res"].values()), tm["res"])
     await E("()=>{S.ed.texts[0].anim='none';renderView()}")
     # ---- 6. sounds and the sound pass

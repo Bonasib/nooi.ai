@@ -8700,7 +8700,7 @@ setInterval(async()=>{for(const id of Object.keys(VOP)){const j=S.jobs.find(x=>x
     edxInit();const it={id:uid(),n:"file",name:d.name,t:+d.t.toFixed(2),vol:100};loadSlot("sx_"+it.id,f);S.ed.sfx.push(it);edSetPick("sfx",it.id);edxBuffer(it).then(()=>{if(S.view==="edit")renderView()});persist();if(S.view==="edit")renderView();toast(L("Voice-over added at ","أُضيف التعليق عند ")+mmss(d.t),{type:"ok"})}
   catch(err){toast(L("Couldn't add the voice-over: ","تعذّرت إضافة التعليق: ")+(err.message||err),{type:"warn"})}}},1500);
 /* undo / redo also cover effects, infographics and the logo's place */
-const snap71=()=>{const o=JSON.parse(edxSnap());o.vfx=S.ed.vfx||[];o.infos=S.ed.infos||[];o.bxy=[S.brand.x,S.brand.y,S.brand.size,S.brand.video];o.marks146=S.ed.marks146||[];o.groups146=S.ed.groups146||[];return JSON.stringify(o)};
+const snap71=()=>{const o=JSON.parse(edxSnap());o.vfx=S.ed.vfx||[];o.infos=S.ed.infos||[];o.bxy=[S.brand.x,S.brand.y,S.brand.size,S.brand.video];o.marks146=S.ed.marks146||[];o.groups146=S.ed.groups146||[];o.fr152=S.ed.fr152||null;o.kit153=S.ed.kit153||null;return JSON.stringify(o)};   // (v153: the frame and the style kit too)
 function histPush(){if(HIST.lock||!S.ed)return;const s=snap71();if(HIST.stack[HIST.i]===s)return;HIST.stack=HIST.stack.slice(0,HIST.i+1);HIST.stack.push(s);if(HIST.stack.length>60)HIST.stack.shift();HIST.i=HIST.stack.length-1;const u=$("#edundo"),r=$("#edredo");if(u)u.disabled=HIST.i<=0;if(r)r.disabled=true}
 histGo=(o=>function(d){o(d);const st=HIST.stack[HIST.i];if(!st)return;try{const x=JSON.parse(st);S.ed.vfx=x.vfx||[];S.ed.infos=x.infos||[];if(x.bxy){[S.brand.x,S.brand.y]=x.bxy;if(x.bxy[2])S.brand.size=x.bxy[2];if(x.bxy[3]!=null)S.brand.video=x.bxy[3]}const p=edPick();if(p&&!edItem(p))S.ed.pick=null;renderView()}catch(e){}})(histGo);
 (()=>{const st=document.createElement("style");st.textContent=`
@@ -19003,7 +19003,7 @@ const FRI152={none:'<circle cx="12" cy="12" r="8"/><path d="M6.5 17.5l11-11"/>',
   finder:'<path d="M3 8V4h4M21 8V4h-4M3 16v4h4M21 16v4h-4"/><circle cx="7" cy="8" r="1"/><path d="M11 12h2M12 11v2"/>',vintage:'<rect x="3" y="4" width="18" height="16" rx="6"/><path d="M8 9l.01.01M15 14l.01.01M11 16l.01.01"/>',
   comic:'<rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 11h9V3M12 11v10"/>',border:'<rect x="3" y="3" width="18" height="18" rx="1"/><rect x="6" y="6" width="12" height="12"/>',double:'<rect x="3" y="3" width="18" height="18" rx="1"/><rect x="5.5" y="5.5" width="13" height="13" rx="1"/>'};
 function rr152(c,x,y,w,h,r){c.beginPath();if(c.roundRect)c.roundRect(x,y,w,h,r);else c.rect(x,y,w,h)}
-function frame152(ctx,W,H,t){const F=S.ed.fr152;if(!F||!F.id||F.id==="none")return;const id=F.id,col=F.col||(id==="neon"?"#ff4fa3":"#ffffff"),U=Math.min(W,H);
+function frame152(ctx,W,H,t,F0){const F=F0||S.ed.fr152;if(!F||!F.id||F.id==="none")return;const id=F.id,col=F.col||(id==="neon"?"#ff4fa3":"#ffffff"),U=Math.min(W,H);
   const copy=()=>{const A=edxCv("fr152a",W,H),a=A.getContext("2d");a.setTransform(1,0,0,1,0,0);a.globalAlpha=1;a.globalCompositeOperation="copy";a.drawImage(ctx.canvas,0,0);a.globalCompositeOperation="source-over";return A};
   // (the picture made smaller inside the frame; behind it, the same picture blurred and darkened)
   const inset=(x,y,w,h,r,bg)=>{const A=copy();ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.filter="blur("+Math.round(U*.03)+"px) brightness(55%)";ctx.drawImage(A,-U*.05,-U*.05,W+U*.1,H+U*.1);ctx.filter="none";
@@ -19293,6 +19293,111 @@ op148=(o=>function(op){if(!["review_fix","sound_pass","style_set"].includes(op.o
 .ed143 .rv152l{display:flex;flex-direction:column;gap:8px}.ed143 .rv152i{border:1px solid var(--line2);border-radius:12px;padding:9px 11px;background:var(--panel2)}.ed143 .rv152i p{margin:4px 0 8px;font-size:13px;line-height:1.4}
 .ed143 .rv152i[data-sev="P0"]{border-color:#ef4444}.ed143 .rv152i[data-sev="P1"]{border-color:#f59e0b}
 .ed143 .rv152t{border:0;background:var(--panel3);color:var(--text);border-radius:8px;padding:2px 7px;font:600 11.5px/1.4 var(--mono,ui-monospace,monospace);margin-inline-end:6px}.ed143 .rv152b{font-size:11.5px;color:var(--mute);font-weight:600}
+`;document.head.appendChild(st)})();
+
+/* ================= v153: STYLE KITS · MORE REVIEW CHECKS · LETTER ROLL & TYPING · SHUTTER, SPLIT & WHIP CUTS · SPLIT AT SCENE CHANGES ================= */
+/* What was still missing from OpenMontage (AGPL — ideas from its public description only) and cinetic (MIT) after v152 —
+   our own code: style kits (OpenMontage's style playbooks: one tap sets the cut, colour, frame, title motion and sounds),
+   review checks for a slideshow-like edit (OpenMontage's "slideshow risk"), stock phrases and too many words (cinetic's taste
+   rules), text under a phone app's buttons; a letter roll and typing with a cursor, shutter / split / whip-blur cuts (cinetic's
+   technique names), typing keys and a riser in the sound pass; and a clip split at its scene changes (scene detection). The kits
+   and the checks are in public/editor152/studio.js, shared with the server (lib/studio153.js). */
+const ST153={busy:null};
+
+// ---- 1. style kits
+const KA153={clean:["#ffffff",500],flat:["#CFE13E",800],minimal:["#ffffff",300],cinema:["#f3d9b1",600],retro:["#ffe9b0",700],neon:["#ff4fa3",800],social:["#ffd400",900],doc:["#e8e8e8",400]};   // (each kit's sample title: colour, weight)
+const KD153={clean:["Fades, mask-rise titles, calm sounds — no filter, no frame.","تلاشٍ، عناوين تصعد من قناع، أصوات هادئة — بلا فلتر ولا إطار."],flat:["Slides, a card frame, one-word slam titles, crisp sounds.","انزلاق، إطار بطاقة، عناوين كلمة بكلمة، أصوات حادة."],
+  minimal:["Straight cuts, a thin double line, blur-rise titles, almost no sound.","قطع مباشر، خط مزدوج رفيع، عناوين ضبابية، شبه بلا صوت."],cinema:["Long fades, teal & orange, tracking titles, calm sounds.","تلاشٍ طويل، تيل وبرتقالي، عناوين متقاربة الحروف، أصوات هادئة."],
+  retro:["Dips to black, vintage colour, a film strip, scramble titles.","انتقال للأسود، ألوان عتيقة، شريط فيلم، عناوين فك التشفير."],neon:["Iris cuts, a night duotone, a pink neon frame, glitch titles.","انتقال قزحي، ثنائي ليلي، إطار نيون وردي، عناوين متقطعة."],
+  social:["Whip cuts, pop titles, crisp sounds — fast and bright.","انتقال خاطف، عناوين منبثقة، أصوات حادة — سريع ومشرق."],doc:["Slow fades, a film look, fading titles, few sounds.","تلاشٍ بطيء، مظهر سينمائي، عناوين تتلاشى، أصوات قليلة."]};
+function kitPanel153(){const m=ST152.modv;if(!m){mod152().then(()=>{if(S.view==="edit")renderView()}).catch(()=>{});return'<p class="small mute">'+esc(L("Loading…","جارٍ التحميل…"))+"</p>"}
+  if(!S.ed.clips.length)return edxNoClip();const cur=S.ed.kit153||"";
+  return'<p class="small mute e-hint">'+esc(L("One tap sets the whole look: the cut between clips, the colour, a frame, how titles move and the sounds. Undo brings yours back.","لمسة واحدة تضبط الشكل كله: الانتقال بين المقاطع، الألوان، الإطار، حركة العناوين والأصوات. التراجع يعيد ما كان."))+'</p><div class="tiles kit153g">'+
+    m.KITS153.map(k=>'<button type="button" class="tile" data-act="kit153" data-v="'+k.id+'" aria-pressed="'+(cur===k.id)+'" title="'+esc(L(...KD153[k.id]))+'"><span class="gl lkw151"><canvas class="kt153" width="96" height="60" data-k="'+k.id+'" aria-hidden="true"></canvas></span><span class="lb">'+esc(L(k.en,k.ar))+"</span></button>").join("")+"</div>"}
+// each kit's tile: the clip itself in that kit's colour and frame
+function kitThumbs153(v){const m=ST152.modv,cs=[...v.querySelectorAll("canvas.kt153")].filter(x=>!x.dataset.done);if(!m||!cs.length)return;let src=null;
+  try{const c=edxPick(),md=c&&clipMedia(c),el=md&&md.el;if(el&&(md.type==="image"?el.naturalWidth:el.readyState>=2&&el.videoWidth))src=el}catch(e){}if(!src){const wk=$("#wk");if(wk&&wk.width)src=wk}if(!src)return;
+  const T=edxCv("kt153s",96,60),tx=T.getContext("2d"),sw=src.videoWidth||src.naturalWidth||src.width,sh=src.videoHeight||src.naturalHeight||src.height,k=Math.max(96/sw,60/sh);tx.drawImage(src,(96-sw*k)/2,(60-sh*k)/2,sw*k,sh*k);
+  cs.forEach(cv=>{const K=m.KITS153.find(x=>x.id===cv.dataset.k);if(!K)return;const c=cv.getContext("2d"),lk=EDX_LOOKS.find(x=>x[0]===K.look);
+    try{c.save();c.filter=lk&&lk[3]?lk[3]:"none";c.drawImage(K.filter?(fx152(T,96,60,K.filter,(K.amt||100)/100,0)||T):T,0,0);c.restore();if(K.frame!=="none")frame152(c,96,60,0,{id:K.frame,col:K.fcol});const A=KA153[K.id]||["#fff",600];c.font=A[1]+" 17px 'Geist','IBM Plex Sans Arabic',sans-serif";c.textAlign="center";c.textBaseline="middle";
+      if(K.id==="social"){c.lineWidth=4;c.strokeStyle="#000";c.strokeText("Aa",48,33)}else{c.shadowColor="rgba(0,0,0,.7)";c.shadowBlur=4}c.fillStyle=A[0];c.fillText("Aa",48,33);c.shadowBlur=0}catch(e){}cv.dataset.done="1"})}
+async function kit153(id){const m=await mod152();histPush&&histPush();const E=S.ed,did=m.applyKit153(E,id,{mkId:()=>uid()});if(!did)return false;
+  persist();renderView();const K=m.KITS153.find(k=>k.id===id);toast(L(K.en+" — the whole video in one look. Undo brings yours back.",K.ar+" — الفيديو كله بشكل واحد. التراجع يعيد ما كان."),{type:"ok"});
+  for(const it of E.sfx.filter(x=>x.sp152))edxBuffer(it).catch(()=>{});return true}
+EDX_PANELS.kit153=kitPanel153;TABS143.find(x=>x[0]==="effects")[4].push("kit153");N143.kit153=["Style kits","أنماط جاهزة"];
+// (the frame and the kit go back with undo too)
+histGo=(o=>function(d){o.apply(this,arguments);try{const x=JSON.parse(HIST.stack[HIST.i]||"{}");let ch=false;
+  if("fr152" in x){if(x.fr152)S.ed.fr152=x.fr152;else delete S.ed.fr152;ch=true}if("kit153" in x){if(x.kit153)S.ed.kit153=x.kit153;else delete S.ed.kit153;ch=true}if(ch&&S.view==="edit")renderView()}catch(e){}})(histGo);
+
+// ---- 2. title motions: a letter roll, typing with a cursor
+TM152.push(["roll","Letter roll","حروف متدحرجة",.8],["cursor","Typing cursor","كتابة بمؤشر",0]);
+Object.assign(TMI152,{roll:'<rect x="3" y="6" width="4" height="12" rx="1"/><rect x="10" y="9" width="4" height="9" rx="1"/><rect x="17" y="12" width="4" height="6" rx="1"/><path d="M5 3v2M12 6v2M19 9v2"/>',cursor:'<path d="M4 8h9M4 12h6M4 16h8"/><path d="M17 5v14"/><path d="M15 5h4M15 19h4"/>'});
+const TML153={c:null};
+drawTextLayer=(o=>function(ctx,tx,ow,oh,t){const an=String(tx.anim||"");if((an!=="t152_roll"&&an!=="t152_cursor")||t<tx.start||t>tx.end)return o.apply(this,arguments);
+  const lt=t-tx.start,len=tx.end-tx.start,txt=String(tx.text||""),plain=Object.assign({},tx,{anim:"none"}),ch=[...txt];
+  if(an==="t152_cursor"){const D=clamp(len*.6,.5,2.5),k=Math.min(ch.length,Math.ceil(ch.length*lt/D)),on=lt<D||Math.floor(lt*2.2)%2===0;return o.call(this,ctx,Object.assign({},plain,{text:ch.slice(0,k).join("")+(on?"|":" ")}),ow,oh,t)}
+  const u=clamp(lt/.8,0,1);if(u>=1)return o.call(this,ctx,plain,ow,oh,t);
+  if(!TML153.c||TML153.c.width!==ow||TML153.c.height!==oh){TML153.c=document.createElement("canvas");TML153.c.width=ow;TML153.c.height=oh}const Lc=TML153.c,lx=Lc.getContext("2d");lx.setTransform(1,0,0,1,0,0);lx.globalAlpha=1;lx.filter="none";lx.clearRect(0,0,ow,oh);
+  const n0=(ED.hit||[]).length,r=o.call(this,lx,plain,ow,oh,t),b=(ED.hit||[]).slice(n0).reverse().find(x=>x.k==="text"&&x.id===tx.id)||{cx:ow/2,cy:oh*.78,w:ow*.6,h:oh*.08};
+  const n=clamp(ch.length,6,28),rtl=/[؀-ۿ]/.test(txt),sw=b.w/n,x0=b.cx-b.w/2,top=b.cy-b.h*.65,hh=b.h*1.3;
+  ctx.save();ctx.setTransform(1,0,0,1,0,0);try{for(let i=0;i<n;i++){const j=rtl?n-1-i:i,e=ease144(clamp((u-i/n*.45)/.55,0,1));if(e<=0)continue;ctx.save();ctx.beginPath();ctx.rect(x0+j*sw-(j?0:b.w*.05),top,sw+(j===n-1||!j?b.w*.05:0)+1,hh);ctx.clip();ctx.drawImage(Lc,0,(1-e)*hh);ctx.restore()}}finally{ctx.restore()}return r})(drawTextLayer);
+
+// ---- 3. three more cuts
+TR152.push(["shutter","Shutter","غالق"],["split","Split open","انشقاق"],["whipblur","Whip blur","خاطف ضبابي"]);["shutter","split","whipblur"].forEach(x=>TRID152.add(x));
+Object.assign(TRI152,{shutter:'<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9h18M3 15h18"/><path d="M12 6v2M12 16v2"/>',split:'<rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M12 5v14"/><path d="M9 12H5M7 10l-2 2 2 2M15 12h4M17 10l2 2-2 2"/>',
+  whipblur:'<path d="M3 8h8M5 12h11M3 16h8"/><rect x="15" y="7" width="6" height="10" rx="1.5"/>'});
+Object.assign(PKV84.transition,{shutter:["","","Black blades close over the shot and open on the next.","شفرات سوداء تُغلق على اللقطة وتنفتح على التالية."],split:["","","The shot splits down the middle and opens like doors.","اللقطة تنشق من المنتصف وتنفتح كباب."],
+  whipblur:["","","A fast whip with a speed smear into the next shot.","حركة خاطفة سريعة بأثر السرعة إلى اللقطة التالية."]});
+trCompose152=(o=>function(id,ctx,A,B,p,W,H){if(!["shutter","split","whipblur"].includes(id))return o.apply(this,arguments);const e=ease144(p),d=x=>ctx.drawImage(x,0,0,W,H);
+  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.filter="none";ctx.globalCompositeOperation="source-over";
+  try{if(id==="shutter"){const q=ease144(p<.5?p*2:(1-p)*2),bh=H/2*q;d(p<.5?A:B);ctx.fillStyle="#000";ctx.fillRect(0,0,W,bh+1);ctx.fillRect(0,H-bh-1,W,bh+1)}
+    else if(id==="split"){d(B);const s=W/2*e;ctx.drawImage(A,0,0,A.width/2,A.height,-s,0,W/2,H);ctx.drawImage(A,A.width/2,0,A.width/2,A.height,W/2+s,0,W/2,H)}   // (the two halves part; the next shot in the gap)
+    else{ctx.fillStyle="#000";ctx.fillRect(0,0,W,H);const sm=Math.sin(Math.PI*p);for(const[img,x]of[[A,-W*e],[B,W*(1-e)]]){for(let i=5;i>=1;i--){ctx.globalAlpha=.16;ctx.drawImage(img,x+i*W*.03*sm,0,W,H)}ctx.globalAlpha=1;ctx.drawImage(img,x,0,W,H)}}}
+  finally{ctx.restore()}})(trCompose152);
+
+// ---- 4. split a clip at its scene changes (on the device: small pictures compared, each cut found to a fortieth of a second)
+async function sceneCuts153(c,onp){const md=clipMedia(c);if(!md||md.type!=="video")return null;const v=document.createElement("video");v.muted=true;v.preload="auto";v.playsInline=true;v.src=md.el.currentSrc||md.el.src;
+  await new Promise((ok,no)=>{const to=setTimeout(()=>no(new Error("timeout")),15000);v.onloadeddata=()=>{clearTimeout(to);ok()};v.onerror=()=>{clearTimeout(to);no(new Error("load"))}});
+  const W=48,H=27,cv=document.createElement("canvas");cv.width=W;cv.height=H;const x=cv.getContext("2d",{willReadFrequently:true});
+  const seek=t=>new Promise(r=>{let done=false;const f=()=>{if(done)return;done=true;v.removeEventListener("seeked",f);r()};v.addEventListener("seeked",f);v.currentTime=t;setTimeout(f,1500)});
+  const sig=async t=>{await seek(t);x.drawImage(v,0,0,W,H);const d=x.getImageData(0,0,W,H).data,g=new Float32Array(W*H),h=new Float32Array(48);for(let i=0,j=0;i<d.length;i+=4,j++){g[j]=(d[i]*.299+d[i+1]*.587+d[i+2]*.114)/255;h[d[i]>>4]++;h[16+(d[i+1]>>4)]++;h[32+(d[i+2]>>4)]++}return{g,h}};
+  const dist=(a,b)=>{let p=0,q=0;for(let i=0;i<a.g.length;i++)p+=Math.abs(a.g[i]-b.g[i]);for(let i=0;i<48;i++)q+=Math.abs(a.h[i]-b.h[i]);return .5*p/a.g.length+.5*q/(6*a.g.length)};
+  try{const a0=+c.in,a1=+c.out,step=Math.max(.2,(a1-a0)/300),ts=[];for(let t=a0;t<=a1-.05;t+=step)ts.push(+t.toFixed(3));const P=[];
+    for(let i=0;i<ts.length;i++){P.push(await sig(ts[i]));if(onp)onp(i/ts.length)}
+    const D=[];for(let i=1;i<P.length;i++)D.push(dist(P[i-1],P[i]));const med=D.slice().sort((p,q)=>p-q)[D.length>>1]||0,thr=Math.max(.12,med*4),out=[];
+    for(let i=0;i<D.length;i++){if(D[i]<=thr||(i&&D[i]<D[i-1])||(i<D.length-1&&D[i]<D[i+1]))continue;let lo=ts[i],hi=ts[i+1],A=P[i];const Bq=P[i+1];
+      for(let k=0;k<3;k++){const mid=(lo+hi)/2,M=await sig(mid);if(dist(A,M)>dist(M,Bq))hi=mid;else{lo=mid;A=M}}out.push(+hi.toFixed(3))}
+    return out.filter((t,i,l)=>t>a0+.3&&t<a1-.3&&(!i||t-l[i-1]>.6))}
+  finally{v.removeAttribute("src");try{v.load()}catch(e){}}}
+// a cut at a time in the clip's own file, as a clip of its own (the id an agent chose, when it gave one)
+function splitAt153(c,lt,id){const E=S.ed,i=E.clips.indexOf(c);if(i<0||lt<=c.in+.1||lt>=c.out-.1)return null;const b=edSplit91(c,edStarts()[i]+(lt-c.in)/(c.speed||1));if(!b)return null;
+  if(id&&id!==b.id){const o="c_"+b.id,k="c_"+id;if(M[o]){M[k]=M[o];delete M[o];if(M[k].file)IDB.put(k,M[k].file)}if(S.mediaKeys&&S.mediaKeys[o]){S.mediaKeys[k]=S.mediaKeys[o];delete S.mediaKeys[o]}b.id=id}return b}
+clipEdit145=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string")return h;const c=edxSel(),md=c&&clipMedia(c);if(!md||md.type!=="video")return h;const i=h.indexOf('data-act="edx-freeze"'),e=i<0?-1:h.indexOf("</button>",i);if(e<0)return h;
+  const b='<button class="btn sm" data-act="sc153"'+(ST153.busy?" disabled":"")+">"+ic("split")+esc(ST153.busy?L("Finding the scenes… ","جارٍ إيجاد المشاهد… ")+ST153.busy+"%":L("Split at scene changes","قسّم عند تغيّر المشهد"))+"</button>";return h.slice(0,e+9)+b+h.slice(e+9)})(clipEdit145);
+async function sceneSplit153(c){if(ST153.busy!=null)return;ST153.busy=0;renderView();let cuts=null;
+  try{cuts=await sceneCuts153(c,p=>{const n=Math.round(p*100);if(n!==ST153.busy){ST153.busy=n;const b=document.querySelector('[data-act="sc153"]');if(b)b.lastChild.textContent=L("Finding the scenes… ","جارٍ إيجاد المشاهد… ")+n+"%"}})}
+  catch(e){cuts=null}finally{ST153.busy=null}
+  if(!cuts){renderView();toast(L("This clip couldn't be read for its scenes.","تعذّرت قراءة مشاهد هذا المقطع."),{type:"warn"});return 0}
+  if(!cuts.length){renderView();toast(L("No scene changes found — it's one shot.","لا تغيّر في المشهد — إنها لقطة واحدة."));return 0}
+  histPush&&histPush();let n=0;for(const t of cuts.slice().sort((a,b)=>b-a))if(splitAt153(c,t))n++;persist();renderView();toast(L("Split into "+(n+1)+" scenes.","قُسّم إلى "+(n+1)+" مشاهد."),{type:"ok"});return n}
+
+// ---- the review: pictures counted for the slideshow check; a split line gets an id; a rewrite opens that text
+review152=async function(){const m=await mod152(),F=fmt(),E=S.ed,pics=E.clips.filter(c=>{const x=clipMedia(c);return x&&x.type==="image"}).length;
+  ST152.rv=m.review152(E,{w:F[2],h:F[3],music:!!M.edMusic,voice:hasVoice152(),lang:S.lang,name:E.title||"",pics});ST152.at=Date.now();return ST152.rv};
+fix152=(o=>async function(issue,noHist){const f=issue&&issue.fix;if(!f)return false;
+  if(f.op==="open"&&f.args.text){const E=S.ed;edSetPick("text",f.args.text);E.selText=f.args.text;E.tab="text";E.lt143="text";E.pclosed143=null;renderView();return true}
+  if(f.op==="text_split"){const m=await mod152();if(!noHist&&histPush)histPush();return m.applyFix152(S.ed,f,()=>uid())}return o.apply(this,arguments)})(fix152);
+
+// ---- clicks, the agents' operations, the thumbnails, the look
+window.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="kit153"],[data-act="sc153"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();
+  if(a.dataset.act==="kit153"){await kit153(a.dataset.v);return}const c=edxSel();if(c)await sceneSplit153(c)},true);
+op148=(o=>function(op){if(!["kit_set","clip_split"].includes(op.op))return o.apply(this,arguments);const m=ST152.modv,E=S.ed,a=op.args||{},q=E.seq148,s=op.tl&&q&&q.cur!==op.tl&&Array.isArray(q.list)?q.list.find(x=>x.id===op.tl):null,ed=s&&s.data?s.data:E;
+  if(op.op==="kit_set"){if(!m){mod152().then(()=>{op148(op);persist();if(S.view==="edit")renderView()}).catch(()=>{});return false}return!!m.applyKit153(ed,a.kit,{sfx:a.sfx})}
+  const c=(ed.clips||[]).find(x=>x.id===a.id);if(!c)return false;if(ed!==E){for(const k of(a.cuts||[]).slice().sort((x,y)=>y.t-x.t)){if(k.t<=c.in+.1||k.t>=c.out-.1)continue;const b=JSON.parse(JSON.stringify(c));b.id=k.id;b.in=k.t;c.out=k.t;b.trans=c.trans;c.trans="cut";ed.clips.splice(ed.clips.indexOf(c)+1,0,b)}return true}
+  let n=0;for(const k of(a.cuts||[]).slice().sort((x,y)=>y.t-x.t))if(!E.clips.some(x=>x.id===k.id)&&splitAt153(c,k.t,k.id))n++;return n>0})(op148);
+after151=(o=>function(){o.apply(this,arguments);const v=document.querySelector("#main .view.ed143");if(v)kitThumbs153(v)})(after151);
+(()=>{const st=document.createElement("style");st.textContent=`
+.ed143 .kit153g .tile{min-width:0}.ed143 .kt153{display:block;width:100%;height:100%}.ed143 [data-act="kit153"]{--c151:#f472b6}
 `;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
