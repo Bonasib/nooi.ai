@@ -28,7 +28,7 @@ async def phone(b):
     for v in VIEWS:
         await E("(v)=>{document.getElementById('modalRoot').innerHTML='';go(v);renderAll();scrollTo(0,0);document.querySelector('#main').scrollTo(0,0)}", v); await pg.wait_for_timeout(1600)
         # 1) tap the page itself (the title) and redraw: nothing starts moving
-        h = await pg.query_selector("#main h1") or await pg.query_selector("#main")
+        h = await pg.query_selector("#main h1:visible") or await pg.query_selector("#main .e-name") or await pg.query_selector("#main")   # (v151: the phone editor's bar carries the project's name, not a page title)
         await h.tap(); await E("()=>renderView()"); await pg.wait_for_timeout(120)
         m = [x for x in await E(MOVING) if not x.startswith(("spin", "star", "st79", "shimmer", "load"))]
         out.setdefault("tap", {})[v] = m

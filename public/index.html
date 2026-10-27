@@ -6906,7 +6906,7 @@ document.addEventListener("click",async e=>{if(S.view!=="edit")return;
   case"edx-vfx":if(c){c.vfx=c.vfx||{};c.vfx[v]=!c.vfx[v];persist();renderView()}break;
   case"edx-cg-all":if(c){E.clips.forEach(x=>{if(x!==c){x.cg=c.cg?JSON.parse(JSON.stringify(c.cg)):undefined;x.vfx=c.vfx?JSON.parse(JSON.stringify(c.vfx)):undefined}});persist();renderView();toast(L("Applied to all clips.","طُبّق على كل المقاطع."))}break;
   case"edx-cg-reset":if(c){delete c.cg;delete c.vfx;persist();renderView()}break;
-  case"edx-sfx-add":{const it={id:uid(),n:v,t:+Math.min(ED.t,Math.max(0,edTotal()-.05)).toFixed(2),vol:100};E.sfx.push(it);E.selSfx=it.id;edxPlaySfx(it,0);await edxBuffer(it);persist();renderView();break}
+  case"edx-sfx-add":{const it={id:uid(),n:v,t:+Math.min(ED.t,Math.max(0,edTotal()-.05)).toFixed(2),vol:100};if(E.sfx.some(x=>x.n===v&&Math.abs(x.t-it.t)<.05))break;E.sfx.push(it);E.selSfx=it.id;edxPlaySfx(it,0);await edxBuffer(it);persist();renderView();break}
   case"edx-sfx-sel":E.selSfx=v;persist();renderView();break;
   case"edx-sfx-play":{const it=E.sfx.find(x=>x.id===E.selSfx);if(it)edxPlaySfx(it,0);break}
   case"edx-sfx-here":{const it=E.sfx.find(x=>x.id===E.selSfx);if(it){it.t=+ED.t.toFixed(2);persist();renderView()}break}
@@ -11221,7 +11221,7 @@ function chip84(E){const parts=E.parts.map(p=>p.opts.filter(o=>o.on));let val,ic
   return'<button type="button" class="pk84c" data-pk84="'+E.f+'" data-key="'+esc(E.key)+'" aria-haspopup="dialog" aria-label="'+esc(L(E.t[0],E.t[1])+": "+val)+'"><span class="pk84ci">'+icon+'</span><span class="pk84k">'+esc(L(E.t[0],E.t[1]))+'</span><span class="pk84v">'+esc(val)+"</span>"+svg('<path d="M6 9l6 6 6-6"/>')+"</button>"}
 function pk84apply(root){root=root||document.getElementById("main");if(!root)return;
   PKF84.forEach(([f,t,qs,parts,o])=>{const P=parts||[[t,qs.join(","),f]];
-    const firsts=[...new Set([...root.querySelectorAll(P[0][1])].filter(b=>!b.closest(".pk84src,.pk84s,.modal,.ed143.desk .e-assets")).map(box84))];   // (v144: the editor's add panel on a computer shows its tiles — they drag)
+    const firsts=[...new Set([...root.querySelectorAll(P[0][1])].filter(b=>!b.closest(".pk84src,.pk84s,.modal,.ed143")).map(box84))];   // (v144/v151: the editor shows its tiles — they drag, and each is a picture)
     firsts.forEach(bx=>{if(!bx||!bx.isConnected||bx.closest(".pk84src"))return;const scope=bx.closest(".panel,.view,.fillwrap")||root;
       const boxes=[bx].concat(P.slice(1).map(p=>{const b=[...scope.querySelectorAll(p[1])].find(x=>!x.closest(".pk84src"));return b?box84(b):null}));
       const E={f,t,o:o||{},parts:[]};P.forEach((p,k)=>{const B=boxes[k];if(!B)return;E.parts.push({t:p[0],sub:p[2]||f,box:B,opts:[...B.querySelectorAll(p[1])].map(b=>opt84(b,p[2]||f))})});
@@ -18251,7 +18251,7 @@ async function aud149(c,m,ac){const dec=async u=>{const b=u instanceof Blob?u:aw
 edxTimelineAudio=async function(){const st=edStarts(),tot=edTotal(),E=S.ed;if(!tot)throw new Error(L("Add clips first.","أضف مقاطع أولاً."));const AC=window.AudioContext||window.webkitAudioContext,ac=new AC();
   const off=new OfflineAudioContext(1,Math.ceil(tot*16000)+16,16000);let n=0;const miss=[];
   const lay=(b,at,from,len,rate)=>{const s=off.createBufferSource();s.buffer=b;s.playbackRate.value=rate||1;s.connect(off.destination);s.start(Math.max(0,at),from||0,len);n++};
-  try{for(let i=0;i<E.clips.length;i++){const c=E.clips[i],m=clipMedia(c);if(!m||m.type!=="video")continue;const b=await aud149(c,m,ac);if(!b){miss.push(i+1);continue}
+  try{for(let i=0;i<E.clips.length;i++){const c=E.clips[i],m=clipMedia(c);if(!m||m.type!=="video")continue;const b=await aud149(c,m,ac);if(!b){if(!SIL151.has(c.id))miss.push(i+1);continue}   // (v151: a clip with no sound at all is not a miss)
       lay(b,st[i],Math.min(c.in,b.duration),Math.max(.05,Math.min(c.out,b.duration)-c.in),c.speed||1)}
     for(const it of E.sfx||[]){if(!it.voice||it.n!=="file"||!M["sx_"+it.id])continue;const b=await aud149(null,M["sx_"+it.id],ac);if(b)lay(b,it.t,0,b.duration)}
     if(M.edVoice&&(M.edVoice.file||M.edVoice.url)){const b=await aud149(null,M.edVoice,ac);if(b)lay(b,0,0,b.duration)}}
@@ -18406,7 +18406,10 @@ EDX_PANELS.sfx=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="strin
   return h.slice(0,e+6)+'<div class="row sx149"><button type="button" class="btn sm primary" data-act="sx149-add" data-v="'+esc(p)+'">'+ic("plus")+esc(L("Add “"+x[1]+"” at ","أضف «"+x[2]+"» عند "))+mmss(ED.t)+'</button><button type="button" class="btn sm ghost" data-act="sx149-play" data-v="'+esc(p)+'">'+ic("play")+L("Hear again","استمع مجدداً")+"</button></div>"+h.slice(e+6)})(EDX_PANELS.sfx);
 document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="sx149-add"],[data-act="sx149-play"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();const v=a.dataset.v,E=S.ed;
   if(a.dataset.act==="sx149-play"){Promise.resolve(edxPlaySfx({n:v,vol:100},0)).catch(()=>{});return}
-  const it={id:uid(),n:v,t:+Math.min(ED.t,Math.max(0,edTotal()-.05)).toFixed(2),vol:100};E.sfx=E.sfx||[];E.sfx.push(it);SX149.pick=null;try{await edxBuffer(it)}catch(err){}persist();renderView();toast(L("Added at ","أُضيف عند ")+mmss(it.t),{type:"ok"})},true);
+  const it={id:uid(),n:v,t:+Math.min(ED.t,Math.max(0,edTotal()-.05)).toFixed(2),vol:100};E.sfx=E.sfx||[];SX149.pick=null;
+  // (v151: it shows at once; a second quick tap while it loads does not add it again)
+  if(E.sfx.some(x=>x.n===v&&Math.abs(x.t-it.t)<.05)){renderView();toast(L("This sound is already there.","هذا الصوت موجود هناك بالفعل."));return}
+  E.sfx.push(it);persist();renderView();toast(L("Added at ","أُضيف عند ")+mmss(it.t),{type:"ok"});try{await edxBuffer(it)}catch(err){}if(S.view==="edit")renderView()},true);
 // 4c. a platform's size in small numbers on one line under its name
 fmtTile=function(f,cur,act){const s=Math.min(40/f[3],52/f[2]);return'<button class="ftile ft149" data-act="'+(act||"pick-fmt")+'" data-val="'+f[0]+'" aria-pressed="'+(cur===f[0])+'"><span class="pi" style="color:'+brandColor(f[4])+'">'+svg(PI[f[4]]||PI[""])+'</span><span class="rb" style="width:'+Math.round(f[2]*s)+"px;height:"+Math.round(f[3]*s)+'px"></span><span class="lb">'+esc(fmtName(f))+'</span><span class="dm149" dir="ltr">'+f[2]+"×"+f[3]+"</span></button>"};
 
@@ -18751,6 +18754,226 @@ window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('
 .mx150v{font-size:12px;text-align:end}
 .mx150x{min-width:30px;padding:2px 0}.mx150x[aria-pressed="true"]{background:#FF4B4B;color:#fff;border-color:#FF4B4B}
 @media (max-width:420px){.mx150r{grid-template-columns:minmax(100px,1.25fr) minmax(32px,.6fr) minmax(70px,1.2fr) 26px 30px;gap:6px}}
+`;document.head.appendChild(st)})();
+
+/* ================= v151: THE STUDIO — THE PHONE EDITOR LIKE THE BIG APPS ================= */
+/* Phones and tablets (<1024 px): the editor fills the screen the way CapCut, LumaFusion, Filmora and Premiere Rush do — no site
+   header, footer or menu bar; a slim top bar (back, the project's name, size, projects, Export), the player, the play row, the
+   timeline in the middle and the tools at the foot. A tool opens as a panel in the lower half: the player stays, the timeline
+   shrinks to a strip above it. Every choice is a picture tile with its own icon (sounds, effects, weather, graphics, motion, and
+   looks drawn from the clip itself, no more drop-down chips); the timeline has coloured lanes with icons, the clip's picture along
+   the video lane and slim sound lanes. (Ideas of layout only — nothing copied; docs/THIRD_PARTY.md.) Fixed with it: the time no
+   longer runs past the end, a clip made without sound is not "a sound that couldn't be read", a sound added twice by a quick
+   second tap is added once, and mixed Arabic/English words keep each line's own direction. */
+const studio151=()=>S.view==="edit"&&!!S.user&&!desk143();
+function shell151(){const R=document.documentElement,on=studio151();R.classList.toggle("studio151",on);if(on)R.style.setProperty("--bn140","0px")}
+// what scrolls inside the editor (a panel, the timeline) keeps its place when the editor is drawn again
+const key151=el=>{const s=el.closest("section");return(s?s.className.split(" ")[0]:"")+"|"+(el.dataset.tab||el.className)};
+function scr151(){return[...document.querySelectorAll(".ed143 .e-body,.ed143 .tlwrap")].map(el=>({k:key151(el),t:el.scrollTop,l:el.classList.contains("tlwrap")?el.scrollLeft:0}))}
+function back151(o){document.querySelectorAll(".ed143 .e-body,.ed143 .tlwrap").forEach(el=>{const x=o.find(y=>y.k===key151(el));if(!x||!(x.t||x.l))return;RS151.add(el);if(x.t)el.scrollTop=x.t;if(x.l)el.scrollLeft=x.l;requestAnimationFrame(()=>requestAnimationFrame(()=>RS151.delete(el)))})}
+// (putting a scroll back is not the user scrolling: a menu that closes when the page scrolls stays open)
+const RS151=new WeakSet();
+cmClose131=(o=>function(){const ev=window.event;if(ev&&ev.type==="scroll"&&ev.target&&RS151.has(ev.target)){RS151.delete(ev.target);return}return o.apply(this,arguments)})(cmClose131);
+
+// ---- 1. the studio frame: back to the site, and the class that says a panel is open
+VIEWS.edit=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string"||!studio151())return h;
+  h=h.replace('<div class="e-top">','<div class="e-top"><button type="button" class="e-home151" data-go="home" aria-label="'+esc(L("Leave the editor (your edit is kept)","الخروج من المحرر (يبقى مونتاجك محفوظاً)"))+'" title="'+esc(L("Leave the editor","الخروج من المحرر"))+'">'+ic("back143")+"</button>");
+  if(h.includes('<section class="e-sheet"'))h=h.replace('class="view ed143 mob"','class="view ed143 mob sh151'+(S.ed.tab==="chat143"?" chat151":"")+'"');
+  return h})(VIEWS.edit);
+// a panel opens at its top (or at the setting asked for) — inside the panel, since the studio page itself never scrolls
+showSheet143=(o=>function(anchor){if(!studio151())return o.apply(this,arguments);requestAnimationFrame(()=>{const b=document.querySelector(".ed143 .e-sheet .e-body");if(!b)return;b.scrollTop=0;if(!anchor)return;let el=null;
+  if(anchor==="speed")el=[...b.querySelectorAll(".lbl")].find(x=>/speed|السرعة/i.test(x.textContent));else if(anchor==="vol")el=b.querySelector('[data-bind="edclip.vol"]');else el=b.querySelector('[data-anc="'+anchor+'"]');
+  if(el)b.scrollTop+=el.getBoundingClientRect().top-b.getBoundingClientRect().top-8})})(showSheet143);
+
+// ---- 2. picture tiles: every sound, weather, graphic and motion choice with its own icon
+const P151={
+  // sounds
+  whoosh:'<path d="M3 8h10a3 3 0 1 0-3-3"/><path d="M3 12h15a3 3 0 1 1-3 3"/><path d="M3 16h6"/>',swoosh:'<path d="M4 19c6.5 0 10.5-4.5 12.5-13"/><path d="M12.5 6h4v4"/><path d="M4 14c3 0 5.5-1.2 7.5-3.5"/>',
+  swipe:'<path d="M4 12h14"/><path d="M14 8l4 4-4 4"/><path d="M4 7.5h6M4 16.5h6"/>',impact:'<path d="M12 3l1.7 4.8L18.5 5l-2.2 4.6L21 12l-4.7 1.7L18.5 19l-4.8-2.4L12 21l-1.7-4.4L5.5 19l2.2-5.3L3 12l4.7-2.4L5.5 5l4.8 2.8z"/>',
+  boom:'<circle cx="12" cy="13.5" r="4.5"/><path d="M12 3.5v3M4.8 6.3l2.1 2.1M19.2 6.3l-2.1 2.1M3 13.5h2.5M18.5 13.5H21M6 20l1.6-1.6M18 20l-1.6-1.6"/>',
+  drum:'<ellipse cx="12" cy="10" rx="8" ry="3"/><path d="M4 10v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/><path d="M15.5 3.5L12 10M8.5 3.5L12 10"/>',
+  pop:'<circle cx="12" cy="12" r="3.5"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/>',
+  click:'<path d="M6 3l12 7-5.3 1.4L10 17z"/><path d="M12.7 12.4l5 5"/>',bubble:'<circle cx="9" cy="14" r="5"/><circle cx="17" cy="7" r="3"/><circle cx="18.5" cy="15.5" r="1.5"/>',
+  ding:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',notify:'<path d="M4 6h11v9H8.5L4 18.5z"/><circle cx="18.5" cy="5.5" r="2.5"/>',
+  cash:'<rect x="3" y="6.5" width="18" height="11" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 9.5v5M17.5 9.5v5"/>',shutter:'<path d="M4 8h3.2l1.8-3h6l1.8 3H20v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  typing:'<rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M9.5 10h.01M13 10h.01M16.5 10h.01M7 14h10"/>',glitch:'<path d="M3 6.5h10M9 10.5h12M3 14.5h7M13 14.5h5M6 18.5h9"/>',
+  riser:'<path d="M4 20v-3M8 20v-6M12 20v-9M16 20V8M20 20V4"/>',laser:'<path d="M3 18L17 7"/><path d="M15 4.5l4.5 1-1 4.5"/><path d="M5 9.5l2 .8M9.5 19.5l.8-2"/>',heart:'<path d="M3 12h4l2-5 3.5 10 2-5H21"/>',
+  file:'<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
+  // ready graphics
+  lower3:'<rect x="3" y="4" width="18" height="9" rx="1.5" stroke-dasharray="2.5 2"/><rect x="3" y="15" width="12" height="3.5" rx="1"/><path d="M3 21h8"/>',title:'<path d="M5 6.5V5h14v1.5M12 5v14M9 19h6"/>',
+  counter:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7.5 9.5l1.5-1v7M12 9.5a1.5 1.5 0 0 1 3 .3c0 1.5-3 2.7-3 5.7h3"/>',progress:'<rect x="3" y="9.5" width="18" height="5" rx="2.5"/><path d="M5.5 12h8" stroke-width="2.6"/>',
+  bars:'<path d="M4 20h16M7 20v-6M11 20V9M15 20v-4M19 20V6"/>',donut:'<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 4.5V8.5M18.5 15.7l-3.4-1.9"/>',
+  stat:'<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 15l3-3.5 2.5 2 3-4"/>',list:'<path d="M10 7h10M10 12h10M10 17h10"/><path d="M4 7l1.2 1.2L7.5 6M4 12l1.2 1.2 2.3-2.2M4 17l1.2 1.2 2.3-2.2"/>',
+  steps:'<circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/><path d="M7.2 12h2.6M14.2 12h2.6"/>',callout:'<path d="M4 5h16v10h-9l-4.5 4v-4H4z"/><path d="M12 8v3M12 13h.01"/>',
+  arrow:'<path d="M5 19L19 5M10 5h9v9"/>',follow:'<circle cx="10" cy="9" r="3.5"/><path d="M3.5 19.5c1-3.5 3.6-5 6.5-5s5.5 1.5 6.5 5"/><path d="M19 8v5M16.5 10.5h5"/>',
+  graphic:'<path d="M20 12a8 8 0 1 1-8-8h4l4 4z"/><path d="M16 4v4h4"/>',
+  // motion presets
+  particles:'<circle cx="6" cy="7" r="1.3"/><circle cx="12" cy="4.5" r="1.3"/><circle cx="18" cy="8" r="1.3"/><circle cx="8.5" cy="12.5" r="1.3"/><circle cx="16" cy="13.5" r="1.3"/><path d="M6 19h12"/>',
+  neon:'<rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="M8 15.5v-7l5 7v-7M16.5 8.5v7"/>',wave:'<path d="M3 13c3-3 6 3 9 0s6 3 9 0"/><path d="M3 18c3-3 6 3 9 0s6 3 9 0"/><path d="M8 7h8"/>',
+  reel:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9.5h4M3 14.5h4M17 9.5h4M17 14.5h4"/>',ex3:'<rect x="4" y="4" width="5" height="5" rx="1"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><rect x="15" y="15" width="5" height="5" rx="1"/>',
+  motion:'<path d="M4 17c4-1 6-10 16-10"/><circle cx="20" cy="7" r="1.6"/><path d="M4 12h3M4 8h5"/>',
+  // timeline lanes
+  clip:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9.5h4M3 14.5h4M17 9.5h4M17 14.5h4"/>',text:'<path d="M5 6.5V5h14v1.5M12 5v14M9 19h6"/>',
+  music:'<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',voice:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>',
+  layer:'<path d="M12 4l9 5-9 5-9-5z"/><path d="M3 14l9 5 9-5"/>',region:'<rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="3 2.5"/><path d="M8.5 15.5l7-7"/>',
+  cap:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M7 11h4M13 11h4M7 15h6M15 15h2"/>',sfx:'<path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>',
+  vfx:'<path d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4z"/><path d="M19 15.5v4M17 17.5h4"/>',info:'<path d="M20 12a8 8 0 1 1-8-8h4l4 4z"/><path d="M16 4v4h4"/>'};
+const MGP151={particles:"particles",neon:"neon",bars:"bars",wave:"wave",reel:"reel",steps:"ex3"};
+// a tile keeps its words; its old picture (an emoji, a dot, the same speaker for every sound) becomes its own drawn icon
+function setIc151(b,p){if(!p||b.querySelector(".ic151"))return;const g=b.querySelector(".gl");
+  if(g){g.innerHTML=svg(p);g.classList.add("ic151");return}
+  const sp=b.querySelector(":scope>span:not(.lb):not(.cost)");if(sp&&!sp.querySelector("svg")&&sp.textContent.trim().length<=2)sp.remove();   // (the old emoji)
+  b.insertAdjacentHTML("afterbegin",'<span class="ic151" aria-hidden="true">'+svg(p)+"</span>");b.classList.add("t151")}
+// the looks: each tile shows the clip's own picture in that look (drawn from the clip at the playhead)
+function looks151(v){const bs=[...v.querySelectorAll('[data-act="edx-look"]')].filter(b=>!b.querySelector(".lk151"));if(!bs.length)return;
+  let src=null;try{const c=edxPick(),m=c&&clipMedia(c),el=m&&m.el;if(el&&(m.type==="image"?el.naturalWidth:el.readyState>=2&&el.videoWidth))src=el}catch(e){}
+  if(!src){const wk=$("#wk");if(wk&&wk.width)src=wk}
+  bs.forEach(b=>{const lk=EDX_LOOKS.find(x=>x[0]===b.dataset.v),g=b.querySelector(".gl");if(!lk||!g)return;
+    g.innerHTML='<canvas class="lk151" width="96" height="60" aria-hidden="true"></canvas>'+(lk[4]?'<i class="lkt151" style="background:'+lk[4][0]+";mix-blend-mode:"+lk[4][1]+";opacity:"+lk[4][2]+'"></i>':"");g.classList.add("lkw151");
+    const cv=g.firstChild;if(lk[3])cv.style.filter=lk[3];if(!src)return;
+    try{const sw=src.videoWidth||src.naturalWidth||src.width,sh=src.videoHeight||src.naturalHeight||src.height,k=Math.max(96/sw,60/sh),w=sw*k,h=sh*k;cv.getContext("2d").drawImage(src,(96-w)/2,(60-h)/2,w,h)}catch(e){}})}
+// what each choice does, when the finger or mouse rests on it (the words of the old picker sheets)
+function tips151(v){[["look",'[data-act="edx-look"]'],["effects",'[data-act="edx-vfx"]'],["overlay",'[data-act="edv-add"]'],["transition",'[data-set="edclip.trans"]'],["textfx",'[data-act="edx-tfx"]']].forEach(([sub,q])=>
+  v.querySelectorAll(q).forEach(b=>{if(b.title)return;const R=reg84(sub,val84(b));if(R&&R[2])b.title=L(R[2],R[3])}))}
+function after151(){const v=document.querySelector("#main .view.ed143");if(!v)return;
+  v.querySelectorAll('[data-act="edx-sfx-add"]').forEach(b=>setIc151(b,P151[b.dataset.v]||P151.sfx));
+  v.querySelectorAll('[data-act="edv-add"]').forEach(b=>{const R=reg84("overlay",b.dataset.v);setIc151(b,R&&R[4]||P151.vfx)});
+  v.querySelectorAll('[data-act="edi-add"]').forEach(b=>{const k=b.dataset.v||"";if(!k.startsWith("mg150:"))setIc151(b,P151[k]||P151.graphic)});
+  v.querySelectorAll('[data-act="mg-pre"]').forEach(b=>setIc151(b,P151[MGP151[b.dataset.v]]||P151.motion));
+  looks151(v);tips151(v);thumbs151()}
+
+// ---- 3. the timeline: a coloured icon for every lane (its letter stays for screen readers), the clip's picture along the video lane
+const LN151={"V":"clip","T":"text","♪":"music","🎙":"voice","L":"layer","◌":"region","CC":"cap","FX":"sfx","VX":"vfx","IN":"info"};
+const LNN151={clip:["Video","الفيديو"],text:["Text","النص"],music:["Music","الموسيقى"],voice:["Voice","الصوت"],layer:["Overlays","الطبقات"],region:["Erase & blur","مسح وتمويه"],cap:["Captions","الترجمة"],sfx:["Sound effects","المؤثرات الصوتية"],vfx:["Effects","المؤثرات"],info:["Graphics","الرسوم"]};
+const TH151=new Map();let THQ151=Promise.resolve();const THB151=new Set();
+tl146=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string")return h;
+  h=h.replace(/<span class="tn">([^<]+)<\/span>/g,(m,t)=>{const k=LN151[t];return k?'<span class="tn" data-ln151="'+k+'" title="'+esc(L(...LNN151[k]))+'">'+svg(P151[k])+'<b class="tnx">'+t+"</b></span>":m});
+  return h.replace(/<div class="blk v([^"]*)" data-clip="([^"]+)"([^>]*?) style="/g,(m,c,id,rest)=>{const x=TH151.get(id);return x?'<div class="blk v'+c+' th151" data-clip="'+id+'"'+rest+' style="--th151:url('+x.u+');':m})})(tl146);
+// one small picture from each clip, taken from a copy of its video (the player's own video keeps playing), one clip at a time
+const url151=cv=>{try{return cv.toDataURL("image/jpeg",.72)}catch(e){return null}};
+async function grab151(c){const m=clipMedia(c);if(!m)return null;const H=56,cv=document.createElement("canvas");cv.height=H;
+  if(m.type==="image"){const im=m.el;if(!im||!im.naturalWidth)return null;cv.width=Math.max(24,Math.round(H*im.naturalWidth/im.naturalHeight));cv.getContext("2d").drawImage(im,0,0,cv.width,H);return url151(cv)}
+  if(m.type!=="video")return null;const src=m.url||(m.el&&(m.el.currentSrc||m.el.src));if(!src)return null;
+  const v=document.createElement("video");v.muted=true;v.playsInline=true;v.preload="auto";v.src=src;
+  try{await new Promise((ok,bad)=>{v.onloadeddata=ok;v.onerror=bad;setTimeout(bad,8000)});
+    await new Promise(ok=>{v.onseeked=ok;try{v.currentTime=Math.min(Math.max(0,(+c.in||0)+.2),Math.max(0,(v.duration||1)-.05))}catch(e){ok()}setTimeout(ok,3000)});
+    if(!v.videoWidth)return null;cv.width=Math.max(24,Math.round(H*v.videoWidth/v.videoHeight));cv.getContext("2d").drawImage(v,0,0,cv.width,H);return url151(cv)}
+  catch(e){return null}finally{v.removeAttribute("src");try{v.load()}catch(e){}}}
+function thumbs151(){for(const c of S.ed.clips||[]){const k=(+c.in||0).toFixed(1),x=TH151.get(c.id);if(x&&x.k===k||THB151.has(c.id+"|"+k))continue;const q=c.id+"|"+k;THB151.add(q);
+  THQ151=THQ151.then(()=>grab151(c)).then(u=>{if(!u)return;TH151.set(c.id,{k,u});const b=document.querySelector('#tlin .blk.v[data-clip="'+c.id+'"]');if(b){b.classList.add("th151");b.style.setProperty("--th151","url("+u+")")}}).catch(()=>{})}}
+
+// ---- 4. fixes
+// 4a. the clock never runs past the end (a clip made shorter or deleted while the playhead was late in the edit)
+edTick=(o=>function(now){const T=edTotal();if(T>0&&ED.t>T)ED.t=T;if(ED.t<0)ED.t=0;return o.apply(this,arguments)})(edTick);
+// 4b. a clip made without sound (most AI video engines make silent clips) has no sound — that is not "couldn't be read":
+// its file is looked at (an MP4 lists a sound track as "soun", a WebM names its sound codec "A_…")
+const SIL151=new Set();
+function noSound151(ab){const u=new Uint8Array(ab),n=u.length;if(n<16)return false;const at=(i,s)=>s.split("").every((ch,k)=>u[i+k]===ch.charCodeAt(0));
+  if(["ftyp","moov","wide","free","mdat"].some(s=>at(4,s))){for(let i=0;i+16<n;i++)if(u[i]===104&&u[i+1]===100&&u[i+2]===108&&u[i+3]===114&&at(i+12,"soun"))return false;return true}   // ("hdlr" … "soun")
+  if(u[0]===0x1a&&u[1]===0x45&&u[2]===0xdf&&u[3]===0xa3){let s="";const e=Math.min(n,1<<20);for(let i=0;i<e;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,Math.min(e,i+8192)));return!/A_(OPUS|VORBIS|AAC|MPEG|PCM|AC3|EAC3|FLAC|ALAC|TRUEHD|DTS)/.test(s)}
+  return false}
+aud149=async function(c,m,ac){const get=async u=>u instanceof Blob?u:await(await fetch(u)).blob();
+  const dec=async b=>{try{return await ac.decodeAudioData(await b.arrayBuffer())}catch(e){if(c){try{if(noSound151(await b.arrayBuffer()))SIL151.add(c.id)}catch(x){}}throw e}};
+  try{return await dec(await get(m.file instanceof Blob?m.file:(m.url||(m.el&&(m.el.currentSrc||m.el.src)))))}catch(e){}
+  if(c&&SIL151.has(c.id))return null;
+  const j=c&&c.src&&c.src.k==="job"&&S.jobs.find(x=>x.id===c.src.job);
+  if(j&&j.remote&&API.mode==="server"){try{const r=await API.req("/v1/jobs/"+j.remote+"/keep",{method:"POST"});if(r&&r.url)return await dec(await get(r.url))}catch(e){}}
+  return null};
+edxTimelineAudio=(o=>async function(){SIL151.clear();return o.apply(this,arguments)})(edxTimelineAudio);
+// (4c — a second quick tap on Add adds the sound once — and 4d — mixed words — are in the Add handler and the styles)
+
+// ---- 5. after every drawing of the editor, and when a panel draws part of itself
+renderView=(o=>function(){const sv=S.view==="edit"?scr151():null;const r=o.apply(this,arguments);
+  try{shell151();if(S.view==="edit"){if(sv&&sv.length)back151(sv);after151();if(studio151()){const m=$("#main");if(m&&m.scrollTop)m.scrollTop=0}}}catch(e){console.warn("v151",e)}return r})(renderView);
+(()=>{let q=false;const mo=new MutationObserver(()=>{if(q||S.view!=="edit")return;q=true;requestAnimationFrame(()=>{q=false;try{after151()}catch(e){}})});const m=$("#main");if(m)mo.observe(m,{childList:true,subtree:true})})();
+window.addEventListener("resize",()=>{try{shell151()}catch(e){}});
+
+(()=>{const st=document.createElement("style");st.textContent=`
+/* ---- the studio (phones and tablets): the editor is the whole screen ---- */
+html.studio151,html.studio151 body{background:#0b0c0f;overscroll-behavior:none}
+html.studio151 #main>.topm,html.studio151 #bottomnav,html.studio151 #main .appfoot{display:none!important}
+html.studio151 .app{height:100vh;height:100dvh}
+html.studio151 #main{overflow:hidden!important;padding:0!important}
+html.studio151 .view.ed143{--bg:#0b0c0f;--panel:#141519;--panel2:#1c1d22;--panel3:#26282e;--line:#24262c;--line2:#33363d;--text:#f1f2f4;--mute:#a3a7b0;--dim:#6d727c;--lime-ink:#CFE13E;color-scheme:dark;background:var(--bg);color:var(--text)}
+html.studio151 .view.ed143.mob{flex:1 1 auto;height:100%;min-height:0;max-width:none;margin:0;padding:env(safe-area-inset-top,0px) 0 0!important;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box}
+html.studio151 .ed143.mob>*{flex:none}
+html.studio151 .ed143.mob>div:not(.e-top):not(.e-app){margin:0!important;padding:4px 8px}
+html.studio151 .view.ed143>.hubtabs{display:none!important}
+html.studio151 .ed143.mob>.e-top{order:-1}   /* (the top bar first; a notice — another device's change, a clip that needs its file — just under it, on one line) */
+html.studio151 .ed143.mob>.dv149{flex-wrap:nowrap;gap:6px;margin:0!important;padding:5px 8px;border-radius:0;border-width:0 0 1px;font-size:12px}
+html.studio151 .ed143.mob>.dv149>span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}html.studio151 .ed143.mob>.dv149 .btn{flex:none;white-space:nowrap;min-height:30px;padding-inline:9px}   /* (the Edit section's other tools are a tap away once you leave) */
+/* the slim top bar: back · name · size · projects · Export */
+html.studio151 .ed143.mob .e-top{flex-wrap:nowrap;gap:6px;margin:0;padding:6px 8px;min-height:50px;box-sizing:border-box;border-bottom:1px solid var(--line);background:var(--bg)}
+html.studio151 #main .view.ed143.mob .e-h{display:none}   /* (the editor's name is the page's title; the bar keeps the project's) */
+html.studio151 .ed143 .e-home151{flex:none;display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:10px;background:transparent;color:var(--text)}
+html.studio151 .ed143 .e-home151 svg{width:22px;height:22px}[dir=rtl] .ed143 .e-home151 svg{transform:scaleX(-1)}
+html.studio151 .ed143.mob .e-name{flex:1 1 auto;min-width:0;height:34px;font-size:14px;background:transparent}
+html.studio151 .ed143.mob .e-act{flex:0 0 auto;gap:6px;justify-content:flex-end}
+html.studio151 #main .ed143.mob .e-act>.fmtbtn{flex:none;width:auto;height:34px;padding:0 8px;gap:4px;border-radius:10px}
+html.studio151 #main .ed143.mob .e-act>.fmtbtn>span:first-child{display:none}
+html.studio151 #main .ed143.mob .e-act>.fmtbtn small{font-size:11.5px;font-weight:600}
+html.studio151 .ed143.mob .e-act>.pj139b{width:36px;height:34px;padding:0;justify-content:center}html.studio151 .ed143.mob .e-act>.pj139b span{display:none}
+html.studio151 .ed143.mob .e-act>.edout{height:34px;padding:0 12px;border-radius:10px;font-weight:700}
+/* the player, the play row, the bar for words */
+html.studio151 .ed143.mob .e-app{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:0}
+html.studio151 .ed143.mob .e-player .edstage{position:relative!important;top:auto!important;flex:0 0 auto;height:38vh;max-height:none;min-height:0;margin:0;padding:0;border-radius:0;box-shadow:none;background:#000}
+html.studio151 .ed143.mob .edstage canvas{max-width:100%!important;max-height:100%!important;width:auto!important;height:auto!important}
+html.studio151 .ed143.mob .e-player .transport{position:relative!important;top:auto!important;flex:none;margin:0;padding:4px 6px;background:var(--bg);border-bottom:1px solid var(--line)}
+html.studio151 .ed143.mob .e-cmd{flex:none;padding:6px 8px 4px;background:var(--bg)}
+/* the timeline fills the middle; a panel takes the lower half and the timeline becomes a strip */
+html.studio151 .ed143.mob .e-tl{flex:1 1 0;min-height:64px;display:flex;flex-direction:column;border:0;border-radius:0;background:var(--bg);padding:2px 0 0}
+html.studio151 .ed143.mob .e-tl>*{flex:none}
+html.studio151 .ed143.mob .e-tl .tlwrap{flex:1 1 auto;min-height:0;max-height:none!important;overflow:auto;overscroll-behavior:contain}
+html.studio151 .ed143.mob .tlwrap .ruler{position:sticky;top:0;z-index:3;background:var(--bg)}html.studio151 .ed143.mob #tlin .ph{z-index:4}   /* (the ruler stays in view while the lanes scroll) */
+html.studio151 .ed143.mob.sh151 .edstage{height:26vh}
+html.studio151 .ed143.mob.sh151 .e-tl{flex:0 0 auto;height:92px}
+html.studio151 .ed143.mob.sh151:not(.chat151) .e-cmd{display:none}
+html.studio151 .ed143.mob .e-sheet{flex:1 1 0;min-height:0;display:flex;flex-direction:column;border:0;border-top:1px solid var(--line2);border-radius:16px 16px 0 0;background:var(--panel);box-shadow:0 -10px 26px rgba(0,0,0,.5)}
+html.studio151 .ed143.mob .e-sheet>*{flex:none}
+html.studio151 .ed143.mob .e-sheet .e-body{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding-bottom:18px}
+html.studio151 .ed143.mob .e-sheet .e-ph{padding-top:8px}
+html.studio151 .ed143.mob .e-sheet .e-ph::before{content:"";position:absolute;left:50%;top:5px;width:36px;height:4px;margin-left:-18px;border-radius:2px;background:var(--line2)}
+html.studio151 .ed143.mob .e-sheet{position:relative}
+html.studio151 .ed143 .e-sub{padding:6px 12px 0;gap:2px;border-bottom:1px solid var(--line)}
+html.studio151 .ed143 .e-sub button{border:0;border-radius:0;padding:8px 10px;background:transparent;color:var(--mute);box-shadow:inset 0 -2px 0 transparent}
+html.studio151 .ed143 .e-sub button[aria-pressed="true"]{background:transparent;color:var(--text);box-shadow:inset 0 -2px 0 var(--lime)}
+/* the tools at the foot */
+html.studio151 .ed143.mob .e-bar{position:relative!important;bottom:auto!important;flex:none;padding:4px 4px calc(4px + env(safe-area-inset-bottom,0px));background:#0f1013;border-top:1px solid var(--line);-webkit-backdrop-filter:none;backdrop-filter:none}
+html.studio151 .ed143.mob .e-bar button[aria-pressed="true"]{color:var(--lime);background:color-mix(in srgb,var(--lime) 12%,transparent)}
+html.studio151 .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+@media (orientation:landscape) and (max-height:500px){html.studio151 .ed143.mob .e-player .edstage{height:46vh}html.studio151 .ed143.mob.sh151 .edstage{height:34vh}html.studio151 .ed143.mob .e-cmd{display:none}html.studio151 .ed143.mob.sh151 .e-tl{height:72px}}
+/* ---- picture tiles (every editor panel, phone and computer) ---- */
+.ed143 .vfxgrid,.ed143 .mgpre{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px}
+.ed143 .vfxt.t151{flex-direction:column;justify-content:center;gap:6px;min-height:78px;padding:10px 4px 8px;color:var(--mute);font-size:11px;font-weight:600;line-height:1.2;text-align:center;overflow-wrap:break-word;min-width:0}
+.ed143 .vfxt.t151:hover,.ed143 .tile:hover{color:var(--text)}
+.ed143 .ic151{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:11px;color:var(--c151,var(--text));background:color-mix(in srgb,var(--c151,var(--text)) 15%,transparent)}
+.ed143 .tile .gl.ic151{width:36px;height:36px}.ed143 .ic151 svg{width:22px;height:22px}
+.ed143 [data-act="edx-sfx-add"]{--c151:#ff6b9a}.ed143 [data-act="edv-add"]{--c151:#4dc3ff}.ed143 [data-act="edi-add"]{--c151:#c38bff}.ed143 [data-act="mg-pre"]{--c151:#CFE13E}
+.ed143 [data-act="edx-sfx-add"][aria-pressed="true"]{border-color:#ff6b9a;background:color-mix(in srgb,#ff6b9a 12%,var(--panel2));color:var(--text)}
+.ed143 .tile .gl.lkw151{position:relative;width:100%;height:auto;aspect-ratio:8/5;border-radius:8px;overflow:hidden;background:#000}
+.ed143 .lk151{display:block;width:100%;height:100%;object-fit:cover}.ed143 .lkt151{position:absolute;inset:0;pointer-events:none}
+.ed143 .tile[data-act="edx-look"]{padding:5px 5px 7px;gap:5px}.ed143 .tile[data-act="edx-look"][aria-pressed="true"]{border-color:var(--lime);box-shadow:inset 0 0 0 1px var(--lime);color:var(--text)}
+.ed143 .sx149 .btn{white-space:normal;height:auto;min-height:36px;text-align:start}
+/* segmented choices: a word is never cut in two */
+.ed143 .seg{display:flex;flex-wrap:wrap;max-width:100%}
+.ed143 .seg button{flex:1 1 auto;white-space:normal;overflow-wrap:normal;word-break:normal;min-width:auto}
+/* mixed Arabic and English: each line keeps its own direction */
+.ed143 textarea,.ed143 input[type=text],.ed143 input:not([type]),.ed143 .e-msg,.ed143 .edxrow>span{unicode-bidi:plaintext}
+/* ---- the timeline: coloured lanes with icons, the clip's picture, slim sound lanes ---- */
+.ed143 .tlwrap{scroll-padding-top:30px;scroll-padding-left:48px}   /* (an item brought into view lands below the ruler that stays at the top, right of the lane icons) */
+#tlin .tn[data-ln151]{left:-35px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:28px;height:22px;border-radius:7px;color:var(--c151);background:color-mix(in srgb,var(--c151) 16%,transparent)}
+#tlin .tn[data-ln151] svg{width:15px;height:15px}
+#tlin .tn .tnx{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#tlin .tn[data-ln151=clip]{--c151:#5eead4}#tlin .tn[data-ln151=text]{--c151:#fbbf24}#tlin .tn[data-ln151=music]{--c151:#60a5fa}#tlin .tn[data-ln151=voice]{--c151:#4ade80}#tlin .tn[data-ln151=layer]{--c151:#a78bfa}
+#tlin .tn[data-ln151=region]{--c151:#f87171}#tlin .tn[data-ln151=cap]{--c151:#CFE13E}#tlin .tn[data-ln151=sfx]{--c151:#f472b6}#tlin .tn[data-ln151=vfx]{--c151:#38bdf8}#tlin .tn[data-ln151=info]{--c151:#c084fc}
+#tlin .blk.t{background:color-mix(in srgb,#fbbf24 26%,var(--panel3));border-color:color-mix(in srgb,#fbbf24 50%,transparent)}
+#tlin .blk.a{background:color-mix(in srgb,#60a5fa 24%,var(--panel3));border-color:color-mix(in srgb,#60a5fa 45%,transparent)}
+#tlin .blk.sx{background:color-mix(in srgb,#f472b6 28%,var(--panel3));border-color:color-mix(in srgb,#f472b6 50%,transparent)}
+#tlin .trk:has(>.blk.v){height:44px}
+#tlin .blk.v.th151{background-image:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0) 55%),var(--th151);background-size:auto,auto 100%;background-repeat:no-repeat,repeat-x;background-color:#111;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.9);line-height:14px;padding-top:3px;border-color:color-mix(in srgb,#5eead4 40%,transparent)}
+#tlin .blk.v.th151[aria-current="true"]{border-color:#fff}
+#tlin .trk:has(>.blk.sx){height:24px;margin:3px 0}#tlin .trk:has(>.blk.sx) .blk{line-height:15px;font-size:10.5px;padding:3px 6px;border-radius:5px}
+@media (max-width:1023px){#tlin .trk:has(>.blk.v){height:40px}}
 `;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */

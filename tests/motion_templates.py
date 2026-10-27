@@ -151,7 +151,7 @@ async def ui(p, w):
     # ---- the animator on an infographic + the new template fields
     await E("()=>{S.ed.tab='info';ED.t=0;renderView()}")
     await pg.click(".edpanel71 [data-act=edi-add][data-v=price]"); await pg.wait_for_timeout(200)
-    r["info"] = await E("()=>{const it=edItem(edPick());return [it&&it.type,!!document.querySelector('.edsel.la'),!!document.querySelector('[data-ib=t2]'),!!document.querySelector('.mgbox'),document.querySelectorAll('.edpanel71 [data-act=edi-add]').length]}")
+    r["info"] = await E("()=>{const it=edItem(edPick());return [it&&it.type,!!document.querySelector('.edsel.la'),!!document.querySelector('[data-ib=t2]'),!!document.querySelector('.mgbox'),document.querySelectorAll('.edpanel71 [data-act=edi-add]:not([data-v^=mg150])').length]}")   # (v150's motion scenes are tiles of their own)
     ok(r["info"][0] == "price" and r["info"][1] and r["info"][2] and r["info"][3] and r["info"][4] == 24, f"{tag}: infographic Motion panel, fields, AI motion box, 24 templates {r['info']}")
     await pg.click(".edsel.la [data-act=la-set][data-f=ap][data-v=flyR]"); await pg.wait_for_timeout(100)
     r["infofly"] = await E("()=>{const it=edItem(edPick());const cv=document.createElement('canvas');cv.width=1280;cv.height=720;const c=cv.getContext('2d');const at=t=>{ED.hit=[];edInfoDraw(c,1280,720,it.start+t);const h=ED.hit.find(x=>x.id===it.id);return h&&Math.round(h.x)};return [it.ap,at(.05),at(2)]}")

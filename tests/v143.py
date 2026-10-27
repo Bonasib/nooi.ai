@@ -1,8 +1,8 @@
 # v143: the editor in the CapCut / DonkeyCut layout. Computer: the add tools on a rail with their panel (Media library, Audio, Text,
 # Stickers, Effects, Transitions, Captions, Filters, AI with the assistant) · the player (guides, full screen, the prompt bar) · the
 # details of what is selected (a clip → Edit · Motion · Tracking; a text, a sound … → its settings; nothing → the project) · the
-# timeline across the bottom, all in the window. Phone: the player pinned, the play row with undo/redo, the timeline, the settings
-# in a sheet with ✓, and a tool bar at the foot — the add tools, or the selected clip's own tools. EN + AR, no element id twice,
+# timeline across the bottom, all in the window. Phone (v151: the studio — the whole screen, no site header, menu or footer): the
+# player, the play row with undo/redo, the timeline, the settings in a panel with ✓, and a tool bar at the foot — the add tools, or the selected clip's own tools. EN + AR, no element id twice,
 # nothing covered, no sideways scroll, no page errors. Run: python3 tests/v143.py
 import asyncio, json, os, subprocess, tempfile, time, urllib.request
 from playwright.async_api import async_playwright
@@ -24,10 +24,10 @@ FIRST = {"media": "media", "audio": "audio", "text": "text", "stickers": "info",
 SCAN = r"""()=>{const vis=e=>{const r=e.getBoundingClientRect();if(r.width<4||r.height<4)return false;const s=getComputedStyle(e);return s.visibility!=='hidden'&&s.display!=='none'&&+s.opacity>0.05};
  const fixed=[...document.querySelectorAll('*')].filter(e=>{const p=getComputedStyle(e).position;return(p==='fixed'||p==='sticky')&&vis(e)}).map(e=>e.getBoundingClientRect());
  let top=0,bot=innerHeight;for(const r of fixed){if(r.top<=innerHeight*0.5&&r.bottom>top&&r.bottom<innerHeight*0.7&&r.width>innerWidth*0.5)top=Math.max(top,r.bottom);if(r.bottom>=innerHeight*0.6&&r.top>innerHeight*0.4&&r.width>innerWidth*0.5)bot=Math.min(bot,r.top)}
- const box=e=>{let p=e.parentElement;while(p&&p!==document.body){const s=getComputedStyle(p);if(/(auto|scroll|hidden)/.test(s.overflowY+s.overflowX)&&(p.scrollHeight>p.clientHeight+2||p.scrollWidth>p.clientWidth+2))return p.getBoundingClientRect();p=p.parentElement}return null};
+ const boxes=e=>{let p=e.parentElement;const o=[];while(p&&p!==document.body){const s=getComputedStyle(p);if(/(auto|scroll|hidden)/.test(s.overflowY+s.overflowX)&&(p.scrollHeight>p.clientHeight+2||p.scrollWidth>p.clientWidth+2))o.push(p.getBoundingClientRect());p=p.parentElement}return o};   // (v151: every box it scrolls in — the studio's panel body too)
  const name=e=>(e.getAttribute('aria-label')||e.textContent||e.value||e.dataset.act||e.tagName).trim().replace(/\s+/g,' ').slice(0,30)+' ['+(e.dataset.act||e.dataset.set||e.className||'').toString().slice(0,24)+']';
  const bad=[];for(const e of document.querySelectorAll('#main button,#main input:not([type=hidden]),#main select,#main textarea,#main label.btn')){if(!vis(e)||e.closest('.e-bar'))continue;const r=e.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
-   if(cy<top+2||cy>bot-2||cx<0||cx>innerWidth)continue;const b=box(e);if(b&&(cy<b.top+2||cy>b.bottom-2||cx<b.left+2||cx>b.right-2))continue;
+   if(cy<top+2||cy>bot-2||cx<0||cx>innerWidth)continue;if(boxes(e).some(b=>cy<b.top+2||cy>b.bottom-2||cx<b.left+2||cx>b.right-2))continue;
    const t=document.elementFromPoint(cx,cy);if(t&&!e.contains(t)&&!t.contains(e)&&!(t.closest('label')&&t.closest('label').contains(e))&&!(e.closest('label')&&e.closest('label').contains(t)))bad.push(name(e)+' under '+((t.closest('[class]')||t).className.toString().slice(0,30)||t.tagName))}
  const ids={};document.querySelectorAll('#main [id]').forEach(e=>{ids[e.id]=(ids[e.id]||0)+1});
  return {bad,over:document.documentElement.scrollWidth-innerWidth,dup:Object.keys(ids).filter(k=>ids[k]>1)}}"""
@@ -46,9 +46,10 @@ async def scan(pg, tag, states):
     found = {}
     for name, js in states:
         await pg.evaluate(js); await pg.wait_for_timeout(250)
-        H = await pg.evaluate("()=>document.getElementById('main').scrollHeight"); bad, over, dup = [], 0, []
+        H, HB = await pg.evaluate("()=>{const b=document.querySelector('.ed143 .e-sheet .e-body');return [document.getElementById('main').scrollHeight,b?b.scrollHeight:0]}"); bad, over, dup = [], 0, []
         for y in range(0, H, 450):
-            await pg.evaluate("(y)=>{document.getElementById('main').scrollTop=y}", y); await pg.wait_for_timeout(60)
+          for yb in range(0, max(1, HB), 260):   # (v151: the studio page never scrolls — its panel does)
+            await pg.evaluate("([y,yb])=>{document.getElementById('main').scrollTop=y;const b=document.querySelector('.ed143 .e-sheet .e-body');if(b)b.scrollTop=yb}", [y, yb]); await pg.wait_for_timeout(60)
             r = await pg.evaluate(SCAN); over = max(over, r["over"]); dup = r["dup"]
             bad += [x for x in r["bad"] if x not in bad]
         await pg.evaluate("()=>{document.getElementById('main').scrollTop=0}")
@@ -132,13 +133,20 @@ async def phone(b, lang):
       const bar=q('.e-bar'),bn=q('#bottomnav');return {pos:getComputedStyle(bar).position,bar:R('.e-bar'),bn:bn&&getComputedStyle(bn).display!=='none'?R('#bottomnav'):null,vh:innerHeight,ctx:bar.classList.contains('ctx'),
         tools:[...bar.querySelectorAll('button')].map(b=>b.dataset.v||b.dataset.act),edbar:document.querySelectorAll('#main .edbar').length,undo:!!q('.transport [data-act="ed-undo"]')&&!!q('.transport [data-act="ed-redo"]'),
         order:['.edstage','.transport','.e-cmd','.e-tl','.e-sheet'].map(s=>{const e=q('#main '+s);return e?Math.round(e.getBoundingClientRect().top+document.getElementById('main').scrollTop):-1}),
-        sticky:getComputedStyle(q('.edstage')).position,top:R('.e-top'),title:(q('#main h1')||{}).textContent,sw:document.documentElement.scrollWidth}}""")
+        sticky:getComputedStyle(q('.edstage')).position,top:R('.e-top'),title:(q('#main h1')||{}).textContent,sw:document.documentElement.scrollWidth,
+        cmd:getComputedStyle(q('.e-cmd')).display,msc:[document.getElementById('main').scrollHeight,document.getElementById('main').clientHeight],studio:document.documentElement.classList.contains('studio151'),
+        head:!!q('#main>.topm')&&getComputedStyle(q('#main>.topm')).display!=='none',foot:[...document.querySelectorAll('#main .appfoot')].some(f=>getComputedStyle(f).display!=='none')}}""")
     out[tag + "_page"] = r
     foot = r["bn"][1] if r["bn"] else r["vh"]
-    chk(f"{tag}: the tool bar is fixed at the foot, just above the site's bar", r["pos"] == "fixed" and abs(r["bar"][3] - foot) <= 2 and not r["ctx"], r)
+    chk(f"{tag}: the studio fills the screen — no site header, menu bar or footer; the tool bar is the foot of the screen", r["studio"] and r["bn"] is None and not r["head"] and not r["foot"] and abs(r["bar"][3] - r["vh"]) <= 2 and not r["ctx"], r)   # (v151: was fixed above the site's bar)
     chk(f"{tag}: the add tools, the project and the magnet on the bar", r["tools"] == RAIL + ["export", "mk146-add", "seq148-menu", "snap141"], r["tools"])   # (v148: Timelines)
     chk(f"{tag}: CapCut's play row: no separate tool row, undo and redo beside play", r["edbar"] == 0 and r["undo"], [r["edbar"], r["undo"]])
-    chk(f"{tag}: preview, play row, prompt bar, timeline, settings — in that order; the preview pinned", r["order"] == sorted(r["order"]) and min(r["order"]) >= 0 and r["sticky"] == "sticky", r["order"])
+    o5 = [x for i, x in enumerate(r["order"]) if i != 2]
+    chk(f"{tag}: preview, play row, timeline, settings — in that order; the page never scrolls (the preview stays); the prompt bar rests while a panel is open", o5 == sorted(o5) and min(o5) >= 0 and r["cmd"] == "none" and r["msc"][0] <= r["msc"][1] + 1, [r["order"], r["cmd"], r["msc"]])   # (v151: the studio)
+    await E("()=>{S.ed.pclosed143=S.ed.tab;renderView()}"); await pg.wait_for_timeout(200)
+    o2 = await E("()=>['.edstage','.transport','.e-cmd','.e-tl'].map(s=>{const e=document.querySelector('#main '+s);return e&&getComputedStyle(e).display!=='none'?Math.round(e.getBoundingClientRect().top):-1})")
+    chk(f"{tag}: with the panel closed: preview, play row, prompt bar, timeline", o2 == sorted(o2) and min(o2) >= 0, o2)
+    await E("()=>{S.ed.pclosed143=null;S.ed.tab='media';renderView()}"); await pg.wait_for_timeout(200)
     chk(f"{tag}: a slim header with the page title; no sideways scroll", r["title"].strip() in ("Video editor", "محرر الفيديو") and r["top"][3] - r["top"][1] <= 96 and r["sw"] <= 390, [r["top"], r["sw"]])
     # a tap on a clip: the clip's own tools
     await E("()=>document.querySelector('#tlin .blk[data-clip]').scrollIntoView({block:'center'})"); await pg.wait_for_timeout(700); bb = await pg.locator("#tlin .blk[data-clip]").first.bounding_box()   # (in the middle: the tool bar at the foot covers the bottom · v149: after the pinned preview has finished resizing)
@@ -149,7 +157,7 @@ async def phone(b, lang):
     chk(f"{tag}: a tap on a clip shows its own tools at the foot (Split, Speed, Volume, Motion, Filters, Transition, Freeze, Mirror, Duplicate, Earlier, Later, Extend, Background, Tracking, AI, Delete)", c["ctx"] and c["kind"] == "clip" and c["tools"] == want and not c["sheet"], c)
     await E("()=>{const b=document.querySelector('.e-bar [data-v=\"speed145\"]');b.scrollIntoView({inline:'center'});b.click()}"); await pg.wait_for_timeout(600)
     sp = await E("()=>{const s=document.querySelector('.e-sheet'),st=document.querySelector('.edstage').getBoundingClientRect(),l=[...s.querySelectorAll('.lbl')].find(x=>/speed|السرعة/i.test(x.textContent));return{tab:S.ed.tab,lbl:l?Math.round(l.getBoundingClientRect().top):null,under:Math.round(st.bottom),bar:Math.round(document.querySelector('.e-bar').getBoundingClientRect().top)}}")
-    chk(f"{tag}: Speed opens the clip's Speed settings, under the pinned preview", sp["tab"] == "speed145" and sp["lbl"] is not None and sp["under"] <= sp["lbl"] < sp["bar"] - 40, sp)
+    chk(f"{tag}: Speed opens the clip's Speed settings, under the preview", sp["tab"] == "speed145" and sp["lbl"] is not None and sp["under"] <= sp["lbl"] < sp["bar"] - 40, sp)
     fh0 = await E("()=>!!(edSelClip().mo&&edSelClip().mo.fh)"); n0 = await E("()=>S.ed.clips.length")
     await E("()=>{const b=document.querySelector('.e-bar [data-act=\"edx-flip\"]');b.scrollIntoView({inline:'center'});b.click()}"); await pg.wait_for_timeout(200)
     await E("()=>{const b=document.querySelector('.e-bar [data-act=\"ed-dup\"]');b.scrollIntoView({inline:'center'});b.click()}"); await pg.wait_for_timeout(200)

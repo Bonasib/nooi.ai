@@ -45,7 +45,7 @@ async def main():
         out = {"clicks": 0, "errors": [], "checks": {}}
         async with async_playwright() as p:
             b = await p.chromium.launch()
-            for w in (1440, 390):
+            for w in [int(x) for x in os.environ.get("PT_W", "1440,390").split(",")]:   # (PT_W=1440 or PT_W=390: one size per run — each under ten minutes)
                 ctx = await b.new_context(viewport={"width": w, "height": 900}, is_mobile=w < 800, has_touch=w < 800)
                 pg = await ctx.new_page(); errs = []
                 pg.on("pageerror", lambda e, errs=errs: errs.append(str(e)[:200]))

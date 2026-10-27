@@ -130,7 +130,8 @@ async def phone(b):
     chk("no copy asked for when the browser can't play it", not p["h264"] and not scrubReqs, [p["h264"], scrubReqs])
     # a real drag on the playhead
     await E("()=>{ED.t=.5;renderView()}"); await pg.wait_for_timeout(600)
-    await box(pg, "#tlin", "nearest", "end"); ph = await pg.locator("#ph").bounding_box(); pps = await E("()=>S.ed.zoom"); x0, y0 = ph["x"] + ph["width"] / 2, ph["y"] + 10
+    await box(pg, "#tlin", "nearest", "end"); ph = await pg.locator("#ph").bounding_box(); pps = await E("()=>S.ed.zoom"); wr = await pg.locator(".tlwrap").bounding_box()
+    x0, y0 = ph["x"] + ph["width"] / 2, max(ph["y"], wr["y"]) + 10   # (v151: the studio's timeline scrolls inside itself — its ruler stays at its top)
     chk("the playhead can be reached (not under the preview or the bottom bar)", await E("([x,y])=>{const e=document.elementFromPoint(x,y);return!!(e&&e.closest('#tlin'))}", [x0, y0]))
     await cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": x0, "y": y0, "id": 1}]})
     for k in range(1, 31):
@@ -179,10 +180,10 @@ async def phone(b):
     else: chk("music on the timeline", False)
     # transitions from gl-transitions
     await E("(id)=>{edSetPick('clip',id);S.ed.tab='clip';renderView()}", c0); await pg.wait_for_function("GL131.list", timeout=8000); await E("()=>renderView()"); await pg.wait_for_timeout(200)
-    await pg.locator('#main .pk84c[data-pk84="transition"]').first.tap(); await pg.wait_for_timeout(300)
-    nt = await E("()=>({n:document.querySelectorAll('.pk84s .pk84o[data-val^=\"gl_\"]').length,desc:(document.querySelector('.pk84s .pk84o[data-val=\"gl_circle\"] small')||{}).textContent||''})")
-    chk("22 new transitions in the Transition sheet, each saying what it does", nt["n"] == 22 and "circle" in nt["desc"], nt)
-    await pg.locator('.pk84s .pk84o[data-val="gl_circle"]').tap(); await pg.wait_for_timeout(300)
+    # (v151: the editor shows its transitions as picture tiles in the clip's panel — no picker sheet; what each does on the tile)
+    nt = await E("()=>({n:document.querySelectorAll('#main [data-set=\"edclip.trans\"][data-val^=\"gl_\"]').length,desc:(document.querySelector('#main [data-set=\"edclip.trans\"][data-val=\"gl_circle\"]')||{}).title||'',chip:document.querySelectorAll('#main .pk84c').length})")
+    chk("22 new transitions among the clip's transition tiles, each saying what it does", nt["n"] == 22 and "circle" in nt["desc"] and nt["chip"] == 0, nt)
+    await pg.locator('#main [data-set="edclip.trans"][data-val="gl_circle"]').first.scroll_into_view_if_needed(); await pg.locator('#main [data-set="edclip.trans"][data-val="gl_circle"]').first.tap(); await pg.wait_for_timeout(300)
     tr = await E("(id)=>S.ed.clips.find(c=>c.id===id).trans", c0); chk("tap a transition: it is the clip's", tr == "gl_circle", tr)
     comp = await E("()=>{if(!glCtx131())return'no webgl';return GLT131.map(x=>x[0]).filter(id=>!glProg131(id))}"); res["glCompile"] = comp
     chk("every transition compiles", comp == [], comp)
@@ -212,11 +213,11 @@ async def phone(b):
         else: chk("text on the timeline", False)
     # looks after CSSgram
     await E("(id)=>{edSetPick('clip',id);S.ed.tab='color';renderView()}", c0); await pg.wait_for_timeout(200)
-    await pg.locator('#main .pk84c[data-pk84="look"]').first.tap(); await pg.wait_for_timeout(300)
-    lk = await E("()=>{const b=document.querySelector('.pk84s .pk84o[data-v=\"ember\"] .lookdot');return{n:document.querySelectorAll('.pk84s .pk84o[data-act=\"edx-look\"]').length,bg:b?getComputedStyle(b).backgroundImage:'',desc:(document.querySelector('.pk84s .pk84o[data-v=\"ember\"] small')||{}).textContent||''}}")
-    await pg.locator('.pk84s .pk84o[data-v="ember"]').tap(); await pg.wait_for_timeout(300)
+    # (v151: the looks are tiles showing the clip itself in that look — no picker sheet)
+    lk = await E("()=>{const b=document.querySelector('#main [data-act=\"edx-look\"][data-v=\"ember\"]'),c=b&&b.querySelector('canvas.lk151');return{n:document.querySelectorAll('#main [data-act=\"edx-look\"]').length,pic:!!c,filt:c?getComputedStyle(c).filter:'',desc:b?b.title:''}}")
+    await pg.locator('#main [data-act="edx-look"][data-v="ember"]').scroll_into_view_if_needed(); await pg.locator('#main [data-act="edx-look"][data-v="ember"]').tap(); await pg.wait_for_timeout(300)
     lk["picked"] = await E("(id)=>(S.ed.clips.find(c=>c.id===id).cg||{}).look", c0)
-    chk("15 more looks in the Look sheet, each with its colour dot and what it does; a tap picks it", lk["n"] >= 26 and "gradient" in lk["bg"] and lk["desc"] and lk["picked"] == "ember", lk)
+    chk("15 more looks among the look tiles, each the clip's own picture in that look and what it does; a tap picks it", lk["n"] >= 26 and lk["pic"] and lk["filt"] not in ("", "none") and lk["desc"] and lk["picked"] == "ember", lk)
     l = await E("""async(id)=>{const P=%s,D=%s,c=S.ed.clips.find(x=>x.id===id);c.cg={look:'none'};D(3);await new Promise(r=>setTimeout(r,200));D(3);const a=P(.5,.5),e=P(.02,.02);c.cg={look:'ember'};D(3);const b=P(.5,.5),f=P(.02,.02);c.cg={look:'seabreeze'};D(3);const s=P(.5,.1);c.cg={};return{a,b,e,f,s}}""" % (PIX, DRAW), c0)
     res["looks"] = l; chk("a look colours the picture", sum(abs(x - y) for x, y in zip(l["a"], l["b"])) > 40 and l["b"] != l["f"], l)
     # banners and stickers with Material Symbols

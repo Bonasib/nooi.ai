@@ -59,10 +59,12 @@ async def main():
                 else: await pg.evaluate(GO, page)
                 await pg.wait_for_timeout(250)
                 for f in fields:
-                    if page.startswith("edit:") and not mob and f != "transition":
-                        # v144: on a computer the editor's add panel shows its tiles (they drag onto the timeline); no chip there
-                        t = await pg.evaluate("(s)=>({vis:[...document.querySelectorAll('.ed143 .e-assets '+s.split(',').join(',.ed143 .e-assets '))].filter(b=>b.offsetParent!==null).length,chip:!!document.querySelector('.ed143 .e-assets .pk84c')})", SEL[f])
-                        ok(t["vis"] >= 2 and not t["chip"], f"{lang} {page}: the {f} tiles show in the editor's add panel {t}"); continue
+                    if page.startswith("edit:"):
+                        # v144: on a computer the editor's add panel shows its tiles (they drag onto the timeline); v151: the whole editor, phone too —
+                        # every field a row of picture tiles (an icon or the clip's own picture, a name, no emoji), no chip anywhere in it
+                        t = await pg.evaluate("""(s)=>{const bs=[...document.querySelectorAll('.ed143 '+s.split(',').join(',.ed143 '))].filter(b=>b.offsetParent!==null);
+                          return {vis:bs.length,chip:!!document.querySelector('.ed143 .pk84c'),bare:bs.filter(b=>!b.querySelector('svg,canvas')||!b.textContent.trim()||/[\u2600-\u27bf]|[\ud83c-\udbff]/.test(b.textContent)).map(b=>b.dataset.v||b.dataset.val)}}""", SEL[f])
+                        ok(t["vis"] >= 2 and not t["chip"] and not t["bare"], f"{lang} {page}: the {f} picture tiles show in the editor {t}"); continue
                     st = await pg.evaluate(STATE, SEL[f]); ch = [c for c in st["chips"] if c["f"] == f]
                     ok(st["vis"] == 0, f"{lang} {page}: the old {f} buttons are still showing ({st['vis']})")
                     ok(len(ch) == 1 and ch[0]["pop"] == "dialog" and ch[0]["v"].strip() and "pk84row" in ch[0]["row"], f"{lang} {page}: one {f} chip in the bar {ch}")
@@ -111,8 +113,8 @@ async def main():
             await pg.evaluate(EDIT, "color"); await pg.click('.e-assets [data-act="edx-vfx"][data-v="glow"]'); await pg.wait_for_timeout(300); await pg.click('.e-assets [data-act="edx-vfx"][data-v="rgb"]'); await pg.wait_for_timeout(300)
             r = await pg.evaluate("()=>{const c=S.ed.clips.find(x=>x.id===S.ed.sel);return {vfx:c&&c.vfx,on:[...document.querySelectorAll('.e-assets [data-act=\"edx-vfx\"][aria-pressed=\"true\"]')].map(b=>b.dataset.v).sort()}}")
             ok(r["vfx"] and r["vfx"].get("glow") and r["vfx"].get("rgb") and r["on"] == ["glow", "rgb"], f"editor: effects are several at once, each tile shows it is on {r}")
-            await pg.evaluate(EDIT, "clip"); await pick("transition", '[data-val="fade"]')
-            ok(await pg.evaluate("()=>S.ed.clips.find(x=>x.id===S.ed.sel).trans") == "fade", "editor: the clip's transition is set from the sheet")
+            await pg.evaluate(EDIT, "clip"); await pg.locator('.ed143 [data-set="edclip.trans"][data-val="fade"]').first.click(); await pg.wait_for_timeout(350)   # (v151: a tile in the clip's panel)
+            ok(await pg.evaluate("()=>S.ed.clips.find(x=>x.id===S.ed.sel).trans") == "fade", "editor: the clip's transition is set from its tile")
             await pg.evaluate(EDIT, "vfx"); n0 = await pg.evaluate("()=>(S.ed.vfx||[]).length"); await pg.click('.e-assets [data-act="edv-add"][data-v="rain"]'); await pg.wait_for_timeout(350)
             ok(await pg.evaluate("()=>(S.ed.vfx||[]).length") == n0 + 1, "editor: a weather & light tile adds the effect")
             await pg.evaluate(GO, "home"); await pg.evaluate("()=>hfRatioSheet()"); await pg.wait_for_timeout(200)

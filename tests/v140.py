@@ -165,14 +165,15 @@ async def phone(p):
     r = []
     for v in ("ai", "media", "filters", "text", "audio", "effects", "captions", "trans", "stickers"):
         await E(f"()=>{{const b=document.querySelector('.e-bar [data-act=\"lt143\"][data-v=\"{v}\"]');b.scrollIntoView({{inline:'center',block:'nearest'}});b.click()}}"); await pg.wait_for_timeout(120)
-        r.append(await E("()=>{const c=document.querySelector('.e-bar'),cr=c.getBoundingClientRect();return{tab:S.ed.tab,sticky:getComputedStyle(c).position,over:document.documentElement.scrollWidth-innerWidth,h:Math.round(cr.height),sheet:!!document.querySelector('.e-sheet .e-body')}}"))
+        r.append(await E("()=>{const c=document.querySelector('.e-bar'),cr=c.getBoundingClientRect();return{tab:S.ed.tab,sticky:getComputedStyle(c).position,foot:Math.abs(cr.bottom-innerHeight)<=1,over:document.documentElement.scrollWidth-innerWidth,h:Math.round(cr.height),sheet:!!document.querySelector('.e-sheet .e-body')}}"))
     out["phone"] = r
-    chk("phone (v143): every add tool opens from the bar at the foot, its settings in the sheet, no sideways page scroll", [x["tab"] for x in r][:3] == ["chat143", "media", "color"] and all(x["sticky"] == "fixed" and x["over"] <= 1 and x["h"] < 70 and x["sheet"] for x in r), r)
+    chk("phone (v143): every add tool opens from the bar at the foot, its settings in the sheet, no sideways page scroll", [x["tab"] for x in r][:3] == ["chat143", "media", "color"] and all(x["foot"] and x["over"] <= 1 and x["h"] < 70 and x["sheet"] for x in r), r)   # (v151: the studio — the bar is the foot of the screen, not fixed over a page)
     await E("()=>{S.ed.tab='ai140';renderView()}"); await pg.wait_for_timeout(300)
-    pin = await E("""()=>{const m=document.getElementById('main'),q=s=>{const r=document.querySelector(s).getBoundingClientRect();return[Math.round(r.top),Math.round(r.bottom)]};const a=q('.e-bar');m.scrollTop=m.scrollHeight;
-      const last=[...document.querySelectorAll('.edxpanel .ai140c')].pop().getBoundingClientRect();return{before:a,cat:q('.e-bar'),nav:q('.bottomnav'),stage:q('.edstage'),last:Math.round(last.bottom),edsh:parseInt(getComputedStyle(document.documentElement).getPropertyValue('--edsh'))}}""")
+    # (v151: the studio — the page never scrolls; the panel scrolls inside itself, the bar is the foot of the screen, no site menu)
+    pin = await E("""()=>{const m=document.getElementById('main'),b=document.querySelector('.e-sheet .e-body'),q=s=>{const r=document.querySelector(s).getBoundingClientRect();return[Math.round(r.top),Math.round(r.bottom)]};const a=q('.e-bar');m.scrollTop=m.scrollHeight;b.scrollTop=b.scrollHeight;
+      const last=[...document.querySelectorAll('.edxpanel .ai140c')].pop().getBoundingClientRect();return{before:a,cat:q('.e-bar'),nav:getComputedStyle(document.querySelector('.bottomnav')).display,stage:q('.edstage'),last:Math.round(last.bottom),vh:innerHeight,ms:m.scrollTop}}""")
     out["phone_pin"] = pin
-    chk("phone: the tool bar sits just above the bottom menu, scrolled or not; the preview stays pinned at the top (its height followed)", pin["before"] == pin["cat"] and abs(pin["cat"][1] - pin["nav"][0]) <= 2 and pin["stage"][0] <= 60 and abs(pin["edsh"] - (pin["stage"][1] - pin["stage"][0])) <= 3, pin)
+    chk("phone: the tool bar is the foot of the screen, scrolled or not (no site menu under it); the preview stays at the top", pin["before"] == pin["cat"] and abs(pin["cat"][1] - pin["vh"]) <= 1 and pin["nav"] == "none" and pin["stage"][0] <= 120 and pin["ms"] == 0, pin)   # (under the top bar, and the one-line notice when another device changed the project)
     chk("…and the last tool can be scrolled up above that bar", pin["last"] <= pin["cat"][0], pin)
     await E("()=>{document.getElementById('main').scrollTop=0}")
     w = await E("()=>{const p=document.querySelector('.edxpanel');return[...p.querySelectorAll('.ai140c')].every(c=>c.getBoundingClientRect().right<=innerWidth+1)}")

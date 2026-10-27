@@ -69,7 +69,7 @@ async def desktop(b, lang):
     await E(SEL, 0)
     subs = await E("()=>[...document.querySelectorAll('.e-details .e-sub button')].map(b=>b.dataset.v)")
     chk(f"{tag}: a clip's details: Edit · Speed · Animation · Audio · Motion · Background · Tracking", subs == ["clip", "speed145", "anim145", "audio145", "motion", "bg144", "track"], subs)
-    ed = await E("()=>({secs:[...document.querySelectorAll('.e-details .e145s')].map(s=>s.dataset.anc),old:/Precision edit|تحرير دقيق|Clip volume|صوت المقطع/.test(document.querySelector('.e-details').textContent),trans:document.querySelectorAll('.e-details [data-set=\"edclip.trans\"]').length,chip:!!document.querySelector('.e-details .pk84c[data-pk84=\"transition\"]')})")
+    ed = await E("()=>({secs:[...document.querySelectorAll('.e-details .e145s')].map(s=>s.dataset.anc),old:/Precision edit|تحرير دقيق|Clip volume|صوت المقطع/.test(document.querySelector('.e-details').textContent),trans:document.querySelectorAll('.e-details [data-set=\"edclip.trans\"]').length,chip:!document.querySelector('.e-details .pk84c')&&!!document.querySelector('.e-details [data-set=\"edclip.trans\"] svg')})")   # (v151: the transitions are picture tiles, no chip)
     chk(f"{tag}: Edit: trim · crop & rotate · canvas · reverse & replace · extend · transition (its own panel, not the old page's)", ed["secs"] == ["trim", "crop", "canvas", "replace", "extend", "trans"] and not ed["old"] and ed["trans"] >= 33 and ed["chip"], ed)
     # ---- crop & rotate, the canvas behind
     await E("()=>{ED.t=2}"); base = await E(PIX, [2, .45, .45, .1, .1])

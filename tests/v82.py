@@ -116,7 +116,7 @@ async def browser_checks(p):
             for v in views:
                 await pg.evaluate("(v)=>{document.getElementById('modalRoot').innerHTML='';go(v);renderAll();scrollTo(0,0)}", v); await pg.wait_for_timeout(450)
                 r = await pg.evaluate(COLLECT, v)
-                ok(len(r["h1"]) == 1 or r["view"] == "home", f"{tag} {v}: one title {r['h1']}")
+                ok(len(r["h1"]) == 1 or r["view"] == "home" or (v == "edit" and w < 1024 and not r["h1"]), f"{tag} {v}: one title {r['h1']}")   # (v151: the phone studio's bar shows the project's name instead)
                 if r["name"] and r["h1"] and r["view"] != "home": ok(r["h1"][0] == r["name"], f"{tag} {v}: the title is the tool's name ({r['h1'][0]} vs {r['name']})")
                 ok(not r["big"], f"{tag} {v}: no oversized icon {r['big']}")
                 ok(not r["emoji"], f"{tag} {v}: no emoji on buttons {r['emoji']}")
