@@ -13,6 +13,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); PORT, LPORT 
 D = tempfile.mkdtemp(prefix="nooi-agents-"); os.makedirs(D + "/data"); os.makedirs(D + "/media"); os.symlink(ROOT + "/public", D + "/public"); os.symlink(ROOT + "/node_modules", D + "/node_modules")
 FF = os.environ.get("FFMPEG_PATH", "ffmpeg")
 subprocess.run([FF, "-v", "error", "-y", "-f", "lavfi", "-i", "sine=frequency=330:sample_rate=44100:duration=2", "-c:a", "libmp3lame", "-b:a", "64k", D + "/tone.mp3"], check=True)
+# (v155: a real little clip — since v132 a storyboard's parts are joined into one video, which 64 empty bytes can't be)
+subprocess.run([FF, "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=320x180:rate=24:duration=2", "-c:v", "libx264", "-pix_fmt", "yuv420p", D + "/clip.mp4"], check=True)
 # a job made with a seeded skill card, to check that results teach the cards
 json.dump({"users": {"local": {"plan": "studio", "credits": 5000, "ledger": [], "posts": {}, "accounts": {},
   "jobs": {"J1": {"id": "J1", "kind": "image", "status": "done", "progress": 1, "url": "/media/x.png", "created": 1, "payload": {"kind": "image", "model": "nano", "meta": {"skills": ["SEED1"], "cat": "people"}}}}}},
@@ -38,7 +40,7 @@ http.createServer((q,s)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{const J=
      agents:Object.fromEntries(['writer','casting','director','cine','sound','editor','producer','proof'].map(r=>[r,'board '+r]))}}
   return J({content:[{type:'text',text:JSON.stringify(o)}]})}
  if(u==='/wan'&&q.method==='POST'){const j=JSON.parse(b);st.wan.push({t:Date.now(),image:j.image_url||null,prompt:(j.prompt||'').slice(0,60)});return J({status:'done',url:'http://localhost:'+P+'/clip.mp4'})}
- if(u==='/clip.mp4'){s.setHeader('content-type','video/mp4');return s.end(Buffer.alloc(64))}
+ if(u==='/clip.mp4'){s.setHeader('content-type','video/mp4');return s.end(fs.readFileSync(D+'/clip.mp4'))}
  if(/^\/el\/v1\/text-to-speech\//.test(u)){st.tts++;s.setHeader('content-type','audio/mpeg');return s.end(fs.readFileSync(D+'/tone.mp3'))}
  J({error:'nf '+u},404)})}).listen(P);
 """
@@ -80,12 +82,12 @@ def api_checks():
     o = api("/v1/agents/skills/SEED1", {"off": True}, "PUT"); seed = next(x for x in api("/v1/agents")["agents"][0]["skills"] if x["id"] == "SEED1"); ok(o.get("ok") and seed["off"], "admin turns a card off")
     p = api("/v1/agents/plan", {"prompt": "coffee ad", "task": "video", "dur": 5}); ok(not stats()["plans"][-1]["seed"], "a card that is off isn't used")
     # a storyboard video: each part from its scene picture, no waiting for the previous part
-    j = api("/v1/jobs", {"kind": "video", "model": "auto", "dur": 10, "prompt": "kite story", "meta": {"parts": 2, "partSec": 5, "shots": ["scene one", "scene two"], "partImages": ["/media/a.png", "https://example.com/b.png"], "partModels": ["auto", "auto"]}})
-    for _ in range(40):
+    w0 = len(stats()["wan"]); j = api("/v1/jobs", {"kind": "video", "model": "auto", "dur": 10, "prompt": "kite story", "meta": {"parts": 2, "partSec": 5, "shots": ["scene one", "scene two"], "partImages": ["/media/a.png", "https://example.com/b.png"], "partModels": ["auto", "auto"]}})
+    for _ in range(360):   # (v155: since v132/v133 the parts are checked for continuity and joined into one video — more than 10 s)
         j = api("/v1/jobs/" + j["id"])
         if j.get("status") in ("done", "failed"): break
         time.sleep(.25)
-    wan = stats()["wan"][-2:]; out["wan"] = wan
+    wan = stats()["wan"][w0:w0 + 2]; out["wan"] = wan   # (the first request of each part — a part made again for continuity comes later)
     ok(j.get("status") == "done" and len(wan) == 2 and {w["image"] for w in wan} == {f"http://localhost:{PORT}/media/a.png", "https://example.com/b.png"} and abs(wan[0]["t"] - wan[1]["t"]) < 1500, f"storyboard parts start from their pictures {j.get('status')} {wan}")
 
 async def ui(p, w):
@@ -106,7 +108,8 @@ async def ui(p, w):
     await E("()=>{window.__seen=[];const iv=setInterval(()=>{const n=document.querySelectorAll('#agstrip .agb').length;if(window.__seen[window.__seen.length-1]!==n)window.__seen.push(n)},60);window.__iv=iv;document.querySelector('.hfsend').click()}")
     ok(await wait_for("()=>AG.shown.length===9&&AG.shown[8]==='proof'", 40), f"{tag}: all 9 agents appeared")
     r["seen"] = await E("()=>{clearInterval(window.__iv);return window.__seen}")
-    ok(r["seen"] == sorted(r["seen"]) and len(r["seen"]) >= 5 and r["seen"][-1] == 9, f"{tag}: icons appear one at a time {r['seen']}")
+    # (v136: the planning shows Quill, Nova and Max; then each agent's turn follows the work, Duke and Iris last — fewer steps, in order)
+    ok(r["seen"] == sorted(r["seen"]) and len(r["seen"]) >= 3 and r["seen"][-1] >= 8, f"{tag}: icons appear in order {r['seen']}")   # (all 9 is checked just above; the 60 ms watch may stop before the last one)
     r["order"] = await E("()=>AG.shown.join(',')"); ok(r["order"] == "writer,casting,director,cine,voice,sound,editor,producer,proof", f"{tag}: order {r['order']}")
     r["notes"] = await E("()=>[AG.note.director,AG.note.producer]"); ok(r["notes"][0] == "decision of director" and r["notes"][1], f"{tag}: decisions shown {r['notes']}")
     r["job"] = await E("()=>{const j=S.jobs.find(x=>x.kind==='video'&&x.meta&&x.meta.agents);return j&&[j.prompt.slice(0,10),j.title,(j.meta.skills||[]).length>0,j.meta.neg]}")

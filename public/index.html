@@ -19470,6 +19470,40 @@ html.studio151 .ed143.mob .e-name{min-width:84px;text-overflow:ellipsis}
 }
 `;document.head.appendChild(st)})();
 
+/* ================= v155: a result never left "being made" · the words keep what was asked ================= */
+/* 1. A job the page sent but never heard back about. When a phone closes or reloads the page while a request is on its way, the
+   server still makes it, but the page's copy never learns the server's id: it stayed "being made" for ever (Home's agents stuck on
+   Remy, "1 in progress"), while the library sync added the finished video as a card of its own. The page sends its own id with
+   each request (cid) and the server now gives it back in its list: the page's copy finds its job, takes its state (the sync's
+   extra copy goes), and one that never reached the server says so after 10 minutes — nothing was charged for it.
+   2. Only what the customer picked goes into the words: the Video page's defaults ("a short film", the cinematic look, a slow
+   dolly-in) and the Images page's "photo" were added to every request, also from Home where nobody saw them — a close-up of a
+   cat came back as an anamorphic short film moving in. The page now says which of Type, Style and Camera were picked (or set by
+   a page, like UGC ads) in meta.chosen155; the server adds only those (lib/intent.js). The agents keep the request's own words
+   first (lib/agents.js). */
+const SEND155=new Set(),KINDS155=new Set(["video","image","look","sheet","lipsync","voice","music","sfx","edit","enhance"]);
+serverSubmit=(o=>async function(obj){const id=obj&&obj.id;if(id){SEND155.add(id);obj.sub155=1}try{return await o.apply(this,arguments)}finally{if(id)SEND155.delete(id)}})(serverSubmit);
+const lost155=()=>{const now=Date.now();return S.jobs.filter(o=>o&&!o.remote&&["queued","rendering"].includes(o.status)&&(o.sub155||KINDS155.has(o.kind))&&!SEND155.has(o.id)&&now-(o.created||now)>15e3)};
+const st155=s=>s==="done"?"complete":s==="queued"||s==="rendering"?"rendering":s==="cancelled"?"failed":s;
+let busy155=false;
+async function link155(){if(API.mode!=="server"||!S.user||busy155)return 0;const lost=lost155();if(!lost.length)return 0;busy155=true;let n=0;
+  try{const list=(await API.req("/v1/jobs")).jobs||[];
+    for(const o of lost){const j=list.find(x=>x&&x.cid===o.id);
+      if(j){const dup=S.jobs.find(x=>x!==o&&x.remote===j.id&&x.meta&&x.meta.synced);if(dup)S.jobs.splice(S.jobs.indexOf(dup),1);   // (the sync's copy of the same result)
+        o.remote=j.id;o.status=st155(j.status);if(j.url)o.resultUrl=j.url;o.progress=j.status==="done"?1:Math.max(+o.progress||0,+j.progress||0);if(j.error)o.error=j.error;if(j.errorAr)o.errorAr=j.errorAr;o.stage=j.stage||null;delete o.sub155;n++;continue}
+      if(Date.now()-(o.created||0)>10*60e3){o.status="failed";o.errorType="unsent";o.error="This one didn't reach the server — nothing was charged. Try again.";o.errorAr="لم يصل هذا إلى الخادم — لم يُخصم شيء. حاول مجدداً.";n++}}
+    if(n){persist();statusChanged()}}catch(e){}finally{busy155=false}return n}
+setInterval(link155,20000);setTimeout(link155,1500);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)setTimeout(link155,800)});   // (back on the page after the phone put it away)
+
+// 2. what was picked: a tap on a Type / Style / Camera choice, or a value a page set (anything but the page's default)
+const DEF155={video:{type:"story",style:"cinematic",camera:"dollyIn"},image:{style:"photo"}};
+const pick155=(d,k)=>{d.chosen155=Object.assign({},d.chosen155,{[k]:true})};
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-set="draft.style"],[data-set="draft.camera"],[data-set="draft.type"],[data-set="img.style"]');if(!a)return;const [o,k]=a.dataset.set.split(".");pick155(o==="img"?S.img:S.draft,k)},true);
+document.addEventListener("change",e=>{const b=e.target&&e.target.dataset&&e.target.dataset.bind;if(/^(draft\.(style|camera|type)|img\.style)$/.test(b||"")){const [o,k]=b.split(".");pick155(o==="img"?S.img:S.draft,k)}},true);
+addJob=(o=>function(j){if(j&&(j.kind==="video"||j.kind==="image")&&!(j.meta&&Array.isArray(j.meta.chosen155))){const m=j.meta||{},d=j.kind==="image"?S.img:S.draft,c=(d&&d.chosen155)||{},D=DEF155[j.kind];
+    j.meta=Object.assign({},m,{chosen155:Object.keys(D).filter(k=>m[k]!=null&&m[k]!==""&&(c[k]||m[k]!==D[k]))})}return o.apply(this,arguments)})(addJob);
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
