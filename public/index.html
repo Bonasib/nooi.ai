@@ -19642,6 +19642,156 @@ API.req=(o=>function(p,opt){if(String(p)==="/v1/explore"&&opt&&opt.json&&!opt.me
 .xpa156{display:flex;gap:8px;align-items:flex-start;margin-top:14px;font-size:13px;line-height:1.45}.xpa156 input{margin-top:3px;flex:none}
 `;document.head.appendChild(st)})();
 
+/* ================= v157: the character's voice in the box (a voice from the library · your clip, the lips follow it · your
+   clip cloned to say new words); a promo from a picture and a word (the word exactly as typed, laid over the film's end) ================= */
+// 1. the Voice tile (Video): what is chosen is made after the video, as a "voices & sound" step (v134) on it — the price is shown in
+// the sheet before anything is sent; the voice picked for an @character is kept on that character
+KEEP_SLOTS.push("vc157");
+const VC157={t:0,send:null};
+const vcName157=()=>{const v=S.hf&&S.hf.vc157;if(!v||!v.mode)return L("Voice","صوت");if(v.mode==="lips")return L("Your clip","مقطعك");if(v.mode==="clone")return L("Your voice","صوتك");const x=VOICES91.find(y=>y[0]===v.voice);return x?x[1]:L("Voice","صوت")};
+const said157=p=>{const m=String(p||"").match(/["“«]([^"”»]{2,600})["”»]/g);return m?m.map(x=>x.slice(1,-1)).join(" "):""};
+const who157=()=>{const p=String((S.hf&&S.hf.prompt)||"");return(S.chars||[]).find(c=>c.name&&p.includes("@"+c.name))||null};
+function req157(remote,v,dur){const r={scope:"all",want:{voice:true,sfx:false,amb:false,music:false},who:"characters",lipsync:true,keep:true,lang:/^[a-z]{2,3}$/.test(S.lang)?S.lang:"en",say:String(v.say||"").trim()||said157(v.prompt!=null?v.prompt:S.hf.prompt)};
+  if(remote)r.job=remote;else r.dur=Math.max(1,+dur||5);if(v.mode==="preset")r.voice=v.voice;if(v.mode==="lips"||v.mode==="clone"){r.clip=v.clip||"/media/pending";r.clipUse=v.mode;r.consent=!!v.consent}return r}
+top136=(o=>function(t){const h=o.apply(this,arguments);if(t!=="video")return h;const on=!!(S.hf.vc157&&S.hf.vc157.mode),k=h.lastIndexOf("</div>");
+  return h.slice(0,k)+'<button type="button" class="t136 add vc157'+(on?" on":"")+'" data-act="vc157" title="'+esc(L("The character's voice — pick one, or use your own clip","صوت الشخصية — اختر صوتاً أو استخدم مقطعك"))+'">'+ic("mic")+"<small>"+esc(vcName157())+"</small></button>"+h.slice(k)})(top136);
+function vcSheet157(){const v=S.hf.vc157||{},clip=M.vc157,ch=who157(),G={male:["man","رجل"],female:["woman","امرأة"],neutral:["neutral","محايد"]},A={young:["young","شاب"],middle:["adult","بالغ"],old:["older","كبير"]};
+  const list=VOICES91.map(x=>'<div class="vc157v'+(v.mode==="preset"&&v.voice===x[0]?" on":"")+'"><button type="button" class="vc157p" data-act="vc157-v" data-id="'+x[0]+'"><b>'+esc(x[1])+"</b><small>"+esc(L((G[x[2]]||G.neutral)[0]+" · "+(A[x[3]]||A.middle)[0]+" · "+x[4],(G[x[2]]||G.neutral)[1]+" · "+(A[x[3]]||A.middle)[1]))+'</small></button><button type="button" class="vc157play" data-act="vc157-play" data-id="'+x[0]+'" aria-label="'+esc(L("Listen","استمع"))+'">'+ic("play")+"</button></div>").join("");
+  hfSheet(L("The character's voice","صوت الشخصية"),'<p class="small mute" style="margin-top:0">'+esc(L("The character in your video speaks in this voice and its lips follow it — added once the video is made. You see the price first.","تتكلم الشخصية في فيديوك بهذا الصوت وتتبعه شفاهها — يُضاف بعد صنع الفيديو. ترى السعر أولاً."))+"</p>"+
+    (ch?'<p class="small">'+esc(L("For","لـ"))+" <b>@"+esc(ch.name)+"</b></p>":"")+
+    '<h3 class="pk156h">'+esc(L("Pick a voice","اختر صوتاً"))+'</h3><div class="vc157g">'+list+"</div>"+
+    '<h3 class="pk156h">'+esc(L("Or use a voice clip","أو استخدم مقطعاً صوتياً"))+'</h3><label class="btn vc157up">'+ic("upload")+"<span>"+esc(clip?clip.name:L("Upload a voice clip","ارفع مقطعاً صوتياً"))+'</span><input type="file" accept="audio/*,video/*" data-vc157up aria-label="'+esc(L("Upload a voice clip","ارفع مقطعاً صوتياً"))+'"></label>'+
+    (clip?'<div class="seg vc157m"><button type="button" data-act="vc157-m" data-v="lips" aria-pressed="'+(v.mode==="lips")+'">'+esc(L("This clip — the lips follow it","هذا المقطع — تتبعه الشفاه"))+'</button><button type="button" data-act="vc157-m" data-v="clone" aria-pressed="'+(v.mode==="clone")+'">'+esc(L("Clone it — new words in this voice","استنسخه — كلمات جديدة بهذا الصوت"))+"</button></div>"+
+      (v.mode==="clone"?'<label class="agree vc157ok"><input type="checkbox" id="vc157ok"'+(v.consent?" checked":"")+"> <span>"+esc(L("This is my voice, or its owner agreed to have it cloned.","هذا صوتي، أو وافق صاحبه على استنساخه."))+"</span></label>":""):"")+
+    (v.mode!=="lips"?'<label class="lbl" for="vc157say">'+esc(L("What they say (optional — or put it in \"quotes\" in your words)","ما يقوله (اختياري — أو ضعه بين \"علامتي تنصيص\" في وصفك)"))+'</label><input type="text" id="vc157say" dir="auto" maxlength="600" value="'+esc(v.say||"")+'">':"")+
+    '<p class="small mute" id="vc157price" aria-live="polite"></p><div class="row" style="justify-content:space-between;margin-top:10px"><button type="button" class="btn sm ghost" data-act="vc157-off">'+esc(L("No voice","بلا صوت"))+'</button><button type="button" class="btn sm primary" data-act="vc157-ok">'+esc(L("Done","تم"))+"</button></div>");
+  price157()}
+function price157(){const v=S.hf.vc157,el=$("#vc157price");if(!el)return;if(!v||!v.mode){el.textContent="";return}if(API.mode!=="server"){el.textContent=L("Voices are made on the live site.","تُصنع الأصوات في الموقع الفعلي.");return}
+  const t=++VC157.t;clearTimeout(VC157.tm);VC157.tm=setTimeout(async()=>{try{const q=await API.req("/v1/sound134/quote",{json:req157(null,v,S.hf.dur)});if(t!==VC157.t)return;const e=$("#vc157price");if(!e)return;
+    e.textContent=(q.missing&&q.missing.length?L("Not available right now: ","غير متاح الآن: ")+q.missing.join(", ")+". ":"")+(q.total>0?L("About "+q.total+" credits more, made after the video — what isn't made isn't charged.","نحو "+q.total+" رصيد إضافي، يُصنع بعد الفيديو — ما لا يُصنع لا يُخصم."):L("No extra credits — made after the video.","بلا رصيد إضافي — يُصنع بعد الفيديو."))}
+    catch(e){const x=$("#vc157price");if(x)x.textContent=String(e.message||e)}},200)}
+const keepSay157=()=>{const s=$("#vc157say");if(s&&S.hf.vc157)S.hf.vc157.say=s.value};
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act^="vc157"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const H=S.hf,act=a.dataset.act;
+  if(act==="vc157"){const q=$("#hfq");if(q)H.prompt=q.value;vcSheet157();return}
+  keepSay157();
+  if(act==="vc157-v"){H.vc157=Object.assign({},H.vc157,{mode:"preset",voice:a.dataset.id});const ch=who157();if(ch)ch.voice=Object.assign({},ch.voice,{vid:a.dataset.id});persist();vcSheet157();return}
+  if(act==="vc157-play"){a.disabled=true;try{const r=await API.req("/v1/voice/sample",{json:{id:a.dataset.id,lang:S.lang}});if(r.url){const au=new Audio(r.url);au.play().catch(()=>{})}}catch(x){toast(S.lang==="ar"&&x.errorAr?x.errorAr:String(x.message||x))}finally{a.disabled=false}return}
+  if(act==="vc157-m"){H.vc157=Object.assign({},H.vc157,{mode:a.dataset.v});persist();vcSheet157();return}
+  if(act==="vc157-off"){H.vc157=null;persist();closeSheet();renderView();return}
+  if(act==="vc157-ok"){const v=H.vc157;if(v&&v.mode==="clone"&&!v.consent){toast(L("Please confirm the voice is yours or its owner agreed.","يرجى تأكيد أن الصوت لك أو وافق صاحبه."));const c=$("#vc157ok");if(c)c.focus();return}persist();closeSheet();renderView()}},true);
+document.addEventListener("change",e=>{const t=e.target;if(!t)return;
+  if(t.matches&&t.matches("input[data-vc157up]")&&t.files&&t.files[0]){keepSay157();loadSlot("vc157",t.files[0]);S.hf.vc157=Object.assign({},S.hf.vc157,{mode:S.hf.vc157&&S.hf.vc157.mode==="clone"?"clone":"lips"});persist();setTimeout(vcSheet157,60);return}
+  if(t.id==="vc157ok"&&S.hf.vc157){S.hf.vc157.consent=t.checked;persist();price157()}});
+document.addEventListener("input",e=>{if(e.target&&e.target.id==="vc157say"&&S.hf.vc157){S.hf.vc157.say=e.target.value;clearTimeout(VC157.sp);VC157.sp=setTimeout(()=>{persist();price157()},500)}});
+// sending: the first video of this send carries the voice (the clip goes up now, so it is the one picked)
+hfSend=(o=>async function(){const H=S.hf,v=H&&H.tab==="video"&&H.vc157&&H.vc157.mode?Object.assign({},H.vc157):null;
+  if(v&&(v.mode==="lips"||v.mode==="clone")&&!(M.vc157&&M.vc157.file)){toast(L("Add the voice clip again — the video is made without it.","أضف مقطع الصوت مجدداً — يُصنع الفيديو من دونه."),{type:"warn"});VC157.send=null}
+  else VC157.send=v?Object.assign(v,{prompt:((($("#hfq")||{}).value)||H.prompt||"")}):null;
+  try{return await o.apply(this,arguments)}finally{VC157.send=null}})(hfSend);
+addJob=(o=>function(j){const v=VC157.send;if(!v||!j||j.kind!=="video"||(j.meta&&j.meta.sound134))return o.apply(this,arguments);VC157.send=null;const r=o.apply(this,arguments);
+  if(r){r.vc157=Object.assign({},v);if((v.mode==="lips"||v.mode==="clone")&&API.mode==="server"&&M.vc157&&M.vc157.file)API.upload(M.vc157.file,M.vc157.name||"voice.mp3").then(u=>{if(u&&u.url){r.vc157.clip=u.url;persist()}}).catch(()=>{r.vc157.upErr=1;persist()})}
+  return r})(addJob);
+// the video made: its voice step goes on it (priced by the server first; a voice engine missing → said, nothing sent)
+async function go157(j){const v=j.vc157;try{const req=req157(j.remote,v),q=await API.req("/v1/sound134/quote",{json:req});
+  if(q.missing&&q.missing.length){v.err=q.missing.join(", ");toast(L("The voice couldn't be added — not available right now: ","تعذّرت إضافة الصوت — غير متاح الآن: ")+v.err,{type:"warn"});persist();return}
+  const n=addJob({kind:"video",prompt:req.say||"",title:L("Voice & lips · ","الصوت والشفاه · ")+String(j.title||j.prompt||"").slice(0,60),model:j.model,dur:j.dur,aspect:j.aspect,cost:q.total,meta:{sound134:req,vc157:1}});
+  if(n){v.job=n.id;if(S.hf&&Array.isArray(S.hf.out)&&S.hf.out.includes(j.id))S.hf.out.push(n.id);toast(L("Adding the voice — the lips will follow it.","تجري إضافة الصوت — ستتبعه الشفاه."),{type:"info"})}persist();statusChanged()}
+  catch(e){v.err=String(e.message||e);persist()}}
+setInterval(()=>{if(API.mode!=="server")return;for(const j of S.jobs){const v=j.vc157;if(!v||v.sent||j.status!=="complete"||!j.remote)continue;
+  if((v.mode==="lips"||v.mode==="clone")&&!v.clip){if(v.upErr||Date.now()-(j.created||0)>3*3600e3){v.sent=Date.now();v.err="clip";toast(L("The voice clip didn't reach the server — add the voice from the video's Voices & sound.","لم يصل مقطع الصوت إلى الخادم — أضف الصوت من «الأصوات والمؤثرات» في الفيديو."),{type:"warn"});persist()}continue}
+  v.sent=Date.now();persist();go157(j)}},3000);
+
+// 2. a promo from a picture and a word: the word (in "quotes", or after "word", "كلمة", "slogan", "شعار"…) is drawn here — Arabic
+// shaped by the browser — at the film's shape, and laid over its last seconds on the server (lib/promo157.js); the engine writes nothing
+const PROMO157=/(promo|advert|commercial|teaser|trailer|\bads?\b|إعلان|اعلان|دعائي|دعائية|ترويج|برومو|تشويق)/i;
+function word157(p){p=String(p||"");const q=/["“«]([^"”»\n]{1,40})["”»]/.exec(p),k=/(?:\bword|\bslogan|\btagline|\btitle|كلمة|كلمه|عبارة|شعار|اسم)\s*[:：]?\s*["“«']?([^"”»'\n,.،؛!؟?]{1,40})/i.exec(p);
+  const w=(q&&(PROMO157.test(p)||k)?q[1]:k?k[1]:"").trim().split(/\s+/).slice(0,5).join(" ");return w.length>=1&&w.length<=40?w:""}
+async function titlePng157(word,aspect){const[a,b]=String(aspect||"16:9").split(":").map(Number),wide=!(b>a),W=wide?1920:Math.round(1920*a/b),H=wide?Math.round(1920*b/a):1920;
+  const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d"),ff=getComputedStyle(document.body).fontFamily||"sans-serif";let fs=Math.round(Math.min(W,H)*.2);
+  const font=()=>"800 "+fs+"px "+ff;try{await document.fonts.load(font(),word)}catch(e){}x.font=font();while(x.measureText(word).width>W*.82&&fs>24){fs-=4;x.font=font()}
+  x.textAlign="center";x.textBaseline="middle";x.direction=/[֐-ࣿ]/.test(word)?"rtl":"ltr";x.fillStyle="#fff";
+  x.shadowColor="rgba(0,0,0,.6)";x.shadowBlur=fs*.3;x.fillText(word,W/2,H/2);x.shadowColor="rgba(255,226,170,.55)";x.shadowBlur=fs*.7;x.fillText(word,W/2,H/2);
+  x.shadowBlur=0;const lw=Math.min(W*.5,x.measureText(word).width*.55);x.fillStyle="rgba(255,255,255,.85)";x.fillRect(W/2-lw/2,H/2+fs*.66,lw,Math.max(2,Math.round(fs*.035)));
+  return await new Promise(r=>c.toBlob(r,"image/png"))}
+const PR157={send:null};
+hfSend=(o=>async function(){const H=S.hf,p=(($("#hfq")||{}).value||H.prompt||"").trim(),w=H&&H.tab==="video"&&API.mode==="server"?word157(p):"";PR157.send=null;
+  if(w){try{const b=await titlePng157(w,H.aspect),u=await Promise.race([API.upload(b,"title.png"),new Promise((_,no)=>setTimeout(()=>no(new Error("slow")),20000))]);
+      if(u&&u.url){PR157.send={url:u.url,word:w};toast(L("“"+w+"” goes on the film's end exactly as you wrote it.","«"+w+"» يظهر في نهاية الفيلم كما كتبتها تماماً."),{type:"info",ms:3500})}}
+    catch(e){console.warn("promo title",e)}}
+  try{return await o.apply(this,arguments)}finally{PR157.send=null}})(hfSend);
+API.req=(o=>function(p,opt){if(PR157.send&&String(p)==="/v1/agents/plan"&&opt&&opt.json)opt.json=Object.assign({},opt.json,{title157:PR157.send.word});return o.apply(this,arguments)})(API.req);   // (the agents know the word goes on afterwards)
+addJob=(o=>function(j){const t=PR157.send;if(t&&j&&j.kind==="video"&&!(j.meta&&j.meta.sound134)){PR157.send=null;j.meta=Object.assign({},j.meta,{title157:{url:t.url,word:t.word}})}return o.apply(this,arguments)})(addJob);
+(()=>{const st=document.createElement("style");st.textContent=`
+.t136.vc157.on{border-style:solid;border-color:var(--lime);color:var(--text)}
+.vc157g{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.vc157v{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:12px;background:var(--panel2);overflow:hidden}.vc157v.on{border-color:var(--lime);background:color-mix(in srgb,var(--lime) 10%,var(--panel2))}
+.vc157p{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 10px;border:0;background:none;color:var(--text);cursor:pointer;font:inherit;text-align:start}.vc157p small{color:var(--mute);font-size:11.5px}
+.vc157play{flex:none;width:40px;border:0;border-inline-start:1px solid var(--line);background:none;color:var(--text);cursor:pointer;display:grid;place-items:center}.vc157play svg{width:16px;height:16px}
+.vc157up{position:relative;width:100%;justify-content:center}.vc157up input{position:absolute;inset:0;opacity:0;cursor:pointer}.vc157up span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vc157m{display:flex;margin-top:10px}.vc157m button{flex:1;white-space:normal;line-height:1.3}.vc157ok{display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:13px}
+`;document.head.appendChild(st)})();
+
+// 3. the creator program on Explore: sharing can join it (on by default, said what it gives) — people use your prompt and you earn
+// credits for each new person who does, they follow you, write to you and ask to work with you; voices, music and sounds can be
+// shared too. A creator's page, follow, messages and requests to work together, the inbox.
+const CR157={me:null,at:0,prof:null};
+async function crMe157(force){if(API.mode!=="server"||!S.user||(!force&&Date.now()-CR157.at<60e3))return;CR157.at=Date.now();try{CR157.me=await API.req("/v1/creators/me");if(S.view==="discover"){const b=document.querySelector(".xpme157");if(b)b.outerHTML=crBar157()}}catch(e){}}
+function crBar157(){const m=CR157.me;if(!m)return'<div class="xpme157"></div>';const c=m.creator;
+  return'<div class="xpme157">'+(c?'<span class="small">'+ic("star","width:14px;height:14px")+" "+esc(L("Creator · "+c.followers+" followers · "+c.earned+" credits earned","مبدع · "+c.followers+" متابع · "+c.earned+" رصيد مكتسب"))+"</span>":'<span class="small mute">'+esc(L("Share with the creator program to earn credits when people use your prompts.","شارك ضمن برنامج المبدعين لتكسب رصيداً حين يستخدم الناس أوصافك."))+"</span>")+
+    '<button type="button" class="btn sm" data-act="cr157-inbox">'+ic("mail")+"<span>"+esc(L("Messages","الرسائل"))+"</span>"+(m.unread?'<b class="xpbadge157">'+m.unread+"</b>":"")+"</button></div>"}
+VIEWS.discover=(o=>function(){let h=o.apply(this,arguments);if(API.mode==="server"){setTimeout(()=>crMe157(),0);h=h.replace(/(<\/h1>)/,"$1").replace('<p class="lede">',crBar157()+'<p class="lede">')}
+  return h.replace(/(<button data-act="xp-type" data-v="image"[^>]*>[^<]*<\/button>)/,'$1<button data-act="xp-type" data-v="audio" aria-pressed="'+((S.xpType||"all")==="audio")+'">'+L("Sounds","أصوات")+"</button>")})(VIEWS.discover);
+xpCard=(o=>function(x){let h=o.apply(this,arguments);if(!x)return h;
+  if(x.kind==="audio")h=h.replace(/<video class="xpm"[^>]*><\/video>/,'<div class="xpm xpaud157">'+ic(x.sub==="music"?"music":"mic")+"<span>"+esc(L(x.sub==="music"?"Music":x.sub==="sfx"?"Sound effect":"Voice",x.sub==="music"?"موسيقى":x.sub==="sfx"?"مؤثر صوتي":"صوت"))+"</span></div>");
+  if(x.program)h=h.replace('<span>'+esc(x.author||"")+"</span>",'<span>'+esc(x.author||"")+'</span><em class="xpcr157">'+L("Creator","مبدع")+"</em>");return h})(xpCard);
+function crRow157(x){const mine=x&&(x.mine||(CR157.me&&CR157.me.creator&&CR157.me.creator.pid===x.creator));if(!x||!x.program||!x.creator||mine||API.mode!=="server")return"";
+  return'<div class="xpc157"><button type="button" class="btn sm ghost" data-act="cr157-open" data-pid="'+esc(x.creator)+'">'+ic("account")+"<span>"+esc(x.author||"")+" · "+esc(L(x.followers+" followers",x.followers+" متابع"))+'</span></button><button type="button" class="btn sm" data-act="cr157-follow" data-pid="'+esc(x.creator)+'" aria-pressed="'+!!x.following+'">'+esc(x.following?L("Following","تتابعه"):L("Follow","تابِع"))+"</button>"+
+    '<button type="button" class="btn sm" data-act="cr157-msg" data-kind="message" data-pid="'+esc(x.creator)+'" data-item="'+esc(x.id)+'">'+esc(L("Message","راسله"))+'</button><button type="button" class="btn sm" data-act="cr157-msg" data-kind="collab" data-pid="'+esc(x.creator)+'" data-item="'+esc(x.id)+'">'+esc(L("Work together","اعملا معاً"))+"</button></div>"+
+    (x.uses?'<p class="small mute" style="margin:6px 0 0">'+esc(L("Its prompt was used "+x.uses+" times","استُخدم وصفه "+x.uses+" مرة"))+"</p>":"")}
+xpOpen=(o=>function(x){const r=o.apply(this,arguments),sh=document.querySelector("#modalRoot .hfsheet");if(!sh||!x)return r;
+  if(x.kind==="audio"){const v=sh.querySelector("video");if(v)v.outerHTML='<audio src="'+esc(x.url)+'" controls autoplay style="width:100%"></audio>'}
+  const row=sh.querySelector(".row.small.mute");if(row)row.insertAdjacentHTML("afterend",crRow157(x));
+  if(x.program){const b=sh.querySelector('[data-act="xp-recreate"]');if(b)b.lastChild.textContent=L("Use this prompt","استخدم هذا الوصف")}return r})(xpOpen);
+xpRecreate=(o=>function(x){if(x&&x.id&&x.ex==null&&API.mode==="server")API.req("/v1/explore/"+x.id+"/use",{json:{}}).catch(()=>{});
+  if(x&&x.kind==="audio"){S.hf.tab="audio";S.hf.audio=x.sub==="music"?"music":x.sub==="sfx"?"sfx":"voice";S.hf.prompt=x.prompt||"";closeSheet();persist();go("home");return}
+  return o.apply(this,arguments)})(xpRecreate);
+// sharing: join the program (on), the benefits said; voices, music and sounds of the library can be shared
+xpShareSheet=(o=>function(j){const r=o.apply(this,arguments),a=document.querySelector("#modalRoot .xpa156");
+  if(a)a.insertAdjacentHTML("beforebegin",'<label class="agree xpp157"><input type="checkbox" id="xpprog157" checked> <span><b>'+esc(L("Join the creator program","انضم إلى برنامج المبدعين"))+"</b><small>"+esc(L("People can use your prompt — you earn 2 credits for each new person who does, more when your post is featured and as followers grow. People can follow you, message you and ask to work with you.","يمكن للناس استخدام وصفك — تكسب رصيدين عن كل شخص جديد يستخدمه، وأكثر حين يُميَّز منشورك ومع نمو متابعيك. يمكن للناس متابعتك ومراسلتك وطلب العمل معك."))+"</small></span></label>");return r})(xpShareSheet);
+API.req=(o=>function(p,opt){if(String(p)==="/v1/explore"&&opt&&opt.json&&!opt.method){const c=document.getElementById("xpprog157");if(c&&c.checked)opt.json=Object.assign({},opt.json,{program:true});
+  const j=opt.json.jobId&&S.jobs.find(x=>x.remote===opt.json.jobId);if(j&&["voice","music","sfx"].includes(j.kind))opt.json=Object.assign({},opt.json,{kind:"audio"})}return o.apply(this,arguments)})(API.req);
+renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="library"&&API.mode==="server")document.querySelectorAll("[data-open-job]").forEach(c=>{if(c.querySelector(".xpshare"))return;const j=S.jobs.find(x=>x.id===c.dataset.openJob);
+  if(!j||j.status!=="complete"||!j.remote||!["voice","music","sfx"].includes(j.kind))return;c.style.position="relative";c.insertAdjacentHTML("beforeend",'<span class="xpshare" role="button" tabindex="0" data-act="xp-share" data-id="'+j.id+'" aria-label="'+L("Share to Explore","شارك في الاستكشاف")+'">'+ic("globe")+"</span>")});return r})(renderView);
+// a creator's page, following, writing to them, the inbox
+xpFind=(o=>function(id){return o.apply(this,arguments)||(CR157.prof&&CR157.prof.items.find(x=>x.id===id))||null})(xpFind);   // (a post opened from a creator's page)
+async function crOpen157(pid){try{const d=await API.req("/v1/creators/"+encodeURIComponent(pid));CR157.prof=d;
+  hfSheet(d.name,'<p class="small mute" style="margin-top:0">'+esc(L(d.followers+" followers · "+d.items.length+" posts",d.followers+" متابع · "+d.items.length+" منشور"))+"</p>"+(d.me?"":'<div class="xpc157"><button type="button" class="btn sm" data-act="cr157-follow" data-pid="'+esc(d.pid)+'" aria-pressed="'+d.following+'">'+esc(d.following?L("Following","تتابعه"):L("Follow","تابِع"))+'</button><button type="button" class="btn sm" data-act="cr157-msg" data-kind="message" data-pid="'+esc(d.pid)+'">'+esc(L("Message","راسله"))+'</button><button type="button" class="btn sm" data-act="cr157-msg" data-kind="collab" data-pid="'+esc(d.pid)+'">'+esc(L("Work together","اعملا معاً"))+"</button></div>")+
+    '<div class="xpgrid xpg157">'+d.items.map(x=>xpCard(x).replace('data-act="xp-open"','data-act="cr157-item"')).join("")+"</div>")}
+  catch(e){toast(S.lang==="ar"&&e.errorAr?e.errorAr:String(e.message||e))}}
+function crMsg157(pid,kind,item){hfSheet(kind==="collab"?L("Ask to work together","اطلب العمل معاً"):L("Send a message","أرسل رسالة"),'<textarea id="cr157t" dir="auto" rows="5" maxlength="1000" placeholder="'+esc(kind==="collab"?L("What would you like to make together?","ماذا تودّ أن تصنعا معاً؟"):L("Your message","رسالتك"))+'" style="width:100%"></textarea>'+
+  '<p class="small mute">'+esc(L("Be kind — messages follow the Acceptable Use Policy.","كن لطيفاً — تلتزم الرسائل بسياسة الاستخدام المقبول."))+'</p><button type="button" class="btn primary" data-act="cr157-send" data-pid="'+esc(pid)+'" data-kind="'+kind+'" data-item="'+esc(item||"")+'">'+ic("send")+esc(L("Send","أرسل"))+"</button>");setTimeout(()=>{const t=$("#cr157t");if(t)t.focus()},60)}
+async function crInbox157(){try{const d=await API.req("/v1/inbox"),fm=t=>new Intl.DateTimeFormat(locale(),{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}).format(new Date(t));
+  hfSheet(L("Messages","الرسائل"),d.items.length?d.items.map(m=>'<div class="ib157'+(m.read?"":" new")+'"><div class="spread"><b dir="auto">'+esc(m.fromName)+"</b>"+(m.kind==="collab"?'<em class="xpcr157">'+esc(L("Work together","عمل مشترك"))+"</em>":"")+'<span class="small mute">'+esc(fm(m.t))+"</span></div>"+(m.item?'<p class="small mute" dir="auto">'+esc(L("About: ","بخصوص: ")+m.item.title)+"</p>":"")+'<p dir="auto">'+esc(m.text)+'</p><button type="button" class="btn sm" data-act="cr157-msg" data-kind="message" data-pid="'+esc(m.from)+'">'+esc(L("Reply","رد"))+"</button></div>").join(""):'<p class="mute">'+esc(L("No messages yet.","لا رسائل بعد."))+"</p>");
+  if(d.items.some(m=>!m.read)){API.req("/v1/inbox/read",{json:{}}).then(()=>{if(CR157.me)CR157.me.unread=0}).catch(()=>{})}}catch(e){toast(String(e.message||e))}}
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act^="cr157-"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const act=a.dataset.act,pid=a.dataset.pid;
+  if(act==="cr157-open"){crOpen157(pid);return}
+  if(act==="cr157-inbox"){crInbox157();return}
+  if(act==="cr157-item"){const x=CR157.prof&&CR157.prof.items.find(i=>i.id===a.dataset.id);if(x)xpOpen(x);return}
+  if(act==="cr157-msg"){crMsg157(pid,a.dataset.kind,a.dataset.item);return}
+  if(act==="cr157-follow"){a.disabled=true;try{const r=await API.req("/v1/creators/"+encodeURIComponent(pid)+"/follow",{json:{}});a.setAttribute("aria-pressed",String(r.following));a.textContent=r.following?L("Following","تتابعه"):L("Follow","تابِع");
+      (XP.items||[]).forEach(x=>{if(x.creator===pid){x.followers=r.followers;x.following=r.following}})}catch(x){toast(S.lang==="ar"&&x.errorAr?x.errorAr:String(x.message||x))}finally{a.disabled=false}return}
+  if(act==="cr157-send"){const t=$("#cr157t"),text=t?t.value.trim():"";if(text.length<2){toast(L("Write a message first.","اكتب رسالة أولاً."));return}a.disabled=true;
+    try{await API.req("/v1/creators/"+encodeURIComponent(pid)+"/message",{json:{text,kind:a.dataset.kind,item:a.dataset.item||undefined}});closeSheet();toast(L("Sent.","أُرسلت."),{type:"ok"})}catch(x){a.disabled=false;toast(S.lang==="ar"&&x.errorAr?x.errorAr:String(x.message||x))}}},true);
+(()=>{const st=document.createElement("style");st.textContent=`
+.xpme157{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:6px 0 4px}.xpme157 .btn{position:relative}
+.xpbadge157{min-width:18px;height:18px;border-radius:9px;background:var(--lime);color:#000;font-size:11px;line-height:18px;text-align:center;padding:0 5px;margin-inline-start:4px}
+.xpcr157{font-style:normal;font-size:10.5px;padding:1px 6px;border-radius:999px;background:color-mix(in srgb,var(--lime) 22%,transparent);color:var(--text);margin-inline-start:6px}
+.xpaud157{display:grid;place-items:center;align-content:center;gap:6px;aspect-ratio:var(--ar,1);background:linear-gradient(135deg,color-mix(in srgb,#E2437B 35%,var(--panel2)),var(--panel2));color:var(--text)}.xpaud157 svg{width:34px;height:34px}
+.xpc157{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.xpg157{margin-top:12px}
+.xpp157{display:flex;gap:8px;align-items:flex-start;margin-top:14px;font-size:13px;line-height:1.45}.xpp157 input{margin-top:3px;flex:none}.xpp157 span{display:flex;flex-direction:column;gap:2px}.xpp157 small{color:var(--mute)}
+.ib157{padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--panel2)}.ib157.new{border-color:var(--lime)}.ib157 p{margin:6px 0}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

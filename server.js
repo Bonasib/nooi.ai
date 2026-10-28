@@ -136,9 +136,10 @@ app.get("/v1/health", (_, res) => res.json({ ok: true }));
 // v134: what voices & sound for a video would cost (shown before anything is made), and what can be made here
 app.post("/v1/sound134/quote", requireUser, wrap(async (req, res) => {
   const b = req.body || {}, U = user(req.user.uid), base = b.job ? (U.jobs || {})[String(b.job)] : null, pub0 = (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "");
-  const src = base ? base.url : String(b.src || "").replace(pub0, "");
-  if (!src || (!base && !/^\/media\/[A-Za-z0-9._-]+$/.test(src))) return res.status(400).json({ error: "Pick a finished video first", errorAr: "اختر فيديو مكتملاً أولاً" });
-  const info = await probe132(await fileOf132(src)).catch(() => null); if (!info || !info.dur) return res.status(400).json({ error: "The video can't be read", errorAr: "تعذّرت قراءة الفيديو" });
+  const src = base ? base.url : String(b.src || "").replace(pub0, ""), ahead = !src && !b.job && +b.dur > 0;   // (v157: a price ahead, for a video not made yet)
+  if (!ahead && (!src || (!base && !/^\/media\/[A-Za-z0-9._-]+$/.test(src)))) return res.status(400).json({ error: "Pick a finished video first", errorAr: "اختر فيديو مكتملاً أولاً" });
+  const info = ahead ? { dur: Math.min(600, Math.max(1, +b.dur)) } : await probe132(await fileOf132(src)).catch(() => null); if (!info || !info.dur) return res.status(400).json({ error: "The video can't be read", errorAr: "تعذّرت قراءة الفيديو" });
+  if (b.clip) b.clip = String(b.clip).replace(pub0, "");
   const c = clean134(b, info.dur), q = quote134(c), staff = isStaff(req.user);
   res.json({ total: staff ? 0 : q.total, parts: q.parts, len: q.len, dur: Math.round(info.dur * 10) / 10, scope: c.scope, t0: c.t0, t1: c.t1, lipsync: c.lipsync, missing: ready134(c), cuts: (base && base.cuts134) || [] });
 }));
