@@ -9454,7 +9454,8 @@ hfSend=(o=>async function(){const H=S.hf,q=$("#hfq"),p=((q&&q.value)||H.prompt||
   try{await o.apply(this,arguments)}finally{AGP.sending=false;AGP.plan=null}
   const ids=(S.hf.out||[]).filter(id=>!before.has(id));await seq;if(AG.run!==run)return;agShow("producer");await agSleep(400);if(AG.run===run)agWatch(run,ids)})(hfSend);
 // the jobs of this send carry the agents' plan: the engine prompt, the negative prompt and the skills used (to learn from the result)
-addJob=(o=>function(j){if(j&&AGP.sending&&AGP.plan&&["video","image"].includes(j.kind)){j.title=j.title||AGP.original;j.prompt=AGP.plan.prompt;j.meta=Object.assign({},j.meta,{neg:(j.meta&&j.meta.neg)||AGP.plan.negative||undefined,skills:(AGP.plan.skills||[]).slice(0,24),agents:1})}return o.apply(this,arguments)})(addJob);
+addJob=(o=>function(j){if(j&&AGP.sending&&AGP.plan&&["video","image"].includes(j.kind)){j.title=j.title||AGP.original;if(!(j.meta&&(j.meta.plan159||j.meta.face87)))j.prompt=AGP.plan.prompt;   // (v159: a job already worded from the plan, with its characters' photo lines, keeps them)
+j.meta=Object.assign({},j.meta,{neg:(j.meta&&j.meta.neg)||AGP.plan.negative||undefined,skills:(AGP.plan.skills||[]).slice(0,24),agents:1})}return o.apply(this,arguments)})(addJob);
 // jobs may carry their own input URLs (a storyboard picture as the reference) and skip the page's upload slots
 serverSubmit=(o=>function(job,kind,payload){if(!job||!job.inputsUrl)return o.apply(this,arguments);const keep={};for(const s of SLOTS_FOR[kind]||[]){keep[s]=M[s];M[s]=null}
   for(const [k,v] of Object.entries(job.inputsUrl))if(v)M[k]={remote:v,name:k};
@@ -19824,6 +19825,132 @@ hash130=(o=>function(){const r=o.apply(this,arguments),box=document.getElementBy
 .hp130 .hp130o{flex:none;padding:4px 14px 4px 4px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);white-space:nowrap}
 .hp130 .hp130o[aria-selected="true"]{border-color:var(--lime);background:color-mix(in srgb,var(--lime) 14%,var(--panel))}.hp130 .hp130o img{width:34px;height:34px;border-radius:50%}
 .hp130 .hp130t{flex:none;white-space:nowrap;padding:0 6px}
+`;document.head.appendChild(st)})();
+
+/* ================= v159: the characters you pick come out as themselves · a photo gives the age, the look and the voice · voice samples say why ================= */
+/* What the owner saw: characters picked in the prompt came out wrong, the voice list kept spinning with "The AI provider is
+   temporarily unavailable. Your credits were refunded.", and a character made from a photo still needed its age and voice set
+   by hand. Fixed:
+   · the agents' plan replaced the job's words and dropped the lines that tie each @character to its photo ("Name = the person
+     in reference picture 1 …"); the first picture of a video got the plan without them. Now the plan keeps the characters
+     tagged, so the photos, the identity lines and the agents' words go together, and the agents are told who the characters are
+     (name + look), to keep each name exactly and never to describe them differently (lib/agents.js)
+   · a Home send reused the Video and Images pages' own draft, so a character once picked in their list (and a voice-over typed
+     there) joined every Home video; Home now sends only what its own box says
+   · "Use as main character" is gone: the story's main character was added to every story chapter and every scan; old choices
+     are cleared
+   · characters from photos: one or several photos (a character each); the AI reads the name, age, gender, height, build, skin,
+     eyes, hair, beard, headwear, clothes, the art style and the voice that fits (voice age, tone and a voice from the library),
+     shown in one line under the photo with a play button; an optional "Look" box (your own words win); every detail below is
+     optional, and a voice picked from the photo follows a changed age or gender until you pick one yourself
+   · voice samples: one at a time, at most 40 s of waiting, and the real reason in the visitor's language (lib/localize.js) */
+
+// ---- voice samples
+const SMP159={cur:null,ms:40000};
+function smpMsg159(e){if(e&&e.slow159)return L("This voice sample is taking long — it keeps being made; tap again in a minute.","عيّنة الصوت تأخذ وقتاً — يستمر صنعها؛ اضغط مرة أخرى بعد دقيقة.");
+  if(e&&e.status===501)return L("Voices aren't connected yet — try again soon.","الأصوات غير متصلة بعد — حاول بعد قليل.");
+  if(e&&e.errorAr)return L(String(e.message||""),e.errorAr);
+  return L("This voice sample couldn't be made right now — nothing was charged. Try again in a minute.","تعذّر صنع عيّنة هذا الصوت الآن — لم يُخصم شيء. حاول بعد دقيقة.")}
+// the newest tap wins: an older sample that arrives late isn't played, and only the newest one shows it is loading
+async function sample159(body,btn){const k=JSON.stringify(body);SMP159.cur=k;unlock97();let tm;
+  try{const r=await Promise.race([API.req("/v1/voice/sample",{json:Object.assign({lang:S.lang},body)}),new Promise((_,rj)=>{tm=setTimeout(()=>rj({slow159:1}),SMP159.ms)})]);
+    if(SMP159.cur!==k)return false;await playUrl97(r.url,btn);return true}
+  catch(e){if(SMP159.cur===k)toast(smpMsg159(e),{type:"warn"});return false}
+  finally{clearTimeout(tm);if(SMP159.cur===k)SMP159.cur=null}}
+vp91Play=async function(id,btn){const v=vp91List().find(x=>x.id===id);if(!v||VP91.busy[id])return;
+  if(API.mode!=="server"){toast(L("Voices play on the live site.","تعمل الأصوات في الموقع."),{type:"info"});return}
+  VP91.busy={[id]:1};vp91Paint();const ok=await sample159({id},null);if(ok)v.sample="ready";if(VP91.busy[id])VP91.busy={};vp91Paint()};
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="vc157-play"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();if(a.classList.contains("busy159"))return;
+  document.querySelectorAll(".busy159").forEach(b=>b.classList.remove("busy159"));a.classList.add("busy159");sample159({id:a.dataset.id},a).finally(()=>a.classList.remove("busy159"))},true);
+
+// ---- no "main character": old choices cleared (also when saved data arrives after the page loads), the button and the badges gone
+const nomain159=()=>{if(S.story&&S.story.charId)S.story.charId=""};nomain159();
+renderView=(o=>function(){nomain159();return o.apply(this,arguments)})(renderView);
+enqueueChapter=(o=>function(){nomain159();return o.apply(this,arguments)})(enqueueChapter);
+VIEWS.chars=(o=>function(){let h=o.apply(this,arguments);
+  return h.replace(/<button class="btn" data-act="char-to-story">[\s\S]*?<\/button>/,"").replace(/<span class="badge b-complete"[^>]*>(Story|القصة|In story|في القصة)<\/span>/g,"")})(VIEWS.chars);
+if(typeof VIEWS.story==="function")VIEWS.story=(o=>function(){return o.apply(this,arguments).replace(/<div class="side-h">[^<]*<\/div><select data-bind="story\.charId"[\s\S]*?<\/select>/,"")})(VIEWS.story);
+
+// ---- Home sends only what its own box says (not the Video / Images pages' character list or voice-over): they are left out
+// just while Home's jobs are made, so those pages keep showing their own choices
+let HOME159=0;
+hfSend=(o=>async function(){HOME159++;try{return await o.apply(this,arguments)}finally{HOME159--}})(hfSend);
+const home159=f=>(o=>function(){if(!HOME159)return o.apply(this,arguments);const D=S.draft||{},I=S.img||{},k=[D.charId,D.vo,I.charId];D.charId="";D.vo="";I.charId="";
+  try{return o.apply(this,arguments)}finally{if(!D.charId)D.charId=k[0]||"";if(!D.vo)D.vo=k[1]||"";if(!I.charId)I.charId=k[2]||""}})(f);
+makeVideo=home159(makeVideo);makeImages=home159(makeImages);
+
+// ---- the agents know the @characters, and their plan keeps them tagged (photos + identity lines stay with the words)
+const cast159=text=>charsIn87(text).map(c=>({name:String(c.name).trim(),look:String(charPrompt(c,"en")||"").replace(/\s+/g," ").slice(0,160)}));
+API.req=(o=>function(p,opt){const k=String(p);if((k==="/v1/agents/plan"||k==="/v1/agents/storyboard")&&opt&&opt.json&&opt.json.prompt){const cs=cast159(opt.json.prompt);if(cs.length)opt.json=Object.assign({},opt.json,{cast:cs})}return o.apply(this,arguments)})(API.req);
+function tag159(text,cs){let t=String(text||"");for(const c of cs){const n=String(c.name).trim();if(!n)continue;
+  if(new RegExp("(^|[^\\p{L}\\p{N}_])@"+reEsc87(n)+"(?=$|[^\\p{L}\\p{N}_])","iu").test(t))continue;
+  const rx=new RegExp("(^|[^\\p{L}\\p{N}_@])("+reEsc87(n)+")(?=$|[^\\p{L}\\p{N}_])","iu");t=rx.test(t)?t.replace(rx,"$1@$2"):"@"+n+" — "+t}return t}
+addJob=(o=>function(j){if(j&&typeof AGP==="object"&&AGP.sending&&AGP.plan&&AGP.plan.prompt&&["video","image"].includes(j.kind)&&!(j.meta&&(j.meta.face87||j.meta.plan159))){const cs=charsIn87(j.prompt);
+    if(cs.length){j.prompt=tag159(AGP.plan.prompt,cs);j.meta=Object.assign({},j.meta,{plan159:1})}}return o.apply(this,arguments)})(addJob);
+
+// ---- characters from photos: the AI reads who it is — age, look and the voice that fits
+const AGEV159=n=>n<13?"child":n<20?"teen":n<30?"young":n<45?"adult":n<60?"mid":"senior";
+const BAND159=n=>n<30?"young":n<55?"middle":"old";
+const TONE159={deep:"deep",energetic:"energetic",upbeat:"energetic",expressive:"dramatic",intense:"dramatic",calm:"calm",soft:"calm",relaxed:"calm",smooth:"calm"};
+function voiceFor159(c,tone){const g=c.gender,band=BAND159(+c.age||30),all=vp91List(),same=all.filter(v=>v.gender===g);
+  return same.find(v=>v.age===band&&v.tone===tone)||same.find(v=>v.age===band)||same.find(v=>v.tone===tone)||same[0]||all.find(v=>v.gender==="neutral")||all[0]||null}
+function autoVoice159(c,tone){c.voice=c.voice||{};c.voice.gender=c.gender;c.voice.age=AGEV159(+c.age||30);if(tone)c.voice.tone=TONE159[tone]||"warm";
+  const v=voiceFor159(c,tone||c.voice.tone159);if(v){c.voice.vid=v.id;c.voice.vname=v.name;c.voice.auto159=1;if(tone)c.voice.tone159=tone}}
+const READ159='Describe the main person or character in this photo for an AI video app. Reply only JSON: {"name":"a fitting first name","gender":"male|female","age":number,"height":cm,"weight":kg,'+
+  '"build":"slim|athletic|average|muscular|curvy|broad","skin":0-5 (0 very fair … 5 deep),"eyes":"#hex eye colour","hair":"#hex hair colour","hairStyle":"short|buzz|wavy|curly|long|ponytail|bun|braids|afro|bald",'+
+  '"facial":"none|stubble|mustache|goatee|beard|full","headwear":"none|hijab|ghutra|cap|hat","outfitStyle":"casual|formal|traditional|sport|street|business|fantasy|scifi",'+
+  '"art":"realistic for a real photo, else anime|anim3d|anim2d|clay|comic","look":"face, hair and build in one short sentence","outfit":"clothing in one short sentence","persona":"one short line of personality",'+
+  '"voice":"the speaking voice that fits this person: one of warm|deep|clear|energetic|casual|natural|smooth|relaxed|friendly|trustworthy|intense|soft|upbeat|confident|expressive|calm"}';
+const in159=(arr,v)=>arr.some(a=>a[0]===v);
+function apply159(c,r,o){if(!c||!r||typeof r!=="object")return;o=o||{};const n=x=>Math.round(+x);
+  if(r.name&&!o.keepName)c.name=String(r.name).slice(0,30);if(/^(male|female)$/.test(r.gender))c.gender=r.gender;if(n(r.age)>0&&n(r.age)<100)c.age=n(r.age);
+  if(n(r.height)>=90&&n(r.height)<=215)c.height=n(r.height);if(n(r.weight)>=15&&n(r.weight)<=180)c.weight=n(r.weight);if(in159(BODY,r.build))c.shape=r.build;
+  if(Number.isFinite(+r.skin)&&+r.skin>=0&&+r.skin<=5)c.skin=n(r.skin);if(/^#[0-9a-f]{6}$/i.test(r.hair||""))c.hair=r.hair;if(/^#[0-9a-f]{6}$/i.test(r.eyes||""))c.eyes=r.eyes;
+  if(in159(HSTYLES,r.hairStyle))c.hairStyle=r.hairStyle;if(in159(FACIAL,r.facial))c.facial=r.facial;if(in159(HEADW,r.headwear))c.headwear=r.headwear;if(in159(OUTFITS,r.outfitStyle))c.outfitStyle=r.outfitStyle;if(in159(ARTS,r.art))c.art=r.art;
+  if(r.look&&!c.lookOwn159)c.look=String(r.look).slice(0,160);if(r.outfit)c.outfit=String(r.outfit).slice(0,160);if(r.persona)c.persona=String(r.persona).slice(0,160);
+  if(!c.voice||!c.voice.vid||c.voice.auto159)autoVoice159(c,VFEEL91[r.voice]?r.voice:"");c.read159=Date.now()}
+// (the page swaps each character for a fresh copy when it redraws, so after every wait the character is looked up again by id)
+async function read159(c0,big,o){const id=c0.id,cur=()=>S.chars.find(q=>q.id===id)||c0,noVoice=c=>!c.voice||!c.voice.vid||c.voice.auto159;
+  if(!(API.mode==="server"&&API.cfg&&API.cfg.providers&&API.cfg.providers.llm)){if(noVoice(cur()))autoVoice159(cur());persist();return false}
+  cur().reading159=1;paint159();
+  try{const r=await API.req("/v1/llm/json",{json:{task:"character from photo",tier:"quick",images:[await shrinkImage(big,640)],prompt:READ159+" Language for name/look/outfit/persona: "+(S.lang==="ar"?"Arabic":"English")+"."}});apply159(cur(),r,o);return true}
+  catch(e){if(noVoice(cur()))autoVoice159(cur());return false}
+  finally{delete cur().reading159;persist();paint159()}}
+function paint159(){if(S.view==="chars")renderView()}
+async function newFromPhoto159(file){const big=await shrinkImage(URL.createObjectURL(file),1024),small=await shrinkImage(URL.createObjectURL(file),320);if(!big)return null;
+  const c=normChar({id:uid(),name:L("Character ","شخصية ")+(S.chars.length+1),age:28,gender:"female",look:"",outfit:"",persona:"",voice:{dialect:S.lang==="ar"?"najdi":"enUS",gender:"female",age:"young",tone:"warm"},looks:[1,2,3,4].map(()=>Math.floor(Math.random()*1e6)),lookSeed:null,locked:true,photo:small});
+  await IDB.put(charPhotoKey(c.id),dataURLtoBlob(big));S.chars.push(c);return{c,big}}
+window.addEventListener("change",async e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.chphoto||!t.files||!t.files.length)return;e.stopImmediatePropagation();const files=[...t.files].filter(f=>/^image\//.test(f.type||"image/")).slice(0,6);t.value="";
+  if(t.dataset.chphoto==="new"){const made=[];for(const f of files){const m=await newFromPhoto159(f);if(m)made.push(m)}
+    if(!made.length){toast(L("Couldn't read this picture.","تعذّرت قراءة الصورة."),{type:"warn"});return}
+    S.charSel=S.chars.indexOf(made[0].c);persist();renderView();toast(made.length>1?L(made.length+" characters made — reading their photos…","أُنشئت "+made.length+" شخصيات — جارٍ قراءة صورها…"):L("Character made — reading the photo…","أُنشئت الشخصية — جارٍ قراءة الصورة…"),{type:"ok"});
+    for(const m of made)await read159(m.c,m.big);return}
+  const c0=S.chars[S.charSel],f=files[0];if(!c0||!f)return;const id=c0.id,big=await shrinkImage(URL.createObjectURL(f),1024);if(!big)return;const small=await shrinkImage(big,320);
+  const c=S.chars.find(q=>q.id===id);if(!c)return;c.photo=small;await IDB.put(charPhotoKey(id),dataURLtoBlob(big));c.face="";persist();renderView();toast(L("Photo set — new looks keep this face","عُيّنت الصورة — الأشكال الجديدة تحافظ على هذا الوجه"),{type:"ok"});
+  read159(c,big,{keepName:true})},true);
+// your own words for the look win over the photo; a voice you pick yourself stays yours
+document.addEventListener("input",e=>{const t=e.target;if(t&&t.dataset&&t.dataset.bind==="char.look"){const c=S.chars[S.charSel];if(c)c.lookOwn159=!!t.value.trim()}},true);
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="vp91-pick"]');if(!a)return;const c=S.chars&&S.chars[S.charSel];if(c&&c.voice)delete c.voice.auto159},true);
+// a voice chosen from the photo follows a changed gender or age
+function follow159(c){if(!c||!c.voice||!c.voice.auto159||!c.voice.vid)return;const v=vp91List().find(x=>x.id===c.voice.vid);
+  if(v&&((["male","female"].includes(c.gender)&&v.gender!==c.gender)||v.age!==BAND159(+c.age||30)||c.voice.gender!==c.gender)){autoVoice159(c);persist()}}
+VIEWS.chars=(o=>function(){const c=S.chars&&S.chars[S.charSel];if(c)follow159(c);let h=o.apply(this,arguments);if(!c)return h;
+  h=h.replace('data-chphoto="new"','data-chphoto="new" multiple').replace(L("Upload a photo → new character","ارفع صورة ← شخصية جديدة"),L("Upload photos → new characters (one each)","ارفع صوراً ← شخصيات جديدة (شخصية لكل صورة)"));
+  const v=c.voice&&c.voice.vid?vp91List().find(x=>x.id===c.voice.vid):null;
+  const read=c.reading159?'<div class="rd159" aria-live="polite">'+ic("wand")+L("Reading the photo — age, look and voice…","جارٍ قراءة الصورة — العمر والشكل والصوت…")+"</div>":
+    c.read159?'<div class="rd159" aria-live="polite"><span><b>'+L("From the photo","من الصورة")+"</b> "+esc(c.age+" · "+lab(GENDERS,c.gender)+(v?" · "+L("Voice: ","الصوت: ")+v.name:""))+"</span>"+
+      (v&&API.mode==="server"?'<button class="vp91play" data-act="vp91-play" data-id="'+v.id+'" aria-label="'+esc(L("Hear ","استمع إلى ")+v.name)+'">'+ic(VP91.busy[v.id]?"refresh":"play")+"</button>":"")+"</div>":"";
+  const box=read+'<label class="lbl" for="look159">'+L("Look (optional)","الشكل (اختياري)")+'</label><textarea id="look159" data-bind="char.look" style="min-height:56px" placeholder="'+esc(L("e.g. tall, short black hair, white thobe, glasses","مثال: طويل، شعر أسود قصير، ثوب أبيض، نظارة"))+'">'+esc(c.look||"")+"</textarea>"+
+    '<p class="small dim" style="margin:4px 0 0">'+L("Your words win over what the AI reads from the photo. Everything below is optional — change anything you like.","كلماتك تتقدّم على ما يقرؤه الذكاء من الصورة. كل ما بالأسفل اختياري — غيّر ما تشاء.")+"</p>";
+  h=h.replace(/(data-chphoto="cur"[^>]*><\/label>(?:<img [^>]*>)?<\/div>)/,"$1"+box);
+  h=h.replace(/<label class="lbl">(Extra appearance details|تفاصيل إضافية للمظهر)<\/label><textarea data-bind="char\.look"[^>]*>[\s\S]*?<\/textarea>/,"");
+  return h.replace('<div class="panel pad cbuild">','<h2 class="opt159">'+L("Change details (optional)","تعديل التفاصيل (اختياري)")+'</h2><div class="panel pad cbuild">')})(VIEWS.chars);
+(()=>{const st=document.createElement("style");st.textContent=`
+.rd159{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0 4px;padding:8px 8px 8px 12px;border:1px solid var(--line2);border-radius:12px;background:var(--panel2);font-size:13px}
+.rd159>svg{width:16px;height:16px;flex:none;color:var(--lime)}.rd159 b{color:var(--lime);font-weight:600}
+.rd159 .vp91play{border:1px solid var(--line2);border-radius:10px;min-height:36px}
+.opt159{font-size:16px;margin:18px 0 8px}
+.busy159{opacity:.55;cursor:progress}.busy159 svg{animation:spin 1s linear infinite}
 `;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
