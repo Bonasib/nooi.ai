@@ -87,7 +87,7 @@ async def phone(b, lang):
     px = await E(PIX, [1.0, [[.5, .012], [.5, .5]]]); out[tag + "_border"] = {"sw": sw, "px": px}
     chk(f"{tag}: the border in the colour picked (6 swatches) — the edge pink, the middle still the video", sw["n"] == 6 and sw["fr"] == {"id": "border", "col": "#ff4fa3"} and abs(px[0][0] - 255) < 20 and abs(px[0][1] - 79) < 25 and abs(px[0][2] - 163) < 25 and not (px[1][0] > 230 and px[1][1] < 100), out[tag + "_border"])
     # drawn under the words: when the frame is drawn, no text of this picture is drawn yet; after it, the text is
-    od = await E("""async()=>{const of=frame152;let at=[];frame152=function(){at.push((ED.hit||[]).filter(x=>x.k==='text').length);return of.apply(this,arguments)};ED.playing=false;ED.t=1;
+    od = await E("""async()=>{const of=frame152;let at=[];frame152=function(){at.push((ED.hit||[]).filter(x=>x.k==='text').length);return of.apply(this,arguments)};ED.playing=false;ED.t=1;if(typeof DR170!=='undefined')DR170.dirty=true;   // (v170: an idle editor draws only when something changed)
       for(let i=0;i<4;i++)await new Promise(r=>requestAnimationFrame(r));frame152=of;return {at,after:(ED.hit||[]).filter(x=>x.k==='text').length}}""")
     chk(f"{tag}: the frame is drawn under the words (the title stays on top)", od["at"] and all(x == 0 for x in od["at"]) and od["after"] >= 1, od)
     await E("()=>{document.querySelector('#main [data-act=\"fr152\"][data-v=\"none\"]').click()}"); await pg.wait_for_timeout(150)

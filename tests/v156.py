@@ -195,7 +195,8 @@ async def page_checks():
         await E("()=>{document.getElementById('xpagree156').checked=true;document.querySelector('[data-act=\"xps-go\"]').click()}")
         it = wait(lambda: api("/v1/explore").get("items"), 10) or []
         ok(len(it) == 1 and it[0].get("url") == "/media/p.png", f"shared once the publisher confirms {it}")
-        db = json.load(open(D + "/data/db.json")); ag = [x.get("agreed156") for x in (db.get("explore") or [])]
+        # (the server writes its data file a moment after a change — read it once it is there)
+        ag = wait(lambda: [x.get("agreed156") for x in (json.load(open(D + "/data/db.json")).get("explore") or [])], 10) or []
         ok(ag and ag[0], f"the server keeps when the publisher agreed {ag}")
         ok(not errs, f"page errors {errs}")
         await b.close()

@@ -104,8 +104,8 @@ async def mdrag(pg, sel, to_js, arg):
     for i in range(1, 13): await pg.mouse.move(a[0] + (b[0] - a[0]) * i / 12, a[1] + (b[1] - a[1]) * i / 12); await pg.wait_for_timeout(15)
     await pg.mouse.up(); await pg.wait_for_timeout(450); return True
 # a phone drag: touch pointer events — a long press, then the finger moves (the page's own handlers on the window)
-TDRAG = """async([sel,b,hold])=>{const e=document.querySelector(sel);if(!e)return 'no tile';e.scrollIntoView({block:'center',inline:'center'});await new Promise(r=>setTimeout(r,60));
- const r=e.getBoundingClientRect(),a=[r.left+r.width/2,r.top+r.height/2],P=(type,x,y,t)=>(t||e).dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,composed:true,pointerId:7,pointerType:'touch',isPrimary:true,clientX:x,clientY:y,button:0,buttons:type==='pointerup'?0:1}));
+TDRAG = """async([sel,b,hold])=>{let e=document.querySelector(sel);if(!e)return 'no tile';e.scrollIntoView({block:'center',inline:'center'});await new Promise(r=>setTimeout(r,60));
+ e=document.querySelector(sel)||e;const r=e.getBoundingClientRect(),a=[r.left+r.width/2,r.top+r.height/2],P=(type,x,y,t)=>(t||e).dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,composed:true,pointerId:7,pointerType:'touch',isPrimary:true,clientX:x,clientY:y,button:0,buttons:type==='pointerup'?0:1}));
  P('pointerdown',a[0],a[1]);if(hold){await new Promise(r=>setTimeout(r,420))}
  const B=typeof b==='string'?eval(b):b;for(let i=1;i<=10;i++){P('pointermove',a[0]+(B[0]-a[0])*i/10,a[1]+(B[1]-a[1])*i/10,window);await new Promise(r=>setTimeout(r,16))}
  P('pointerup',B[0],B[1],window);await new Promise(r=>setTimeout(r,350));return 'ok'}"""

@@ -4585,7 +4585,7 @@ edTick=(o=>function(now){
   // 3) move the playhead with a GPU transform (smooth, sub-pixel)
   const ph=$("#ph");if(ph){const x=40+ED.t*S.ed.zoom;ph.style.left="0px";ph.style.transform="translate3d("+x.toFixed(2)+"px,0,0)"}
   // 4) continuous follow: once the playhead passes 40% of the view, the timeline glides under it
-  const w=document.querySelector(".tlwrap");if(!w||scrub)return;const x=40+ED.t*S.ed.zoom,vw=w.clientWidth;
+  const w=document.querySelector(".tlwrap");if(!w||scrub||(typeof TLX!=="undefined"&&TLX.s&&!TLX.s.lazy))return;const x=40+ED.t*S.ed.zoom,vw=w.clientWidth;   // (v170: not while the playhead is held — the edge scroll moves the timeline then, and reading its width each frame laid the page out again)
   if(ED.playing){const target=Math.max(0,x-vw*.4);if(target>w.scrollLeft||x<w.scrollLeft+20)w.scrollLeft=target}
   else if(edFollowT!==ED.t){edFollowT=ED.t;if(x<w.scrollLeft+24||x>w.scrollLeft+vw-36)w.scrollLeft=Math.max(0,x-vw*.45)}
 })(edTick);
@@ -8135,7 +8135,7 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
 /* avatar with extra angles: first one clean front portrait made from all photos, then the talking avatar from it */
 hfSend=(o=>async function(){const H=S.hf,ang=[1,2,3].map(i=>M["hfAng"+i]).filter(Boolean);
   if(H.tab!=="avatar"||!ang.length||!M.hfRef)return o.apply(this,arguments);
-  const q=$("#hfq"),p=((q&&q.value)||H.prompt||"").trim();if(!p&&!M.hfAud){toast(L("Type what they say, or add a voice file.","اكتب ما يقوله أو أضف ملفاً صوتياً."));return}
+  const q=$("#hfq"),p=((q&&q.value)||H.prompt||"").trim(),aud=M.hfAud;if(!p&&!M.hfAud){toast(L("Type what they say, or add a voice file.","اكتب ما يقوله أو أضف ملفاً صوتياً."));return}
   if(API.mode!=="server"){toast(L("Extra angles are joined on your nooi server — this demo uses the main photo.","تُدمج الزوايا الإضافية على خادم nooi — هذا العرض يستخدم الصورة الرئيسية."),{type:"info"});return o.apply(this,arguments)}
   const keep=["iRef","iRef2","iRef3","iRef4"].map(k=>[k,M[k]]);M.iRef=M.hfRef;ang.forEach((m,i)=>M["iRef"+(i+2)]=m);
   const im=imgOK("nanopro")?"nanopro":"nano";HF_GRAB=[];
@@ -8148,8 +8148,8 @@ hfSend=(o=>async function(){const H=S.hf,ang=[1,2,3].map(i=>M["hfAng"+i]).filter
   const jid=j.id;const tick=setInterval(()=>{const j=S.jobs.find(x=>x.id===jid)||{status:"failed"};if(!restored&&(j.remote||j.status==="failed")){restored=true;keep.forEach(([k,v])=>M[k]=v)}
     if(j.status==="failed"||Date.now()-t0>15*60e3){clearInterval(tick);if(!restored)keep.forEach(([k,v])=>M[k]=v);toast(L("Joining the photos failed — try again or use one photo.","تعذّر دمج الصور — حاول مجدداً أو استخدم صورة واحدة."),{type:"warn"});return}
     if(j.status!=="complete"||!mediaUrl(j))return;clearInterval(tick);const u=mediaUrl(j),tab=H.tab;
-    M.hfRef={url:u,remote:u,name:"avatar-face.png"};[1,2,3].forEach(i=>M["hfAng"+i]=null);H.tab="avatar";H.prompt=p;const qq=$("#hfq");if(qq)qq.value=p;
-    Promise.resolve(o()).finally(()=>{if(tab!=="avatar"){H.tab=tab;persist();renderView()}})},1500)})(hfSend);
+    M.hfRef={url:u,remote:u,name:"avatar-face.png"};[1,2,3].forEach(i=>M["hfAng"+i]=null);if(aud)M.hfAud=aud;H.tab="avatar";H.prompt=p;const qq=$("#hfq");if(qq)qq.value=p;   // (v170: the voice file comes back for this step — the box was emptied when the face job started)
+    const n0=S.jobs.length;Promise.resolve(o()).finally(()=>{if(S.jobs.length>n0&&typeof empty170==="function")empty170("avatar");if(tab!=="avatar"){H.tab=tab;persist();renderView()}})},1500)})(hfSend);
 SLOTS_FOR.image=["iRef","iRef2","iRef3","iRef4"];
 
 /* ---- the bots learn: every approve / make-again / remove / failure updates what works best for each kind of shot ---- */
@@ -8439,7 +8439,7 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
    tap anywhere on the timeline (not on a clip) → move the playhead there · drag on the ruler or the playhead → scrub smoothly
    swipe on the tracks (touch) → scrolls the timeline · tapping a track never adds anything by itself (use the "+" buttons) */
 const TLX={s:null};
-const edSeekX=(x)=>{const tl=$("#tlin");if(!tl)return;const r=tl.getBoundingClientRect();ED.playing=false;ED.t=clamp((x-r.left-40)/S.ed.zoom,0,Math.max(0,edTotal()-.01));const ph=$("#ph");if(ph)ph.style.left=(40+ED.t*S.ed.zoom)+"px"};
+const edSeekX=(x)=>{const tl=$("#tlin");if(!tl)return;const r=tl.getBoundingClientRect();ED.playing=false;ED.t=clamp((x-r.left-40)/S.ed.zoom,0,Math.max(0,edTotal()-.01));const ph=$("#ph");if(ph){ph.style.left="0px";ph.style.transform="translate3d("+(40+ED.t*S.ed.zoom).toFixed(2)+"px,0,0)"}};   // (v170: the same GPU move as each frame's — a left as well put it at twice its place until the next frame)
 window.addEventListener("pointerdown",e=>{if(S.view!=="edit")return;const tl=e.target.closest&&e.target.closest("#tlin");if(!tl)return;const near=nearPh169(e,tl);   // (v169: on the playhead's line — even over a clip — it is the playhead you take)
   if(!near&&e.target.closest(".blk,.trkadd,button,input,label"))return;
   // (a finger there waits for its first move: sideways takes the playhead, up or down scrolls, still is a tap or a long press on
@@ -18348,7 +18348,7 @@ open139=(o=>async function(id){const r=await o.apply(this,arguments);if(S.ed&&S.
 persist=(o=>function(){const r=o.apply(this,arguments);try{const E=S.ed;if(E&&!E.srv139&&S.cloud149!==false&&API.mode==="server"&&S.user&&S.view==="edit"&&E.clips.length&&!PJ139.busy&&!R139.on&&!DV149.t)
   DV149.t=setTimeout(()=>{DV149.t=0;if(S.ed&&!S.ed.srv139&&S.view==="edit"&&S.ed.clips.length)save139(true)},5000)}catch(e){}return r})(persist);
 async function sync149(){const E=S.ed;if(DV149.busy||API.mode!=="server"||!S.user||!E||S.view!=="edit"||document.hidden||PJ139.busy||R139.on||ED.rec||ED.playing||S.cloud149===false)return;
-  if(Date.now()-DV149.last<15000||$("#modalRoot").innerHTML||AG148.down)return;DV149.last=Date.now();DV149.busy=true;
+  if(Date.now()-DV149.last<15000||$("#modalRoot").innerHTML||AG148.down||DND144.s||TLX.s)return;DV149.last=Date.now();DV149.busy=true;   // (v170: never mid-press)
   try{const list=(await API.req("/v1/projects")).projects||[];if(!list.length||S.ed!==E)return;const mine=E.srv139&&list.find(p=>p.id===E.srv139),newest=list.slice().sort((a,b)=>(b.updated||0)-(a.updated||0))[0];
     const hash=async()=>{try{return hashStr(JSON.stringify((await doc139(false)).doc))}catch(e){return null}};
     const dAt=p=>(p&&(p.devAt||p.updated))||0;   // (the last save from a device — the agents' changes come in by themselves)
@@ -20564,12 +20564,49 @@ VIEWS.edit=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="string"
 .hfstplan.bots .hbl .hbav{width:34px;height:34px}.hfstplan.bots .hbl .hbav svg.bot{width:32px!important;height:32px!important}
 .hfstplan.bots .hbt{font-size:12px}`;document.head.appendChild(st)})();
 
+/* ================= v170: the Home box empties after Create; its angle photos stay in their tiles; the editor's preview is
+   drawn only when something changed, so the playhead and the picture follow the finger ================= */
+// 1. after Create the box is ready for the next one: the face photo, the extra angles, the voice file and the pictures to use
+// (# pictures, the first / end frame, the clip to start from) leave it with the words (v88 emptied only the words)
+function drop170(k){if(!M[k])return;delete M[k];   // (its picture URL is kept: a result card being made may still show it)
+  if(S.mediaKeys&&S.mediaKeys[k]){delete S.mediaKeys[k];try{IDB.del(k)}catch(e){}}}
+function empty170(tab){["hfRef","hfAng1","hfAng2","hfAng3","hfAud"].forEach(drop170);
+  if(tab==="video"){(typeof REF130!=="undefined"?REF130:[]).forEach(drop170);S.draft.refs130=[];drop170("vStart");drop170("vEnd");S.draft.startJob=null}
+  persist();if(S.view==="home")renderView()}
+hfSend=(o=>async function(){const H=S.hf,tab=H.tab,n=S.jobs.length,ang=tab==="avatar"&&[1,2,3].some(i=>M["hfAng"+i])&&M.hfRef&&API.mode==="server";
+  const r=await o.apply(this,arguments);if(S.jobs.length>n)empty170(ang?"avatar":tab);return r})(hfSend);
+// 2. an angle photo of any shape is cropped to its tile (a tall photo ran down over the Acting chip under it)
+(()=>{const st=document.createElement("style");st.textContent=`
+.hfang{overflow:visible}.hfang img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:12px}.hfang button{z-index:2}
+.hfref.has img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}`;document.head.appendChild(st)})();
+// 3. the preview is drawn when something changed — playing, a drag, a touch or a key, an edit, a picture or a video frame that
+// arrived — and otherwise at most every 0.7 s; it was drawn again 60 times a second over the same picture, which on a phone
+// kept the page busy (a 0.7 s drag of the playhead took 10 s on a phone-speed processor) and the playhead and picture lagged
+const DR170={dirty:true,at:0,sig:"",down:0};const dirty170=()=>{DR170.dirty=true};
+["pointerdown","pointerup","pointercancel","keydown","input","change","wheel","click"].forEach(t=>window.addEventListener(t,()=>{if(t==="pointerdown")DR170.down++;else if(t==="pointerup"||t==="pointercancel")DR170.down=Math.max(0,DR170.down-1);DR170.dirty=true},{capture:true,passive:true}));
+window.addEventListener("pointermove",()=>{if(DR170.down)DR170.dirty=true},{capture:true,passive:true});
+window.addEventListener("blur",()=>{DR170.down=0;DR170.dirty=true});
+["seeked","loadeddata","canplay","load","play","pause","error"].forEach(t=>document.addEventListener(t,dirty170,true));
+try{document.fonts.addEventListener("loadingdone",dirty170)}catch(e){}
+renderView=(o=>function(){DR170.dirty=true;return o.apply(this,arguments)})(renderView);
+persist=(o=>function(){DR170.dirty=true;return o.apply(this,arguments)})(persist);
+// (what is on screen now: the time, the clip under it and the state of its video — a jump that lands changes it)
+// (and the project itself: a change made in code — the assistant, an AI agent through MCP, a tool — is drawn at once too)
+function sig170(){const E=S.ed;let s=ED.t.toFixed(4)+"|"+(E.tab||"")+"|";try{s+=JSON.stringify(E)+JSON.stringify(S.brand||null)+JSON.stringify((S.tools&&S.tools.edit)||null)}catch(e){s+=Math.random()}
+  try{const tot=edTotal();if(tot){const c=E.clips[edAt(Math.min(ED.t,tot-.001)).i],m=c&&M["c_"+c.id],v=m&&m.el;
+    if(v)s+="|"+(v.readyState||0)+"|"+(v.seeking?1:0)+"|"+(v.tagName==="VIDEO"?(+CT131.get.call(v)||0).toFixed(3):(v.complete?1:0))+"|"+(m.sp135&&m.sp135.ok?1:0)}}catch(e){}
+  return s}
+// (asked by the page's frame loop only — a draw asked for directly, by the export or a tool, always happens)
+function draw170(now){const busy=ED.playing||ED.rec||R139.on||recording||DR170.down>0||!!TLX.blk||!!(TLX.s&&!TLX.s.lazy)||TRK.busy,sig=busy?"":sig170();
+  if(!busy&&!DR170.dirty&&sig===DR170.sig&&now-DR170.at<700)return false;   // (nothing changed: the picture on screen is still right)
+  DR170.dirty=false;DR170.sig=sig;DR170.at=now;return true}
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
   if(!document.hidden){
     $$("canvas.live[data-ref]").forEach(cv=>{sizeCanvas(cv);const it=itemFor(cv.dataset.ref);if(it)drawItem(cv,it,playing?ts/1000:0)});
-    if(S.user){const v=S.view;try{if(v==="bg")bgTick();else if(v==="grade")gradeTick();else if(v==="edit")edTick(ts);else if(v==="mocap")mocapTick()}catch(err){}}
+    if(S.user){const v=S.view;try{if(v==="bg")bgTick();else if(v==="grade")gradeTick();else if(v==="edit"){if(typeof draw170!=="function"||draw170(ts))edTick(ts)}else if(v==="mocap")mocapTick()}catch(err){}}
     if(AN)animTick(ts);
   }
   requestAnimationFrame(loop);

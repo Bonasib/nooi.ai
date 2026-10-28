@@ -193,11 +193,11 @@ async def page_checks():
             if g: break
             await asyncio.sleep(.25)
         ok(g and g["ar"] == [360, 640] and g["css"].replace(" ", "") == "360/640", f"the gallery card in the video's own shape {g}")
-        # the editor's top bar and tab rows, English and Arabic
+        # the editor's top bar and tab rows, English and Arabic (v169: on a phone Export is an icon, its name read out)
         for lang in ("en", "ar"):
             await E(SETUP_ED, lang); await pg.wait_for_function("S.ed.clips.length===1&&document.querySelector('.ed143 #wk')", timeout=20000); await pg.wait_for_timeout(500)
-            tb = await E("()=>{const t=document.querySelector('.ed143 .e-top'),n=t.querySelector('.e-name'),x=t.querySelector('.edout');const r=x.getBoundingClientRect();return {sw:t.scrollWidth,cw:t.clientWidth,name:n.getBoundingClientRect().width,left:r.left,right:r.right,vw:innerWidth,label:x.innerText.trim()}}")
-            ok(tb["sw"] <= tb["cw"] + 1 and tb["name"] >= 80 and tb["left"] >= 0 and tb["right"] <= tb["vw"] and tb["label"] in ("Export", "تصدير"), f"{lang}: the editor's top bar — the name keeps room, Export inside the screen {tb}")
+            tb = await E("()=>{const t=document.querySelector('.ed143 .e-top'),n=t.querySelector('.e-name'),x=t.querySelector('.edout');const r=x.getBoundingClientRect();return {sw:t.scrollWidth,cw:t.clientWidth,name:n.getBoundingClientRect().width,left:r.left,right:r.right,vw:innerWidth,label:x.innerText.trim()||x.getAttribute('aria-label')}}")
+            ok(tb["sw"] <= tb["cw"] + 1 and tb["name"] >= 80 and tb["left"] >= 0 and tb["right"] <= tb["vw"] and tb["label"] in ("Export", "تصدير", "Export video", "تصدير الفيديو"), f"{lang}: the editor's top bar — the name keeps room, Export inside the screen {tb}")
             await E("()=>{edSetPick(null);S.ed.lt143='ai';S.ed.tab='chat143';S.ed.pclosed143=null;renderView()}"); await pg.wait_for_timeout(500)
             fd = await E("()=>{const r=document.querySelector('.ed143 .e-sub');return r?{more:r.scrollWidth>r.clientWidth+2,fade:r.classList.contains('fe154')||r.classList.contains('fs154')}:null}")
             ok(fd and (not fd["more"] or fd["fade"]), f"{lang}: a tab row that goes past the edge fades there {fd}")
