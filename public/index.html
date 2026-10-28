@@ -20751,6 +20751,113 @@ hfMRow=(o=>function(t){const h=o.apply(this,arguments),H=S.hf;if(((t==="video"?H
 .nai172{display:flex;align-items:flex-start;gap:8px;margin:6px 2px 4px;font-size:12.5px;line-height:1.5;color:var(--mute)}
 .nai172 img{flex:none;width:16px;height:16px;margin-top:2px;object-fit:contain}`;document.head.appendChild(st)})();
 
+/* ================= v173: NVIDIA Cosmos with its own logo (picked by hand → made on NVIDIA or not at all, never quietly on
+   another engine) · the agents react to the engine picked and the words typed · the character's picture in its place in
+   "Your characters" · the member dashboard (the planned v166): balance, posts, invite friends (with a link or a code) and
+   earn credits for every 10 who subscribe, social links, a gift, delete the account ================= */
+// 1. NVIDIA's logo on its engines (a green tile with the eye) — in the lists, the chip and the agents' lines
+LOGO_SRC.nvidia="data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#76B900"/><path d="M7 33C15 21 25 15 34 15c10 0 18 6 24 18-6 11-14 17-24 17-9 0-19-5-27-17z" fill="#fff"/><path d="M19 33c4-7 9-10 15-10 6 0 11 4 13 10-2 6-7 9-12 9-5 0-8-3-8-7 0-3 3-6 6-6" fill="none" stroke="#76B900" stroke-width="4.6" stroke-linecap="round"/></svg>');
+// (NVIDIA's video model closed to this site's key → its line in the list says so; nothing is charged if it is tried)
+hfModelSheet=(o=>function(){const r=o.apply(this,arguments);try{const P=API.cfg&&API.cfg.providers;if(P&&P.nvDown&&P.nvDown.video){const b=document.querySelector('#modalRoot .hfmodel[data-v="nvcosmos"]');
+  if(b){b.classList.add("off173");const s=b.querySelector(".nm small");if(s)s.textContent=L("Not open to this site right now — nothing is charged if you try","غير متاح لهذا الموقع الآن — لا يُخصم شيء إن جرّبت")}}}catch(e){}return r})(hfModelSheet);
+
+// 2. the agents react: an engine picked → the producer says which engine makes every shot; words typed → the agent whose part
+// they touch speaks (voices and sound → the sound engineer, people → the character designer, camera and light → the
+// cinematographer, otherwise the director) and quotes them; the row of agents below hops one after another, as if starting
+const AG173={w:0,last:""};
+function agWave173(){const st=document.querySelector(".hfbots .botstrip");if(!st)return;[...st.querySelectorAll(".sbot")].forEach((s,i)=>s.style.setProperty("--i173",i));
+  st.classList.remove("wave173");void st.offsetWidth;st.classList.add("wave173");clearTimeout(AG173.w);AG173.w=setTimeout(()=>st.classList.remove("wave173"),2400)}
+function agBot173(p){const t=String(p||"").toLowerCase(),ul=document.querySelector(".hfstplan.bots .hbls"),has=id=>!!(ul&&ul.querySelector('li.hbl[data-bot="'+id+'"]'));
+  // (whole words: English by word edges, Arabic word by word with its little front letters — و ف ب ل ك and ال — so «صحراوي» isn't «راوي»)
+  const ws=t.split(/[\s،,.!?؟:;"'«»()]+/).filter(Boolean),arw=re=>ws.some(w=>re.test(w)),A=x=>new RegExp("^(?:[وفبلك])?(?:ال)?(?:"+x+")");
+  const want=/\b(voices?|sounds?|music|songs?|sing|sings|singing|speaks?|speaking|says?|talks?|talking|dialog(ue)?|narrat\w*)\b/.test(t)||arw(A("صوت|موسيق|أغني|غناء|يغني|تغني|يقول|تقول|يتكلم|تتكلم|حوار|راوي|يروي"))?"sound"
+    :/\b(camera|lens|lights?|lighting|drone|close-?up|zoom|angle|sunset|night)\b/.test(t)||arw(A("كاميرا|عدس|إضاء|اضاء|ضوء|أضواء|درون|زاوي|قريب|غروب|ليل"))?"cine"
+    :/\b(man|men|woman|women|girls?|boys?|person|people|faces?|characters?|child|children|kids?)\b/.test(t)||arw(A("رجل|رجال|امرأة|امراة|نساء|فتاة|بنت|ولد|شخص|ناس|وجه|وجوه|طفل|أطفال"))?"casting":"director";
+  return has(want)?want:has("director")?"director":has("cine")?"cine":null}
+function agReact173(bot,quote){if(!bot)return;AG171.bot=bot;AG171.hold=Date.now()+9000;try{hfStudioPaint()}catch(e){}agApply171(true);agWave173();
+  if(quote){const li=document.querySelector('.hfstplan.bots .hbls li.hbl.on171 .hbt');if(li&&!li.querySelector(".q173")){const q=String(quote).trim().replace(/\s+/g," ");li.insertAdjacentHTML("beforeend",'<q class="q173" dir="auto">'+esc(q.length>70?q.slice(0,68)+"…":q)+"</q>")}}}
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="hf-pick"]');if(!a||S.view!=="home")return;S.hf.bots=true;setTimeout(()=>agReact173(document.querySelector('.hfstplan.bots .hbls li.hbl[data-bot="producer"]')?"producer":agBot173("")),90)},true);
+document.addEventListener("input",e=>{if(!e.target||e.target.id!=="hfq")return;clearTimeout(AG173.t);AG173.t=setTimeout(()=>{const v=(($("#hfq")||{}).value||"").trim();
+  if(v.length<3||v===AG173.last||S.view!=="home")return;AG173.last=v;agReact173(agBot173(v),v)},800)});
+
+// 3. "Your characters": the face sat at the sheet's corner (the editor's playhead rule .ph took it out of its tile) — back in place
+// 4. the member dashboard, at the top of the account page
+const MB173={r:null,posts:null,links:null,at:0,busy:0};
+const LK173=[["instagram","Instagram","instagram.com/you"],["tiktok","TikTok","@you"],["youtube","YouTube","youtube.com/@you"],["x","X","@you"],["snapchat","Snapchat","@you"],["facebook","Facebook","facebook.com/you"],["linkedin","LinkedIn","linkedin.com/in/you"],["website",["Website","الموقع"],"https://"]];
+if(!ICONS.link)ICONS.link='<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>';
+function mbLoad173(force){if(API.mode!=="server"||!S.user||MB173.busy||(!force&&Date.now()-MB173.at<60e3))return;MB173.busy=1;
+  Promise.allSettled([API.req("/v1/refer"),API.req("/v1/explore/mine"),API.req("/v1/me/links")]).then(([a,b,c])=>{if(a.status==="fulfilled")MB173.r=a.value;if(b.status==="fulfilled")MB173.posts=b.value.items||[];
+    if(c.status==="fulfilled")MB173.links=c.value.links||{};MB173.at=Date.now();mbPaint173()}).finally(()=>{MB173.busy=0})}
+function mbPaint173(){const el=document.querySelector("#main #mb173"),a=document.activeElement;if(!el||(a&&a.tagName==="INPUT"&&el.contains(a)))return;el.outerHTML=mb173()}
+function mb173(){if(!S.user)return"";const R=MB173.r,srv=API.mode==="server",posts=MB173.posts||[],P=myPlan(),lk=MB173.links||{},n=R?(R.progress!=null?R.progress:R.subscribed%R.every):0,fmt=v=>(+v||0).toLocaleString("en");
+  const stat=(i,v,lb,go)=>"<"+(go?'button type="button" data-go="'+go+'"':"div")+' class="mbs173">'+ic(i)+"<b>"+v+"</b><small>"+lb+"</small></"+(go?"button":"div")+">";
+  const thumb=x=>'<button type="button" class="mbp173" data-go="explore" title="'+esc(x.title||x.prompt||"")+'">'+(x.kind==="image"?'<img src="'+esc(x.url)+'" alt="" loading="lazy">':x.kind==="audio"?ic("music"):x.poster?'<img src="'+esc(x.poster)+'" alt="" loading="lazy">':'<video src="'+esc(x.url)+'#t=0.5" muted playsinline preload="metadata"></video>')+"</button>";
+  return'<div class="panel set mb173" id="mb173"><h2>'+ic("dash","width:18px;vertical-align:-3px")+" "+L("My dashboard","لوحتي")+"</h2>"+
+    '<div class="mbg173">'+stat("coin",fmt(S.credits),L("credits · ","رصيد · ")+esc(L(P.n[0],P.n[1])))+stat("explore",fmt(posts.length),L("posts on Explore","منشور في استكشف"),"explore")+
+      stat("users",fmt(R?R.joined:0),L("friends joined","صديق انضم"))+stat("gift",fmt(R?R.earned:0),L("credits earned from invites","رصيد من الدعوات"))+"</div>"+
+    '<div class="mbinv173"><h3>'+ic("users")+" "+L("Invite friends, earn credits","ادعُ أصدقاءك واكسب رصيداً")+"</h3>"+
+      (R?'<p class="small mute">'+L("Every "+R.every+" friends who sign up and subscribe to a plan give you "+fmt(R.bonus)+" credits.","كل "+R.every+" أصدقاء يسجّلون ويشتركون في باقة يمنحونك "+fmt(R.bonus)+" رصيد.")+"</p>"+
+        '<div class="mbbar173" role="progressbar" aria-valuemin="0" aria-valuemax="'+R.every+'" aria-valuenow="'+n+'" aria-label="'+esc(L("Friends who subscribed toward the next bonus","الأصدقاء المشتركون نحو المكافأة التالية"))+'"><i style="width:'+Math.round(n/R.every*100)+'%"></i></div>'+
+        '<p class="small mute mbnx173">'+L(n+" of "+R.every+" subscribed — "+R.toNext+" more for the next "+fmt(R.bonus)+" credits","اشترك "+n+" من "+R.every+" — بقي "+R.toNext+" للحصول على "+fmt(R.bonus)+" رصيد")+"</p>"+
+        '<div class="mbcode173"><span class="small mute">'+L("Your invite code","رمز دعوتك")+'</span><b class="mono" dir="ltr">'+esc(R.code)+'</b><button type="button" class="btn sm ghost" data-act="mb173-copy" aria-label="'+esc(L("Copy the code","انسخ الرمز"))+'">'+ic("copy")+"</button></div>"+
+        '<div class="row mbsh173"><button type="button" class="btn primary" data-act="mb173-share" data-how="link">'+ic("link")+L("Share with a link","شارك برابط")+'</button><button type="button" class="btn" data-act="mb173-share" data-how="code">'+ic("share")+L("Share without a link","شارك بدون رابط")+"</button></div>"+
+        (R.canJoin?'<div class="mbjoin173"><label class="lbl" for="mbj173">'+L("Got an invite code from a friend?","معك رمز دعوة من صديق؟")+'</label><div class="row" style="flex-wrap:nowrap"><input id="mbj173" dir="ltr" autocomplete="off" spellcheck="false" placeholder="R-XXXXXX" style="flex:1;min-width:0;text-transform:uppercase;font-family:var(--mono)"><button type="button" class="btn sm" data-act="mb173-join">'+L("Join","انضم")+"</button></div></div>":"")
+      :'<p class="small mute">'+(srv?STARS("load")+" "+L("Loading…","جارٍ التحميل…"):L("Invites work on the live site, once you're signed in.","الدعوات تعمل في الموقع الفعلي بعد تسجيل الدخول."))+"</p>")+"</div>"+
+    '<div class="mbposts173"><h3>'+ic("explore")+" "+L("Your posts","منشوراتك")+"</h3>"+(posts.length?'<div class="mbpg173">'+posts.slice(0,8).map(thumb).join("")+"</div>":'<p class="small mute">'+L("Nothing shared yet — share a video or picture from your library to Explore.","لم تشارك شيئاً بعد — شارك فيديو أو صورة من مكتبتك في استكشف.")+' <button type="button" class="btn sm ghost" data-go="library">'+L("Library","المكتبة")+"</button></p>")+"</div>"+
+    '<div class="mblinks173"><h3>'+ic("link")+" "+L("Your social links","روابط حساباتك")+'</h3><p class="small mute">'+L("Shown on your creator page, so people who like your posts can find you.","تظهر في صفحتك كمبدع ليجدك من أعجبته منشوراتك.")+'</p><div class="mblg173">'+
+      LK173.map(k=>'<label class="mbl173"><span>'+esc(Array.isArray(k[1])?L(k[1][0],k[1][1]):k[1])+'</span><input id="lk173-'+k[0]+'" data-lk173="'+k[0]+'" dir="ltr" autocomplete="off" spellcheck="false" placeholder="'+esc(k[2])+'" value="'+esc(lk[k[0]]||"")+'"></label>').join("")+
+      '</div><button type="button" class="btn sm" data-act="mb173-links" style="margin-top:10px"'+(srv?"":" disabled")+">"+ic("check")+L("Save links","احفظ الروابط")+"</button></div>"+
+    '<div class="row mbact173"><button type="button" class="btn" data-act="mb173-gift">'+ic("gift")+L("Create a gift","أنشئ هدية")+'</button><button type="button" class="btn ghost danger" data-act="mb173-del">'+ic("trash")+L("Delete my account","حذف حسابي")+"</button></div></div>"}
+VIEWS.account=(o=>function(){const h=o.apply(this,arguments);if(!S.user)return h;setTimeout(()=>mbLoad173(false),0);return h.replace('<p class="lede"></p>','<p class="lede"></p>'+mb173())})(VIEWS.account);
+// (its own part in the page's bar, with the profile card: "My dashboard")
+PARTS122.account=(o=>V=>{const g=o(V),d=V.querySelector(":scope>#mb173");if(!d)return g;const pl=g.find(x=>x[0]==="plan"),pc=pl&&pl[3][0]&&pl[3][0].matches&&pl[3][0].matches(".pcard")?pl[3].shift():null;
+  g.unshift(["dash","My dashboard","لوحتي",[pc,d]]);return g})(PARTS122.account);
+async function mbShare173(how){const R=MB173.r;if(!R)return;const link=how==="link";
+  const t=link?L("I make videos and pictures with AI on nooi.ai — join with my invite:","أصنع الفيديوهات والصور بالذكاء الاصطناعي على nooi.ai — انضم بدعوتي:"):L("Join nooi.ai and enter my invite code: ","انضم إلى nooi.ai وأدخل رمز دعوتي: ")+R.code;
+  try{if(navigator.share){await navigator.share(link?{title:"nooi.ai",text:t,url:R.link}:{title:"nooi.ai",text:t});return}}catch(e){if(e&&e.name==="AbortError")return}
+  try{await navigator.clipboard.writeText(link?t+" "+R.link:t);toast(L("Copied — paste it anywhere","نُسخ — الصقه أينما تريد"))}catch(e){toast(link?R.link:R.code)}}
+window.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest('[data-act^="mb173-"]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();const a=b.dataset.act,R=MB173.r;
+  if(a==="mb173-share")return mbShare173(b.dataset.how);
+  if(a==="mb173-copy"){if(!R)return;try{await navigator.clipboard.writeText(R.code);toast(L("Code copied","نُسخ الرمز"))}catch(_){toast(R.code)}return}
+  if(a==="mb173-gift"){if(typeof gfBuild==="function")gfBuild();return}
+  if(a==="mb173-del"){const d=$("#del125");if(d){d.scrollIntoView({behavior:"smooth",block:"center"});setTimeout(()=>{const i=$("#del125i");if(i)i.focus({preventScroll:true})},450)}return}
+  if(a==="mb173-join"){const c=(($("#mbj173")||{}).value||"").trim();if(!c){toast(L("Type the code first","اكتب الرمز أولاً"));return}b.disabled=true;
+    try{MB173.r=await API.req("/v1/refer/claim",{json:{code:c}});toast(L("✓ You joined with your friend's invite","✓ انضممت بدعوة صديقك"));const x=$("#mbj173");if(x)x.blur();mbPaint173()}catch(err){toast(S.lang==="ar"&&err.errorAr?err.errorAr:err.message)}finally{if(b.isConnected)b.disabled=false}return}
+  if(a==="mb173-links"){const links={};document.querySelectorAll("#mb173 [data-lk173]").forEach(i=>{if(i.value.trim())links[i.dataset.lk173]=i.value.trim()});b.disabled=true;
+    try{const r=await API.req("/v1/me/links",{json:{links}});MB173.links=r.links||{};document.querySelectorAll("#mb173 [data-lk173]").forEach(i=>{i.value=MB173.links[i.dataset.lk173]||""});toast(L("✓ Links saved","✓ حُفظت الروابط"))}
+    catch(err){toast(S.lang==="ar"&&err.errorAr?err.errorAr:err.message)}finally{if(b.isConnected)b.disabled=false}return}},true);
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target&&e.target.id==="mbj173"){e.preventDefault();const b=$('[data-act="mb173-join"]');if(b)b.click()}});
+// (an invite link — /?ref=CODE — is kept until the friend is signed in, then taken once)
+const REF173={busy:0};
+(()=>{try{const r=new URLSearchParams(window.BOOT_Q||location.search).get("ref");if(r&&/^R?-?[A-Za-z0-9]{6}$|^R-[A-Za-z0-9]{6}$/i.test(r.trim()))localStorage.setItem("nooi.ref173",r.trim().toUpperCase())}catch(e){}})();
+function refClaim173(){let c=null;try{c=localStorage.getItem("nooi.ref173")}catch(e){}if(!c||REF173.busy||!S.user||API.mode!=="server")return;REF173.busy=1;const drop=()=>{try{localStorage.removeItem("nooi.ref173")}catch(e){}};
+  API.req("/v1/refer/claim",{json:{code:c}}).then(r=>{drop();MB173.r=r;if(!r.already)toast(L("✓ Welcome — you joined with a friend's invite","✓ أهلاً — انضممت بدعوة من صديق"))}).catch(e=>{if([400,403,404,409].includes(e.status))drop()}).finally(()=>{REF173.busy=0})}
+setInterval(refClaim173,3000);
+(()=>{const st=document.createElement("style");st.textContent=`
+.chpick87{position:relative}.chpick87 .ph,.at87 .ph{position:relative;top:auto;bottom:auto;inset-inline-start:auto;z-index:auto;pointer-events:none;flex:none}
+.hfsheet .hfmodel.off173{opacity:.6}.hfsheet .hfmodel.off173 .nm small{color:var(--amber,#e0a23a)}
+.hfbots .botstrip.wave173 .sbot .sav{animation:hop173 .55s cubic-bezier(.3,1.6,.5,1) calc(var(--i173,0)*80ms) both}
+.hfbots .botstrip.wave173 .sbot .sav svg.bot{animation:glow173 1.2s ease calc(var(--i173,0)*80ms) both}
+@keyframes hop173{0%{transform:none}40%{transform:translateY(-9px) scale(1.06)}100%{transform:none}}
+@keyframes glow173{0%,100%{filter:none}35%{filter:brightness(1.25) drop-shadow(0 0 10px color-mix(in srgb,var(--lime) 70%,transparent))}}
+.hfstplan.bots.one171 .hbt>q.q173{display:block;margin-top:5px;font-style:italic;color:var(--mute);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;quotes:"“" "”"}
+.hfstplan.bots.one171 .hbl.anim171 .hbt>q.q173{animation:txt171 .35s ease-out 1s both}
+@media (prefers-reduced-motion:reduce){.hfbots .botstrip.wave173 .sbot .sav,.hfbots .botstrip.wave173 .sbot .sav svg.bot{animation:none}}
+#main .mb173 h3{display:flex;align-items:center;gap:6px;margin:18px 0 6px;font-size:15px}#main .mb173 h3 svg{width:16px;height:16px}
+.mbg173{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.mbs173{display:grid;justify-items:start;gap:2px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:inherit;text-align:start;min-width:0}
+button.mbs173{cursor:pointer}button.mbs173:hover{border-color:var(--line2,var(--line))}
+.mbs173 svg{width:18px;height:18px;color:var(--lime)}.mbs173 b{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}.mbs173 small{color:var(--mute);font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mbbar173{height:8px;border-radius:99px;background:var(--panel2);overflow:hidden;margin:8px 0 4px}.mbbar173 i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--lime),#8a5cff);min-width:4px}
+.mbcode173{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0;padding:10px 12px;border-radius:12px;border:1px dashed var(--line);background:var(--panel2)}.mbcode173 b{font-size:18px;letter-spacing:.06em}
+.mbsh173{gap:8px}.mbjoin173{margin-top:12px}
+.mbpg173{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+.mbp173{aspect-ratio:1;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--panel2);padding:0;cursor:pointer;display:grid;place-items:center;color:var(--mute)}
+.mbp173 img,.mbp173 video{width:100%;height:100%;object-fit:cover;display:block}.mbp173 svg{width:26px;height:26px}
+.mblg173{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.mbl173{display:grid;gap:4px;min-width:0}.mbl173 span{font-size:12px;color:var(--mute)}.mbl173 input{min-width:0;width:100%}
+.mbact173{gap:8px;margin-top:16px}
+@media (max-width:767px){.mbg173{grid-template-columns:repeat(2,minmax(0,1fr))}.mblg173{grid-template-columns:minmax(0,1fr)}.mbsh173 .btn{flex:1 1 140px}}`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

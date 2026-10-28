@@ -141,7 +141,8 @@ async def home(p, lang):
     a = await E("()=>({m:S.hf.vModel,bots:S.hf.bots,txt:document.querySelector('.hfmi.eng171').textContent.trim()})")
     ok(a["m"] == "auto" and a["bots"] is True and a["txt"] == nooi, f"{lang}: nooi Auto from the list brings the agents back {a}")
     # the agents: one at a time in a bubble
-    await E("()=>{const r=document.querySelector('.hfstplan');r&&r.scrollIntoView({block:'center'})}"); await pg.wait_for_timeout(1300)
+    # (v173: picking from the list lets the producer speak about it for a while — the turns below start after that)
+    await E("()=>{const r=document.querySelector('.hfstplan');r&&r.scrollIntoView({block:'center'});AG171.hold=0}"); await pg.wait_for_timeout(1300)
     ONE = """()=>{const P=document.querySelector('.hfstplan.bots'),li=[...document.querySelectorAll('.hfstplan .hbls>li.hbl')],on=li.filter(x=>x.classList.contains('on171')),pr=P.getBoundingClientRect();
       const vis=li.filter(x=>getComputedStyle(x).visibility!=='hidden'&&+getComputedStyle(x).opacity>.5),b=on[0]&&on[0].querySelector('.hbt').getBoundingClientRect();
       return {one:P.classList.contains('one171'),n:li.length,on:on.map(x=>x.dataset.bot),vis:vis.map(x=>x.dataset.bot),spk:[...document.querySelectorAll('.hfbots .sbot.spk171')].map(x=>x.dataset.bot),

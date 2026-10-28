@@ -71,7 +71,7 @@ import { registerMotion } from "./lib/motion.js";
 import { registerSketch, rtEngine } from "./lib/sketch.js";
 import { registerWorld } from "./lib/world.js";
 import { registerIngest } from "./lib/ingest.js";
-import { nvReady, nvCfg, nvOn } from "./providers/nvidia.js";
+import { nvReady, nvCfg, nvOn, nvVideoDown173 } from "./providers/nvidia.js";
 import { cbSig, findJob, pollOne, speedAdvice, setSwapRes, setSwapEngine, setLipsEngine, setHold154 } from "./lib/jobs.js";
 import { setPace } from "./lib/line124.js";
 import { safetyInfo, setSafety } from "./lib/safety126.js";
@@ -82,6 +82,7 @@ import { fastFiles, warm } from "./lib/static124.js";   // v124: the page compre
 import { registerGifts } from "./lib/gifts.js";
 import { registerInvoices } from "./lib/invoices.js";
 import { registerExplore } from "./lib/explore.js";
+import { registerRefer173 } from "./lib/refer173.js";   // v173: invite friends (the member dashboard)
 import { sendEmail, emailConfigured } from "./lib/email.js";
 import { renderEmail } from "./public/email-templates.js";
 import { uiLang, uiDict, uiTranslate, rateOk } from "./lib/uit.js";
@@ -177,7 +178,7 @@ app.get("/v1/config", (_, res) => res.json({
   firebase: firebaseWebConfig(), localAI: { tfUrl: fs.existsSync(TF_DIR + "/transformers.min.js") ? "/vendor/transformers/transformers.min.js" : null, ortBase: fs.existsSync(ORT_DIR) ? "/vendor/ort/" : null, modelsHost: process.env.MODELS_DIR ? "/models/" : null, models: platform().localModels || {} }, emailCode: canSendSignInLinks() && emailConfigured(), kieRoutes: kieRoutes(),
   llm: llmConfigured() ? { on: true } : null,   // (which provider and model: the owner's "Test connection" only — this reply is public)
   billing: enabledPayments().length > 0, freeCredits: freeCredits(), stage: process.env.NOOI_STAGE === "1", biz: biz(), registry: publicRegistry(), shots133: shotsTable133((m) => { const r = adapterFor("video", { kind: "video", model: m }, PROVIDERS); return r && r.key; }), payments: enabledPayments(), modelLogos: platform().modelLogos || {}, worldEngine: !!(process.env.WORLD_API_URL || (platform().providers || {}).world), modelCat: Object.fromEntries(Object.entries(platform().modelCat || {}).map(([k, v]) => [k, { cr: v.cr, verified: !!v.verified, kie: !!v.kieModel }])), features: platform().features, models: platform().models, prices: priceTable(), support: "contact@nooi.ai",
-  providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || !!kieDefault(k) || !!kieAuto(k, { kind: k === "tts" ? "voice" : k }) || (k === "image" && (nvOn("image") || nvOn("edit"))) || (k === "edit" && nvOn("edit")) || (k === "video" && nvOn("video"))])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!rtEngine(), realtimeEngine: rtEngine(), vss: vssServer(), localize: (() => { try { const e = locEngines(); return { nooi: e.nooi, elevenlabs: e.elevenlabs, camb: e.camb, nvidia: e.nvidia, stt: e.stt }; } catch { return null; } })(), gen3d: { tripo: configured("tripo"), meshy: configured("meshy"), skybox: configured("blockade") }, nvidia: nvReady(), nvUse: nvReady() ? nvCfg().use : null, billing: enabledPayments().length > 0 }
+  providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || !!kieDefault(k) || !!kieAuto(k, { kind: k === "tts" ? "voice" : k }) || (k === "image" && (nvOn("image") || nvOn("edit"))) || (k === "edit" && nvOn("edit")) || (k === "video" && nvOn("video"))])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!rtEngine(), realtimeEngine: rtEngine(), vss: vssServer(), localize: (() => { try { const e = locEngines(); return { nooi: e.nooi, elevenlabs: e.elevenlabs, camb: e.camb, nvidia: e.nvidia, stt: e.stt }; } catch { return null; } })(), gen3d: { tripo: configured("tripo"), meshy: configured("meshy"), skybox: configured("blockade") }, nvidia: nvReady(), nvUse: nvReady() ? nvCfg().use : null, nvDown: nvReady() && nvVideoDown173() ? { video: true } : null, billing: enabledPayments().length > 0 }
 }));
 
 // Uploads (start frames, references, exports, music…)
@@ -323,7 +324,7 @@ registerV88(app, requireUser); startKeepMedia(); registerScrub131(app, requireUs
 registerEdit147(app, requireUser);
 registerEdit148(app, requireUser); registerEdit149(app, requireUser, isStaff); registerCaptions169(app, requireUser, isStaff); registerMotion150(app, requireUser);
 registerIngest(app);
-registerExplore(app); registerShowcase(app); registerGifts(app); registerInvoices(app);
+registerExplore(app); registerShowcase(app); registerGifts(app); registerInvoices(app); registerRefer173(app);
 // Low-latency voice preview (ElevenLabs stream, key never leaves the server)
 app.post("/v1/tts/stream", requireUser, async (req, res) => { try { const { planOf } = await import("./lib/plans.js"); const plan = planOf(user(req.user.uid)); if (!["pro", "studio"].includes(plan)) return res.status(402).json({ error: "ElevenLabs voices start from the Pro plan" }); await streamTTS(res, req.body || {}); } catch (e) { if (!res.headersSent) res.status(502).json({ error: e.message }); } });
 // Export: convert a browser WebM recording to MP4 (H.264/AAC) with ffmpeg

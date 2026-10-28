@@ -8,7 +8,8 @@
 // switched on or off ("use"). Picture / 3D / video jobs that fail on NVIDIA fall back to the site's other engine (lib/jobs.js).
 // NVIDIA answers synchronously (200 + JSON with base64) or, for long jobs, 202 + NVCF-REQID → poll the NVCF status URL.
 import zlib from "zlib";
-import { cfg } from "../lib/settings.js";
+import { cfg, S } from "../lib/settings.js";
+import { save } from "../lib/store.js";
 import { saveBuffer } from "../lib/media.js";
 
 const DEF = {
@@ -21,7 +22,17 @@ const DEF = {
 const USE_DEFAULT = { text: true, vision: true, image: true, edit: true, "3d": true, video: false };
 export const nvCfg = () => { const c = cfg("nvidia"); let use = {}; try { use = typeof c.use === "string" ? (c.use.trim().startsWith("{") ? JSON.parse(c.use) : Object.fromEntries(c.use.split(/[,;\s]+/).filter(Boolean).map((x) => x.split(":")).map(([k, v]) => [k.trim().toLowerCase(), !/^(off|no|false|0)$/i.test((v || "on").trim())]))) : c.use || {}; } catch { use = {}; }
   return { key: c.apiKey || "", chat: (c.baseUrl || DEF.chat).replace(/\/$/, ""), vision: c.model || DEF.vision, text: c.textModel || DEF.text,
-    image: c.imageUrl || DEF.image, image2: c.image2Url || DEF.image2, edit: c.editUrl || DEF.edit, trellis: c.trellisUrl || DEF.trellis, video: c.videoUrl || DEF.video, status: c.statusUrl || process.env.NVIDIA_STATUS_URL || DEF.status, assets: c.assetsUrl || process.env.NVIDIA_ASSETS_URL || DEF.assets, use: { ...USE_DEFAULT, ...use } }; };
+    image: c.imageUrl || DEF.image, image2: c.image2Url || DEF.image2, edit: c.editUrl || DEF.edit, trellis: c.trellisUrl || DEF.trellis, video: c.videoUrl || DEF.video, status: c.statusUrl || process.env.NVIDIA_STATUS_URL || DEF.status, assets: c.assetsUrl || process.env.NVIDIA_ASSETS_URL || DEF.assets, use: { ...USE_DEFAULT, ...use, ...off173(c.videoUrl || DEF.video) } }; };
+// v173: NVIDIA said its video model isn't open to this key ("Function '…': Not found for account" — a model NVIDIA retired or
+// the account can't run). Until the Video URL in Admin changes or a Cosmos video is made, nooi Auto doesn't pick it (a customer
+// who picks it by hand gets NVIDIA's answer in plain words, nothing charged — no other engine instead).
+const down173 = () => { try { return S().nvDown173 || null; } catch { return null; } };
+const fresh173 = (v) => !!v && Date.now() - (v.at || 0) < 6 * 3600e3;   // (asked again after 6 hours: NVIDIA may have opened it)
+function off173(url) { const d = down173(); return d && fresh173(d.video) && d.video.url === url ? { video: false } : {}; }
+function markDown173(task, url, err) { if (task !== "video") return; try { const st = S(); st.nvDown173 = { ...(st.nvDown173 || {}), video: { url, at: Date.now(), error: String(err).slice(0, 200) } }; save(); } catch {} }
+function clearDown173(task) { if (task !== "video") return; try { const st = S(); if (st.nvDown173 && st.nvDown173.video) { delete st.nvDown173.video; save(); } } catch {} }
+export const nvVideoDown173 = () => { const d = down173(); return d && fresh173(d.video) && d.video.url === (cfg("nvidia").videoUrl || DEF.video) ? d.video : null; };
+const NOTFOUND173 = /\b404\b[\s\S]*not found for account|Function '[^']+': Not found/i;
 export const nvReady = () => !!nvCfg().key;
 export const nvOn = (what) => { const c = nvCfg(); return !!c.key && c.use[what] !== false && c.use[what] !== "false"; };
 export const NV_MODELS = { image: ["nvflux", "nvsd35"], edit: ["nvkontext"], video: ["nvcosmos"] };
@@ -92,7 +103,13 @@ export function nvAdapter(task) {
   const c = nvCfg(), ext = task === "3d" ? ".glb" : task === "video" ? ".mp4" : ".jpg";
   const finish = (res) => { const buf = payload(res, ext); const kind = ext === ".jpg" && buf[0] === 0x89 ? ".png" : ext; return { done: true, url: saveBuffer(buf, kind).url }; };
   return { name: "NVIDIA AI", configured: !!c.key,
-    async submit(p) { let res;
+    async submit(p) { try { const r = await this.submit0(p); if (r.done) clearDown173(task); return r; }
+      catch (e) { if (NOTFOUND173.test(e.message || "")) { const url = task === "video" ? c.video : task;
+          markDown173(task, url, e.message); e.type = "input"; e.retryable = false;   // (kept as it is through the retry wrapper: no retry, its own words)
+          e.message += " — this NVIDIA key can't run the model at " + url + ". Set Admin → AI providers → NVIDIA AI → " + (task === "video" ? "Video URL" : "its URL") + " to a model the key can run (build.nvidia.com).";
+          if (task === "video") { e.userMsg = "NVIDIA Cosmos isn't open to this site right now — nothing was charged. Pick another engine or nooi Auto."; e.userMsgAr = "NVIDIA Cosmos غير متاح لهذا الموقع الآن — لم يُخصم شيء. اختر محركاً آخر أو nooi تلقائي."; } }
+        throw e; } },
+    async submit0(p) { let res;
       if (task === "image") { const url = p.model === "nvsd35" ? c.image2 : c.image; res = await call(url, imageBody(url, p)); }
       else if (task === "edit") { const ref = await toDataUrl(refOf(p)); if (!ref) throw new Error("Add the picture to edit"); const a = await nvAsset(ref);
         res = await call(c.edit, { prompt: fullPrompt(p), image: a.ref, aspect_ratio: p.meta?.world360 || p.meta?.keepAspect === false ? (SIZES[p.aspect] ? p.aspect : "16:9") : "match_input_image", cfg_scale: 3.5, steps: 30, seed: Math.abs(+p.seed || 0) % 4294967295 }, 180000, a.headers); }
@@ -101,7 +118,7 @@ export function nvAdapter(task) {
       else if (task === "video") { const ref = await toDataUrl(p.inputs?.startImage || p.inputs?.vStart); const a = ref ? await nvAsset(ref) : null; res = await call(c.video, { prompt: fullPrompt(p), seed: Math.abs(+p.seed || 0) % 4294967295, ...(a ? { image: a.ref } : {}), video_params: { height: p.aspect === "9:16" ? 1280 : 704, width: p.aspect === "9:16" ? 704 : 1280, frames_count: 121, frames_per_sec: 24 } }, 600000, a?.headers); }
       else throw new Error("Unknown NVIDIA task " + task);
       return res.pending ? { remoteId: res.pending } : finish(res); },
-    async poll(id) { const res = await status(id); if (res.pending) return { status: "rendering" }; try { return { status: "done", url: finish(res).url }; } catch (e) { return { status: "failed", error: e.message }; } } }; }
+    async poll(id) { const res = await status(id); if (res.pending) return { status: "rendering" }; try { const u = finish(res).url; clearDown173(task); return { status: "done", url: u }; } catch (e) { return { status: "failed", error: e.message }; } } }; }
 // which NVIDIA task (if any) runs this job: explicit NVIDIA models always; "nooi Auto" when that capability is switched on
 export function nvRoute(cap, body) {
   if (!nvReady() || body.noNv) return null; const m = body.model || "", auto = !m || m === "auto" || m === "dotimg";
