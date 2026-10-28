@@ -99,8 +99,11 @@ if [ "${nb:-0}" -gt 0 ]; then
 cd "$APP" 2>/dev/null && LASTQ="$LASTQ" node -e '
 const fs = require("fs"); let db = {}; try { db = JSON.parse(fs.readFileSync("data/db.json", "utf8")); } catch {}
 const st = (db.settings || {}).status || {}, al = (db.settings || {}).alerts138 || {}, ago = (t) => Math.round((Date.now() - t) / 60e3) + " min ago";
-for (const [k, a] of Object.entries(al)) if (a && a.type === "quota") console.log("⚠ The site has marked the AI engine (" + k + ") out of credits since " + ago(a.since) + " · " + a.count + " job(s) failed · it clears itself when a job is made again.");
+for (const [k, a] of Object.entries(al)) if (a && a.type === "quota") console.log("⚠ The site has marked the AI engine (" + k + ") out of credits since " + ago(a.since) + " · " + a.count + " job(s) failed · it clears itself when a job is made again, or at the engine check the site makes every 15 min once the engine shows credits.");
 const e = st.kie; if (e) console.log("AI engine connection (last check " + ago(e.checked || 0) + "): " + e.state + (e.note ? " · " + e.note : ""));
+// v169: a balance the check could not read cannot show a top-up — say how the mark goes then
+if (e && /balance not read/.test(e.note || "") && Object.values(al).some((a) => a && a.type === "quota"))
+  console.log("  The site couldn’t read the engine’s balance (above), so it can’t see a top-up by itself: after topping up, Admin → Models → Connections & live status → Test on the AI engine takes the mark away (or the next picture or video made).");
 // v139: checked after the last refusal and answering normally, with nothing marked → most likely topped up already
 const lq = +process.env.LASTQ * 1000 || 0;
 if (lq && e && e.state === "online" && (e.checked || 0) > lq && !Object.values(al).some((a) => a && a.type === "quota"))

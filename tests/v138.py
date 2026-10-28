@@ -24,7 +24,7 @@ class H(BaseHTTPRequestHandler):
         u = urllib.parse.urlparse(self.path); q = urllib.parse.parse_qs(u.query)
         if u.path == "/stats": return self.send(st)
         if u.path == "/set": st.update({k: int(v[0]) for k, v in q.items()}); return self.send(st)
-        if u.path.endswith("credit"): return self.send({"code": 200, "msg": "success", "data": st["credits"]})
+        if u.path.endswith("credit"): return self.send({"error": "not found"}, 404) if st.get("creditNo") else self.send({"code": 200, "msg": "success", "data": st["credits"]})
         if u.path.startswith("/f/"):
             b = open(DIR + "/" + u.path[3:], "rb").read(); self.send_response(200); self.send_header("content-length", str(len(b))); self.end_headers(); return self.wfile.write(b)
         tid = (q.get("taskId") or [""])[0]
@@ -119,6 +119,17 @@ def server_side():
     # 4. topped up → the test clears it
     eng("/set?credits=50"); t = api("/v1/admin/providers/engine/test", {}, tok=None)
     chk("topped up: the connection test passes and the staff line goes", t.get("state") == "online" and api("/v1/me", tok=None).get("alerts138") == {}, [t, api("/v1/me", tok=None).get("alerts138")])
+    # 4b. (v169) the check-up's case: refused, then topped up — "Test all" (the same check the site makes every 15 minutes) takes the
+    #     line away too and says the balance (it had left the line on for hours)
+    eng("/set?credits=0"); v = api("/v1/jobs", {"kind": "video", "model": "wan30", "prompt": "Gulls at dusk", "dur": 5, "aspect": "16:9"}); waitjob(v.get("id", "x"))
+    had = bool((api("/v1/me", tok=None).get("alerts138") or {}).get("engine"))
+    eng("/set?credits=50"); t = api("/v1/admin/providers-test", {}, tok=None); k = t.get("engine") or t.get("kie") or {}
+    chk("topped up: Test all / the 15-minute check clears the line and shows the balance", had and k.get("state") == "online" and "50 credits left" in (k.get("note") or "") and api("/v1/me", tok=None).get("alerts138") == {}, [had, k, api("/v1/me", tok=None).get("alerts138")])
+    # …a balance that can't be read (its address answers 404): the check says why and the line stays (a top-up can't be seen)
+    eng("/set?credits=0"); v = api("/v1/jobs", {"kind": "video", "model": "wan30", "prompt": "Gulls at dawn", "dur": 5, "aspect": "16:9"}); waitjob(v.get("id", "x"))
+    eng("/set?credits=50&creditNo=1"); t = api("/v1/admin/providers-test", {}, tok=None); k = t.get("engine") or t.get("kie") or {}
+    chk("…a balance it can't read: 'balance not read (HTTP 404)', the line stays", "balance not read (HTTP 404)" in (k.get("note") or "") and (api("/v1/me", tok=None).get("alerts138") or {}).get("engine"), [k, api("/v1/me", tok=None).get("alerts138")])
+    eng("/set?creditNo=0"); api("/v1/admin/providers/engine/test", {}, tok=None)
     # 5. again out of credits, then a job made → it clears itself
     eng("/set?credits=0"); v = api("/v1/jobs", {"kind": "video", "model": "wan30", "prompt": "Ropes on the pier", "dur": 5, "aspect": "16:9"}); waitjob(v.get("id", "x"))
     had = bool((api("/v1/me", tok=None).get("alerts138") or {}).get("engine"))
