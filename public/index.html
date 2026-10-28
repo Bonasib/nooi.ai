@@ -20731,6 +20731,26 @@ window.addEventListener("resize",()=>cmdPlace171());document.addEventListener("s
 .ed143.desk .transport{flex-wrap:wrap;row-gap:4px;min-width:0}
 .ed143 .transport .wand171 .dot171{position:absolute;top:3px;inset-inline-end:3px;width:7px;height:7px;border-radius:50%;background:var(--lime)}`;document.head.appendChild(st)})();
 
+/* ================= v172: a quieter engine list (no "Video engine" title, no "Strongest first — sorted by credits per run"
+   line, no stars on the logos — the order, the prices and the list itself stay the same) · under the Home box, what nooi Auto
+   does when it is the one chosen ================= */
+// 1. the words and stars are only hidden: the sheet keeps its name for screen readers (its aria-label) and its order
+hfModelSheet=(o=>function(){const r=o.apply(this,arguments);const s=document.querySelector("#modalRoot .hfsheet");if(s&&s.querySelector(".hfmodels"))s.classList.add("eng172");return r})(hfModelSheet);
+// (the pages' engine lists lose their "Engine" heading too — the chip above says it; an engine with no line of its own says what
+// it is good at instead of "Video engine")
+Object.keys(MODELS).forEach(k=>{const m=MODELS[k],f=typeof MFEAT!=="undefined"&&MFEAT[(typeof M_ALIAS!=="undefined"&&M_ALIAS[k])||k];if(m&&m.d&&m.d[0]==="Video engine"&&f)m.d=[f[0],f[1]]});
+// 2. nooi Auto chosen → one line under the box's chips says what it does (an engine picked by hand → no line)
+hfMRow=(o=>function(t){const h=o.apply(this,arguments),H=S.hf;if(((t==="video"?H.vModel:H.iModel)||"auto")!=="auto")return h;
+  const d=t==="video"?L("nooi Auto: 9 AI agents read your words and pick the best engine for every shot — the strongest where it shows, a lighter one where it doesn't — then keep faces, clothes and places the same and check every frame.",
+      "nooi تلقائي: 9 وكلاء ذكاء اصطناعي يقرؤون وصفك ويختارون أفضل محرك لكل لقطة — الأقوى حيث يظهر الفرق، والأخف حيث لا يظهر — ثم يحافظون على الوجوه والملابس والأماكن ويراجعون كل إطار.")
+    :L("nooi Auto: reads your words and picks the best picture engine for them — text, faces, products or art — and checks every picture.","nooi تلقائي: يقرأ وصفك ويختار أفضل محرك صور له — نص أو وجوه أو منتجات أو فن — ويراجع كل صورة.");
+  return h+'<p class="nai172" data-t="'+t+'"><img src="'+esc(logoFor("auto"))+'" alt=""><span>'+esc(d)+"</span></p>"})(hfMRow);
+(()=>{const st=document.createElement("style");st.textContent=`
+.hfsheet.eng172>.spread{justify-content:flex-end}.hfsheet.eng172>.spread>h2,.hfsheet.eng172 .mrkh,.hfsheet.eng172 .hfmodel .mrk{display:none!important}
+#sec93-model>.lbl:first-child,#sec93-imodel .igrp.imod>.lbl:first-child{display:none}
+.nai172{display:flex;align-items:flex-start;gap:8px;margin:6px 2px 4px;font-size:12.5px;line-height:1.5;color:var(--mute)}
+.nai172 img{flex:none;width:16px;height:16px;margin-top:2px;object-fit:contain}`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
