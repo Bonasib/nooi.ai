@@ -8440,11 +8440,18 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
    swipe on the tracks (touch) → scrolls the timeline · tapping a track never adds anything by itself (use the "+" buttons) */
 const TLX={s:null};
 const edSeekX=(x)=>{const tl=$("#tlin");if(!tl)return;const r=tl.getBoundingClientRect();ED.playing=false;ED.t=clamp((x-r.left-40)/S.ed.zoom,0,Math.max(0,edTotal()-.01));const ph=$("#ph");if(ph)ph.style.left=(40+ED.t*S.ed.zoom)+"px"};
-window.addEventListener("pointerdown",e=>{if(S.view!=="edit")return;const tl=e.target.closest&&e.target.closest("#tlin");if(!tl||e.target.closest(".blk,.trkadd,button,input,label"))return;e.stopImmediatePropagation();
-  const scrub=e.pointerType==="mouse"||!!e.target.closest(".ruler,#ph");TLX.s={id:e.pointerId,x:e.clientX,y:e.clientY,cx:e.clientX,moved:false,scrub};tlTouch149(scrub);
+window.addEventListener("pointerdown",e=>{if(S.view!=="edit")return;const tl=e.target.closest&&e.target.closest("#tlin");if(!tl)return;const near=nearPh169(e,tl);   // (v169: on the playhead's line — even over a clip — it is the playhead you take)
+  if(!near&&e.target.closest(".blk,.trkadd,button,input,label"))return;
+  // (a finger there waits for its first move: sideways takes the playhead, up or down scrolls, still is a tap or a long press on
+  // what is under it — until it moves, the rest of the page hears it as before)
+  if(near&&e.pointerType!=="mouse"&&!e.target.closest(".ruler,#ph")){TLX.s={id:e.pointerId,x:e.clientX,y:e.clientY,cx:e.clientX,moved:false,scrub:true,lazy:true};return}
+  e.stopImmediatePropagation();
+  const scrub=near||e.pointerType==="mouse"||!!e.target.closest(".ruler,#ph");TLX.s={id:e.pointerId,x:e.clientX,y:e.clientY,cx:e.clientX,moved:false,scrub};tlTouch149(scrub);
   if(scrub){e.preventDefault();edSeekX(e.clientX);try{tl.setPointerCapture(e.pointerId)}catch(_){}tl.classList.add("scrubbing")}},true);
-window.addEventListener("pointermove",e=>{const s=TLX.s;if(!s||e.pointerId!==s.id)return;e.stopImmediatePropagation();if(s.scrub){s.cx=e.clientX;edSeekX(e.clientX);return}if(Math.hypot(e.clientX-s.x,e.clientY-s.y)>8)s.moved=true},true);
-const tlEnd=e=>{const s=TLX.s;if(!s||e.pointerId!==s.id)return;e.stopImmediatePropagation();if(!s.scrub&&!s.moved&&e.type==="pointerup")edSeekX(e.clientX);const tl=$("#tlin");if(tl)tl.classList.remove("scrubbing");TLX.s=null;TLX.lastEnd=performance.now();persist()};
+window.addEventListener("pointermove",e=>{const s=TLX.s;if(!s||e.pointerId!==s.id)return;
+  if(s.lazy){const dx=Math.abs(e.clientX-s.x),dy=Math.abs(e.clientY-s.y);if(dx<6&&dy<6)return;if(dy>dx){TLX.s=null;return}take169(e,s)}
+  e.stopImmediatePropagation();if(s.scrub){s.cx=e.clientX;edSeekX(e.clientX);return}if(Math.hypot(e.clientX-s.x,e.clientY-s.y)>8)s.moved=true},true);
+const tlEnd=e=>{const s=TLX.s;if(!s||e.pointerId!==s.id)return;if(s.lazy){TLX.s=null;return}e.stopImmediatePropagation();if(!s.scrub&&!s.moved&&e.type==="pointerup")edSeekX(e.clientX);const tl=$("#tlin");if(tl)tl.classList.remove("scrubbing");TLX.s=null;TLX.lastEnd=performance.now();persist()};
 window.addEventListener("pointerup",tlEnd,true);window.addEventListener("pointercancel",tlEnd,true);
 window.addEventListener("click",e=>{if(S.view!=="edit")return;const tl=e.target.closest&&e.target.closest("#tlin");if(!tl)return;const add=e.target.closest(".trkadd");
   if(add){e.stopImmediatePropagation();e.preventDefault();if(add.dataset.k==="t"){const s0=Math.min(ED.t,Math.max(0,edTotal()-1)),tx={id:uid(),text:L("Your text","نصك هنا"),start:s0,end:s0+2.5,pos:"bottom",style:"caption",size:7,anim:"pop"};S.ed.texts.push(tx);S.ed.selText=tx.id;S.ed.tab="text";persist();renderView();setTimeout(()=>{const i=document.querySelector('[data-bind="edtext.text"]');if(i){i.focus();i.select()}},60)}
@@ -20374,6 +20381,188 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
 // the job carries it (a tone already set — a character's own — stays)
 addJob=(o=>function(j){const k=act165();if(j&&j.kind==="lipsync"&&k!=="auto"&&!(j.meta&&j.meta.tone))j.meta=Object.assign({},j.meta,{tone:k});return o.apply(this,arguments)})(addJob);
 (()=>{const st=document.createElement("style");st.textContent=`.act165 .tile .lb small{white-space:normal;line-height:1.3}.act165 .tile{min-height:62px}`;document.head.appendChild(st)})();
+
+/* ================= v169: the editor — captions that are the words said, when they're said; a playhead that always
+   moves; the editor opening as it should; the agents in one row ================= */
+// 1. captions. What the device's small speech model got wrong, and how each is put right:
+//   · words it invents where nobody speaks ("Thank you.", "Subscribe…", "[Music]", "ترجمة …") — a word with no voice under
+//     it is dropped, and subtitle-credit lines are dropped always;
+//   · a phrase it repeats in a loop — kept once;
+//   · times that drift from the voice — each word is laid on the voice the sound really has (its loud stretches between
+//     pauses), so a word lights up as it is said and nothing shows in a pause;
+//   · the language guessed again for every part — the language heard in the first part is kept for the rest.
+// And the exact way, when the server has speech-to-text: the sound of the whole edit is heard there (every word and when it
+// is said), priced per minute on the button before anything is sent; nothing is charged when nothing is said.
+// the voice in the sound: loudness every 20 ms → where something is heard (dips under 120 ms inside a word are bridged,
+// clicks under 60 ms ignored) and its stretches between pauses
+function env169(a,sr){sr=sr||16000;const F=Math.round(sr*.02),n=Math.ceil(a.length/F),E=new Float32Array(n);
+  for(let i=0;i<n;i++){let s=0;const b=i*F,e=Math.min(a.length,b+F);for(let k=b;k<e;k++)s+=a[k]*a[k];E[i]=Math.sqrt(s/Math.max(1,e-b))}
+  const so=Array.from(E).sort((x,y)=>x-y),lo=so[Math.floor(so.length*.1)]||0,hi=so[Math.floor(so.length*.95)]||0,thr=Math.max(.004,lo*2.5,hi*.1),on=new Uint8Array(n);
+  for(let i=0;i<n;i++)on[i]=E[i]>thr?1:0;
+  for(let i=0;i<n;){if(on[i]){i++;continue}let j=i;while(j<n&&!on[j])j++;if(i>0&&j<n&&j-i<=6)on.fill(1,i,j);i=j}
+  for(let i=0;i<n;){if(!on[i]){i++;continue}let j=i;while(j<n&&on[j])j++;if(j-i<=3)on.fill(0,i,j);i=j}
+  const segs=[];for(let i=0;i<n;){if(!on[i]){i++;continue}let j=i;while(j<n&&on[j])j++;segs.push([+(i*.02).toFixed(3),+(j*.02).toFixed(3)]);i=j}
+  return{on,segs,dt:.02,dur:a.length/sr}}
+// how much of [a, b] has voice (0…1)
+function vf169(V,a,b){const i0=Math.max(0,Math.floor(a/V.dt)),i1=Math.min(V.on.length,Math.ceil(b/V.dt));let n=0;for(let i=i0;i<i1;i++)n+=V.on[i];return i1>i0?n/(i1-i0):0}
+// subtitle-credit lines and calls to subscribe the model writes over silence or music (never what someone said in a clip)
+const JUNK169=[/amara\.?org/i,/\b(subtitles?|captions?|transcri(?:bed|ption)|translated|translation)\s+by\b/i,/ترجمة\s+نانسي/,/نانسي\s+قنقر/,/اشتركوا?\s+(?:في|ب)\s*القناة/,/لا\s+تنسوا?\s+الا?شتراك/,/\bplease\s+subscribe\b/i,/\bsubscribe\s+to\s+(?:my|the|our)\s+channel\b/i,/\blike\s+and\s+subscribe\b/i];
+// what it says when there is music and no one speaks — dropped only when it stands alone over little voice
+const ENDS169=/^(?:(?:thank\s+you|thanks)(?:\s+(?:so|very)\s+much)?(?:\s+for\s+watching)?|bye|bye-bye|see\s+you(?:\s+next\s+time)?|you|(?:شكرا|شكراً)(?:\s+(?:لكم|جزيلا|جزيلاً))?(?:\s+(?:على|لل)\s*المشاهدة)?)$/i;
+const key169=w=>String(w||"").toLowerCase().replace(/[^\p{L}\p{N}]+/gu,"");
+// a phrase repeated over and over (a loop of the model) → once
+function unloop169(W){const out=[];
+  for(let i=0;i<W.length;){let cut=0;
+    for(let n=1;n<=6&&!cut;n++){if(i+n*3>W.length)break;let r=1;
+      while(i+(r+1)*n<=W.length){let same=true;for(let q=0;q<n;q++){const a=key169(W[i+q].w);if(!a||a!==key169(W[i+r*n+q].w)){same=false;break}}if(!same)break;r++}
+      if(r>=(n===1?4:3)){for(let q=0;q<n;q++)out.push(W[i+q]);cut=r*n}}
+    if(cut)i+=cut;else out.push(W[i++])}
+  return out}
+// runs of words (a pause of more than 0.6 s between two words starts a new run)
+function runs169(W){const R=[];let cur=null;W.forEach(w=>{if(!cur||w.s-cur[cur.length-1].e>.6){cur=[];R.push(cur)}cur.push(w)});return R}
+// each word on the voice: a word goes to the stretch of voice it overlaps most (else the nearest, never going back in time);
+// a stretch's words share it by their length — a long stretch of sound (music under the voice) keeps its words where they were heard
+function align169(W,V){if(!W.length||!V||!V.segs.length)return W;const S=V.segs,by=S.map(()=>[]);let si=0;
+  for(const w of W){const c=(w.s+w.e)/2;let best=-1,bo=0;
+    for(let j=si;j<S.length;j++){if(S[j][0]>w.e+.05)break;const o=Math.min(w.e,S[j][1])-Math.max(w.s,S[j][0]);if(o>bo){bo=o;best=j}}
+    if(best<0){let bd=Infinity;for(let j=si;j<S.length;j++){const d=c<S[j][0]?S[j][0]-c:c>S[j][1]?c-S[j][1]:0;if(d<bd){bd=d;best=j}if(S[j][0]>c)break}}
+    if(best<si)best=si;si=best;by[best].push(w)}
+  const out=[];S.forEach((sg,j)=>{const ws=by[j];if(!ws.length)return;let a=sg[0],b=sg[1];
+    const need=ws.reduce((t,w)=>t+Math.max(.12,Math.min(.9,w.e-w.s)),0),os=ws[0].s,oe=ws[ws.length-1].e;
+    if(b-a>Math.max(need*1.8,oe-os)+1){a=Math.max(a,os-.15);b=Math.min(b,oe+.15);if(b-a<.2){a=Math.max(sg[0],Math.min(os,sg[1]-.2));b=Math.min(sg[1],a+Math.max(.2,need))}}
+    const wt=ws.map(w=>Math.max(2,key169(w.w).length+1)),tot=wt.reduce((x,y)=>x+y,0);let t=a;
+    ws.forEach((w,i)=>{const d=(b-a)*wt[i]/tot;out.push({s:+t.toFixed(3),e:+(t+d).toFixed(3),w:w.w});t+=d})});
+  return out}
+// words typed by hand laid over the voice in order (by their length, only where something is heard)
+function spreadVoice169(text,V,from,to){const ws=String(text||"").trim().split(/\s+/).filter(Boolean);if(!ws.length)return[];
+  const S=V.segs.map(s=>[Math.max(s[0],from),Math.min(s[1],to)]).filter(s=>s[1]-s[0]>.05),T=S.reduce((t,s)=>t+s[1]-s[0],0);if(T<.3)return null;
+  const wt=ws.map(w=>Math.max(2,key169(w).length+1)),tot=wt.reduce((x,y)=>x+y,0),at=p=>{let r=p;for(let i=0;i<S.length;i++){const L0=S[i][1]-S[i][0];if(r<=L0+1e-9)return[i,S[i][0]+r];r-=L0}return[S.length-1,S[S.length-1][1]]};
+  let p=0,last=-1;return ws.map((w,i)=>{const d=T*wt[i]/tot;let[ia,ta]=at(p),[ib,tb]=at(p+d);p+=d;
+    if(ia!==ib){if(S[ia][1]-ta<tb-S[ib][0]){ta=S[ib][0];ia=ib}else{tb=S[ia][1];ib=ia}}
+    if(ia>last&&last>=0)ta=S[ia][0];last=ib;   // (a stretch's first word starts with its voice)
+    return{s:+ta.toFixed(3),e:+Math.max(tb,ta+.08).toFixed(3),w}})}
+// the clean-up for any captions: brackets and sound tags out, punctuation kept on its word, credit lines out, loops once;
+// with the voice (device captions): words over silence out, lone stock phrases over music out, every word laid on the voice
+function clean169(W,V,lay){let out=[],tag=0;
+  for(const x of W||[]){const w=String(x.w||"").replace(/\s+/g," ").trim();if(!w)continue;
+    if(tag){if(/[\])）】♪♫]$/.test(w)||++tag>12)tag=0;continue}   // ([Music], (laughs), ♪ … ♪ — never words that were said)
+    if(/^[\[(（【]/.test(w)){if(!/[\])）】]$/.test(w))tag=1;continue}
+    if(/^[♪♫]/.test(w)){if(w.length===1||!/[♪♫]$/.test(w))tag=1;continue}
+    if(/[♪♫*#]/.test(w))continue;
+    if(!/[\p{L}\p{N}]/u.test(w)){if(out.length)out[out.length-1].w+=w;continue}   // (a lone mark goes on the word before it)
+    out.push({s:+x.s||0,e:Math.max(+x.e||0,(+x.s||0)+.05),w})}
+  // credit lines
+  for(const run of runs169(out)){const txt=run.map(w=>w.w).join(" "),st=[];let p=0;run.forEach(w=>{st.push(p);p+=w.w.length+1});
+    for(const re of JUNK169){const m=re.exec(txt);if(!m)continue;
+      // the credit to the end of its sentence (a stop before a space — "Amara.org" isn't one), and its first few words before it
+      let k=-1;for(const q of txt.slice(0,m.index).matchAll(/[.!?؟](?=\s)/g))k=q.index;const lead=txt.slice(k+1,m.index).trim();
+      const a=lead&&lead.split(/\s+/).length<=4?k+1:m.index,z0=txt.slice(m.index).search(/[.!?؟](?=\s|$)/),b=z0<0?txt.length:m.index+z0+1;
+      run.forEach((w,i)=>{if(st[i]+w.w.length>a&&st[i]<b)w.x169=1})}}
+  out=out.filter(w=>!w.x169);
+  // (a word is only dropped when no voice is heard within 0.6 s of it — the model's times can be a little late or early)
+  if(V){out=runs169(out).filter(run=>vf169(V,run[0].s-.3,run[run.length-1].e+.3)>=.05).flat().filter(w=>vf169(V,w.s-.6,w.e+.6)>0);
+    out=runs169(out).filter(run=>{const t=run.map(w=>w.w).join(" ").replace(/[.!?؟،,]+/g,"").trim(),sp=run[run.length-1].e-run[0].s;return!(run.length<=5&&ENDS169.test(t)&&(vf169(V,run[0].s,run[run.length-1].e)<.6||sp>3))}).flat()}
+  out=unloop169(out);if(V&&lay)out=align169(out,V);
+  out.sort((a,b)=>a.s-b.s);for(let i=0;i<out.length-1;i++)if(out[i].e>out[i+1].s)out[i].e=Math.max(out[i].s+.04,out[i+1].s);
+  return out.map(w=>({s:+(+w.s).toFixed(3),e:+(+w.e).toFixed(3),w:w.w}))}
+// the price of exact captions for this edit's length (asked once per length; the button says it before anything is sent)
+const CAP169={dur:-1,ready:false,cost:null,asking:false};
+function capPrice169(){if(API.mode!=="server"||CAP169.asking)return;const d=Math.round(edTotal()*2)/2;if(d===CAP169.dur)return;CAP169.dur=d;CAP169.asking=true;
+  API.req("/v1/captions169?dur="+d).then(r=>{CAP169.ready=!!(r&&r.ready);CAP169.cost=r&&r.cost!=null?+r.cost:null}).catch(()=>{CAP169.ready=false}).finally(()=>{CAP169.asking=false;if(S.view==="edit"&&S.ed.tab==="words")renderView()})}
+const capLang169=()=>{const C=S.ed.caps;return C.lang149&&C.lang149!=="auto"?C.lang149:null};
+// on this device (free): the parts of the edit with sound, heard one by one; the language heard first is kept for the rest
+edxAutoCaps=async function(){if(EDX.busy)return;if(!laiOn()){toast(L("Turn on On-device AI in Account to transcribe here, or use exact captions.","فعّل الذكاء على الجهاز من الحساب للتفريغ هنا، أو استخدم الترجمة الدقيقة."));return}
+  EDX.busy=1;renderView();const E=S.ed;let lang=capLang169(),part="";
+  const pill=p=>uiPill(L("Listening ","الاستماع ")+part+" · "+(p.status==="progress"&&p.progress!=null?laiNote(p)+" "+Math.round(p.progress)+"%":laiNote(p)));
+  try{uiPill(L("Reading the sound of the whole edit…","قراءة صوت المونتاج كله…"));const audio=await edxTimelineAudio(),MD=laiModels(),wins=win149(audio,16000),V=env169(audio);let words=[];
+    if(!wins.length||!V.segs.length)throw new Error(L("No speech found.","لم يُعثر على كلام."));
+    for(let k=0;k<wins.length;k++){const[s,e]=wins[k],off=s/16000,seg=audio.slice(s,e),dur=seg.length/16000;part=(k+1)+"/"+wins.length;let got=[];
+      try{const r=await laiCall({op:"run",task:"asr",model:MD.asrw,input:{audio:seg,words:true,...(lang?{language:lang}:{})}},pill,[]);
+        got=(r.chunks||[]).map(c=>({s:+((c.start||0)+off).toFixed(3),e:+((c.end!=null?c.end:(c.start||0)+.3)+off).toFixed(3),w:String(c.text||"").trim()})).filter(x=>x.w)}
+      catch(err){const r=await laiCall({op:"run",task:"asr",model:MD.asr,input:{audio:seg.slice(),...(lang?{language:lang}:{})}},pill,[]);
+        (r.chunks||[]).forEach((c,i,a)=>{got=got.concat(edxSpread(c.text,off+(c.start||0),off+(c.end!=null?c.end:(a[i+1]?a[i+1].start:dur))))});if(!got.length&&r.text)got=edxSpread(r.text,off,off+dur)}
+      got=clean169(got,V,false);if(!lang&&got.length>=3)lang=detect149(got.map(w=>w.w).join(" "));
+      words=words.concat(got)}
+    words=clean169(words,V,true);
+    if(!words.length)throw new Error(L("No speech found.","لم يُعثر على كلام."));
+    E.caps.words=words;E.caps.on=true;E.caps.by169="device";delete E.caps.orig149;persist();const miss=EDX.miss149||[];
+    toast(L("Captions ready — ","الترجمة جاهزة — ")+words.length+L(" words, each timed to the voice. Check them — this device's listening can miss words.",' كلمة، كل كلمة على توقيت الصوت. راجعها — الاستماع على هذا الجهاز قد يخطئ بعض الكلمات.')+(miss.length?" "+L("The sound of clip "+miss.join(", ")+" couldn't be read.","تعذّرت قراءة صوت المقطع "+miss.join("، ")+"."):""),{type:miss.length?"warn":"ok"})}
+  catch(e){toast(String(e.message||e))}finally{EDX.busy=0;uiPill("");renderView()}};
+// exact (on the server, priced): the sound of the edit → every word and its time
+async function capExact169(){if(EDX.busy)return;const E=S.ed;EDX.busy=1;renderView();
+  try{uiPill(L("Reading the sound of the whole edit…","قراءة صوت المونتاج كله…"));const audio=await edxTimelineAudio(),V=env169(audio);
+    if(!V.segs.length)throw new Error(L("No speech found — nothing was charged.","لم يُعثر على كلام — لم يُخصم شيء."));
+    uiPill(L("Sending the sound…","إرسال الصوت…"));const up=await API.upload(wavBlob(audio,16000),"captions169.wav");
+    uiPill(L("Hearing every word…","الاستماع إلى كل كلمة…"));const r=await API.req("/v1/captions169",{json:{url:up.url,lang:capLang169()||""}});
+    let W=(r.words||[]).map(w=>({s:+w.s,e:+w.e,w:String(w.w||"")}));
+    if(!W.length&&(r.lines||[]).length)W=clean169(r.lines.flatMap(l=>edxSpread(l.text,+l.s,+l.e)),V,true);else W=clean169(W,null,false);
+    if(!W.length)throw new Error(L("No speech found — nothing was charged.","لم يُعثر على كلام — لم يُخصم شيء."));
+    E.caps.words=W;E.caps.on=true;E.caps.by169="exact";delete E.caps.orig149;if(r.lang&&!capLang169())E.caps.heard169=r.lang;persist();try{syncServer()}catch(_){}
+    toast(L("Exact captions ready — ","الترجمة الدقيقة جاهزة — ")+W.length+L(" words, each at the moment it is said."," كلمة، كل كلمة في لحظة نطقها."),{type:"ok"})}
+  catch(e){toast(e&&e.status===402?L("Not enough credits for exact captions — top up, or make them free on this device.","الرصيد لا يكفي للترجمة الدقيقة — اشحن رصيدك أو اصنعها مجاناً على هذا الجهاز."):(S.lang==="ar"&&e&&e.errorAr?e.errorAr:String((e&&e.message)||e)),{type:"warn"})}
+  finally{EDX.busy=0;uiPill("");renderView()}}
+// typed words: the same number → only the spelling changes; new words → laid over the voice the edit has
+edxCapsFromText=(o=>async function(txt){const C=S.ed.caps,ws=String(txt||"").trim().split(/\s+/).filter(Boolean);if(!ws.length||C.words.length===ws.length)return o.apply(this,arguments);
+  if(EDX.busy)return o.apply(this,arguments);const to=edTotal();let W=null;EDX.busy=1;
+  try{uiPill(L("Laying the words on the voice…","وضع الكلمات على الصوت…"));const V=env169(await edxTimelineAudio());W=spreadVoice169(ws.join(" "),V,0,to)}catch(e){}finally{EDX.busy=0;uiPill("")}
+  if(!W||!W.length)return o.apply(this,arguments);C.words=W;C.on=true;persist();renderView();toast(L("Captions updated — the words follow the voice.","تم تحديث الترجمة — الكلمات تتبع الصوت."))})(edxCapsFromText);
+// the captions panel: exact (with its price) when the server can, free on this device otherwise or as well
+EDX_PANELS.words=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string")return h;capPrice169();
+  const exact=API.mode==="server"&&CAP169.ready,busy=!!EDX.busy,i=h.indexOf('<button class="btn sm primary" data-act="edx-cap-auto"'),j=i<0?-1:h.indexOf("</button>",i);if(j<0)return h;
+  const pr=CAP169.cost==null?"":CAP169.cost?" · "+CAP169.cost+" "+L("credits","رصيد"):" · "+L("free","مجاناً");
+  const dev='<button class="btn sm'+(exact?"":" primary")+'" data-act="edx-cap-auto" '+(busy?"disabled":"")+">"+ic("mic")+(busy?L("Listening…","جارٍ الاستماع…"):exact?L("On this device · free","على هذا الجهاز · مجاناً"):L("Auto from speech","تلقائياً من الكلام"))+"</button>";
+  const ex=exact?'<button class="btn sm primary" data-act="cap169" '+(busy?"disabled":"")+">"+ic("captions")+L("Exact captions","ترجمة دقيقة")+esc(pr)+"</button>":"";
+  h=h.slice(0,i)+ex+dev+h.slice(j+9);
+  const note=exact?L("Exact: every word heard on the nooi server, at the moment it is said. On this device: free — words are checked against the voice, but some can be missed. Or type the words and they're laid on the voice.","الدقيقة: كل كلمة تُسمع على خادم nooi في لحظة نطقها. على هذا الجهاز: مجاناً — تُطابق الكلمات مع الصوت لكن قد تفوت بعضها. أو اكتب الكلمات وتوضع على الصوت.")
+    :L("Runs on your device · free — every word is checked against the voice and timed to it. Or type the words and they're laid on the voice.","يعمل على جهازك مجاناً — كل كلمة تُطابق مع الصوت وتُوقّت عليه. أو اكتب الكلمات وتوضع على الصوت.");
+  return h.replace(/(<p class="small dim" style="margin:6px 0 0">)[\s\S]*?(<\/p>)/,(m0,a,b)=>a+esc(note)+b)})(EDX_PANELS.words);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="cap169"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();if(!a.disabled)capExact169()},true);
+
+// 2. the playhead: on its line (even over a clip) it is the playhead you take — the mouse at once, a finger once it moves
+// sideways (held still it is still a long press on the clip, a tap still picks it, up or down still scrolls); a picked clip's
+// edge under it still trims. While it is dragged on a phone the page doesn't scroll away under the finger.
+function nearPh169(e,tl){if(e.button>0||!S.ed)return false;const t=e.target;if(!t||!t.closest||t.closest(".mk146,.trkadd,input,label,select,textarea"))return false;
+  const r=tl.getBoundingClientRect(),x=r.left+40+ED.t*S.ed.zoom,tol=e.pointerType==="mouse"?5:14;if(Math.abs(e.clientX-x)>tol)return false;
+  const b=t.closest(".blk");if(b){const br=b.getBoundingClientRect(),off=e.clientX-br.left,edge=Math.min(16,br.width/4);if((off<edge||off>br.width-edge)&&(e.pointerType==="mouse"||b.classList.contains("pk")))return false}
+  return true}
+// (a finger that waited on the line and moved sideways: the playhead is its own now — no long-press menu, no clip drag)
+function take169(e,s){s.lazy=false;tlTouch149(true);if(CM131.lp&&CM131.lp.id===e.pointerId){clearTimeout(CM131.lp.tm);CM131.lp=null}TLX.blk=null;
+  const tl=$("#tlin");if(tl){try{tl.setPointerCapture(e.pointerId)}catch(_){}tl.classList.add("scrubbing")}}
+window.addEventListener("touchmove",e=>{if(TLX.s&&TLX.s.scrub&&!TLX.s.lazy&&S.view==="edit"&&e.cancelable)e.preventDefault()},{capture:true,passive:false});
+window.addEventListener("contextmenu",e=>{if(TLX.s&&TLX.s.scrub&&S.view==="edit"){e.preventDefault();e.stopImmediatePropagation()}},true);   // (a finger held still on the playhead is not a long press on the clip under it)
+
+// 3. the editor opens as it should: the panel left open last time (captions, say) isn't opened again by itself — the
+// selection is let go and the tools start at Media (an empty project shows Media to add clips; on a phone a project with
+// clips opens on the preview and the timeline, no sheet over them). A way in that asks for a panel (a result sent to the
+// editor, the Subtitles page's captions, a voice from the Voice page…) keeps the panel it asked for.
+const OPEN169={left:null};
+const snap169=()=>{const E=S.ed||{};return JSON.stringify([E.tab||"",E.sel||"",E.selText||"",E.pick||null])};
+function open169(){const E=S.ed;if(!E)return;E.tab="media";E.lt143="media";E.aux143=null;E.pick=null;E.sel=null;E.selText=E.selLayer=E.selReg=E.selSfx=null;E.ms146=[];E.pclosed143=E.clips&&E.clips.length?"media":null}
+go=(o=>function(v){const was=S.view;
+  if(was==="edit"&&v!=="edit")OPEN169.left=snap169();
+  else if(v==="edit"&&was!=="edit"&&OPEN169.left===snap169())open169();
+  return o.apply(this,arguments)})(go);
+if(S.view==="edit")open169();OPEN169.left=snap169();
+
+// 4. the agents in one row: their faces side by side (sliding sideways on a phone), and the plan as cards in a row under them.
+// All 9 are in the plan too — the Editor had been left out of a one-shot video (8 cards under 9 faces)
+hfStudioPlanHTML=(o=>function(){const h=o.apply(this,arguments);if(S.hf.tab!=="video"||typeof h!=="string"||h.indexOf('data-bot="editor"')>=0||h.indexOf('data-bot="producer"')<0)return h;
+  const ed=hfBotLine("editor",L("Cuts the shot to its best moments and sets its rhythm and titles.","يقصّ اللقطة على أفضل لحظاتها ويضبط إيقاعها وعناوينها.")).replace('<li class="hbl"','<li class="hbl" data-bot="editor"');
+  return h.replace('<li class="hbl" data-bot="producer"',ed+'<li class="hbl" data-bot="producer"')})(hfStudioPlanHTML);
+// 5. the editor's Export button on a phone: its icon only (the words take room the project's name needs); its name is still read out
+VIEWS.edit=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="string")return h;const x=esc(L("Export video","تصدير الفيديو"));
+  return h.replace('<button class="btn primary edout" data-act="ed-out"','<button class="btn primary edout" data-act="ed-out" aria-label="'+x+'" title="'+x+'"')})(VIEWS.edit);
+(()=>{const st=document.createElement("style");st.textContent=`
+@media (max-width:767px){.ed143.mob .e-act>.edout{flex:none;width:40px;min-width:40px;padding:0!important;justify-content:center;gap:0}.ed143.mob .e-act>.edout>span{display:none}.ed143.mob .e-act>.edout svg{margin:0;width:18px;height:18px}}`;document.head.appendChild(st)})();
+(()=>{const st=document.createElement("style");st.textContent=`
+.hfbots .botstrip{display:flex!important;flex-wrap:nowrap;gap:8px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none;justify-content:flex-start;padding:4px 2px 6px}
+.hfbots .botstrip::-webkit-scrollbar{display:none}
+.hfbots .botstrip .sbot{flex:1 0 64px;width:auto;max-width:96px;scroll-snap-align:start}
+@media (max-width:767px){.hfbots .botstrip .sbot{flex:0 0 66px}}
+.hfstplan.bots .hbls{flex-direction:row!important;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;gap:8px;padding:2px 2px 6px;scrollbar-width:thin}
+.hfstplan.bots .hbl{flex:0 0 min(210px,70%);flex-direction:column;gap:6px;padding:10px;border-radius:12px;background:color-mix(in srgb,var(--panel2) 85%,transparent);border:1px solid var(--line);scroll-snap-align:start}
+.hfstplan.bots .hbl .hbav{width:34px;height:34px}.hfstplan.bots .hbl .hbav svg.bot{width:32px!important;height:32px!important}
+.hfstplan.bots .hbt{font-size:12px}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

@@ -52,6 +52,7 @@ import { registerEdit145 } from "./lib/edit145.js";
 import { registerEdit147 } from "./lib/edit147.js";
 import { registerEdit148 } from "./lib/edit148.js";   // v145: the editor's Reverse (a clip's part backwards, made here, free)   // v131: a light copy of a clip for dragging the editor's playhead
 import { registerEdit149 } from "./lib/edit149.js";   // v149: captions translated on the server, the price of sound for a whole edit
+import { registerCaptions169 } from "./lib/captions169.js";   // v169: the editor's exact captions (every word and when it is said), priced per minute
 import { registerMotion150 } from "./lib/motion150.js";   // v150: motion ads planned by the text AI (or without it) + agent tools
 import { startKeepMedia } from "./lib/v89.js";   // v89: results that still point at an engine's (expiring) link are kept here
 import "./lib/alert138.js";   // v138: an engine out of credits is said at once (Admin, staff line, one email)
@@ -320,7 +321,7 @@ registerSketch(app);
 registerWorld(app);
 registerV88(app, requireUser); startKeepMedia(); registerScrub131(app, requireUser); registerEdit145(app, requireUser);
 registerEdit147(app, requireUser);
-registerEdit148(app, requireUser); registerEdit149(app, requireUser, isStaff); registerMotion150(app, requireUser);
+registerEdit148(app, requireUser); registerEdit149(app, requireUser, isStaff); registerCaptions169(app, requireUser, isStaff); registerMotion150(app, requireUser);
 registerIngest(app);
 registerExplore(app); registerShowcase(app); registerGifts(app); registerInvoices(app);
 // Low-latency voice preview (ElevenLabs stream, key never leaves the server)
