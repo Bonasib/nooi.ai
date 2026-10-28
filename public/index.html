@@ -8439,6 +8439,12 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
    tap anywhere on the timeline (not on a clip) → move the playhead there · drag on the ruler or the playhead → scrub smoothly
    swipe on the tracks (touch) → scrolls the timeline · tapping a track never adds anything by itself (use the "+" buttons) */
 const TLX={s:null};
+// (v171: a finger's tap on a timeline item does nothing — a long press opens its settings, a long press on an edge trims it;
+// the rest is in the v171 block. This one listener sits here so it is heard before the older ones that pick on a tap.)
+const LP171={s:null,tap:0,fired:0,touch:false};
+window.addEventListener("click",e=>{if(!LP171.tap||performance.now()-LP171.tap>800||S.view!=="edit")return;const b=e.target.closest&&e.target.closest("#tlin .blk");
+  if(!b||(S.ed&&S.ed.msMode146))return;LP171.tap=0;e.stopImmediatePropagation();e.preventDefault()},true);
+window.addEventListener("pointerdown",e=>cmdOutside171(e),true);   // (v171: a touch anywhere else folds the editor's prompt bar — before the picture keeps its touches to itself)
 const edSeekX=(x)=>{const tl=$("#tlin");if(!tl)return;const r=tl.getBoundingClientRect();ED.playing=false;ED.t=clamp((x-r.left-40)/S.ed.zoom,0,Math.max(0,edTotal()-.01));const ph=$("#ph");if(ph){ph.style.left="0px";ph.style.transform="translate3d("+(40+ED.t*S.ed.zoom).toFixed(2)+"px,0,0)"}};   // (v170: the same GPU move as each frame's — a left as well put it at twice its place until the next frame)
 window.addEventListener("pointerdown",e=>{if(S.view!=="edit")return;const tl=e.target.closest&&e.target.closest("#tlin");if(!tl)return;const near=nearPh169(e,tl);   // (v169: on the playhead's line — even over a clip — it is the playhead you take)
   if(!near&&e.target.closest(".blk,.trkadd,button,input,label"))return;
@@ -8580,7 +8586,7 @@ const blkInfo=b=>{const E=S.ed;if(b.dataset.textl)return{k:"text",it:E.texts.fin
   if(b.dataset.clip)return{k:"clip",it:E.clips.find(x=>x.id===b.dataset.clip)};if(b.dataset.edxsel){const[k,id]=b.dataset.edxsel.split(":");if(k==="ly")return{k:"layer",it:E.layers.find(x=>x.id===id)};if(k==="rg")return{k:"region",it:E.regions.find(x=>x.id===id)};if(k==="sx")return{k:"sfx",it:E.sfx.find(x=>x.id===id)}}return null};
 window.addEventListener("pointerdown",e=>{if(S.view!=="edit")return;const b=e.target.closest&&e.target.closest("#tlin .blk");if(!b)return;const inf=blkInfo(b);if(!inf||!inf.it)return;const r=b.getBoundingClientRect(),off=e.clientX-r.left,edge=Math.min(16,r.width/4);
   const mode=off<edge?"l":off>r.width-edge?"r":"m";if(inf.k==="sfx"&&mode!=="m")return;if(inf.k==="clip"&&mode==="m")return;   // clips keep their order (use the arrows); their edges trim
-  const touch=e.pointerType!=="mouse",sel=b.classList.contains("pk");if(touch&&!sel&&mode==="m")return;   // on phones: tap to select first, then drag
+  const touch=e.pointerType!=="mouse",sel=b.classList.contains("pk");if(touch&&!sel)return;   // on phones: a picked item drags; any other item's edge trims after a long press (v171)
   TLX.blk={id:e.pointerId,b,inf,mode,x0:e.clientX,y0:e.clientY,s0:inf.k==="sfx"?inf.it.t:inf.k==="clip"?inf.it.in:inf.it.start,e0:inf.k==="clip"?inf.it.out:inf.it.end,started:false};TLX.dragDone=false},true);
 window.addEventListener("pointermove",e=>{const D=TLX.blk;if(!D||e.pointerId!==D.id)return;const dx=e.clientX-D.x0;if(!D.started){if(Math.abs(dx)<6)return;D.started=true;try{D.b.setPointerCapture(e.pointerId)}catch(_){}D.b.classList.add("dragging")}
   e.stopImmediatePropagation();e.preventDefault();const dt=dx/S.ed.zoom,it=D.inf.it,k=D.inf.k,tot=Math.max(edTotal(),1);
@@ -14975,7 +14981,7 @@ function menuAt131(t,x,y){if(S.view==="edit"){const b=t.closest&&t.closest("#tli
     if(u)items.push({icon:"edit",label:L("Edit in the editor","حرّر في المحرر"),fn:async()=>{await edUseJob(j);go("edit")}});if(u&&img)items.push(actBtn131("video",L("Animate","حرّكها"),"animate-img",'data-id="'+esc(j.id)+'"'));
     items.push(actBtn131("trash",L("Delete","حذف"),"del88",'data-id="'+esc(j.id)+'"',1));cmOpen131(items,x,y,(typeof shown88==="function"?shown88(j):j.prompt||"").slice(0,60));return true}
   return false}
-window.addEventListener("pointerdown",e=>{if(e.button>0||!e.target.closest)return;const t=e.target.closest("#tlin .blk,.gc98[data-open98]")||(e.target.id==="wk"?e.target:null);if(t)lpStart131(e,e.target)},true);
+window.addEventListener("pointerdown",e=>{if(e.button>0||!e.target.closest)return;const t=e.target.closest(".gc98[data-open98]")||(e.target.id==="wk"?e.target:null);if(t)lpStart131(e,e.target)},true);   // (v171: a timeline item's long press opens its settings instead — LP171)
 function lpStart131(e,target){if(e.pointerType==="mouse")return;   // (a mouse has its right click)
   if(CM131.lp&&CM131.lp.id===e.pointerId&&CM131.lp.t===target)return;clearTimeout(CM131.lp&&CM131.lp.tm);const lp={id:e.pointerId,x:e.clientX,y:e.clientY,t:target,p0:target.id==="wk"&&typeof PV!=="undefined"&&PV.pts?PV.pts.get(e.pointerId):null};
   // (the finger's release goes to the thing it touched even when the page has redrawn it — so it is stopped there too)
@@ -20600,6 +20606,130 @@ function sig170(){const E=S.ed;let s=ED.t.toFixed(4)+"|"+(E.tab||"")+"|";try{s+=
 function draw170(now){const busy=ED.playing||ED.rec||R139.on||recording||DR170.down>0||!!TLX.blk||!!(TLX.s&&!TLX.s.lazy)||TRK.busy,sig=busy?"":sig170();
   if(!busy&&!DR170.dirty&&sig===DR170.sig&&now-DR170.at<700)return false;   // (nothing changed: the picture on screen is still right)
   DR170.dirty=false;DR170.sig=sig;DR170.at=now;return true}
+
+/* ================= v171: the timeline by touch (a tap does nothing, a long press opens the settings, a long press on an
+   edge trims) · one agent at a time in a speech bubble · the engines inside the nooi Auto chip · the editor's prompt as a wand ================= */
+// 1. a finger on a timeline item: a tap does nothing (the timeline is for looking and scrolling), a long press picks the item and
+// opens its settings, a long press on its left or right edge then a slide makes it longer or shorter. A picked item's handles
+// still trim and it still drags at once; "Select more" still adds with a tap; the mouse works as before.
+function props171(b){const E=S.ed;if(!E||!b)return;MS146.mod=null;
+  if(b.closest('[data-trk="a"]')){edSetPick(null);E.aux143="music";E.tab=KIND143.music[0]}
+  else if(b.classList.contains("cc")){edSetPick(null);E.aux143="cap";E.tab=KIND143.cap[0]}
+  else{const kk=blkKey131(b);if(!kk)return;if(kk[0]==="music"){edSetPick(null);E.aux143="music";E.tab=KIND143.music[0]}
+    else{edSetPick(kk[0],kk[1]);E.tab=(KIND143[kk[0]]||[E.tab])[0];if(kk[0]==="clip")E.dt143=E.tab}}
+  E.pclosed143=null;persist();renderView();showSheet143()}
+function fire171(s){if(LP171.s!==s)return;
+  if((TLX.s&&!TLX.s.lazy)||(TLX.blk&&TLX.blk.started)||!s.b.isConnected){LP171.s=null;return}   // (the playhead or a drag took the finger)
+  if(CM131.lp){clearTimeout(CM131.lp.tm);CM131.lp=null}
+  s.fired=true;LP171.fired=performance.now();LP171.tap=LP171.fired;try{navigator.vibrate&&navigator.vibrate(12)}catch(e){}
+  const inf=s.zone==="m"?null:blkInfo(s.b);
+  if(!inf||!inf.it||inf.k==="sfx"){LP171.s=null;TLX.blk=null;props171(s.b);return}   // (the middle — or a sound effect, which is a moment: its settings)
+  s.b.classList.add("pk","trim171",s.zone==="l"?"l171":"r171");
+  TLX.blk={id:s.id,b:s.b,inf,mode:s.zone,x0:s.cx,y0:s.cy,s0:inf.k==="clip"?inf.it.in:inf.it.start,e0:inf.k==="clip"?inf.it.out:inf.it.end,started:false};TLX.dragDone=false}
+window.addEventListener("pointerdown",e=>{const o=LP171.s;if(o){clearTimeout(o.tm);LP171.s=null}LP171.touch=e.pointerType!=="mouse";LP171.fired=0;
+  if(S.view!=="edit"||e.pointerType==="mouse"||e.button>0||!e.isPrimary)return;const b=e.target.closest&&e.target.closest("#tlin .blk");if(!b)return;
+  const r=b.getBoundingClientRect(),off=e.clientX-r.left,ed=Math.min(22,r.width/4),zone=off<ed?"l":off>r.width-ed?"r":"m";
+  const s=LP171.s={id:e.pointerId,b,x:e.clientX,y:e.clientY,cx:e.clientX,cy:e.clientY,zone,t0:performance.now(),fired:false,moved:false};
+  s.tm=setTimeout(()=>fire171(s),zone==="m"?480:340)},true);
+window.addEventListener("pointermove",e=>{const s=LP171.s;if(!s||e.pointerId!==s.id)return;
+  if(!s.fired){if(Math.hypot(e.clientX-s.x,e.clientY-s.y)>10){clearTimeout(s.tm);LP171.s=null}else{s.cx=e.clientX;s.cy=e.clientY}return}
+  if(Math.abs(e.clientX-s.cx)>=6)s.moved=true},true);
+const end171=e=>{const s=LP171.s;if(!s||e.pointerId!==s.id)return;clearTimeout(s.tm);LP171.s=null;
+  if(!s.fired){if(e.type==="pointerup"&&performance.now()-s.t0<480)LP171.tap=performance.now();return}   // (a tap: the click it makes does nothing)
+  if(s.zone!=="m"&&!s.moved&&e.type==="pointerup"){s.b.classList.remove("trim171","l171","r171");props171(s.b)}};   // (held on an edge and let go: its settings)
+window.addEventListener("pointerup",end171,true);window.addEventListener("pointercancel",end171,true);
+// (an edge being trimmed keeps the finger: the timeline doesn't scroll under it; a long press is not the phone's own menu)
+window.addEventListener("touchmove",e=>{const s=LP171.s;if(s&&s.fired&&s.zone!=="m"&&e.cancelable)e.preventDefault()},{capture:true,passive:false});
+window.addEventListener("touchend",e=>{if(LP171.fired&&performance.now()-LP171.fired<1500&&e.cancelable&&e.target.closest&&e.target.closest("#tlin"))e.preventDefault()},{capture:true,passive:false});
+window.addEventListener("contextmenu",e=>{if(S.view==="edit"&&LP171.touch&&e.target.closest&&e.target.closest("#tlin .blk")){e.preventDefault();e.stopImmediatePropagation()}},true);
+
+// 2. Home → Agents: above the row of agents, one agent at a time says what it does in a speech bubble (it pops up, "types",
+// then speaks); every few seconds the next one; a tap on an agent in the row below lets that one speak
+const AG171={i:0,bot:null,hold:0};
+function agApply171(anim){const ul=document.querySelector(".hfstplan.bots .hbls");if(!ul)return;const items=[...ul.children].filter(x=>x.matches("li.hbl"));if(!items.length)return;
+  ul.parentNode.classList.add("one171");let i=items.findIndex(x=>x.dataset.bot===AG171.bot);if(i<0)i=AG171.i%items.length;AG171.i=i;const bot=items[i].dataset.bot||"",fresh=anim||bot!==AG171.shown;
+  items.forEach((li,k)=>{li.classList.toggle("on171",k===i);if(k!==i)li.classList.remove("anim171");else if(fresh){li.classList.remove("anim171");void li.offsetWidth;li.classList.add("anim171")}});
+  AG171.bot=bot;AG171.shown=bot;document.querySelectorAll(".hfbots .botstrip .sbot").forEach(s=>s.classList.toggle("spk171",s.dataset.bot===bot))}
+setInterval(()=>{if(document.hidden||Date.now()<AG171.hold)return;const ul=document.querySelector(".hfstplan.bots .hbls");if(!ul)return;
+  const items=[...ul.children].filter(x=>x.matches("li.hbl"));if(items.length<2)return;AG171.i=(AG171.i+1)%items.length;AG171.bot=items[AG171.i].dataset.bot||null;agApply171(true)},4200);
+renderView=(o=>function(){const r=o.apply(this,arguments);try{if(S.view==="home")agApply171(false)}catch(e){}return r})(renderView);
+hfStudioPaint=(o=>function(){const r=o.apply(this,arguments);try{agApply171(false)}catch(e){}return r})(hfStudioPaint);
+document.addEventListener("click",e=>{const s=e.target.closest&&e.target.closest(".hfbots .botstrip .sbot");if(!s||!s.dataset.bot)return;
+  const ul=document.querySelector(".hfstplan.bots .hbls");if(!ul)return;const id=s.dataset.bot;
+  if(!ul.querySelector('li.hbl[data-bot="'+id+'"]')){const b=BOT(id);if(!b||!b.job)return;ul.querySelectorAll("li.x171").forEach(x=>x.remove());
+    ul.insertAdjacentHTML("beforeend",hfBotLine(id,esc(L(b.job[0],b.job[1]))).replace('<li class="hbl"','<li class="hbl x171" data-bot="'+id+'"'))}
+  AG171.bot=id;AG171.hold=Date.now()+9000;agApply171(true)});
+
+// 3. the engines live inside the nooi Auto chip: no "Engine" chip and no row of engine icons under the box — the chip shows what
+// makes the video (nooi Auto, or the engine picked) with a small arrow, and opens the list (nooi Auto first) to pick from
+hfMRow=(o=>function(t){let h=o.apply(this,arguments);const H=S.hf,cur=(t==="video"?H.vModel:H.iModel)||"auto",auto=cur==="auto",nm=auto?L("nooi Auto","nooi تلقائي"):hfMName(t,cur),u=logoFor(auto?"auto":cur);
+  h=h.replace(/<div class="ms163"[^>]*>[\s\S]*?<\/div>/,"").replace(/<button class="hfmi pick[^"]*" data-act="hf-model"[\s\S]*?<\/button>/,"");
+  return h.replace(/<button class="hfmi nooi[^"]*" data-act="hfx-nooi"[^>]*>[\s\S]*?<\/button>/,'<button class="hfmi nooi on eng171'+(auto?"":" picked")+'" data-act="hf-model" aria-haspopup="dialog" aria-label="'+esc(L("Engine: ","المحرك: ")+nm)+'" title="'+esc(auto?L("nooi Auto — 9 AI agents pick the best engine for every shot. Tap to pick an engine yourself.","nooi تلقائي — 9 وكلاء ذكاء اصطناعي يختارون أفضل محرك لكل لقطة. اضغط لتختار المحرك بنفسك."):L("Tap to change the engine","اضغط لتغيير المحرك"))+'"><span class="lg">'+(u?'<img src="'+esc(u)+'" alt="">':ic("spark"))+"</span><b>"+esc(nm)+"</b>"+svg('<path d="M6 9l6 6 6-6"/>')+"</button>")})(hfMRow);
+// (the pages' boxes lose the row too — their Engine chip opens the same list)
+page163=function(){document.querySelectorAll('#main .o93[data-o93="model"],#main .o93[data-o93="imodel"]').forEach(c=>{const v=c.querySelector(".o93v");c.setAttribute("aria-label",L("Engine: ","المحرك: ")+(v?v.textContent.trim():""))})};
+// (nooi Auto picked from the list brings the agents back, as its chip did)
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="hf-pick"][data-v="auto"]');if(a)S.hf.bots=true},true);
+
+// 4. the editor's "Add or change anything with a prompt" bar folds into a wand in the row under the picture — a tap opens it
+// over the timeline (the picture and the timeline keep their room); Go, a tap elsewhere or Esc folds it again. In the
+// assistant's chat it stays open where it was (it is the chat's own line).
+const CMD171={open:false};
+VIEWS.edit=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="string"||h.indexOf('<div class="e-cmd">')<0)return h;const E=S.ed||{},chat=E.tab==="chat143",x=esc(L("Edit with a prompt","التعديل بالوصف"));
+  return h.replace('<div class="e-cmd">','<div class="e-cmd c171'+(chat?" inl":CMD171.open?" open":"")+'" id="cmd171">')
+    .replace('<button class="btn sm ghost" data-act="guides143"','<button type="button" class="btn sm ghost wand171" data-act="cmd171" aria-expanded="'+(chat||CMD171.open)+'" aria-controls="cmd171" aria-label="'+x+'" title="'+x+'">'+ic("wand")+((S.edCmd||"").trim()?'<i class="dot171"></i>':"")+'</button><button class="btn sm ghost" data-act="guides143"')})(VIEWS.edit);
+function cmdPlace171(){const c=$("#cmd171"),tr=document.querySelector(".ed143 .transport");if(!c||!tr||!c.classList.contains("open"))return;const r=tr.getBoundingClientRect();
+  c.style.top=Math.round(r.bottom+6)+"px";c.style.left=Math.round(r.left+8)+"px";c.style.width=Math.round(Math.max(200,r.width-16))+"px"}
+function cmdOpen171(on){CMD171.open=!!on;const c=$("#cmd171"),w=document.querySelector(".ed143 .wand171");if(!c||c.classList.contains("inl")){const q=$("#edcmdq");if(on&&q)q.focus();return}
+  c.classList.toggle("open",CMD171.open);if(w)w.setAttribute("aria-expanded",CMD171.open);if(CMD171.open){cmdPlace171();const q=$("#edcmdq");if(q){q.focus();try{q.setSelectionRange(q.value.length,q.value.length)}catch(e){}}}
+  else if(w){const d=w.querySelector(".dot171"),has=!!(S.edCmd||"").trim();if(has&&!d)w.insertAdjacentHTML("beforeend",'<i class="dot171"></i>');else if(!has&&d)d.remove()}}
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="cmd171"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();cmdOpen171(!CMD171.open)},true);
+window.addEventListener("click",e=>{if(S.view==="edit"&&!CMD171.open&&e.target.closest&&e.target.closest('#cmd171 [data-act="at147-open"]'))cmdOpen171(true)},true);   // (its @ list shows with it)
+function cmdOutside171(e){if(!CMD171.open||S.view!=="edit")return;const t=e.target;if(t.closest&&t.closest("#cmd171,.wand171,#at147,.toast,#modalRoot"))return;cmdOpen171(false)}   // (heard early — see LP171)
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&CMD171.open&&S.view==="edit"){cmdOpen171(false);e.stopPropagation()}},true);
+// (Go folds it — the plan and its progress show in the assistant and on the timeline)
+window.addEventListener("click",e=>{if(CMD171.open&&e.target.closest&&e.target.closest('[data-act="edcmd-go"]')&&(($("#edcmdq")||{}).value||"").trim())setTimeout(()=>cmdOpen171(false),0)},true);
+window.addEventListener("keydown",e=>{if(CMD171.open&&e.key==="Enter"&&!e.isComposing&&e.target&&e.target.id==="edcmdq"&&e.target.value.trim())setTimeout(()=>cmdOpen171(false),0)},true);
+renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="edit"&&CMD171.open)cmdPlace171();else if(S.view!=="edit")CMD171.open=false;return r})(renderView);
+window.addEventListener("resize",()=>cmdPlace171());document.addEventListener("scroll",()=>cmdPlace171(),true);
+
+(()=>{const st=document.createElement("style");st.textContent=`
+#tlin .blk.trim171{touch-action:none;box-shadow:0 0 0 2px var(--lime);z-index:4}
+#tlin .blk.trim171.l171{box-shadow:inset 4px 0 0 var(--lime),0 0 0 2px var(--lime)}#tlin .blk.trim171.r171{box-shadow:inset -4px 0 0 var(--lime),0 0 0 2px var(--lime)}
+.hfstplan.bots.one171 .hbls{display:grid!important;grid-template-columns:minmax(0,1fr);overflow:visible!important;padding:6px 2px 4px!important;scroll-snap-type:none}
+.hfstplan.bots.one171 .hbl{grid-area:1/1;display:flex!important;flex-direction:row!important;align-items:flex-end;gap:10px;margin:0;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;opacity:0;visibility:hidden;pointer-events:none;flex:none!important;min-width:0}
+.hfstplan.bots.one171 .hbl{align-self:start}.hfstplan.bots.one171 .hbl.on171{opacity:1;visibility:visible;pointer-events:auto}
+.o93[data-o93="model"] .o93t,.o93[data-o93="imodel"] .o93t{display:none}
+.o93[data-o93="model"]::after,.o93[data-o93="imodel"]::after{content:"";flex:none;width:7px;height:7px;border-right:1.7px solid currentColor;border-bottom:1.7px solid currentColor;transform:translateY(-2px) rotate(45deg);margin-inline-start:6px;opacity:.7}
+.hfstplan.bots.one171 .hbl .hbav{flex:none;width:52px!important;height:52px!important;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--lime) 22%,transparent),transparent 70%)}
+.hfstplan.bots.one171 .hbl .hbav svg.bot{width:44px!important;height:44px!important}
+.hfstplan.bots.one171 .hbl.on171 .hbav{animation:bob171 2.6s ease-in-out infinite}
+.hfstplan.bots.one171 .hbt{position:relative;flex:1;min-width:0;display:block;padding:10px 13px 11px;border-radius:18px 18px 18px 6px;background:color-mix(in srgb,var(--lime) 13%,var(--panel));box-shadow:0 8px 22px rgba(0,0,0,.10);font-size:13.5px!important;line-height:1.45;margin-bottom:6px}
+[dir=rtl] .hfstplan.bots.one171 .hbt{border-radius:18px 18px 6px 18px}
+.hfstplan.bots.one171 .hbt::before{content:"";position:absolute;bottom:-5px;inset-inline-start:2px;width:14px;height:14px;background:inherit;border-radius:0 0 0 4px;clip-path:polygon(0 0,100% 0,0 100%)}
+[dir=rtl] .hfstplan.bots.one171 .hbt::before{clip-path:polygon(0 0,100% 0,100% 100%)}
+.hfstplan.bots.one171 .hbt>b{font-size:14px}.hfstplan.bots.one171 .hbt>small{color:var(--mute);margin-inline-start:4px}.hfstplan.bots.one171 .hbt>span{display:block;margin-top:3px}
+.hfstplan.bots.one171 .hbl.anim171 .hbav{animation:pop171 .5s cubic-bezier(.3,1.5,.5,1) both,bob171 2.6s ease-in-out .5s infinite}
+.hfstplan.bots.one171 .hbl.anim171 .hbt{animation:bub171 .42s cubic-bezier(.2,1.3,.4,1) .12s both;transform-origin:0% 100%}
+[dir=rtl] .hfstplan.bots.one171 .hbl.anim171 .hbt{transform-origin:100% 100%}
+.hfstplan.bots.one171 .hbl.anim171 .hbt>*{animation:txt171 .35s ease-out .85s both}
+.hfstplan.bots.one171 .hbl.anim171 .hbt::after{content:"";position:absolute;top:50%;inset-inline-start:16px;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:var(--mute);box-shadow:11px 0 0 var(--mute),22px 0 0 var(--mute);animation:dots171 .8s steps(1) .2s both}
+[dir=rtl] .hfstplan.bots.one171 .hbl.anim171 .hbt::after{box-shadow:-11px 0 0 var(--mute),-22px 0 0 var(--mute)}
+@keyframes pop171{0%{opacity:0;transform:scale(.4) translateY(10px)}70%{opacity:1;transform:scale(1.1)}100%{transform:none}}
+@keyframes bub171{0%{opacity:0;transform:scale(.6) translateY(8px)}100%{opacity:1;transform:none}}
+@keyframes txt171{0%{opacity:0;transform:translateY(4px)}100%{opacity:1;transform:none}}
+@keyframes dots171{0%{opacity:1}25%{opacity:.45}50%{opacity:1}75%{opacity:.45}100%{opacity:0}}
+@keyframes bob171{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.hfbots .botstrip .sbot.spk171 .sav{box-shadow:0 0 0 2px var(--lime),0 6px 16px color-mix(in srgb,var(--lime) 35%,transparent);transition:box-shadow .25s}
+@media (prefers-reduced-motion:reduce){.hfstplan.bots.one171 .hbl *,.hfstplan.bots.one171 .hbl .hbt::after{animation:none!important}.hfstplan.bots.one171 .hbl .hbt::after{display:none}}
+.hfmi.eng171{gap:6px}.hfmi.eng171>svg:last-child{width:14px;height:14px;opacity:.75;flex:none}.hfmi.eng171 .lg img{object-fit:contain}
+.ed143 .e-cmd.c171:not(.open):not(.inl){display:none!important}
+.ed143 .e-cmd.c171.open{display:block!important;position:fixed;z-index:60;padding:8px;border-radius:16px;background:var(--panel);border:1px solid var(--line2);box-shadow:0 14px 36px rgba(0,0,0,.4);animation:cmd171 .18s ease-out}
+.ed143 .e-cmd.c171.open .edcmd{margin:0}
+@keyframes cmd171{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.ed143 .transport .wand171{position:relative;color:color-mix(in srgb,var(--lime) 80%,var(--text))}
+.ed143 .transport .wand171[aria-expanded="true"]{background:color-mix(in srgb,var(--lime) 20%,transparent)}
+.ed143.desk .transport{flex-wrap:wrap;row-gap:4px;min-width:0}
+.ed143 .transport .wand171 .dot171{position:absolute;top:3px;inset-inline-end:3px;width:7px;height:7px;border-radius:50%;background:var(--lime)}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

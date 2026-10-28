@@ -127,29 +127,27 @@ async def page_checks():
             await pg.goto(B + "/"); await pg.wait_for_function("typeof API!=='undefined'&&API.mode==='server'", timeout=20000)
             await pg.evaluate("(l)=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.lang=l;S.user={name:'T',method:'google'};AU.showAuth=false}", lang); return pg
         pg = await page()
-        # every engine with its icon, Kling 3.0 kept
+        # every engine with its icon, Kling 3.0 kept (v171: the engines are inside the nooi Auto chip — no row of icons under the box)
         r = await pg.evaluate("""async()=>{const R={};R.noLogo=[...Object.keys(MODELS),...Object.keys(IMG_MODELS)].filter(i=>!logoFor(i));
-          S.view='home';S.hf.tab='video';S.hf.vModel='auto';renderView();await new Promise(r=>setTimeout(r,400));
-          const row=document.querySelector('.hfbox .ms163, .ms163');R.home=row?[...row.querySelectorAll('button')].map(b=>b.dataset.v):[];R.homeImgs=row?[...row.querySelectorAll('button:not(.all163) img')].length:0;
-          row.querySelector('[data-v="kling30"]').click();await new Promise(r=>setTimeout(r,300));R.picked=S.hf.vModel;R.chip=(document.querySelector('.hfmi.pick')||{}).textContent;
-          document.querySelector('.ms163 .all163').click();await new Promise(r=>setTimeout(r,300));R.sheet=(document.querySelector('.hfsheet h2')||{}).textContent;R.sheetK30=!!document.querySelector('.hfsheet .hfmodel[data-v="kling30"]');closeSheet();
-          S.view='video';renderView();await new Promise(r=>setTimeout(r,600));const vr=document.querySelector('.dock98 .ms163');R.video=vr?[...vr.querySelectorAll('button')].map(b=>b.dataset.v):[];
-          vr.querySelector('[data-v="kling40"]').click();await new Promise(r=>setTimeout(r,400));R.vPicked=S.draft.model;R.vOn=(document.querySelector('.dock98 .ms163 [aria-checked="true"]')||{dataset:{}}).dataset.v;
-          S.view='image';renderView();await new Promise(r=>setTimeout(r,600));const ir=document.querySelector('.dock98 .ms163');R.image=ir?[...ir.querySelectorAll('button')].map(b=>b.dataset.v):[];
-          ir.querySelector('[data-v="mj"]').click();await new Promise(r=>setTimeout(r,400));R.iPicked=S.img.model;return R}""")
+          S.view='home';S.hf.tab='video';S.hf.vModel='auto';renderView();await new Promise(r=>setTimeout(r,400));R.rows=document.querySelectorAll('.ms163').length;
+          document.querySelector('.hfmi.eng171').click();await new Promise(r=>setTimeout(r,300));const L=[...document.querySelectorAll('.hfsheet .hfmodel')];R.home=L.map(b=>b.dataset.v);R.homeImgs=L.filter(b=>b.querySelector('img')).length;
+          R.sheet=(document.querySelector('.hfsheet h2')||{}).textContent;document.querySelector('.hfsheet .hfmodel[data-v="kling30"]').click();await new Promise(r=>setTimeout(r,300));R.picked=S.hf.vModel;R.chip=(document.querySelector('.hfmi.eng171')||{}).textContent;
+          S.view='video';renderView();await new Promise(r=>setTimeout(r,600));R.vrows=document.querySelectorAll('.ms163').length;const vt=[...document.querySelectorAll('.dock98 .sec93 [data-set="draft.model"][data-val]')];R.video=vt.map(b=>b.dataset.val);
+          vt.find(b=>b.dataset.val==='kling40').click();await new Promise(r=>setTimeout(r,400));R.vPicked=S.draft.model;
+          S.view='image';renderView();await new Promise(r=>setTimeout(r,600));R.irows=document.querySelectorAll('.ms163').length;const it=[...document.querySelectorAll('.dock98 .sec93 [data-set="img.model"][data-val]')];R.image=it.map(b=>b.dataset.val);
+          it.find(b=>b.dataset.val==='mj').click();await new Promise(r=>setTimeout(r,400));R.iPicked=S.img.model;return R}""")
         out["icons"] = r
         ok(not r["noLogo"], f"every engine has an icon {r['noLogo']}")
-        ok(r["home"][:2] == ["kling40", "kling30"] and "*" in r["home"] and len(r["home"]) >= 15 and r["homeImgs"] == len(r["home"]) - 1, f"home row: Kling 4.0, Kling 3.0 first, every engine with its icon, All last {r['home']} {r['homeImgs']}")
-        ok(r["picked"] == "kling30" and r["chip"] == "Kling 3.0", f"a tap picks Kling 3.0 {r['picked']} {r['chip']!r}")
-        ok(r["sheet"] == "Video engine" and r["sheetK30"], f"All opens the full list (Kling 3.0 in it) {r['sheet']!r}")
-        ok(r["video"][:3] == ["auto", "kling40", "kling30"] and "*" in r["video"] and r["vPicked"] == "kling40" and r["vOn"] == "kling40", f"nooi Studio row {r['video'][:4]} {r['vPicked']} {r['vOn']}")
-        ok(r["image"][:2] == ["auto", "nanopro"] and r["iPicked"] == "mj", f"Images row {r['image'][:3]} {r['iPicked']}")
+        ok(r["rows"] == 0 and r["home"][0] == "auto" and {"kling40", "kling30"} <= set(r["home"]) and len(r["home"]) >= 15 and r["homeImgs"] == len(r["home"]), f"home: the nooi Auto chip opens every engine, each with its icon {r['home']} {r['homeImgs']}")
+        ok(r["sheet"] == "Video engine" and r["picked"] == "kling30" and r["chip"] == "Kling 3.0", f"Kling 3.0 picked from the list shows on the chip {r['picked']} {r['chip']!r}")
+        ok(r["vrows"] == 0 and {"auto", "kling40", "kling30"} <= set(r["video"]) and r["vPicked"] == "kling40", f"nooi Studio: the engines in the Engine list {r['video'][:4]} {r['vPicked']}")
+        ok(r["irows"] == 0 and {"auto", "nanopro", "mj"} <= set(r["image"]) and r["iPicked"] == "mj", f"Images: the engines in the Engine list {r['image'][:3]} {r['iPicked']}")
         # engine, not model / generator
-        for lang, want in (("en", ("Engine", "Video engine")), ("ar", ("المحرك", "محرك الفيديو"))):
+        for lang, want in (("en", ("Engine: ", "Video engine")), ("ar", ("المحرك: ", "محرك الفيديو"))):
             await pg.evaluate("(l)=>{S.lang=l;S.view='home';S.hf.tab='video';S.hf.vModel='auto';renderView()}", lang); await pg.wait_for_timeout(300)
             t = await pg.evaluate("""async()=>{const box=document.querySelector('.hfbox');const txt=box.innerText;hfModelSheet();await new Promise(r=>setTimeout(r,200));const h=(document.querySelector('.hfsheet h2')||{}).textContent;closeSheet();
-              return {chip:(document.querySelector('.hfmi.pick')||{}).textContent,h,model:/\\bmodels?\\b|generator|نموذج|مولّد/i.test(txt)}}""")
-            ok(t["chip"] == want[0] and t["h"] == want[1] and not t["model"], f"{lang}: the box says engine {t}")
+              return {chip:(document.querySelector('.hfmi.eng171')||{getAttribute:()=>''}).getAttribute('aria-label'),h,model:/\\bmodels?\\b|generator|نموذج|مولّد/i.test(txt)}}""")
+            ok((t["chip"] or "").startswith(want[0]) and t["h"] == want[1] and not t["model"], f"{lang}: the box says engine {t}")
         await pg.evaluate("()=>{S.lang='en'}")
         fr = json.load(open(ROOT + "/public/i18n/fr.json")); ok(fr.get("Video engine") == "Moteur vidéo" and "Video model" not in fr, "the shipped French says moteur")
         # super slow motion on the Video page: tiles with price and length, the Generate price, the job
@@ -181,9 +179,9 @@ async def page_checks():
         ok(r["kept"] == "off" and r["dev"], f"a smoothing switched off stays off; a clip the engine can't do says it is smoothed on this device {r}")
         # phone, Arabic: the row and the tiles fit
         pg2 = await page(390, 844, "ar")
-        r = await pg2.evaluate("""async()=>{S.view='home';S.hf.tab='video';S.hf.vModel='happyhorse';renderView();await new Promise(r=>setTimeout(r,400));const s=document.querySelector('.ms163'),c=s.getBoundingClientRect(),o=s.querySelector('[aria-checked="true"]').getBoundingClientRect();
-          return {inView:o.left>=c.left-1&&o.right<=c.right+1,overflow:document.documentElement.scrollWidth>innerWidth+1}}""")
-        ok(r["inView"] and not r["overflow"], f"phone (Arabic): the picked engine is in view, nothing wider than the screen {r}")
+        r = await pg2.evaluate("""async()=>{S.view='home';S.hf.tab='video';S.hf.vModel='happyhorse';renderView();await new Promise(r=>setTimeout(r,400));const o=document.querySelector('.hfmi.eng171').getBoundingClientRect();
+          return {inView:o.left>=-1&&o.right<=innerWidth+1&&o.width>40,overflow:document.documentElement.scrollWidth>innerWidth+1}}""")
+        ok(r["inView"] and not r["overflow"], f"phone (Arabic): the picked engine's chip is in view, nothing wider than the screen {r}")
         ok(not errs, f"page errors {errs}")
         await b.close()
 

@@ -13,7 +13,7 @@
 #    scroll; a picked clip's edge under it still trims with the mouse
 #  · the editor opens on Media with nothing picked (no sheet over the timeline on a phone), also after a reload; a way in that
 #    asks for a panel keeps it; inside the editor the captions panel stays when chosen
-#  · Home → Agents: all 9 agents in one row (sliding sideways on a phone), the plan as a row of all 9 cards in the same order
+#  · Home → Agents: all 9 agents in one row (sliding sideways on a phone), the plan has all 9 in the same order (v171: one speaks at a time)
 #  · the editor's Export button is an icon only on a phone
 # Run: python3 tests/v169.py
 import asyncio, hashlib, json, os, shutil, subprocess, sys, tempfile, time, urllib.request, uuid
@@ -183,16 +183,16 @@ async def playhead_checks(p, phone):
     g = await geo(1.0); r = await drag(g["x"], g["y"], 80, hold=300); g2 = await pg.evaluate("()=>({scroll:(document.querySelector('#main')||{}).scrollTop||0})"); R["held"] = r
     ok(abs(r["t"] - (1.0 + 80 / g["z"])) < .25 and not r["menu"] and not r["sel"] and g2["scroll"] == g["scroll"], f"held then moved: the playhead, no menu, no scroll {r} {g['scroll']}→{g2['scroll']}")
     if phone:
-        # a finger held still on the line is a long press on the clip (its menu), a tap picks the clip, up or down doesn't scrub
+        # a finger held still on the line is a long press on the clip (v171: its settings), a tap does nothing, up or down doesn't scrub
         cdp = await c.new_cdp_session(pg)
         async def press(x, y, ms):
             await cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": x, "y": y}]}); await pg.wait_for_timeout(ms)
             await cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []}); await pg.wait_for_timeout(350)
-            return await pg.evaluate("()=>({t:+ED.t.toFixed(3),sel:S.ed.sel,pick:S.ed.pick&&S.ed.pick.k||null,menu:!!CM131.el,items:CM131.el?[...CM131.el.querySelectorAll('.cm131i')].length:0})")
+            return await pg.evaluate("()=>({t:+ED.t.toFixed(3),sel:S.ed.sel,pick:S.ed.pick&&S.ed.pick.k||null,tab:S.ed.tab,menu:!!CM131.el,items:CM131.el?[...CM131.el.querySelectorAll('.cm131i')].length:0})")
         g = await geo(1.0); r = await press(g["x"], g["y"], 800); R["long"] = r
-        ok(r["menu"] and r["items"] > 2 and abs(r["t"] - 1.0) < .02, f"held still on the line over a clip: the clip's menu, the playhead stays {r}")
-        await pg.evaluate("()=>cmClose131()"); await pg.wait_for_timeout(700); g = await geo(1.0); r = await press(g["x"], g["y"], 60); R["tap"] = r
-        ok(r["sel"] == "c1" and not r["menu"], f"a tap on the line over a clip picks the clip (as a tap on a clip always does) {r}")
+        ok(r["sel"] == "c1" and r["tab"] == "clip" and not r["menu"] and abs(r["t"] - 1.0) < .02, f"held still on the line over a clip: the clip's settings (v171), the playhead stays {r}")
+        await pg.wait_for_timeout(700); g = await geo(1.0); r = await press(g["x"], g["y"], 60); R["tap"] = r
+        ok(not r["sel"] and not r["pick"] and not r["menu"] and abs(r["t"] - 1.0) < .02, f"a tap on the line over a clip does nothing (v171: as a tap on any clip) {r}")
         g = await geo(1.0); await cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": g["x"], "y": g["y"]}]})
         for k in range(1, 9): await cdp.send("Input.dispatchTouchEvent", {"type": "touchMove", "touchPoints": [{"x": g["x"] + k, "y": g["y"] - 8 * k}]}); await pg.wait_for_timeout(16)
         await cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []}); await pg.wait_for_timeout(300)
@@ -237,11 +237,11 @@ async def agents_checks(p, phone):
     r = await pg.evaluate("""async()=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.lang='en';AU.showAuth=false;S.view='home';S.hf.tab='video';S.hf.bots=false;renderView();await new Promise(r=>setTimeout(r,300));
       document.querySelector('[data-act="hfx-bots"]').click();await new Promise(r=>setTimeout(r,600));const s=document.querySelector('.hfbots .botstrip'),bs=[...s.querySelectorAll('.sbot')],l=document.querySelector('.hfstplan.bots .hbls'),ls=l?[...l.querySelectorAll('.hbl')]:[];
       const top=a=>new Set(a.map(x=>Math.round(x.getBoundingClientRect().top))).size;s.scrollIntoView({block:'center'});
-      return {on:hfBotsOn(),n:bs.length,ids:bs.map(x=>x.dataset.bot),planIds:ls.map(x=>x.dataset.bot),rows:top(bs),h:Math.round(s.getBoundingClientRect().height),sw:s.scrollWidth,cw:s.clientWidth,plan:ls.length,planRows:top(ls),pw:l?l.scrollWidth:0,pcw:l?l.clientWidth:0,ov:getComputedStyle(s).overflowX}}""")
+      return {on:hfBotsOn(),n:bs.length,ids:bs.map(x=>x.dataset.bot),planIds:ls.map(x=>x.dataset.bot),rows:top(bs),h:Math.round(s.getBoundingClientRect().height),sw:s.scrollWidth,cw:s.clientWidth,plan:ls.length,planRows:top(ls),shown:ls.filter(x=>getComputedStyle(x).visibility!=='hidden').length,ov:getComputedStyle(s).overflowX}}""")
     out["agents_" + ("phone" if phone else "desk")] = r
     ok(r["on"] and r["n"] == 9 and r["rows"] == 1 and r["h"] < 130, f"the agents in one row {r}")
-    ok(r["plan"] == 9 and r["planRows"] == 1 and r["planIds"] == r["ids"], f"the plan: all 9 agents, in the same order, as a row of cards {r}")
-    if phone: ok(r["sw"] > r["cw"] and r["ov"] == "auto" and r["pw"] > r["pcw"], f"on a phone the row slides sideways {r}")
+    ok(r["plan"] == 9 and r["planIds"] == r["ids"] and r["shown"] == 1, f"the plan: all 9 agents in the same order, one speaking at a time (v171) {r}")
+    if phone: ok(r["sw"] > r["cw"] and r["ov"] == "auto", f"on a phone the row slides sideways {r}")
     await pg.screenshot(path=D + f"/agents_{'phone' if phone else 'desk'}.png")
     ok(not errs, f"page errors {errs}"); await b.close()
 

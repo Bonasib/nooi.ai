@@ -61,11 +61,11 @@ async def phone(b, lang):
     r = await E("""()=>{const q=s=>document.querySelector(s),R=s=>{const e=q(s);if(!e)return null;const r=e.getBoundingClientRect();return [Math.round(r.left),Math.round(r.top),Math.round(r.right),Math.round(r.bottom)]},m=q('#main'),shown=e=>!!e&&getComputedStyle(e).display!=='none'&&e.getBoundingClientRect().height>0;
       return {studio:document.documentElement.classList.contains('studio151'),head:shown(q('#main>.topm')),nav:shown(q('#bottomnav')),foot:[...document.querySelectorAll('#main .appfoot')].some(shown),tabs:shown(q('#main .hubtabs')),
         view:R('.view.ed143'),vh:innerHeight,scroll:[m.scrollHeight,m.clientHeight],bar:R('.e-bar'),top:R('.e-top'),back:(q('.e-top .e-home151')||{dataset:{}}).dataset.go||null,h1:(q('#main h1')||{}).textContent||'',
-        stage:R('.edstage'),tl:R('.e-tl'),cmd:shown(q('.e-cmd')),bg:getComputedStyle(q('.view.ed143')).backgroundColor}}""")
+        stage:R('.edstage'),tl:R('.e-tl'),cmd:!shown(q('.e-cmd'))&&!!q('.transport .wand171'),bg:getComputedStyle(q('.view.ed143')).backgroundColor}}""")
     out[tag + "_shell"] = r
     chk(f"{tag}: the editor is the whole screen — no site header, menu bar, footer or section tabs", r["studio"] and not r["head"] and not r["nav"] and not r["foot"] and not r["tabs"] and r["view"][1] == 0 and abs(r["view"][3] - r["vh"]) <= 1, r)
     chk(f"{tag}: the page never scrolls; the tool bar is the foot of the screen; a slim top bar with back (to the site)", r["scroll"][0] <= r["scroll"][1] + 1 and abs(r["bar"][3] - r["vh"]) <= 1 and r["top"][1] == 0 and r["top"][3] <= 60 and r["back"] == "home" and r["h1"].strip() in ("Video editor", "محرر الفيديو"), r)
-    chk(f"{tag}: top bar, player, prompt bar, timeline, tools — top to bottom, filling the screen", r["top"][3] <= r["stage"][1] + 1 and r["stage"][3] < r["tl"][1] and r["tl"][3] <= r["bar"][1] + 1 and r["cmd"] and r["bar"][1] - r["tl"][3] < 4, r)
+    chk(f"{tag}: top bar, player, timeline, tools — top to bottom, filling the screen (v171: the prompt bar is a wand in the play row)", r["top"][3] <= r["stage"][1] + 1 and r["stage"][3] < r["tl"][1] and r["tl"][3] <= r["bar"][1] + 1 and r["cmd"] and r["bar"][1] - r["tl"][3] < 4, r)
     chk(f"{tag}: the studio is dark", sum(int(x) for x in r["bg"].replace("rgb(", "").replace(")", "").split(",")[:3]) < 90, r["bg"])
     # ---- 2. a tool opens its panel in the lower half
     await E("()=>{const b=document.querySelector('.e-bar [data-act=\"lt143\"][data-v=\"audio\"]');b.click()}"); await pg.wait_for_timeout(300)

@@ -41,7 +41,7 @@ STARS = """async()=>{const wait=ms=>new Promise(r=>setTimeout(r,ms)),out={};
   go('home');S.hf.tab='video';S.hf.out=['jr89'];renderAll();await wait(400);const ph=document.querySelector('.hfrph');out.home=ph?[ph.innerText.trim(),!!ph.querySelector('svg.nstars')]:null;
   // the home box's list: every model, each with its logo, a star (not a number) on the strongest
   document.querySelector('[data-act="hf-model"]').click();await wait(400);
-  const rows=[...document.querySelectorAll('#modalRoot .hfmodel')];out.sheet={n:rows.length,want:1+Object.keys(MODELS).filter(k=>k!=='auto').length,noLogo:rows.filter(r=>!r.querySelector('img')).map(r=>r.dataset.v),
+  const rows=[...document.querySelectorAll('#modalRoot .hfmodel')];out.sheet={n:rows.length,want:1+Object.keys(MODELS).filter(k=>k!=='auto'&&k!=='grok15').length,noLogo:rows.filter(r=>!r.querySelector('img')).map(r=>r.dataset.v),
     marks:rows.filter(r=>r.querySelector('.mrk')).map(r=>[r.dataset.v,r.querySelector('.mrk').textContent.trim(),!!r.querySelector('.mrk svg')]),mini:rows.some(r=>r.dataset.v==='seedance2mini'&&r.querySelector('img'))};
   document.querySelector('#modalRoot [data-act="close-sheet"]')?.click();await wait(150);
   S.hf.tab='image';renderAll();await wait(200);document.querySelector('[data-act="hf-model"]').click();await wait(400);

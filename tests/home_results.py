@@ -34,7 +34,7 @@ async def main():
                 await E("()=>document.querySelector('[data-act=hfr-ok]').click()"); await pg.wait_for_timeout(300)
                 img_view = await E("()=>S.view")
                 await E("()=>{go('home');S.hf.tab='video';S.hf.vModel='auto';renderView()}")
-                auto_first = await E("()=>{const b=document.querySelector('.hfmi');b.click();return b.dataset.act==='hfx-nooi'&&/nooi/.test(b.textContent)&&nooiOn()&&!!document.querySelector('.hfbots .botstrip')&&HF_DURS.filter(hfDurOK).includes(30)}")
+                auto_first = await E("async()=>{const b=document.querySelector('.hfmi');const ok=b.classList.contains('eng171')&&b.dataset.act==='hf-model'&&/nooi/.test(b.textContent);b.click();await new Promise(r=>setTimeout(r,200));document.querySelector('.hfmodel[data-v=auto]').click();await new Promise(r=>setTimeout(r,200));return ok&&nooiOn()&&!!document.querySelector('.hfbots .botstrip')&&HF_DURS.filter(hfDurOK).includes(30)}")   # (v171: the nooi Auto chip holds the engines — it opens their list, nooi Auto first)
                 await E("()=>{document.querySelector('#hfq').value='waves at sunset';document.querySelector('.hfsend').click()}")
                 await pg.wait_for_timeout(14000)
                 await E("()=>document.querySelector('[data-act=hfr-ok]').click()"); await pg.wait_for_timeout(300)
@@ -81,7 +81,7 @@ async def main():
                 audio_ok = bool(aud) and aud["h"] < 160 and aud["svg"] <= 48 and aud["play"] and aud["mute"] and aud["t"].endswith("0:01") and "music" in aud["ph"].lower() and aud["cost"] == 15 and muted
                 r = {"modelRow": row, "picked": picked, "stayedOnHome": stay, "cards": cards, "statuses": done, "approveImage": img_view, "autoFirst": auto_first, "approveVideo": vid_view, "botsKeepModel": [off, on], "audio": aud, "errors": errs}
                 out[w] = r
-                if not (row and row[0] == "hfx-nooi" and "hf-model" in row and picked == "nanopro"): fails.append(f"{w}: model row")
+                if not (row and row[0] == "hf-model" and "hfx-nooi" not in row and row.count("hf-model") == 1 and picked == "nanopro"): fails.append(f"{w}: model row")   # (v171: one chip — nooi Auto with the engines inside)
                 if stay != "home" or cards != 2: fails.append(f"{w}: results not under the box ({stay}, {cards})")
                 if done != ["complete", "complete"]: fails.append(f"{w}: images did not finish {done}")
                 if img_view != "image" or vid_view != "edit": fails.append(f"{w}: approve went to {img_view}/{vid_view}")

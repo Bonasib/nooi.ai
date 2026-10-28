@@ -59,7 +59,7 @@ SCAN = r"""()=>{const vis=e=>{const r=e.getBoundingClientRect();if(r.width<4||r.
  const name=e=>(e.getAttribute('aria-label')||e.textContent||e.value||e.dataset.act||e.tagName).trim().replace(/\s+/g,' ').slice(0,30)+' ['+(e.dataset.act||e.dataset.set||e.className||'').toString().slice(0,24)+']';
  const bad=[];for(const e of document.querySelectorAll('#main button,#main input:not([type=hidden]),#main select,#main textarea,#main label.btn')){if(!vis(e)||e.closest('.e-bar'))continue;const r=e.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
    if(cy<top+2||cy>bot-2||cx<0||cx>innerWidth)continue;const b=box(e);if(b&&(cy<b.top+2||cy>b.bottom-2||cx<b.left+2||cx>b.right-2))continue;
-   const t=document.elementFromPoint(cx,cy);if(t&&!e.contains(t)&&!t.contains(e)&&!(t.closest('label')&&t.closest('label').contains(e))&&!(e.closest('label')&&e.closest('label').contains(t)))bad.push(name(e)+' under '+((t.closest('[class]')||t).className.toString().slice(0,30)||t.tagName))}
+   const t=document.elementFromPoint(cx,cy);if(t&&!e.contains(t)&&!t.contains(e)&&!t.closest('#cmd171.open')&&!(t.closest('label')&&t.closest('label').contains(e))&&!(e.closest('label')&&e.closest('label').contains(t)))bad.push(name(e)+' under '+((t.closest('[class]')||t).className.toString().slice(0,30)||t.tagName))}
  const ids={};document.querySelectorAll('#main [id]').forEach(e=>{ids[e.id]=(ids[e.id]||0)+1});
  return {bad,over:document.documentElement.scrollWidth-innerWidth,dup:Object.keys(ids).filter(k=>ids[k]>1)}}"""
 # a picture of the preview at a moment: the average colour of a box (fractions of the canvas)

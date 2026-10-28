@@ -147,7 +147,12 @@ async def desktop(b, lang):
 async def phone(b, lang):
     tag = f"phone {lang}"; ctx, pg, errs = await open_page(b, 390, 844, lang, True); E = pg.evaluate
     bar = lambda: E("()=>[...document.querySelectorAll('.ed143 .e-bar>button,.ed143 .e-bar>label')].map(x=>x.dataset.act||x.className)")
-    await scrollto(pg, '[data-textl="t1"]'); await pg.tap('#tlin [data-textl="t1"]'); await pg.wait_for_timeout(400)
+    cdp = await ctx.new_cdp_session(pg)
+    async def lp(sel, ms=750):   # (v171: a finger's tap on a timeline item does nothing — a long press picks it and opens its settings)
+        r = await E("(s)=>{const b=document.querySelector(s).getBoundingClientRect();return[b.left+b.width/2,b.top+b.height/2]}", sel)
+        await cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": r[0], "y": r[1]}]}); await pg.wait_for_timeout(ms)
+        await cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []}); await pg.wait_for_timeout(400)
+    await scrollto(pg, '[data-textl="t1"]'); await lp('#tlin [data-textl="t1"]')
     b1 = await bar(); chk(f"{tag}: a text's tools at the foot include Copy and Select more", "cp146" in b1 and "msm146" in b1, b1)
     await E("()=>{S.ed.pclosed143=S.ed.tab;renderView()}"); await pg.wait_for_timeout(200)
     await pg.tap('.ed143 .e-bar [data-act="msm146"]'); await pg.wait_for_timeout(300)
@@ -167,14 +172,14 @@ async def phone(b, lang):
     await E("()=>{ED.t=9}"); await pg.tap('.ed143 .e-bar [data-act="pa146"]'); await pg.wait_for_timeout(400)
     pa = await E("()=>({n:S.ed.texts.length,g:S.ed.groups146.length,st:S.ed.texts.slice(2).map(t=>t.start)})")
     chk(f"{tag}: Paste puts the copied group at the playhead", pa["n"] == 4 and pa["g"] == 2 and abs(min(pa["st"]) - 9) < .05, pa)
-    # a long press on a text: Copy and Select more are in its menu
-    await E("()=>{edSetPick(null);S.ed.ms146=[];S.ed.groups146=[];renderView();document.querySelectorAll('.toast').forEach(t=>t.classList.remove('show'))}"); await scrollto(pg, '[data-textl="t1"]')   # (the "Pasted" message gone first — it can sit over the timeline)
-    r = await E("()=>{const b=document.querySelector('#tlin [data-textl=\"t1\"]').getBoundingClientRect();return[b.left+b.width/2,b.top+b.height/2]}")
-    cdp = await ctx.new_cdp_session(pg)
-    await cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": r[0], "y": r[1]}]}); await pg.wait_for_timeout(800)
-    await cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []}); await pg.wait_for_timeout(300)
+    # a long press on a text: its settings (v171); its menu (a right click) has Copy and Select more
+    await E("()=>{edSetPick(null);S.ed.ms146=[];S.ed.groups146=[];S.ed.tab='media';S.ed.pclosed143='media';renderView();document.querySelectorAll('.toast').forEach(t=>t.classList.remove('show'))}"); await scrollto(pg, '[data-textl="t1"]')   # (the "Pasted" message gone first — it can sit over the timeline)
+    await lp('#tlin [data-textl="t1"]', 800)
+    st = await E("()=>({tab:S.ed.tab,pick:S.ed.pick&&S.ed.pick.id,menu:!!document.querySelector('.cm131')})")
+    chk(f"{tag}: a long press on a text opens its settings", st["tab"] == "text" and st["pick"] == "t1" and not st["menu"], st)
+    await E("()=>{const b=document.querySelector('#tlin [data-textl=\"t1\"]'),r=b.getBoundingClientRect();menuAt131(b,r.left+r.width/2,r.top+r.height/2)}"); await pg.wait_for_timeout(300)
     menu = await E("()=>[...document.querySelectorAll('.cm131 .cm131i')].map(x=>x.textContent)")
-    chk(f"{tag}: a long press on a text offers Copy and Select more", any(("Copy" in x or "نسخ" in x) for x in menu) and any(("Select more" in x or "تحديد المزيد" in x) for x in menu), menu)
+    chk(f"{tag}: a text's menu offers Copy and Select more", any(("Copy" in x or "نسخ" in x) for x in menu) and any(("Select more" in x or "تحديد المزيد" in x) for x in menu), menu)
     await E("()=>cmClose131()")
     # the music selected: Beat marks in its bar
     await E("()=>{edSetPick(null);S.ed.aux143='music';S.ed.tab='audio';S.ed.pclosed143='audio';renderView()}"); await pg.wait_for_timeout(250); b5 = await bar()

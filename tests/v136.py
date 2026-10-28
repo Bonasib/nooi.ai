@@ -233,7 +233,7 @@ async def phone(b):
     await pg.wait_for_timeout(500)
     # the home box: no Agent tab; nooi Auto says what it is; what to use at the top, the words below
     h = await E("""()=>{const box=document.querySelector('.hfbox').getBoundingClientRect(),top=document.querySelector('.hfmain .hft136'),q=document.getElementById('hfq').getBoundingClientRect(),t=top&&top.getBoundingClientRect();
-      const n=document.querySelector('[data-act="hfx-nooi"]');return{tabs:[...document.querySelectorAll('[data-act=hf-tab]')].map(e=>e.dataset.v),nooi:n&&n.textContent.trim(),title:n&&n.title,
+      const n=document.querySelector('.hfmi.eng171');return{tabs:[...document.querySelectorAll('[data-act=hf-tab]')].map(e=>e.dataset.v),nooi:n&&n.textContent.trim(),title:n&&n.title,
       top:top?[...top.children].map(e=>e.dataset.act||e.className.split(' ')[0]+(e.querySelector('input[data-ref130]')?':pic':'')):null,above:t&&t.bottom<=q.top+1,wide:Math.round(q.width)>=Math.round(box.width)-60,inside:t&&t.right<=box.right+1}}""")
     out["box"] = h
     chk("home box: Video · Image · Audio · Avatar (no Agent tab); the nooi chip reads nooi Auto and says the agents pick the engine; the start frame, pictures, a clip and characters sit at the top, the words below at full width",

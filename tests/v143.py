@@ -144,17 +144,19 @@ async def phone(b, lang):
     o5 = [x for i, x in enumerate(r["order"]) if i != 2]
     chk(f"{tag}: preview, play row, timeline, settings — in that order; the page never scrolls (the preview stays); the prompt bar rests while a panel is open", o5 == sorted(o5) and min(o5) >= 0 and r["cmd"] == "none" and r["msc"][0] <= r["msc"][1] + 1, [r["order"], r["cmd"], r["msc"]])   # (v151: the studio)
     await E("()=>{S.ed.pclosed143=S.ed.tab;renderView()}"); await pg.wait_for_timeout(200)
-    o2 = await E("()=>['.edstage','.transport','.e-cmd','.e-tl'].map(s=>{const e=document.querySelector('#main '+s);return e&&getComputedStyle(e).display!=='none'?Math.round(e.getBoundingClientRect().top):-1})")
-    chk(f"{tag}: with the panel closed: preview, play row, prompt bar, timeline", o2 == sorted(o2) and min(o2) >= 0, o2)
+    o2 = await E("()=>['.edstage','.transport','.e-tl','.e-cmd'].map(s=>{const e=document.querySelector('#main '+s);return e&&getComputedStyle(e).display!=='none'?Math.round(e.getBoundingClientRect().top):-1})")
+    wd = await E("()=>!!document.querySelector('#main .transport .wand171')")
+    chk(f"{tag}: with the panel closed: preview, play row, timeline (v171: the prompt bar is a wand in the play row)", o2[:3] == sorted(o2[:3]) and min(o2[:3]) >= 0 and o2[3] == -1 and wd, [o2, wd])
     await E("()=>{S.ed.pclosed143=null;S.ed.tab='media';renderView()}"); await pg.wait_for_timeout(200)
     chk(f"{tag}: a slim header with the page title; no sideways scroll", r["title"].strip() in ("Video editor", "محرر الفيديو") and r["top"][3] - r["top"][1] <= 96 and r["sw"] <= 390, [r["top"], r["sw"]])
-    # a tap on a clip: the clip's own tools
+    # a long press on a clip (v171 — a tap does nothing): the clip's own tools and its settings
     await E("()=>document.querySelector('#tlin .blk[data-clip]').scrollIntoView({block:'center'})"); await pg.wait_for_timeout(700); bb = await pg.locator("#tlin .blk[data-clip]").first.bounding_box()   # (in the middle: the tool bar at the foot covers the bottom · v149: after the pinned preview has finished resizing)
-    await pg.touchscreen.tap(bb["x"] + 30, bb["y"] + bb["height"] / 2); await pg.wait_for_timeout(500)
+    cdp = await ctx.new_cdp_session(pg); await cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": bb["x"] + 30, "y": bb["y"] + bb["height"] / 2}]}); await pg.wait_for_timeout(750)
+    await cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []}); await pg.wait_for_timeout(500)
     c = await E("()=>({ctx:document.querySelector('.e-bar').classList.contains('ctx'),tools:[...document.querySelectorAll('.e-bar button')].map(b=>b.dataset.v||b.dataset.act),sheet:!!document.querySelector('.e-sheet'),kind:kind143()})")
     out[tag + "_ctx"] = c
     want = ["desel143", "clip", "ed-split", "speed145", "audio145", "anim145", "motion", "color", "trans143", "clip#crop", "90", "rev145", "edx-freeze", "fh", "ed-dup", "ed-move", "ed-move", "ed-extend91", "bg144", "clip#replace", "xa145", "track", "ai140", "cp146", "msm146", "ed-del", "snap141"]   # (v146: Copy, Select more · v144: Background · v145: Speed/Volume/Animation tabs, Crop, Rotate, Reverse, Replace, Extract audio)
-    chk(f"{tag}: a tap on a clip shows its own tools at the foot (Split, Speed, Volume, Motion, Filters, Transition, Freeze, Mirror, Duplicate, Earlier, Later, Extend, Background, Tracking, AI, Delete)", c["ctx"] and c["kind"] == "clip" and c["tools"] == want and not c["sheet"], c)
+    chk(f"{tag}: a long press on a clip shows its own tools at the foot (Split, Speed, Volume, Motion, Filters, Transition, Freeze, Mirror, Duplicate, Earlier, Later, Extend, Background, Tracking, AI, Delete) and opens its settings", c["ctx"] and c["kind"] == "clip" and c["tools"] == want and c["sheet"], c)
     await E("()=>{const b=document.querySelector('.e-bar [data-v=\"speed145\"]');b.scrollIntoView({inline:'center'});b.click()}"); await pg.wait_for_timeout(600)
     sp = await E("()=>{const s=document.querySelector('.e-sheet'),st=document.querySelector('.edstage').getBoundingClientRect(),l=[...s.querySelectorAll('.lbl')].find(x=>/speed|السرعة/i.test(x.textContent));return{tab:S.ed.tab,lbl:l?Math.round(l.getBoundingClientRect().top):null,under:Math.round(st.bottom),bar:Math.round(document.querySelector('.e-bar').getBoundingClientRect().top)}}")
     chk(f"{tag}: Speed opens the clip's Speed settings, under the preview", sp["tab"] == "speed145" and sp["lbl"] is not None and sp["under"] <= sp["lbl"] < sp["bar"] - 40, sp)
@@ -165,11 +167,14 @@ async def phone(b, lang):
     chk(f"{tag}: Mirror and Duplicate work from the bar", a["fh"] != fh0 and a["n"] == n0 + 1, [fh0, n0, a])
     await E("()=>document.querySelector('.e-bar [data-act=\"desel143\"]').click()"); await pg.wait_for_timeout(200)
     chk(f"{tag}: ‹ goes back to the add tools", not await E("()=>document.querySelector('.e-bar').classList.contains('ctx')"))
-    # a tap on a text opens its settings; ✓ closes; another tool opens again
+    # a long press on a text opens its settings (v171: a tap does nothing); ✓ closes; another tool opens again
     await E("()=>document.querySelector('#tlin .blk[data-textl=\"t1\"]').scrollIntoView({block:'center'})"); await pg.wait_for_timeout(150); bb = await pg.locator('#tlin .blk[data-textl="t1"]').bounding_box()
     await pg.touchscreen.tap(bb["x"] + bb["width"] / 2, bb["y"] + bb["height"] / 2); await pg.wait_for_timeout(600)
+    t0 = await E("()=>({tab:S.ed.tab,pick:S.ed.pick&&S.ed.pick.k})"); chk(f"{tag}: a tap on a text does nothing", t0["tab"] != "text" and t0["pick"] != "text", t0)
+    await cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": bb["x"] + bb["width"] / 2, "y": bb["y"] + bb["height"] / 2}]}); await pg.wait_for_timeout(750)
+    await cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []}); await pg.wait_for_timeout(600)
     tx = await E("()=>({tab:S.ed.tab,edit:!!document.querySelector('.e-sheet [data-bind=\"edtext.text\"]')})")
-    chk(f"{tag}: a tap on a text opens its settings", tx["tab"] == "text" and tx["edit"], tx)
+    chk(f"{tag}: a long press on a text opens its settings", tx["tab"] == "text" and tx["edit"], tx)
     await E("()=>document.querySelector('.e-sheet [data-act=\"pclose143\"]').click()"); await pg.wait_for_timeout(200)
     closed = await E("()=>!document.querySelector('.e-sheet')")
     await E("()=>{edSetPick(null);S.ed.selText=null;renderView();document.querySelector('.e-bar [data-act=\"lt143\"][data-v=\"filters\"]').click()}"); await pg.wait_for_timeout(300)

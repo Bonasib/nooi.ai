@@ -27,7 +27,7 @@ async def run(b, W, H, lang, tag):
             out[tag][v] = g
             ok(g and 0 <= g["nav"] - g["bot"] <= 20, f"{tag} {v}: the pinned button sits just above the bottom menu {g}")
     # nine agents
-    t = await E("""()=>{S.hf.tab='video';go('home');renderAll();const b=document.querySelector('#main [data-act="hfx-nooi"]');go('crew');renderAll();
+    t = await E("""()=>{S.hf.tab='video';go('home');renderAll();const b=document.querySelector('#main .hfmi.eng171');go('crew');renderAll();
       return {title:b?b.title:'',all:document.getElementById('main').outerHTML.match(/(\\b8 AI agents|Eight AI agents|8 وكلاء|ثمانية وكلاء)/g)||[],desc:TOOLDESC.crew[S.lang==='ar'?1:0]}}""")
     out[tag]["agents"] = t
     ok(("9 AI agents" in t["title"] or "9 وكلاء" in t["title"]) and not t["all"] and ("Nine" in t["desc"] or "تسعة" in t["desc"]), f"{tag}: nine agents everywhere {t}")

@@ -91,7 +91,7 @@ AI = "()=>{S.ed.lt143='ai';(S.ed.ls143=S.ed.ls143||{}).ai='ai140';S.ed.tab='ai14
 async def click(pg, sel):
     await pg.evaluate("(s)=>{const b=document.querySelector(s);if(!b)throw new Error('no '+s);b.scrollIntoView({block:'center'});b.click()}", sel); await pg.wait_for_timeout(250)
 async def cmd(pg, text):
-    await pg.evaluate("()=>{const q=document.getElementById('edcmdq');q.scrollIntoView({block:'center'});q.focus()}"); await pg.fill("#edcmdq", text); await pg.wait_for_timeout(250)
+    await pg.evaluate("()=>{if(typeof cmdOpen171==='function'&&!CMD171.open)cmdOpen171(true);const q=document.getElementById('edcmdq');q.scrollIntoView({block:'center'});q.focus()}"); await pg.fill("#edcmdq", text); await pg.wait_for_timeout(250)   # (v171: the prompt bar opens from its wand)
     plan = await pg.evaluate("()=>(document.getElementById('edplan91')||{}).textContent||''")
     await pg.evaluate("()=>document.querySelector('[data-act=\"edcmd-go\"]').click()"); await pg.wait_for_timeout(500); return plan
 
@@ -154,7 +154,7 @@ async def desktop(b, lang):
     chk(f"{tag}: the @ button lists the playhead, the selection, the markers and the clips", len(al) >= 5 and al[0].startswith("@") and ("@selection" in al or "@التحديد" in al) and "@Drop" in al and ("@clip 1" in al or "@المقطع 1" in al), al)
     await click(pg, '#at147 [data-v="' + ('@التحديد' if ar else '@selection') + '"]'); val = await E("()=>document.getElementById('edcmdq').value")
     chk(f"{tag}: a tap puts it in the prompt", ("@التحديد" if ar else "@selection") in val, val)
-    await scan(pg, tag, [("AI tools", AI), ("background panel", "()=>{edSetPick('clip',S.ed.clips[0].id);S.ed.ms146=[];S.ed.tab='bg144';renderView()}"), ("the @ list open", "()=>{atOpen147(true)}")])
+    await scan(pg, tag, [("AI tools", AI), ("background panel", "()=>{edSetPick('clip',S.ed.clips[0].id);S.ed.ms146=[];S.ed.tab='bg144';renderView()}"), ("the @ list open", "()=>{cmdOpen171(true);atOpen147(true)}")])   # (v171: the prompt bar floats over the timeline while open — the scan treats it as a popup)
     chk(f"{tag}: no page errors", not errs, errs); await ctx.close()
 
 async def phone(b, lang):

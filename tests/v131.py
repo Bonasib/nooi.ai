@@ -4,7 +4,7 @@
 #  · dragging the playhead: a jump waits for the one before (only the newest place is kept), the light copy is shown while you
 #    drag and the clip itself after; the server makes the copy (a keyframe every 6 frames, no sound, ≤ 640 px) and refuses
 #    anything that isn't a clip of its own
-#  · a long press (or a right click) opens the menu of a clip, a text, a banner, the picture, a video you made; its actions work;
+#  · a long press (or a right click) opens the menu of the picture and a video you made; on the timeline a long press opens the item's settings (v171) and a right click its menu; its actions work;
 #    a finger that moves is a drag, not a menu
 #  · 22 transitions (gl-transitions) compile and draw the next clip; 20 text motions (Animate.css) move the text; 15 looks
 #    (after CSSgram) colour the picture; 10 banners and 36+ stickers in groups (Material Symbols) are added, styled and drawn — in Arabic too
@@ -144,15 +144,18 @@ async def phone(b):
     pt = await spot(pg, f'#tlin .blk[data-clip="{c0}"]', 24)
     before = await E("()=>S.ed.clips.map(c=>c.id+':'+c.in)")
     await touch(cdp, *pt, hold=750); await pg.wait_for_timeout(250)
+    st = await E(SET171); res["longClip"] = st
+    chk("long press on a clip (v171): its settings open, no menu", st["tab"] == "clip" and st["pick"] == "clip" and not st["menu"] and not st["closed"], st)
+    await E(MENU171, f'#tlin .blk[data-clip="{c0}"]'); await pg.wait_for_timeout(200)
     mn = await E("()=>{const m=document.querySelector('.cm131');return m&&{sheet:m.classList.contains('sheet'),title:(m.querySelector('.cm131h')||{}).textContent||'',items:[...m.querySelectorAll('.cm131i')].map(x=>x.textContent.trim())}}")
     res["menuClip"] = mn; await pg.screenshot(path=D + "/menu.png")
-    chk("long press on a clip: its menu, as a sheet on a phone", mn and mn["sheet"] and any("Split" in x for x in mn["items"]) and any("Duplicate" in x for x in mn["items"]) and any("Delete" in x for x in mn["items"]) and any("2×" in x for x in mn["items"]), mn)
+    chk("a clip's menu (as a right click opens it): as a sheet on a phone", mn and mn["sheet"] and any("Split" in x for x in mn["items"]) and any("Duplicate" in x for x in mn["items"]) and any("Delete" in x for x in mn["items"]) and any("2×" in x for x in mn["items"]), mn)
     chk("long press didn't move the clip", await E("()=>S.ed.clips.map(c=>c.id+':'+c.in)") == before)
     if mn:
         await pg.locator(".cm131 .cm131i", has_text="Duplicate").tap(); await pg.wait_for_timeout(300)
         n = await E("()=>({n:S.ed.clips.length,menu:!!document.querySelector('.cm131')})"); chk("menu → Duplicate", n["n"] == 3 and not n["menu"], n)
         await E("()=>{S.ed.clips.splice(1,1);persist();renderView()}"); await pg.wait_for_timeout(300)
-        pt = await spot(pg, f'#tlin .blk[data-clip="{c0}"]', 24); await touch(cdp, *pt, hold=750); await pg.wait_for_timeout(250)
+        await E(MENU171, f'#tlin .blk[data-clip="{c0}"]'); await pg.wait_for_timeout(250)
         await pg.locator(".cm131 .cm131i", has_text="Speed 2×").tap(); await pg.wait_for_timeout(250)
         sp = await E("(id)=>S.ed.clips.find(c=>c.id===id).speed", c0); chk("menu → Speed 2×", sp == 2, sp)
         await E("(id)=>{S.ed.clips.find(c=>c.id===id).speed=1;persist();renderView()}", c0); await pg.wait_for_timeout(200)
@@ -174,9 +177,11 @@ async def phone(b):
     am = pg.locator("#tlin .blk.a").first
     if await am.count():
         pt = await spot(pg, "#tlin .blk.a", 20); await touch(cdp, *pt, hold=750); await pg.wait_for_timeout(250)
+        st = await E(SET171); res["longMusic"] = st; chk("long press on the music (v171): its settings", st["aux"] == "music" and st["tab"] == "audio" and not st["menu"], st)
+        await E(MENU171, "#tlin .blk.a"); await pg.wait_for_timeout(250)
         it = await E("()=>[...document.querySelectorAll('.cm131 .cm131i')].map(x=>x.textContent.trim())"); res["menuMusic"] = it
         if any("Remove" in x for x in it): await pg.locator(".cm131 .cm131i", has_text="Remove").tap(); await pg.wait_for_timeout(250)
-        chk("long press on the music → Remove the music", not await E("()=>!!M.edMusic"), it)
+        chk("the music's menu → Remove the music", not await E("()=>!!M.edMusic"), it)
     else: chk("music on the timeline", False)
     # transitions from gl-transitions
     await E("(id)=>{edSetPick('clip',id);S.ed.tab='clip';renderView()}", c0); await pg.wait_for_function("GL131.list", timeout=8000); await E("()=>renderView()"); await pg.wait_for_timeout(200)
@@ -208,7 +213,9 @@ async def phone(b):
         tl = pg.locator(f'#tlin .blk[data-textl="{tx["id"]}"]')
         if await tl.count():
             pt = await spot(pg, f'#tlin .blk[data-textl="{tx["id"]}"]', 12); await touch(cdp, *pt, hold=750); await pg.wait_for_timeout(250)
-            it = await E("()=>[...document.querySelectorAll('.cm131 .cm131i')].map(x=>x.textContent.trim())"); res["menuText"] = it; chk("long press on a text: Edit, Duplicate, Delete", "Edit" in it and "Duplicate" in it and "Delete" in it, it)
+            st = await E(SET171); res["longText"] = st; chk("long press on a text (v171): its settings", st["tab"] == "text" and st["pick"] == "text" and not st["menu"], st)
+            await E(MENU171, f'#tlin .blk[data-textl="{tx["id"]}"]'); await pg.wait_for_timeout(200)
+            it = await E("()=>[...document.querySelectorAll('.cm131 .cm131i')].map(x=>x.textContent.trim())"); res["menuText"] = it; chk("a text's menu: Edit, Duplicate, Delete", "Edit" in it and "Duplicate" in it and "Delete" in it, it)
             await E("()=>cmClose131()")
         else: chk("text on the timeline", False)
     # looks after CSSgram
@@ -238,8 +245,10 @@ async def phone(b):
         bl = pg.locator(f'#tlin .blk[data-ix="{it["id"]}"]')
         if await bl.count():
             pt = await spot(pg, f'#tlin .blk[data-ix="{it["id"]}"]', 12); await touch(cdp, *pt, hold=750); await pg.wait_for_timeout(250)
+            st = await E(SET171); res["longBanner"] = st; chk("long press on a banner (v171): its settings", st["tab"] == "info" and st["pick"] == "info" and not st["menu"], st)
+            await E(MENU171, f'#tlin .blk[data-ix="{it["id"]}"]'); await pg.wait_for_timeout(200)
             m2 = await E("()=>{const m=document.querySelector('.cm131');return m&&{title:(m.querySelector('.cm131h')||{}).textContent,items:[...m.querySelectorAll('.cm131i')].map(x=>x.textContent.trim())}}"); res["menuBanner"] = m2
-            chk("long press on a banner: its menu", m2 and "Subscribe" in m2["title"] and "Edit" in m2["items"], m2); await E("()=>cmClose131()")
+            chk("a banner's menu", m2 and "Subscribe" in m2["title"] and "Edit" in m2["items"], m2); await E("()=>cmClose131()")
         else: chk("banner on the timeline", False)
     await E("()=>{S.ed.tab='info';S.ed.pick=null;renderView()}"); await pg.wait_for_timeout(150)
     await pg.locator('#main .st131t[data-v="favorite"]').first.scroll_into_view_if_needed(); await pg.locator('#main .st131t[data-v="favorite"]').first.tap(); await pg.wait_for_timeout(300)
@@ -249,6 +258,9 @@ async def phone(b):
     await pg.screenshot(path=D + "/banners.png")
     res["phoneErrs"] = errs[:5]; res["warns"] = warns[:5]; chk("phone: no page errors", not errs, errs[:3]); chk("phone: no drawing warnings", not warns, warns[:3])
     await ctx.close()
+
+MENU171 = "(sel)=>{const b=document.querySelector(sel);if(!b)return false;const r=b.getBoundingClientRect();return menuAt131(b,r.left+r.width/2,r.top+r.height/2)}"
+SET171 = "()=>({tab:S.ed.tab,pick:S.ed.pick&&S.ed.pick.k,aux:S.ed.aux143||null,menu:!!document.querySelector('.cm131'),closed:S.ed.pclosed143})"
 
 async def arabic(b):
     ctx = await b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, device_scale_factor=2)
@@ -265,7 +277,7 @@ async def arabic(b):
     a["lbl"] = await E("()=>[...document.querySelectorAll('#main .lbl')].map(x=>x.textContent).filter(x=>/البانرات|الملصقات/.test(x)).length")
     res["arabic"] = a; chk("Arabic: banner words in Arabic, banner and sticker drawn, panel in Arabic", a["t1"] == "خصم 50%" and a["hits"] >= 2 and a["lbl"] == 2, a)
     await E("()=>{S.ed.tab='clip';ED.t=1;renderView()}"); await pg.wait_for_timeout(200)
-    pt = await spot(pg, f'#tlin .blk[data-clip="{c0}"]', 40); await touch(cdp, *pt, hold=750); await pg.wait_for_timeout(250)
+    await E(MENU171, f'#tlin .blk[data-clip="{c0}"]'); await pg.wait_for_timeout(250)
     it = await E("()=>[...document.querySelectorAll('.cm131 .cm131i')].map(x=>x.textContent.trim())"); res["menuAr"] = it
     chk("Arabic: the clip menu in Arabic", any("قص" in x for x in it) and any("حذف" in x for x in it), it)
     await pg.screenshot(path=D + "/arabic.png")
