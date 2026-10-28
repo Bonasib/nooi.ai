@@ -19,7 +19,8 @@ D = tempfile.mkdtemp(prefix="nooi-v156-"); os.makedirs(D + "/data"); os.makedirs
 now = int(time.time() * 1000)
 J = lambda i, **k: {"id": i, "owner": "local", "kind": "video", "status": "rendering", "created": now - 10 * 60e3, "prov": "kie", "cap": "video", "progress": .2, "payload": {"kind": "video", "prompt": "x", "model": "kling30", "dur": 5, "meta": {}}, **k}
 jobs = {"SW1": J("SW1"), "SW2": J("SW2", payload={"kind": "video", "prompt": "x", "model": "kling30", "dur": 60, "meta": {"long132": 1}}),
-        "R1": J("R1", status="done", url="/media/a.mp4", progress=1, created=now - 60e3)}
+        "R1": J("R1", status="done", url="/media/a.mp4", progress=1, created=now - 60e3),
+        "SW3": J("SW3", created=now - 5 * 3600e3, live158=now)}   # (v158: made active again just now — a film's missing part made again)
 json.dump({"users": {"local": {"plan": "studio", "credits": 50000, "ledger": [], "posts": {}, "accounts": {}, "jobs": jobs}}}, open(D + "/data/db.json", "w"))
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=0x406080:size=1280x720:rate=30:duration=6", "-c:v", "libvpx-vp9", "-deadline", "realtime", "-b:v", "800k", D + "/media/a.webm"], check=True)
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=0xd02020:s=320x180:r=10:d=2", "-c:v", "libx264", "-pix_fmt", "yuv420p", D + "/media/a.mp4"], check=True)
@@ -48,6 +49,7 @@ def server_checks():
     a = wait(lambda: (lambda j: j if j.get("status") == "failed" else None)(api("/v1/jobs/SW1")), 20) or api("/v1/jobs/SW1")
     ok(a.get("status") == "failed" and "took far too long" in str(a.get("error")) and "أطول" in str(a.get("errorAr")), f"a job stuck past its time fails with the reason {a}")
     b = api("/v1/jobs/SW2"); ok(b.get("status") == "rendering", f"a long film is given longer {b.get('status')}")
+    c = api("/v1/jobs/SW3"); ok(c.get("status") == "rendering", f"a job made active again is timed from then, not from when it was first made {c.get('status')}")
     r = api("/v1/explore", {"url": "/media/p.png", "kind": "image", "prompt": "a green square"})
     ok(r.get("_status") == 400 and "responsib" in str(r.get("error")) and "مسؤوليتك" in str(r.get("errorAr")), f"sharing to Explore without the publisher's yes is refused {r}")
 

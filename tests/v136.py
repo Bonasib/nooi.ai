@@ -237,9 +237,10 @@ async def phone(b):
       top:top?[...top.children].map(e=>e.dataset.act||e.className.split(' ')[0]+(e.querySelector('input[data-ref130]')?':pic':'')):null,above:t&&t.bottom<=q.top+1,wide:Math.round(q.width)>=Math.round(box.width)-60,inside:t&&t.right<=box.right+1}}""")
     out["box"] = h
     chk("home box: Video · Image · Audio · Avatar (no Agent tab); the nooi chip reads nooi Auto and says the agents pick the engine; the start frame, pictures, a clip and characters sit at the top, the words below at full width",
-        h["tabs"] == ["video", "image", "audio", "avatar"] and h["nooi"] == "nooi Auto" and "agents pick" in (h["title"] or "") and h["top"] and h["top"][0] == "hfref" and "t136:pic" in h["top"] and "hf136-clip" in h["top"] and "ch87-open" in h["top"] and h["above"] and h["wide"] and h["inside"], h)
+        h["tabs"] == ["video", "image", "audio", "avatar"] and h["nooi"] == "nooi Auto" and "agents pick" in (h["title"] or "") and h["top"] and h["top"][0] == "ch87-open" and "hfref" in h["top"] and "pic156" in h["top"] and "hf136-clip" in h["top"] and h["above"] and h["wide"] and h["inside"], h)
     # # in the box's words: the pictures, inside the box
-    await pg.set_input_files(".hft136 input[data-hf136]", D + "/media/pic1.png"); await pg.wait_for_timeout(600)
+    await E("()=>document.querySelector('.hft136 [data-act=\"pic156\"]').click()"); await pg.wait_for_timeout(300)   # (v156: Picture opens a sheet — from the phone there)
+    await pg.set_input_files("#modalRoot .pkup156 input[data-hf136]", D + "/media/pic1.png"); await pg.wait_for_timeout(600)
     await pg.wait_for_function("refs130().length===1&&!!document.querySelector('.hft136 .t136.pic')", timeout=15000); await pg.wait_for_timeout(1200)
     await pg.locator("#hfq").fill(""); await pg.locator("#hfq").type("a fox walks past #"); await pg.wait_for_timeout(300)
     l = await E("()=>{const l=document.getElementById('hp136'),box=document.querySelector('.hfbox');return{open:!!l,inBox:!!(l&&box.contains(l)),opts:l?[...l.querySelectorAll('[data-hp136]')].map(o=>o.textContent.trim()):[],tiles:[...document.querySelectorAll('.hft136 .t136.pic small')].map(x=>x.textContent)}}")

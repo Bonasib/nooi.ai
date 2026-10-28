@@ -15796,7 +15796,7 @@ previewCol=(o=>function(g){const h=o.apply(this,arguments),t=partial136(g);retur
 document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="again136"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
   const j=S.jobs.find(x=>x.id===a.dataset.id),q=j&&j.partial136;if(!j||!q||!j.remote||a.disabled)return;
   if(!crFree()&&q.again&&S.credits<(+q.again.price||0)){toast(L("Not enough credits for this.","الرصيد لا يكفي لهذه العملية."));return}
-  a.disabled=true;try{const r=await API.req("/v1/jobs/"+j.remote+"/again136",{json:{}});Object.assign(j,{status:"rendering",stage:r.stage||"again",progress:r.progress||.05,partial136:null,parts108:r.partsTotal?[r.partsDone||0,r.partsTotal]:j.parts108});
+  a.disabled=true;try{const r=await API.req("/v1/jobs/"+j.remote+"/again136",{json:{}});Object.assign(j,{status:"rendering",again158:Date.now(),stage:r.stage||"again",progress:r.progress||.05,partial136:null,parts108:r.partsTotal?[r.partsDone||0,r.partsTotal]:j.parts108});
     if(typeof loadMe==="function")loadMe();persist();statusChanged();renderAll();toast(L("Making it again — the film comes back whole.","تجري إعادة الصنع — سيعود الفيلم كاملاً."),{type:"ok"})}
   catch(x){a.disabled=false;toast(S.lang==="ar"&&x.errorAr?x.errorAr:String(x.message||x))}},true);
 
@@ -19522,8 +19522,10 @@ if(typeof JB124==="object"&&typeof JB124.o==="function")JB124.o=timed156(JB124.o
 // Quill showed "working" for good)
 busyBots=(o=>function(){if(!(AI_BUSY>0))AI_BUSY=0;return o.apply(this,arguments)})(busyBots);
 // a job the page has followed for far too long stops being "being made" (the server stops its own after 75 min, 3 h for long films)
+// (v158: timed from when the server made the job active again — a film's missing part made again keeps its first "created" time)
+API.req=(o=>async function(p){const r=await o.apply(this,arguments);try{if(r&&r.live158&&/^\/v1\/jobs\/[A-Za-z0-9_-]+$/.test(String(p))){const j=S.jobs.find(x=>x.remote===r.id);if(j)j.live158=r.live158}}catch(e){}return r})(API.req);
 function stale156(){if(API.mode!=="server"||!S.user)return 0;const now=Date.now();let n=0;
-  for(const o of S.jobs){if(!o||!["queued","rendering"].includes(o.status)||!o.created)continue;const age=now-o.created;
+  for(const o of S.jobs){if(!o||!["queued","rendering"].includes(o.status)||!o.created)continue;const age=now-Math.max(o.created,+o.live158||0,+o.again158||0);
     if(o.remote?age>6*3600e3:age>30*60e3&&!SEND155.has(o.id)){o.status="failed";o.errorType="stale";o.error="This took far too long and was stopped — nothing was charged. Try again.";o.errorAr="استغرق هذا وقتاً أطول بكثير من المعتاد فأُوقف — لم يُخصم شيء. حاول مجدداً.";n++}}
   if(n){persist();statusChanged()}return n}
 setInterval(stale156,60e3);setTimeout(stale156,5000);
@@ -19790,6 +19792,38 @@ document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.c
 .xpc157{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.xpg157{margin-top:12px}
 .xpp157{display:flex;gap:8px;align-items:flex-start;margin-top:14px;font-size:13px;line-height:1.45}.xpp157 input{margin-top:3px;flex:none}.xpp157 span{display:flex;flex-direction:column;gap:2px}.xpp157 small{color:var(--mute)}
 .ib157{padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--panel2)}.ib157.new{border-color:var(--lime)}.ib157 p{margin:6px 0}
+`;document.head.appendChild(st)})();
+
+/* ================= v158: the lists you pick from in the prompt box run across, not down ================= */
+// the @ characters: one row of chips (face + name) as wide as the box, swiped sideways — up to 24, the chosen one kept in view;
+// a swipe along the row neither picks nor closes it (before, any scroll inside the list closed it)
+at87Show=function(ta,at,q){const ql=String(q||"").toLowerCase(),list=(S.chars||[]).filter(c=>String(c.name||"").toLowerCase().includes(ql)).slice(0,24);if(!list.length){at87Close();return}
+  AT87.ta=ta;AT87.at=at;AT87.list=list;AT87.i=Math.max(0,Math.min(AT87.i,list.length-1));
+  if(!AT87.el){AT87.el=document.createElement("div");AT87.el.className="at87";AT87.el.setAttribute("role","listbox");document.body.appendChild(AT87.el)}
+  const el=AT87.el;el.classList.add("row158");el.setAttribute("aria-orientation","horizontal");el.setAttribute("aria-label",L("Your characters","شخصياتك"));
+  el.innerHTML=list.map((c,i)=>{const u=avatar106(c);return'<button type="button" role="option" aria-selected="'+(i===AT87.i)+'" data-i="'+i+'"><span class="ph">'+(u?'<img src="'+esc(u)+'" alt="">':'<span class="sil87">'+SIL87+"</span>")+'</span><b dir="auto">'+esc(c.name)+"</b></button>"}).join("");
+  pos156();const on=el.querySelector('[aria-selected="true"]');if(on){const a=on.getBoundingClientRect(),b=el.getBoundingClientRect();if(a.left<b.left||a.right>b.right)el.scrollLeft+=(a.left+a.width/2)-(b.left+b.width/2)}};
+pos156=(o=>function(){const el=AT87.el,ta=AT87.ta;if(!el||!ta||!el.classList.contains("row158"))return o.apply(this,arguments);
+  const r=ta.getBoundingClientRect(),vv=window.visualViewport,top=vv?vv.offsetTop:0,bot=vv?vv.offsetTop+vv.height:innerHeight,vw=vv?vv.width:innerWidth,
+    w=Math.min(Math.max(r.width,260),vw-16),left=Math.max(8,Math.min(vw-w-8,r.left)),h=el.offsetHeight||62;
+  let y=r.bottom+6;if(y+h>bot-6){y=r.top-h-6;if(y<top+4)y=bot-h-6}   // (under the words, else over them, else just above the keyboard)
+  Object.assign(el.style,{width:Math.round(w)+"px",left:Math.round(left)+"px",top:Math.round(Math.max(top+4,y))+"px",maxHeight:"none"})})(pos156);
+if(window.visualViewport){visualViewport.addEventListener("resize",()=>pos156());visualViewport.addEventListener("scroll",()=>pos156())}
+at87Close=(o=>function(){const ev=window.event;if(ev&&ev.type==="scroll"&&ev.target&&ev.target.closest&&ev.target.closest(".at87"))return;return o.apply(this,arguments)})(at87Close);
+// the # pictures on the Video page: the same row (the chosen one kept in view)
+hash130=(o=>function(){const r=o.apply(this,arguments),box=document.getElementById("hp130"),on=box&&box.querySelector('[aria-selected="true"]');
+  if(on){const a=on.getBoundingClientRect(),b=box.getBoundingClientRect();if(a.left<b.left||a.right>b.right)box.scrollLeft+=(a.left+a.width/2)-(b.left+b.width/2)}return r})(hash130);
+(()=>{const st=document.createElement("style");st.textContent=`
+.at87.row158{display:flex;flex-direction:row;align-items:center;gap:6px;padding:6px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior:contain;max-height:none}
+.at87.row158::-webkit-scrollbar{display:none}
+.at87.row158 button{flex:none;display:inline-flex;align-items:center;gap:8px;padding:4px 14px 4px 4px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);white-space:nowrap}
+.at87.row158 button[aria-selected=true]{border-color:var(--lime);background:color-mix(in srgb,var(--lime) 14%,var(--panel))}
+.at87.row158 .ph{position:relative;inset:auto;width:40px;height:40px;flex:none}.at87.row158 b{max-width:140px;overflow:hidden;text-overflow:ellipsis}
+.hp130{display:flex!important;flex-direction:row;align-items:center;gap:6px;width:100%!important;max-height:none!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none;overscroll-behavior:contain}
+.hp130::-webkit-scrollbar{display:none}
+.hp130 .hp130o{flex:none;padding:4px 14px 4px 4px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);white-space:nowrap}
+.hp130 .hp130o[aria-selected="true"]{border-color:var(--lime);background:color-mix(in srgb,var(--lime) 14%,var(--panel))}.hp130 .hp130o img{width:34px;height:34px;border-radius:50%}
+.hp130 .hp130t{flex:none;white-space:nowrap;padding:0 6px}
 `;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
