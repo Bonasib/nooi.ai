@@ -141,7 +141,7 @@ app.post("/v1/sound134/quote", requireUser, wrap(async (req, res) => {
   const info = ahead ? { dur: Math.min(600, Math.max(1, +b.dur)) } : await probe132(await fileOf132(src)).catch(() => null); if (!info || !info.dur) return res.status(400).json({ error: "The video can't be read", errorAr: "تعذّرت قراءة الفيديو" });
   if (b.clip) b.clip = String(b.clip).replace(pub0, "");
   const c = clean134(b, info.dur), q = quote134(c), staff = isStaff(req.user);
-  res.json({ total: staff ? 0 : q.total, parts: q.parts, len: q.len, dur: Math.round(info.dur * 10) / 10, scope: c.scope, t0: c.t0, t1: c.t1, lipsync: c.lipsync, missing: ready134(c), cuts: (base && base.cuts134) || [] });
+  res.json({ total: staff ? 0 : q.total, parts: q.parts, len: q.len, dur: Math.round(info.dur * 10) / 10, scope: c.scope, t0: c.t0, t1: c.t1, lipsync: c.lipsync, lang: c.lang, missing: ready134(c), cuts: (base && base.cuts134) || [] });
 }));
 app.get("/v1/extend134/angles", (_, res) => res.json(ANGLES134));
 // v135: what an Edit with words costs — the seconds chosen (at least 4), in parts of up to 14 s, each priced like Replace the person

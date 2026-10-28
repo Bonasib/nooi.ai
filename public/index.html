@@ -19953,6 +19953,31 @@ VIEWS.chars=(o=>function(){const c=S.chars&&S.chars[S.charSel];if(c)follow159(c)
 .busy159{opacity:.55;cursor:progress}.busy159 svg{animation:spin 1s linear infinite}
 `;document.head.appendChild(st)})();
 
+/* ================= v160: people in the video speak the language you write in ================= */
+/* What the owner saw: a prompt in Arabic gave videos whose people spoke English. On the server (lib/speech160.js) the lines
+   someone says now stay as typed through the agents and the translation, and every talking video tells the engine which
+   language is spoken. On the page:
+   · nooi Auto doesn't pick Kling 2.6 for speech in another language than Chinese or English (its own guide: it speaks only
+     those two and turns other languages into English); picked by hand, a short notice says so and what to do instead
+   · the character's voice from the box (v157) speaks the language of its lines, or of the prompt — not the page's language */
+const SCR160=[["ar",/[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/g],["ru",/[Ѐ-ӿ]/g],["ja",/[぀-ヿ]/g],["zh",/[㐀-䶿一-鿿]/g],
+  ["ko",/[ᄀ-ᇿ가-힯]/g],["he",/[֐-׿]/g],["hi",/[ऀ-ॿ]/g],["th",/[฀-๿]/g],["el",/[Ͱ-Ͽ]/g]];
+function lang160(t){t=String(t||"");let b="",n=0;for(const [c,re] of SCR160){const k=(t.match(re)||[]).length;if(k>n){n=k;b=c}}
+  const lat=(t.match(/[A-Za-zÀ-ɏ]/g)||[]).length;if(!b||n<2||n<lat*.5)return"";return b==="zh"&&/[぀-ヿ]/.test(t)?"ja":b}
+const TALK160=/\b(talks?|talking|speaks?|speaking|says?|said|sings?|dialogue|interview|presenter|announces?|explains?|welcomes?|voice[- ]?over)\b|يتكلم|تتكلم|يتحدث|تتحدث|يتحدّث|تتحدّث|يقول|تقول|يشرح|تشرح|يرحب|ترحب|يغني|تغني|حوار|بلهجة|لهجة|يسوق|يسوّق|говорит|разговаривает|рассказывает|поёт|диалог/iu;
+// the language people in this video speak, from its lines (in quotes, or in brackets after a colon), else from the prompt ("" = can't tell)
+function speech160(t){const s=String(t||""),q=(s.match(/["“«„]([^"”»“\n]{2,400})["”»“]|[:：]\s*[(（[]([^)）\]\n]{2,400})[)）\]]/g)||[]).map(lang160).filter(Boolean);
+  return q.length?q[0]:TALK160.test(s)?lang160(s):""}
+const LNAME160={ar:["Arabic","العربية"],ru:["Russian","الروسية"],ja:["Japanese","اليابانية"],zh:["Chinese","الصينية"],ko:["Korean","الكورية"],he:["Hebrew","العبرية"],hi:["Hindi","الهندية"],th:["Thai","التايلاندية"],el:["Greek","اليونانية"]};
+const ONLY160={kling26:["zh","en"]};   // (engines known to speak only some languages — from their own guides)
+const cant160=(m,p)=>{const l=speech160(p);return l&&ONLY160[m]&&!ONLY160[m].includes(l)?l:""};
+pickVideo=(o=>function(prompt){const r=o.apply(this,arguments);if(r&&cant160(r.id,prompt)){const alt=["wan27","seedance","veo31f"].find(m=>m!==r.id&&MODELS[m]&&(typeof modelAllowed!=="function"||modelAllowed(m)));if(alt)return Object.assign({},r,{id:alt})}return r})(pickVideo);
+let note160=0;
+addJob=(o=>function(j){const r=o.apply(this,arguments);try{const l=j&&j.kind==="video"&&!(j.meta&&j.meta.audio===false)?cant160(j.model,(j.meta&&j.meta.said)||j.title||j.prompt):"";
+  if(l&&Date.now()-note160>60e3){note160=Date.now();const n=LNAME160[l]||[l,l];
+    toast(L((MODELS[j.model]||{}).name+" speaks only Chinese and English — "+n[0]+" lines may come out in English. For "+n[0]+" speech choose another engine, or give the character a voice (lips follow it).",(MODELS[j.model]||{}).name+" يتكلم الصينية والإنجليزية فقط — قد تخرج جمل "+n[1]+" بالإنجليزية. لكلام ب"+n[1]+" اختر محرّكاً آخر، أو أعطِ الشخصية صوتاً (تتبعه الشفاه)."),{type:"info",ms:7000})}}catch(e){}return r})(addJob);
+req157=(o=>function(){const r=o.apply(this,arguments);try{const l=lang160(r.say)||speech160(S.hf&&S.hf.prompt);if(l)r.lang=l}catch(e){}return r})(req157);
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
