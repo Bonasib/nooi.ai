@@ -18,13 +18,15 @@ import { inLine } from "../lib/line124.js";   // v124: new tasks leave at the pa
 import { presetVoiceId } from "../lib/voicepresets.js";   // v97: the Voice page example you heard = the voice you get
 import { PICTURE_WORDS } from "../lib/picturewords.js";   // v100: a picture with no words still tells the engine what to do
 import { refsOf130, takesRefs130, tagWords130, seedanceRefs130 } from "../lib/refs130.js";   // v130: reference pictures with # names
+import { kling4Input, keepRefs161, castNames161 } from "../lib/kling161.js";   // v161: Kling 4.0 — the characters' faces and voices in one pass
 
 const VEO = new Set(["veo3", "veo3_fast", "veo3_lite"]);
 const VEO_RATIOS = new Set(["16:9", "9:16"]);
 const IMAGE_KINDS = new Set(["image", "look", "sheet"]);
 const MUSIC_KINDS = new Set(["music", "sfx"]);
 
-const fullPrompt = (p) => [p.prompt, p.character && `Main character: ${p.character.description}`, ...(p.meta?.refs || []).map((r) => `${r.type}: ${r.description}`), p.camera && `Camera: ${p.camera}`].filter(Boolean).join("\n");
+const rawPrompt = (p) => [p.prompt, p.character && `Main character: ${p.character.description}`, ...(p.meta?.refs || []).map((r) => `${r.type}: ${r.description}`), p.camera && `Camera: ${p.camera}`].filter(Boolean).join("\n");
+const fullPrompt = (p) => castNames161(rawPrompt(p), p.meta?.cast161);   // (v161: the characters' #cast tags are names again for every engine but Kling 4.0)
 const startImg = (p) => p.inputs?.startImage || p.inputs?.vStart || (p.meta?.refs || []).find((r) => r.url)?.url || undefined;
 const refImg = (p) => p.inputs?.iRef || p.inputs?.skImg || p.inputs?.chRef || p.inputs?.dmIn || p.inputs?.eRef || p.inputs?.iRef2 || undefined;
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -33,6 +35,7 @@ const URLK = /^(image_urls|input_urls|image_input|reference_image_urls|reference
 export function sentView(input) { const o = {}; let pics = 0, vids = 0;
   for (const [k, v] of Object.entries(input || {})) { if (v == null || v === "") continue;
     if (URLK.test(k)) { const n = Array.isArray(v) ? v.length : 1; if (/video/.test(k)) vids += n; else pics += n; continue; }
+    if (/^(elements|voices)$/.test(k) && Array.isArray(v)) { o[k === "elements" ? "people" : "voices"] = v.length; continue; }   // (v161: Kling 4.0's people and voices)
     if (/^(prompt|text)$/.test(k)) o.prompt = String(v).slice(0, 4000); else if (/^(duration|aspect_ratio|ratio|image_size|aspectRatio|resolution|mode|quality|character_orientation|sound|generate_audio|negative_prompt|stability|speed|generationType|background_source)$/.test(k)) o[k] = typeof v === "object" ? JSON.stringify(v).slice(0, 80) : v; }
   if (pics) o.pictures = pics; if (vids) o.videos = vids; return o; }
 const drop = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && v !== ""));
@@ -179,6 +182,8 @@ export function kieInput(model, p) {
   if (/^bytedance\/seedance-2/.test(m) && p.meta?.edit135 && inp.edVideo) { const pics = [...refsOf130(p).map((x) => absUrl(x.url)), ...(inp.edPrev ? [absUrl(inp.edPrev)] : [])].slice(0, 9);
     return drop({ prompt: String(p.prompt || ""), reference_image_urls: pics.length ? pics : undefined, reference_video_urls: [absUrl(inp.edVideo)], generate_audio: false,
       resolution: pickRes(p, ["480p", "720p", "1080p"], "720p"), aspect_ratio: "adaptive", duration: clamp(Math.round(+p.dur || 5), 4, 15), web_search: false }); }
+  // v161: Kling 4.0 — the # pictures, the characters (their pictures and voices) and the first / last frame in one request (lib/kling161.js)
+  if (/^kling-4\.0\//.test(m)) return kling4Input(m, p, { abs: absUrl, res: pickRes(p, ["720p", "1080p"], "720p"), ar: snapAR(p.aspect, ["16:9", "9:16", "1:1", "21:9"]), prompt: rawPrompt(p), start: startImg(p), end: inp.vEnd });
   const refs = p.model === "mcswap" || p.meta?.swap93 ? [] : refsOf130(p), refsOn = refs.length > 0 && takesRefs130(m);
   const img0 = startImg(p) || (refs.length && !refsOn ? refs[0].url : undefined), img = img0 ? absUrl(img0) : undefined, end = inp.vEnd ? absUrl(inp.vEnd) : undefined, dur = Math.round(+p.dur || 5), audio = !!(p.meta?.audio);
   const prompt = refs.length && !refsOn ? tagWords130(fullPrompt(p), refs, (i) => refs[i].tag) || PICTURE_WORDS.video : fullPrompt(p) || (img0 ? PICTURE_WORDS.video : "");
@@ -342,6 +347,7 @@ export function kieDur(model, dur) {
   if (/grok-imagine-video-1-5/.test(m)) return clamp(d, 1, 15);
   if (/^happyhorse\//.test(m)) return clamp(d, 3, 15);
   if (/^kling-3\.0\/video/.test(m)) return clamp(d, 3, 15);
+  if (/^kling-4\.0\//.test(m)) return clamp(d, 3, 30);   // v161
   if (/^kling-2\.6\//.test(m)) return +snapDur(d, ["5", "10"]);
   if (/kling/.test(m)) return d >= 10 ? 10 : 5;
   if (/seedance/.test(m)) return clamp(d, 4, 15);
@@ -355,7 +361,7 @@ export function kieDur(model, dur) {
 // (an id set in Admin → Models, or the admin's default model, still wins). Image-to-video / edit variants are
 // picked when the job carries a start frame or a reference image.
 export const KIE_BUILTIN = {
-  video: { kling40: "kling-3.0/video", kling30: "kling-3.0/video", kling: "kling-2.6/text-to-video", seedance25: "bytedance/seedance-2-5", seedance20: "bytedance/seedance-2",
+  video: { kling40: "kling-4.0/reference-to-video", kling30: "kling-3.0/video", kling: "kling-2.6/text-to-video", seedance25: "bytedance/seedance-2-5", seedance20: "bytedance/seedance-2",
     seedance: "bytedance/seedance-2-fast", hailuoh3: "minimax-h3/text-to-video", hailuo: "minimax-h3/text-to-video", wan30: "wan/3-0-video", wan22: "wan/2-7-text-to-video",
     qwenwan: "wan/2-7-text-to-video", hunyuan: "wan/2-7-text-to-video", ltx23: "veo3_fast", ltxfast: "bytedance/seedance-2-fast", veo: "veo3", veofast: "veo3_fast", veo31: "veo3", veo31f: "veo3_fast", grok: "grok-imagine/text-to-video", pixverse6: "pixverse-v6/text-to-video", kling26: "kling-2.6/text-to-video", wan27: "wan/2-7-text-to-video", auto: "bytedance/seedance-2-fast",
     kling30t: "kling/v3-turbo-text-to-video", seedance2mini: "bytedance/seedance-2-mini", gemomni: "gemini-omni-video", grok15: "grok-imagine-video-1-5-preview", happyhorse: "happyhorse/text-to-video",
@@ -365,7 +371,8 @@ export const KIE_BUILTIN = {
     nano2lite: "nano-banana-2-lite", seedream5lite: "seedream/5-lite-text-to-image", zimage: "z-image" },
 };
 const I2V = { "kling-2.6/text-to-video": "kling-2.6/image-to-video", "wan/2-7-text-to-video": "wan/2-7-image-to-video", "minimax-h3/text-to-video": "minimax-h3/image-to-video", "grok-imagine/text-to-video": "grok-imagine/image-to-video", "pixverse-v6/text-to-video": "pixverse-v6/image-to-video",
-  "kling/v3-turbo-text-to-video": "kling/v3-turbo-image-to-video", "happyhorse/text-to-video": "happyhorse/image-to-video" };
+  "kling/v3-turbo-text-to-video": "kling/v3-turbo-image-to-video", "happyhorse/text-to-video": "happyhorse/image-to-video",
+  "kling-4.0/reference-to-video": "kling-4.0/keyframe-to-video" };   // (v161: unless it carries characters, voices or # pictures — keepRefs161)
 const EDIT = { "gpt-image-2-text-to-image": "gpt-image-2-image-to-image", "flux-2/pro-text-to-image": "flux-2/pro-image-to-image", "seedream/4.5-text-to-image": "seedream/4.5-edit", "qwen3/text-to-image": "qwen3/image-to-image", "seedream/5-pro-text-to-image": "seedream/5-pro-image-to-image", "grok-imagine/text-to-image": "grok-imagine/image-to-image" };
 // the voice an avatar speaks with: the site's own ElevenLabs key first (natural voice, saved in /media), then the engine's
 // ElevenLabs voices — each tried twice, multilingual v2 then turbo 2.5 — so one busy voice service doesn't fail the avatar
@@ -406,7 +413,7 @@ export function kieAuto(cap, body = {}) {
   const img = IMAGE_KINDS.has(kind) || cap === "image";
   let m = (!img && body.model === "mcswap" ? swapModel() : KIE_BUILTIN[img ? "image" : "video"][body.model]) || (img ? c.imageModel || KIE_BUILTIN.image.auto : c.videoModel || KIE_BUILTIN.video.auto);
   if (img) { if (refImg(body) && EDIT[m]) m = EDIT[m]; }
-  else if (startImg(body) && I2V[m]) m = I2V[m];
+  else if (startImg(body) && I2V[m] && !keepRefs161(m, body)) m = I2V[m];
   return m;
 }
 
@@ -415,7 +422,7 @@ export function kieAuto(cap, body = {}) {
 export function kieVariant(m, cap, body = {}) {
   if (!m) return m;
   if (cap === "image" || IMAGE_KINDS.has(body.kind)) return refImg(body) && EDIT[m] ? EDIT[m] : m;
-  return cap === "video" && startImg(body) && I2V[m] ? I2V[m] : m;
+  return cap === "video" && startImg(body) && I2V[m] && !keepRefs161(m, body) ? I2V[m] : m;
 }
 
 // Default Kie model for a capability, if the admin set one (used when no direct provider is connected).

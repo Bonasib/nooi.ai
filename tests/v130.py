@@ -88,9 +88,9 @@ r.plain = kieInput('bytedance/seedance-2', { kind: 'video', model: 'seedance20',
 r.swap = kieInput('bytedance/seedance-2', { kind: 'video', model: 'mcswap', prompt: '', dur: 5, inputs: { mcMove: '/media/m.mp4', mcChar: '/media/c.png', ...inputs }, meta: { ...meta, swap93: true } });
 r.none = seedanceRefs130('', refsOf130({ meta, inputs }));
 const refuse = (b) => { try { checkRefs130(b); return { ok: true, meta: b.meta }; } catch (e) { return { code: e.code, msg: e.message, ar: e.errorAr }; } };
-r.kling = refuse({ kind: 'video', model: 'kling40', inputs, meta: { ...meta } });
+r.kling = refuse({ kind: 'video', model: 'kling30', inputs, meta: { ...meta } });
 r.seven = refuse({ kind: 'video', model: 'seedance20', inputs, meta: { refs130: [...Array(7)].map((_, i) => ({ slot: 'vRef' + ((i % 3) + 1), tag: 't' + i })) } });
-r.parts = refuse({ kind: 'video', model: 'auto', inputs, meta: { ...meta, parts: 3, partModels: ['veo31', 'seedance25', 'kling40'] } });
+r.parts = refuse({ kind: 'video', model: 'auto', inputs, meta: { ...meta, parts: 3, partModels: ['veo31', 'seedance25', 'kling30'] } });
 r.image = refuse({ kind: 'image', model: 'nano', inputs, meta: { ...meta } });
 const b = { kind: 'video', model: 'seedance20', prompt: 'فتاة #صورة1 تشرب #صورة2 الباردة', inputs, meta: { refs130: [{ slot: 'vRef1', tag: 'صورة1' }, { slot: 'vRef2', tag: 'صورة2' }] } };
 asciiTags130(b); r.ascii = { prompt: b.prompt, title: b.title, meta: b.meta };
@@ -133,14 +133,14 @@ async def main():
         j = wait(lambda: (lambda d: d if d.get("title") else None)(api("/v1/jobs/" + r.get("id", "x"), tok=TOKEN)), 10) or {}
         ok("#صورة1" in str(j.get("title", "")), f"the library keeps the customer's own words {j.get('title')}")
         n1 = len(tasks()); w1 = wallet()
-        r2 = api("/v1/jobs", {"kind": "video", "model": "kling40", "prompt": "#image1 walks", "dur": 5, "cid": "v130-b", "inputs": {"vRef1": up("girl")}, "meta": {"refs130": [{"slot": "vRef1", "tag": "image1"}]}}, tok=TOKEN)
+        r2 = api("/v1/jobs", {"kind": "video", "model": "kling30", "prompt": "#image1 walks", "dur": 5, "cid": "v130-b", "inputs": {"vRef1": up("girl")}, "meta": {"refs130": [{"slot": "vRef1", "tag": "image1"}]}}, tok=TOKEN)
         ok(r2.get("_status") == 400 and "Seedance" in r2.get("error", "") and r2.get("errorAr") and len(tasks()) == n1 and wallet() == w1, f"another engine refused, nothing sent, nothing charged {r2} {w1} {wallet()}")
 
         # ---- the page on a computer
         ctx = await b.new_context(viewport={"width": 1280, "height": 860}); pg = await ctx.new_page(); errs = []
         pg.on("pageerror", lambda e: errs.append(str(e)[:200])); E = pg.evaluate
         await pg.goto(f"http://localhost:{PORT}/"); await pg.wait_for_timeout(1500)
-        await E("()=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.lang='en';S.user={name:'T',method:'google'};AU.showAuth=false;Object.assign(S.draft,{model:'kling40',dur:5,variations:1,prompt:'',refs130:[]});S.draft.startJob=null;delete M.vStart;delete M.vEnd;go('video')}")
+        await E("()=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.lang='en';S.user={name:'T',method:'google'};AU.showAuth=false;Object.assign(S.draft,{model:'kling30',dur:5,variations:1,prompt:'',refs130:[]});S.draft.startJob=null;delete M.vStart;delete M.vEnd;go('video')}")
         await pg.wait_for_timeout(700)
         await pg.click("#main .cz98 .add98"); await pg.wait_for_timeout(200)
         m = await E("()=>{const a=document.getElementById('am130'),r=a&&a.getBoundingClientRect();return{shown:!!a&&!a.hidden,items:a?[...a.querySelectorAll('.am130i b')].map(x=>x.textContent):[],inputs:a?[...a.querySelectorAll('input')].map(i=>i.dataset.kf||(i.hasAttribute('data-ref130')?'ref':'')+(i.multiple?'*':'')):[],top:r&&r.top,exp:document.querySelector('#main .cz98 .add98').getAttribute('aria-expanded')}}")
@@ -197,7 +197,7 @@ async def main():
         ok(after["v"] == "" and after["strip"] == ["girl", "image2"] and after["job"] == [{"slot": "vRef1", "tag": "girl"}, {"slot": "vRef2", "tag": "image2"}], f"the box is empty for the next idea, the pictures stay {after}")
         # another engine: Generate says so and makes nothing
         n3 = len(tasks())
-        await E("()=>{S.draft.model='kling40';S.draft.prompt='#girl waves';renderView()}"); await pg.wait_for_timeout(1300)   # (a second Generate within 1.2 s is a double tap)
+        await E("()=>{S.draft.model='kling30';S.draft.prompt='#girl waves';renderView()}"); await pg.wait_for_timeout(1300)   # (a second Generate within 1.2 s is a double tap)
         jobs0 = await E("()=>{window.__t=[];toast=(o=>function(m){__t.push(String(m));return o.apply(this,arguments)})(toast);return S.jobs.length}")
         await pg.click("#main .cz98 [data-act='gen-video']"); await pg.wait_for_timeout(500)
         no = await E("()=>({jobs:S.jobs.length,toast:__t.join(' | ').slice(0,300)})")

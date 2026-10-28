@@ -5673,7 +5673,7 @@ Object.assign(BOT_STYLE,{writer:["lumpy","spark","beret"],casting:["star","heart
 /* ================= v32b: FLAGSHIP VIDEO MODELS · PLAN COLOURS ================= */
 /* Features are each family's known strengths; the admin confirms specs & API ids (Admin → Models) before launch. */
 const FLAG=[
- {id:"kling40",name:"Kling 4.0",maker:"Kuaishou",prov:"kling",cr:30,sec:95,maxDur:15,plan:"studio",feat:[["Cinematic motion","حركة سينمائية"],["Precise camera control","تحكم دقيق بالكاميرا"],["Lip-sync & sound","مزامنة الشفاه والصوت"],["Long takes","لقطات طويلة"]]},
+ {id:"kling40",name:"Kling 4.0",maker:"Kuaishou",prov:"kling",cr:30,sec:95,maxDur:30,plan:"studio",feat:[["Your characters' faces and voices","وجوه شخصياتك وأصواتها"],["Speech, lip-sync & sound in one pass","الكلام ومزامنة الشفاه والصوت في مرة واحدة"],["Up to 30 s","حتى 30 ثانية"],["Cinematic motion","حركة سينمائية"]]},
  {id:"kling30",name:"Kling 3.0",maker:"Kuaishou",prov:"kling",cr:24,sec:80,maxDur:10,plan:"pro",feat:[["Realistic people","بشر واقعيون"],["Camera control","تحكم بالكاميرا"],["Image → video","صورة إلى فيديو"]]},
  {id:"seedance25",name:"Seedance 2.5",maker:"ByteDance",prov:"seedance",cr:22,sec:75,maxDur:12,plan:"pro",feat:[["Multi-shot storytelling","سرد متعدد اللقطات"],["Consistent characters","ثبات الشخصيات"],["Smooth complex motion","حركة معقدة سلسة"]]},
  {id:"seedance20",name:"Seedance 2.0",maker:"ByteDance",prov:"seedance",cr:16,sec:60,maxDur:10,plan:"basic",feat:[["Multi-shot scenes","مشاهد متعددة اللقطات"],["Text & image → video","نص وصورة إلى فيديو"]]},
@@ -7179,7 +7179,7 @@ VIEWS.mocap=(o=>()=>{let h=o();if(mcServer()||!laiOn())return h;const done=S.job
 mocapTick=(o=>function(){o();const j=S.mcSel&&S.jobs.find(x=>x.id===S.mcSel);const cv=$("#wk"),m=M.mc;if(!j||!j.meta||!j.meta.frames||!cv||!srcReady(m)||m.type!=="video")return;const fr=j.meta.frames,t=m.el.currentTime;let i=0;while(i<fr.length-1&&fr[i+1].t<=t)i++;const kp=fr[i].kp,ctx=cv.getContext("2d"),W=cv.width,H=cv.height;
   ctx.save();ctx.lineCap="round";ctx.lineWidth=Math.max(3,W/160);ctx.strokeStyle="#CFE13E";COCO_BONES.forEach(([a,b])=>{if(kp[a][2]<.25||kp[b][2]<.25)return;ctx.beginPath();ctx.moveTo(kp[a][0]*W,kp[a][1]*H);ctx.lineTo(kp[b][0]*W,kp[b][1]*H);ctx.stroke()});ctx.fillStyle="#fff";kp.forEach(p=>{if(p[2]<.25)return;ctx.beginPath();ctx.arc(p[0]*W,p[1]*H,Math.max(3,W/180),0,7);ctx.fill()});ctx.restore()})(mocapTick);
 /* ---------- AI engine quick start: paste the key, test it, switch on every model AI engine can run, then try one ---------- */
-const ENG_VIDEO_RULES=[[/kling.?4|kling40/,"kling-3.0/video"],[/kling.?3|kling30/,"kling-3.0/video"],[/kling/,"kling-2.6/text-to-video"],[/seedance.?2\.?5|seedance25/,"bytedance/seedance-2-5"],[/seedance/,"bytedance/seedance-2"],[/hailuo|minimax|h3/,"minimax-h3/text-to-video"],[/wan.?3|wan30/,"wan/3-0-video"],[/wan|qwenwan/,"wan/2-7-text-to-video"],[/veo.*(fast|lite)/,"veo3_fast"],[/veo/,"veo3"],[/grok/,"grok-imagine/text-to-video"],[/pixverse/,"pixverse-v6/text-to-video"]];
+const ENG_VIDEO_RULES=[[/kling.?4|kling40/,"kling-4.0/reference-to-video"],[/kling.?3|kling30/,"kling-3.0/video"],[/kling/,"kling-2.6/text-to-video"],[/seedance.?2\.?5|seedance25/,"bytedance/seedance-2-5"],[/seedance/,"bytedance/seedance-2"],[/hailuo|minimax|h3/,"minimax-h3/text-to-video"],[/wan.?3|wan30/,"wan/3-0-video"],[/wan|qwenwan/,"wan/2-7-text-to-video"],[/veo.*(fast|lite)/,"veo3_fast"],[/veo/,"veo3"],[/grok/,"grok-imagine/text-to-video"],[/pixverse/,"pixverse-v6/text-to-video"]];
 const ENG_IMAGE_RULES=[[/nano.?banana.*pro|nbpro/,"nano-banana-pro"],[/nano.?banana/,"nano-banana-2"],[/gpt.?image/,"gpt-image-2-text-to-image"],[/seedream/,"seedream/5-pro-text-to-image"],[/flux/,"flux-2/pro-text-to-image"],[/qwen|img20/,"qwen3/text-to-image"],[/imagen/,"google/imagen4-ultra"],[/ideogram/,"ideogram/v3-text-to-image"],[/grok/,"grok-imagine/text-to-image"],[/dotimg/,"nano-banana-2"],[/sdxl/,"seedream/4.5-text-to-image"]];
 function engPlan(){const out=[];const pick=(rules,id,name)=>{const s=(id+" "+(name||"")).toLowerCase();const r=rules.find(x=>x[0].test(s));return r?r[1]:null};
   Object.keys(MODELS).filter(k=>k!=="auto").forEach(k=>{const km=pick(ENG_VIDEO_RULES,k,MODELS[k].name);if(km)out.push([k,MODELS[k].name||k,km,"video"])});
@@ -7872,7 +7872,7 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
 SC_KIND.avatar=["Avatar","أفاتار"];
 /* ---- v59: plans & prices follow the engine's own models ---- */
 /* older ids run as aliases of the engine model they always used (hidden from every list, still valid for old projects) */
-const M_ALIAS={ltxfast:"seedance",wan22:"wan27",qwenwan:"wan27",hunyuan:"wan27",ltx23:"veo31f",kling40:"kling30"},I_ALIAS={sdxl:"img25",flux:"flux2",qwen2:"qwen"};
+const M_ALIAS={ltxfast:"seedance",wan22:"wan27",qwenwan:"wan27",hunyuan:"wan27",ltx23:"veo31f"},I_ALIAS={sdxl:"img25",flux:"flux2",qwen2:"qwen"};
 /* Studio flagship: Veo 3.1 (Google) replaces the old "Kling 4.0" entry */
 FLAG[0]={id:"veo31",name:"Veo 3.1",maker:"Google",prov:"google",cr:221,sec:90,maxDur:8,plan:"studio",feat:[["Cinematic realism","واقعية سينمائية"],["Native sound & dialogue","صوت وحوار أصليان"],["1080p · 8 s shots","1080p · لقطات 8 ث"]]};
 if(MODELS.veo31)Object.assign(MODELS.veo31,{maxDur:8});
@@ -7882,16 +7882,16 @@ Object.entries(I_ALIAS).forEach(([a,t])=>{if(IMG_MODELS[t])Object.defineProperty
 const ALIAS_IDS=new Set(Object.keys(M_ALIAS).concat(Object.keys(I_ALIAS)));
 [VRAIL,IRAIL].forEach(r=>{for(let i=r.length-1;i>=0;i--)if(ALIAS_IDS.has(r[i][0]))r.splice(i,1)});
 if(typeof TASK_MODELS!=="undefined")Object.values(TASK_MODELS).forEach(r=>{if(Array.isArray(r))for(let i=r.length-1;i>=0;i--)if(ALIAS_IDS.has(r[i][0]))r.splice(i,1)});
-HF_TOP.video=["auto","kling30","seedance20","veo31","hailuo","wan30","grok","pixverse6"];
+HF_TOP.video=["auto","kling40","kling30","seedance20","veo31","hailuo","wan30","grok","pixverse6"];
 /* plans: the engine's models per plan (same lists as the server) */
 const P_FREE=["auto","seedance","wan27","ltxfast","wan22","qwenwan"],P_BASIC=P_FREE.concat(["kling","kling26","hailuo","pixverse6","grok","wan30","seedance20","hunyuan"]),P_PRO=P_BASIC.concat(["kling30","seedance25","hailuoh3","veo31f","ltx23","kling40"]);
 BASIC_MODELS.length=0;P_FREE.forEach(x=>BASIC_MODELS.push(x));LIMITS.free.models=P_FREE;LIMITS.basic.models=P_BASIC;LIMITS.pro.models=P_PRO;LIMITS.studio.models="all";
-CMP[7]=[["Video models","نماذج الفيديو"],p=>({free:L("Seedance Fast · WAN 2.7","Seedance السريع · WAN 2.7"),basic:L("+ Kling 2.6 · WAN 3.0 · Seedance 2.0 · MiniMax · PixVerse · Grok","+ Kling 2.6 · WAN 3.0 · Seedance 2.0 · MiniMax · PixVerse · Grok"),pro:L("+ Kling 3.0 · Seedance 2.5 · MiniMax H3 · Veo 3.1 Fast","+ Kling 3.0 · Seedance 2.5 · MiniMax H3 · Veo 3.1 Fast"),studio:L("All · incl. Veo 3.1","الكل · مع Veo 3.1")})[p.id]];
+CMP[7]=[["Video models","نماذج الفيديو"],p=>({free:L("Seedance Fast · WAN 2.7","Seedance السريع · WAN 2.7"),basic:L("+ Kling 2.6 · WAN 3.0 · Seedance 2.0 · MiniMax · PixVerse · Grok","+ Kling 2.6 · WAN 3.0 · Seedance 2.0 · MiniMax · PixVerse · Grok"),pro:L("+ Kling 4.0 · Kling 3.0 · Seedance 2.5 · MiniMax H3 · Veo 3.1 Fast","+ Kling 4.0 · Kling 3.0 · Seedance 2.5 · MiniMax H3 · Veo 3.1 Fast"),studio:L("All · incl. Veo 3.1","الكل · مع Veo 3.1")})[p.id]];
 /* Smart picks only the engine's models the plan allows */
 pickVideo=(o=>function(prompt,opt){const r=o(prompt,opt);let id=({ltxfast:"seedance",wan22:"wan27",hunyuan:"kling26",ltx23:"veo31f",qwenwan:"wan27"})[r.id]||r.id;if(!modelAllowed(id))id=modelAllowed("wan27")&&/(people|faces|أشخاص|وجوه)/.test(r.why.join(" "))?"wan27":"seedance";return{id,why:r.why}})(pickVideo);
 pickImage=(o=>function(prompt){const k=o(prompt);return({flux:"ideogram3",sdxl:"nano"})[k]||k})(pickImage);
 /* one price list: the server's (engine cost × margin), the same table built in for the offline demo */
-const PRICE_TABLE={video:{veo31:189,seedance25:101,kling30:83,wan30:71,seedance20:68,kling:67,kling26:67,hailuoh3:59,veo31f:48,wan27:48,pixverse6:48,hailuo:30,grok:27,seedance:19},image:{nanopro:22,imagen4:15,mj:12,img20:12,ideogram3:11,seedream5:9,flux2:9,img25:6,nano:5,dotimg:5,qwen:5,grokimg:5},fixed:{lipsync:90,finish:17,music:15,voice:8,sfx:5,bg:3}};
+const PRICE_TABLE={video:{kling40:169,veo31:189,seedance25:101,kling30:83,wan30:71,seedance20:68,kling:67,kling26:67,hailuoh3:59,veo31f:48,wan27:48,pixverse6:48,hailuo:30,grok:27,seedance:19},image:{nanopro:22,imagen4:15,mj:12,img20:12,ideogram3:11,seedream5:9,flux2:9,img25:6,nano:5,dotimg:5,qwen:5,grokimg:5},fixed:{lipsync:90,finish:17,music:15,voice:8,sfx:5,bg:3}};
 function applyPrices(t){t=t||PRICE_TABLE;Object.entries(t.video||{}).forEach(([k,v])=>{if(!M_ALIAS[k]&&MODELS[k])MODELS[k].cr=v;const f=FLAG.find(x=>x.id===k);if(f)f.cr=v});Object.entries(t.image||{}).forEach(([k,v])=>{if(!I_ALIAS[k]&&IMG_MODELS[k])IMG_MODELS[k].cr=v});PRICE_TABLE.fixed=Object.assign({},PRICE_TABLE.fixed,t.fixed||{})}
 applyPrices();
 setTimeout(function w(n){if(API.cfg&&API.cfg.prices&&API.cfg.prices.video){applyPrices(API.cfg.prices);renderAll()}else if((n||0)<30)setTimeout(()=>w((n||0)+1),500)},300);
@@ -7908,7 +7908,7 @@ document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.c
 (()=>{const st=document.createElement("style");st.textContent=`.prtable{margin-top:12px;display:flex;flex-direction:column;gap:4px;max-height:460px;overflow:auto}.prh,.prr{display:grid;grid-template-columns:minmax(0,2fr) 110px 70px 70px;gap:8px;align-items:center;font-size:13px}.prh{font-weight:700;color:var(--mute);font-size:12px}.prr{padding:4px 6px;border-radius:8px;background:var(--panel2)}.prr input{padding:4px 6px;min-height:30px}`;document.head.appendChild(st)})();
 /* ================= v60: nooi Studio 2.0 (bots, 30 s for every model) · one model chip · durations · scene lock · faster updates ================= */
 /* longest single shot each engine model makes; longer videos are made in connected parts (nooi Studio 2.0) */
-const ENG_MAX={seedance:10,wan27:10,kling:10,kling26:10,hailuo:10,hailuoh3:10,pixverse6:8,grok:6,wan30:10,seedance20:15,seedance25:12,kling30:15,veo31f:8,veo31:8};
+const ENG_MAX={kling40:30,seedance:10,wan27:10,kling:10,kling26:10,hailuo:10,hailuoh3:10,pixverse6:8,grok:6,wan30:10,seedance20:15,seedance25:12,kling30:15,veo31f:8,veo31:8};
 const engMax=id=>ENG_MAX[(M_ALIAS&&M_ALIAS[id])||id]||10;
 const HF_DURS=[5,10,15,20,25,30];
 const nooiOn=()=>{const H=S.hf;return(H.tab==="video"?H.vModel:H.tab==="image"?H.iModel:"auto")==="auto"};
@@ -14777,7 +14777,7 @@ document.addEventListener("keydown",e=>{if(e.target.id!=="dprompt"||!HP130.open)
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&AM130.open){menuShow130(false);e.stopPropagation()}},true);
 // Generate: the pictures go with every take, to an engine that takes them
 makeVideo=(o=>function(){const R=S.view==="video"?refs130():[];if(!R.length)return o.apply(this,arguments);
-  if(!refOk130(S.draft.model)){toast(L("Reference pictures work with Seedance — pick Seedance 2.0 in Engine, or remove the pictures.","الصور المرجعية تعمل مع Seedance — اختر Seedance 2.0 من المحرك، أو أزل الصور."),{type:"warn"});return}
+  if(!refOk130(S.draft.model)){toast(L("Reference pictures work with Seedance and Kling 4.0 — pick one of them in Engine, or remove the pictures.","الصور المرجعية تعمل مع Seedance و Kling 4.0 — اختر أحدهما من المحرك، أو أزل الصور."),{type:"warn"});return}
   REFGO130=R.map(r=>({slot:r.s,tag:r.tag}));try{return o.apply(this,arguments)}finally{REFGO130=null}})(makeVideo);
 addJob=(o=>function(j){if(REFGO130&&j&&j.kind==="video")j.meta=Object.assign({},j.meta,{refs130:REFGO130.slice()});return o.apply(this,arguments)})(addJob);
 // another video (a story, an ad…) doesn't take the Video page's pictures
@@ -15247,7 +15247,7 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
    video. The cards say what is happening (planning · part 3 of 8 · joining). */
 LIMITS.basic.maxDur=30;LIMITS.pro.maxDur=60;LIMITS.studio.maxDur=120;
 const PART132={seedance:15,seedance20:15,seedance25:15,seedance2mini:15,kling30:15,kling30t:15,wan30:15,wan27:15,wan22:15,qwenwan:15,hunyuan:15,happyhorse:15,grok15:15,
-  kling:10,kling26:10,kling40:15,hailuo:10,hailuoh3:10,gemomni:10,grok:10,pixverse6:8,veo31:8,veo31f:8,ltx23:8,ltxfast:15,auto:15};
+  kling:10,kling26:10,kling40:30,hailuo:10,hailuoh3:10,gemomni:10,grok:10,pixverse6:8,veo31:8,veo31f:8,ltx23:8,ltxfast:15,auto:15};
 const partMax132=m=>PART132[m]||PART132[(typeof M_ALIAS!=="undefined"&&M_ALIAS[m])||""]||10;
 const capDur132=()=>Math.min(120,lim().maxDur||5);
 const parts132=(m,d)=>{const x=durs133(m||"auto",d);return x.length>1?x.length:1};   // (v133: the real shot lengths of each engine)
@@ -19977,6 +19977,46 @@ addJob=(o=>function(j){const r=o.apply(this,arguments);try{const l=j&&j.kind==="
   if(l&&Date.now()-note160>60e3){note160=Date.now();const n=LNAME160[l]||[l,l];
     toast(L((MODELS[j.model]||{}).name+" speaks only Chinese and English — "+n[0]+" lines may come out in English. For "+n[0]+" speech choose another engine, or give the character a voice (lips follow it).",(MODELS[j.model]||{}).name+" يتكلم الصينية والإنجليزية فقط — قد تخرج جمل "+n[1]+" بالإنجليزية. لكلام ب"+n[1]+" اختر محرّكاً آخر، أو أعطِ الشخصية صوتاً (تتبعه الشفاه)."),{type:"info",ms:7000})}}catch(e){}return r})(addJob);
 req157=(o=>function(){const r=o.apply(this,arguments);try{const l=lang160(r.say)||speech160(S.hf&&S.hf.prompt);if(l)r.lang=l}catch(e){}return r})(req157);
+
+/* ================= v161: Kling 4.0 — the agents, the characters and the voices as one system =================
+   Kling 4.0 (on the AI engine) takes each @character's face(s) and voice and makes the picture, the speech, the lip-sync and the
+   sound in one pass, up to 30 s (lib/kling161.js). So a Kling 4.0 video with characters doesn't first make a picture of the scene
+   (v87): their faces go to the engine with the words. The voice picked in the box — a voice from the library, or your clip cloned
+   with your consent — goes with them too, instead of a voice step after the video (v157): nothing extra to pay. ("Your clip — the
+   lips follow it" still lays that exact clip on the video afterwards.) 1080p costs 1.5× (the engine's own price). The agents are
+   told the engine and each character's voice. */
+SLOTS_FOR.video=(SLOTS_FOR.video||[]).concat("vVoice161");
+const K4_161="kling40";
+REFOK130.push(K4_161);   // (# pictures too: @image_1… in Kling 4.0's words)
+const k4On161=()=>S.hf&&S.hf.tab==="video"&&S.hf.vModel===K4_161;
+function faces161(c){const more=S.jobs.filter(j=>j.kind==="look"&&j.meta&&j.meta.char===c.id&&j.status==="complete"&&mediaUrl(j)).map(mediaUrl);
+  return[...new Set([face87(c)].concat(more).filter(u=>typeof u==="string"&&/^(https?:\/\/|\/media\/)/.test(u)))].slice(0,4)}
+const cast161=cs=>cs.map(c=>({name:String(c.name).trim(),faces:faces161(c),voice:(c.voice&&c.voice.vid)||""})).filter(c=>c.name&&c.faces.length);
+addJob=(o=>function(j){
+  if(!j||j.kind!=="video"||j.model!==K4_161||(j.meta&&(j.meta.sound134||j.meta.chars87||j.meta.cast161||j.meta.ugc||j.meta.merge135||j.meta.edit135||j.meta.replace136||j.meta.extend132)))return o.apply(this,arguments);
+  const cs=charsIn87(j.prompt),pk=j.meta&&j.meta.char?charById(j.meta.char):null;if(pk&&!cs.includes(pk))cs.push(pk);cs.splice(3);
+  if(cs.some(c=>!face87(c)))return o.apply(this,arguments);   // (a character without a real face gets one first — v87 — then this job comes back here)
+  const v=VC157.send,clip=!!(v&&v.mode==="clone"&&v.consent&&M.vc157&&M.vc157.file),useV=!!(v&&((v.mode==="preset"&&v.voice)||clip));
+  if(!cs.length&&!useV)return o.apply(this,arguments);
+  j=Object.assign({},j,{meta:Object.assign({},j.meta)});
+  if(cs.length){j.meta.cast161=cast161(cs);j.meta.chars87=cs.map(c=>({id:c.id,name:c.name}))}   // (chars87: no first-frame picture — the engine takes the faces itself)
+  if(useV){const who=who157(),wn=who?String(who.name).trim():"";j.meta.voice161=Object.assign(v.mode==="preset"?{voice:v.voice}:{clip:1},wn?{who:wn}:{});
+    const say=String(v.say||"").trim();if(say&&!String(j.prompt).includes(say))j.prompt=String(j.prompt).replace(/[\s.]*$/,"")+". "+(wn?"@"+wn:"The person")+' says: "'+say+'"';
+    VC157.send=null;   // (the voice goes with the video — no voice step after it)
+    toast(L("Kling 4.0 speaks with this voice in the video itself — no extra step, nothing extra to pay.","يتكلم Kling 4.0 بهذا الصوت داخل الفيديو نفسه — بلا خطوة إضافية ولا تكلفة إضافية."),{type:"info",ms:3500});
+    if(clip)return withSlots87({vVoice161:M.vc157},()=>o.call(this,j))}
+  return o.call(this,j)})(addJob);
+// the voice sheet says it: with Kling 4.0 a library voice or your cloned voice is part of the video (no step after it, no price)
+price157=(o=>function(){const v=S.hf&&S.hf.vc157,el=$("#vc157price");if(!el||!k4On161()||!v||!(v.mode==="preset"||v.mode==="clone"))return o.apply(this,arguments);
+  el.textContent=L("Kling 4.0 speaks with this voice in the video itself, lips in sync — no extra credits.","يتكلم Kling 4.0 بهذا الصوت داخل الفيديو نفسه والشفاه متزامنة — بلا رصيد إضافي.")})(price157);
+vcSheet157=(o=>function(){const r=o.apply(this,arguments);if(!k4On161())return r;const p=document.querySelector("#modalRoot .hfsheet p.small.mute");
+  if(p)p.textContent=L("The character in your video speaks in this voice, its lips in sync — Kling 4.0 makes it in the video itself.","تتكلم الشخصية في فيديوك بهذا الصوت والشفاه متزامنة — يصنعه Kling 4.0 داخل الفيديو نفسه.");return r})(vcSheet157);
+// 1080p and above on Kling 4.0 cost 1.5× (the same as the server's price)
+hfCost=(o=>function(){const r=o.apply(this,arguments);return k4On161()&&typeof r==="number"&&/1080|2k|4k/i.test(String(S.hf.res||""))?Math.round(r*1.5):r})(hfCost);
+// the agents know the engine and each character's chosen voice
+API.req=(o=>function(p,opt){const k=String(p);if((k==="/v1/agents/plan"||k==="/v1/agents/storyboard")&&opt&&opt.json){const js=Object.assign({},opt.json);
+    const vs={};charsIn87(js.prompt||"").forEach(c=>{if(c.voice&&c.voice.vname)vs[String(c.name).trim()]=String(c.voice.vname)});if(Object.keys(vs).length)js.castVoices161=vs;   // (the cast itself is added by v159)
+    if(k4On161())js.model=K4_161;opt.json=js}return o.apply(this,arguments)})(API.req);
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

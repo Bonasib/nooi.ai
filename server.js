@@ -57,6 +57,7 @@ import { startKeepMedia } from "./lib/v89.js";   // v89: results that still poin
 import "./lib/alert138.js";   // v138: an engine out of credits is said at once (Admin, staff line, one email)
 import "./lib/intent.js";   // v96: the page's choices (style, camera move, type, motion, what to avoid, voice-over) reach the engine as words
 import "./lib/words100.js";   // v100: a picture with no words gets plain words for the engine (Kling 3.0 refused "prompt is required")
+import "./lib/voices161.js";   // v161: Kling 4.0 hears each character's own voice (library sample or the customer's clip) — speech and lips in one pass
 import "./lib/isolate144.js";   // v144: the voice of an editor clip alone (its sound cut out here, priced per started minute)
 // a stray error in some background task is logged — it never takes the whole site down (every request in flight would fail
 // with "Failed to fetch" while the service restarts)
