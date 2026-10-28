@@ -47,37 +47,75 @@ export function clean150(list, len) {
   return out;
 }
 
-// a brief → a plan, with no AI: the brand's reveal, light, the main line in big words, then the scenes the brief speaks of
-// (an app, a number, a leaderboard, a call, a list of things), the last line, and the end card
+// v162: a line in two parts at its natural break — a comma, or a joining word near the middle ("…turns one sentence | into a
+// finished video"), else before "their / the / your…" — never just after the second word ("nooi.ai turns | one sentence into…")
+const JOIN162 = /^(into|to|for|with|at|in|on|from|and|but|so|that|which|while|when|because|في|إلى|الى|من|على|مع|لكي|حتى|ثم|و|لأن|عندما)$/i;
+const DET162 = /^(their|the|a|an|your|my|our|his|her|its|every|any|all|this|that|these|those|كل|هذا|هذه)$/i;
+export function split150(line) {
+  const w = String(line || "").split(/\s+/).filter(Boolean), n = w.length; if (n <= 3) return [w.join(" "), ""];
+  const lo = Math.max(2, Math.ceil(n * 0.3)), hi = Math.min(5, n - Math.max(2, Math.ceil(n * 0.3))); let at = -1, best = 1e9;
+  for (let i = lo; i <= hi; i++) { const comma = /[,،:]$/.test(w[i - 1]), join = JOIN162.test(w[i].replace(/[,،.:]/g, "")), det = DET162.test(w[i]);
+    if (!comma && !join && !det) continue; const sc = Math.abs(i - n / 2) - (comma ? 1.5 : 0) + (join || comma ? 0 : 0.75); if (sc < best) { best = sc; at = i; } }
+  if (at < 0) at = Math.max(2, Math.min(5, Math.floor(n / 2)));
+  return [w.slice(0, at).join(" ").replace(/[,،:]$/, ""), w.slice(at).join(" ")];
+}
+// v162: the last line asks the viewer to act ("Start free at nooi.ai", "ابدأ الآن") — it goes on the end card, not on a scene of its own
+const CTA162 = /^(start|try|get|download|join|sign\s*up|visit|book|order|shop|buy|subscribe|ابدأ|ابدا|جرّب|جرب|حمّل|حمل|انضم|اطلب|زُر|زر|سجّل|سجل|اشترك|احجز)/i;
+// a brief → a plan, with no AI: the brand's reveal, light, the main line in big words, then every other line of the brief in its
+// order — as the scene that shows it (an app, a number, a leaderboard, a call, a list of things, or big words) — the last line,
+// and the end card (v162: every line gets a scene; before, lines with no number, list, app or call were left out)
 export function plan150(b) {
-  const brand = str(b && b.brand, 40) || "nooi", msg = str(b && b.msg, 600), ar = isAr(msg + brand);
+  const brand = str(b && b.brand, 40) || "nooi", msg = str(b && b.msg, 600), ar = isAr(msg + brand), L = Math.max(6, Math.min(60, +(b && b.len) || 20));
   const sents = msg.split(/(?<=[.!?؟])\s+|\n+/).map((s) => s.trim().replace(/[.!؟?]+$/, "")).filter(Boolean);
-  const has = (re) => re.test(msg), out = [];
-  const first = sents[0] || brand, fw = first.split(" ");
-  out.push({ sc: "logo", t1: brand, t2: "" });
-  out.push({ sc: "trail" });
-  out.push({ sc: "words", t1: fw.slice(0, Math.min(2, fw.length)).join(" "), t2: fw.slice(2).join(" ") });
+  const has = (re) => re.test(msg), mid = [], sIdx = (re) => Math.max(0, sents.findIndex((x) => re.test(x)));
+  const first = sents[0] || brand, used = new Set([0]);
+  const out = [{ sc: "logo", t1: brand, t2: "" }, { sc: "trail" }];
+  { const [a, c] = split150(first); out.push({ sc: "words", t1: a, t2: c }); }
+  // the closing: a call to action goes on the end card; two short lines together ("One app." "Every skill."), else the last line
+  let last = sents.length > 1 ? sents[sents.length - 1] : "", cta = "";
+  if (last && CTA162.test(last) && last.split(" ").length <= 7) { cta = last.slice(0, 40); used.add(sents.length - 1); last = sents.length > 2 ? sents[sents.length - 2] : ""; }
+  const li = last ? sents.lastIndexOf(last) : -1, prev = li > 1 ? sents[li - 1] : "", short = (x) => x && x.split(" ").length <= 3;
+  let closing = null;
+  if (short(last) && short(prev) && prev !== first) { closing = { sc: "words", t1: prev, t2: last }; used.add(li); used.add(li - 1); }
   if (has(/\bapp\b|lesson|learn|screen|تطبيق|درس|تعلم|تعلّم|شاشة/i)) {
     const lang = has(/language|lingu|لغ/i), stop = /^(the|a|an|to|of|in|on|and|for|any|with|a|في|من|على|إلى|و|أي)$/i;
-    out.push({ sc: "phone", t1: lang ? (ar ? "ترجم هذه الجملة" : "Translate this sentence") : first.length > 34 ? first.slice(0, 34) + "…" : first,
-      items: first.split(" ").map((w) => w.replace(/[,،.]/g, "")).filter((w) => w.length > 1 && !stop.test(w)).slice(0, 5) });
+    mid.push({ i: 0.5, k: 0, s: { sc: "phone", t1: lang ? (ar ? "ترجم هذه الجملة" : "Translate this sentence") : first.length > 34 ? first.slice(0, 34) + "…" : first,
+      items: first.split(" ").map((w) => w.replace(/[,،.]/g, "")).filter((w) => w.length > 1 && !stop.test(w)).slice(0, 5) } });
   }
-  // (the biggest number is the one to show — "369 day streak", not "5 minutes")
-  const nms = [...msg.matchAll(/(\d[\d,.]*)\s*[-–]?\s*([^\d.,!?؟\n]{0,28})/g)].sort((x, y) => +y[1].replace(/,/g, "") - +x[1].replace(/,/g, ""));
-  const nm = nms[0];   // (its label: up to two words, ended by "and" — or an Arabic "و" joined to the next word)
-  if (nm) { const lab = nm[2].trim().split(/\s+(?:and|or|و|أو)\s+/i)[0].split(" ").reduce((o, w, i) => (o.stop || (i > 0 && /^و../.test(w)) ? { ...o, stop: true } : { ...o, w: o.w.concat(w) }), { w: [] }).w.slice(0, 2).join(" "); out.push({ sc: "counter", val: +nm[1].replace(/,/g, ""), t1: lab || (ar ? "يوماً متتالياً" : "day streak"), ic: iconFor150(lab || "streak") }); }
+  // the numbers: the biggest one ("369 day streak", not "5 minutes"), and (v162) one more from another line — not a version
+  // in a name ("Kling 4.0", "Veo 3.1")
+  const dig = msg.replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x660)).replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x6f0)).replace(/٬/g, ",");   // (v162: ١٢٠٠٠٠ is a number too — same length, so the places match)
+  const nms = [...dig.matchAll(/(\d[\d,.]*)\s*[-–]?\s*([^\d.,!?؟\n]{0,28})/g)].filter((m) => !(/\./.test(m[1].replace(/\.$/, "")) && /[A-Za-z][\w-]*\s?$/.test(dig.slice(0, m.index))))
+    .sort((x, y) => +y[1].replace(/,/g, "") - +x[1].replace(/,/g, ""));
+  const lineOf = (m) => { let at = 0; for (let i = 0; i < sents.length; i++) { const p = msg.indexOf(sents[i], at); if (p >= 0 && m.index >= p && m.index < p + sents[i].length + 1) return i; if (p >= 0) at = p + sents[i].length; } return 0; };
+  const counter = (nm) => { const lab = nm[2].trim().split(/\s+(?:and|or|و|أو)\s+/i)[0].split(" ").reduce((o, w, i) => (o.stop || (i > 0 && /^و../.test(w)) ? { ...o, stop: true } : { ...o, w: o.w.concat(w) }), { w: [] }).w.slice(0, 2).join(" ").replace(/[,،:]$/, "");
+    return { sc: "counter", val: +nm[1].replace(/,/g, ""), t1: lab || (ar ? "يوماً متتالياً" : "day streak"), ic: iconFor150(lab || "streak") }; };
+  if (nms[0]) { const i = lineOf(nms[0]); mid.push({ i, k: 1, s: counter(nms[0]) }); used.add(i);
+    const n2 = nms.slice(1).find((m) => { const j = lineOf(m); return j !== i && j !== 0 && !used.has(j) && +m[1].replace(/,/g, "") >= 2; });
+    if (n2 && L >= 15) { const j = lineOf(n2); mid.push({ i: j, k: 1, s: counter(n2) }); used.add(j); } }
   if (has(/league|rank|leader|top|compete|friends|دوري|ترتيب|منافس|الأول|أصدقاء/i)) {
-    const nms = ar ? ["مايا", "عمر", "لوسيا", "كينجي", "صوفيا", "أنت"] : ["Maya", "Omar", "Lucia", "Kenji", "Sofia", "You"];
-    out.push({ sc: "board", t1: ar ? "الدوري الماسي" : "Diamond League", t2: ar ? "أفضل ثلاثة يفوزون بكأس" : "Top 3 win a trophy", items: nms.map((n, i) => n + ":" + (1340 - i * 70)), ic: "diamond" });
+    const nms = ar ? ["مايا", "عمر", "لوسيا", "كينجي", "صوفيا", "أنت"] : ["Maya", "Omar", "Lucia", "Kenji", "Sofia", "You"], i = sIdx(/league|rank|leader|top|compete|friends|دوري|ترتيب|منافس|الأول|أصدقاء/i);
+    mid.push({ i, k: 2, s: { sc: "board", t1: ar ? "الدوري الماسي" : "Diamond League", t2: ar ? "أفضل ثلاثة يفوزون بكأس" : "Top 3 win a trophy", items: nms.map((n, i) => n + ":" + (1340 - i * 70)), ic: "diamond" } }); used.add(i);
   }
-  if (has(/call|talk|speak|chat|tutor|conversation|مكالم|محادث|تحدث|تحدّث|مدرس|معلم/i)) out.push({ sc: "call", t1: ar ? "مرحباً! كيف كان يومك؟" : "Hi! How was your day?", t2: ar ? "رائع، شكراً!" : "Great, thanks!", ic: "mood" });
-  const lm = /[:：]\s*([^.!?؟\n]+)/.exec(msg), commas = sents.find((s) => (s.match(/[,،]/g) || []).length >= 2);
-  const list = (lm ? lm[1] : commas || "").split(/\s*(?:[,،]|\band\b|\sو)\s*/).map((x) => x.trim().replace(/^(and|و)\s+/i, "")).filter((x) => x && x.length <= 24);
-  if (list.length >= 2) out.push({ sc: "nodes", items: list.slice(0, 6) });
-  // the closing line: two short lines together ("One app." "Every skill."), else the last line in two parts
-  const last = sents.length > 1 ? sents[sents.length - 1] : "", prev = sents.length > 2 ? sents[sents.length - 2] : "", short = (x) => x && x.split(" ").length <= 3;
-  if (short(last) && short(prev) && prev !== first) out.push({ sc: "words", t1: prev, t2: last });
-  else if (last && last !== first && !(lm && last.includes(lm[1]))) { const lw = last.split(" "); out.push({ sc: "words", t1: lw.slice(0, Math.min(2, lw.length)).join(" "), t2: lw.slice(2).join(" ") }); }
-  out.push({ sc: "end", t1: brand, t2: ar ? "ابدأ اليوم" : "Start today" });
+  const CALL = /call|talk|speak|chat|tutor|conversation|مكالم|محادث|تحدث|تحدّث|مدرس|معلم/i;
+  if (has(CALL)) { const i = sIdx(CALL); mid.push({ i, k: 3, s: { sc: "call", t1: ar ? "مرحباً! كيف كان يومك؟" : "Hi! How was your day?", t2: ar ? "رائع، شكراً!" : "Great, thanks!", ic: "mood" } }); used.add(i); }
+  // a list: after a colon, a line with two commas, or (v162) "A, B and C" — a line not shown already, one that doesn't start with a
+  // number first ("8 agents plan, film and edit" is a number); the last item loses its tail ("Seedance in one studio" → "Seedance")
+  const lm = /[:：]\s*([^.!?؟\n]+)/.exec(msg), isList = (x) => (x.match(/[,،]/g) || []).length >= 2 || ((x.match(/[,،]/g) || []).length >= 1 && /\s(and|و)\s/i.test(x)) || (x.match(/\s(and|و)\s/gi) || []).length >= 2;   // (v162: "A و B و C")
+  const lsI = lm ? sIdx(new RegExp(lm[1].slice(0, 12).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))) : [...sents.keys()].filter((i) => i > 0 && !used.has(i) && isList(sents[i])).sort((x, y) => /^\d/.test(sents[x]) - /^\d/.test(sents[y]))[0] ?? sents.findIndex((x) => (x.match(/[,،]/g) || []).length >= 2);
+  const lsrc = lm ? lm[1] : lsI >= 0 ? sents[lsI] : "";
+  // (v162: "و" alone, or joined to "ال…" — "والموسيقى"; a word that just starts with و — "واحد", "وقت" — is not cut)
+  let list = lsrc.split(/\s*(?:[,،]|\band\b|\sو\s|\sو(?=ال))\s*/).map((x) => x.trim().replace(/^(and|و)\s+/i, "")).filter((x) => x && x.length <= 24);
+  if (list.length >= 3) { const lw = list[list.length - 1].split(" "), cut = lw.findIndex((w, i) => i > 0 && /^(in|on|at|for|with|from|to|of|في|على|من|مع|إلى)$/i.test(w)); if (cut > 0) list[list.length - 1] = lw.slice(0, cut).join(" "); }
+  if (list.length >= 2) { mid.push({ i: Math.max(0, lsI), k: 4, s: { sc: "nodes", items: list.slice(0, 6) } }); if (lsI >= 0) used.add(lsI); }
+  // (v162) every other line of the brief: big words, in two parts
+  sents.forEach((x, i) => { if (used.has(i) || i === li || (closing && i === li - 1)) return; const [a, c] = split150(x); mid.push({ i, k: 5, s: { sc: "words", t1: a, t2: c } }); });
+  if (!closing && last && last !== first && !(lm && last.includes(lm[1])) && !mid.some((m) => m.i === li)) { const [a, c] = split150(last); closing = { sc: "words", t1: a, t2: c }; }
+  // (as many scenes as the length holds — about one every two seconds; the lines that don't fit are the last of the middle ones)
+  const room = Math.max(1, Math.round(L / 2.2) - 3 - (closing ? 1 : 0));
+  mid.sort((x, y) => x.i - y.i || x.k - y.k); const keep = mid.filter((m) => m.k < 5).length >= room ? mid.filter((m) => m.k < 5) : mid;
+  let words = room - keep.filter((m) => m.k < 5).length; out.push(...keep.filter((m) => m.k < 5 || words-- > 0).map((m) => m.s));
+  if (closing) out.push(closing);
+  out.push({ sc: "end", t1: brand, t2: cta || (ar ? "ابدأ اليوم" : "Start today") });
   return clean150(out, b && b.len);
 }

@@ -16180,6 +16180,10 @@ async function mix139(total){const SR=48000,off=new OfflineAudioContext(2,Math.m
   for(const it of S.ed.sfx||[]){let b=null;try{b=await edxBuffer(it)}catch(e){}if(b)put(b,it.t,0,b.duration,clamp((it.vol??100)/100,0,2))}
   for(const Ly of S.ed.layers||[]){const m=M["ly_"+Ly.id];if(!Ly.sound||!m||m.type!=="video")continue;const b=await dec("ly:"+(m.url||m.el.src),m);if(b&&b.duration>.05)for(let t=Ly.start;t<Ly.end;t+=b.duration)put(b,t,0,Math.min(b.duration,Ly.end-t),(Ly.vol??100)/100)}
   return n?await off.startRendering():null}
+// v162: "high" quality as a real bitrate, held constant — the library's own "high" became a quantizer the browser's encoder turned
+// into ~0.2 Mbit/s for a 1080×1920 motion ad (blocks and smeared glow in the exported file; now ~3.4 Mbit/s); a library
+// without these options keeps the old setting
+const q162=MB=>{try{return MB.Quality?new MB.Quality({quality:"high",preferBitrate:true,bitrateMode:"constant"}):MB.QUALITY_HIGH}catch(e){return MB.QUALITY_HIGH}};
 async function edRender139(total){
   if(!window.VideoEncoder||!window.OfflineAudioContext||S.ed.render139===false)return null;
   const cv=$("#wk");if(!cv)return null;let MB;try{MB=await mb139()}catch(e){return null}
@@ -16197,7 +16201,7 @@ async function edRender139(total){
     if(vc!=="avc"&&Math.max(W,H)>1920){ED.hq=1920;draw(0);W=cv.width;H=cv.height}R139.cap=Math.max(W,H);
     if(btn){btn.disabled=true;btn.textContent=L("Preparing the sound…","تجهيز الصوت…")}
     const mixed=await mix139(total);let ac=null;if(mixed)for(const k of acs)if(!ac&&await MB.canEncodeAudio(k,{numberOfChannels:2,sampleRate:48000}))ac=k;
-    const out=new MB.Output({format:fmtO,target:new MB.BufferTarget()}),vs=new MB.CanvasSource(cv,{codec:vc,bitrate:MB.QUALITY_HIGH,keyFrameInterval:2,latencyMode:"realtime"});/* ("quality" mode: VP9 in software made ~1.5 frames a second on real pictures) */out.addVideoTrack(vs,{frameRate:fps});
+    const out=new MB.Output({format:fmtO,target:new MB.BufferTarget()}),vs=new MB.CanvasSource(cv,{codec:vc,bitrate:q162(MB),keyFrameInterval:2,latencyMode:"realtime"});/* ("quality" mode: VP9 in software made ~1.5 frames a second on real pictures) */out.addVideoTrack(vs,{frameRate:fps});
     let as=null;if(mixed&&ac){as=new MB.AudioBufferSource({codec:ac,bitrate:192e3});out.addAudioTrack(as)}await out.start();
     const SR=48000;let aAt=0;const audioTo=async sec=>{if(!as)return;const end=Math.min(mixed.length,Math.round(sec*SR));while(aAt<end){const len=Math.min(SR,end-aAt),b=new AudioBuffer({length:len,numberOfChannels:2,sampleRate:SR});
         for(let ch=0;ch<2;ch++)b.copyToChannel(mixed.getChannelData(Math.min(ch,mixed.numberOfChannels-1)).subarray(aAt,aAt+len),ch);await as.add(b);aAt+=len}};
@@ -16250,7 +16254,7 @@ function slotUrl139(k,x){const url=x.url;let m;
   m._srv139=url;M[k]=m;return m}
 async function open139(id){if(API.mode!=="server")return;
   try{const r=await API.req("/v1/projects/"+id),d=r.doc||{};PJ.saveCurrent("edit");   // (the work open now stays in this device's projects)
-    Object.assign(S.ed,{seq148:null},d.ed||{},{sel:null,selText:null,tab:"clip",srv139:id});if(d.look)S.tools.edit=d.look;
+    Object.assign(S.ed,{seq148:null},d.ed||{},{sel:null,selText:null,tab:"clip",srv139:id,title:(d.ed&&d.ed.title)||r.name||""});if(d.look)S.tools.edit=d.look;   // (v162: the project keeps its name — the next save used to rename it "Edit · 1 clips · …")
     for(const[k,x]of Object.entries(d.media||{}))if(x&&x.url&&!x.local)slotUrl139(k,x);
     S.ed.clips.forEach(c=>{if(c.src&&c.src.k==="job"&&!S.jobs.some(j=>j.id===c.src.job)&&c.src.url139){delete M["c_"+c.id];slotUrl139("c_"+c.id,{url:c.src.url139,type:/\.(png|jpe?g|webp|gif|avif)(\?|$)/i.test(c.src.url139)?"image":"video",name:""})}});
     S.cur.edit=null;HIST.stack=[];HIST.i=-1;ED.t=0;try{edxInit()}catch(e){}PJ139.at=r.updated||0;try{PJ139.key=JSON.stringify((await doc139(false)).doc)}catch(e){}PJ139.local=Object.values(d.media||{}).filter(x=>x&&x.local).length;
@@ -18040,6 +18044,7 @@ async function poll148(){const E=S.ed;if(AG148.busy||Date.now()<AG148.next||API.
   if(AG148.down||BR148.d||$("#modalRoot").innerHTML||CM131.el||document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName)&&document.activeElement.type!=="range")return;   // (not in the middle of a drag, a stroke, a menu or typing)
   AG148.busy=true;const id=E.srv139;
   try{const known=E.opN148!=null,r=await API.req("/v1/projects/"+id+"/ops?after="+(known?E.opN148:1e12));if(S.ed!==E||E.srv139!==id)return;   // (another project was opened meanwhile)
+    if(Array.isArray(r.want162)&&r.want162.length)setTimeout(()=>look162(id,r.want162),0);   // (v162: an agent asks to see a frame or to have the video exported)
     if(!known){E.opN148=+r.seq||0;return}
     const ops=(r.ops||[]).filter(x=>x.n>E.opN148);if(!ops.length)return;const said=[];
     for(const op of ops){try{if(op148(op))said.push(opSay148(op))}catch(e){}E.opN148=Math.max(E.opN148,+op.n||0)}
@@ -18513,6 +18518,14 @@ const bez150=(a,b,c,d,n)=>{const o=[];for(let i=0;i<=(n||40);i++){const t=i/(n||
 function rr150(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
 function txt150(ctx,s,x,y,w,px,col,maxW,al,glow){if(!s)return 0;const F=fitF(ctx,s,w,px,maxW);ctx.font=infoFont(w,F);ctx.textAlign=al||"center";ctx.textBaseline="middle";ctx.direction=isRtl(s)?"rtl":"ltr";
   if(glow){ctx.shadowColor=glow;ctx.shadowBlur=F*.5}ctx.fillStyle=col;ctx.fillText(s,x,y);ctx.shadowBlur=0;return ctx.measureText(s).width}
+// v162: a line that would shrink below 70 % of its size to fit goes on two balanced lines instead (a long subtitle on a phone
+// reel was a thin line of tiny letters) — {w: the wider line, dy: how far the second line is below the first}
+function split162(ctx,s,w,px,maxW){s=String(s||"");const ws=s.split(/\s+/).filter(Boolean),F1=fitF(ctx,s,w,px,maxW);if(ws.length<2||F1>=px*.7||(ws.length<3&&F1>=px*.45))return{l:[s],F:F1,dy:0};
+  let k=1,bd=1e9;ctx.font=infoFont(w,px);for(let i=1;i<ws.length;i++){const d=Math.abs(ctx.measureText(ws.slice(0,i).join(" ")).width-ctx.measureText(ws.slice(i).join(" ")).width);if(d<bd){bd=d;k=i}}
+  const a=ws.slice(0,k).join(" "),b=ws.slice(k).join(" "),F=Math.min(fitF(ctx,a,w,px,maxW),fitF(ctx,b,w,px,maxW));return{l:[a,b],F,dy:F*1.18}}
+// (mid: y is the middle of the lines, else the first line)
+function lines162(ctx,s,x,y,w,px,col,maxW,al,glow,mid){const T=split162(ctx,s,w,px,maxW);if(!T.l[0])return{w:0,dy:0};const y0=mid?y-T.dy/2:y;
+  return{w:Math.max(...T.l.map((t,i)=>txt150(ctx,t,x,y0+i*T.dy,w,T.F,col,maxW,al,glow))),dy:T.dy}}
 // the dark background with the accent's glow and slow specks of light
 function bg150(ctx,W,H,ac,t){ctx.save();const g=ctx.createRadialGradient(W/2,H*.42,0,W/2,H*.42,Math.hypot(W,H)*.62);g.addColorStop(0,dark150(ac,.2));g.addColorStop(.5,"#06100a");g.addColorStop(1,"#010302");
   ctx.fillStyle=g;ctx.fillRect(0,0,W,H);const U=Math.min(W,H);for(let i=0;i<28;i++){const x=(rn150(i,1)*W+t*U*.012*(rn150(i,2)-.5)*4+W)%W,y=(rn150(i,3)*H-t*U*.01*(.4+rn150(i,4))+H*9)%H,a=.05+.12*Math.abs(Math.sin(t*.8+i));
@@ -18525,7 +18538,7 @@ const SC150={
     ctx.save();ctx.scale(s,s);ctx.shadowColor=ac;ctx.shadowBlur=U*.09;ctx.fillStyle=ac;ctx.beginPath();ctx.arc(0,-U*.05,R,0,7);ctx.fill();ctx.shadowBlur=0;
     if(it.ic)icDraw131(ctx,it.ic,0,-U*.05,R*1.15,dark);else txt150(ctx,(String(it.t1||"n").trim()[0]||"n").toUpperCase(),0,-U*.05,800,R*1.2,dark,R*1.6);ctx.restore();
     const tp=clamp((lt-.45)/.45,0,1);if(tp>0&&it.t1){ctx.save();ctx.globalAlpha*=ezo(tp);const y=R+U*.06+(1-ezo(tp))*U*.05,w=txt150(ctx,it.t1,0,y,800,U*.13,ac,o.W*.86,"center",ac);
-      const up=clamp((lt-.9)/.5,0,1);if(up>0)neon150(ctx,[[-w/2,y+U*.085],[w/2,y+U*.085]],ezo(up),ac,U*.005);if(it.t2)txt150(ctx,it.t2,0,y+U*.15,500,U*.042,"rgba(255,255,255,.8)",o.W*.86);ctx.restore()}
+      const up=clamp((lt-.9)/.5,0,1);if(up>0)neon150(ctx,[[-w/2,y+U*.085],[w/2,y+U*.085]],ezo(up),ac,U*.005);if(it.t2)lines162(ctx,it.t2,0,y+U*.15,500,U*.05,"rgba(255,255,255,.8)",o.W*.86);ctx.restore()}
     return{w:U*.9,h:U*.7}},
   trail(ctx,o){const{W,H,U,lt,len,ac}=o,hw=W/2,hh=H/2;for(let i=0;i<3;i++){const p=ezo(clamp((lt-i*.15)/(Math.max(.6,len*.75)),0,1)),c=i===1?"#ffffff":ac;
       neon150(ctx,bez150([-hw*1.1,hh*(.7-.3*i)],[-hw*.2,-hh*(.55+.1*i)],[hw*.25,hh*(.6-.25*i)],[hw*1.1,-hh*(.25+.2*i)],60),p,i===1?ac:c,U*(.007-.0015*i))}
@@ -18546,7 +18559,7 @@ const SC150={
     const on=lt>o.len*.62;rr150(ctx,x0+Pw*.1,y0+Ph*.84,Pw*.8,Ph*.075,Ph*.03);ctx.fillStyle=on?ac:"#26302b";if(on){ctx.shadowColor=ac;ctx.shadowBlur=U*.03}ctx.fill();ctx.shadowBlur=0;
     txt150(ctx,rtl?"تحقّق":"CHECK",0,y0+Ph*.8775,800,Pw*.055,on?dark150(ac,.12):"rgba(255,255,255,.5)",Pw*.7);ctx.restore();return{w:Pw,h:Ph}},
   counter(ctx,o){const{W,U,lt,ac,it}=o,ic=it.ic||"local_fire_department",fire=/fire|whatshot/.test(ic),col=fire?"#FFA41B":ac,val=+it.val||0,
-      n=Math.round(val*ezo(clamp((lt-.15)/1.1,0,1))),num=n.toLocaleString("en-US"),I=U*.3,F=fitF(ctx,num,800,U*.2,W*.45);ctx.font=infoFont(800,F);const nw=ctx.measureText(num).width,lw=it.t1?fitF(ctx,it.t1,600,U*.05,W*.45):0;
+      n=Math.round(val*ezo(clamp((lt-.15)/(val<20?.35:1.1),0,1))),num=n.toLocaleString("en-US"),I=U*.3,F=fitF(ctx,num,800,U*.2,W*.45);ctx.font=infoFont(800,F);const nw=ctx.measureText(num).width,lw=it.t1?fitF(ctx,it.t1,600,U*.05,W*.45):0;
     const gw=I+U*.04+Math.max(nw,U*.36),x0=-gw/2,s=Math.max(.001,backOut131(clamp(lt/.45,0,1)))*(1+.035*Math.sin(lt*9));
     ctx.save();ctx.translate(x0+I/2,0);ctx.scale(s,s);ctx.shadowColor=col;ctx.shadowBlur=U*.08;icDraw131(ctx,ic,0,0,I,col);ctx.shadowBlur=0;if(fire)icDraw131(ctx,ic,0,I*.12,I*.45,"#FFE066");ctx.restore();
     const tx=x0+I+U*.04;ctx.save();const g=ctx.createLinearGradient(0,-F/2,0,F/2);g.addColorStop(0,fire?"#FFD84D":"#fff");g.addColorStop(1,col);ctx.font=infoFont(800,F);ctx.textAlign="left";ctx.textBaseline="middle";ctx.direction="ltr";
@@ -18582,19 +18595,20 @@ const SC150={
       neon150(ctx,bez150([x*.25,oy],[x*.3,oy*.4],[x,y+R*3],[x,y+R],30),p,ac,U*.005);if(p<1)return;const pp=clamp((lt-.85-i*.14)/.35,0,1),col=PAL150[i%PAL150.length],s=Math.max(.001,backOut131(pp));
       ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.shadowColor=col;ctx.shadowBlur=R*1.2;ctx.fillStyle=col;ctx.beginPath();ctx.arc(0,0,R,0,7);ctx.fill();ctx.shadowBlur=0;icDraw131(ctx,ics[i]||"star",0,0,R*1.1,"#fff");
       if(i===0)for(let k=0;k<6;k++){const a=lt*1.3+k*Math.PI/3;ctx.fillStyle=PAL150[(k+1)%PAL150.length];ctx.beginPath();ctx.arc(Math.cos(a)*R*1.75,Math.sin(a)*R*1.75,R*.17,0,7);ctx.fill()}ctx.restore();
-      if(pp>.4){ctx.save();ctx.globalAlpha*=clamp((pp-.4)/.6,0,1);txt150(ctx,lab,x,y+R*1.75,600,U*.036,"#fff",gap*.95);ctx.restore()}});
+      if(pp>.4){ctx.save();ctx.globalAlpha*=clamp((pp-.4)/.6,0,1);const F=fitF(ctx,lab,600,U*.046,gap*.88),ly=y+R*1.9;ctx.font=infoFont(600,F);const tw=ctx.measureText(lab).width;   /* (v162: on a dark tag — the line no longer runs through the name) */
+        rr150(ctx,x-tw/2-F*.5,ly-F*.78,tw+F,F*1.56,F*.6);ctx.fillStyle="rgba(4,10,7,.9)";ctx.fill();txt150(ctx,lab,x,ly,600,F,"#fff",gap*.88);ctx.restore()}});
     return{w:gap*n,h:U*.5}},
-  words(ctx,o){const{W,U,lt,len,ac,it}=o,two=!!it.t2,ph=two?clamp((lt-len*.42)/.35,0,1):0,a=ezo(clamp(lt/.35,0,1)),s1=1.25-.25*a;
-    ctx.save();ctx.globalAlpha*=a;ctx.translate(0,-U*.11*ezo(ph));ctx.scale(s1*(1-.35*ezo(ph)),s1*(1-.35*ezo(ph)));const w1=txt150(ctx,it.t1||"",0,0,800,U*.16,"#fff",W*.86,"center",ac);ctx.restore();
-    const up=clamp((lt-.3)/.6,0,1);if(!two&&up>0)neon150(ctx,[[-w1/2,U*.11],[w1/2,U*.11]],ezo(up),ac,U*.006);
-    if(two&&ph>0){ctx.save();ctx.globalAlpha*=ezo(ph);const y=U*.06+(1-ezo(ph))*U*.06,w2=txt150(ctx,it.t2,0,y,800,U*.12,ac,W*.86,"center",ac);const up2=clamp((lt-len*.42-.25)/.5,0,1);if(up2>0)neon150(ctx,[[-w2/2,y+U*.09],[w2/2,y+U*.09]],ezo(up2),"#fff",U*.004);ctx.restore()}
+  words(ctx,o){const{W,U,lt,len,ac,it}=o,two=!!it.t2,ph=two?clamp((lt-len*.42)/.35,0,1):0,a=ezo(clamp(lt/.35,0,1)),s1=1.25-.25*a,T1=split162(ctx,it.t1||"",800,U*.16,W*.86/1.25),h1=T1.dy/2;   /* (v162: a long first line on two big lines) */
+    ctx.save();ctx.globalAlpha*=a;ctx.translate(0,-(U*.11+h1*.65)*ezo(ph));ctx.scale(s1*(1-.35*ezo(ph)),s1*(1-.35*ezo(ph)));const w1=lines162(ctx,it.t1||"",0,0,800,U*.16,"#fff",W*.86/1.25,"center",ac,true).w;ctx.restore();
+    const up=clamp((lt-.3)/.6,0,1);if(!two&&up>0)neon150(ctx,[[-w1/2,U*.11+h1],[w1/2,U*.11+h1]],ezo(up),ac,U*.006);
+    if(two&&ph>0){ctx.save();ctx.globalAlpha*=ezo(ph);const y=U*.06+(1-ezo(ph))*U*.06,r2=lines162(ctx,it.t2,0,y,800,U*.12,ac,W*.86,"center",ac),w2=r2.w;const up2=clamp((lt-len*.42-.25)/.5,0,1);if(up2>0)neon150(ctx,[[-w2/2,y+r2.dy+U*.09],[w2/2,y+r2.dy+U*.09]],ezo(up2),"#fff",U*.004);ctx.restore()}
     return{w:W*.8,h:U*.4}},
   end(ctx,o){const{W,H,U,lt,ac,it}=o,a=ezo(clamp(lt/.6,0,1));ctx.save();ctx.globalAlpha*=a;const g=ctx.createRadialGradient(0,0,0,0,0,U*.6);g.addColorStop(0,rgba150(ac,.12));g.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=g;ctx.fillRect(-W/2,-H/2,W,H);
     const R=U*.075;ctx.shadowColor=ac;ctx.shadowBlur=U*.06;ctx.fillStyle=ac;ctx.beginPath();ctx.arc(0,-U*.14,R,0,7);ctx.fill();ctx.shadowBlur=0;
     if(it.ic)icDraw131(ctx,it.ic,0,-U*.14,R*1.15,dark150(ac,.1));else txt150(ctx,(String(it.t1||"n").trim()[0]||"n").toUpperCase(),0,-U*.14,800,R*1.2,dark150(ac,.1),R*1.6);
-    txt150(ctx,it.t1||"",0,-U*.01,800,U*.1,ac,W*.8,"center",ac);if(it.t2)txt150(ctx,it.t2,0,U*.09,600,U*.048,"#fff",W*.8);
+    txt150(ctx,it.t1||"",0,-U*.01,800,U*.1,ac,W*.8,"center",ac);if(it.t2)lines162(ctx,it.t2,0,U*.095,600,U*.062,"#fff",W*.8);
     const its=items150(it);if(its[0])txt150(ctx,its[0],0,H/2-U*.05,500,U*.022,"rgba(255,255,255,.5)",W*.9);ctx.restore();return{w:U*.8,h:U*.45}}};
-function mgDraw150(ctx,W,H,t,it){if(t<it.start||t>it.end)return;const lt=t-it.start,len=Math.max(.2,it.end-it.start),ac=it.accent||"#7CFF4F",U=Math.min(W,H),k=it.k||1,out=it.anim==="none"?1:clamp((len-lt)/.3,0,1);
+function mgDraw150(ctx,W,H,t,it){if(t<it.start||t>it.end)return;const lt=t-it.start,len=Math.max(.2,it.end-it.start),ac=it.accent||"#7CFF4F",U=Math.min(W,H),k=(it.k||1)*clamp(H/W*.75,1,1.4),   /* (v162: a tall frame — 9:16 — draws the scene 1.33× as big; the scenes keep to its width) */out=it.anim==="none"?1:clamp((len-lt)/.3,0,1);
   ctx.save();if(it.bg!=="none")bg150(ctx,W,H,ac,t);ctx.globalAlpha=out;const cx=W/2+((it.x??.5)-.5)*W,cy=H/2+((it.y??.5)-.5)*H;ctx.translate(cx,cy);ctx.scale(k,k);
   let r={w:U*.6,h:U*.4};try{r=(SC150[it.sc]||SC150.words)(ctx,{W:W/k,H:H/k,U,lt:it.anim==="none"?Math.max(lt,9):lt,len,ac,it})||r}catch(e){console.warn("v150 scene",e)}ctx.restore();
   const w=Math.min(W,r.w*k),h=Math.min(H,r.h*k);(ED.hit=ED.hit||[]).push({k:"info",id:it.id,x:cx-w/2,y:cy-h/2,w,h,cx,cy})}
@@ -20017,6 +20031,28 @@ hfCost=(o=>function(){const r=o.apply(this,arguments);return k4On161()&&typeof r
 API.req=(o=>function(p,opt){const k=String(p);if((k==="/v1/agents/plan"||k==="/v1/agents/storyboard")&&opt&&opt.json){const js=Object.assign({},opt.json);
     const vs={};charsIn87(js.prompt||"").forEach(c=>{if(c.voice&&c.voice.vname)vs[String(c.name).trim()]=String(c.voice.vname)});if(Object.keys(vs).length)js.castVoices161=vs;   // (the cast itself is added by v159)
     if(k4On161())js.model=K4_161;opt.json=js}return o.apply(this,arguments)})(API.req);
+
+/* ================= v162: an AI agent (MCP) sees the video as the editor draws it and gets it exported =================
+   The agent's nooi_preview_frame / nooi_export ask the editor that has the project open (lib/edit148.js): the requests come with
+   the operations every 4 s; a frame is drawn at that moment (the playhead goes back after) and sent as a picture, the video is
+   exported frame by frame like the Export button and sent as a file. The agent also changes or removes motion scenes. */
+async function look162(id,list){for(const w of list){if(S.ed.srv139!==id)return;const post=b=>API.req("/v1/projects/"+id+"/look162",{json:Object.assign({rid:w.rid},b)}).catch(()=>{});
+  try{if(w.kind==="frame"){const t0=ED.t,pl=ED.playing;ED.playing=false;ED.t=clamp(+w.t||0,0,Math.max(0,edTotal()-.01));
+      try{for(let i=0;i<3;i++)await new Promise(r=>requestAnimationFrame(r));await new Promise(r=>setTimeout(r,150));await new Promise(r=>requestAnimationFrame(r));
+        const cv=$("#wk");if(!cv){await post({error:"The editor's preview isn't on screen."});continue}const k=Math.min(1,720/Math.max(cv.width,cv.height)),c=document.createElement("canvas");c.width=Math.round(cv.width*k);c.height=Math.round(cv.height*k);
+        c.getContext("2d").drawImage(cv,0,0,c.width,c.height);await post({data:c.toDataURL("image/jpeg",.85).split(",")[1]})}
+      finally{ED.t=t0;ED.playing=pl}}
+    else if(w.kind==="video"){toast(L("Your AI agent asked for the finished video — exporting it now.","طلب وكيلك الذكي الفيديو النهائي — يجري تصديره الآن."),{type:"info",ms:5000});
+      const r=await edRender139(edTotal());if(!r){await post({error:"This browser can't export the video frame by frame."});continue}
+      const u=await API.upload(r.blob,"nooi-export."+(/mp4/.test(r.mime)?"mp4":"webm"));await post(u&&u.url?{url:String(u.url).replace(location.origin,"")}:{error:"The file couldn't go up."})}}
+  catch(e){await post({error:String(e.message||e).slice(0,200)})}}}
+// the agent changes or removes a motion scene — the same as on the server (lib/motion150.js OPS148.motion_edit)
+op148=(o=>function(op){if(op.op!=="motion_edit")return o.apply(this,arguments);const E=S.ed,a=op.args||{},q=E.seq148,s=op.tl&&q&&q.cur!==op.tl&&Array.isArray(q.list)?q.list.find(x=>x.id===op.tl):null,ed=s&&s.data?s.data:E;
+  ed.infos=ed.infos||[];const it=ed.infos.find(x=>x.id===a.id&&x.type==="mg150");if(!it)return false;if(a.remove){ed.infos=ed.infos.filter(x=>x!==it);return true}
+  for(const k of["sc","t1","t2","items","val","ic","start","end","accent","ics"])if(a[k]!==undefined)it[k]=a[k];if(it.sc==="nodes"&&AD150.f)it.ics=items150(it).map((x,j)=>AD150.f(x,j));return true})(op148);
+// (what the toast says — a motion ad used to say nothing after "Your AI agent")
+opSay148=(o=>function(op){const a=op.args||{};if(op.op==="motion_add")return(a.infos||[]).length>1?L("built a motion ad","بنى إعلاناً متحركاً"):L("added a motion scene","أضاف مشهداً متحركاً");
+  if(op.op==="motion_edit")return a.remove?L("removed a motion scene","أزال مشهداً متحركاً"):L("changed a motion scene","غيّر مشهداً متحركاً");return o.apply(this,arguments)})(opSay148);
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

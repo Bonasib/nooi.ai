@@ -64,7 +64,7 @@ try {
   const it = (await req(B, "/v1/projects/p1abc23")).d.doc.ed.infos.find((x) => x.sc === "counter" && x.start === 1);
   ok(!one.err && c1 && c1.end === 3 && it.bg === "none" && it.val === "120" && it.accent === "#FFC800", "nooi_motion_scene_add: a big number over the video from 1 s to 3 s");
   const b1 = await mcp(B, tk, "nooi_motion_scene_add", { project_id: "p1abc23", kind: "hologram" }); ok(b1.err && /Unknown scene/.test(b1.text), "a scene the editor doesn't have: a clear error");
-  const fr = await mcp(B, tk, "nooi_preview_frame", { project_id: "p1abc23", time: 10 }); ok(fr.err && /motion scenes/.test(fr.text), "a picture of a motion scene: the agent is told the editor draws it (nooi_timeline_read lists them)");
+  const fr = await mcp(B, tk, "nooi_preview_frame", { project_id: "p1abc23", time: 10 }); ok(!fr.err && /Open this project in nooi's editor/.test(fr.text) && /"motion_scenes"/.test(fr.text) && /"kind"/.test(fr.text), "a motion scene with no editor open: what is on screen, in words, and how to see the picture (v162 — before, an error)");
   const twice = (await req(B, "/v1/projects/p1abc23", { method: "PUT", json: { name: "Holiday", opN: 0, doc: (await req(B, "/v1/projects/p1abc23")).d.doc } }));
   const e3 = (await req(B, "/v1/projects/p1abc23")).d.doc.ed; ok(twice.status === 200 && e3.clips.length === 2 && e3.infos.length === ms.length + 1, "an editor's save that hadn't seen them: applied once, nothing doubled");
   const tid = (await req(B, "/v1/tokens")).d.tokens[0].id; await req(B, "/v1/tokens/" + tid, { method: "PUT", json: { access: "read" } });
