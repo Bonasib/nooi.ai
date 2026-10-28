@@ -134,7 +134,7 @@
 134|Panjang video maksimum
 135|Resolusi
 136|Kadar bingkai
-137|Model video
+137|Enjin video
 138|Pengklonan suara
 139|Paling popular
 140|Pro
@@ -162,7 +162,7 @@
 162|E-mel
 163|Keutamaan
 164|Keutamaan + bimbingan permulaan
-165|Model imej
+165|Enjin imej
 166|Semua model imej
 167|Suara ElevenLabs
 168|Semua · termasuk Eleven v3
@@ -281,7 +281,7 @@
 281|Belum ada apa-apa. Terangkan syot di atas untuk menghasilkan klip pertama anda.
 282|Cerita baharu
 283|Suntingan baharu
-284|Model AI
+284|Enjin AI
 285|Pintar
 286|terbaik untuk prompt anda
 287|Saat
@@ -312,7 +312,7 @@
 312|sinematik, warna hangat
 313|Guna struktur ini
 314|Satu baris bagi setiap bahagian — ejen membaca setiap bahagian.
-315|Model video
+315|Enjin video
 316|Bingkai pertama & akhir
 317|Bingkai pertama
 318|Muat naik
@@ -328,7 +328,7 @@
 328|Tidak bersambung
 329|Luar talian
 330|Demo
-331|Semua model
+331|Semua enjin
 332|Terma
 333|Privasi
 334|Bercakap dan bukannya menaip

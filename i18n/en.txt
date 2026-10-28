@@ -134,7 +134,7 @@
 134|Max video length
 135|Resolution
 136|Frame rate
-137|Video models
+137|Video engines
 138|Voice cloning
 139|Most popular
 140|Pro
@@ -162,7 +162,7 @@
 162|Email
 163|Priority
 164|Priority + onboarding
-165|Image models
+165|Picture engines
 166|All image models
 167|ElevenLabs voices
 168|All · incl. Eleven v3
@@ -281,7 +281,7 @@
 281|Nothing yet. Describe a shot above to make your first clip.
 282|New story
 283|New edit
-284|AI model
+284|AI engine
 285|Smart
 286|best for your prompt
 287|Seconds
@@ -312,7 +312,7 @@
 312|cinematic, warm colors
 313|Use this structure
 314|One line per part — the agents read each part.
-315|Video model
+315|Video engine
 316|First & end frame
 317|First frame
 318|Upload
@@ -328,7 +328,7 @@
 328|Not connected
 329|Offline
 330|Demo
-331|All models
+331|All engines
 332|Terms
 333|Privacy
 334|Speak instead of typing

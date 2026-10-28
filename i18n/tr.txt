@@ -134,7 +134,7 @@
 134|Maksimum video süresi
 135|Çözünürlük
 136|Kare hızı
-137|Video modelleri
+137|Video motorları
 138|Ses klonlama
 139|En popüler
 140|Pro
@@ -162,7 +162,7 @@
 162|E-posta
 163|Öncelikli
 164|Öncelikli + başlangıç desteği
-165|Görsel modelleri
+165|Görsel motorları
 166|Tüm görsel modelleri
 167|ElevenLabs sesleri
 168|Tümü · Eleven v3 dahil
@@ -281,7 +281,7 @@
 281|Henüz bir şey yok. İlk klibinizi yapmak için yukarıda bir çekim tarif edin.
 282|Yeni hikâye
 283|Yeni düzenleme
-284|YZ modeli
+284|YZ motoru
 285|Akıllı
 286|promptunuz için en iyisi
 287|Saniye
@@ -312,7 +312,7 @@
 312|sinematik, sıcak renkler
 313|Bu yapıyı kullan
 314|Her bölüm için bir satır — ajanlar her bölümü okur.
-315|Video modeli
+315|Video motoru
 316|İlk ve son kare
 317|İlk kare
 318|Yükle
@@ -328,7 +328,7 @@
 328|Bağlı değil
 329|Çevrimdışı
 330|Demo
-331|Tüm modeller
+331|Tüm motorlar
 332|Koşullar
 333|Gizlilik
 334|Yazmak yerine konuşun

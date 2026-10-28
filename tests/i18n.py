@@ -11,7 +11,7 @@ async def main():
         views=await pg.evaluate("Object.keys(VIEWS)")
         found=collections.defaultdict(set)
         for v in views:
-            txt=await pg.evaluate("""(v)=>{S.user={name:'G',method:'google'};S.lang='ar';S.uiDialect='';S.view=v;renderAll();const out=[];const w=document.createTreeWalker(document.querySelector('#main'),NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode()){const t=n.textContent.trim();if(t&&!n.parentElement.closest('script,style,code,pre,[dir=ltr] .mono,.fn,.fs,.cchip b,.usage .mono,input,textarea,select,.thumb,.tc,.kbd,.mono')&&/[A-Za-z]{3,}/.test(t)&&!/[\\u0600-\\u06FF]/.test(t))out.push(t.slice(0,90))}return [...new Set(out)]}""",v)
+            txt=await pg.evaluate("""(v)=>{S.user={name:'G',method:'google'};S.lang='ar';S.uiDialect='';S.view=v;renderAll();const out=[];const w=document.createTreeWalker(document.querySelector('#main'),NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode()){const t=n.textContent.trim();if(t&&!n.parentElement.closest('script,style,code,pre,[translate=no],[dir=ltr] .mono,.fn,.fs,.cchip b,.usage .mono,input,textarea,select,.thumb,.tc,.kbd,.mono')&&/[A-Za-z]{3,}/.test(t)&&!/[\\u0600-\\u06FF]/.test(t))out.push(t.slice(0,90))}return [...new Set(out)]}""",v)
             for t in txt:
                 words=[w for w in re.findall(r"[A-Za-z][A-Za-z\.\-]+",t) if not ALLOW.match(w)]
                 if words: found[v].add(t)

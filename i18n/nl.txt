@@ -134,7 +134,7 @@
 134|Maximale videolengte
 135|Resolutie
 136|Beeldsnelheid
-137|Videomodellen
+137|Video-engines
 138|Stem klonen
 139|Populairst
 140|Pro
@@ -162,7 +162,7 @@
 162|E-mail
 163|Voorrang
 164|Voorrang + onboarding
-165|Afbeeldingsmodellen
+165|Afbeeldingsengines
 166|Alle afbeeldingsmodellen
 167|ElevenLabs-stemmen
 168|Alle · incl. Eleven v3
@@ -281,7 +281,7 @@
 281|Nog niets. Beschrijf hierboven een shot om je eerste clip te maken.
 282|Nieuw verhaal
 283|Nieuwe bewerking
-284|AI-model
+284|AI-engine
 285|Slim
 286|het best voor je prompt
 287|Seconden
@@ -312,7 +312,7 @@
 312|filmisch, warme kleuren
 313|Gebruik deze structuur
 314|Eén regel per onderdeel — de agents lezen elk onderdeel.
-315|Videomodel
+315|Video-engine
 316|Begin- & eindbeeld
 317|Beginbeeld
 318|Uploaden
@@ -328,7 +328,7 @@
 328|Niet gekoppeld
 329|Offline
 330|Demo
-331|Alle modellen
+331|Alle engines
 332|Voorwaarden
 333|Privacy
 334|Spreek in plaats van typen

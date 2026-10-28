@@ -134,7 +134,7 @@
 134|Durata massima del video
 135|Risoluzione
 136|Frequenza fotogrammi
-137|Modelli video
+137|Motori video
 138|Clonazione vocale
 139|Il più scelto
 140|Pro
@@ -162,7 +162,7 @@
 162|Email
 163|Prioritaria
 164|Prioritaria + onboarding
-165|Modelli di immagine
+165|Motori di immagine
 166|Tutti i modelli di immagine
 167|Voci ElevenLabs
 168|Tutte · incluso Eleven v3
@@ -281,7 +281,7 @@
 281|Ancora niente. Descrivi un'inquadratura qui sopra per creare la tua prima clip.
 282|Nuova storia
 283|Nuovo montaggio
-284|Modello IA
+284|Motore IA
 285|Smart
 286|il migliore per il tuo prompt
 287|Secondi
@@ -312,7 +312,7 @@
 312|cinematografico, colori caldi
 313|Usa questa struttura
 314|Una riga per parte — gli agenti leggono ogni parte.
-315|Modello video
+315|Motore video
 316|Primo e ultimo fotogramma
 317|Primo fotogramma
 318|Carica
@@ -328,7 +328,7 @@
 328|Non collegato
 329|Offline
 330|Demo
-331|Tutti i modelli
+331|Tutti i motori
 332|Termini
 333|Privacy
 334|Parla invece di scrivere

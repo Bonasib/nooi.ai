@@ -135,7 +135,7 @@
 134|Maks. długość wideo
 135|Rozdzielczość
 136|Liczba klatek
-137|Modele wideo
+137|Silniki wideo
 138|Klonowanie głosu
 139|Najpopularniejszy
 140|Pro
@@ -163,7 +163,7 @@
 162|E-mail
 163|Priorytetowe
 164|Priorytetowe + wdrożenie
-165|Modele obrazów
+165|Silniki obrazów
 166|Wszystkie modele obrazów
 167|Głosy ElevenLabs
 168|Wszystkie · w tym Eleven v3
@@ -282,7 +282,7 @@
 281|Jeszcze nic tu nie ma. Opisz ujęcie powyżej, aby zrobić pierwszy klip.
 282|Nowa historia
 283|Nowy montaż
-284|Model AI
+284|Silnik AI
 285|Inteligentny
 286|najlepszy do Twojego promptu
 287|Sekundy
@@ -313,7 +313,7 @@
 312|filmowy, ciepłe kolory
 313|Użyj tej struktury
 314|Jedna linijka na część — agenci czytają każdą część.
-315|Model wideo
+315|Silnik wideo
 316|Pierwsza i ostatnia klatka
 317|Pierwsza klatka
 318|Prześlij
@@ -329,7 +329,7 @@
 328|Nie połączono
 329|Offline
 330|Demo
-331|Wszystkie modele
+331|Wszystkie silniki
 332|Warunki
 333|Prywatność
 334|Mów zamiast pisać

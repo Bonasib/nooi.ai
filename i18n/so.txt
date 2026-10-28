@@ -134,7 +134,7 @@
 134|Dhererka ugu badan ee muuqaalka
 135|Tayada
 136|Heerka sawirrada
-137|Moodellada muuqaalka
+137|Matoorada muuqaalka
 138|Koobiyeynta codka
 139|Ugu caansan
 140|Pro
@@ -162,7 +162,7 @@
 162|Iimayl
 163|Mudnaan
 164|Mudnaan + hagid bilow
-165|Moodellada sawirka
+165|Matoorada sawirka
 166|Dhammaan moodellada sawirka
 167|Codadka ElevenLabs
 168|Dhammaan · oo ay ku jirto Eleven v3
@@ -281,7 +281,7 @@
 281|Weli waxba ma jiraan. Kor ka qeex muuqaal si aad u samayso kilibkaaga ugu horreeya.
 282|Sheeko cusub
 283|Tifaftir cusub
-284|Moodalka AI
+284|Matoorka AI
 285|Caqli badan
 286|kan ugu fiican amarkaaga
 287|Ilbiriqsi
@@ -312,7 +312,7 @@
 312|shineemo, midabbo diiran
 313|Isticmaal qaabkan
 314|Hal sadar qayb kasta — wakiilladu qayb kasta way akhriyaan.
-315|Moodalka muuqaalka
+315|Matoorka muuqaalka
 316|Sawirka koowaad & kan dambe
 317|Sawirka koowaad
 318|Soo geli
@@ -328,7 +328,7 @@
 328|Lama xidhin
 329|Khadka ka maqan
 330|Tijaabo
-331|Dhammaan moodellada
+331|Dhammaan matoorada
 332|Shuruudaha
 333|Asturnaanta
 334|Ku hadal halkii aad qori lahayd

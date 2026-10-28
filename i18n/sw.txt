@@ -134,7 +134,7 @@
 134|Urefu wa juu wa video
 135|Ubora
 136|Kasi ya fremu
-137|Miundo ya video
+137|Injini za video
 138|Kunakili sauti
 139|Maarufu zaidi
 140|Pro
@@ -162,7 +162,7 @@
 162|Barua pepe
 163|Kipaumbele
 164|Kipaumbele + kuanzishwa
-165|Miundo ya picha
+165|Injini za picha
 166|Miundo yote ya picha
 167|Sauti za ElevenLabs
 168|Zote · pamoja na Eleven v3
@@ -281,7 +281,7 @@
 281|Bado hakuna kitu. Eleza picha hapo juu ili kutengeneza klipu yako ya kwanza.
 282|Hadithi mpya
 283|Uhariri mpya
-284|Muundo wa AI
+284|Injini ya AI
 285|Mahiri
 286|bora kwa maelekezo yako
 287|Sekunde
@@ -312,7 +312,7 @@
 312|kisinema, rangi za joto
 313|Tumia muundo huu
 314|Mstari mmoja kwa kila sehemu — mawakala husoma kila sehemu.
-315|Muundo wa video
+315|Injini ya video
 316|Fremu ya kwanza na ya mwisho
 317|Fremu ya kwanza
 318|Pakia
@@ -328,7 +328,7 @@
 328|Haijaunganishwa
 329|Nje ya mtandao
 330|Onyesho
-331|Miundo yote
+331|Injini zote
 332|Masharti
 333|Faragha
 334|Ongea badala ya kuandika

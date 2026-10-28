@@ -135,7 +135,7 @@
 134|Độ dài video tối đa
 135|Độ phân giải
 136|Tốc độ khung hình
-137|Mô hình video
+137|Công cụ video
 138|Nhân bản giọng nói
 139|Phổ biến nhất
 140|Pro
@@ -163,7 +163,7 @@
 162|Email
 163|Ưu tiên
 164|Ưu tiên + hướng dẫn ban đầu
-165|Mô hình ảnh
+165|Công cụ ảnh
 166|Mọi mô hình ảnh
 167|Giọng ElevenLabs
 168|Tất cả · gồm Eleven v3
@@ -282,7 +282,7 @@
 281|Chưa có gì. Mô tả một cảnh quay ở trên để tạo clip đầu tiên.
 282|Câu chuyện mới
 283|Bản chỉnh sửa mới
-284|Mô hình AI
+284|Công cụ AI
 285|Thông minh
 286|tốt nhất cho prompt của bạn
 287|Giây
@@ -313,7 +313,7 @@
 312|điện ảnh, tông màu ấm
 313|Dùng cấu trúc này
 314|Mỗi phần một dòng — các tác tử đọc từng phần.
-315|Mô hình video
+315|Công cụ video
 316|Khung đầu & khung cuối
 317|Khung đầu
 318|Tải lên
@@ -329,7 +329,7 @@
 328|Chưa kết nối
 329|Ngoại tuyến
 330|Demo
-331|Tất cả mô hình
+331|Tất cả công cụ
 332|Điều khoản
 333|Quyền riêng tư
 334|Nói thay vì gõ

@@ -135,7 +135,7 @@
 134|Durasi video maks.
 135|Resolusi
 136|Frame rate
-137|Model video
+137|Mesin video
 138|Kloning suara
 139|Paling populer
 140|Pro
@@ -163,7 +163,7 @@
 162|Email
 163|Prioritas
 164|Prioritas + onboarding
-165|Model gambar
+165|Mesin gambar
 166|Semua model gambar
 167|Suara ElevenLabs
 168|Semua · termasuk Eleven v3
@@ -282,7 +282,7 @@
 281|Belum ada apa-apa. Deskripsikan shot di atas untuk membuat klip pertamamu.
 282|Cerita baru
 283|Editan baru
-284|Model AI
+284|Mesin AI
 285|Pintar
 286|terbaik untuk prompt-mu
 287|Detik
@@ -313,7 +313,7 @@
 312|sinematik, warna hangat
 313|Gunakan struktur ini
 314|Satu baris per bagian — para agen membaca setiap bagian.
-315|Model video
+315|Mesin video
 316|Frame awal & akhir
 317|Frame awal
 318|Unggah
@@ -329,7 +329,7 @@
 328|Tidak terhubung
 329|Offline
 330|Demo
-331|Semua model
+331|Semua mesin
 332|Ketentuan
 333|Privasi
 334|Bicara alih-alih mengetik

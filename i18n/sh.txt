@@ -134,7 +134,7 @@
 134|Maksimalna duljina videa
 135|Razlučivost
 136|Broj sličica
-137|Video modeli
+137|Video motori
 138|Kloniranje glasa
 139|Najpopularnije
 140|Pro
@@ -162,7 +162,7 @@
 162|E-pošta
 163|Prioritetna
 164|Prioritetna + uvođenje
-165|Modeli slika
+165|Motori slika
 166|Svi modeli slika
 167|ElevenLabs glasovi
 168|Svi · uključujući Eleven v3
@@ -281,7 +281,7 @@
 281|Još ništa. Opišite kadar iznad da napravite prvi klip.
 282|Nova priča
 283|Nova montaža
-284|AI model
+284|AI motor
 285|Pametno
 286|najbolje za vaš prompt
 287|Sekunde
@@ -312,7 +312,7 @@
 312|filmski, tople boje
 313|Koristi ovu strukturu
 314|Jedan red po dijelu — agenti čitaju svaki dio.
-315|Video model
+315|Video motor
 316|Početni i završni kadar
 317|Početni kadar
 318|Učitaj
@@ -328,7 +328,7 @@
 328|Nije povezano
 329|Izvan mreže
 330|Demo
-331|Svi modeli
+331|Svi motori
 332|Uvjeti
 333|Privatnost
 334|Govorite umjesto tipkanja

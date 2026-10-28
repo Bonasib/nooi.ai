@@ -134,7 +134,7 @@
 134|Dirêjahiya herî zêde ya vîdyoyê
 135|Çareserî
 136|Leza çarçoveyê
-137|Modelên vîdyoyê
+137|Motorên vîdyoyê
 138|Klonkirina dengê
 139|Herî populer
 140|Pro
@@ -162,7 +162,7 @@
 162|E-name
 163|Pêşîn
 164|Pêşîn + destpêkirin
-165|Modelên wêneyan
+165|Motorên wêneyan
 166|Hemû modelên wêneyan
 167|Dengên ElevenLabs
 168|Hemû · bi Eleven v3 re
@@ -281,7 +281,7 @@
 281|Hêj tiştek tune. Ji bo klîpa xwe ya yekem, li jor dîmenekî rave bike.
 282|Çîroka nû
 283|Sererastkirina nû
-284|Modela AI
+284|Motora AI
 285|Jîr
 286|ji bo prompta te ya herî baş
 287|Saniye
@@ -312,7 +312,7 @@
 312|sînemayî, rengên germ
 313|Vê avahiyê bi kar bîne
 314|Ji bo her beşê rêzek — ajan her beşê dixwînin.
-315|Modela vîdyoyê
+315|Motora vîdyoyê
 316|Çarçoveya yekem û dawî
 317|Çarçoveya yekem
 318|Bar bike
@@ -328,7 +328,7 @@
 328|Girêdayî nîne
 329|Derhêl
 330|Demo
-331|Hemû model
+331|Hemû motor
 332|Merc
 333|Nepenî
 334|Li şûna nivîsandinê biaxive

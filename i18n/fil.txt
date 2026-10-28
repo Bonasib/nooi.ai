@@ -134,7 +134,7 @@
 134|Pinakamahabang video
 135|Resolution
 136|Frame rate
-137|Mga video model
+137|Mga video engine
 138|Voice cloning
 139|Pinakasikat
 140|Pro
@@ -162,7 +162,7 @@
 162|Email
 163|Priority
 164|Priority + onboarding
-165|Mga image model
+165|Mga picture engine
 166|Lahat ng image model
 167|Mga boses ng ElevenLabs
 168|Lahat · kasama ang Eleven v3
@@ -281,7 +281,7 @@
 281|Wala pa. Maglarawan ng shot sa itaas para gawin ang una mong clip.
 282|Bagong kuwento
 283|Bagong edit
-284|AI model
+284|AI engine
 285|Smart
 286|pinakamahusay para sa prompt mo
 287|Segundo
@@ -312,7 +312,7 @@
 312|cinematic, maiinit na kulay
 313|Gamitin ang istrukturang ito
 314|Isang linya bawat bahagi — binabasa ng mga ahente ang bawat bahagi.
-315|Video model
+315|Video engine
 316|Una at huling frame
 317|Unang frame
 318|Mag-upload
@@ -328,7 +328,7 @@
 328|Hindi nakakonekta
 329|Offline
 330|Demo
-331|Lahat ng model
+331|Lahat ng engine
 332|Mga tuntunin
 333|Privacy
 334|Magsalita sa halip na mag-type

@@ -134,7 +134,7 @@
 134|Maximale Videolänge
 135|Auflösung
 136|Bildrate
-137|Videomodelle
+137|Video-Engines
 138|Stimmklonen
 139|Am beliebtesten
 140|Pro
@@ -162,7 +162,7 @@
 162|E-Mail
 163|Bevorzugt
 164|Bevorzugt + Onboarding
-165|Bildmodelle
+165|Bild-Engines
 166|Alle Bildmodelle
 167|ElevenLabs-Stimmen
 168|Alle · inkl. Eleven v3
@@ -281,7 +281,7 @@
 281|Noch nichts da. Beschreibe oben eine Einstellung für deinen ersten Clip.
 282|Neue Geschichte
 283|Neuer Schnitt
-284|KI-Modell
+284|KI-Engine
 285|Smart
 286|am besten für deinen Prompt
 287|Sekunden
@@ -312,7 +312,7 @@
 312|filmisch, warme Farben
 313|Diese Struktur verwenden
 314|Eine Zeile pro Teil — die KI-Agenten lesen jeden Teil.
-315|Videomodell
+315|Video-Engine
 316|Start- & Endbild
 317|Startbild
 318|Hochladen
@@ -328,7 +328,7 @@
 328|Nicht verbunden
 329|Offline
 330|Demo
-331|Alle Modelle
+331|Alle Engines
 332|Bedingungen
 333|Datenschutz
 334|Sprechen statt tippen

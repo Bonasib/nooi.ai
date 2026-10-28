@@ -134,7 +134,7 @@
 134|Duração máxima do vídeo
 135|Resolução
 136|Taxa de fotogramas
-137|Modelos de vídeo
+137|Motores de vídeo
 138|Clonagem de voz
 139|Mais popular
 140|Pro
@@ -162,7 +162,7 @@
 162|E-mail
 163|Prioritário
 164|Prioritário + onboarding
-165|Modelos de imagem
+165|Motores de imagem
 166|Todos os modelos de imagem
 167|Vozes ElevenLabs
 168|Todas · incl. Eleven v3
@@ -281,7 +281,7 @@
 281|Ainda não há nada. Descreva um plano acima para criar o seu primeiro clipe.
 282|Nova história
 283|Nova edição
-284|Modelo de IA
+284|Motor de IA
 285|Inteligente
 286|o melhor para o seu prompt
 287|Segundos
@@ -312,7 +312,7 @@
 312|cinematográfico, cores quentes
 313|Usar esta estrutura
 314|Uma linha por parte — os agentes leem cada parte.
-315|Modelo de vídeo
+315|Motor de vídeo
 316|Primeiro e último fotograma
 317|Primeiro fotograma
 318|Carregar
@@ -328,7 +328,7 @@
 328|Não ligado
 329|Offline
 330|Demo
-331|Todos os modelos
+331|Todos os motores
 332|Termos
 333|Privacidade
 334|Falar em vez de escrever

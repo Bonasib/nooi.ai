@@ -134,7 +134,7 @@
 134|Durée vidéo maximale
 135|Résolution
 136|Fréquence d'images
-137|Modèles vidéo
+137|Moteurs vidéo
 138|Clonage de voix
 139|Le plus populaire
 140|Pro
@@ -162,7 +162,7 @@
 162|E-mail
 163|Prioritaire
 164|Prioritaire + accompagnement
-165|Modèles d'image
+165|Moteurs d'image
 166|Tous les modèles d'image
 167|Voix ElevenLabs
 168|Toutes · y compris Eleven v3
@@ -281,7 +281,7 @@
 281|Rien pour l'instant. Décrivez un plan ci-dessus pour créer votre premier clip.
 282|Nouvelle histoire
 283|Nouveau montage
-284|Modèle IA
+284|Moteur IA
 285|Intelligent
 286|le meilleur pour votre prompt
 287|Secondes
@@ -312,7 +312,7 @@
 312|cinématique, couleurs chaudes
 313|Utiliser cette structure
 314|Une ligne par partie — les agents lisent chaque partie.
-315|Modèle vidéo
+315|Moteur vidéo
 316|Première et dernière image
 317|Première image
 318|Importer
@@ -328,7 +328,7 @@
 328|Non connecté
 329|Hors ligne
 330|Démo
-331|Tous les modèles
+331|Tous les moteurs
 332|Conditions
 333|Confidentialité
 334|Parler au lieu d'écrire
