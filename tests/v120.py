@@ -34,7 +34,7 @@ async def computer(b):
     tag = "computer"; ctx, pg, errs = await start(b, 1440, 900, "en"); E = pg.evaluate; out[tag] = {}
     for v in ["home", "explore", "discover", "recipes", "apps", "library"]:
         await E("(v)=>{go(v);renderAll()}", v); await pg.wait_for_timeout(250); f = await E(FOOT); out[tag][v] = f and {"cols": f["cols"], "n": len(f["links"])}
-        ok(f and f["cols"] == ["Create", "Edit & publish", "Explore", "Account & help"] and len(f["links"]) >= 15 and f["logo"] and f["mail"] and f["legal"] == 2, f"{tag} {v}: the full footer {f and {k: f[k] for k in ('cols', 'logo', 'mail', 'legal')}}")
+        ok(f and f["cols"] == ["Create", "Edit & publish", "Explore", "Account & help"] and len(f["links"]) >= 15 and f["logo"] and f["mail"] and f["legal"] == 3, f"{tag} {v}: the full footer (v156: Terms, Privacy and the Publishing policy) {f and {k: f[k] for k in ('cols', 'logo', 'mail', 'legal')}}")
         if f: ok(all(f["names"].get(g, t) == t for g, t in f["links"]) and all(x == 14 for x in f["h3"]), f"{tag} {v}: each link carries its tool's own name; headings 14 px {[x for x in f['links'] if f['names'].get(x[0], x[1]) != x[1]]} {f['h3']}")
     await E("()=>{go('video');renderAll()}"); await pg.wait_for_timeout(250)
     w = await E("()=>({big:!!document.querySelector('#main .foot120'),slim:!!document.querySelector('#main .appfoot')})"); out[tag]["video"] = w

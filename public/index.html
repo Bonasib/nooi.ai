@@ -19504,6 +19504,144 @@ document.addEventListener("change",e=>{const b=e.target&&e.target.dataset&&e.tar
 addJob=(o=>function(j){if(j&&(j.kind==="video"||j.kind==="image")&&!(j.meta&&Array.isArray(j.meta.chosen155))){const m=j.meta||{},d=j.kind==="image"?S.img:S.draft,c=(d&&d.chosen155)||{},D=DEF155[j.kind];
     j.meta=Object.assign({},m,{chosen155:Object.keys(D).filter(k=>m[k]!=null&&m[k]!==""&&(c[k]||m[k]!==D[k]))})}return o.apply(this,arguments)})(addJob);
 
+/* ================= v156: agents never stuck; taps keep their place; sheets pull down; sliders hold; effects' settings first;
+   characters and pictures picked in the box; the email under the policies; publishing is the publisher's responsibility ================= */
+// 1. the agents never wait forever: a request that hangs is given up (a status check after 25 s, a send after 5 minutes, an upload
+// after 10) — before, one hung check stopped every later check, so the agents stayed "working" after the video was made
+// (the job checks gathered into one request — v124 — are given up the same way, so a hung one never holds the browser's connections)
+const T156={get:25e3,send:3e5,ai:12e4,up:6e5};
+const timed156=o=>function(p,opt){opt=opt||{};if(opt.signal||typeof AbortController!=="function")return o.call(this,p,opt);
+  const m=String(opt.method||(opt.json||opt.body?"POST":"GET")).toUpperCase(),up=typeof FormData!=="undefined"&&opt.body instanceof FormData,
+    ms=m==="GET"?T156.get:up?T156.up:/^\/v1\/(llm|agents)\//.test(String(p))?T156.ai:T156.send,c=new AbortController();opt.signal=c.signal;let t=0;
+  const slow=()=>Object.assign(new Error(L("The connection is slow — please try again.","الاتصال بطيء — حاول مجدداً.")),{status:0,timeout156:true});
+  return Promise.race([Promise.resolve(o.call(this,p,opt)),new Promise((_,no)=>{t=setTimeout(()=>{c.abort();no(slow())},ms)})])
+    .catch(e=>{if(e&&e.name==="AbortError")throw slow();throw e}).finally(()=>clearTimeout(t))};
+API.req=timed156(API.req);
+if(typeof JB124==="object"&&typeof JB124.o==="function")JB124.o=timed156(JB124.o);
+// (the writer's "thinking" count could go below zero — a plan set it to true/false while a reply was still counted — and then
+// Quill showed "working" for good)
+busyBots=(o=>function(){if(!(AI_BUSY>0))AI_BUSY=0;return o.apply(this,arguments)})(busyBots);
+// a job the page has followed for far too long stops being "being made" (the server stops its own after 75 min, 3 h for long films)
+function stale156(){if(API.mode!=="server"||!S.user)return 0;const now=Date.now();let n=0;
+  for(const o of S.jobs){if(!o||!["queued","rendering"].includes(o.status)||!o.created)continue;const age=now-o.created;
+    if(o.remote?age>6*3600e3:age>30*60e3&&!SEND155.has(o.id)){o.status="failed";o.errorType="stale";o.error="This took far too long and was stopped — nothing was charged. Try again.";o.errorAr="استغرق هذا وقتاً أطول بكثير من المعتاد فأُوقف — لم يُخصم شيء. حاول مجدداً.";n++}}
+  if(n){persist();statusChanged()}return n}
+setInterval(stale156,60e3);setTimeout(stale156,5000);
+
+// 2. a tap keeps your place: the lists you scrolled inside the page (an engine list, a row of chips, the editor's tool row) stay where
+// they were when the page is drawn again — before, every tap brought them back to the first option
+const SCR156={view:null,els:new Set()};
+addEventListener("scroll",e=>{const t=e.target,m=document.getElementById("main");if(t&&t.nodeType===1&&m&&t!==m&&m.contains(t))SCR156.els.add(t)},{capture:true,passive:true});
+function key156(el,m){if(el.id)return["#"+CSS.escape(el.id),0];const s=el.tagName.toLowerCase()+[...el.classList].filter(c=>!/^(on|sel|active|open|fe154|fs154|has)$/.test(c)).map(c=>"."+CSS.escape(c)).join("");return[s,[...m.querySelectorAll(s)].indexOf(el)]}
+renderView=(o=>function(){const m=document.getElementById("main"),keep=[];
+  // (the editor's own rows — not its tool bar — scroll to their open tab themselves)
+  if(m&&SCR156.view===S.view)SCR156.els.forEach(el=>{if(!el.isConnected||!m.contains(el)||(el.closest(".ed143")&&!el.matches(".e-bar")))return;if(el.scrollTop||el.scrollLeft)keep.push([key156(el,m),el.scrollTop,el.scrollLeft])});
+  SCR156.els.clear();SCR156.view=S.view;const r=o.apply(this,arguments);
+  if(keep.length&&m)for(const[[s,i],t,l]of keep){let el=null;try{el=m.querySelectorAll(s)[i]||null}catch(e){}if(!el)continue;el.scrollTop=t;el.scrollLeft=l;SCR156.els.add(el)}
+  const bar=m&&m.querySelector(".ed143.mob .e-bar");if(bar){const on=bar.querySelector('[aria-pressed="true"]');if(on){const a=on.getBoundingClientRect(),b=bar.getBoundingClientRect();if(a.left<b.left||a.right>b.right)bar.scrollLeft+=(a.left+a.width/2)-(b.left+b.width/2)}}
+  return r})(renderView);
+
+// 3. sheets pull down to close (from anywhere on the sheet while its list is at the top); the editor's panel by its top bar
+function close156(box){box.style.transform="";if(box.classList.contains("e-sheet")){const ok=box.querySelector(".e-ok");if(ok)ok.click();return}
+  const w=box.parentElement;if(w&&w.dataset.act==="close-sheet"){w.click();return}const x=box.querySelector('[data-act="close-sheet"]');if(x)x.click();else closeSheet()}
+(()=>{let D=null;const scroller=(t,box)=>{for(let el=t;el&&box.contains(el);el=el.parentElement){if(el.scrollHeight>el.clientHeight+2&&/auto|scroll/.test(getComputedStyle(el).overflowY))return el}return null};
+  document.addEventListener("touchstart",e=>{D=null;if(e.touches.length!==1)return;const t=e.target;if(!t||!t.closest)return;
+    const sh=t.closest("#modalRoot .sheetwrap>.sheet"),es=!sh&&t.closest(".ed143.mob .e-sheet"),box=sh||es;if(!box)return;
+    if(t.closest("input,textarea,select,[contenteditable],canvas,.durtrack"))return;                 // (sliders and typing keep their touch)
+    if(es&&!t.closest(".e-ph"))return;                                                                // (the editor's panel body has tiles you drag)
+    const sc=scroller(t,box);if(sc&&sc.scrollTop>0)return;
+    D={box,sc,x:e.touches[0].clientX,y:e.touches[0].clientY,t:performance.now(),dy:0,on:false}},{capture:true,passive:true});
+  document.addEventListener("touchmove",e=>{if(!D)return;const p=e.touches[0],dx=p.clientX-D.x,dy=p.clientY-D.y;
+    if(!D.on){if(dy<-6||Math.abs(dx)>12&&Math.abs(dx)>dy){D=null;return}if(dy<10)return;if(D.sc&&D.sc.scrollTop>0){D=null;return}D.on=true;D.box.style.transition="none";D.box.style.animation="none"}
+    D.dy=Math.max(0,dy);D.box.style.transform="translateY("+D.dy+"px)";if(e.cancelable)e.preventDefault()},{capture:true,passive:false});
+  const end=()=>{if(!D)return;const d=D;D=null;if(!d.on)return;const v=d.dy/Math.max(1,performance.now()-d.t),h=d.box.offsetHeight;
+    if(d.dy>Math.min(140,h*.28)||v>.65&&d.dy>40){d.box.style.transition="transform .17s ease-in";d.box.style.transform="translateY("+(h+40)+"px)";setTimeout(()=>close156(d.box),160)}
+    else{d.box.style.transition="transform .2s cubic-bezier(.2,.8,.2,1)";d.box.style.transform="";setTimeout(()=>{d.box.style.transition=""},220)}};
+  document.addEventListener("touchend",end,{capture:true});document.addEventListener("touchcancel",end,{capture:true})})();
+
+// 4. a slider in a sheet follows a fast finger: the sheet doesn't grow under it while it moves (the note under the length slider
+// changed its height and pushed the slider up), and a quick sideways swipe isn't taken as a scroll
+document.addEventListener("touchstart",e=>{const r=e.target&&e.target.closest&&e.target.closest('#modalRoot .sheet input[type="range"],#modalRoot .sheet .durtrack');if(!r)return;const s=r.closest(".sheet");if(s&&!s.dataset.h156){s.dataset.h156="1";s.style.height=s.offsetHeight+"px"}},{capture:true,passive:true});
+document.addEventListener("pointerdown",e=>{if(e.pointerType==="touch")return;const r=e.target&&e.target.closest&&e.target.closest('#modalRoot .sheet input[type="range"]');if(!r)return;const s=r.closest(".sheet");if(s&&!s.dataset.h156){s.dataset.h156="1";s.style.height=s.offsetHeight+"px"}},true);
+
+// 5. the effect you selected: its settings first (strength, when it starts and ends), above the effects to add
+function fx156(v){v.querySelectorAll(".edsel").forEach(s=>{const amt=s.querySelector("[data-vfxamt]");if(!amt||s.dataset.f156)return;s.dataset.f156="1";s.classList.add("sel156");const host=s.parentElement;if(!host)return;
+  const b=s.querySelector("b");if(b)b.insertAdjacentHTML("beforebegin",'<span class="small mute sel156h">'+esc(L("Selected effect","المؤثر المحدد"))+"</span>");
+  const row=s.querySelector(".row");if(row)row.insertAdjacentHTML("beforebegin",'<div class="row sel156t"><button type="button" class="btn sm" data-act="edv156" data-v="start">'+ic("clock")+esc(L("Starts here","يبدأ هنا"))+'</button><button type="button" class="btn sm" data-act="edv156" data-v="end">'+ic("clock")+esc(L("Ends here","ينتهي هنا"))+"</button></div>");
+  host.insertBefore(s,host.firstChild)})}
+after151=(o=>function(){o.apply(this,arguments);const v=document.querySelector("#main .view.ed143");if(v)try{fx156(v)}catch(e){}})(after151);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="edv156"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const p=S.ed.pick,it=p&&p.k==="vfx"&&edItem(p);if(!it)return;
+  const T=Math.max(.5,edTotal()||it.end||1),t=Math.max(0,Math.min(T,+ED.t||0));if(a.dataset.v==="start"){it.start=Math.min(t,(+it.end||T)-.3);if(it.start<0)it.start=0}else it.end=Math.max(t,(+it.start||0)+.3);
+  it.start=Math.round(it.start*100)/100;it.end=Math.round(Math.min(T,it.end)*100)/100;persist();renderView()},true);
+
+// 6. the prompt box: Characters first in the row (it was past the edge on phones), Picture opens a sheet — from the phone or from
+// your own pictures and characters; the @ list stays open while the page moves for the keyboard, sits above it, and a scroll in it isn't a pick
+top136=(o=>function(t,ref,chr){if(!chr)return o.apply(this,arguments);const h=o.call(this,t,ref,""),k=h.indexOf(">")+1;
+  return h.slice(0,k)+chr.replace('class="ch87b"','class="ch87b t156"')+h.slice(k)})(top136);
+top136=(o=>function(){return o.apply(this,arguments).replace(/<label class="t136 add"([^>]*)>([\s\S]*?)<input type="file" accept="image\/\*" multiple data-ref130 data-hf136[^>]*><\/label>/,(m,a,inner)=>'<button type="button" class="t136 add" data-act="pic156"'+a+">"+inner+"</button>")})(top136);
+function picSheet156(){const imgs=S.jobs.filter(j=>j.kind==="image"&&j.status==="complete"&&mediaUrl(j)).slice(-24).reverse(),cs=(S.chars||[]).filter(c=>avatar106(c));
+  const tile=(u,a,v,cap)=>'<button type="button" class="pk156" data-act="pk156" data-'+a+'="'+esc(v)+'"><img src="'+esc(u)+'" alt="" loading="lazy">'+(cap?'<small dir="auto">'+esc(cap)+"</small>":"")+"</button>";
+  hfSheet(L("Add a picture","أضف صورة"),'<label class="btn primary pkup156">'+ic("upload")+esc(L("From your phone or computer","من جهازك"))+'<input type="file" accept="image/*" multiple data-ref130 data-hf136 aria-label="'+esc(L("Add pictures to use","أضف صوراً للاستخدام"))+'"></label>'+
+    (cs.length?'<h3 class="pk156h">'+esc(L("Your characters","شخصياتك"))+'</h3><div class="pk156g">'+cs.map(c=>tile(avatar106(c),"char",c.id,c.name)).join("")+"</div>":"")+
+    '<h3 class="pk156h">'+esc(L("Your pictures","صورك"))+"</h3>"+(imgs.length?'<div class="pk156g">'+imgs.map(j=>tile(mediaUrl(j),"job",j.id,"")).join("")+"</div>":'<p class="small mute">'+esc(L("Pictures you make appear here.","تظهر هنا الصور التي تصنعها."))+"</p>"))}
+async function pick156(a){const u=a.dataset.job?mediaUrl(S.jobs.find(j=>j.id===a.dataset.job)):a.dataset.char?avatar106(charById(a.dataset.char)):"";if(!u)return;a.disabled=true;
+  try{const b=await(await fetch(u)).blob();if(!/^image\//.test(b.type||""))throw new Error("type");const f=new File([b],"picture."+((b.type.split("/")[1]||"png").replace("jpeg","jpg")),{type:b.type});
+    const dt=new DataTransfer();dt.items.add(f);closeSheet();const inp=document.createElement("input");inp.type="file";inp.multiple=true;inp.setAttribute("data-ref130","");inp.setAttribute("data-hf136","");inp.hidden=true;document.body.appendChild(inp);
+    inp.files=dt.files;inp.dispatchEvent(new Event("change",{bubbles:true}));setTimeout(()=>inp.remove(),0)}
+  catch(e){a.disabled=false;toast(L("This picture couldn't be opened — try another one.","تعذّر فتح هذه الصورة — جرّب صورة أخرى."))}}
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="pic156"],[data-act="pk156"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
+  if(a.dataset.act==="pic156"){const q=$("#hfq");if(q)S.hf.prompt=q.value;picSheet156();return}pick156(a)},true);
+document.addEventListener("change",e=>{if(e.target&&e.target.matches&&e.target.matches(".pkup156 input"))setTimeout(()=>{if($("#modalRoot").innerHTML)closeSheet()},0)});
+// the @ list: placed in what can be seen (above the keyboard), not closed when the page scrolls to make room for the keyboard
+function pos156(){const el=AT87.el,ta=AT87.ta;if(!el||!ta)return;const r=ta.getBoundingClientRect(),vv=window.visualViewport,top=vv?vv.offsetTop:0,bot=vv?vv.offsetTop+vv.height:innerHeight,
+  need=Math.min(AT87.list.length*46+8,290),below=bot-r.bottom-10,above=r.top-top-10;let h,y;
+  if(below>=Math.min(need,100)){h=Math.min(need,below);y=r.bottom+6}else if(above>=Math.min(need,100)){h=Math.min(need,above);y=r.top-h-6}else{h=Math.min(need,Math.max(96,(bot-top)*.42));y=bot-h-6}
+  el.style.maxHeight=Math.round(h)+"px";el.style.top=Math.round(Math.max(top+4,y))+"px"}
+at87Show=(o=>function(){const r=o.apply(this,arguments);pos156();return r})(at87Show);
+at87Close=(o=>function(){const ev=window.event;if(ev&&ev.type==="scroll"&&AT87.el&&AT87.ta&&AT87.ta.isConnected&&!(ev.target&&ev.target.closest&&ev.target.closest(".at87"))){pos156();return}return o.apply(this,arguments)})(at87Close);
+if(window.visualViewport){visualViewport.addEventListener("resize",pos156);visualViewport.addEventListener("scroll",pos156)}
+let AT156=null;
+addEventListener("touchstart",e=>{const b=e.target.closest&&e.target.closest(".at87 button");if(!b)return;e.stopPropagation();AT156={b,x:e.touches[0].clientX,y:e.touches[0].clientY}},{capture:true,passive:true});
+addEventListener("touchmove",e=>{if(AT156&&Math.hypot(e.touches[0].clientX-AT156.x,e.touches[0].clientY-AT156.y)>10)AT156=null},{capture:true,passive:true});
+addEventListener("touchend",e=>{const a=AT156;AT156=null;if(!a||!AT87.el||!a.b.isConnected)return;if(e.cancelable)e.preventDefault();const c=AT87.list[+a.b.dataset.i],ta=AT87.ta,at=AT87.at;at87Close();if(c&&ta)put87(ta,c,at)},{capture:true,passive:false});
+
+// 7. the platform's email sits under the policies; the publishing policy (what you publish is yours and your responsibility)
+LEGAL.publish={t:["Publishing & Content Policy","سياسة النشر والمحتوى"],p:[
+  ["Your content, your responsibility","محتواك مسؤوليتك","Everything you make, upload or publish with {company} (\"nooi\") — videos, pictures, voices, sounds, prompts, titles and comments — is published by you and under your own responsibility. nooi is a tool and a hosting service: it does not write, review in advance, approve or endorse what users publish, and it is not responsible for it. You alone are responsible for what you publish and for any harm, claim, loss or legal consequence that comes from it.","كل ما تصنعه أو ترفعه أو تنشره عبر {company} (\"nooi\") — فيديوهات وصور وأصوات ومؤثرات وأوصاف وعناوين وتعليقات — تنشره أنت وعلى مسؤوليتك وحدك. nooi أداة وخدمة استضافة: لا تكتب ما ينشره المستخدمون ولا تراجعه مسبقاً ولا تعتمده ولا تتبناه، وليست مسؤولة عنه. أنت وحدك المسؤول عما تنشره وعن أي ضرر أو مطالبة أو خسارة أو تبعة قانونية تنتج عنه."],
+  ["What you confirm when you publish","ما تؤكده عند النشر","Each time you publish, you confirm that you own the content or have every right and permission needed (including the consent of every real person whose face or voice appears), that it is lawful where you and your audience are, and that it follows this policy and the Acceptable Use Policy.","في كل مرة تنشر فيها تؤكد أنك تملك المحتوى أو لديك كل الحقوق والأذونات اللازمة (بما فيها موافقة كل شخص حقيقي يظهر وجهه أو صوته)، وأنه نظامي حيث أنت وحيث جمهورك، وأنه يلتزم بهذه السياسة وبسياسة الاستخدام المقبول."],
+  ["Not allowed","غير مسموح","Content that is sexual or sexualises minors in any way, hateful, harassing or threatening, violent or glorifying violence, defamatory, misleading or impersonating real people (deepfakes without consent), infringing other people's rights, encouraging crime or self-harm, or offensive to religions, cultures or public morals.","المحتوى الجنسي أو أي محتوى يسيء للقاصرين بأي شكل، أو المحتوى الذي يحض على الكراهية أو يضايق أو يهدد، أو العنيف أو الممجّد للعنف، أو التشهيري، أو المضلل، أو الذي ينتحل شخصيات حقيقية (التزييف العميق بلا موافقة)، أو المعتدي على حقوق الآخرين، أو المحرّض على الجريمة أو إيذاء النفس، أو المسيء للأديان أو الثقافات أو الآداب العامة."],
+  ["Your promise to us (indemnity)","تعهدك لنا (التعويض)","You agree to defend and hold harmless {company}, its staff and partners from any claim, demand, fine or cost (including reasonable legal fees) that arises from what you publish or from your breach of this policy.","توافق على أن تدافع عن {company} وموظفيها وشركائها وأن تعفيهم من أي مطالبة أو طلب أو غرامة أو تكلفة (بما فيها أتعاب المحاماة المعقولة) تنشأ عما تنشره أو عن مخالفتك لهذه السياسة."],
+  ["Reports and removal","البلاغات والإزالة","Anyone can report a post. nooi may hide or remove any content, without notice, and may suspend or close accounts that break this policy, keep records and cooperate with the authorities when the law requires. Removing content does not make nooi responsible for it.","يمكن لأي شخص الإبلاغ عن منشور. يحق لـ nooi إخفاء أي محتوى أو إزالته دون إشعار، وإيقاف الحسابات المخالفة أو إغلاقها، والاحتفاظ بالسجلات والتعاون مع الجهات المختصة حين يتطلب النظام ذلك. إزالة المحتوى لا تجعل nooi مسؤولة عنه."],
+  ["Contact","التواصل","To report content or ask about this policy: {email}.","للإبلاغ عن محتوى أو الاستفسار عن هذه السياسة: {email}."]]};
+DOCS.push("publish");
+legalTabs=(o=>function(doc,owner){const i=DOCS.indexOf("publish");if(i>=0)DOCS.splice(i,1);let h;try{h=o.apply(this,arguments)}finally{DOCS.push("publish")}
+  const b='<button data-act="legal-tab" data-doc="publish" aria-pressed="'+(doc==="publish")+'">'+L(LEGAL.publish.t[0],LEGAL.publish.t[1])+"</button>",k=h.lastIndexOf("</div>");return k<0?h:h.slice(0,k)+b+h.slice(k)})(legalTabs);
+const mail156=()=>'<a class="f156mail" href="mailto:'+SUPPORT_EMAIL+'">'+ic("mail","width:14px;height:14px")+"<span>"+SUPPORT_EMAIL+"</span></a>",pubLink156=()=>'<a href="#" data-act="legal" data-doc="publish">'+L("Publishing policy","سياسة النشر")+"</a>";
+appFooter=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string")return h;
+  if(h.indexOf("f120bot")>=0)return h.replace(/<a class="f120mail"[\s\S]*?<\/a>/,"").replace(/(<div class="f120bot">[\s\S]*?data-doc="privacy">[\s\S]*?<\/a>)/,"$1"+pubLink156()+'<span class="f156sep"></span>'+mail156());
+  const m=/<a href="mailto:[^"]*">[\s\S]*?<\/a>/.exec(h);if(!m)return h;h=h.replace(m[0],"");const k=h.lastIndexOf("</footer>");return k<0?h:h.slice(0,k)+pubLink156()+m[0].replace("<a ",'<a class="f156mail" ')+h.slice(k)})(appFooter);
+lpFooter=(o=>function(){const h=o.apply(this,arguments),m=/<a href="mailto:[^"]*">[^<]*<\/a>/.exec(h);if(!m)return h;return h.replace(m[0],"").replace("</nav>",m[0].replace("<a ",'<a class="f156mail" ')+"</nav>")})(lpFooter);
+// sharing to Explore: the publisher confirms the content is theirs and their responsibility (the server keeps when they agreed)
+xpShareSheet=(o=>function(j){const r=o.apply(this,arguments);const g=document.querySelector('#modalRoot [data-act="xps-go"]');
+  if(g)g.insertAdjacentHTML("beforebegin",'<label class="agree xpa156"><input type="checkbox" id="xpagree156"> <span>'+L("I own this or have the rights to it, every real person in it agreed, and I alone am responsible for what I publish — as in the ","أملك هذا أو لدي حقوقه، ووافق كل شخص حقيقي يظهر فيه، وأنا وحدي المسؤول عما أنشره — وفق ")+'<a href="#" data-act="legal" data-doc="publish">'+L("Publishing policy","سياسة النشر")+"</a>.</span></label>");return r})(xpShareSheet);
+addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="xps-go"]');if(!a)return;const c=document.getElementById("xpagree156");if(c&&c.checked)return;
+  e.stopImmediatePropagation();e.preventDefault();toast(L("Please confirm the content is yours and your responsibility first.","يرجى تأكيد أن المحتوى لك وعلى مسؤوليتك أولاً."));if(c)c.focus()},true);
+API.req=(o=>function(p,opt){if(String(p)==="/v1/explore"&&opt&&opt.json&&!opt.method){const c=document.getElementById("xpagree156");if(c&&c.checked)opt.json=Object.assign({},opt.json,{agree:true})}return o.apply(this,arguments)})(API.req);
+(()=>{const st=document.createElement("style");st.textContent=`
+@media (max-width:820px){.sheetwrap>.sheet::before{content:"";display:block;width:38px;height:4px;border-radius:2px;background:var(--line2);margin:-8px auto 10px;opacity:.9}}
+#modalRoot .sheet input[type="range"],#hfdr{touch-action:none}#hfdr{height:36px}#hfdnote{min-height:3.9em}
+.hft136 .ch87b.t156{order:-1;margin-inline-start:0;flex:none;width:auto;min-width:64px;height:54px;padding:4px 8px;border-radius:12px;display:grid;place-items:center;align-content:center;gap:3px;background:var(--panel2);border:1px dashed var(--line2);color:var(--mute)}
+.hft136 .ch87b.t156 b{display:none}.hft136 .ch87b.t156>span:last-of-type{font-size:10.5px;line-height:1.1;white-space:nowrap}.hft136 .ch87b.t156 .fc87 img{width:20px;height:20px}.hft136 .ch87b.t156>svg{width:16px;height:16px}
+.pkup156{position:relative;width:100%;justify-content:center;margin:0 0 6px}.pkup156 input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.pk156h{font-size:14px;margin:14px 0 8px}.pk156g{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+.pk156{position:relative;padding:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;aspect-ratio:1;background:var(--panel2);cursor:pointer}.pk156 img{width:100%;height:100%;object-fit:cover;display:block}
+.pk156 small{position:absolute;inset:auto 0 0 0;background:rgba(0,0,0,.6);color:#fff;font-size:11px;padding:2px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pk156[disabled]{opacity:.5}
+.edsel.sel156{margin:0 0 12px;padding:10px 12px;border-radius:12px;border:1px solid color-mix(in srgb,var(--lime) 45%,var(--line));background:color-mix(in srgb,var(--lime) 7%,var(--panel2))}
+.sel156h{display:block;margin-bottom:2px}.sel156t{gap:8px;margin-top:8px}.sel156t .btn{flex:1;justify-content:center}
+.f120bot .f156sep{flex:1}.f156mail{display:inline-flex;gap:6px;align-items:center}.foot120 .f156mail{color:var(--mute)}
+.xpa156{display:flex;gap:8px;align-items:flex-start;margin-top:14px;font-size:13px;line-height:1.45}.xpa156 input{margin-top:3px;flex:none}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
