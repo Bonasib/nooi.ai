@@ -7,8 +7,8 @@
 #  · super slow motion: real speed · 0.5× · 0.25× · 0.125× · cinematic ramp — each shows its price and final length; the video is
 #    slowed on the server with real in-between frames (30 a second, no frame shown twice), the engine is asked for crisp real-time
 #    action; an unknown choice or a video shown in parts is not slowed and not charged for it
-#  · the editor: a slowed clip is smoothed on the device by itself; "Smooth with the engine" makes the real slow-motion file (a
-#    Finish job, tool "slowmo", priced like the Video page) and only for the client's own video
+#  · the editor: a slowed clip is smoothed on the device by itself and the engine makes the real slow-motion file by itself, free
+#    (v168 — tests/v168.py); a preset Finish job (tool "slowmo") is priced like the Video page and only for the client's own video
 # Run: python3 tests/v163.py
 import asyncio, hashlib, json, os, shutil, subprocess, sys, tempfile, time, urllib.request
 from playwright.async_api import async_playwright
@@ -169,15 +169,16 @@ async def page_checks():
         ok(r["job"] == {"cost": r["c1"], "slow": "super"}, f"the job carries super slow and its price {r['job']} {r.get('err')}")
         ok(dict(r["long"]).get("ultra") is True and dict(r["long"]).get("super") is False, f"30 s at 0.125× would be over 2 minutes → that choice is off (0.25× is exactly 2 minutes) {r['long']}")
         ok(r["hchip"] == "Slow-mo" and r["hsheet"] == 5 and r["hafter"][0] == "ramp" and r["hafter"][1] == "Cinematic ramp" and not r["hafter"][2], f"home: a Slow-mo chip with the same choices {r['hchip']!r} {r['hsheet']} {r['hafter']}")
-        # the editor: a slowed clip is smooth by itself; the engine button with its price
+        # the editor: a slowed clip is smooth by itself — the engine's version starts by itself, free (v168: tests/v168.py goes further)
         r = await pg.evaluate("""async()=>{const R={};const j={id:'lj1',remote:'x',kind:'video',status:'complete',progress:1,resultUrl:'/media/none.mp4',title:'Clip',prompt:'x',created:Date.now(),dur:3,aspect:'16:9',art:'scene',seed:1,pal:PALS[0]};S.jobs.push(j);
           S.ed.clips=[{id:'c1',src:{k:'job',job:'lj1'},in:0,out:3,speed:1}];S.ed.sel='c1';S.view='edit';renderView();await new Promise(r=>setTimeout(r,500));const c=S.ed.clips[0];
-          R.before=speed145().includes('sl163ed');edxSetSlow(c,.125,'none');R.smooth=c.smooth;const h=speed145();R.btn=(h.match(/data-act="sl163ed"[^>]*>[\\s\\S]*?<\\/svg>([^<]*)/)||[])[1];R.hint=/3 s of the clip → 24 s/.test(h);
-          c.smooth='off';edxSetSlow(c,.5,'bullet');R.kept=c.smooth;R.ramp=(speed145().match(/data-act="sl163ed"[^>]*>[\\s\\S]*?<\\/svg>([^<]*)/)||[])[1];return R}""")
+          const h0=speed145();R.before=h0.includes('sl163ed');R.hint0=/plays smooth: the engine makes the real in-between frames by itself, free/.test(h0);
+          edxSetSlow(c,.125,'none');c.no163=null;R.smooth=c.smooth;const h=speed145();R.btn=(h.match(/data-act="sl163ed"[^>]*>[\\s\\S]*?<\\/svg>([^<]*)/)||[])[1];R.starting=/Starting the engine's smooth slow motion/.test(h);R.price=/\\bcr\\b|credits/.test(h.slice(h.indexOf('slow163')));
+          c.smooth='off';edxSetSlow(c,.5,'bullet');R.kept=c.smooth;c.no163=edKey163(c);R.dev=/smoothed on this device/.test(speed145());return R}""")
         out["editor"] = r
-        ok(not r["before"] and r["smooth"] == "flow", f"a clip at real speed has no engine button; slowing it smooths it on the device {r}")
-        ok(r["btn"] == "Smooth with the engine · +6 cr" and r["hint"], f"ultra slow: the engine button and what it makes {r['btn']!r} {r['hint']}")
-        ok(r["kept"] == "off" and r["ramp"] == "Smooth with the engine · +4 cr", f"a smoothing switched off stays off; a ramp is +4 {r}")
+        ok(not r["before"] and r["hint0"] and r["smooth"] == "flow", f"real speed: no button, the line says slow motion plays smooth by itself; slowing it smooths it on the device {r}")
+        ok(r["btn"] == "Make it smooth now" and r["starting"] and not r["price"], f"slowed: the engine's version starts by itself, free (no price) {r}")
+        ok(r["kept"] == "off" and r["dev"], f"a smoothing switched off stays off; a clip the engine can't do says it is smoothed on this device {r}")
         # phone, Arabic: the row and the tiles fit
         pg2 = await page(390, 844, "ar")
         r = await pg2.evaluate("""async()=>{S.view='home';S.hf.tab='video';S.hf.vModel='happyhorse';renderView();await new Promise(r=>setTimeout(r,400));const s=document.querySelector('.ms163'),c=s.getBoundingClientRect(),o=s.querySelector('[aria-checked="true"]').getBoundingClientRect();

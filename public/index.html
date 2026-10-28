@@ -16131,9 +16131,10 @@ function dec139(m){let d=DEC139.get(m);if(d)return d;d={m,it:null,cur:null,nxt:n
     catch(e){d.el=true;d.err=String(e&&e.message||e);d.dur=m.el&&isFinite(m.el.duration)?m.el.duration:0}})();return d}
 const fit139=(c,t)=>{if(c){c.complete=true;c.naturalWidth=c.width;c.naturalHeight=c.height;c.currentTime=t}return c};
 async function at139(d,t){await d.ready;if(d.el)return el139(d,t);t=Math.max(0,Math.min(t,d.dur?d.dur-1e-3:t));
-  const inCur=()=>d.cur&&t>=d.cur.timestamp-1e-4&&(!d.nxt||t<d.nxt.timestamp-1e-4);if(inCur())return fit139(d.cur.canvas,t);
-  if(!d.it||!d.cur||t<d.cur.timestamp-1e-4||(d.nxt&&t>d.nxt.timestamp+3)){try{d.it&&await d.it.return()}catch(e){}d.it=d.sink.canvases(t);d.cur=(await d.it.next()).value||null;d.nxt=d.cur?(await d.it.next()).value||null:null}
-  while(d.nxt&&t>=d.nxt.timestamp-1e-4){d.cur=d.nxt;d.nxt=(await d.it.next()).value||null}
+  // (v168: 1 ms of slack — WebM keeps times in whole milliseconds, 0.067 for 0.0667, and every third frame of a 30 fps clip was shown twice)
+  const E=1e-3,inCur=()=>d.cur&&t>=d.cur.timestamp-E&&(!d.nxt||t<d.nxt.timestamp-E);if(inCur())return fit139(d.cur.canvas,t);
+  if(!d.it||!d.cur||t<d.cur.timestamp-E||(d.nxt&&t>d.nxt.timestamp+3)){try{d.it&&await d.it.return()}catch(e){}d.it=d.sink.canvases(Math.max(0,t-E));d.cur=(await d.it.next()).value||null;d.nxt=d.cur?(await d.it.next()).value||null:null}
+  while(d.nxt&&t>=d.nxt.timestamp-E){d.cur=d.nxt;d.nxt=(await d.it.next()).value||null}
   return d.cur?fit139(d.cur.canvas,t):null}
 // a file the decoder can't open (another site's address…): the video itself, moved to the moment and copied
 async function el139(d,t){const v=d.m.el;if(!v||v.error)return null;if(d.cv&&Math.abs((d.et??-9)-t)<1e-4)return d.cv;
@@ -20111,8 +20112,8 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
 /* v163 · super slow motion that stays smooth (the engine makes the in-between frames — lib/slowmo163.js)
    · nooi Studio (Frame rate chip → "Slow motion") and the home box (a Slow-mo chip): real speed · 0.5× · super slow 0.25× ·
      ultra slow 0.125× · cinematic ramp (real speed → super slow → real speed). Each shows its price and the final length first.
-   · Editor: a slowed clip is smoothed on the device by itself (optical flow), and "Smooth with the engine" makes the real thing —
-     the clip is replaced by the smooth slow-motion file when it is ready (and can go back to the original). */
+   · Editor (v168): a slowed clip is smoothed on the device at once and the engine makes the real thing by itself, free — the clip
+     is replaced by the smooth slow-motion file when it is ready (and can go back to the original). */
 const SLOW163P=[["off","Real speed","السرعة الحقيقية",1,0],["slow","Slow · 0.5×","بطيء · 0.5×",.5,2],["super","Super slow · 0.25×","بطيء جداً · 0.25×",.25,4],["ultra","Ultra slow · 0.125×","فائق البطء · 0.125×",.125,6],["ramp","Cinematic ramp","تدرّج سينمائي",0,4]];
 const SLOWIC163={off:'<path d="M8 5l11 7-11 7z"/>',slow:'<path d="M7 6l6 6-6 6"/>',super:'<path d="M5 6l6 6-6 6M12 6l6 6-6 6"/>',ultra:'<path d="M3 6l5 6-5 6M9 6l5 6-5 6M15 6l5 6-5 6"/>',ramp:'<path d="M3 17c4 0 4-10 9-10s5 10 9 10"/>'};
 const sp163=(k,x)=>{const s=SLOW163P.find(r=>r[0]===k);if(!s||k==="off")return 1;if(k!=="ramp")return s[3];const st=(a,b,v)=>{const t=clamp((v-a)/(b-a),0,1);return t*t*(3-2*t)};return 1+(.25-1)*st(.22,.42,x)*(1-st(.62,.82,x))};
@@ -20144,34 +20145,74 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
   S.draft.slow163=a.dataset.v;persist();if(a.dataset.act==="sl163s")closeSheet();renderView()},true);
 // what the card says while the in-between frames are made
 line132=(o=>function(j){if(j&&j.kind==="video"&&j.stage==="slow"&&!["complete","failed"].includes(j.status))return L("Making the in-between frames — smooth slow motion…","صنع الإطارات الوسيطة — حركة بطيئة ناعمة…");return o.apply(this,arguments)})(line132);
-// ---- editor: a slowed clip is smooth by itself; "Smooth with the engine" makes the real slow-motion file
-edxSetSlow=(o=>function(c,s,ramp){o.apply(this,arguments);if(c&&(+s<1||(ramp&&ramp!=="none"))&&c.smooth==null)c.smooth="flow"})(edxSetSlow);
+// ---- editor: every slowed clip plays smooth (v168). Measured before: a clip at 0.25× exported 49 different pictures out of 240 —
+// each frame held five times. Now the engine makes the clip's real in-between frames by itself, free (this server's work, like
+// Reverse), timed exactly as the editor times it — any speed from 0.1×, steady or a ramp — so the clip keeps its length and every
+// moment stays where it was. Until it is ready (or with no server) the clip is smoothed on the device; the export waits for the
+// engine's file, else for the device's frames. A clip made smooth shows the speed it was given; changing it starts again from the
+// original; "Back to the original clip" keeps it as it was.
+edxSetSlow=(o=>function(c,s,ramp){if(c&&c.sl0)back163(c,true);o.apply(this,arguments);if(c&&(+s<1||(ramp&&ramp!=="none"))&&c.smooth==null)c.smooth="flow"})(edxSetSlow);
+const slowOn163=c=>!!c&&!c.sl0&&+(c.slowTo||c.speed||1)<.99;
 const edKind163=c=>{if(!c)return null;if(c.ramp&&c.ramp!=="none")return"ramp";const s=+(c.slowTo||c.speed||1);return s<=.13?"ultra":s<=.3?"super":s<.99?"slow":null};
-speed145=(o=>function(){let h=o.apply(this,arguments);const c=edxSel(),m=c&&clipMedia(c);if(!c||!m||m.type!=="video")return h;
-  const k=edKind163(c),r=k&&SLOW163P.find(x=>x[0]===k),busy=c.sl163&&S.jobs.find(j=>j.id===c.sl163.job&&!["complete","failed"].includes(j.status));
-  const body=c.sl0?'<button class="btn sm" data-act="sl163back">'+ic("rev145")+L("Back to the original clip","العودة للمقطع الأصلي")+"</button>"
-    :busy?'<p class="small" style="margin:0">'+ic("spark","width:14px;height:14px")+" "+L("The engine is making the smooth slow motion — the clip changes by itself when it is ready.","المحرك يصنع الحركة البطيئة الناعمة — يتغيّر المقطع وحده عند جاهزيته.")+"</p>"
-    :k?'<button class="btn sm primary" data-act="sl163ed">'+ic("spark")+L("Smooth with the engine · +","نعّمها بالمحرك · +")+r[4]+L(" cr"," رصيد")+'</button><p class="small dim e-hint">'+L(Math.round(c.out-c.in)+" s of the clip → "+Math.round(out163(k,c.out-c.in))+" s of real in-between frames (30 a second), no sound. It replaces the clip when ready.",Math.round(c.out-c.in)+" ث من المقطع ← "+Math.round(out163(k,c.out-c.in))+" ث من إطارات وسيطة حقيقية (30 في الثانية)، بلا صوت. يحل محل المقطع عند جاهزيته.")+"</p>"
-    :'<p class="small dim e-hint">'+L("Pick a slow speed or a ramp above, then let the engine make every in-between frame.","اختر سرعة بطيئة أو منحنى أعلاه، ثم دع المحرك يصنع كل إطار وسيط.")+"</p>";
-  return h+sec145("slow163",L("Super smooth slow motion","حركة بطيئة فائقة النعومة"),body)})(speed145);
-async function slowEd163(c){const k=edKind163(c);if(!c||!k)return;if(API.mode!=="server"){toast(L("Smooth slow motion is made on your nooi server.","تُصنع الحركة البطيئة الناعمة على خادم nooi."),{type:"info"});return}
-  const b=await base140(c);if(!b)return;const url=String(b.resultUrl||mediaUrl(b)||"").replace(location.origin,""),len=c.out-c.in,ex=SLOW163P.find(x=>x[0]===k)[4],nm=clipName(c)||"clip";
-  const jj=addJob({kind:"finish",prompt:L("Slow motion · ","حركة بطيئة · ")+nm,title:L("Slow motion · ","حركة بطيئة · ")+String(nm).slice(0,40),cost:ex,secs:90,dur:Math.max(1,Math.round(out163(k,len))),art:"scene",
-    meta:{tool:"slowmo",slow163:k,sourceUrl:url,from163:+c.in.toFixed(3),to163:+c.out.toFixed(3),isVideo:true}});
-  if(!jj)return;c.sl163={job:jj.id,k,len:+len.toFixed(3)};persist();renderView();toast(L("The engine is making smooth slow motion — the clip changes when it's ready.","المحرك يصنع حركة بطيئة ناعمة — يتغيّر المقطع عند جاهزيته."),{type:"info"})}
-// when the engine's slow motion is ready, it takes the clip's place (the original is kept to go back to)
-function edit163(){const E=S.ed;if(!E||!E.clips)return;let ch=false;
-  E.clips.forEach(c=>{if(c.smooth==null&&+(c.speed||1)<.99){const m=clipMedia(c);if(m&&m.type==="video")c.smooth="flow"}
-    if(!c.sl163)return;const j=S.jobs.find(x=>x.id===c.sl163.job);if(!j){delete c.sl163;ch=true;return}
-    if(j.status==="failed"){toast(L("The smooth slow motion couldn't be made — nothing was charged.","تعذّر صنع الحركة البطيئة الناعمة — لم يُخصم شيء."),{type:"warn"});delete c.sl163;ch=true;return}
-    if(j.status!=="complete"||!j.resultUrl)return;const est=out163(c.sl163.k,c.sl163.len);
-    c.sl0={src:c.src,in:c.in,out:c.out,speed:c.speed,slowTo:c.slowTo,ramp:c.ramp,smooth:c.smooth};M["sl0_"+c.id]=M["c_"+c.id];delete M["c_"+c.id];edxSmFree(c.id);
-    Object.assign(c,{src:{k:"job",job:j.id},in:0,out:+Math.max(.5,est-.03).toFixed(2),speed:1,ramp:"none",smooth:"off"});delete c.slowTo;delete c.sl163;ch=true;
-    toast(L("Smooth slow motion is in — every in-between frame was made by the engine.","الحركة البطيئة الناعمة جاهزة — صنع المحرك كل إطار وسيط."),{type:"ok"})});
-  if(ch){persist();setTimeout(renderView,0)}}
+const edKey163=c=>[c.src&&c.src.k,c.src&&(c.src.job||c.src.id||c.src.name)||"",(+c.in).toFixed(2),(+c.out).toFixed(2),(+(c.slowTo||c.speed||1)).toFixed(3),c.ramp||"none"].join("|");
+const SLT163={};
+function back163(c,quiet){if(!c||!c.sl0)return;M["c_"+c.id]=M["sl0_"+c.id];if(!M["c_"+c.id])delete M["c_"+c.id];delete M["sl0_"+c.id];Object.assign(c,c.sl0);delete c.sl0;if(c.slowTo==null)delete c.slowTo;delete c.k163;
+  if(!quiet){c.no163=edKey163(c);persist();renderView();toast(L("Back to the original clip","عاد المقطع الأصلي"),{type:"ok"})}}
+speed145=(o=>function(){const c=edxSel(),m=c&&clipMedia(c);let h;
+  // (a clip the engine made smooth shows the speed it was given, not the 1× its new file plays at)
+  if(c&&c.sl0){const keep={speed:c.speed,slowTo:c.slowTo,ramp:c.ramp,smooth:c.smooth};Object.assign(c,{speed:c.sl0.speed,slowTo:c.sl0.slowTo,ramp:c.sl0.ramp,smooth:c.sl0.smooth});
+    try{h=o.apply(this,arguments)}finally{Object.assign(c,keep);if(keep.slowTo==null)delete c.slowTo}}else h=o.apply(this,arguments);
+  if(!c||!m||(m.type!=="video"&&!c.sl0))return h;
+  const pend=c.sl163&&S.jobs.find(j=>j.id===c.sl163.job&&!["complete","failed"].includes(j.status));
+  const body=c.sl0?'<p class="small ok163">'+ic("check")+" "+L("Smooth — every in-between frame was made by the engine (30 a second).","ناعمة — صنع المحرك كل إطار وسيط (30 في الثانية).")+'</p><button class="btn sm" data-act="sl163back">'+ic("rev145")+L("Back to the original clip","العودة للمقطع الأصلي")+"</button>"
+    :pend?'<div class="bar" style="height:6px"><i style="width:'+Math.round(clamp(+pend.progress||.08,.08,1)*100)+'%"></i></div><p class="small" style="margin:4px 0 0">'+L("The engine is making every in-between frame — the clip turns smooth by itself in a moment. Free.","المحرك يصنع كل إطار وسيط — يصبح المقطع ناعماً وحده بعد لحظات. مجاناً.")+"</p>"
+    :slowOn163(c)?'<p class="small dim e-hint">'+(API.mode==="server"?(c.no163===edKey163(c)?L("Playing the clip's own frames, smoothed on this device.","يُعرض المقطع بإطاراته مع تنعيم على هذا الجهاز."):L("Starting the engine's smooth slow motion…","يبدأ المحرك الحركة البطيئة الناعمة…")):L("Smoothed on this device.","تنعيم على هذا الجهاز."))+"</p>"+(API.mode==="server"?'<button class="btn sm" data-act="sl163ed">'+ic("spark")+L("Make it smooth now","نعّمها الآن")+"</button>":"")
+    :'<p class="small dim e-hint">'+L("Every slow speed and ramp plays smooth: the engine makes the real in-between frames by itself, free, and the clip keeps its length.","كل سرعة بطيئة ومنحنى يُعرض ناعماً: يصنع المحرك الإطارات الوسيطة الحقيقية وحده مجاناً، ويحتفظ المقطع بطوله.")+"</p>";
+  return h+sec145("slow163",L("Smooth slow motion","حركة بطيئة ناعمة"),body)})(speed145);
+async function slowEd163(c){if(!slowOn163(c)||API.mode!=="server")return;const key=edKey163(c),D=clipDur(c);if(!(D>.2)||D>120.5){c.no163=key;return}
+  const b=await base140(c);if(!b){c.no163=key;return}const url=String(b.resultUrl||mediaUrl(b)||"").replace(location.origin,""),nm=clipName(c)||"clip";if(edKey163(c)!==key||c.sl163)return;
+  const jj=addJob({kind:"finish",prompt:L("Slow motion · ","حركة بطيئة · ")+nm,title:L("Slow motion · ","حركة بطيئة · ")+String(nm).slice(0,40),cost:0,secs:Math.round(15+D*3),dur:Math.max(1,Math.round(D)),art:"scene",
+    meta:{tool:"slowmo",slow163:"ed",speed163:+(+(c.slowTo||c.speed)).toFixed(3),ramp163:c.ramp||"none",sourceUrl:url,from163:+(+c.in).toFixed(3),to163:+(+c.out).toFixed(3),isVideo:true}});
+  if(!jj)return;c.sl163={job:jj.id,key,D:+D.toFixed(3)};persist();if(S.view==="edit")renderView()}
+// on every drawing of the editor: start the engine's version once the speed has settled, put a finished one in, smooth on the device meanwhile
+function edit163(){const E=S.ed;if(!E||!E.clips||S.view!=="edit")return;let ch=false;
+  E.clips.forEach(c=>{const m=clipMedia(c),isV=!!m&&m.type==="video";
+    if(c.sl163){const j=S.jobs.find(x=>x.id===c.sl163.job);
+      if(!j){delete c.sl163;ch=true}
+      else if(j.status==="failed"){toast(L("The engine couldn't make this slow motion smooth — it plays smoothed on this device. Nothing was charged.","تعذّر على المحرك تنعيم هذه الحركة البطيئة — تُعرض بتنعيم الجهاز. لم يُخصم شيء."),{type:"warn"});c.no163=c.sl163.key;delete c.sl163;ch=true}
+      else if(j.status==="complete"&&j.resultUrl){if(c.sl163.key!==edKey163(c)){delete c.sl163;ch=true}   // (the speed changed meanwhile: a new one is made)
+        else{const D=c.sl163.D;c.sl0={src:c.src,in:c.in,out:c.out,speed:c.speed,slowTo:c.slowTo,ramp:c.ramp,smooth:c.smooth};M["sl0_"+c.id]=M["c_"+c.id];delete M["c_"+c.id];edxSmFree(c.id);
+          Object.assign(c,{src:{k:"job",job:j.id},in:0,out:+Math.max(.3,D-.02).toFixed(3),speed:1,ramp:"none",smooth:"off"});delete c.slowTo;c.k163=c.sl163.key;delete c.sl163;ch=true;
+          toast(L("Slow motion is smooth — every in-between frame was made by the engine.","الحركة البطيئة ناعمة — صنع المحرك كل إطار وسيط."),{type:"ok"})}}}
+    if(!slowOn163(c)||!isV)return;
+    if(c.smooth==null){c.smooth="flow";ch=true}
+    // (once the speed has stayed the same 1.4 s — a drawing of the page meanwhile doesn't put it off again)
+    if(API.mode==="server"&&!c.sl163&&c.no163!==edKey163(c)){const key=edKey163(c),T=SLT163[c.id];if(!T||T.key!==key){if(T)clearTimeout(T.t);
+      SLT163[c.id]={key,t:setTimeout(()=>{delete SLT163[c.id];const cc=(S.ed.clips||[]).find(x=>x.id===c.id);if(cc&&!cc.sl163&&slowOn163(cc)&&edKey163(cc)===key)slowEd163(cc)},1400)}}}
+    if(c.smooth!=="off"&&srcReady(m)){const s=EDX.sm[c.id];if(!s||(!s.busy&&(!s.ready||s.key!==edxSmKey(c))))setTimeout(()=>edxSmBuild(c),0)}});
+  if(ch){persist();setTimeout(renderView,0)}return ch}
+// a clip made smooth: a new speed starts from the original again (the speed chips and the custom-speed slider)
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-set="edclip.speed"]');if(!a||S.view!=="edit")return;const c=edxSel();if(c&&c.sl0)back163(c,true)},true);
+window.addEventListener("input",e=>{const t=e.target;if(!t||!t.dataset||t.dataset.bind!=="edclip.speed"||S.view!=="edit")return;const c=edxSel();if(c&&c.sl0)back163(c,true)},true);
 document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="sl163ed"],[data-act="sl163back"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();const c=edxSel();if(!c)return;
-  if(a.dataset.act==="sl163ed"){a.disabled=true;Promise.resolve(slowEd163(c)).finally(()=>{a.disabled=false});return}
-  if(c.sl0){M["c_"+c.id]=M["sl0_"+c.id];if(!M["c_"+c.id])delete M["c_"+c.id];delete M["sl0_"+c.id];Object.assign(c,c.sl0);delete c.sl0;if(c.slowTo==null)delete c.slowTo;persist();renderView();toast(L("Back to the original clip","عاد المقطع الأصلي"),{type:"ok"})}},true);
+  if(a.dataset.act==="sl163ed"){delete c.no163;a.disabled=true;Promise.resolve(slowEd163(c)).finally(()=>{a.disabled=false});return}
+  back163(c,false)},true);
+// the export: the engine's files first (up to 10 minutes), else the device's in-between frames — no slowed frame is shown twice
+async function prep163(){const E=S.ed;if(!E||!E.clips)return;const btn=$("#recbtn"),bt0=btn&&btn.textContent,t0=Date.now(),vid=c=>{const m=clipMedia(c);return!!m&&m.type==="video"};
+  try{await prep163b(E,btn,t0,vid)}finally{const b=$("#recbtn");if(b&&bt0!=null&&b.textContent!==bt0)b.textContent=bt0}}
+async function prep163b(E,btn,t0,vid){
+  if(API.mode==="server")for(const c of E.clips)if(slowOn163(c)&&vid(c)&&!c.sl163&&c.no163!==edKey163(c)){const T=SLT163[c.id];if(T){clearTimeout(T.t);delete SLT163[c.id]}try{await slowEd163(c)}catch(e){}}
+  for(;;){const pend=E.clips.map(c=>c.sl163&&S.jobs.find(x=>x.id===c.sl163.job)).filter(j=>j&&!["complete","failed"].includes(j.status));if(!pend.length||Date.now()-t0>600e3)break;
+    for(const j of pend)if(j.remote){try{const r=await API.req("/v1/jobs/"+j.remote);if(r.status==="done"&&r.url){j.status="complete";j.progress=1;j.resultUrl=r.url}else if(r.status==="failed"){j.status="failed";j.error=r.error}else j.progress=r.progress||j.progress}catch(e){}}
+    if(btn)btn.textContent=L("Making the slow motion smooth…","تنعيم الحركة البطيئة…");await new Promise(r=>setTimeout(r,2000))}
+  // (a finished one goes in now, and the page is drawn now — the export records the editor's picture as it is from here on)
+  if(S.view==="edit"&&edit163())renderView()
+  for(const c of E.clips)if(slowOn163(c)&&vid(c)){if(c.smooth==null||c.smooth==="off")c.smooth="flow";const s=EDX.sm[c.id];if(!(s&&s.ready&&s.key===edxSmKey(c))){try{await edxSmBuild(c)}catch(e){}}}}
+edRender139=(o=>async function(){R139.keep=true;try{try{await prep163()}catch(e){console.warn("v168 slow",e)}return await o.apply(this,arguments)}finally{R139.keep=false}})(edRender139);
+// an export records the preview's own canvas: a page drawn meanwhile (from the export's first step: a job finishing, a toast…) keeps
+// that canvas in its place instead of a new one — before, the rest of the video stayed on the last picture drawn before it
+renderView=(o=>function(){const old=(R139.keep||R139.on||recording)&&$("#wk"),r=o.apply(this,arguments);
+  if(old&&!document.contains(old)){const nw=$("#wk");if(nw&&nw!==old){old.style.cssText=nw.style.cssText;old.className=nw.className;nw.replaceWith(old)}}return r})(renderView);
 (()=>{const st=document.createElement("style");st.textContent=`
 .sl163{display:grid!important;gap:8px;grid-template-columns:repeat(auto-fill,minmax(172px,1fr))}
 .sl163 .tile{flex-direction:row;justify-content:flex-start;gap:10px;text-align:start;padding:10px 12px;min-height:58px}
@@ -20183,6 +20224,7 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
 .sl163 .tile[aria-checked="true"] .gl{background:var(--lime);color:#111}
 .sl163 .tile:disabled{opacity:.45;cursor:not-allowed}
 .hfchip.on163{border-color:var(--lime);color:var(--text)}
+.ok163{display:flex;align-items:center;gap:6px;margin:0 0 6px;color:var(--lime)}.ok163 svg{width:15px;height:15px}
 .hfchip svg{flex:none}`;document.head.appendChild(st)})();
 
 /* ================= v164: Motion engine 2 — motion graphics drawn the way the big tools draw them =================
