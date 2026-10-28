@@ -17,7 +17,7 @@ http.createServer((q,s)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{const u=
  if(u.pathname==='/api/v1/chat/credit')return send(500);
  if(u.pathname==='/api/v1/jobs/createTask'){const j=JSON.parse(b||'{}'),id='t'+(++n);T[id]=j;st.tasks.push(j);return send({taskId:id})}
  if(u.pathname==='/api/v1/jobs/recordInfo'){const j=T[u.searchParams.get('taskId')]||{},i=j.input||{};
-  if(/^elevenlabs\/text-to-speech/.test(j.model)){if(!/^[A-Za-z0-9]{18,}$/.test(i.voice||'')||(/multilingual/.test(j.model)&&i.language_code))return send({state:'fail',failMsg:'Internal Error, Please try again later.'});
+  if(/^elevenlabs\/text-to-(speech|dialogue)/.test(j.model)){if(!/^[A-Za-z0-9]{18,}$/.test(i.voice||((i.dialogue||[])[0]||{}).voice||'')||(/multilingual/.test(j.model)&&i.language_code))return send({state:'fail',failMsg:'Internal Error, Please try again later.'});
    if(process.env.TTS_DOWN==='1')return send({state:'fail',failMsg:'Internal Error, Please try again later.'});
    return send({state:'success',resultJson:JSON.stringify({resultUrls:['http://localhost:'+P+'/out.mp3']})})}
   return send({state:'success',resultJson:JSON.stringify({resultUrls:['http://localhost:'+P+'/out.mp4']})})}
@@ -93,7 +93,9 @@ def api_checks():
     j = wait_job(r.get("id", "x")); tasks = stats()["tasks"]
     tts = [t for t in tasks if t["model"].startswith("elevenlabs/")]; av = [t for t in tasks if t["model"].startswith("kling/ai-avatar")]
     ok(j.get("status") == "done", f"avatar: finished {j} {tasks}")
-    ok(tts and tts[0]["input"].get("voice") == GEORGE and tts[0]["input"].get("text") == "Welcome to our store" and "language_code" not in tts[0]["input"], f"avatar: the engine got a voice ID {tts}")
+    # (v165: the acted voice — ElevenLabs v3 as dialogue — comes first; the same voice ID and words)
+    t0 = (tts[0]["input"] if tts else {}); d0 = (t0.get("dialogue") or [{}])[0]
+    ok(tts and (t0.get("voice") or d0.get("voice")) == GEORGE and (t0.get("text") or d0.get("text")) == "Welcome to our store" and "language_code" not in t0, f"avatar: the engine got a voice ID {tts}")
     ok(av and av[-1]["input"].get("audio_url", "").endswith("/out.mp3") and av[-1]["input"].get("image_url") == f"http://localhost:{PORT}/media/face.png", f"avatar: the face speaks the voice {av}")
     out["api"] = {"tasks": [t["model"] for t in tasks]}
 

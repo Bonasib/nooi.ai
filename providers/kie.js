@@ -19,6 +19,7 @@ import { presetVoiceId } from "../lib/voicepresets.js";   // v97: the Voice page
 import { PICTURE_WORDS } from "../lib/picturewords.js";   // v100: a picture with no words still tells the engine what to do
 import { refsOf130, takesRefs130, tagWords130, seedanceRefs130 } from "../lib/refs130.js";   // v130: reference pictures with # names
 import { kling4Input, keepRefs161, castNames161 } from "../lib/kling161.js";   // v161: Kling 4.0 — the characters' faces and voices in one pass
+import { plan165, faceDirection165, faceShort165, isFileName165, plainText165 } from "../lib/face165.js";   // v165: a living face and an acted voice for talking avatars
 
 const VEO = new Set(["veo3", "veo3_fast", "veo3_lite"]);
 const VEO_RATIOS = new Set(["16:9", "9:16"]);
@@ -296,9 +297,12 @@ export const kie = (model) => {
         const d = await call("/api/v1/mj/generate", { method: "POST", body: JSON.stringify(drop({ taskType: ref ? "mj_img2img" : "mj_txt2img", prompt: fullPrompt(p), speed: "fast", aspectRatio: ar, version: mo.slice(3) || "7", fileUrls: ref ? [ref] : undefined, callBackUrl: p.callbackUrl, ...extraInputs(c, mo) })) });
         return { remoteId: "mj:" + d.taskId, sent: sentView({ prompt: fullPrompt(p), aspect_ratio: ar, image: ref }) };
       }
-      // lip-sync from a typed script: make the voice with ElevenLabs on Kie first, then animate the face with it
-      if (/^(kling\/ai-avatar|infinitalk\/|volcengine\/video-to-video-lip-sync)/.test(mo) && !(p.inputs || {}).lsA && p.prompt) {
-        p = { ...p, prompt: "", inputs: { ...(p.inputs || {}), lsA: await lipVoice(p, call) } };
+      // lip-sync from a typed script: make the voice with ElevenLabs on Kie first, then animate the face with it.
+      // v165: a face from a photo gets the performance engine's direction (real blinks, living eyes, each line's expression)
+      // and an acted voice; a face video keeps its own eyes and gets the acted voice
+      if (/^(kling\/ai-avatar|infinitalk\/)/.test(mo)) p = await perform165(p, call, mo);
+      else if (/^volcengine\/video-to-video-lip-sync/.test(mo) && !(p.inputs || {}).lsA && p.prompt) {
+        p = { ...p, prompt: "", inputs: { ...(p.inputs || {}), lsA: await lipVoice({ ...p, prompt: words165(p) }, call, await planFor165(p)) } };
       }
       const suno = mo.startsWith("suno:");
       const apiModel = suno ? "ai-music-api/generate" : mo;
@@ -374,28 +378,59 @@ const I2V = { "kling-2.6/text-to-video": "kling-2.6/image-to-video", "wan/2-7-te
   "kling/v3-turbo-text-to-video": "kling/v3-turbo-image-to-video", "happyhorse/text-to-video": "happyhorse/image-to-video",
   "kling-4.0/reference-to-video": "kling-4.0/keyframe-to-video" };   // (v161: unless it carries characters, voices or # pictures — keepRefs161)
 const EDIT = { "gpt-image-2-text-to-image": "gpt-image-2-image-to-image", "flux-2/pro-text-to-image": "flux-2/pro-image-to-image", "seedream/4.5-text-to-image": "seedream/4.5-edit", "qwen3/text-to-image": "qwen3/image-to-image", "seedream/5-pro-text-to-image": "seedream/5-pro-image-to-image", "grok-imagine/text-to-image": "grok-imagine/image-to-image" };
+// v165: the plan and the voice of a talking avatar are kept for 3 hours — a job tried again on the next face engine uses the
+// same plan and the same voice (the voice isn't made, or paid for, twice)
+const PLAN165 = new Map(), VOICE165 = new Map();
+async function memo165(m, k, make) { const hit = m.get(k); if (hit && Date.now() - hit.at < 3 * 3600e3) return hit.v;
+  const v = await make(); m.set(k, { v, at: Date.now() }); if (m.size > 300) m.delete(m.keys().next().value); return v; }
+const words165 = (p) => (isFileName165(p.prompt) ? "" : String(p.prompt || "").trim());   // (the page sends a voice file's name when there are no words)
+function planFor165(p) { const w = words165(p); if (!w) return null; const o = { lang: p.meta?.lang, tone: p.meta?.tone };
+  return memo165(PLAN165, JSON.stringify([w, o.lang || "", o.tone || ""]), () => plan165(w, o)); }
+async function perform165(p, call, mo) {
+  const inp = p.inputs || {}, plan = await planFor165(p), tone = p.meta?.tone;
+  const lsA = inp.lsA || (plan ? await lipVoice({ ...p, prompt: words165(p) }, call, plan) : undefined);
+  const face = /^infinitalk\//.test(mo) ? faceShort165(plan && plan.beats, { tone }) : plan ? plan.face : faceDirection165(null, { tone });
+  return { ...p, prompt: face, inputs: { ...inp, lsA } };
+}
+// ElevenLabs v3 on the AI engine (elevenlabs/text-to-dialogue-v3, the acted voice with audio tags): off for a while when the
+// engine refuses it (6 h) or a task of it fails (1 h) — the avatar then speaks on Multilingual v2 with the plan's delivery.
+// (Field names from search results — docs.kie.ai is blocked here: dialogue [{text, voice}], stability 0 · 0.5 · 1; verify
+// on the first real run.)
+export const V3_165 = { model: "elevenlabs/text-to-dialogue-v3", offUntil: 0 };
 // the voice an avatar speaks with: the site's own ElevenLabs key first (natural voice, saved in /media), then the engine's
-// ElevenLabs voices — each tried twice, multilingual v2 then turbo 2.5 — so one busy voice service doesn't fail the avatar
-async function lipVoice(p, call) {
-  const errs = [];
+// ElevenLabs voices — each tried twice, multilingual v2 then turbo 2.5 — so one busy voice service doesn't fail the avatar.
+// v165: with a plan, the voice acts: v3 with its audio tags (the site's key, then the engine), else v2 with the plan's tone
+function lipVoice(p, call, plan) {
+  const said = plan ? plan.voiceText : String(p.prompt || ""), tone = plan ? plan.tone : p.meta?.tone;
+  return memo165(VOICE165, JSON.stringify([said, ttsVoice(p), tone || "", p.meta?.lang || ""]), () => makeVoice165({ ...p, meta: { ...(p.meta || {}), tone } }, call, plan, said));
+}
+async function makeVoice165(p, call, plan, said) {
+  const errs = [], plain = plainText165(said);
   if (cfg("elevenlabs").apiKey) {
     try { const { speak, polish } = await import("../lib/voice.js"), { saveBuffer } = await import("../lib/media.js"), fs = await import("fs");
-      const sp = await speak(p.prompt, { lang: p.meta?.lang, voice: { id: ttsVoice(p), name: p.meta?.voiceId || p.meta?.gender || "voice", gender: p.meta?.gender }, emotion: p.meta?.tone });
+      const sp = await speak(plan ? said : plain, { lang: p.meta?.lang, voice: { id: ttsVoice(p), name: p.meta?.voiceId || p.meta?.gender || "voice", gender: p.meta?.gender }, emotion: p.meta?.tone, expressive: !!plan });
       const fin = await polish(sp.file, { ext: ".mp3", room: false }), out = saveBuffer(fs.readFileSync(fin), ".mp3"); fs.unlink(fin, () => {}); if (sp.temp) fs.unlink(sp.file, () => {});
       return out.url; } catch (e) { errs.push("ElevenLabs: " + e.message); }
   }
+  const own = ttsVoice(p), wait = async (t) => { for (let i = 0; i < 80; i++) { await new Promise((r) => setTimeout(r, i ? 3000 : 1200)); const d = await call("/api/v1/jobs/recordInfo?taskId=" + encodeURIComponent(t.taskId), { method: "GET" }); const st = String(d.state || "").toLowerCase();
+      if (st === "success") { const audio = kieResult(d); if (audio) return audio; throw new Error("finished without audio"); } if (st === "fail") throw Object.assign(new Error(d.failMsg || "failed"), { taskFail: true }); }
+    throw new Error("took too long"); };
+  // the acted voice (v3 with the plan's audio tags) on the engine
+  if (plan && Date.now() > V3_165.offUntil) {
+    try { const t = await call("/api/v1/jobs/createTask", { method: "POST", body: JSON.stringify({ model: V3_165.model, input: { dialogue: [{ text: said.slice(0, 4900), voice: own }], stability: 0.5, ...extraInputs(cfg("kie"), V3_165.model) } }) });
+      return await wait(t); }
+    catch (e) { errs.push("v3: " + String(e.message).slice(0, 120)); if ([400, 404, 422].includes(e.status)) V3_165.offUntil = Date.now() + 6 * 3600e3; else if (e.taskFail) V3_165.offUntil = Date.now() + 3600e3; }
+  }
   // the avatar's own voice on multilingual v2, then on turbo 2.5, then the engine's default voice (always on the engine)
-  const own = ttsVoice(p), tries = [["elevenlabs/text-to-speech-multilingual-v2", own], ["elevenlabs/text-to-speech-turbo-2-5", own], ["elevenlabs/text-to-speech-multilingual-v2", KIE_VOICE_DEFAULT]];
+  const tries = [["elevenlabs/text-to-speech-multilingual-v2", own], ["elevenlabs/text-to-speech-turbo-2-5", own], ["elevenlabs/text-to-speech-multilingual-v2", KIE_VOICE_DEFAULT]];
   for (const [tm, vid] of tries) {
     try {
-      const t = await call("/api/v1/jobs/createTask", { method: "POST", body: JSON.stringify({ model: tm, input: { ...kieInput(tm, { ...p, kind: "voice", meta: { ...(p.meta || {}), voiceId: vid, plain96: tm !== tries[0][0] || vid !== own } }), ...extraInputs(cfg("kie"), tm) } }) });
-      for (let i = 0; i < 80; i++) { await new Promise((r) => setTimeout(r, i ? 3000 : 1200)); const d = await call("/api/v1/jobs/recordInfo?taskId=" + encodeURIComponent(t.taskId), { method: "GET" }); const st = String(d.state || "").toLowerCase();
-        if (st === "success") { const audio = kieResult(d); if (audio) return audio; throw new Error("finished without audio"); } if (st === "fail") throw new Error(d.failMsg || "failed"); }
-      throw new Error("took too long");
+      const t = await call("/api/v1/jobs/createTask", { method: "POST", body: JSON.stringify({ model: tm, input: { ...kieInput(tm, { ...p, prompt: plain, kind: "voice", meta: { ...(p.meta || {}), voiceId: vid, plain96: tm !== tries[0][0] || vid !== own } }), ...extraInputs(cfg("kie"), tm) } }) });
+      return await wait(t);
     } catch (e) { errs.push(tm.split("/")[1] + ": " + String(e.message).slice(0, 120)); await new Promise((r) => setTimeout(r, 2500)); }
   }
   // the backup voice on our own server (free), so the avatar still speaks
-  try { const { piperOn, backupVoiceFile } = await import("./piper.js"); if (piperOn()) return await backupVoiceFile(p.prompt, p.meta?.lang); } catch (e) { errs.push("backup voice: " + String(e.message).slice(0, 120)); }
+  try { const { piperOn, backupVoiceFile } = await import("./piper.js"); if (piperOn()) return await backupVoiceFile(plain, p.meta?.lang); } catch (e) { errs.push("backup voice: " + String(e.message).slice(0, 120)); }
   throw Object.assign(new Error("The voice service is busy — the avatar wasn't charged (" + errs.join(" · ") + ")"), { type: "provider", retryable: false, noFallback: true,
     userMsg: "The avatar's voice couldn't be made right now — nothing was charged. Try again in a minute, or add a voice file." });
 }

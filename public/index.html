@@ -20340,6 +20340,41 @@ mgDraw150=function(ctx,W,H,t,it){if(t<it.start||t>it.end)return;const lt=t-it.st
     finally{MG164.sub=false;ax.globalAlpha=1;ax.globalCompositeOperation="source-over"}ctx.drawImage(acc,0,0,W,H);draw164(ctx,W,H,t,it,"grain");hit164(W,H,it);return}
   draw164(ctx,W,H,t,it);hit164(W,H,it)};
 
+/* ================= v165: A LIVING FACE AND AN ACTED VOICE FOR TALKING AVATARS =================
+   "The permanent eyes are permanent and strange — an engine that works with the lip engine, so the facial expressions are
+   realistic, with realistic voice acting like ElevenLabs." The server's performance engine (lib/face165.js) reads the words
+   line by line: the face engine is told to blink, move the eyes and show each line's feeling at its time, and the voice acts
+   the same lines. Here: how it should be acted — Auto (each line its own feeling, read from the words) or one feeling for all —
+   in the Home avatar box (an "Acting" chip and its sheet) and the Voice page's lip-sync panel; it rides with the job as
+   meta.tone. */
+const ACT165=[["auto","Auto","تلقائي","Each line gets its own feeling, read from the words","كل جملة بإحساسها، يُقرأ من الكلمات"],
+  ["warm","Warm","دافئ","A real smile that reaches the eyes","ابتسامة حقيقية تصل إلى العينين"],["excited","Excited","متحمّس","Bright eyes, raised brows, energy","عيون لامعة وحواجب مرفوعة وحيوية"],
+  ["serious","Serious","جاد","A steady, sincere look into the lens","نظرة ثابتة وصادقة إلى العدسة"],["calm","Calm","هادئ","Slow blinks, a gentle half smile","رمشات بطيئة وابتسامة خفيفة"],
+  ["funny","Funny","مرح","A playful grin and a real laugh","ابتسامة مرحة وضحكة حقيقية"],["sad","Sad","حزين","Soft eyes, a quieter voice","عيون رقيقة وصوت أهدأ"],
+  ["whisper","Whisper","همس","Leans in, as if sharing a secret","يقترب كأنه يشارك سراً"]];
+const ACTIC165={auto:'<circle cx="12" cy="12" r="8"/><path d="M9 10h.01M15 10h.01M9 14.5c1.6 1.4 4.4 1.4 6 0M19 3v3M17.5 4.5h3"/>',warm:'<circle cx="12" cy="12" r="8"/><path d="M8.5 10.5q1-1 2 0M13.5 10.5q1-1 2 0M8.5 14c2 2 5 2 7 0"/>',
+  excited:'<circle cx="12" cy="12" r="8"/><path d="M9 9v1.5M15 9v1.5M8.5 13.5h7a3.5 3.5 0 0 1-7 0z"/>',serious:'<circle cx="12" cy="12" r="8"/><path d="M8.5 9.5l2 .8M15.5 9.5l-2 .8M9 15h6"/>',
+  calm:'<circle cx="12" cy="12" r="8"/><path d="M8.5 11h2M13.5 11h2M9.5 14.5c1.5.8 3.5.8 5 0"/>',funny:'<circle cx="12" cy="12" r="8"/><path d="M8.5 10.5l1.5-1 1.5 1M12.5 10.5l1.5-1 1.5 1M8 13.5c1 3 7 3 8 0z"/>',
+  sad:'<circle cx="12" cy="12" r="8"/><path d="M9 10h.01M15 10h.01M9 16c1.6-1.4 4.4-1.4 6 0"/>',whisper:'<circle cx="12" cy="12" r="8"/><path d="M9 10h.01M15 10h.01M11 15h2M19 5l2.5-1.5M19.5 8.5H22"/>'};
+const act165=()=>{const a=S.hf&&S.hf.act165;return ACT165.some(r=>r[0]===a)?a:"auto"};
+const LIVE165=()=>L("Living face: natural blinks, eyes that move and an expression for every line — the voice acts the same lines.","وجه حيّ: رمشات طبيعية وعيون تتحرك وتعبير لكل جملة — والصوت يؤدي الجمل نفسها.");
+function actTiles165(act){const cur=act165();
+  return'<div class="tiles sl163 act165" role="radiogroup" aria-label="'+esc(L("Acting","الأداء"))+'">'+ACT165.map(([k,en,ar,den,dar])=>'<button type="button" class="tile" role="radio" data-act="'+act+'" data-v="'+k+'" aria-checked="'+(cur===k)+'"><span class="gl">'+svg(ACTIC165[k])+'</span><span class="lb">'+esc(L(en,ar))+"<small>"+esc(L(den,dar))+"</small></span></button>").join("")+"</div>"+
+    '<p class="small dim" style="margin:6px 0 0">'+LIVE165()+"</p>"}
+// the Home avatar box: an "Acting" chip next to "Voice file"
+hfBox=(o=>function(){let h=o.apply(this,arguments);if(S.hf.tab!=="avatar")return h;const k=act165(),r=ACT165.find(x=>x[0]===k);
+  const chip='<button class="hfchip'+(k!=="auto"?" on163":"")+'" data-act="act165h" aria-haspopup="dialog">'+svg(ACTIC165[k])+"<span>"+esc(k==="auto"?L("Acting","الأداء"):L(r[1],r[2]))+"</span></button>";
+  return h.replace(/(<div class="hfbar"><div class="hfchips">)/,"$1"+chip)})(hfBox);
+// the Voice page's lip-sync panel: the same choice under the words
+VIEWS.voice=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="string")return h;
+  return h.replace(/(<textarea data-bind="tools\.voice\.lipText"[^>]*>[\s\S]*?<\/textarea>)/,'$1<span class="lbl" style="margin-top:10px">'+L("Acting","الأداء")+"</span>"+actTiles165("act165"))})(VIEWS.voice);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="act165"],[data-act="act165h"],[data-act="act165s"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
+  if(a.dataset.act==="act165h"){const q=$("#hfq");if(q)S.hf.prompt=q.value;hfSheet(L("Acting","الأداء"),actTiles165("act165s"));return}
+  S.hf.act165=a.dataset.v;persist();if(a.dataset.act==="act165s")closeSheet();renderView()},true);
+// the job carries it (a tone already set — a character's own — stays)
+addJob=(o=>function(j){const k=act165();if(j&&j.kind==="lipsync"&&k!=="auto"&&!(j.meta&&j.meta.tone))j.meta=Object.assign({},j.meta,{tone:k});return o.apply(this,arguments)})(addJob);
+(()=>{const st=document.createElement("style");st.textContent=`.act165 .tile .lb small{white-space:normal;line-height:1.3}.act165 .tile{min-height:62px}`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
