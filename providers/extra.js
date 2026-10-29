@@ -10,6 +10,7 @@ import { nvRoute, nvAdapter } from "./nvidia.js";
 import { gen3dRoute, GEN3D } from "./gen3d.js";
 import { fpsAdapter } from "../lib/fps96.js";
 import { slowAdapter163 } from "../lib/slowmo163.js";
+import { mmRoute183, MM_KEYS183 } from "./minimax183.js";   // v183: MiniMax voices, pictures and music with the owner's own key
 // Flagship models → provider + API model id set by the admin (Admin → Models)
 const FLAGSHIP = { kling40: "kling", kling30: "kling", seedance25: "seedance", seedance20: "seedance", hailuoh3: "minimax" };
 const makers = () => ({ kling, seedance, minimax });
@@ -56,6 +57,7 @@ export const minimax = (mo) => { const c = cfg("minimax"); const base = (c.baseU
 export function adapterFor(cap, body, PROVIDERS) {
   if (cap === "enhance" && body.meta?.tool === "interp") return { key: "fps96", a: fpsAdapter() };   // v96: smooth motion on this server
   if (cap === "enhance" && body.meta?.tool === "slowmo") return { key: "slow163", a: slowAdapter163() };   // v163: super slow motion on this server
+  const mm = mmRoute183(cap, body); if (mm) return mm;   // v183: MiniMax (the owner's switches in Admin; MiniMax Image when picked)
   // NVIDIA AI first when it handles this job (explicit NVIDIA model, or "nooi Auto" with that capability switched on)
   const nt = nvRoute(cap, body); if (nt) return { key: "nv@" + nt, a: nvAdapter(nt) };
   if (cap === "video" && body.model === "mcswap" && swapEngine() === "fal") return { key: "fal@" + FAL_SWAP, a: falVideo(FAL_SWAP) };   // v116
@@ -89,4 +91,4 @@ function directAdapter(cap, body, PROVIDERS) {
   if (cap === "image" && body.model === "qwen") return { key: "qwen-image", a: dashscope("image") };
   return { key: cap, a: PROVIDERS[cap] };
 }
-export function adapterByKey(key, PROVIDERS) { if (key === "fps96") return fpsAdapter(); if (key === "slow163") return slowAdapter163(); if (String(key).startsWith("fal@")) return falVideo(key.slice(4)); if (String(key).startsWith("nv@")) return nvAdapter(key.slice(3)); if (GEN3D[key]) return GEN3D[key](); if (String(key).startsWith("kie@")) return kie(key.slice(4)); if (String(key).startsWith("gpt@")) return gptImage(key.slice(4)); if (key === "elevenlabs") return elevenlabs(); if (key === "midjourney") return midjourney(); if (String(key).startsWith("nano@")) return nanoBanana(key.slice(5)); if (String(key).includes("@")) { const [prov, mo] = key.split("@"); return makers()[prov](mo); } return key === "minimax" ? minimax() : key === "seedance" ? seedance() : key === "kling" ? kling() : key === "qwen-video" ? dashscope("video") : key === "qwen-image" ? dashscope("image") : PROVIDERS[key]; }
+export function adapterByKey(key, PROVIDERS) { if (MM_KEYS183[key]) return MM_KEYS183[key](); if (key === "fps96") return fpsAdapter(); if (key === "slow163") return slowAdapter163(); if (String(key).startsWith("fal@")) return falVideo(key.slice(4)); if (String(key).startsWith("nv@")) return nvAdapter(key.slice(3)); if (GEN3D[key]) return GEN3D[key](); if (String(key).startsWith("kie@")) return kie(key.slice(4)); if (String(key).startsWith("gpt@")) return gptImage(key.slice(4)); if (key === "elevenlabs") return elevenlabs(); if (key === "midjourney") return midjourney(); if (String(key).startsWith("nano@")) return nanoBanana(key.slice(5)); if (String(key).includes("@")) { const [prov, mo] = key.split("@"); return makers()[prov](mo); } return key === "minimax" ? minimax() : key === "seedance" ? seedance() : key === "kling" ? kling() : key === "qwen-video" ? dashscope("video") : key === "qwen-image" ? dashscope("image") : PROVIDERS[key]; }

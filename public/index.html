@@ -21242,6 +21242,38 @@ span.l182act{flex:1 1 220px;flex-wrap:wrap}
 </style>`);
 setTimeout(()=>{try{soonPaint182()}catch(e){}},0);setTimeout(()=>{try{soonPaint182()}catch(e){}},5100);
 
+/* ================= v183: MINIMAX — VOICES, PICTURES AND MUSIC WITH THE OWNER'S OWN KEY ================= */
+/* The owner has a MiniMax key (pay as you go). Admin → AI providers gets a MiniMax card: the key (saved encrypted, never shown
+   again), the API URL and the models, three switches — Voices (every voice-over, character voice and dub speaks with MiniMax
+   Speech; a customer's picked ElevenLabs voice stays ElevenLabs), Pictures (MiniMax Image-01 joins the picture engines) and Music
+   (music for videos is made by MiniMax) — and a free check of the key (MiniMax's voice list, providers/minimax183.js).
+   Videos stay where they are. */
+AI_PROVIDERS.push(["minimax","MiniMax — voices, pictures, music","ميني ماكس — أصوات وصور وموسيقى","voice · image · music",[["apiKey","API key (pay as you go)"],["baseUrl","API URL (empty = https://api.minimax.io · China: https://api.minimaxi.com)"],["speechModel","Voice model (empty = speech-2.8-hd)"],["imageModel","Picture model (empty = image-01)"],["musicModel","Music model (empty = music-2.6)"]],"https://api.minimax.io"]);
+const MM183={d:null,busy:false,checking:false};
+const mmUse183=k=>!!(API.cfg&&API.cfg.providers&&API.cfg.providers.minimax183&&API.cfg.providers.minimax183[k]);
+async function mmLoad183(){if(API.mode!=="server"||MM183.busy)return;MM183.busy=true;try{MM183.d=await API.req("/v1/admin/minimax183")}catch(e){MM183.d=MM183.d||{err:String(e.message||e)}}finally{MM183.busy=false;if(S.view==="admin")renderView()}}
+function mmCard183(){if(API.mode!=="server")return"";const D=MM183.d;if(!D){if(!MM183.busy)setTimeout(mmLoad183,0);return'<div class="small dim mm183">'+L("Loading…","جارٍ التحميل…")+"</div>"}
+  const st=D.status||{},ok=st.state==="online",note=MM183.checking?L("Checking…","جارٍ الفحص…"):st.checked?(ok?"✓ "+L("Key works · ","المفتاح يعمل · ")+(D.voices||0)+L(" voices"," صوتاً"):"✗ "+(st.type==="auth"?L("MiniMax refused the key","رفضت ميني ماكس المفتاح"):st.type==="quota"?L("The MiniMax balance is used up — top it up","نفد رصيد ميني ماكس — اشحنه"):String(st.note||st.type||""))):L("Not checked yet","لم يُفحص بعد");
+  return'<div class="mm183"><div class="trows">'+
+    toggleRow(D.voice!==false,"mm183-use","voice",L("Voices","الأصوات"),L("Voice-overs, character voices and dubbing speak with MiniMax (Arabic and 30+ languages, with feeling). A customer's chosen ElevenLabs voice stays ElevenLabs.","التعليق الصوتي وأصوات الشخصيات والدبلجة بصوت ميني ماكس (العربية و30+ لغة، مع الإحساس). صوت ElevenLabs الذي يختاره العميل يبقى كما هو."))+
+    toggleRow(D.image!==false,"mm183-use","image",L("Pictures","الصور"),L("MiniMax Image-01 joins the picture engines (a character's photo keeps the face).","يظهر MiniMax Image-01 بين محركات الصور (صورة الشخصية تحفظ الوجه)."))+
+    toggleRow(D.music!==false,"mm183-use","music",L("Music","الموسيقى"),L("Music for videos is made by MiniMax — instrumental unless there are words to sing.","تصنع ميني ماكس موسيقى الفيديوهات — بلا غناء ما لم تُكتب كلمات."))+
+    '</div><div class="spread mm183chk"><span class="small '+(ok?"":"dim")+'" id="mm183st">'+esc(note)+'</span><button class="btn sm" data-act="mm183-check" '+(D.err?"disabled":"")+">"+ic("refresh")+L("Check the key (free)","افحص المفتاح (مجاناً)")+'</button></div><p class="small dim" style="margin:6px 0 0">'+L("Pay as you go: each voice, picture and song is billed to your MiniMax balance; customers pay in nooi credits first. Videos stay on their engines.","الدفع حسب الاستخدام: كل صوت وصورة وأغنية تُحسب من رصيدك في ميني ماكس، ويدفع العملاء بأرصدة nooi أولاً. الفيديوهات تبقى على محركاتها.")+"</p></div>"}
+admModels=(o=>function(){const h=o();const at=h.indexOf('data-act="adm-pv" data-k="minimax"');if(at<0)return h;const b=h.lastIndexOf("<button",at);return h.slice(0,b)+mmCard183()+h.slice(b)})(admModels);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="mm183-use"],[data-act="mm183-check"]');if(!a)return;e.stopPropagation();
+  if(a.dataset.act==="mm183-check"){MM183.checking=true;renderView();try{const r=await API.req("/v1/admin/minimax183/check",{json:{}});MM183.d=Object.assign({},MM183.d,{status:r,voices:r.voices});toast(r.state==="online"?L("✓ MiniMax key works","✓ مفتاح ميني ماكس يعمل"):L("MiniMax: ","ميني ماكس: ")+(r.note||r.type),{type:r.state==="online"?"ok":"warn"})}catch(err){toast(String(err.message||err))}MM183.checking=false;await mmLoad183();return}
+  const k=a.dataset.k,on=(MM183.d||{})[k]!==false;try{const r=await API.req("/v1/admin/minimax183",{method:"PUT",json:{[k]:!on}});MM183.d=Object.assign({},MM183.d,r);try{API.cfg=await(await fetch("/v1/config")).json()}catch(x){}}catch(err){toast(String(err.message||err))}renderAll()},true);
+// MiniMax Image-01 among the picture engines while the owner has it on (and the key saved)
+function mmPics183(){const on=mmUse183("image");if(on&&!IMG_MODELS.mmimage){const cr=(API.cfg&&API.cfg.prices&&API.cfg.prices.image&&API.cfg.prices.image.mmimage)||1;IMG_MODELS.mmimage={name:"MiniMax Image-01",cr};if(PRICE_TABLE.image)PRICE_TABLE.image.mmimage=cr;MFEAT.mmimage=["MiniMax · characters keep their face · quick, low cost","ميني ماكس · الشخصيات تحفظ وجوهها · سريع ومنخفض التكلفة"];MODEL_LOGO.mmimage="minimax"}
+  else if(!on&&IMG_MODELS.mmimage){delete IMG_MODELS.mmimage;if(S.hf&&S.hf.iModel==="mmimage")S.hf.iModel="auto"}}
+renderView=(o=>function(){try{mmPics183()}catch(e){}return o.apply(this,arguments)})(renderView);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.mm183{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.mm183 .trows{margin:0}
+.mm183chk{gap:10px;margin-top:10px;flex-wrap:wrap}
+.mm183chk .small{min-width:0;overflow-wrap:anywhere}
+</style>`);
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
