@@ -12064,9 +12064,6 @@ addJob=(o=>function(j){if(NO87||!j||!["image","video"].includes(j.kind)||(j.meta
 // a waited-for step finished → run the next one
 setInterval(()=>{if(!S.flow87.length)return;let ch=false;
   for(const f of S.flow87.slice()){const js=f.wait.map(id=>S.jobs.find(x=>x.id===id));
-    // (v179: NVIDIA FLUX.1's first frame failed → the video is still made, from the words)
-    if(f.then&&f.then.meta&&f.then.meta.nvFrame179&&js.some(x=>!x||x.status==="failed")){S.flow87=S.flow87.filter(x=>x!==f);ch=true;const m=Object.assign({},f.then.meta,{nvNoFrame179:1});delete m.nvFrame179;let r=null;NO87++;try{r=addJob(Object.assign({},f.then,{meta:m}))}finally{NO87--}
-      toast(L("NVIDIA FLUX.1 couldn't make the first frame — the video is made from your words.","لم يستطع NVIDIA FLUX.1 صنع الإطار الأول — يُصنع الفيديو من وصفك."),{type:"warn"});if(r&&S.hf&&Array.isArray(S.hf.out)&&f.wait.some(id=>S.hf.out.includes(id)))S.hf.out=[r.id].concat(S.hf.out.filter(id=>id!==r.id)).slice(0,12);continue}
     if(js.some(x=>!x||x.status==="failed")){S.flow87=S.flow87.filter(x=>x!==f);ch=true;toast(L("A step failed — nothing more was made.","فشلت خطوة — لم يُصنع شيء آخر."),{type:"warn"});continue}
     if(!js.every(x=>x.status==="complete"&&mediaUrl(x)))continue;S.flow87=S.flow87.filter(x=>x!==f);ch=true;
     for(const x of js)if(x.kind==="look"&&x.meta&&x.meta.char){const c=charById(x.meta.char);if(c&&!c.face)c.face=mediaUrl(x)}
@@ -20995,7 +20992,7 @@ hfCost=(o=>function(){const c=o.apply(this,arguments),H=S.hf;if(H.tab!=="video"|
 hfrCard=(o=>function(j){const h=o(j);if(!j||!j.meta||!j.meta.frame87)return h;const e=(MODELS[j.meta.for177]||{}).name,mn=(IMG_MODELS[j.model]||{}).name||"";
   return h.replace(/(<small[^>]*>)[^<]*(<\/small>)/,"$1"+esc(e?L("First frame for "+e,"الإطار الأول لـ "+e):L("First frame","الإطار الأول"))+(mn?" · "+esc(mn):"")+"$2")})(hfrCard);
 
-/* ================= v179: A TICK ON EVERY CHOICE · TIDY OPTIONS UNDER THE PROMPT · THE AGENTS POP IN (GLASS) · NOOI KEEPS YOUR PICTURES · NVIDIA + AGENTS ================= */
+/* ================= v179: A TICK ON EVERY CHOICE · TIDY OPTIONS UNDER THE PROMPT · THE AGENTS POP IN (GLASS) · NOOI KEEPS YOUR PICTURES · NVIDIA STAYS NVIDIA (v180) ================= */
 // 1. every chosen option in a settings sheet shows the same tick as the format tiles: the resolution, slow motion, the scene, the
 //    engine list… — drawn by CSS from the option's own state (aria-pressed / aria-checked / .on), so it follows every tap
 // 2. under the prompt on a phone: the engine and the agents on one line, then the options in two even columns (Scene moves into
@@ -21005,74 +21002,32 @@ hfrCard=(o=>function(j){const h=o(j);if(!j||!j.meta||!j.meta.frame87)return h;co
 // 4. nooi Auto keeps the # pictures: when the agents' engine starts from one picture, the first picture named is its first frame
 //    and every picture is read into the words (v178, lib/read178.js); with @ characters, their first frame is made from the faces
 //    AND the pictures (flow87)
-// 5. NVIDIA, as the owner asked: only the NVIDIA engines that passed the check are offered for pictures; for video, while NVIDIA's
-//    Cosmos is closed to the key, NVIDIA is "NVIDIA + Agents": the 9 agents make the video with NVIDIA's working AI — its text and
-//    vision AI plan the shots and read the pictures (the site's text AI), NVIDIA FLUX.1 makes the first frame — and the best open
-//    engine makes the video from it. Never refused, the price shows first, the card names both engines.
-const NV179={busy:0};
-const nvAgents179=()=>!!(API.cfg&&API.cfg.providers&&API.cfg.providers.nvidia&&nvClosed177("nvcosmos"));
-const nvFluxOk179=()=>!!(API.cfg&&API.cfg.providers&&API.cfg.providers.nvidia&&IMG_MODELS.nvflux&&!nvClosed177("nvflux"));
-const nvName179=()=>L("NVIDIA + Agents","NVIDIA + الوكلاء");
-const nvOn179=()=>{const H=S.hf;return!!(H&&H.tab==="video"&&(H.vModel==="nvcosmos"||NV179.busy)&&nvAgents179())};
-// will NVIDIA FLUX.1 make the first frame? (not when a first frame, a # picture or an @ character gives it)
-function nvFrame179(p){const H=S.hf;p=p==null?((document.getElementById("hfq")||{}).value||H.prompt||""):p;
-  return nvFluxOk179()&&!M.hfRef&&!M.vStart&&!M.startImage&&!refs130().length&&!(typeof charsIn87==="function"&&charsIn87(p).length)&&(+H.dur||5)<=10}
-// the price: what the agents make it with, plus NVIDIA FLUX.1's first frame
-hfCost=(o=>function(){const H=S.hf;if(!(H&&H.tab==="video"&&H.vModel==="nvcosmos"&&nvAgents179()))return o.apply(this,arguments);
-  H.vModel="auto";let c;try{c=o.apply(this,arguments)}finally{H.vModel="nvcosmos"}return c==null?c:c+(nvFrame179()?(IMG_MODELS.nvflux||{cr:2}).cr:0)})(hfCost);
-const nvCost179=()=>{const H=S.hf,k=H.vModel;H.vModel="nvcosmos";try{return hfCost()}finally{H.vModel=k}};
-// the engine chip and the studio card say what makes it
-hfMRow=(o=>function(t){const h=o.apply(this,arguments);if(t!=="video"||!nvOn179())return h;const n=nvName179(),u=logoFor("nvcosmos");
-  return h.replace(/(<button class="hfmi nooi on eng171)[^"]*("[^>]*?aria-label=")[^"]*("[^>]*>)[\s\S]*?(<\/button>)/,(m,a,b,c,d)=>a+" picked nv179"+b+esc(L("Engine: ","المحرك: ")+n)+c+'<span class="lg">'+(u?'<img src="'+esc(u)+'" alt="">':ic("spark"))+"</span><b>"+esc(n)+"</b>"+svg('<path d="M6 9l6 6 6-6"/>')+d)})(hfMRow);
-hfStudioPlanHTML=(o=>function(){const H=S.hf;if(!(H&&H.tab==="video"&&H.vModel==="nvcosmos"&&nvAgents179()))return o.apply(this,arguments);H.vModel="auto";try{return o.apply(this,arguments)}finally{H.vModel="nvcosmos"}})(hfStudioPlanHTML);
-// (Scene joins the options; NVIDIA + Agents tells what it does)
+// 5. NVIDIA (v180, as the owner asked): NVIDIA Cosmos is NVIDIA's own — it is never made on Kie AI or any other engine; the
+//    agents (the Agents option under the prompt) work with every engine, Cosmos included. Only the NVIDIA picture engines that
+//    passed Admin's check are offered. nooi Auto / the agents' own picks never choose a closed NVIDIA engine.
+// (Scene joins the options)
 hfBox=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string")return h;
   const sc=/<button class="hfmi scene([^"]*)" (data-act="hfx-scene"[^>]*)>([\s\S]*?)<\/button>/.exec(h);
   if(sc&&h.indexOf('<div class="hfchips">')>0)h=h.replace(sc[0],"").replace('<div class="hfchips">','<div class="hfchips"><button class="hfchip sc179'+sc[1]+'" '+sc[2]+">"+sc[3].replace(/<\/?b>/g,m=>m==="<b>"?"<span>":"</span>")+"</button>");
-  if(nvOn179())h=h.replace(/(<p class="hfstd">)[\s\S]*?(<\/p>)/,"$1"+esc(L("9 AI agents make it with NVIDIA's AI: it plans every shot and reads your pictures, NVIDIA FLUX.1 makes the first frame, and the best open engine makes the video from it. (NVIDIA's own video engine isn't open to this site right now.)","9 وكلاء ذكاء اصطناعي يصنعونه مع ذكاء NVIDIA: يخطط كل لقطة ويقرأ صورك، ويصنع NVIDIA FLUX.1 الإطار الأول، ويصنع أفضل محرك متاح الفيديو منه. (محرك الفيديو الخاص بـ NVIDIA غير متاح لهذا الموقع الآن.)"))+"$2");
   return h})(hfBox);
-// the engine lists: an NVIDIA engine the key can't run isn't offered for pictures; NVIDIA for video is NVIDIA + Agents
+// the picture engine list: an NVIDIA engine the key can't run (Admin's check) isn't offered
 hfModelSheet=(o=>function(){const r=o.apply(this,arguments);try{
-  ["nvflux","nvsd35","nvkontext"].forEach(m=>{if(nvClosed177(m))document.querySelectorAll('#modalRoot .hfmodel[data-v="'+m+'"]').forEach(b=>b.remove())});
-  const b=document.querySelector('#modalRoot .hfmodel[data-v="nvcosmos"]');
-  if(b&&nvAgents179()){b.classList.remove("off173");b.classList.add("nv179");const n=b.querySelector(".nm b"),s=b.querySelector(".nm small"),c=b.querySelector(".cr");
-    if(n)n.textContent=nvName179();if(s)s.textContent=L("9 agents with NVIDIA's AI · NVIDIA FLUX.1 first frame · the best open engine makes the video","9 وكلاء مع ذكاء NVIDIA · إطار أول من NVIDIA FLUX.1 · أفضل محرك متاح يصنع الفيديو");
-    if(c){const t=[...c.childNodes].reverse().find(x=>x.nodeType===3&&/\d/.test(x.textContent)),v=nvCost179();if(t&&v!=null)t.textContent=String(v)}}}catch(e){}return r})(hfModelSheet);
-// picking NVIDIA + Agents brings the agents, as nooi Auto does
-window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="hf-pick"][data-v="nvcosmos"]');if(a&&nvAgents179())S.hf.bots=true},true);
-note177=(o=>function(m){if(m==="nvcosmos"&&nvAgents179()){if(Date.now()-NOTE177.t<3000&&NOTE177.m===m)return;NOTE177.t=Date.now();NOTE177.m=m;
-  toast(L("NVIDIA + Agents: the first picture named in your words is the first frame, and NVIDIA's AI reads every picture you add into the words.","NVIDIA + الوكلاء: أول صورة تذكرها في الوصف هي الإطار الأول، ويقرأ ذكاء NVIDIA كل صورة تضيفها ويضعها في الوصف."),{type:"ok"});return}return o.apply(this,arguments)})(note177);
-// Create: the agents make it (as nooi Auto), with NVIDIA's tools; never a closed NVIDIA engine
-hfSend=(o=>async function(){const H=S.hf;if(!(H&&H.tab==="video"&&H.vModel==="nvcosmos"&&nvAgents179()))return o.apply(this,arguments);
-  H.vModel="auto";H.bots=true;NV179.busy++;try{return await o.apply(this,arguments)}finally{NV179.busy--;H.vModel="nvcosmos";try{if(S.view==="home")renderView()}catch(e){}}})(hfSend);
-makeVideo=(o=>function(){const d=S.draft;if(!(d&&d.model==="nvcosmos"&&nvAgents179()))return o.apply(this,arguments);d.model="auto";NV179.busy++;try{return o.apply(this,arguments)}finally{NV179.busy--;d.model="nvcosmos"}})(makeVideo);
+  ["nvflux","nvsd35","nvkontext"].forEach(m=>{if(nvClosed177(m))document.querySelectorAll('#modalRoot .hfmodel[data-v="'+m+'"]').forEach(b=>b.remove())})}catch(e){}return r})(hfModelSheet);
+// Admin → NVIDIA AI: when NVIDIA says Cosmos isn't open to the key, say what the owner can do on NVIDIA's side
+nvCheckHTML176=(o=>function(){const h=o.apply(this,arguments),r=NV176.r,v=r&&Array.isArray(r.engines)&&r.engines.find(e=>e.task==="video");
+  if(!v||v.state!=="closed"||(r.suggest&&r.suggest.videoUrl))return h;
+  return h.replace(/<\/div>$/,'<p class="small nvhint180" dir="auto">'+esc(L("NVIDIA's own server says this key can't run Cosmos 3 yet (it is a preview on build.nvidia.com). Developers who got the same answer report it opened with a key that includes \u201cPublic API Endpoints\u201d: make a new key at build.nvidia.com (or NGC → Setup → Personal Keys, with Public API Endpoints ticked), paste it above, save, and press Check NVIDIA engines again. If Cosmos still isn't open, ask NVIDIA to open Cosmos 3 Nano for your account. Until then a video asked for on NVIDIA Cosmos is refused before anything is paid — it is never made on another engine.","يقول خادم NVIDIA نفسه إن هذا المفتاح لا يستطيع تشغيل Cosmos 3 بعد (فهو نسخة تجريبية على build.nvidia.com). أفاد مطوّرون ظهرت لهم الرسالة نفسها أنه فُتح بمفتاح يتضمن \u201cPublic API Endpoints\u201d: أنشئ مفتاحاً جديداً على build.nvidia.com (أو NGC ← Setup ← Personal Keys مع تحديد Public API Endpoints)، والصقه أعلاه واحفظه، ثم اضغط افحص محركات NVIDIA مرة أخرى. إن بقي Cosmos غير متاح، اطلب من NVIDIA فتح Cosmos 3 Nano لحسابك. وحتى ذلك الحين يُرفض أي فيديو مطلوب على NVIDIA Cosmos قبل أن يُدفع شيء — ولا يُصنع أبداً على محرك آخر."))+"</p></div>")})(nvCheckHTML176);
+// nooi Auto / the agents' own pick: never a closed NVIDIA engine
 pickVideo=(o=>function(){const r=o.apply(this,arguments);if(r&&NVT177[r.id]&&nvClosed177(r.id)){const alt=["kling30","seedance20","wan27","seedance"].find(m=>MODELS[m]&&(typeof modelAllowed!=="function"||modelAllowed(m)));if(alt)return Object.assign({},r,{id:alt})}return r})(pickVideo);
-addJob=(o=>function(j){
-  if(j&&j.kind==="video"&&j.model==="nvcosmos"&&!(j.meta&&(j.meta.studio||j.meta.auto))&&nvAgents179()){j.model="auto";j.meta=Object.assign({},j.meta,{nv179:1})}
-  else if(j&&j.kind==="video"&&NV179.busy)j.meta=Object.assign({},j.meta,{nv179:1});
-  // NVIDIA FLUX.1 makes the first frame, then the video starts from it (the v87 flow's wait-then-make)
-  const m=j&&j.meta;
-  if(j&&j.kind==="video"&&m&&m.nv179&&!NO87&&!m.from87&&!m.start&&!m.parts&&!M.vStart&&!M.startImage&&!REFGO130&&!READ178&&!(m.refs130||[]).length&&!m.char&&!(typeof charsIn87==="function"&&charsIn87(j.prompt).length)&&(+j.dur||5)<=10&&nvFluxOk179()){
-    let pic=null;NO87++;try{pic=o({kind:"image",model:"nvflux",prompt:"The first frame of a video — one still picture of its opening moment: "+String(j.prompt||"").slice(0,1500)+"\nIn the style the words ask for (a real photo unless they ask for another).",
-      title:(j.title||String(j.prompt||"").slice(0,40))+" · "+L("first frame","الإطار الأول"),aspect:j.aspect||"16:9",cost:(IMG_MODELS.nvflux||{cr:2}).cr,secs:8,art:"scene",meta:{frame87:1,nv179:1,for177:"nv179"}})}finally{NO87--}
-    if(!pic)return null;const job=Object.assign({},j,{meta:Object.assign({},m,{nvFrame179:1})});delete job.id;
-    S.flow87.push({id:uid(),at:Date.now(),wait:[pic.id],then:job,start:pic.id,grab:!!HF_GRAB});persist();
-    toast(L("NVIDIA FLUX.1 makes the first frame — the video starts from it.","يصنع NVIDIA FLUX.1 الإطار الأول — ويبدأ الفيديو منه."),{type:"ok"});return pic}
-  return o.apply(this,arguments)})(addJob);
 // nooi / the agents: # pictures for an engine that starts from one picture → the first one named is its first frame (unless one
 // is given), all of them go up to be read into the words (not as references the engine can't take — the server dropped them)
 serverSubmit=(o=>function(obj,kind,payload){const m=payload&&payload.meta;
-  if(kind!=="video"||!m||!Array.isArray(m.refs130)||!m.refs130.length||!(m.studio||m.auto||m.nv179||m.from87)||!frame177(payload.model))return o.apply(this,arguments);
+  if(kind!=="video"||!m||!Array.isArray(m.refs130)||!m.refs130.length||!(m.studio||m.auto||m.from87)||!frame177(payload.model))return o.apply(this,arguments);
   const refs=m.refs130.filter(r=>r&&r.slot&&M[r.slot]);if(!refs.length)return o.apply(this,arguments);
   const p=String(payload.prompt||""),first=refs.find(r=>tagRe178(r.tag).test(p))||refs[0],ks=M.vStart;
   const meta=Object.assign({},m,{read178:refs.map(r=>({slot:r.slot,tag:r.tag}))});delete meta.refs130;payload=Object.assign({},payload,{meta});
   if(!ks&&!M.startImage&&first)M.vStart=Object.assign({},M[first.slot]);
   try{return o.call(this,obj,kind,payload)}finally{M.vStart=ks}})(serverSubmit);
-// the card: NVIDIA FLUX.1 made the first frame, the engine made the video
-eng175=(o=>function(j){const n=o(j);if(!(j&&j.kind==="video"&&j.meta&&j.meta.nvFrame179))return n;const f=(IMG_MODELS.nvflux||{}).name||"NVIDIA FLUX.1",v=n.length?n:[(MODELS[j.model]||{}).name||L("another engine","محرك آخر")];
-  return v.includes(f)?v:[f].concat(v)})(eng175);
-note175=(o=>function(g){if(!(g&&g.kind==="video"&&g.meta&&g.meta.nvFrame179))return o.apply(this,arguments);const v=(MODELS[g.model]||{}).name||L("another engine","محرك آخر");
-  return L("NVIDIA FLUX.1 made the first frame and "+v+" made the video from it; the agents planned it with NVIDIA's AI.","صنع NVIDIA FLUX.1 الإطار الأول وصنع "+v+" الفيديو منه؛ وخطط له الوكلاء بذكاء NVIDIA.")})(note175);
 // 3. the agents: pop in once, glass, the plan box fits the line shown
 // (a redraw while it pops carries on from where it was — the animation is neither restarted nor cut short)
 const AG179={was:false,t:0};
@@ -21090,8 +21045,8 @@ window.addEventListener("resize",()=>{try{agFit179()}catch(e){}});
 .hfsheet .tile[role=radio][aria-checked="true"],.hfsheet .scopt.on{padding-inline-end:36px}
 .hfsheet .tile[role=radio][aria-checked="true"]::after,.hfsheet .scopt.on::after,.hfsheet .hfmodel[aria-pressed="true"]::after{content:"";position:absolute;top:8px;inset-inline-end:8px;width:20px;height:20px;border-radius:50%;background:var(--lime) var(--tick179) center/12px no-repeat;box-shadow:0 1px 4px rgba(0,0,0,.25);pointer-events:none}
 .hfsheet .hfmodel[aria-pressed="true"]::after{top:6px;inset-inline-end:6px;width:18px;height:18px;background-size:11px}
-.hfmodel.nv179 .nm small{color:var(--mute)}
 .hfbar .hfchip.sc179 svg{width:15px;height:15px;flex:none}
+.nvhint180{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--lime) 10%,var(--panel2));border:1px solid var(--line);line-height:1.5}
 .hfbar .hfchip.sc179.on{border-color:var(--lime);background:color-mix(in srgb,var(--lime) 12%,var(--panel2))}
 @media (max-width:640px){
 .hfbox .hfmrow.g{flex-wrap:nowrap!important}

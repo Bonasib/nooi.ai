@@ -11,7 +11,7 @@
 #  · the API: GET /v1/refer, links saved (a handle, a site without https, a bad link refused), a connection (token) can't take
 #    an invite
 #  · the page (phone and computer, English and Arabic): NVIDIA's logo (the green eye, not "NV" letters) on Cosmos and its line
-#    "NVIDIA + Agents" (v179); picking an engine → the producer speaks and the row of agents hops; words typed → the
+#    "Not open to this site right now"; picking an engine → the producer speaks and the row of agents hops; words typed → the
 #    agent whose part they touch speaks and quotes them; "Your characters" — every face inside its own tile; the account page
 #    opens with My dashboard (balance, posts, friends, credits earned, the invite code, share with a link / without a link,
 #    social links that save, Create a gift, Delete my account); an invite link (/?ref=CODE) is taken once after sign-in;
@@ -163,8 +163,7 @@ async def run(p, phone, lang, first, cust_code):
     ok(lg["green"] and lg["eye"] and not lg["letters"] and lg["chip"], f"{tag}: NVIDIA's logo is the green eye, not letters {lg}")
     sh = await E("""async()=>{document.querySelector('.hfmi.eng171').click();await new Promise(r=>setTimeout(r,400));const b=document.querySelector('#modalRoot .hfmodel[data-v="nvcosmos"]');
       return b&&{img:(b.querySelector('.lg img')||{}).src===LOGO_SRC.nvidia,off:b.classList.contains('off173'),txt:(b.querySelector('.nm small')||{}).textContent||''}}""")
-    # (v179: while NVIDIA keeps Cosmos closed, its row is NVIDIA + Agents — the agents make it with NVIDIA's working AI)
-    R["cosmos_row"] = sh; ok(sh and sh["img"] and not sh["off"] and ("وكلاء مع ذكاء NVIDIA" in sh["txt"] if ar else "agents with NVIDIA's AI" in sh["txt"]), f"{tag}: Cosmos in the list with NVIDIA's logo and its line {sh}")
+    R["cosmos_row"] = sh; ok(sh and sh["img"] and sh["off"] and ("غير متاح لهذا الموقع" in sh["txt"] if ar else "Not open to this site right now" in sh["txt"]), f"{tag}: Cosmos in the list with NVIDIA's logo and its line {sh}")
     # 2. picking an engine → the producer speaks, the row hops
     await E("()=>document.querySelector('#modalRoot .hfmodel[data-v=\"kling30\"]').click()"); await pg.wait_for_timeout(450)
     a = await E("()=>{const on=document.querySelector('.hfstplan.bots li.hbl.on171');return{m:S.hf.vModel,bot:on&&on.dataset.bot,txt:on&&on.textContent,wave:!!document.querySelector('.hfbots .botstrip.wave173'),spk:[...document.querySelectorAll('.hfbots .sbot.spk171')].map(x=>x.dataset.bot),anim:!!(on&&on.classList.contains('anim171'))}}")

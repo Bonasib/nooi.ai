@@ -1,16 +1,15 @@
-# v179 — a tick on every choice, tidy options under the prompt, the agents pop in (glass), nooi keeps your pictures, NVIDIA + Agents.
-# A real nooi server with a stand-in AI engine (pictures and videos) and a stand-in NVIDIA: Cosmos 3 closed to the key, FLUX.1 open,
-# SD 3.5 closed, its text and vision AI answering:
+# v179 + v180 — a tick on every choice, tidy options under the prompt, the agents pop in (glass), nooi keeps your pictures,
+# NVIDIA Cosmos stays NVIDIA. A real nooi server with a stand-in AI engine (pictures and videos) and a stand-in NVIDIA: Cosmos 3
+# closed to the key (then open), FLUX.1 open, SD 3.5 closed, its text and vision AI answering:
 #  · the settings sheets: the chosen resolution, slow motion, scene and engine show the same tick as the format tiles; the others don't
 #  · under the prompt on a phone: the engine and Agents on one line, the options in two even columns (Scene among them), the price
 #    and Create in the last column; nothing wider than the screen
 #  · the agents' panel pops in once (not on every redraw); the plan box is as tall as the line shown
-#  · NVIDIA: the picture list offers only the NVIDIA engines that passed the check (FLUX.1, not SD 3.5); NVIDIA for video is
-#    "NVIDIA + Agents" (chip, list, card), priced first (the agents' price + FLUX.1's first frame), never refused: NVIDIA FLUX.1 makes
-#    the first frame, then an open engine makes the video from it; the card names both
-#  · NVIDIA + Agents with #image1 → the picture is used (first frame or reference), no FLUX.1 picture, not refused
+#  · NVIDIA (v180): the picture list offers only the NVIDIA engines that passed the check (FLUX.1, not SD 3.5); NVIDIA Cosmos keeps
+#    its name and price; closed → refused at once, never made on Kie AI or another engine; open, with the agents on → the agents
+#    plan and ONE job is made by NVIDIA Cosmos (Kie AI never asked)
 #  · nooi Auto with #image1 and @Saba → the first frame is made from Saba's face AND #image1; with #image1 alone → the picture isn't dropped
-#  · the server never sends the agents' work to a closed NVIDIA engine (it moves before anything is sent)
+#  · the server: nooi's own pick never goes to a closed NVIDIA engine; the customer's Cosmos (with the agents too) is never moved
 # Run: python3 tests/v179.py
 import asyncio, hashlib, json, os, shutil, subprocess, sys, tempfile, time, urllib.request, urllib.error
 from playwright.async_api import async_playwright
@@ -86,7 +85,7 @@ def wait_job(jid, tok=None, secs=60):
 
 SET = """(l)=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.lang=l;S.user={name:'T',method:'google'};AU.showAuth=false;S.hf.tab='video';S.hf.bots=true;S.hf.dur=5;S.hf.aspect='16:9';
   S.chars=[{id:'c1',name:'Saba',face:'%s/face.png',facePic:'%s/face.png',look:'a young woman'}];go('home');renderAll();
-  window.SENT=[];const o=API.req;API.req=function(p,opt){if(String(p)==='/v1/jobs'&&opt&&opt.json){const j=opt.json;SENT.push({kind:j.kind,model:j.model,prompt:String(j.prompt||''),inputs:Object.keys(j.inputs||{}),meta:j.meta||{}})}return o.apply(this,arguments)};
+  window.SENT=[];window.PLAN=0;const o=API.req;API.req=function(p,opt){if(String(p)==='/v1/agents/plan')PLAN++;if(String(p)==='/v1/jobs'&&opt&&opt.json){const j=opt.json;SENT.push({kind:j.kind,model:j.model,prompt:String(j.prompt||''),inputs:Object.keys(j.inputs||{}),meta:j.meta||{}})}return o.apply(this,arguments)};
   window.TOASTS=[];const t=window.toast;window.toast=function(m,o2){TOASTS.push(String(m));return t.apply(this,arguments)}}""" % (M, M)
 CLEAR = "()=>{S.draft.refs130=[];REF130.forEach(s=>M[s]=null);M.hfRef=null;M.vStart=null;TOASTS.length=0;SENT.length=0;const q=document.getElementById('hfq');if(q){q.value='';S.hf.prompt=''}renderAll()}"
 ADD = """async()=>{document.querySelector('[data-act=pic156]').click();await new Promise(r=>setTimeout(r,300));return !!document.querySelector('#modalRoot input[data-ref130]')}"""
@@ -113,14 +112,14 @@ async def run(p, phone, lang, full):
     st = await E("()=>({chip:document.querySelector('.eng171').innerText.trim(),pop:!!document.querySelector('.hfbots.pro.in179'),std:(document.querySelector('.hfstd')||{}).innerText||''})")
     await pg.wait_for_timeout(1500); await E("()=>renderAll()"); await pg.wait_for_timeout(300)
     st["pop2"] = await E("()=>!!document.querySelector('.hfbots.pro.in179')"); R["chip"] = st
-    ok(st["chip"] == ("NVIDIA + الوكلاء" if ar else "NVIDIA + Agents") and ("NVIDIA FLUX.1" in st["std"]), f"{tag}: NVIDIA for video is NVIDIA + Agents, the card says what it does {st}")
+    ok(st["chip"] == "NVIDIA Cosmos" and "NVIDIA Cosmos" in st["std"] and "Agents" not in st["chip"], f"{tag}: NVIDIA Cosmos keeps its own name; the agents plan for it {st}")
     ok(st["pop"] and not st["pop2"], f"{tag}: the agents' panel pops in once, not on every redraw {st}")
     fit = await E("()=>{agApply171(false);const ul=document.querySelector('.hfstplan.bots.one171 .hbls'),li=ul&&ul.querySelector('li.on171');if(!li)return null;const cs=getComputedStyle(ul);return{ul:ul.getBoundingClientRect().height,li:li.offsetHeight,pad:parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom),box:cs.boxSizing}}")
     R["fit"] = fit; ok(fit and abs(fit["ul"] - fit["li"] - fit["pad"]) < 3, f"{tag}: the plan box is as tall as the line shown {fit}")
-    # 2. the price: the agents' price + NVIDIA FLUX.1's first frame
+    # 2. the price: NVIDIA Cosmos's own (no picture made on another engine)
     await words(E, "a red car on a coast road at sunset")
-    pr = await E("()=>{const H=S.hf;const a=hfCost();H.vModel='auto';const b=hfCost();H.vModel='nvcosmos';return{nv:a,auto:b,flux:IMG_MODELS.nvflux.cr}}"); R["price"] = pr
-    ok(pr["nv"] == pr["auto"] + pr["flux"], f"{tag}: NVIDIA + Agents costs the agents' price + FLUX.1's first frame {pr}")
+    pr = await E("()=>({nv:hfCost(),cosmos:vcost('nvcosmos',S.hf.dur)})"); R["price"] = pr
+    ok(pr["nv"] == pr["cosmos"], f"{tag}: NVIDIA Cosmos costs its own price {pr}")
     # 3. the options under the prompt
     lay = await E("""()=>{const bar=document.querySelector('.hfbox .hfbar'),chips=[...bar.querySelectorAll('.hfchip')],go=bar.querySelector('.hfgo'),eng=document.querySelector('.eng171'),bots=document.querySelector('.hfmrow .bots'),r=e=>e.getBoundingClientRect();
       return{grid:getComputedStyle(bar).display,scene:!!bar.querySelector('.hfchip.sc179[data-act=hfx-scene]'),sceneTop:!!document.querySelector('.hfmrow [data-act=hfx-scene]'),widths:chips.map(c=>Math.round(r(c).width)),lefts:[...new Set(chips.map(c=>Math.round(r(c).left)))].length,
@@ -148,31 +147,28 @@ async def run(p, phone, lang, full):
     R["ticks"] = tk; R["tile"] = tile; R["imgList"] = [m for m in imgs if m.startswith("nv")]
     ok(tk["res_on"] == "tick" and tk["res_off"] == "none" and tk["ar"] and tk["slow_on"] == "tick" and tk["slow_off"] == "none" and tk["scene_on"] == "tick" and tk["eng_on"] == "tick" and tk["eng_off"] == "none",
        f"{tag}: every chosen option shows a tick, the others don't {tk}")
-    ok(tile and not tile["off"] and ("NVIDIA + الوكلاء" if ar else "NVIDIA + Agents") in tile["t"], f"{tag}: the list offers NVIDIA + Agents (not 'not open') {tile}")
+    ok(tile and tile["off"] and ("غير متاح" if ar else "Not open to this site right now") in tile["t"] and "Agents" not in tile["t"], f"{tag}: the list keeps NVIDIA Cosmos, marked not open while NVIDIA keeps it closed {tile}")
     ok("nvflux" in imgs and "nvsd35" not in imgs, f"{tag}: pictures: only the NVIDIA engines that passed the check {R['imgList']}")
     if full:
-        # 5. Create with NVIDIA + Agents: NVIDIA FLUX.1's first frame, then an open engine makes the video from it — never refused
-        await E(CLEAR); await E("()=>{S.hf.vModel='nvcosmos';renderAll()}"); await words(E, "a red car on a coast road at sunset")
-        k0, f0, n0 = len(stats()["kie"]), len(stats().get("flux") or []), len(stats()["nv"]); v0 = await E("()=>S.jobs.filter(x=>x.kind==='video').length")
+        # 5. NVIDIA Cosmos closed, the agents on → refused at once: nothing sent, nothing made on Kie or anywhere else
+        await E(CLEAR); await E("()=>{S.hf.vModel='nvcosmos';S.hf.bots=true;renderAll()}"); await words(E, "a red car on a coast road at sunset")
+        k0, f0 = len(stats()["kie"]), len(stats().get("flux") or [])
+        await E("()=>hfSend()"); await pg.wait_for_timeout(2500)
+        cl = await E("()=>({sent:SENT.length,toasts:TOASTS.slice()})"); R["closed"] = cl
+        ok(cl["sent"] == 0 and any("NVIDIA Cosmos isn't open" in t for t in cl["toasts"]) and len(stats()["kie"]) == k0 and len(stats().get("flux") or []) == f0,
+           f"{tag}: NVIDIA Cosmos closed → refused at once, never made on Kie AI or another engine {cl}")
+        # 6. NVIDIA open → the agents plan and NVIDIA Cosmos makes it — NVIDIA only
+        nano("open"); api("/v1/admin/nvidia/check", {}); await E("async()=>{API.cfg=await API.req('/v1/config');renderAll()}")
+        await E(CLEAR); await E("()=>{S.hf.vModel='nvcosmos';S.hf.bots=true;PLAN=0;renderAll()}"); await words(E, "a red car on a coast road at sunset")
+        k1, n1 = len(stats()["kie"]), len(stats()["nv"]); v0 = await E("()=>S.jobs.filter(x=>x.kind==='video').length")
         await E("()=>hfSend()"); await done_video(pg, v0)
-        sent = await E("()=>SENT.map(x=>({kind:x.kind,model:x.model,inputs:x.inputs,nv:!!x.meta.nv179,frame:!!x.meta.frame87,nvf:!!x.meta.nvFrame179,start:!!x.meta.start}))"); R["nvSent"] = sent
-        fin = await E("()=>{const j=S.jobs.filter(x=>x.kind==='video').pop();return{status:j.status,model:j.model,names:names175(j),toasts:TOASTS.slice(),chip:document.querySelector('.eng171').innerText.trim()}}"); R["nvFinal"] = fin
-        img = [x for x in sent if x["kind"] == "image"]; vid = [x for x in sent if x["kind"] == "video"]
-        ok(len(img) == 1 and img[0]["model"] == "nvflux" and img[0]["frame"] and len(vid) == 1 and vid[0]["model"] not in ("nvcosmos", "auto") and "vStart" in vid[0]["inputs"] and vid[0]["nvf"] and vid[0]["start"],
-           f"{tag}: NVIDIA + Agents — NVIDIA FLUX.1 makes the first frame, an open engine makes the video from it {sent}")
-        ok(fin["status"] == "complete" and not any("isn't open" in t or "غير متاح" in t for t in fin["toasts"]) and fin["names"] and fin["names"].startswith("NVIDIA FLUX.1 + ") and fin["chip"] == "NVIDIA + Agents",
-           f"{tag}: never refused, made, the card names both engines, NVIDIA + Agents stays picked {fin}")
-        fl = (stats().get("flux") or [])[f0:]; kie = stats()["kie"][k0:]; R["flux"] = [x[:80] for x in fl]; R["kie"] = [{"model": x["model"], "in": sorted((x["input"] or {}).keys())} for x in kie]
-        ok(len(fl) == 1 and len(stats()["nv"]) == n0 and any(x["input"] and any(k in json.dumps(x["input"]) for k in ("first_frame", "image_url", "image_urls", "start_image", "input_image")) for x in kie),
-           f"{tag}: FLUX.1 asked once, Cosmos never, the engine got the first frame {R['flux']} {R['kie']}")
-        # 6. NVIDIA + Agents with #image1: the picture is used — no FLUX.1 picture, not dropped, not refused
-        await E(CLEAR); await E("()=>{S.hf.vModel='nvcosmos';renderAll()}"); await add_pic(pg, E); f1 = len(stats().get("flux") or [])
-        t1 = await E("()=>TOASTS.slice()"); await words(E, "a man walks into #image1"); await E("()=>{SENT.length=0}"); v1 = await E("()=>S.jobs.filter(x=>x.kind==='video').length")
-        await E("()=>hfSend()"); await done_video(pg, v1)
-        s2 = await E("()=>SENT.map(x=>({kind:x.kind,model:x.model,inputs:x.inputs,refs:x.meta.refs130||null,read:x.meta.read178||null}))"); R["nvPic"] = s2
-        v = [x for x in s2 if x["kind"] == "video"]
-        ok(any("NVIDIA + Agents" in t for t in t1) and not [x for x in s2 if x["kind"] == "image"] and len(stats().get("flux") or []) == f1 and v and "vRef1" in v[0]["inputs"] and (v[0]["refs"] or (v[0]["read"] and "vStart" in v[0]["inputs"])),
-           f"{tag}: NVIDIA + Agents with a picture — told how it's used, the picture is used (first frame or reference), no FLUX.1 picture {t1} {s2}")
+        sent = await E("()=>({plan:PLAN,sent:SENT.map(x=>({kind:x.kind,model:x.model,meta:Object.keys(x.meta)}))})"); R["open"] = sent
+        fin = await E("()=>{const j=S.jobs.filter(x=>x.kind==='video').pop();return{status:j.status,model:j.model,names:names175(j)}}"); R["openFinal"] = fin
+        ok(sent["plan"] >= 1 and len(sent["sent"]) == 1 and sent["sent"][0]["model"] == "nvcosmos" and not {"studio", "auto"} & set(sent["sent"][0]["meta"]),
+           f"{tag}: the agents plan, ONE job on NVIDIA Cosmos (picked by the customer, not nooi's own pick) {sent}")
+        ok(fin["status"] == "complete" and fin["model"] == "nvcosmos" and len(stats()["nv"]) > n1 and len(stats()["kie"]) == k1,
+           f"{tag}: made by NVIDIA Cosmos, Kie AI never asked {fin} kie {len(stats()['kie']) - k1}")
+        nano("closed"); api("/v1/admin/nvidia/check", {}); await E("async()=>{API.cfg=await API.req('/v1/config')}")
         # 7. nooi Auto with #image1 and @Saba → the first frame from Saba's face AND #image1
         await E(CLEAR); await E("()=>{S.hf.vModel='auto';renderAll()}"); await add_pic(pg, E); await words(E, "walking through this field #image1 @Saba"); await E("()=>{SENT.length=0}")
         v2 = await E("()=>S.jobs.filter(x=>x.kind==='video').length"); await E("()=>hfSend()"); await done_video(pg, v2)
@@ -185,15 +181,21 @@ async def run(p, phone, lang, full):
         s4 = await E("()=>SENT.filter(x=>x.kind==='video').map(x=>({model:x.model,inputs:x.inputs,refs:x.meta.refs130||null,read:x.meta.read178||null}))"); R["autoPic"] = s4
         ok(s4 and "vRef1" in s4[0]["inputs"] and ((s4[0]["model"] in ("seedance20", "seedance25", "seedance", "kling40") and s4[0]["refs"]) or (s4[0]["read"] and "vStart" in s4[0]["inputs"] and not s4[0]["refs"])),
            f"{tag}: nooi Auto keeps the picture — as the first frame read into the words, or as a reference {s4}")
+    hint = await E("()=>{const k=NV176.r;NV176.r={engines:[{task:'video',state:'closed',label:'NVIDIA Cosmos (video)',url:'u',status:404}]};const a=nvCheckHTML176();NV176.r={engines:[{task:'video',state:'open',label:'x',url:'u'}]};const b=nvCheckHTML176();NV176.r=k;return{closed:a.includes('nvhint180')&&a.includes('Public API Endpoints'),open:b.includes('nvhint180')}}")
+    R["hint"] = hint; ok(hint["closed"] and not hint["open"], f"{tag}: Admin's NVIDIA check says what to do on NVIDIA's side when Cosmos is closed (only then) {hint}")
     w = await E("()=>document.documentElement.scrollWidth<=innerWidth+1"); ok(w, f"{tag}: nothing wider than the screen")
     out[tag] = R; ok(not errs, f"{tag}: page errors {errs}"); await br.close()
 
 def server_part():
-    # the agents' work on a closed NVIDIA engine moves before anything is sent: made, Cosmos never asked
+    # nooi's own pick (nooi Auto / the agents choosing) on a closed NVIDIA engine moves before anything is sent
     n0, k0 = len(stats()["nv"]), len(stats()["kie"])
     c, j = api("/v1/jobs", {"kind": "video", "model": "nvcosmos", "prompt": "a robot arm stacks blocks", "dur": 5, "aspect": "16:9", "meta": {"studio": 2}}, tok=TOKEN)
     j = wait_job(j.get("id", "x"), TOKEN); out["swap"] = {"code": c, "status": j.get("status"), "nv": len(stats()["nv"]) - n0, "kie": len(stats()["kie"]) - k0}
-    ok(c == 200 and j.get("status") == "done" and len(stats()["nv"]) == n0 and len(stats()["kie"]) > k0, f"the agents' job on a closed NVIDIA engine moves before it's sent {out['swap']}")
+    ok(c == 200 and j.get("status") == "done" and len(stats()["nv"]) == n0 and len(stats()["kie"]) > k0, f"nooi's own pick on a closed NVIDIA engine moves before it's sent {out['swap']}")
+    # the customer's NVIDIA Cosmos with the agents' plan (meta.agents) is the customer's pick: refused while closed, never moved
+    k1 = len(stats()["kie"])
+    c, j = api("/v1/jobs", {"kind": "video", "model": "nvcosmos", "prompt": "a robot arm stacks blocks", "dur": 5, "aspect": "16:9", "meta": {"agents": ["director", "cine"], "skills": []}}, tok=TOKEN)
+    ok(c == 409 and len(stats()["kie"]) == k1, f"the customer's NVIDIA Cosmos with the agents is refused while closed, never moved to Kie AI {c} {j}")
     # picked by hand it is still refused at once (nothing charged)
     c, j = api("/v1/jobs", {"kind": "video", "model": "nvcosmos", "prompt": "a robot arm stacks blocks", "dur": 5, "aspect": "16:9"}, tok=TOKEN)
     ok(c == 409, f"a hand-picked closed NVIDIA engine sent straight to the server is refused, nothing charged {c} {j}")
