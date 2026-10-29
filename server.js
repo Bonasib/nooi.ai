@@ -84,7 +84,7 @@ import { registerInvoices } from "./lib/invoices.js";
 import { registerExplore } from "./lib/explore.js";
 import { registerRefer173 } from "./lib/refer173.js";   // v173: invite friends (the member dashboard)
 import { registerLaunch182, launchMode182, gate182 } from "./lib/launch182.js";   // v182: Coming soon — the team only
-import { mmOn183, mmState183 } from "./providers/minimax183.js";   // v183: MiniMax voices, pictures and music
+import { mmOn183, mmState183, mmRegion183 } from "./providers/minimax183.js";   // v183: MiniMax voices, pictures and music
 import { sendEmail, emailConfigured } from "./lib/email.js";
 import { renderEmail } from "./public/email-templates.js";
 import { uiLang, uiDict, uiTranslate, rateOk } from "./lib/uit.js";
@@ -224,7 +224,7 @@ app.post("/v1/ui-t/:lang", wrap(async (req, res) => {
 // v176: Admin → AI providers → NVIDIA AI → Check NVIDIA engines (an empty request to each engine: nothing is made or spent)
 app.post("/v1/admin/nvidia/check", requireUser, requireAdmin("providers.manage"), wrap(async (req, res) => res.json(await nvCheck176())));
 // v183: MiniMax — what it is used for (voices · pictures · music, each on unless switched off) and the free check of the key
-app.get("/v1/admin/minimax183", requireUser, requireAdmin("providers.manage"), (req, res) => { const m = mmState183(); res.json({ voice: m.voice !== false, image: m.image !== false, music: m.music !== false, voices: (m.voices || []).length, checked: m.checked || 0, status: (platform().status || {}).minimax || null }); });
+app.get("/v1/admin/minimax183", requireUser, requireAdmin("providers.manage"), (req, res) => { const m = mmState183(); res.json({ keySet: configured("minimax"), region: mmRegion183(), voice: m.voice !== false, image: m.image !== false, music: m.music !== false, voices: (m.voices || []).length, checked: m.checked || 0, status: (platform().status || {}).minimax || null }); });
 app.put("/v1/admin/minimax183", requireUser, requireAdmin("providers.manage"), (req, res) => { const m = mmState183(), b = req.body || {}; for (const k of ["voice", "image", "music"]) if (typeof b[k] === "boolean") m[k] = b[k]; save();
   audit(req, "MiniMax used for: " + ["voice", "image", "music"].filter((k) => m[k] !== false).join(", ")); res.json({ ok: true, voice: m.voice !== false, image: m.image !== false, music: m.music !== false }); });
 app.post("/v1/admin/minimax183/check", requireUser, requireAdmin("providers.manage"), wrap(async (req, res) => { const { testProvider } = await import("./lib/health.js"); const st = await testProvider("minimax"); res.json({ ...st, voices: (mmState183().voices || []).length }); }));

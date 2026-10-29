@@ -14,6 +14,7 @@ const mmCfg = () => ({ ...MM_DEFAULTS183, ...Object.fromEntries(Object.entries(c
 export const mmState183 = () => { const st = S(); return (st.minimax183 = st.minimax183 || {}); };
 // is MiniMax used for voices / pictures / music? (connected, and not switched off by the owner)
 export const mmOn183 = (what) => configured("minimax") && mmState183()[what] !== false;
+export const mmRegion183 = () => (/minimaxi\.com/.test(String(cfg("minimax").baseUrl || "")) ? "cn" : "intl");   // (v183b: Admin's region choice)
 
 function mmErr(code, msg) {
   const m = code === 1008 ? "MiniMax: insufficient balance — top up the MiniMax account (pay as you go)"

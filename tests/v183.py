@@ -8,8 +8,9 @@
 #    here, about 1 credit; pictures off → refused at once, nothing charged
 #  · music: MiniMax music-2.6, instrumental without words; the song is kept here
 #  · the MiniMax balance used up (1008) → the job fails, the credits come back, staff see MiniMax out of credits
-#  · the page (phone in English, computer in Arabic): the MiniMax card with its switches and "Check the key (free)" → "works · 5
-#    voices"; MiniMax Image-01 in the picture engines only while Pictures is on; nothing wider than the screen
+#  · the page (phone in English, computer in Arabic): the MiniMax box right under Admin's tabs (v183b — not a card far down the
+#    page): a wrong key typed there → refused, the right one → "works · 5 voices", the key never left on the page; the switches,
+#    the region and the models; MiniMax Image-01 in the picture engines only while Pictures is on; nothing wider than the screen
 # Run: python3 tests/v183.py
 import asyncio, hashlib, json, os, shutil, subprocess, sys, tempfile, time, urllib.request, urllib.error
 from playwright.async_api import async_playwright
@@ -140,15 +141,25 @@ async def page_part(p, phone, lang):
     try:
         await pg.goto(B + "/"); await pg.wait_for_function("typeof API!=='undefined'&&API.mode==='server'&&API.cfg", timeout=20000)
         await E(f"()=>{{S.lang='{lang}';document.documentElement.dir='{'rtl' if ar else 'ltr'}';S.user=S.user||{{name:'Owner',method:'email',contact:'owner@nooi.ai'}};persist();S.admTab='models';go('admin')}}")
-        await pg.wait_for_function("!!document.querySelector('.mm183 .trows')", timeout=20000)
-        await E("()=>document.querySelector('.mm183').scrollIntoView({block:'center'})")
-        await pg.click('[data-act="mm183-check"]')
-        await pg.wait_for_function("(document.getElementById('mm183st')||{}).textContent&&/5/.test(document.getElementById('mm183st').textContent)", timeout=20000)
-        v = await E("""()=>{const c=document.querySelector('.mm183').closest('.provc'),W=innerWidth;return {text:c.innerText,sw:[...c.querySelectorAll('[data-act="mm183-use"]')].map(b=>b.dataset.k+':'+b.getAttribute('aria-checked')),
-          fields:[...c.querySelectorAll('[data-pv="minimax"]')].map(i=>i.dataset.fl),wide:[...c.querySelectorAll('*')].filter(e=>{const b=e.getBoundingClientRect();return b.width&&(b.right>W+1||b.left<-1)}).length,st:document.getElementById('mm183st').textContent}}""")
-        out[tag + "-card"] = {k: v[k] for k in ("sw", "fields", "wide", "st")}
-        ok(v["sw"] == ["voice:true", "image:true", "music:true"] and v["fields"] == ["apiKey", "baseUrl", "speechModel", "imageModel", "musicModel"], f"{tag}: the MiniMax card: {out[tag + '-card']}")
-        ok(("المفتاح يعمل" in v["st"] if ar else "Key works" in v["st"]) and not v["wide"], f"{tag}: the check should say the key works: {v['st']}")
+        await pg.wait_for_function("!!document.getElementById('mm183p')&&!!document.getElementById('mm183key')", timeout=20000)
+        # the MiniMax box is the first thing under Admin's tabs (not the 26th card down the page)
+        pos = await E("()=>{const m=document.getElementById('main'),b=document.getElementById('mm183p').getBoundingClientRect(),t=document.querySelector('.admtabs').getBoundingClientRect();return {top:Math.round(b.top+m.scrollTop),gap:Math.round(b.top-t.bottom),inGrid:!!document.querySelector('.provc [data-pv=\"minimax\"]')}}")
+        out[tag + "-pos"] = pos; ok(pos["gap"] >= 0 and pos["gap"] < 60 and not pos["inGrid"], f"{tag}: the MiniMax box should sit right under the tabs: {pos}")
+        # the key typed in the box: a wrong one is refused, the right one works with MiniMax's voices
+        async def save_key(k):
+            await pg.fill("#mm183key", k); await pg.click('[data-act="mm183-save"]')
+            await pg.wait_for_function("!MM183.checking&&!!document.getElementById('mm183st')&&!/…/.test(document.getElementById('mm183st').textContent)", timeout=20000)
+            return await E("()=>document.getElementById('mm183st').textContent")
+        st_bad = await save_key("mm-wrong-" + lang)
+        ok(("رُفض" in st_bad or "رفضت" in st_bad) if ar else "refused" in st_bad, f"{tag}: a wrong key should be refused: {st_bad}")
+        st_ok = await save_key("mm-good-key")
+        ok(("المفتاح يعمل" in st_ok if ar else "Key works" in st_ok) and "5" in st_ok, f"{tag}: the right key should work with 5 voices: {st_ok}")
+        ok(await E("()=>document.getElementById('mm183key').value===''&&document.getElementById('mm183key').type==='password'"), f"{tag}: the key must not stay on the page")
+        v = await E("""()=>{const c=document.getElementById('mm183p'),W=innerWidth;return {text:c.innerText,sw:[...c.querySelectorAll('[data-act="mm183-use"]')].map(b=>b.dataset.k+':'+b.getAttribute('aria-checked')),
+          region:[...c.querySelectorAll('[data-act="mm183-region"]')].map(b=>b.dataset.v+':'+b.getAttribute('aria-pressed')),models:[...c.querySelectorAll('[data-mm183]')].map(i=>i.dataset.mm183),
+          wide:[...c.querySelectorAll('*')].filter(e=>{const b=e.getBoundingClientRect();return b.width&&(b.right>W+1||b.left<-1)}).length,st:document.getElementById('mm183st').textContent}}""")
+        out[tag + "-card"] = {k: v[k] for k in ("sw", "region", "models", "wide", "st")}
+        ok(v["sw"] == ["voice:true", "image:true", "music:true"] and v["region"] == ["intl:true", "cn:false"] and v["models"] == ["speechModel", "imageModel", "musicModel"] and not v["wide"], f"{tag}: the MiniMax box: {out[tag + '-card']}")
         await pg.screenshot(path=D + f"/{tag}-card.png")
         # MiniMax Image-01 among the picture engines; switched off → gone
         has = lambda: E("()=>{S.hf.tab='image';hfModelSheet();const t=(document.getElementById('modalRoot').innerText||'');document.getElementById('modalRoot').innerHTML='';return t.includes('MiniMax Image-01')}")
