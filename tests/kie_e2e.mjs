@@ -59,7 +59,8 @@ try {
     ok(!!sent, name + ": Kie received model " + want);
     ok(j.status === "done" && /\/media\//.test(j.url || ""), name + ": finished and saved to /media (" + j.status + (j.error ? " · " + j.error : "") + ")"); });
   const mj = seen.find((s) => s.path === "/api/v1/mj/generate"); ok(mj && mj.body.taskType === "mj_txt2img" && mj.body.aspectRatio === "16:9", "Midjourney request shape");
-  const av = seen.filter((s) => s.body && s.body.model === "kling/ai-avatar-standard").find((s) => s.body.input.prompt === ""), tts = seen.filter((s) => s.body && s.body.model === "elevenlabs/text-to-speech-multilingual-v2" && s.body.input.text === "Welcome to our store");
+  // (v165: the avatar gets the living-face direction; the typed script goes in as the voice, never as the motion prompt)
+  const av = seen.filter((s) => s.body && s.body.model === "kling/ai-avatar-standard" && /out\.mp3$/.test(s.body.input.audio_url || "")).find((s) => !/Welcome to our store/.test(s.body.input.prompt || "")), tts = seen.filter((s) => s.body && ((s.body.model === "elevenlabs/text-to-speech-multilingual-v2" && s.body.input.text === "Welcome to our store") || (s.body.model === "elevenlabs/text-to-dialogue-v3" && (s.body.input.dialogue || []).some((d) => /Welcome to our store/.test(d.text)))));   // (v165: the acted voice, Eleven v3)
   ok(tts.length === 1 && av && /out\.mp3$/.test(av.body.input.audio_url), "lip-sync from a script: ElevenLabs voice first, then the avatar uses that audio");
   const fb = jobs[made.findIndex((m) => /falls back/.test(m[0]))] || {}; ok(fb.status === "done" && seen.some((s) => s.body?.model === "nano-banana-2" && /FAILME/.test(s.body.input.prompt)), "fallback: the failed Nano Banana job finished on Seedream instead of refunding");
   const dt = await api("/v1/jobs/" + made[0][1]); ok("via" in dt.d, "owners and admins see which provider ran a job (via: " + dt.d.via + ")");
@@ -82,7 +83,7 @@ try {
   const files = ["index.html", "email-templates.js", "local-ai-worker.js", ...fsm.readdirSync(pub + "/i18n").map((f) => "i18n/" + f)];
   // (v128: in the translations the name is looked for as a word — Polish words end in "-kie": wszystkie, krótkie)
   const word = (t) => /\bkie\b|kie\.ai/i.test(String(t));
-  const bad = files.filter((f) => (/^i18n\//.test(f) ? word : leak)(fsm.readFileSync(pub + "/" + f, "utf8").replace(/[A-Za-z0-9+/=]{200,}/g, "").replace(/\bkies\b/g, "")));
+  const bad = files.filter((f) => (/^i18n\//.test(f) ? word : leak)(fsm.readFileSync(pub + "/" + f, "utf8").replace(/[A-Za-z0-9+/=]{200,}/g, "").replace(/\bkies\b/g, "").replace(/Luckiest Guy/g, "")));   // (v167: the "Luckiest Guy" font, v141)
   ok(!bad.length, "no provider name in any file the browser downloads (" + bad.join(", ") + ")");
   // showcase: the admin button makes nooi's marketing media with Kie AI and posts each one to Explore with its prompt
   const sc0 = await api("/v1/showcase"); ok(sc0.status === 200 && sc0.d.items.length >= 20 && ["motion", "anime", "vfx", "pixel"].every((c) => sc0.d.items.some((x) => x.cat === c && x.kind === "video")) && sc0.d.items.some((x) => x.kind === "image"), "showcase: motion, anime, VFX, pixel-art videos and pictures, each with a prompt");

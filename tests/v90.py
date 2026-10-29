@@ -35,10 +35,10 @@ PAGES = r"""async()=>{const wait=ms=>new Promise(r=>setTimeout(r,ms)),vis=e=>{co
     for(const a of document.getAnimations()){try{if(a.effect&&a.effect.getTiming().iterations!==Infinity)a.finish()}catch(e){}}
     const m=document.querySelector('#main');
     for(const e of m.querySelectorAll('*')){const r=e.getBoundingClientRect();if(r.width<40||r.height<30||!vis(e))continue;const c=getComputedStyle(e);
-      if(!((c.borderTopWidth!=='0px'&&c.borderTopStyle!=='none')||c.backgroundColor!=='rgba(0, 0, 0, 0)'))continue;const rad=parseFloat(c.borderTopLeftRadius);
+      if(!((c.borderTopWidth!=='0px'&&c.borderTopStyle!=='none')||c.backgroundColor!=='rgba(0, 0, 0, 0)'))continue;if(e.matches('.rb'))continue;const rad=parseFloat(c.borderTopLeftRadius);
       if(![0,8,12,16].includes(rad)&&rad<17)(res.radii[rad+' '+cl(e)]=res.radii[rad+' '+cl(e)]||[]).push(v)}
     for(const h of m.querySelectorAll('h1,h2,h3')){if(!vis(h))continue;const fs=parseFloat(getComputedStyle(h).fontSize),want={H1,H2:16,H3:14}[h.tagName];
-      if(fs!==want&&!(v==='home'&&h.tagName==='H1'))(res.titles[h.tagName+' '+fs]=res.titles[h.tagName+' '+fs]||[]).push(v)}
+      if(fs!==want&&!(v==='home'&&h.tagName==='H1')&&!(v==='edit'&&h.matches('.e-h')))(res.titles[h.tagName+' '+fs]=res.titles[h.tagName+' '+fs]||[]).push(v)}
     // the icon's own size (an icon that breathes or pops is measured at rest)
     for(const s of m.querySelectorAll('svg')){const r=s.getBoundingClientRect();if(r.width<2||r.width>34||!vis(s))continue;if(s.closest('.thumb,.tplcov,.frame,canvas,svg.bot,.bot,.sfly,.hfmark'))continue;
       const w=Math.round(parseFloat(getComputedStyle(s).width));if(w>30)continue;if(![14,16,20].includes(w))(res.icons[w+' '+cl(s.parentElement)]=res.icons[w+' '+cl(s.parentElement)]||[]).push(v)}

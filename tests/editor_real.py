@@ -58,7 +58,14 @@ async def run(p, w, mob, fails, out):
         for k in range(1, 9): await pg.mouse.move(x0 + (x1 - x0) * k / 8, y); await pg.wait_for_timeout(20)
         mid = (await snap())["t"]; await pg.mouse.up()
     check("drag on the ruler scrubs", mid > 0.5, mid)
-    await tap(".blk.v"); s = await snap(); check("tap a clip selects it", bool(s["sel"]))
+    if mob:   # (v171: on a phone a tap on a clip does nothing — a long press picks it and opens its settings, where its tools are)
+        await E(SCROLL, ".blk.v"); await pg.wait_for_timeout(250); r = await E(RECT, ".blk.v"); wr = await E(WRAP); cx, cy = min(r[0] + r[2] * 0.5, wr[1] - 25), r[1] + r[3] / 2
+        cdp2 = await ctx.new_cdp_session(pg); await E("()=>{S.ed.sel=null}")
+        await cdp2.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": cx, "y": cy}]}); await pg.wait_for_timeout(650)
+        await cdp2.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []}); await pg.wait_for_timeout(400)
+        s = await snap(); tab = await E("()=>S.ed.tab"); check("long press on a clip picks it and opens its settings", bool(s["sel"]) and tab == "clip", [s["sel"], tab])
+    else:
+        await tap(".blk.v"); s = await snap(); check("tap a clip selects it", bool(s["sel"]))
     await tap("[data-act=ed-play]"); await pg.wait_for_timeout(900); s1 = await snap(); check("play", s1["playing"] and s1["t"] > s["t"], [s["t"], s1["t"]])
     await tap("[data-act=ed-play]"); check("pause", not (await snap())["playing"])
     await E("()=>{ED.t=2;S.ed.sel=S.ed.clips[0].id;renderView()}")

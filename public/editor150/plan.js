@@ -100,7 +100,7 @@ export function plan150(b) {
   const CALL = /call|talk|speak|chat|tutor|conversation|مكالم|محادث|تحدث|تحدّث|مدرس|معلم/i;
   if (has(CALL)) { const i = sIdx(CALL); mid.push({ i, k: 3, s: { sc: "call", t1: ar ? "مرحباً! كيف كان يومك؟" : "Hi! How was your day?", t2: ar ? "رائع، شكراً!" : "Great, thanks!", ic: "mood" } }); used.add(i); }
   // a list: after a colon, a line with two commas, or (v162) "A, B and C" — a line not shown already, one that doesn't start with a
-  // number first ("8 agents plan, film and edit" is a number); the last item loses its tail ("Seedance in one studio" → "Seedance")
+  // number first ("9 agents plan, film and edit" is a number); the last item loses its tail ("Seedance in one studio" → "Seedance")
   const lm = /[:：]\s*([^.!?؟\n]+)/.exec(msg), isList = (x) => (x.match(/[,،]/g) || []).length >= 2 || ((x.match(/[,،]/g) || []).length >= 1 && /\s(and|و)\s/i.test(x)) || (x.match(/\s(and|و)\s/gi) || []).length >= 2;   // (v162: "A و B و C")
   const lsI = lm ? sIdx(new RegExp(lm[1].slice(0, 12).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))) : [...sents.keys()].filter((i) => i > 0 && !used.has(i) && isList(sents[i])).sort((x, y) => /^\d/.test(sents[x]) - /^\d/.test(sents[y]))[0] ?? sents.findIndex((x) => (x.match(/[,،]/g) || []).length >= 2);
   const lsrc = lm ? lm[1] : lsI >= 0 ? sents[lsI] : "";

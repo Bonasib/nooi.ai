@@ -35,7 +35,7 @@ async def run(b, W, H, lang, tag):
     a = await E("""()=>{go('account');renderAll();const V=document.querySelector('#main>.view');const bar=[...V.querySelectorAll('.secbar122 button')].map(b=>b.textContent.trim()),tabs=[...V.querySelectorAll('.hubtabs [data-go]')].map(b=>b.textContent.trim());
       return {bar,tabs,same:bar.filter(x=>tabs.includes(x))}}""")
     out[tag]["account"] = a
-    ok(len(a["bar"]) == 5 and not a["same"], f"{tag}: Account's parts have no name of a page beside them {a}")
+    ok(len(a["bar"]) == 6 and not a["same"], f"{tag}: Account's parts have no name of a page beside them {a}")
     # This device: the chip's name
     d = await E("""()=>{const g=s=>gpuName123(s);return {m1:g('ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)'),rtx:g('ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)'),
       intel:g('ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00005917) Direct3D11 vs_5_0 ps_5_0, D3D11)'),adreno:g('ANGLE (Qualcomm, Adreno (TM) 740, OpenGL ES 3.2)'),soft:g('ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)'),

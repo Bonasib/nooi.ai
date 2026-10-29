@@ -42,15 +42,15 @@ async def run(b, W, H, lang, tag):
         order:[ix('[data-act="signout"]'),ix('[data-set="currency"]'),ix('#coupon'),ix('#brandkit'),ix('[data-act="view-landing"]'),ix('[data-act="ui-set"]'),ix('[data-set="routing.mode"]'),ix('[data-act="lai-toggle"]'),ix('[data-act="export-json"]'),ix('#devpanel')],
         panels:V.querySelectorAll('.panel.set').length}}""")
     out[tag]["account"] = a
-    want = {"en": ["Plan", "Top-up & usage", "Brand", "Preferences", "Sign-in & data"], "ar": ["الباقة", "الشحن والاستهلاك", "العلامة", "التفضيلات", "الدخول والبيانات"]}[lang]
+    want = {"en": ["My dashboard", "Plan", "Top-up & usage", "Brand", "Preferences", "Sign-in & data"], "ar": ["لوحتي", "الباقة", "الشحن والاستهلاك", "العلامة", "التفضيلات", "الدخول والبيانات"]}[lang]   # (v173: My dashboard first)
     ok(a["bar"] == want and a["afterTitle"], f"{tag}: Account & plan has the bar of its parts under the title {a['bar']}")
     ok(all(x >= 0 for x in a["order"]) and a["order"] == sorted(a["order"]) and a["panels"] >= 10, f"{tag}: Account & plan in order — Plan · Top-up & usage · Brand · Preferences · Sign-in & data, nothing lost {a['order']} {a['panels']}")
     # a tap goes to the part and marks it; the bar stays in view
-    await pg.click('#main .secbar122 [data-sec122="3"]'); await pg.wait_for_timeout(1200)
+    await pg.click('#main .secbar122 [data-sec122="4"]'); await pg.wait_for_timeout(1200)
     g = await E("""()=>{const p=document.querySelector('#main [data-act="ui-set"]').closest('.panel'),bar=document.querySelector('#main .secbar122'),r=p.getBoundingClientRect(),br=bar.getBoundingClientRect();
       return {top:Math.round(r.top),barTop:Math.round(br.top),barBottom:Math.round(br.bottom),cur:(bar.querySelector('[aria-current="true"]')||{}).dataset?.sec122,wide:document.documentElement.scrollWidth-innerWidth}}""")
     out[tag]["go"] = g
-    ok(g["top"] >= g["barBottom"] - 2 and g["top"] < 260 and g["cur"] == "3" and 40 <= g["barTop"] <= 90 and g["wide"] <= 1, f"{tag}: a tap goes to Preferences, marks it, and the bar stays in view under the top bar {g}")
+    ok(g["top"] >= g["barBottom"] - 2 and g["top"] < 260 and g["cur"] == "4" and 40 <= g["barTop"] <= 90 and g["wide"] <= 1, f"{tag}: a tap goes to Preferences, marks it, and the bar stays in view under the top bar {g}")
     # the moved blocks still work: the currency switch
     cur0 = await E("()=>S.currency||S.cur||null")
     await E(SC + "sc().scrollTop=0"); await pg.wait_for_timeout(200)
