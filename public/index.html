@@ -20892,22 +20892,37 @@ document.addEventListener("touchmove",e=>{if(!TS174.on)return;const t=$("#toast"
 document.addEventListener("touchend",()=>{if(!TS174.on)return;TS174.on=false;const t=$("#toast");if(!t)return;t.classList.remove("drag174");t.style.translate="";
   if(TS174.dy<-28){clearTimeout(toastT);t.classList.remove("show","open81");toastAct=null}});
 
-/* ================= v175: a card names the engine that really made it ================= */
+/* ================= v175: a card names every engine that really made it ================= */
 // When the engine planned for a shot (by the agents or nooi Auto) couldn't take it — NVIDIA Cosmos refused it — the server makes
-// it on the site's other engine, and the card still said "NVIDIA Cosmos" for a video Kling 3.0 made. The server now says which
-// engine made it (madeWith): the card's name and logo, the open view and "Make it again" use that one, and the open view says why.
-// (an engine the customer picked by hand is never swapped — v173)
-const made175=(j,id)=>{if(!j||!id)return 0;const T=j.kind==="image"?IMG_MODELS:MODELS,m=T[id]?id:"auto";if(j.model===m||!T[m])return 0;j.asked175=j.asked175||j.model;j.model=m;return 1};
+// it on the site's other engine, and the card still said "NVIDIA Cosmos" for a video Kling 3.0 made; and a film the agents put on
+// several engines (one per shot) showed only the first shot's. The server now lists the engines that made it (madeBy): the card
+// names them all ("Kling 3.0 + Seedance"; before the server answers, the agents' plan), the open view says which and why, and a
+// single engine that took over becomes the card's engine (its logo, "Make it again"). (An engine picked by hand never moves — v173.)
+const made175=(j,l)=>{if(!j||!Array.isArray(l)||!l.length)return 0;const T=j.kind==="image"?IMG_MODELS:MODELS,ids=l.map(m=>T[m]?m:"auto"),m0=ids.find(m=>m!=="auto")||"auto";
+  if(JSON.stringify(j.made175||null)===JSON.stringify(ids)&&j.model===m0)return 0;j.asked175=j.asked175||j.model;j.made175=ids;if(T[m0])j.model=m0;return 1};
 API.req=(o=>async function(p){const r=await o.apply(this,arguments);try{const s=String(p);let ch=0;
-  if(/^\/v1\/jobs\/[A-Za-z0-9_-]+$/.test(s)&&r&&r.id&&r.madeWith)ch=made175(S.jobs.find(x=>x.remote===r.id),r.madeWith);
-  else if(s==="/v1/jobs"&&r&&Array.isArray(r.jobs))r.jobs.forEach(x=>{if(x&&x.madeWith)ch|=made175(S.jobs.find(y=>y.remote===x.id),x.madeWith)});
+  if(/^\/v1\/jobs\/[A-Za-z0-9_-]+$/.test(s)&&r&&r.id&&r.madeBy)ch=made175(S.jobs.find(x=>x.remote===r.id),r.madeBy);
+  else if(s==="/v1/jobs"&&r&&Array.isArray(r.jobs))r.jobs.forEach(x=>{if(x&&x.madeBy)ch|=made175(S.jobs.find(y=>y.remote===x.id),x.madeBy)});
   if(ch){persist();if(["video","home","image","library"].includes(S.view))setTimeout(renderView,0)}}catch(e){}return r})(API.req);
-function note175(g){const T=g.kind==="image"?IMG_MODELS:MODELS,a=(T[g.asked175]||{}).name,m=(T[g.model]||{}).name;if(!a||!m)return"";
+// the engines a card names: the server's list, else the agents' plan for the shots; "auto" (an engine nooi can't name) → "another engine"
+function eng175(j){const T=j&&j.kind==="image"?IMG_MODELS:MODELS;if(!j)return[];const l=j.made175||[...new Set(((j.meta&&j.meta.partModels)||[]).filter(m=>T[m]))];
+  return[...new Set(l)].map(m=>m==="auto"||!T[m]?L("another engine","محرك آخر"):T[m].name)}
+function names175(j){const n=eng175(j);if(n.length<2)return null;return n.length>3?n.slice(0,3).join(" + ")+" +"+(n.length-3):n.join(" + ")}
+function note175(g){if(!g||!g.made175)return"";const T=g.kind==="image"?IMG_MODELS:MODELS,made=eng175(g),nm=m=>(T[m]||{}).name;
+  const plan=[...new Set([g.asked175,...((g.meta&&g.meta.partModels)||[])])].filter(m=>m&&m!=="auto"&&T[m]),miss=plan.filter(m=>!g.made175.includes(m)).map(nm),and=x=>x.join(L(" and "," و"));
+  if(made.length>1)return L("Made with "+made.join(" + ")+" — each shot on the engine that made it.","صُنع بـ "+made.join(" + ")+" — كل لقطة على المحرك الذي صنعها.")
+    +(miss.length?" "+L(and(miss)+", planned for some shots, couldn't take them — they were made on the other engines at the price you were shown.","لم يستطع "+and(miss)+"، المخطط لبعض اللقطات، أخذها — فصُنعت على المحركات الأخرى بالسعر الذي ظهر لك."):"");
+  const a=nm(g.asked175),m=made[0];if(!a||!m||g.asked175===g.model)return"";
   return g.model==="auto"?L(a+", the engine planned for this, couldn't take it — nooi made it on another engine at the price you were shown.",a+"، المحرك المخطط له، لم يستطع أخذه — صنعه nooi على محرك آخر بالسعر الذي ظهر لك.")
     :L("Made with "+m+" — "+a+", the engine planned for this, couldn't take it, so it was made on "+m+" at the price you were shown.","صُنع بـ "+m+" — لم يستطع "+a+"، المحرك المخطط له، أخذه، فصُنع على "+m+" بالسعر الذي ظهر لك.")}
-previewCol=(o=>function(g,prev){const h=o(g,prev);if(!g||!g.asked175||g.status!=="complete")return h;const t=note175(g);
+previewCol=(o=>function(g,prev){const h=o(g,prev);if(!g||!g.made175||g.status!=="complete")return h;const t=note175(g);
   return t?h.replace('<div class="pipe"','<p class="small mute note175" dir="auto">'+ic("info","width:14px;height:14px;vertical-align:-2px")+" "+esc(t)+'</p><div class="pipe"'):h})(previewCol);
-hfrCard=(o=>function(j){const h=o(j);if(!j||!j.asked175||j.status!=="complete")return h;const t=note175(j);return t?h.replace(/(<small)(>)/,'$1 title="'+esc(t)+'"$2'):h})(hfrCard);
+// the cards: every engine named (the Video page's cards, the Home results, any job picture with an engine tag)
+card98=(o=>function(j,i){let h=o(j,i);const n=names175(j);return n?h.replace(/(<span class="tag98">)[^<]*(<\/span>)/,"$1"+esc(n)+"$2"):h})(card98);
+hfrCard=(o=>function(j){let h=o(j);if(!j)return h;const n=names175(j),t=j.status==="complete"&&note175(j);
+  if(n)h=h.replace(/(<small[^>]*>[^<]*? · )[^<]*(<\/small>)/,"$1"+esc(n)+"$2");return t?h.replace(/(<small)(>)/,'$1 title="'+esc(t)+'"$2'):h})(hfrCard);
+thumb=(o=>function(ref,op){if(op&&op.tag&&/^j:/.test(String(ref))){const n=names175(S.jobs.find(x=>x.id===String(ref).slice(2)));if(n)op=Object.assign({},op,{tag:n})}return o.call(this,ref,op)})(thumb);
+(()=>{const st=document.createElement("style");st.textContent=`.tk98 .tag98,.thumb .m{max-width:calc(100% - 16px);white-space:normal;overflow-wrap:anywhere;line-height:1.3}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;
