@@ -379,7 +379,7 @@ app.put("/v1/tokens/:id", requireUser, (req, res) => { if (req.user.viaToken) re
 app.delete("/v1/tokens/:id", requireUser, (req, res) => { revokeToken(req.user.uid, req.params.id); res.json({ ok: true }); });
 
 // ---- Assets & jobs list (library sync, Blender/Unity)
-app.get("/v1/jobs", requireUser, (req, res) => res.json({ jobs: Object.values(user(req.user.uid).jobs).sort((a, b) => b.created - a.created).slice(0, 100).map(publicJob) }));
+app.get("/v1/jobs", requireUser, (req, res) => res.json({ jobs: Object.values(user(req.user.uid).jobs).sort((a, b) => b.created - a.created).slice(0, 100).map((j) => publicJob(j, isStaff(req.user))) }));   // (v175: map(publicJob) passed the index as "staff" — every job after the first showed the engine's details to customers)
 app.get("/v1/assets", requireUser, (req, res) => { const k = req.query.kind; res.json({ assets: Object.values(user(req.user.uid).jobs).filter((j) => j.status === "done" && j.url && (!k || j.kind === k)).sort((a, b) => b.created - a.created).slice(0, 100).map((j) => ({ id: j.id, kind: j.kind, title: j.title, url: j.url })) }); });
 app.post("/v1/assets", requireUser, (req, res) => { const U = user(req.user.uid); const id = uid(); U.jobs[id] = { id, kind: req.body.kind || "3d", status: "done", progress: 1, url: req.body.url, title: req.body.title || "Imported", created: Date.now(), payload: {} }; save(); res.json({ id }); });
 // v140: a clip you uploaded to the editor becomes one of your videos (or pictures) on the server, so the AI tools — extend, edit with

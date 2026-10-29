@@ -20892,6 +20892,23 @@ document.addEventListener("touchmove",e=>{if(!TS174.on)return;const t=$("#toast"
 document.addEventListener("touchend",()=>{if(!TS174.on)return;TS174.on=false;const t=$("#toast");if(!t)return;t.classList.remove("drag174");t.style.translate="";
   if(TS174.dy<-28){clearTimeout(toastT);t.classList.remove("show","open81");toastAct=null}});
 
+/* ================= v175: a card names the engine that really made it ================= */
+// When the engine planned for a shot (by the agents or nooi Auto) couldn't take it — NVIDIA Cosmos refused it — the server makes
+// it on the site's other engine, and the card still said "NVIDIA Cosmos" for a video Kling 3.0 made. The server now says which
+// engine made it (madeWith): the card's name and logo, the open view and "Make it again" use that one, and the open view says why.
+// (an engine the customer picked by hand is never swapped — v173)
+const made175=(j,id)=>{if(!j||!id)return 0;const T=j.kind==="image"?IMG_MODELS:MODELS,m=T[id]?id:"auto";if(j.model===m||!T[m])return 0;j.asked175=j.asked175||j.model;j.model=m;return 1};
+API.req=(o=>async function(p){const r=await o.apply(this,arguments);try{const s=String(p);let ch=0;
+  if(/^\/v1\/jobs\/[A-Za-z0-9_-]+$/.test(s)&&r&&r.id&&r.madeWith)ch=made175(S.jobs.find(x=>x.remote===r.id),r.madeWith);
+  else if(s==="/v1/jobs"&&r&&Array.isArray(r.jobs))r.jobs.forEach(x=>{if(x&&x.madeWith)ch|=made175(S.jobs.find(y=>y.remote===x.id),x.madeWith)});
+  if(ch){persist();if(["video","home","image","library"].includes(S.view))setTimeout(renderView,0)}}catch(e){}return r})(API.req);
+function note175(g){const T=g.kind==="image"?IMG_MODELS:MODELS,a=(T[g.asked175]||{}).name,m=(T[g.model]||{}).name;if(!a||!m)return"";
+  return g.model==="auto"?L(a+", the engine planned for this, couldn't take it — nooi made it on another engine at the price you were shown.",a+"، المحرك المخطط له، لم يستطع أخذه — صنعه nooi على محرك آخر بالسعر الذي ظهر لك.")
+    :L("Made with "+m+" — "+a+", the engine planned for this, couldn't take it, so it was made on "+m+" at the price you were shown.","صُنع بـ "+m+" — لم يستطع "+a+"، المحرك المخطط له، أخذه، فصُنع على "+m+" بالسعر الذي ظهر لك.")}
+previewCol=(o=>function(g,prev){const h=o(g,prev);if(!g||!g.asked175||g.status!=="complete")return h;const t=note175(g);
+  return t?h.replace('<div class="pipe"','<p class="small mute note175" dir="auto">'+ic("info","width:14px;height:14px;vertical-align:-2px")+" "+esc(t)+'</p><div class="pipe"'):h})(previewCol);
+hfrCard=(o=>function(j){const h=o(j);if(!j||!j.asked175||j.status!=="complete")return h;const t=note175(j);return t?h.replace(/(<small)(>)/,'$1 title="'+esc(t)+'"$2'):h})(hfrCard);
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

@@ -377,7 +377,9 @@ export const KIE_BUILTIN = {
 const I2V = { "kling-2.6/text-to-video": "kling-2.6/image-to-video", "wan/2-7-text-to-video": "wan/2-7-image-to-video", "minimax-h3/text-to-video": "minimax-h3/image-to-video", "grok-imagine/text-to-video": "grok-imagine/image-to-video", "pixverse-v6/text-to-video": "pixverse-v6/image-to-video",
   "kling/v3-turbo-text-to-video": "kling/v3-turbo-image-to-video", "happyhorse/text-to-video": "happyhorse/image-to-video",
   "kling-4.0/reference-to-video": "kling-4.0/keyframe-to-video" };   // (v161: unless it carries characters, voices or # pictures — keepRefs161)
+export const KIE_I2V = I2V;   // (v175: to name the site model a job really ran on)
 const EDIT = { "gpt-image-2-text-to-image": "gpt-image-2-image-to-image", "flux-2/pro-text-to-image": "flux-2/pro-image-to-image", "seedream/4.5-text-to-image": "seedream/4.5-edit", "qwen3/text-to-image": "qwen3/image-to-image", "seedream/5-pro-text-to-image": "seedream/5-pro-image-to-image", "grok-imagine/text-to-image": "grok-imagine/image-to-image" };
+export const KIE_EDIT = EDIT;
 // v165: the plan and the voice of a talking avatar are kept for 3 hours — a job tried again on the next face engine uses the
 // same plan and the same voice (the voice isn't made, or paid for, twice)
 const PLAN165 = new Map(), VOICE165 = new Map();
