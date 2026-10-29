@@ -15,7 +15,7 @@ if [ "$NOLD" -gt 0 ]; then echo "  backup archives from before v186 (each with a
 echo; echo "== Elsewhere"; sz /tmp /tmp/systemd-private-*-nooi*.service-* /var/log /var/lib/docker /var/lib/containerd /root/.npm /home/nooi/.npm /var/cache/apt
 echo; echo "== The biggest folders on the disk (a minute at most)"
 timeout 90 du -xh --max-depth=2 / 2>/dev/null | sort -rh | head -15
-if [ "$FREE" -ne 1 ]; then echo; echo "Nothing was changed. To clear what nooi doesn't need: bash $0 --free"; exit 0; fi
+if [ "$FREE" -ne 1 ]; then echo; echo "Nothing was changed. To clear what nooi doesn't need: bash $APP/deploy/space.sh --free"; exit 0; fi   # (a fixed path: the script may come through a pipe)
 
 echo; echo "== Clearing"
 if [ "$NOLD" -gt 0 ]; then for f in $OLD; do rm -f "$f"; done; echo "✓ $NOLD old backup archives removed (the newest one is kept)"; fi
