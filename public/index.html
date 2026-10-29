@@ -20924,6 +20924,31 @@ hfrCard=(o=>function(j){let h=o(j);if(!j)return h;const n=names175(j),t=j.status
 thumb=(o=>function(ref,op){if(op&&op.tag&&/^j:/.test(String(ref))){const n=names175(S.jobs.find(x=>x.id===String(ref).slice(2)));if(n)op=Object.assign({},op,{tag:n})}return o.call(this,ref,op)})(thumb);
 (()=>{const st=document.createElement("style");st.textContent=`.tk98 .tag98,.thumb .m{max-width:calc(100% - 16px);white-space:normal;overflow-wrap:anywhere;line-height:1.3}`;document.head.appendChild(st)})();
 
+/* ================= v176: NVIDIA — Cosmos 3, and a free check of every NVIDIA engine ================= */
+// NVIDIA retired Cosmos Predict 1 (its hosted endpoint answers 404 "Not found for account"); the video engine is now Cosmos 3 Nano
+// (the server reads a Video URL saved for the old one as the new default). Admin → AI providers → NVIDIA AI → "Check NVIDIA
+// engines" sends each NVIDIA engine an empty request — nothing is made or spent — and lists which ones this key can run; one that
+// can't is left out of nooi Auto, says so in the engine lists, and is refused at once if picked (nothing charged).
+(()=>{const p=AI_PROVIDERS.find(x=>x[0]==="nvidia");const f=p&&p[4].find(x=>x[0]==="videoUrl");if(f)f[1]="Video URL (default …/cosmos/nvidia/cosmos3-nano)"})();
+const NV176={busy:false,r:null};
+function nvCheckHTML176(){const r=NV176.r,st={open:[L("Open to this key","متاح لهذا المفتاح"),"ok"],closed:[L("Not open to this key","غير متاح لهذا المفتاح"),"bad"],key:[L("Key refused","المفتاح مرفوض"),"bad"],
+  credits:[L("Out of NVIDIA credits","نفد رصيد NVIDIA"),"bad"],error:[L("NVIDIA answered with an error","ردّت NVIDIA بخطأ"),"warn"],unreachable:[L("Couldn't reach NVIDIA","تعذّر الوصول إلى NVIDIA"),"warn"]};
+  return'<div class="nvchk176" id="nvchk176"><button class="btn sm" data-act="nv176-check"'+(NV176.busy?" disabled":"")+">"+ic(NV176.busy?"refresh":"check")+L("Check NVIDIA engines","افحص محركات NVIDIA")+'</button><p class="small mute">'+L("Asks each NVIDIA engine with an empty request — nothing is made and nothing is spent.","يسأل كل محرك NVIDIA بطلب فارغ — لا يُصنع شيء ولا يُستهلك شيء.")+"</p>"+
+    (r&&r.error?'<p class="small nverr176" dir="auto">'+esc(r.error)+"</p>":"")+
+    (r&&r.engines?'<div class="nvrows176">'+r.engines.map(e=>{const s=st[e.state]||[e.state,"warn"];return'<div class="nvrow176 '+s[1]+'" data-task="'+esc(e.task)+'"><b dir="ltr">'+esc(e.label)+"</b><span>"+esc(s[0])+(e.status?" · "+e.status:"")+'</span><small dir="ltr">'+esc(String(e.url).replace(/^https:\/\/ai\.api\.nvidia\.com/,"…"))+"</small>"+(e.note?'<small dir="ltr">'+esc(e.note)+"</small>":"")+"</div>"}).join("")+"</div>"+
+      (r.suggest&&r.suggest.videoUrl?'<button class="btn sm primary" data-act="nv176-use" data-url="'+esc(r.suggest.videoUrl)+'">'+L("Use Cosmos 3 Super for video","استخدم Cosmos 3 Super للفيديو")+"</button>":""):"")+"</div>"}
+admModels=(o=>function(){const h=o.apply(this,arguments);return h.replace(/(data-act="adm-pv" data-k="nvidia"[^>]*>[\s\S]*?<\/button>)/,"$1"+nvCheckHTML176())})(admModels);
+document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest('[data-act="nv176-check"],[data-act="nv176-use"]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();
+  const paint=()=>{const w=document.getElementById("nvchk176");if(w)w.outerHTML=nvCheckHTML176()},cfg=async()=>{const c=await API.req("/v1/config").catch(()=>null);if(c)API.cfg=c};
+  if(b.dataset.act==="nv176-use"){b.disabled=true;try{await API.req("/v1/admin/providers/nvidia",{method:"PUT",json:{videoUrl:b.dataset.url}});toast(L("Saved — NVIDIA video now uses Cosmos 3 Super.","حُفظ — فيديو NVIDIA يستخدم الآن Cosmos 3 Super."),{type:"ok"});NV176.r=null;await cfg()}catch(x){toast(x.message||String(x))}paint();return}
+  NV176.busy=true;paint();try{NV176.r=await API.req("/v1/admin/nvidia/check",{method:"POST",json:{}});await cfg()}catch(x){NV176.r={error:x.message||String(x)}}NV176.busy=false;paint()},true);
+// (an NVIDIA picture engine the key can't run → its line in the list says so, like Cosmos — v173)
+hfModelSheet=(o=>function(){const r=o.apply(this,arguments);try{const D=API.cfg&&API.cfg.providers&&API.cfg.providers.nvDown;if(D)Object.entries({nvflux:"image",nvsd35:"image2",nvkontext:"edit"}).forEach(([m,t])=>{if(!D[t])return;
+  const b=document.querySelector('#modalRoot .hfmodel[data-v="'+m+'"]');if(b&&!b.classList.contains("off173")){b.classList.add("off173");const s=b.querySelector(".nm small");if(s)s.textContent=L("Not open to this site right now — nothing is charged if you try","غير متاح لهذا الموقع الآن — لا يُخصم شيء إن جرّبت")}})}catch(e){}return r})(hfModelSheet);
+(()=>{const st=document.createElement("style");st.textContent=`.nvchk176{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}.nvchk176 .small{margin:6px 0 0}
+.nvrows176{display:grid;gap:6px;margin:10px 0}.nvrow176{display:grid;gap:2px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);min-width:0}.nvrow176 small{overflow-wrap:anywhere;color:var(--mute)}
+.nvrow176.ok span{color:var(--lime,#9be15d)}.nvrow176.bad span{color:var(--red,#ff6b6b)}.nvrow176.warn span{color:var(--amber,#e0a23a)}.nverr176{color:var(--red,#ff6b6b)}`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
