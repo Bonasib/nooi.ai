@@ -90,7 +90,8 @@ def server_part():
     c, _ = api("/v1/admin/providers/nvidia", PROV, "PUT"); ok(c == 200, f"NVIDIA set up (stand-in) {c}")
     # 1. the free check
     n0 = len(stats()["calls"]); c, r = api("/v1/admin/nvidia/check", {}); calls = stats()["calls"][n0:]; out["check"] = {"states": STATES(r), "statuses": {e["task"]: e["status"] for e in r.get("engines", [])}}
-    ok(c == 200 and STATES(r) == {"video": "open", "image": "closed", "image2": "open", "edit": "key", "3d": "error", "video-super": "open", "video-edge": "closed", "video-genai": "open"}, f"the check: each engine's state {out['check']}")
+    # (v181: Cosmos 3 Super Image2Video is asked too — "i2v", at its own Picture-to-video URL, not set here)
+    ok(c == 200 and {k: v for k, v in STATES(r).items() if k != "i2v"} == {"video": "open", "image": "closed", "image2": "open", "edit": "key", "3d": "error", "video-super": "open", "video-edge": "closed", "video-genai": "open"} and "i2v" in STATES(r), f"the check: each engine's state {out['check']}")
     ok(len(calls) == 8 and all(x["empty"] and x["auth"] == "Bearer test-nv-key" for x in calls), f"the check sent empty requests only (nothing made) {calls}")
     ok("suggest" not in r, f"no suggestion while Cosmos 3 Nano is open {r.get('suggest')}")
     cfg = api("/v1/config")[1].get("providers", {}); out["cfg"] = {"nvDown": cfg.get("nvDown"), "nvUse": cfg.get("nvUse")}

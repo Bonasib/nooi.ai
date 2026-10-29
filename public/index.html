@@ -21072,6 +21072,28 @@ window.addEventListener("resize",()=>{try{agFit179()}catch(e){}});
 @media (prefers-reduced-motion: reduce){.hfbots.pro.in179,.hfbots.pro.in179 .botstrip .sbot{animation:none}.hfstplan.bots.one171 .hbls{transition:none}}
 `;document.head.appendChild(st)})();
 
+/* ================= v181: NVIDIA COSMOS 3 SUPER IMAGE2VIDEO — ON NVIDIA'S OWN API, FOR A COSMOS VIDEO THAT STARTS FROM A PICTURE ================= */
+// The owner chose NVIDIA's own API only (nvidia/Cosmos3-Super-Image2Video). Admin → NVIDIA AI has a "Picture-to-video URL" (NVIDIA's
+// Cosmos 3 Super Image2Video by default) that the free check tries. While Cosmos 3 Nano is closed to the key and Cosmos 3 Super
+// Image2Video is open (/v1/config providers.nvI2v), NVIDIA Cosmos makes a video that starts from a picture — the first # picture named,
+// or a first frame — there; without a picture it says to add one, before anything is paid. Nothing goes to another company.
+(()=>{const p=AI_PROVIDERS.find(x=>x[0]==="nvidia");if(p&&!p[4].some(x=>x[0]==="i2vUrl")){const i=p[4].findIndex(x=>x[0]==="videoUrl");p[4].splice(i<0?p[4].length:i+1,0,["i2vUrl","Picture-to-video URL (default …/cosmos/nvidia/cosmos3-super-image2video)"])}})();
+const nvI2vOn181=()=>!!(API.cfg&&API.cfg.providers&&API.cfg.providers.nvI2v);
+const nvNanoDown181=()=>!!(API.cfg&&API.cfg.providers&&API.cfg.providers.nvDown&&API.cfg.providers.nvDown.video);
+const nvPic181=()=>!!(M.vStart||M.startImage||M.hfRef||(typeof refs130==="function"&&refs130().length));
+// (closed only when there is no picture to start from)
+nvClosed177=(o=>function(m){const c=o.apply(this,arguments);return c&&m==="nvcosmos"&&nvI2vOn181()?!nvPic181():c})(nvClosed177);
+const noPic181=()=>toast(L("NVIDIA Cosmos makes the video from a picture right now — add a picture or a first frame. Nothing was charged.","يصنع NVIDIA Cosmos الفيديو من صورة الآن — أضف صورة أو إطاراً أول. لم يُخصم شيء."),{type:"warn"});
+makeVideo=(o=>function(){const m=S.draft&&S.draft.model;if(m==="nvcosmos"&&nvNanoDown181()&&nvI2vOn181()&&!nvPic181()){noPic181();return}return o.apply(this,arguments)})(makeVideo);
+// the engine list: Cosmos isn't "not open" when it can make the video from a picture
+hfModelSheet=(o=>function(){const r=o.apply(this,arguments);try{if(nvNanoDown181()&&nvI2vOn181()){const b=document.querySelector('#modalRoot .hfmodel[data-v="nvcosmos"]');
+  if(b){b.classList.remove("off173");const s=b.querySelector(".nm small");if(s)s.textContent=L("NVIDIA · Cosmos 3 Super · makes the video from your picture — add a picture or a first frame","NVIDIA · Cosmos 3 Super · يصنع الفيديو من صورتك — أضف صورة أو إطاراً أول")}}}catch(e){}return r})(hfModelSheet);
+// Admin: say when Cosmos 3 Super Image2Video is open (the "what to do on NVIDIA's side" note stays for when it isn't)
+nvCheckHTML176=(o=>function(){const r=NV176.r,i=r&&Array.isArray(r.engines)&&r.engines.find(e=>e.task==="i2v");
+  if(!(i&&i.state==="open"))return o.apply(this,arguments);const h=o.apply(this,arguments);
+  return h.replace(/<p class="small nvhint180"[\s\S]*?<\/p>/,"").replace(/<\/div>$/,'<p class="small nvhint180 ok181" dir="auto">'+esc(L("Cosmos 3 Super Image2Video is open to this key: NVIDIA Cosmos videos that start from a picture are made there, on NVIDIA's own servers. Videos from words only need Cosmos 3 Nano to be open too.","Cosmos 3 Super Image2Video متاح لهذا المفتاح: فيديوهات NVIDIA Cosmos التي تبدأ من صورة تُصنع هناك، على خوادم NVIDIA نفسها. أما الفيديو من الوصف وحده فيحتاج أن يكون Cosmos 3 Nano متاحاً أيضاً."))+"</p></div>")})(nvCheckHTML176);
+(()=>{const st=document.createElement("style");st.textContent=`.nvhint180.ok181{background:color-mix(in srgb,var(--lime) 18%,var(--panel2));border-color:color-mix(in srgb,var(--lime) 40%,var(--line))}`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

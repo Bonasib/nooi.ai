@@ -44,6 +44,15 @@ function clearDown173(task) { try { const st = S(); if (st.nvDown173 && st.nvDow
 // the "not open" mark of one NVIDIA engine (for its current URL), or null
 export const nvDown176 = (task) => { const d = down173(); return d && fresh173(d[task]) && d[task].url === urlOf176(cfg("nvidia"), task) ? d[task] : null; };
 export const nvVideoDown173 = () => nvDown176("video");
+// v181: NVIDIA Cosmos 3 Super Image2Video (picture → video) on NVIDIA's own API, at the address saved in Admin as "Picture-to-video
+// URL" (default below). Admin's free check tries it; it is used for a Cosmos video that starts from a picture only once NVIDIA has
+// answered that this key can run it (an "open" mark, renewed by every check and every video made there) — never anyone else's server.
+const I2V181 = "https://ai.api.nvidia.com/v1/cosmos/nvidia/cosmos3-super-image2video";
+const i2vUrl181 = (c) => (c && c.i2vUrl) || I2V181;
+const open181 = () => { try { return S().nvOpen181 || {}; } catch { return {}; } };
+function markOpen181(url) { try { const st = S(); st.nvOpen181 = { i2v: { url, at: Date.now() } }; save(); } catch {} }
+function clearOpen181() { try { const st = S(); if (st.nvOpen181) { delete st.nvOpen181; save(); } } catch {} }
+export const nvI2v181 = () => { if (!nvReady()) return null; const o = open181().i2v, u = i2vUrl181(cfg("nvidia")); return o && o.url === u && Date.now() - (o.at || 0) < 12 * 3600e3 ? u : null; };
 // the NVIDIA engine a site model runs on, and its name for messages
 export const NV_TASK176 = { nvcosmos: "video", nvflux: "image", nvsd35: "image2", nvkontext: "edit" };
 export const NV_NAME176 = { nvcosmos: "NVIDIA Cosmos", nvflux: "NVIDIA FLUX.1", nvsd35: "NVIDIA SD 3.5", nvkontext: "NVIDIA FLUX Kontext", "3d": "NVIDIA TRELLIS" };
@@ -139,23 +148,28 @@ export function nvAdapter(task) {
     const kind = ext === ".jpg" && buf[0] === 0x89 ? ".png" : ext; return { done: true, url: saveBuffer(buf, kind).url }; };
   const keyOf = (p) => (task === "image" && p && p.model === "nvsd35" ? "image2" : task);
   return { name: "NVIDIA AI", configured: !!c.key,
-    async submit(p) { const k = keyOf(p); try { const r = await this.submit0(p); if (r.done) clearDown173(k); return r; }
-      catch (e) { if (NOTFOUND173.test(e.message || "")) { const url = urlOf176(cfg("nvidia"), k), nm = NV_NAME176[p?.model] || NV_NAME176[{ video: "nvcosmos", image: "nvflux", image2: "nvsd35", edit: "nvkontext" }[k]] || NV_NAME176["3d"];
+    async submit(p) { const k = keyOf(p), ctx = {}; try { const r = await this.submit0(p, ctx); if (r.done) { if (ctx.i2v) markOpen181(ctx.i2v); else clearDown173(k); } return r; }
+      catch (e) { if (ctx.i2v && NOTFOUND173.test(e.message || "")) { clearOpen181(); e.type = "input"; e.retryable = false;   // (v181: Cosmos 3 Super closed again)
+          e.message += " — this NVIDIA key can't run Cosmos 3 Super Image2Video at " + ctx.i2v + " any more. Press Check NVIDIA engines in Admin.";
+          e.userMsg = "NVIDIA Cosmos isn't open to this site right now — nothing was charged. Pick another engine or nooi Auto."; e.userMsgAr = "NVIDIA Cosmos غير متاح لهذا الموقع الآن — لم يُخصم شيء. اختر محركاً آخر أو nooi تلقائي."; throw e; }
+        if (NOTFOUND173.test(e.message || "")) { const url = urlOf176(cfg("nvidia"), k), nm = NV_NAME176[p?.model] || NV_NAME176[{ video: "nvcosmos", image: "nvflux", image2: "nvsd35", edit: "nvkontext" }[k]] || NV_NAME176["3d"];
           markDown173(k, url, e.message); e.type = "input"; e.retryable = false;   // (kept as it is through the retry wrapper: no retry, its own words)
           e.message += " — this NVIDIA key can't run the model at " + url + ". Set Admin → AI providers → NVIDIA AI → " + (k === "video" ? "Video URL" : "its URL") + " to a model the key can run (build.nvidia.com), or press Check NVIDIA engines.";
           e.userMsg = nm + " isn't open to this site right now — nothing was charged. Pick another engine or nooi Auto."; e.userMsgAr = nm + " غير متاح لهذا الموقع الآن — لم يُخصم شيء. اختر محركاً آخر أو nooi تلقائي."; }
         throw e; } },
-    async submit0(p) { let res;
+    async submit0(p, ctx) { let res;
       if (task === "image") { const url = p.model === "nvsd35" ? c.image2 : c.image; res = await call(url, imageBody(url, p)); }
       else if (task === "edit") { const ref = await toDataUrl(refOf(p)); if (!ref) throw new Error("Add the picture to edit"); const a = await nvAsset(ref);
         res = await call(c.edit, { prompt: fullPrompt(p), image: a.ref, aspect_ratio: p.meta?.world360 || p.meta?.keepAspect === false ? (SIZES[p.aspect] ? p.aspect : "16:9") : "match_input_image", cfg_scale: 3.5, steps: 30, seed: Math.abs(+p.seed || 0) % 4294967295 }, 180000, a.headers); }
       else if (task === "3d") { const ref = await toDataUrl(refOf(p)); const a = ref ? await nvAsset(ref) : null;
         res = await call(c.trellis, a ? { mode: "image", image: a.ref, output_format: "glb", seed: 0, ss_sampling_steps: 25, slat_sampling_steps: 25, ss_cfg_strength: 7.5, slat_cfg_strength: 3 } : { mode: "text", prompt: fullPrompt(p), output_format: "glb", seed: 0, ss_sampling_steps: 25, slat_sampling_steps: 25 }, 300000, a?.headers); }
-      else if (task === "video" && COSMOS3_176.test(c.video)) { const ref = await toDataUrl(p.inputs?.startImage || p.inputs?.vStart); res = await call(c.video, cosmos3Body176(p, ref), 900000); }
+      else if (task === "video" && (COSMOS3_176.test(c.video) || ((p.inputs?.startImage || p.inputs?.vStart) && nvI2v181()))) { const ref = await toDataUrl(p.inputs?.startImage || p.inputs?.vStart), i2v = ref ? nvI2v181() : null;
+        if (ctx) ctx.i2v = i2v; res = await call(i2v || c.video, cosmos3Body176(p, ref), 900000); if (i2v && res.pending) res.pending = "i2v181:" + res.pending; }
       else if (task === "video") { const ref = await toDataUrl(p.inputs?.startImage || p.inputs?.vStart); const a = ref ? await nvAsset(ref) : null; res = await call(c.video, { prompt: fullPrompt(p), seed: Math.abs(+p.seed || 0) % 4294967295, ...(a ? { image: a.ref } : {}), video_params: { height: p.aspect === "9:16" ? 1280 : 704, width: p.aspect === "9:16" ? 704 : 1280, frames_count: 121, frames_per_sec: 24 } }, 600000, a?.headers); }
       else throw new Error("Unknown NVIDIA task " + task);
       return res.pending ? { remoteId: res.pending } : await finish(res); },
-    async poll(id) { const res = await status(id); if (res.pending) return { status: "rendering" }; try { const u = (await finish(res)).url; clearDown173(task); return { status: "done", url: u }; } catch (e) { return { status: "failed", error: e.message }; } } }; }
+    async poll(id0) { const i2v = /^i2v181:/.test(String(id0)), id = String(id0).replace(/^i2v181:/, ""); const res = await status(id); if (res.pending) return { status: "rendering" };
+      try { const u = (await finish(res)).url; if (i2v) { const x = nvI2v181(); if (x) markOpen181(x); } else clearDown173(task); return { status: "done", url: u }; } catch (e) { return { status: "failed", error: e.message }; } } }; }
 
 // v176: Admin → Check NVIDIA engines — each NVIDIA engine this site uses is sent an empty request: NVIDIA answers 400 / 422 (it
 // wants a prompt) when the key can run it, 404 when it can't ("Not found for account", a retired model), 401 / 403 when the key is
@@ -170,10 +184,12 @@ export async function nvCheck176() {
   const vu = urlOf176(raw, "video"), base = /\/cosmos3-nano$/.test(vu) ? vu : DEF.video;
   for (const [t, label, u] of [["video-super", "NVIDIA Cosmos 3 Super (video)", base.replace(/cosmos3-nano$/, "cosmos3-super")], ["video-edge", "NVIDIA Cosmos 3 Edge (video)", base.replace(/cosmos3-nano$/, "cosmos3-edge")],
     ["video-genai", "NVIDIA Cosmos 3 Nano · another address (video)", base.replace("/v1/cosmos/", "/v1/genai/")]]) if (u !== vu) rows.push([t, label, u]);
+  rows.push(["i2v", "NVIDIA Cosmos 3 Super Image2Video (picture to video)", i2vUrl181(raw)]);   // (v181)
   const one = async ([task, label, url]) => { const t0 = Date.now(), ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 20000);
     try { const r = await fetch(url, { method: "POST", signal: ctl.signal, headers: hdr(), body: "{}" }), txt = (await r.text()).slice(0, 400), st = r.status;
       const state = st === 400 || st === 422 || st === 429 || (st >= 200 && st < 300) ? "open" : st === 404 || st === 410 ? "closed" : st === 401 || st === 403 ? "key" : st === 402 ? "credits" : "error";
       if (TASKS176.includes(task)) { if (state === "open") clearDown173(task); else if (state === "closed") markDown173(task, url, "NVIDIA AI " + st + ": " + txt); }
+      if (task === "i2v") { if (state === "open") markOpen181(url); else if (state === "closed" || state === "key") clearOpen181(); }
       return { task, label, url, state, status: st, ms: Date.now() - t0, note: state === "open" ? "" : txt.replace(/\s+/g, " ").slice(0, 200) };
     } catch (e) { return { task, label, url, state: "unreachable", status: 0, ms: Date.now() - t0, note: e.name === "AbortError" ? "Timed out" : String(e.message).slice(0, 160) }; }
     finally { clearTimeout(to); } };
