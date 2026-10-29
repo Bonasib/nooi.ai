@@ -43,6 +43,13 @@ sec "Settings that change the speed (set or not — no values)"
 for k in MIRROR_MEDIA LOCAL_LLM_URL GPU_FEATURES PUBLIC_BASE_URL AGENTS_AUTO_LEARN NOOI_STAGE; do
   grep -qE "^$k=." "$APP/.env" 2>/dev/null && echo "$k: set" || echo "$k: not set"; done
 
+sec "Who can use the site (v182: Coming soon = the team only)"
+m="$(curl -s -m 10 "http://127.0.0.1:$PORT/v1/config" | grep -o '"launch182":"[a-z]*"' | cut -d'"' -f4)"
+echo "mode: ${m:-no answer} (soon = only the owners and the team in Admin → Admins & permissions; open = everyone)"
+grep -qE "^NOOI_LAUNCH=." "$APP/.env" 2>/dev/null && echo "NOOI_LAUNCH: set in .env (it decides; Admin's switch can't change it)" || echo "NOOI_LAUNCH: not set (Admin's switch decides)"
+grep -qE "^ADMIN_EMAILS=." "$APP/.env" 2>/dev/null && echo "owners (ADMIN_EMAILS): set" || echo "⚠ ADMIN_EMAILS is not set — no one is the owner, so you'd see the Coming soon page yourself. Add your email to $APP/.env (ADMIN_EMAILS=you@example.com) and run: systemctl restart nooi"
+(cd "$APP" 2>/dev/null && node -e 'try{const d=JSON.parse(require("fs").readFileSync("data/db.json","utf8")),st=(d.settings||{});console.log("team members:",(st.team||[]).length,"· registrations kept:",((st.launch182||{}).regs||[]).length)}catch(e){}')
+
 sec "Jobs (read from the data file)"
 cd "$APP" 2>/dev/null && node -e '
 const fs = require("fs"); let db; try { db = JSON.parse(fs.readFileSync("data/db.json", "utf8")); } catch (e) { console.log("cannot read data/db.json:", e.message); process.exit(0); }

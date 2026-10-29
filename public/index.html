@@ -2655,7 +2655,7 @@ const _go=go;go=function(v){if(v==="fx")v=S.fxTab||"bg";_go(v)};
 const API={mode:"demo",cfg:null,fb:null,
   async detect(){if(hasClaude()||!/^https?:$/.test(location.protocol))return;try{const r=await fetch("/v1/health");if(!r.ok)return;this.mode="server";this.cfg=await(await fetch("/v1/config")).json();if(this.cfg.firebase)await initFirebase(this.cfg.firebase);renderAll();syncPosts()}catch(e){}},
   async token(){try{return this.fb&&this.fb.auth().currentUser?await this.fb.auth().currentUser.getIdToken():null}catch(e){return null}},
-  async req(p,o){o=o||{};o.headers=Object.assign({},o.headers||{});const tk=await this.token();if(tk)o.headers.Authorization="Bearer "+tk;if(o.json){o.body=JSON.stringify(o.json);o.headers["Content-Type"]="application/json";o.method=o.method||"POST";delete o.json}const r=await fetch(p,o);const tx=await r.text();let d;try{d=JSON.parse(tx)}catch(e){d={error:tx}}if(!r.ok)throw Object.assign(new Error(d.error||("HTTP "+r.status)),{status:r.status,errorAr:d.errorAr||null});return d},
+  async req(p,o){o=o||{};o.headers=Object.assign({},o.headers||{});const tk=await this.token();if(tk)o.headers.Authorization="Bearer "+tk;if(o.json){o.body=JSON.stringify(o.json);o.headers["Content-Type"]="application/json";o.method=o.method||"POST";delete o.json}const r=await fetch(p,o);const tx=await r.text();let d;try{d=JSON.parse(tx)}catch(e){d={error:tx}}if(!r.ok)throw Object.assign(new Error(d.error||("HTTP "+r.status)),{status:r.status,errorAr:d.errorAr||null,soon182:!!d.soon182});return d},
   async upload(blob,name){const fd=new FormData();fd.append("file",blob,name||"upload");return this.req("/v1/uploads",{method:"POST",body:fd})}
 };
 const SLOTS_FOR={video:["vStart","vEnd"],image:["iRef"],edit:["eRef"],bg:["bgFg"],mocap:["mc"],lipsync:["lsV","lsA"],finish:["fin"]};
@@ -21093,6 +21093,154 @@ nvCheckHTML176=(o=>function(){const r=NV176.r,i=r&&Array.isArray(r.engines)&&r.e
   if(!(i&&i.state==="open"))return o.apply(this,arguments);const h=o.apply(this,arguments);
   return h.replace(/<p class="small nvhint180"[\s\S]*?<\/p>/,"").replace(/<\/div>$/,'<p class="small nvhint180 ok181" dir="auto">'+esc(L("Cosmos 3 Super Image2Video is open to this key: NVIDIA Cosmos videos that start from a picture are made there, on NVIDIA's own servers. Videos from words only need Cosmos 3 Nano to be open too.","Cosmos 3 Super Image2Video متاح لهذا المفتاح: فيديوهات NVIDIA Cosmos التي تبدأ من صورة تُصنع هناك، على خوادم NVIDIA نفسها. أما الفيديو من الوصف وحده فيحتاج أن يكون Cosmos 3 Nano متاحاً أيضاً."))+"</p></div>")})(nvCheckHTML176);
 (()=>{const st=document.createElement("style");st.textContent=`.nvhint180.ok181{background:color-mix(in srgb,var(--lime) 18%,var(--panel2));border-color:color-mix(in srgb,var(--lime) 40%,var(--line))}`;document.head.appendChild(st)})();
+
+/* ================= v182: COMING SOON — THE TEAM ONLY ================= */
+/* While nooi.ai is "Coming soon" (Admin → Admins & permissions → Site access), only the team the owner added there (each with a
+   role) uses the site. Everyone else sees the Coming soon page: what nooi does (the free AI editor, Extend, translation and
+   dubbing, live AI sketch, the nine agents…), Register (the account waits on the list and the owner is told at once) and, once
+   registered, "You're registered". The server refuses everything else (403 soon182, lib/launch182.js) — this page is the face,
+   not the lock. Admin gets the switch and the list of registrations, each with a role and "Give access". */
+const SOON182={lastMe:0,busy:false,was:"",told:false};
+// (a browser that saw Coming soon last time shows it at once, before the server answers — never longer than 5 s without it)
+let pre182=false;try{pre182=localStorage.getItem("nooi-soon182")==="1"}catch(e){}
+const soonOn182=()=>API.mode==="server"?!!API.cfg&&API.cfg.launch182==="soon":pre182&&!API.cfg&&performance.now()<5000;
+// off · visitor (signed out) · checking (signed in, who it is not known yet) · wait (registered, not in the team)
+function soonState182(){if(!soonOn182())return"off";if(!S.user)return AU.showAuth?"off":"visitor";
+  const fb=S.user.uid;if(!ME.uid182||(fb&&ME.uid182!==fb))return"checking";return ME.role?"off":"wait"}
+const FEAT182=[["edit","#9CD245",1,"Free AI video editor","محرر فيديو مجاني بالذكاء الاصطناعي","A full editor in your browser, free: timeline, captions, colour, a sound mixer, motion titles and effects — with AI in every tool.","محرر كامل في متصفحك ومجاناً: خط زمني وترجمة وألوان وميكسر صوت وعناوين متحركة ومؤثرات — والذكاء الاصطناعي في كل أداة."],
+  ["frame","#4dc3ff",0,"Extend any shot","مدّ أي لقطة","Continue a clip from its last frame — the same place, people and light — up to two minutes, with joins you can't see.","أكمل المقطع من آخر إطار فيه — بالمكان والأشخاص والإضاءة نفسها — حتى دقيقتين، بوصلات لا تُرى."],
+  ["dub","#E2437B",0,"Translate & dub","ترجمة ودبلجة","Subtitles and dubbing in 35 languages and their dialects, with lips that follow the new voice.","ترجمة ودبلجة بـ35 لغة ولهجاتها، مع شفاه تتبع الصوت الجديد."],
+  ["brush","#ff9a3c",0,"Live AI sketch","الرسم الحي بالذكاء الاصطناعي","Draw a few lines and watch them turn into a real picture while you draw.","ارسم بضعة خطوط وشاهدها تتحول إلى صورة حقيقية وأنت ترسم."],
+  ["agent148","#a78bfa",0,"Nine AI agents","تسعة وكلاء بالذكاء الاصطناعي","A writer, a director, a cinematographer, voice and sound designers and more plan every shot with you — with every engine.","كاتب ومخرج ومدير تصوير ومصمما حوار وصوت وغيرهم يخططون كل لقطة معك — ومع كل المحركات."],
+  ["char","#2DD4A8",0,"Characters that stay themselves","شخصيات تبقى كما هي","Your characters keep their face, outfit and voice in every shot and every language.","تحتفظ شخصياتك بوجهها وملابسها وصوتها في كل لقطة وبكل لغة."],
+  ["swap93","#ff6b5e",0,"Change anything with words","غيّر أي شيء بالكلمات","Replace a person, a car, the sky or a sound in a video or a picture — the price is shown before anything is made.","استبدل شخصاً أو سيارة أو السماء أو صوتاً في فيديو أو صورة — ويظهر السعر قبل أي إنشاء."],
+  ["bolt","#F5C518",0,"The top engines in one place","أقوى المحركات في مكان واحد","Kling, Seedance, Veo, NVIDIA Cosmos and more behind one prompt — nooi picks the right one for each shot.","Kling وSeedance وVeo وNVIDIA Cosmos وغيرها خلف وصف واحد — ويختار nooi الأنسب لكل لقطة."],
+  ["cam3d","#6d8bff",0,"3D worlds & motion","عوالم ثلاثية الأبعاد وحركة","Walk through worlds made from words or a photo, give a character any motion and slow it down beautifully.","تجوّل في عوالم من الكلمات أو من صورة، وامنح أي شخصية أي حركة، وأبطئها بجمال."]];
+function soonHTML182(st){
+  const nav='<header class="s182nav"><div class="brand" style="padding:0"><i class="dot"></i><b>nooi</b><span>.ai</span></div><span class="s182sp"></span>'+themeBtn()+langBtn()+(st==="wait"?'<button class="btn ghost sm" data-act="signout">'+ic("logout")+'<span class="s182t">'+L("Sign out","خروج")+"</span></button>":"")+"</header>";
+  if(st==="checking")return'<div class="s182w">'+nav+'<div class="s182chk" role="status"><i class="s182spin"></i>'+L("Checking your access…","نتحقق من صلاحيتك…")+"</div></div>";
+  const who=S.user&&(S.user.contact||"");
+  const cta=st==="wait"?'<div class="s182state" id="s182you"><span class="s182ok">'+ic("check")+'</span><div style="min-width:0"><b>'+L("You're registered","أنت مسجّل")+'</b><div class="small mute">'+(who?L("We'll tell you at ","سنخبرك على ")+'<bdi dir="ltr">'+esc(who)+"</bdi>"+L(" when nooi opens."," عند افتتاح nooi."):L("We'll tell you when nooi opens.","سنخبرك عند افتتاح nooi."))+" "+L("Team members get in as soon as the owner adds them.","يدخل أعضاء الفريق فور إضافتهم من المالك.")+"</div></div></div>"
+    :'<div class="s182cta"><button class="btn primary" data-act="soon182-reg">'+L("Register for early access","سجّل للوصول المبكر")+ic("arrow","width:14px")+'</button><button class="btn" data-act="soon182-in">'+ic("lock")+L("Team sign in","دخول الفريق")+'</button></div><p class="small dim s182note">'+L("Registering puts you on the list — we'll let you in when nooi opens.","التسجيل يضعك في القائمة — وسنفتح لك عند الافتتاح.")+"</p>";
+  return'<div class="s182w">'+nav+'<section class="s182hero"><div class="s182glow" aria-hidden="true"></div><span class="s182badge"><i></i>'+L("Coming soon","قادمون قريباً")+'</span><h1>'+L("Coming soon.","قادمون قريباً.")+"<br><em>"+L("Stay tuned.","ترقّبوا.")+'</em></h1><p class="s182sub">'+L("nooi.ai is an AI film studio — a free video editor powered by AI, nine agents that plan every shot with you, and the best engines in one place. We're putting on the final touches.","nooi.ai استوديو أفلام بالذكاء الاصطناعي — محرر فيديو مجاني مدعوم بالذكاء الاصطناعي، وتسعة وكلاء يخططون كل لقطة معك، وأقوى المحركات في مكان واحد. نضع اللمسات الأخيرة الآن.")+"</p>"+cta+
+    '<div class="s182agents" aria-label="'+esc(L("The nine agents","الوكلاء التسعة"))+'">'+BOTS.map(b=>'<span title="'+esc(L(b.name[0],b.name[1])+" · "+L(b.role[0],b.role[1]))+'">'+botSVG(b.id,"idle",36)+"</span>").join("")+'</div><p class="small dim" style="margin:0">'+L("Meet the nine agents who make your film with you.","تعرّف على الوكلاء التسعة الذين يصنعون فيلمك معك.")+"</p></section>"+
+    '<section class="s182sec"><div class="kicker">'+L("WHAT'S COMING","ما الذي سيأتي")+'</div><h2>'+L("Everything to make a film — in one place.","كل ما تحتاجه لصنع فيلم — في مكان واحد.")+'</h2><div class="s182grid">'+FEAT182.map(f=>'<div class="s182card" style="--c:'+f[1]+'"><span class="gl">'+ic(f[0])+"</span>"+(f[2]?'<span class="s182free">'+L("Free","مجاني")+"</span>":"")+"<b>"+L(f[3],f[4])+"</b><p>"+L(f[5],f[6])+"</p></div>").join("")+"</div></section>"+
+    '<footer class="s182foot">© '+new Date().getFullYear()+' nooi.ai · <a href="mailto:contact@nooi.ai" dir="ltr">contact@nooi.ai</a></footer></div>'}
+function soonPaint182(){if(!document.body)return;
+  if(API.mode==="server"&&API.cfg){const v=API.cfg.launch182==="soon";if(v!==pre182){pre182=v;try{v?localStorage.setItem("nooi-soon182","1"):localStorage.removeItem("nooi-soon182")}catch(e){}}}
+  const st=soonState182();document.body.classList.toggle("soon182on",st!=="off");let el=document.getElementById("soon182");
+  if(st==="checking"&&S.user&&!SOON182.busy&&Date.now()-SOON182.lastMe>4000)soonMe182();
+  if(st==="off"){if(el)el.remove();return}
+  if(!el){el=document.createElement("div");el.id="soon182";el.className="soon182";document.body.appendChild(el)}
+  const k=[st,S.lang,S.uiDialect||"",S.user&&S.user.contact||"",isDarkNow()].join("|");if(el.dataset.k!==k){const y=el.scrollTop;el.innerHTML=soonHTML182(st);el.scrollTop=y;el.dataset.k=k}}
+async function soonMe182(){SOON182.busy=true;SOON182.lastMe=Date.now();try{await API.req("/v1/me")}catch(e){}finally{SOON182.busy=false}}
+// who is signed in, from every answer of /v1/me (loadMe's own setting follows the same answer); the staff count of new registrations
+function me182(r){const before=soonState182();ME.role=r.role||null;ME.perms=r.perms||[];ME.uid182=r.uid;ME.fresh182=r.launch182?(+r.launch182.fresh||0):0;
+  const now=soonState182();if(before==="wait"&&now==="off"){renderAll();toast(L("✓ You have access — welcome to nooi.","✓ صار لديك وصول — أهلاً بك في nooi."),{type:"ok"})}else soonPaint182();
+  if(ME.fresh182>0&&!SOON182.told){let seen="";try{seen=sessionStorage.getItem("l182told")||""}catch(e){}if(seen!==String(ME.fresh182)){SOON182.told=true;try{sessionStorage.setItem("l182told",String(ME.fresh182))}catch(e){}
+    setTimeout(()=>toast(ME.fresh182===1?L("1 new registration — Admin → Admins & permissions.","تسجيل جديد واحد — لوحة الإدارة ← المشرفون والصلاحيات."):L(ME.fresh182+" new registrations — Admin → Admins & permissions.",ME.fresh182+" تسجيلات جديدة — لوحة الإدارة ← المشرفون والصلاحيات.")),1500)}}
+  try{l182Dots()}catch(e){}}
+API.req=(o=>async function(p,opts){const path=String(p||"");
+  // registered but not in the team: nothing is asked of the server but who they are, support and the page's own words
+  if(soonState182()==="wait"&&!/^\/v1\/(me|me\/delete|support(\/.*)?|ui-t\/.*|config|health)(\?|$)/.test(path))throw Object.assign(new Error(L("nooi.ai is coming soon — only the team can use it for now.","nooi.ai قادم قريباً — يستخدمه الفريق فقط الآن.")),{status:403,soon182:true});
+  try{const r=await o.call(API,p,opts);if(path==="/v1/me"&&r&&r.uid)me182(r);return r}
+  catch(e){if(e&&e.soon182&&S.user){if(API.cfg)API.cfg.launch182="soon";if(ME.uid182&&ME.role){ME.role=null;ME.perms=[]}soonPaint182()}throw e}})(API.req);
+renderView=(o=>function(){const r=o.apply(this,arguments);try{soonPaint182()}catch(e){}return r})(renderView);
+// (the landing page isn't drawn behind the Coming soon page)
+vLanding=(o=>function(){return soonState182()==="visitor"?'<div class="lp"></div>':o()})(vLanding);
+// while the Coming soon page is up, the site's own notes stay quiet (the requests it would answer are refused anyway)
+toast=(o=>function(){if(soonState182()!=="off")return;return o.apply(this,arguments)})(toast);
+vAuth=(o=>function(){let h=o();if(soonOn182()&&AU.showAuth&&!AU.legal&&AU.step==="start")h=h.replace('<div class="oauth">','<p class="note s182auth">'+(AU.team182?L("Team members: sign in with the email the owner added in Admin.","أعضاء الفريق: سجّلوا الدخول بالبريد الذي أضافه المالك في لوحة الإدارة."):L("nooi.ai is coming soon. Registering puts you on the list — we'll let you in when it opens.","nooi.ai قادم قريباً. التسجيل يضعك في القائمة — وسنفتح لك عند الافتتاح."))+'</p><div class="oauth">');return h})(vAuth);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="soon182-reg"],[data-act="soon182-in"]');if(!a)return;
+  AU.showAuth=true;AU.step="start";AU.team182=a.dataset.act==="soon182-in";renderAll();const m=$("#main");if(m)m.scrollTop=0});
+setInterval(()=>{const st=soonState182();if(document.hidden||SOON182.busy||!S.user)return;const age=Date.now()-SOON182.lastMe;if((st==="checking"&&age>4000)||(st==="wait"&&age>30000))soonMe182()},2000);
+initFirebase=(o=>async function(c){await o(c);try{if(API.fb)API.fb.auth().onAuthStateChanged(u=>{if(!u){ME.uid182=null;ME.fresh182=0}soonPaint182()})}catch(e){}})(initFirebase);
+
+/* ---- Admin → Admins & permissions: Site access (Coming soon / open) + Registrations (role → Give access) ---- */
+const L182={d:null,busy:false,seen:false};
+async function l182Load(){if(API.mode!=="server"||L182.busy)return;L182.busy=true;try{L182.d=await API.req("/v1/admin/launch")}catch(e){L182.d=L182.d||{mode:(API.cfg&&API.cfg.launch182)||"open",regs:[],err:String(e.message||e)}}finally{L182.busy=false;if(S.view==="admin")renderView()}}
+function admLaunch182(){if(API.mode!=="server")return"";const D=L182.d;if(!D){if(!L182.busy)setTimeout(l182Load,0);return'<div class="panel pad l182"><h3>'+ic("lock")+" "+L("Site access","الوصول إلى الموقع")+'</h3><p class="small dim">'+L("Loading…","جارٍ التحميل…")+"</p></div>"}
+  const on=D.mode==="soon",regs=D.regs||[],fresh=regs.filter(r=>r.fresh).length,roles=Object.keys(ROLE_DEF).filter(r=>r!=="owner");
+  if(fresh&&!L182.seen){L182.seen=true;setTimeout(()=>API.req("/v1/admin/launch/seen",{json:{}}).then(()=>{ME.fresh182=0;l182Dots()}).catch(()=>{}),2500)}
+  const row=r=>{const who=r.email||r.phone||r.cid||r.uid,when=r.created?fmtT(r.created):"";
+    return'<div class="l182row"><div class="l182who"><b dir="ltr">'+esc(who)+"</b>"+(r.fresh?'<span class="l182new">'+L("New","جديد")+"</span>":"")+'<div class="small dim">'+[when,r.country,r.cid].filter(Boolean).map(esc).join(" · ")+"</div></div>"+
+      (r.email?'<div class="l182act"><select data-l182role="'+esc(r.uid)+'" aria-label="'+esc(L("Role","الصلاحية"))+'">'+roles.map(k=>'<option value="'+k+'"'+(k==="viewer"?" selected":"")+">"+esc(L(ROLE_DEF[k][0][0],ROLE_DEF[k][0][1]))+"</option>").join("")+'</select><button class="btn sm primary" data-act="l182-give" data-uid="'+esc(r.uid)+'" data-email="'+esc(r.email)+'">'+ic("check")+L("Give access","امنح الوصول")+"</button></div>"
+      :'<span class="small dim l182act">'+(r.unverified?L("Email not confirmed yet — they can be added once they confirm it.","لم يُؤكَّد البريد بعد — يمكن إضافته بعد تأكيده."):L("Signed in without an email — access is given by email.","سجّل دون بريد — يُمنح الوصول بالبريد."))+"</span>")+"</div>"};
+  return'<div class="panel pad l182"><h3>'+ic("lock")+" "+L("Site access","الوصول إلى الموقع")+'</h3><div class="trows">'+toggleRow(on,"l182-mode","soon",L("Coming soon — the team only","قادمون قريباً — للفريق فقط"),on?L("Only the admins below (each with their role) can use nooi. Everyone else sees the Coming soon page and can register — you're told about each new account.","يستخدم nooi المشرفون أدناه فقط (كلٌّ بصلاحياته). يرى الجميع صفحة «قادمون قريباً» ويمكنهم التسجيل — ويصلك إشعار بكل حساب جديد."):L("nooi is open to everyone.","nooi مفتوح للجميع."))+"</div>"+
+    (D.env?'<p class="small dim" style="margin:6px 0 0">'+L("Set on the server: ","مُعيّن على الخادم: ")+'<code dir="ltr">NOOI_LAUNCH='+esc(D.env)+"</code>"+L(" — change it in the server's "," — غيّره على الخادم في ")+'<code dir="ltr">.env</code>'+"</p>":"")+
+    '<h3 class="sec" style="margin-top:16px">'+L("Registrations","التسجيلات")+(fresh?' <span class="l182new">'+fresh+" "+L("new","جديد")+"</span>":"")+'</h3><p class="small mute" style="margin-top:0">'+L("People who registered and are waiting. Choose a role and give access — they get in at once.","أشخاص سجّلوا وينتظرون. اختر الصلاحية وامنح الوصول — يدخلون فوراً.")+"</p>"+
+    (regs.length?'<div class="l182list">'+regs.map(row).join("")+"</div>":'<p class="small dim">'+L("No one is waiting.","لا أحد ينتظر.")+"</p>")+"</div>"}
+admTeam=(o=>function(){return admLaunch182()+o()})(admTeam);
+// a small count of new registrations on Admin (the menu and the Admins & permissions tab)
+function l182Dots(){document.querySelectorAll(".l182dot").forEach(x=>x.remove());const n=ME.fresh182||0;if(!n||!isAdmin()||!can("admins.manage"))return;
+  document.querySelectorAll('#side [data-go="admin"],#bottomnav [data-go="admin"],header [data-go="admin"],[data-act="adm-tab"][data-v="team"]').forEach(b=>{const i=document.createElement("i");i.className="l182dot";i.textContent=n>9?"9+":String(n);i.setAttribute("aria-label",L(n+" new registrations",n+" تسجيلات جديدة"));b.appendChild(i)})}
+renderShell=(o=>function(){const r=o.apply(this,arguments);try{l182Dots()}catch(e){}return r})(renderShell);
+renderView=(o=>function(){const r=o.apply(this,arguments);try{if(S.view==="admin")l182Dots()}catch(e){}return r})(renderView);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="l182-mode"],[data-act="l182-give"]');if(!a)return;e.stopPropagation();
+  if(a.dataset.act==="l182-mode"){const on=(L182.d||{}).mode==="soon";if(on&&!a.dataset.armed){arm(a,L("Tap again to open nooi to everyone","اضغط مرة أخرى لفتح nooi للجميع"));return}
+    try{const r=await API.req("/v1/admin/launch",{method:"PUT",json:{mode:on?"open":"soon"}});if(API.cfg)API.cfg.launch182=r.mode;toast(r.mode==="soon"?L("✓ nooi is Coming soon — only the team can use it.","✓ nooi الآن «قادم قريباً» — للفريق فقط."):L("✓ nooi is open to everyone.","✓ nooi مفتوح للجميع الآن."),{type:"ok"})}catch(err){toast(S.lang==="ar"&&err.errorAr?err.errorAr:String(err.message||err))}
+    await l182Load();return}
+  const sel=document.querySelector('[data-l182role="'+CSS.escape(a.dataset.uid)+'"]'),role=sel?sel.value:"viewer",em=a.dataset.email;a.disabled=true;
+  try{await API.req("/v1/admin/team",{json:{email:em,role}});toast(L("✓ "+em+" can use nooi now.","✓ يمكن لـ "+em+" استخدام nooi الآن."),{type:"ok"})}catch(err){toast(String(err.message||err));a.disabled=false;return}
+  await Promise.all([l182Load(),admLoad()])},true);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.soon182{position:fixed;inset:0;z-index:39;overflow-y:auto;overflow-x:hidden;background:var(--bg);color:var(--text);-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+body.soon182on{overflow:hidden}
+body.soon182on #app,body.soon182on #bottomnav{visibility:hidden}
+.soon182 .s182w{max-width:1080px;margin:0 auto;padding:0 16px calc(28px + env(safe-area-inset-bottom,0px));box-sizing:border-box}
+.soon182 .s182nav{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:8px;padding:12px 0;background:color-mix(in srgb,var(--bg) 84%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.soon182 .s182sp{flex:1}
+.soon182 .s182chk{display:flex;align-items:center;justify-content:center;gap:10px;min-height:60vh;color:var(--mute);font-size:14px}
+.soon182 .s182spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--line2);border-top-color:var(--lime);animation:s182spin .8s linear infinite}
+.soon182 .s182hero{position:relative;text-align:center;padding:48px 0 18px}
+.soon182 .s182glow{position:absolute;left:50%;top:-30px;width:min(720px,100%);height:380px;transform:translateX(-50%);background:radial-gradient(closest-side,color-mix(in srgb,var(--lime) 30%,transparent),transparent);opacity:.6;pointer-events:none;animation:s182glow 7s ease-in-out infinite}
+.soon182 .s182hero>*:not(.s182glow){position:relative}
+.soon182 .s182badge{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid var(--line2);border-radius:999px;background:var(--panel);color:var(--mute);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.soon182 .s182badge i{width:8px;height:8px;border-radius:50%;background:var(--lime);animation:s182ping 1.8s ease-out infinite}
+.soon182 h1{font-size:clamp(40px,9vw,86px);line-height:1.04;letter-spacing:-.02em;margin:16px 0 12px;font-weight:700}
+.soon182 h1 em{font-style:normal;background:var(--brand-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.soon182 .s182sub{max-width:640px;margin:0 auto;color:var(--mute);font-size:clamp(15px,2.2vw,18px);line-height:1.65}
+.soon182 .s182cta{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:24px}
+.soon182 .s182note{margin:10px auto 0;max-width:460px}
+.soon182 .s182state{max-width:520px;margin:24px auto 0;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;text-align:start;border:1px solid var(--line2);border-radius:16px;background:var(--panel)}
+.soon182 .s182state b{font-weight:600}
+.soon182 .s182ok{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--lime) 18%,transparent);color:var(--lime-ink)}
+.soon182 .s182ok svg{width:18px;height:18px}
+.soon182 .s182agents{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:560px;margin:34px auto 8px}
+.soon182 .s182agents span{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--panel2) 80%,transparent);border:1px solid var(--line);overflow:hidden}
+.soon182 .s182agents svg{width:36px;height:36px}
+.soon182 .s182sec{padding:34px 0 0}
+.soon182 .s182sec h2{font-size:clamp(22px,4vw,34px);line-height:1.2;margin:6px 0 0;letter-spacing:-.01em}
+.soon182 .s182grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:12px;margin-top:18px}
+.soon182 .s182card{position:relative;min-width:0;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--panel);transition:transform .2s,border-color .2s}
+.soon182 .s182card:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--c) 45%,var(--line))}
+.soon182 .s182card .gl{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c)}
+.soon182 .s182card .gl svg{width:20px;height:20px}
+.soon182 .s182card b{display:block;margin:12px 0 4px;font-size:15px;font-weight:600}
+.soon182 .s182card p{margin:0;color:var(--mute);font-size:13px;line-height:1.55}
+.soon182 .s182free{position:absolute;top:14px;inset-inline-end:14px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;background:color-mix(in srgb,var(--lime) 18%,transparent);color:var(--lime-ink)}
+.soon182 .s182foot{margin-top:34px;text-align:center;color:var(--dim);font-size:12px}
+.soon182 .s182foot a{color:inherit}
+@media (max-width:420px){.soon182 .s182t{display:none}.soon182 .s182hero{padding-top:30px}.soon182 .s182agents{gap:4px}.soon182 .s182agents span{width:36px;height:36px}.soon182 .s182agents svg{width:29px;height:29px}}
+@keyframes s182ping{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--lime) 70%,transparent)}100%{box-shadow:0 0 0 10px transparent}}
+@keyframes s182glow{0%,100%{opacity:.45}50%{opacity:.75}}
+@keyframes s182spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.soon182 .s182badge i,.soon182 .s182glow,.soon182 .s182spin{animation:none}}
+.s182auth{margin:12px 0 0}
+.l182{margin-bottom:12px}
+.l182 h3 svg{width:16px;height:16px;vertical-align:-3px}
+.l182list{display:flex;flex-direction:column;gap:8px}
+.l182row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);min-width:0}
+.l182who{flex:1 1 200px;min-width:0}
+.l182who b{font-weight:500;font-size:13px;overflow-wrap:anywhere}
+.l182act{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0}
+.l182act select{width:150px;min-width:0;height:36px;min-height:36px;padding-top:0;padding-bottom:0}
+.l182act .btn{flex:none;white-space:nowrap}
+span.l182act{flex:1 1 220px;flex-wrap:wrap}
+.l182new{display:inline-block;margin-inline-start:6px;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:600;vertical-align:1px;background:color-mix(in srgb,var(--lime) 20%,transparent);color:var(--lime-ink)}
+.l182dot{display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 4px;margin-inline-start:6px;border-radius:999px;background:var(--red);color:#fff;font-size:10px;font-style:normal;font-weight:700;line-height:1;box-sizing:border-box}
+</style>`);
+setTimeout(()=>{try{soonPaint182()}catch(e){}},0);setTimeout(()=>{try{soonPaint182()}catch(e){}},5100);
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;
