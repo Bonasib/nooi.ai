@@ -21420,6 +21420,22 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 @media (max-width:480px){.aip184{padding:12px}.aip184 .aiphead{gap:10px;padding:10px}.aip184 .aipname small{display:none}}
 </style>`);
 
+/* ================= v186: THE SERVER'S DISK NEARLY FULL — SAID TO STAFF ================= */
+/* (the server: lib/disk186.js — GET /v1/me gives owners and admins disk186 {pct, freeGb, totalGb} from 85 %): a red line at the top
+   of Admin with how full it is and the one command that clears what nooi doesn't need, and once a visit a short note. */
+let DK186=null;
+function line186(){if(!DK186)return"";const cmd="bash /opt/nooi/deploy/space.sh --free";
+  return'<div class="al138 dk186" role="alert">'+ic("warn","width:18px;height:18px;flex:none")+'<div><b>'+L("The server's disk is "+DK186.pct+"% full","قرص الخادم ممتلئ بنسبة "+DK186.pct+"%")+"</b> · "+
+    L(DK186.freeGb+" GB free. When it fills, new videos, pictures and saves fail. On the server, run:",DK186.freeGb+" غيغابايت متبقية. حين يمتلئ تفشل الفيديوهات والصور الجديدة والحفظ. شغّل على الخادم:")+
+    '<br><code dir="ltr" class="dk186c">'+esc(cmd)+"</code></div></div>"}
+async function disk186(){if(API.mode!=="server"||!S.user)return;try{const r=await API.req("/v1/me"),d=(r&&r.disk186)||null,was=DK186?DK186.pct:0;DK186=d;
+  if(d&&d.pct!==was){if(S.view==="admin")renderView();let seen="";try{seen=sessionStorage.getItem("dk186")||""}catch(_){}
+    if(!seen){try{sessionStorage.setItem("dk186","1")}catch(_){}toast(L("The server's disk is "+d.pct+"% full — see Admin.","قرص الخادم ممتلئ بنسبة "+d.pct+"% — راجع لوحة الإدارة."),{type:"warn"})}}
+  else if(!d&&was&&S.view==="admin")renderView()}catch(_){}}
+VIEWS.admin=(o=>function(){const h=o.apply(this,arguments);return DK186&&typeof h==="string"?h.replace('<div class="admtabs">',()=>line186()+'<div class="admtabs">'):h})(VIEWS.admin);
+setTimeout(disk186,3000);setInterval(disk186,600000);
+(function(){const st=document.createElement("style");st.textContent=`.dk186 code.dk186c{display:inline-block;margin-top:6px;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,.25);font-size:12px;word-break:break-all;user-select:all}`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

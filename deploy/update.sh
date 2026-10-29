@@ -10,7 +10,10 @@ TMP="$(mktemp -d)"; unzip -q "$ZIP" -d "$TMP"; NEW="$(find "$TMP" -maxdepth 2 -n
 # chown below, the running site (user nooi) couldn't open its own folder: "EACCES: permission denied, stat /opt/nooi/public/…",
 # and a picture or a save landing then failed. The new version's folders are opened to read (755) before they are copied.
 chmod 755 "$TMP" "$NEW"
-"$BINDIR/nooi-backup" || true
+# v186: the new package's backup (data + settings in a small archive, the media kept once) — the installed one may still be an old
+# one that packs all the media again; and a word when the disk is nearly full
+if [ -f "$NEW/deploy/backup.sh" ]; then APP="$APP" bash "$NEW/deploy/backup.sh" || true; else "$BINDIR/nooi-backup" || true; fi
+FREE_MB="$(df -Pm "$APP" | awk 'NR==2{print $4}')"; [ "${FREE_MB:-0}" -lt 2048 ] && echo "⚠ Only ${FREE_MB} MB free on the disk — after this update: bash $APP/deploy/space.sh --free"
 PREV="${PREV:-${APP}-prev}"; rm -rf "$PREV"; rsync -a --exclude data --exclude media --exclude node_modules "$APP"/ "$PREV"/
 rsync -a --delete --exclude data --exclude media --exclude .env --exclude node_modules "$NEW"/ "$APP"/
 chown -R nooi:nooi "$APP"; sudo -u nooi -H bash -c "cd $APP && npm install --omit=dev --no-audit --no-fund"

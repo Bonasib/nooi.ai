@@ -15,6 +15,11 @@ uptime; echo "CPUs: $(nproc 2>/dev/null)"; free -m 2>/dev/null
 sec "Disk"
 df -h / "$APP" 2>/dev/null | awk '!seen[$0]++'
 du -sh "$APP/media" "$APP/data" 2>/dev/null; ls -l "$APP/data/db.json" 2>/dev/null | awk '{print "db.json:", $5, "bytes"}'
+# v186: the backups (each update used to pack all the media again) and how full the disk is
+du -sh /var/backups/nooi 2>/dev/null | awk '{print "backups:", $1, "in", $2}'
+nold="$(ls -1 /var/backups/nooi/nooi-2[0-9][0-9][0-9]-*.tgz 2>/dev/null | wc -l)"; [ "$nold" -gt 1 ] && echo "⚠ $nold backup archives from before v186, each with all the media inside — the next backup keeps only the newest (or now: bash $APP/deploy/space.sh --free)"
+pct="$(df -P / | awk 'NR==2{gsub("%","",$5);print $5}')"
+if [ "${pct:-0}" -ge 85 ]; then echo "⚠ The disk is ${pct}% full — see what fills it: bash $APP/deploy/space.sh   · clear what nooi doesn't need: bash $APP/deploy/space.sh --free"; fi
 sec "Busiest programs now"
 ps -eo pid,pcpu,pmem,rss,etime,comm --sort=-pcpu 2>/dev/null | head -12
 n="$(pgrep -c ffmpeg 2>/dev/null)"; echo "ffmpeg running: ${n:-0}"
@@ -92,6 +97,11 @@ nq="$(cnt 'credits insufficient|insufficient (credits|balance)|balance isn.t eno
 # v139: when the last refusal was (the time of its line) — after a top-up the old ones still count for 24 h
 LASTQ="$(journalctl -u nooi --since '24 hours ago' --no-pager -o short-unix 2>/dev/null | grep -iE 'credits insufficient|insufficient (credits|balance)|balance isn.t enough' | tail -1 | awk '{print $1}' | grep -E '^[0-9]+(\.[0-9]+)?$' || true)"
 lq=""; [ -n "$LASTQ" ] && lq=" The last one was at $(date -d "@${LASTQ%.*}" '+%H:%M' 2>/dev/null) ($(( ( $(date +%s) - ${LASTQ%.*} ) / 60 )) min ago)."
+# v186: a nearly full disk (every update used to pack all the media into a new backup)
+dpct="$(df -P / | awk 'NR==2{gsub("%","",$5);print $5}')"
+if [ "${dpct:-0}" -ge 85 ]; then need=1
+  echo "⚠ The server's disk is ${dpct}% full — when it fills, new videos, pictures and saves fail."
+  echo "  → See what fills it: bash $APP/deploy/space.sh   · clear what nooi doesn't need (never the site's data or media): bash $APP/deploy/space.sh --free"; fi
 if [ "${nq:-0}" -gt 0 ]; then need=1
   echo "⚠ The AI engine account ran out of credits — it refused $nq request(s) in the last 24 h.$lq Pictures, videos and sounds fail until it is topped up;"
   pp=""; [ "${np:-0}" -gt 0 ] && pp=" $np film part(s) stopped because the part before them failed the same way."

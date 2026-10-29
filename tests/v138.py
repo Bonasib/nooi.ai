@@ -183,11 +183,12 @@ def deploy_side():
     with zipfile.ZipFile(PKG, "w") as z:
         z.writestr("server.js", "// new\n"); z.writestr("public/index.html", "<html></html>")
         z.write(ROOT + "/deploy/update.sh", "deploy/update.sh"); z.write(ROOT + "/deploy/backup.sh", "deploy/backup.sh")
-    env = dict(os.environ, PATH=BIN + ":" + os.environ["PATH"], CALLS=LOG, APP=APP, BINDIR=BIN, PREV=T + "/opt/nooi-prev")
+    env = dict(os.environ, PATH=BIN + ":" + os.environ["PATH"], CALLS=LOG, APP=APP, BINDIR=BIN, PREV=T + "/opt/nooi-prev", DEST=T + "/backups")   # (v186: the package's own backup runs — into DEST)
     r = subprocess.run(["bash", ROOT + "/deploy/update.sh", PKG], env=env, capture_output=True, text=True, timeout=120)
     mode = stat.S_IMODE(os.stat(APP).st_mode); inst = open(BIN + "/nooi-update").read()
     out["update"] = {"rc": r.returncode, "mode": oct(mode), "tail": (r.stdout + r.stderr)[-300:]}
     chk("update: the site's folder stays open to the site while the new version is copied (755, not mktemp's 700 → no more EACCES)", r.returncode == 0 and "Updated" in r.stdout and mode == 0o755 and open(APP + "/server.js").read() == "// new\n", out["update"])
+    chk("update: the new package's backup ran first (v186: data + settings in a small archive, no media inside)", any(n.startswith("nooi-data-") for n in (os.listdir(T + "/backups") if os.path.isdir(T + "/backups") else [])), (r.stdout + r.stderr)[-300:])
     chk("update: this version's update and backup commands are installed for next time", inst == open(ROOT + "/deploy/update.sh").read() and os.access(BIN + "/nooi-update", os.X_OK) and open(BIN + "/nooi-backup").read() == open(ROOT + "/deploy/backup.sh").read(), inst[:120])
     # the preview: its folder open too; promote uses the update steps of the version being put live
     T2 = tempfile.mkdtemp(prefix="nooi-v138s-"); APP2, STG, ETC, BIN2, LOG2 = T2 + "/opt/nooi", T2 + "/opt/nooi-stage", T2 + "/etc", T2 + "/bin", T2 + "/calls.log"
