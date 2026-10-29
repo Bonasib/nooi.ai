@@ -8,8 +8,8 @@
 #    here, about 1 credit; pictures off → refused at once, nothing charged
 #  · music: MiniMax music-2.6, instrumental without words; the song is kept here
 #  · the MiniMax balance used up (1008) → the job fails, the credits come back, staff see MiniMax out of credits
-#  · the page (phone in English, computer in Arabic): the MiniMax box right under Admin's tabs (v183b — not a card far down the
-#    page): a wrong key typed there → refused, the right one → "works · 5 voices", the key never left on the page; the switches,
+#  · the page (phone in English, computer in Arabic): MiniMax's own row in Admin → AI providers (v184; v183b: a box under the
+#    tabs — not a card far down the page), a tap opens it: a wrong key typed there → refused, the right one → "works · 5 voices", the key never left on the page; the switches,
 #    the region and the models; MiniMax Image-01 in the picture engines only while Pictures is on; nothing wider than the screen
 # Run: python3 tests/v183.py
 import asyncio, hashlib, json, os, shutil, subprocess, sys, tempfile, time, urllib.request, urllib.error
@@ -141,10 +141,12 @@ async def page_part(p, phone, lang):
     try:
         await pg.goto(B + "/"); await pg.wait_for_function("typeof API!=='undefined'&&API.mode==='server'&&API.cfg", timeout=20000)
         await E(f"()=>{{S.lang='{lang}';document.documentElement.dir='{'rtl' if ar else 'ltr'}';S.user=S.user||{{name:'Owner',method:'email',contact:'owner@nooi.ai'}};persist();S.admTab='models';go('admin')}}")
-        await pg.wait_for_function("!!document.getElementById('mm183p')&&!!document.getElementById('mm183key')", timeout=20000)
-        # the MiniMax box is the first thing under Admin's tabs (not the 26th card down the page)
-        pos = await E("()=>{const m=document.getElementById('main'),b=document.getElementById('mm183p').getBoundingClientRect(),t=document.querySelector('.admtabs').getBoundingClientRect();return {top:Math.round(b.top+m.scrollTop),gap:Math.round(b.top-t.bottom),inGrid:!!document.querySelector('.provc [data-pv=\"minimax\"]')}}")
-        out[tag + "-pos"] = pos; ok(pos["gap"] >= 0 and pos["gap"] < 60 and not pos["inGrid"], f"{tag}: the MiniMax box should sit right under the tabs: {pos}")
+        await pg.wait_for_function("!!document.querySelector('.aiprow[data-k=\"minimax\"]')", timeout=20000)
+        # (v184) MiniMax is a row of its own in the AI providers list, among the all-in-one engines near the top; a tap opens it
+        pos = await E("()=>{const r=document.querySelector('.aiprow[data-k=\"minimax\"]'),t=document.querySelector('.admtabs').getBoundingClientRect();return {grp:r.closest('.aipgrp').dataset.g,below:Math.round(r.getBoundingClientRect().top-t.bottom),logo:!!r.querySelector('.aiplogo img')}}")
+        out[tag + "-pos"] = pos; ok(pos["grp"] == "all" and 0 <= pos["below"] < 900 and pos["logo"], f"{tag}: the MiniMax row should be near the top with its logo: {pos}")
+        await pg.click('.aiprow[data-k="minimax"] .aiphead')
+        await pg.wait_for_function("!!document.getElementById('mm183key')&&document.getElementById('mm183key').offsetParent!==null", timeout=20000)
         # the key typed in the box: a wrong one is refused, the right one works with MiniMax's voices
         async def save_key(k):
             await pg.fill("#mm183key", k); await pg.click('[data-act="mm183-save"]')

@@ -21249,15 +21249,15 @@ setTimeout(()=>{try{soonPaint182()}catch(e){}},0);setTimeout(()=>{try{soonPaint1
    Speech; a customer's picked ElevenLabs voice stays ElevenLabs), Pictures (MiniMax Image-01 joins the picture engines) and Music
    (music for videos is made by MiniMax) — and a free check of the key (MiniMax's voice list, providers/minimax183.js).
    Videos stay where they are. */
-// (v183b: MiniMax has its own box at the top of Admin → AI providers — mmPanel183 — instead of a card among the provider keys)
+// (v183b/v184: MiniMax is a row of its own in Admin → AI providers — its settings: mmBody183)
 const MM183={d:null,busy:false,checking:false};
 const mmUse183=k=>!!(API.cfg&&API.cfg.providers&&API.cfg.providers.minimax183&&API.cfg.providers.minimax183[k]);
 async function mmLoad183(){if(API.mode!=="server"||MM183.busy)return;MM183.busy=true;try{MM183.d=await API.req("/v1/admin/minimax183")}catch(e){MM183.d=MM183.d||{err:String(e.message||e)}}finally{MM183.busy=false;if(S.view==="admin")renderView()}}
-function mmPanel183(){if(API.mode!=="server")return"";const D=MM183.d;if(!D){if(!MM183.busy)setTimeout(mmLoad183,0);return'<div class="panel pad mm183p" id="mm183p"><h3>'+L("MiniMax — voices, pictures and music","ميني ماكس — الأصوات والصور والموسيقى")+'</h3><p class="small dim">'+L("Loading…","جارٍ التحميل…")+"</p></div>"}
+function mmBody183(){if(API.mode!=="server")return'<p class="small dim">'+L("Demo: keys can't be saved in the browser. On your server they are stored encrypted.","تجريبي: لا يمكن حفظ المفاتيح في المتصفح. على خادمك تُحفظ مشفّرة.")+"</p>";const D=MM183.d;if(!D){if(!MM183.busy)setTimeout(mmLoad183,0);return'<div class="mm183p" id="mm183p"><p class="small dim">'+L("Loading…","جارٍ التحميل…")+"</p></div>"}
   const st=D.status||{},ok=D.keySet&&st.state==="online",reg=MM183.region||D.region||"intl",
     note=MM183.checking?L("Checking…","جارٍ الفحص…"):!D.keySet?L("No key yet — paste your MiniMax API key, then Save & check.","لا يوجد مفتاح بعد — الصق مفتاح MiniMax API ثم اضغط «حفظ وفحص»."):st.checked?(ok?"✓ "+L("Key works · ","المفتاح يعمل · ")+(D.voices||0)+L(" voices"," صوتاً"):"✗ "+(st.type==="auth"?L("MiniMax refused the key — check it and the region","رفضت ميني ماكس المفتاح — تحقّق منه ومن المنطقة"):st.type==="quota"?L("The MiniMax balance is used up — top it up","نفد رصيد ميني ماكس — اشحنه"):String(st.note||st.type||""))):L("Saved — press Save & check to test it (free).","محفوظ — اضغط «حفظ وفحص» لتجربته (مجاناً).");
-  return'<div class="panel pad mm183p" id="mm183p"><div class="spread"><h3 style="margin:0">'+ic("key")+" "+L("MiniMax — voices, pictures and music","ميني ماكس — الأصوات والصور والموسيقى")+"</h3>"+(ok?badge("complete",L("Connected","متصل")):D.keySet?badge("queued",L("Key saved","المفتاح محفوظ")):badge("draft",L("Not set","غير مُعد")))+"</div>"+
-    '<p class="small mute" style="margin:6px 0 10px">'+L("Your own MiniMax key (pay as you go). Each voice, picture and song is billed to your MiniMax balance; customers pay in nooi credits first. Videos stay on their engines.","مفتاح ميني ماكس الخاص بك (الدفع حسب الاستخدام). كل صوت وصورة وأغنية تُحسب من رصيدك في ميني ماكس، ويدفع العملاء بأرصدة nooi أولاً. الفيديوهات تبقى على محركاتها.")+"</p>"+
+  return'<div class="mm183p" id="mm183p">'+
+    '<p class="small mute" style="margin:0 0 10px">'+L("Your own MiniMax key (pay as you go). Each voice, picture and song is billed to your MiniMax balance; customers pay in nooi credits first. Videos stay on their engines.","مفتاح ميني ماكس الخاص بك (الدفع حسب الاستخدام). كل صوت وصورة وأغنية تُحسب من رصيدك في ميني ماكس، ويدفع العملاء بأرصدة nooi أولاً. الفيديوهات تبقى على محركاتها.")+"</p>"+
     '<label class="lbl" for="mm183key">'+L("MiniMax API key","مفتاح MiniMax API")+'</label><input type="password" id="mm183key" dir="ltr" autocomplete="off" placeholder="'+esc(D.keySet?L("Saved — paste a new key to replace it","محفوظ — الصق مفتاحاً جديداً لاستبداله"):L("Paste your MiniMax API key","الصق مفتاح MiniMax API"))+'">'+
     '<span class="lbl">'+L("Account region","منطقة الحساب")+'</span><div class="seg mm183reg">'+[["intl",L("International · api.minimax.io","دولي · api.minimax.io")],["cn",L("China · api.minimaxi.com","الصين · api.minimaxi.com")]].map(r=>'<button data-act="mm183-region" data-v="'+r[0]+'" aria-pressed="'+(reg===r[0])+'">'+esc(r[1])+"</button>").join("")+"</div>"+
     '<div class="spread mm183chk"><span class="small '+(ok?"":"dim")+'" id="mm183st">'+esc(note)+'</span><button class="btn sm primary" data-act="mm183-save">'+ic("check")+L("Save & check","حفظ وفحص")+"</button></div>"+
@@ -21266,19 +21266,18 @@ function mmPanel183(){if(API.mode!=="server")return"";const D=MM183.d;if(!D){if(
       toggleRow(D.image!==false,"mm183-use","image",L("Pictures","الصور"),L("MiniMax Image-01 joins the picture engines (a character's photo keeps the face).","يظهر MiniMax Image-01 بين محركات الصور (صورة الشخصية تحفظ الوجه)."))+
       toggleRow(D.music!==false,"mm183-use","music",L("Music","الموسيقى"),L("Music for videos is made by MiniMax — instrumental unless there are words to sing.","تصنع ميني ماكس موسيقى الفيديوهات — بلا غناء ما لم تُكتب كلمات."))+"</div>":"")+
     '<details class="mm183adv"><summary class="small">'+L("Models (optional)","النماذج (اختياري)")+"</summary>"+[["speechModel",L("Voice model","نموذج الصوت"),"speech-2.8-hd"],["imageModel",L("Picture model","نموذج الصور"),"image-01"],["musicModel",L("Music model","نموذج الموسيقى"),"music-2.6"]].map(f=>'<label class="lbl">'+esc(f[1])+'</label><input type="text" dir="ltr" data-mm183="'+f[0]+'" placeholder="'+f[2]+'" autocomplete="off">').join("")+'<p class="small dim" style="margin:6px 0 0">'+L("Empty = the default shown. Saved with Save & check.","فارغ = الافتراضي الظاهر. يُحفظ مع «حفظ وفحص».")+"</p></details></div>"}
-// (the box comes first in Admin → AI providers, right under the tabs)
-VIEWS.admin=(o=>function(){const h=o.apply(this,arguments);if(S.admTab!=="models"||API.mode!=="server"||!can("providers.manage")||typeof h!=="string")return h;const t=h.indexOf('<div class="admtabs">');const e=t<0?-1:h.indexOf("</div>",t);return e<0?h:h.slice(0,e+6)+mmPanel183()+h.slice(e+6)})(VIEWS.admin);
+// (v184: the MiniMax row in Admin → AI providers holds these settings — mmBody183)
 document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="mm183-region"],[data-act="mm183-save"]');if(!a)return;e.stopPropagation();
   if(a.dataset.act==="mm183-region"){MM183.region=a.dataset.v;document.querySelectorAll('[data-act="mm183-region"]').forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===a.dataset.v)));return}
   const key=(($("#mm183key")||{}).value||"").trim(),vals={};if(key)vals.apiKey=key;if(MM183.region||!(MM183.d||{}).keySet)vals.baseUrl=(MM183.region||"intl")==="cn"?"https://api.minimaxi.com":"https://api.minimax.io";
   document.querySelectorAll("[data-mm183]").forEach(i=>{if(i.value.trim())vals[i.dataset.mm183]=i.value.trim()});
   if(!key&&!(MM183.d||{}).keySet){toast(L("Paste your MiniMax API key first.","الصق مفتاح MiniMax API أولاً."));const k=$("#mm183key");if(k)k.focus();return}
   a.disabled=true;MM183.checking=true;renderView();
-  try{if(Object.keys(vals).length)await API.req("/v1/admin/providers/minimax",{method:"PUT",json:vals});const r=await API.req("/v1/admin/minimax183/check",{json:{}});MM183.region=null;
+  try{if(Object.keys(vals).length){await API.req("/v1/admin/providers/minimax",{method:"PUT",json:vals});if(typeof aipForget184==="function")aipForget184("minimax")}const r=await API.req("/v1/admin/minimax183/check",{json:{}});MM183.region=null;
     try{API.cfg=await(await fetch("/v1/config")).json()}catch(x){}
     toast(r.state==="online"?L("✓ MiniMax connected — voices, pictures and music are on","✓ تم ربط ميني ماكس — الأصوات والصور والموسيقى مفعّلة"):L("MiniMax: ","ميني ماكس: ")+(r.type==="auth"?L("the key was refused","رُفض المفتاح"):r.note||r.type),{type:r.state==="online"?"ok":"warn"})}
   catch(err){toast(String(err.message||err))}
-  MM183.checking=false;await mmLoad183();renderAll()},true);
+  await mmLoad183();MM183.checking=false;renderAll()},true);
 document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="mm183-use"],[data-act="mm183-check"]');if(!a)return;e.stopPropagation();
   if(a.dataset.act==="mm183-check"){MM183.checking=true;renderView();try{const r=await API.req("/v1/admin/minimax183/check",{json:{}});MM183.d=Object.assign({},MM183.d,{status:r,voices:r.voices});toast(r.state==="online"?L("✓ MiniMax key works","✓ مفتاح ميني ماكس يعمل"):L("MiniMax: ","ميني ماكس: ")+(r.note||r.type),{type:r.state==="online"?"ok":"warn"})}catch(err){toast(String(err.message||err))}MM183.checking=false;await mmLoad183();return}
   const k=a.dataset.k,on=(MM183.d||{})[k]!==false;try{const r=await API.req("/v1/admin/minimax183",{method:"PUT",json:{[k]:!on}});MM183.d=Object.assign({},MM183.d,r);try{API.cfg=await(await fetch("/v1/config")).json()}catch(x){}}catch(err){toast(String(err.message||err))}renderAll()},true);
@@ -21287,8 +21286,6 @@ function mmPics183(){const on=mmUse183("image");if(on&&!IMG_MODELS.mmimage){cons
   else if(!on&&IMG_MODELS.mmimage){delete IMG_MODELS.mmimage;if(S.hf&&S.hf.iModel==="mmimage")S.hf.iModel="auto"}}
 renderView=(o=>function(){try{mmPics183()}catch(e){}return o.apply(this,arguments)})(renderView);
 document.head.insertAdjacentHTML("beforeend",`<style>
-.mm183p{margin:0 0 14px;border-color:color-mix(in srgb,var(--lime) 35%,var(--line))}
-.mm183p h3 svg{width:16px;height:16px;vertical-align:-3px}
 .mm183p .seg{display:flex;flex-wrap:wrap;gap:6px}
 .mm183p .seg button{flex:1 1 180px;min-width:0}
 .mm183chk{gap:10px;margin-top:12px;flex-wrap:wrap}
@@ -21296,6 +21293,130 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 .mm183use{margin-top:12px}
 .mm183adv{margin-top:10px}
 .mm183adv summary{cursor:pointer;color:var(--mute)}
+</style>`);
+
+/* ================= v184: ADMIN → AI PROVIDERS — EVERY AI ON ITS OWN ROW ================= */
+/* The owner asked for a tidy, good-looking Admin where each AI shows with its own icon; a tap opens its settings and keys
+   right below it, and what is saved takes effect at once on the server and in the site. AI providers now opens with one
+   list, in groups (all-in-one engines · video · pictures · voices · text AI · 3D · dubbing · other): the logo, the name, what
+   it does and its state (Connected · Key saved · Problem · Not set). A row opens in place (the others stay as they are) with
+   its fields, Save & test (the key saved encrypted on the server, then a free test, the state, the site's settings read
+   again — nothing waits for a restart) and its own extras: the AI engine's quick start, NVIDIA's engine check, MiniMax's
+   region and switches. ElevenLabs, Google (Nano Banana · Gemini) and Midjourney get rows too (their keys were .env-only).
+   The old grid of 26 key cards is gone; a search finds an AI by name. */
+const AIP184={open:{},q:"",busy:{},health:{}};
+const AIP_G184=[["all","All-in-one engines","محركات شاملة"],["video","Video","الفيديو"],["image","Pictures","الصور"],["voice","Voices & sound","الأصوات والصوت"],["text","Text AI","الذكاء النصي"],["3d","3D & worlds","ثلاثي الأبعاد والعوالم"],["dub","Dubbing & video understanding","الدبلجة وفهم الفيديو"],["other","Other services","خدمات أخرى"]];
+// key → [group, logo (LOGO_SRC), icon, name EN/AR when it isn't in AI_PROVIDERS, fields when it isn't in AI_PROVIDERS]
+const AIP_META184={engine:["all",null,"bolt",null,null,["video · image · music — Kling, Seedance, Wan, Hailuo, Veo, Grok, Nano Banana, GPT Image, Seedream, Flux, Suno…","فيديو · صور · موسيقى — Kling وSeedance وWan وHailuo وVeo وGrok وNano Banana وGPT Image وSeedream وFlux وSuno…"]],nvidia:["all","nvidia","bolt"],qwen:["all","qwen","bolt"],
+  minimax:["all","minimax","voice",["MiniMax — voices, pictures, music","ميني ماكس — أصوات وصور وموسيقى"],null,["voice · image · music — Speech 2.8, Image-01, music (pay as you go)","صوت · صور · موسيقى — Speech 2.8 وImage-01 والموسيقى (الدفع حسب الاستخدام)"]],
+  seedance:["video","seedance","video"],kling:["video","kling","video"],wan:["video","wan","video"],
+  google:["image","google","image",["Google — Nano Banana · Gemini","جوجل — Nano Banana · Gemini"],[["apiKey","API key (Google AI Studio)"],["baseUrl","API URL (optional)"]],["image · text — Nano Banana pictures and edits, Gemini","صور · نص — صور Nano Banana وتعديلاتها، وGemini"]],
+  openai:["image","openai","image"],midjourney:["image","midjourney","image",["Midjourney","ميدجورني"],[["apiKey","API key"],["baseUrl","API URL"]],["image — artistic pictures","صور — صور فنية"]],
+  realtime:["image",null,"brush"],fal:["image",null,"brush"],
+  elevenlabs:["voice","eleven","voice",["ElevenLabs","ElevenLabs"],[["apiKey","API key"],["voiceId","Default voice id (optional)"],["baseUrl","API URL (optional)"]],["voice — natural voices, cloning, sound effects","صوت — أصوات طبيعية واستنساخ ومؤثرات"]],
+  tts:["voice",null,"voice"],piper:["voice",null,"voice"],
+  claude:["text","claude","pen"],gemma:["text","google","pen",null,null,["text — Google runs it, nothing on your server · runs nooi's text tasks first","نص — تشغّله جوجل دون شيء على خادمك · يقوم بمهام nooi النصية أولاً"]],qwentext:["text","qwen","pen"],localtext:["text",null,"pen"],
+  worldlabs:["3d",null,"cam3d"],world:["3d",null,"cam3d"],tripo:["3d",null,"cam3d"],meshy:["3d",null,"cam3d"],blockade:["3d",null,"cam3d"],sam3d:["3d",null,"cam3d"],
+  camb:["dub",null,"dub"],nvloc:["dub","nvidia","dub"],vss:["dub","nvidia","video"],email:["other",null,"mail"]};
+function aipItems184(){const seen=new Set(),out=[];
+  const add=(k,p)=>{if(seen.has(k))return;seen.add(k);const m=AIP_META184[k]||["other",null,"key"];out.push({k,g:m[0],logo:m[1],icon:m[2],name:p?L(p[1],p[2]):L(m[3][0],m[3][1]),what:m[5]?L(m[5][0],m[5][1]):aipWhat184(p?p[3]:""),fields:p?p[4]:(m[4]||[]),def:p?p[5]:""})};
+  AI_PROVIDERS.forEach(p=>{if(p[0]!=="sam3d")add(p[0],p)});Object.keys(AIP_META184).forEach(k=>{if(!seen.has(k)&&AIP_META184[k][3])add(k,null)});
+  return AIP_G184.map(g=>[g,out.filter(x=>x.g===g[0])]).filter(x=>x[1].length)}
+// what each AI does, in the reader's language (the provider list keeps it in English)
+const AIP_W184=[["Subtitles & dubbing","الترجمة والدبلجة"],["Video intelligence","فهم الفيديو"],["Live sketch","الرسم الحي"],["All tools","كل الأدوات"],["3D objects","مجسمات ثلاثية الأبعاد"],["3D worlds","عوالم ثلاثية الأبعاد"],["3D world","عالم ثلاثي الأبعاد"],["3D","ثلاثي الأبعاد"],["video","فيديو"],["image","صور"],["text","نص"],["voice","صوت"],["music","موسيقى"],["email","البريد"]];
+function aipWhat184(s){s=String(s||"");if(S.lang!=="ar")return s;const head=s.split(" — ")[0];if(!/^[A-Za-z0-9 ·&]+$/.test(head))return s;let h=head;AIP_W184.forEach(([en,ar])=>{h=h.replace(new RegExp("\\b"+en.replace(/[&]/g,"\\$&")+"\\b","g"),ar)});return h+(s.length>head.length?s.slice(head.length):"")}
+const AIP_L184=[["Access key","مفتاح الوصول"],["Secret key","المفتاح السري"],["API key","مفتاح API"],["Base URL","الرابط الأساسي"],["API URL","رابط API"],["Model id","معرّف النموذج"],["Video model","نموذج الفيديو"],["Image model","نموذج الصور"],["Music model","نموذج الموسيقى"],["Text model","نموذج النص"],["Model","النموذج"],["(optional)","(اختياري)"],["optional","اختياري"],["Default voice id","معرّف الصوت الافتراضي"],["Video URL","رابط الفيديو"],["From","المرسِل"]];
+const aipLbl184=t=>{t=String(t||"");if(S.lang!=="ar")return t;AIP_L184.forEach(([en,ar])=>{t=t.split(en).join(ar)});return t};
+function aipState184(k){const pv=((A()||{}).providers||{})[k]||{},h=AIP184.health[k]||((A()||{}).health||{})[k],ps=typeof PSTATUS!=="undefined"?PSTATUS[k]:null;
+  if(k==="minimax"&&MM183.d){if(!MM183.d.keySet)return["off",L("Not set","غير مُعد")];const s=(MM183.d.status||{}).state;return s==="online"?["ok",L("Connected","متصل")]:s==="down"?["bad",L("Problem","مشكلة")]:["saved",L("Key saved","المفتاح محفوظ")]}
+  if(!pv.configured)return["off",L("Not set","غير مُعد")];const st=(h&&h.state)||ps;
+  return st==="online"?["ok",L("Connected","متصل")]:st==="down"?["bad",L("Problem","مشكلة")]:st==="maintenance"?["warn",L("Maintenance","صيانة")]:st==="degraded"?["warn",L("Slow","بطيء")]:["saved",L("Key saved","المفتاح محفوظ")]}
+function aipNote184(k){const h=AIP184.health[k]||((A()||{}).health||{})[k];if(AIP184.busy[k])return L("Saving and testing…","جارٍ الحفظ والاختبار…");if(!h)return((A()||{}).providers||{})[k]&&A().providers[k].configured?L("Saved on the server — press Test to check it (free).","محفوظ على الخادم — اضغط «اختبر» للتأكد (مجاناً)."):L("Not set — add its key and press Save & test.","غير مُعد — أضف مفتاحه واضغط «حفظ واختبار».");
+  return(h.state==="online"?"✓ ":h.state==="down"?"✗ ":"")+String(h.note||h.state||"")+(h.latency?" · "+h.latency+" ms":"")}
+function aipLogo184(it){const src=it.logo&&typeof LOGO_SRC!=="undefined"&&LOGO_SRC[it.logo];return'<span class="aiplogo'+(src?" img":"")+'">'+(src?'<img src="'+src+'" alt="">':ic(it.icon))+"</span>"}
+function aipBody184(it){const k=it.k,pv=((A()||{}).providers||{})[k]||{};if(k==="minimax")return'<div style="height:10px"></div>'+mmBody183();let h='<p class="small mute aipdesc">'+esc(it.what||"")+"</p>";
+  if(k==="engine"&&AIP184.engq)h+=AIP184.engq;
+  const f=(it.fields||[]).map(fl=>'<label class="lbl">'+esc(aipLbl184(fl[1]))+'</label><input type="'+(/key|secret|token|pass/i.test(fl[0])?"password":"text")+'" dir="ltr" data-pv="'+k+'" data-fl="'+fl[0]+'" placeholder="'+esc(fl[0]==="baseUrl"&&it.def?it.def:(pv[fl[0]+"Mask"]||""))+'" autocomplete="off">').join("");
+  const act='<div class="spread aipact"><span class="small '+(aipState184(k)[0]==="ok"?"":"dim")+'" id="aipst-'+k+'">'+esc(aipNote184(k))+'</span><div class="row aipbtns">'+(pv.configured?'<button class="btn sm" data-act="aip184-test" data-k="'+k+'">'+ic("refresh")+L("Test","اختبر")+"</button>":"")+'<button class="btn sm primary" data-act="aip184-save" data-k="'+k+'" '+(API.mode==="server"?"":"disabled")+">"+ic("check")+L("Save & test","حفظ واختبار")+"</button></div></div>";
+  h+=k==="engine"&&AIP184.engq?'<details class="aipadv"><summary class="small">'+L("More fields","حقول أخرى")+"</summary>"+f+act+"</details>":f+act;
+  if(k==="nvidia"&&typeof nvCheckHTML176==="function")h+=nvCheckHTML176();
+  return h}
+function aipList184(){const G=aipItems184(),all=G.flatMap(g=>g[1]),on=all.filter(it=>aipState184(it.k)[0]==="ok").length,saved=all.filter(it=>aipState184(it.k)[0]!=="off").length;
+  return'<section class="aip184" id="aip184"><div class="aiptop"><div style="min-width:0"><h2 class="aipt">'+ic("key")+" "+L("AI providers","مزودو الذكاء")+'</h2><p class="small mute" style="margin:2px 0 0">'+L("Tap an AI to open its settings and keys. Saving takes effect at once on the server and in the site.","اضغط على أي ذكاء لفتح إعداداته ومفاتيحه. الحفظ يسري فوراً على الخادم وفي الموقع.")+'</p></div><div class="aipsum"><b>'+on+"</b> "+L("connected","متصل")+' · <b>'+saved+"</b> "+L("with a key","بمفتاح")+' · <b>'+all.length+"</b> "+L("in all","إجمالاً")+'</div></div>'+
+    '<input type="search" id="aip184q" class="aipq" dir="auto" placeholder="'+esc(L("Find an AI… (MiniMax, Kling, voices)","ابحث عن ذكاء… (MiniMax، Kling، أصوات)"))+'" value="'+esc(AIP184.q)+'" autocomplete="off">'+
+    G.map(([g,items])=>'<div class="aipgrp" data-g="'+g[0]+'"><div class="aipgh">'+esc(L(g[1],g[2]))+'</div><div class="aiplist">'+items.map(it=>{const st=aipState184(it.k),open=!!AIP184.open[it.k];
+      return'<div class="aiprow" data-k="'+it.k+'" data-open="'+open+'" data-q="'+esc((it.name+" "+it.k+" "+(it.what||"")).toLowerCase())+'"><button class="aiphead" data-act="aip184" data-k="'+it.k+'" aria-expanded="'+open+'" aria-controls="aipb-'+it.k+'">'+aipLogo184(it)+'<span class="aipname"><b>'+esc(it.name)+"</b><small>"+esc(it.what||"")+'</small></span><span class="aippill s-'+st[0]+'"><i></i>'+esc(st[1])+'</span><span class="aipchev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></button>'+
+        '<div class="aipbody provc" id="aipb-'+it.k+'"'+(open?"":" hidden")+">"+aipBody184(it)+"</div></div>"}).join("")+"</div></div>").join("")+"</section>"}
+// the list opens the AI providers tab; the old key cards and the quick start box above it go (the quick start lives in the AI engine row)
+const divEnd184=(h,s)=>{let d=0;const re=/<div\b|<\/div>/g;re.lastIndex=s;let m;while((m=re.exec(h))){d+=m[0]==="</div>"?-1:1;if(!d)return m.index+6}return -1};
+VIEWS.admin=(o=>function(){let h=o.apply(this,arguments);if(S.admTab!=="models"||!can("providers.manage")||typeof h!=="string")return h;
+  const q=h.indexOf('<div class="panel pad engquick"');if(q>=0){const e=divEnd184(h,q);if(e>0){AIP184.engq=h.slice(q,e);h=h.slice(0,q)+h.slice(e)}}
+  const ph=h.indexOf('<h3 class="sec">'+L("Provider keys","مفاتيح المزودين")+"</h3>");if(ph>=0){const g=h.indexOf('<div class="intgrid">',ph),e=g>=0?divEnd184(h,g):-1;if(e>0)h=h.slice(0,ph)+h.slice(e)}
+  const t=h.indexOf('<div class="admtabs">'),te=t<0?-1:h.indexOf("</div>",t);return te<0?h:h.slice(0,te+6)+aipList184()+h.slice(te+6)})(VIEWS.admin);
+// open / close a row in place; search
+function aipToggle184(k,open){const r=document.querySelector('.aiprow[data-k="'+k+'"]');if(!r)return;const b=r.querySelector(".aipbody"),h=r.querySelector(".aiphead");open=open==null?!AIP184.open[k]:open;AIP184.open[k]=open;r.dataset.open=String(open);h.setAttribute("aria-expanded",String(open));b.hidden=!open;if(open&&k==="minimax"&&!MM183.d)mmLoad183()}
+function aipFilter184(){const q=AIP184.q.trim().toLowerCase();document.querySelectorAll(".aip184 .aiprow").forEach(r=>{r.style.display=!q||r.dataset.q.includes(q)?"":"none"});document.querySelectorAll(".aip184 .aipgrp").forEach(g=>{g.style.display=[...g.querySelectorAll(".aiprow")].some(r=>r.style.display!=="none")?"":"none"})}
+// what is typed into a key field stays while the page redraws itself (a background refresh used to empty it before Save);
+// kept in memory only, never in the page's code or storage, and dropped once saved
+const AIP_D184={};
+document.addEventListener("input",e=>{const t=e.target;if(!t)return;if(t.id==="aip184q"){AIP184.q=t.value;aipFilter184();return}
+  const k=t.dataset&&t.dataset.pv?t.dataset.pv+"|"+t.dataset.fl:t.id==="mm183key"?"minimax|apiKey":t.dataset&&t.dataset.mm183?"minimax|"+t.dataset.mm183:null;if(k)AIP_D184[k]=t.value});
+function aipRefill184(){document.querySelectorAll(".aip184 [data-pv],#mm183key,.aip184 [data-mm183]").forEach(i=>{const k=i.dataset.pv?i.dataset.pv+"|"+i.dataset.fl:i.id==="mm183key"?"minimax|apiKey":"minimax|"+i.dataset.mm183;if(AIP_D184[k]&&!i.value)i.value=AIP_D184[k]})}
+const aipForget184=pv=>Object.keys(AIP_D184).forEach(k=>{if(k.startsWith(pv+"|"))delete AIP_D184[k]});
+renderView=(o=>function(){const r=o.apply(this,arguments);try{if(S.view==="admin"){if(AIP184.q)aipFilter184();aipRefill184()}}catch(e){}return r})(renderView);
+async function aipTest184(k){let r;try{r=await API.req("/v1/admin/providers/"+k+"/test",{method:"POST",json:{}})}catch(err){r={state:"down",note:String(err.message||err)}}
+  AIP184.health[k]=r;const D=A();D.health=D.health||{};D.health[k]=r;if(typeof PSTATUS!=="undefined")PSTATUS[k]=r.state;return r}
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="aip184"],[data-act="aip184-save"],[data-act="aip184-test"]');if(!a)return;e.stopPropagation();const k=a.dataset.k;
+  if(a.dataset.act==="aip184"){aipToggle184(k);return}
+  if(API.mode!=="server"){toast(L("Demo: keys can't be saved in the browser. On your server they are stored encrypted.","تجريبي: لا يمكن حفظ المفاتيح في المتصفح. على خادمك تُحفظ مشفّرة."));return}
+  const vals={};if(a.dataset.act==="aip184-save"){document.querySelectorAll('[data-pv="'+k+'"]').forEach(i=>{if(i.value.trim())vals[i.dataset.fl]=i.value.trim()});if(!Object.keys(vals).length){toast(L("Fill at least one field.","املأ حقلاً واحداً على الأقل."));return}}
+  AIP184.busy[k]=true;a.disabled=true;const st=document.getElementById("aipst-"+k);if(st)st.textContent=aipNote184(k);
+  let r=null;try{if(Object.keys(vals).length){await API.req("/v1/admin/providers/"+k,{method:"PUT",json:vals});aipForget184(k)}r=await aipTest184(k)}catch(err){toast(String(err.message||err))}
+  try{API.cfg=await(await fetch("/v1/config")).json()}catch(x){}await admLoad();{const D2=A();D2.health=Object.assign({},D2.health||{},AIP184.health)}AIP184.busy[k]=false;AIP184.open[k]=true;renderAll();
+  if(r)toast(r.state==="online"?L("✓ Saved — it works now, on the server and in the site","✓ حُفظ — يعمل الآن على الخادم وفي الموقع"):r.state==="unconfigured"?L("Saved, but the key isn't there yet","حُفظ، لكن المفتاح غير موجود بعد"):L("Saved — the test says: ","حُفظ — نتيجة الاختبار: ")+(r.note||r.state),{type:r.state==="online"?"ok":"warn"})},true);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.aip184{margin:0 0 16px;padding:16px;border:1px solid var(--line);border-radius:18px;background:var(--panel)}
+.aip184 .aiptop{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 16px}
+.aip184 .aipt{margin:0;font-size:18px;display:flex;align-items:center;gap:8px}
+.aip184 .aipt svg{width:18px;height:18px}
+.aip184 .aipsum{font-size:12px;color:var(--mute);white-space:nowrap}
+.aip184 .aipsum b{color:var(--text)}
+.aip184 .aipq{margin:12px 0 4px;width:100%;box-sizing:border-box}
+.aip184 .aipgrp{margin-top:14px}
+.aip184 .aipgh{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin:0 2px 6px}
+.aip184 .aiplist{display:flex;flex-direction:column;gap:6px}
+.aip184 .aiprow{border:1px solid var(--line);border-radius:14px;background:var(--panel2);overflow:hidden;transition:border-color .2s}
+.aip184 .aiprow[data-open="true"]{border-color:color-mix(in srgb,var(--lime) 40%,var(--line))}
+.aip184 .aiphead{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:12px;padding:10px 12px;cursor:pointer;min-height:56px}
+.aip184 .aiphead:focus-visible{outline:2px solid var(--lime);outline-offset:-2px;border-radius:14px}
+.aip184 .aiplogo{flex:none;width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--panel3);color:var(--mute);overflow:hidden}
+.aip184 .aiplogo.img{background:#fff}
+.aip184 .aiplogo img{width:24px;height:24px;object-fit:contain}
+.aip184 .aiplogo svg{width:18px;height:18px}
+.aip184 .aipname{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.aip184 .aipname b{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.aip184 .aipname small{color:var(--dim);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.aip184 .aippill{flex:none;display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;background:var(--panel3);color:var(--mute);white-space:nowrap}
+.aip184 .aippill i{width:7px;height:7px;border-radius:50%;background:currentColor}
+.aip184 .aippill.s-ok{color:var(--lime-ink);background:color-mix(in srgb,var(--lime) 16%,transparent)}
+.aip184 .aippill.s-saved{color:var(--gold);background:color-mix(in srgb,var(--gold) 14%,transparent)}
+.aip184 .aippill.s-warn{color:var(--gold);background:color-mix(in srgb,var(--gold) 14%,transparent)}
+.aip184 .aippill.s-bad{color:var(--red);background:color-mix(in srgb,var(--red) 14%,transparent)}
+.aip184 .aipchev{flex:none;color:var(--dim);display:grid;place-items:center;transition:transform .2s}
+.aip184 .aipchev svg{width:18px;height:18px}
+.aip184 .aiprow[data-open="true"] .aipchev{transform:rotate(180deg)}
+.aip184 .aipbody{padding:4px 14px 14px;border-top:1px solid var(--line);animation:aip184in .2s ease-out}
+.aip184 .aipbody[hidden]{display:none}
+.aip184 .aipbody .panel{margin:10px 0 0!important;box-shadow:none}
+.aip184 .aipdesc{margin:10px 0 0}
+.aip184 .aipact{margin-top:12px;gap:8px 10px;flex-wrap:wrap}
+.aip184 .aipact>.small{flex:1 1 220px;min-width:0;overflow-wrap:anywhere}
+.aip184 .aipbtns{gap:6px;flex-wrap:nowrap}
+.aip184 .aipadv{margin-top:10px}
+.aip184 .aipadv summary{cursor:pointer;color:var(--mute)}
+@keyframes aip184in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.aip184 .aipbody{animation:none}.aip184 .aipchev{transition:none}}
+@media (max-width:480px){.aip184{padding:12px}.aip184 .aiphead{gap:10px;padding:10px}.aip184 .aipname small{display:none}}
 </style>`);
 
 /* ================= LOOP + BOOT ================= */
