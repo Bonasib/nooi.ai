@@ -9,7 +9,7 @@
 #    given pictures show — #image1: … · Saba: …"), the picture itself doesn't go to the engine; no picture made by another engine
 #  · no vision AI answering → Saba's saved look goes in the words; the video is still made
 #  · from Home the pictures reach an engine that takes them: Seedance gets meta.refs130 with the picture
-#  · NVIDIA closed to the key (Admin's check) → NVIDIA Cosmos picked is refused at once: nothing sent, nothing made, nothing paid;
+#  · NVIDIA closed to the key (Admin's check) → NVIDIA Cosmos picked is NVIDIA + Agents (v179): made by the agents, never on Cosmos;
 #    a fal.ai key changes nothing (NVIDIA Cosmos has nothing to do with fal.ai) and fal.ai is never asked
 #  · Admin's check tries other Cosmos 3 addresses; no fal.ai row
 # Run: python3 tests/v178.py
@@ -150,18 +150,21 @@ async def run(p, phone, lang, full):
         await pg.wait_for_function("SENT.some(x=>x.kind==='video')", timeout=30000)
         sv = await E("()=>SENT.filter(x=>x.kind==='video').map(x=>({model:x.model,refs:x.meta.refs130||null,inputs:x.inputs}))"); R["seed"] = sv
         ok(sv and sv[0]["refs"] and sv[0]["refs"][0]["tag"] == "image1" and "vRef1" in sv[0]["inputs"], f"{tag}: Home's picture reaches Seedance {sv}")
-        # 6. NVIDIA closed to the key → refused at once, nothing sent
-        nano("closed"); api("/v1/admin/nvidia/check", {}); await E("async()=>{API.cfg=await API.req('/v1/config')}")
+        # 6. NVIDIA closed to the key → (v179) NVIDIA + Agents: never refused, the agents make it, never on Cosmos
+        nano("closed"); api("/v1/admin/nvidia/check", {}); await E("async()=>{API.cfg=await API.req('/v1/config')}"); n6 = len(stats()["nv"])
         await E(clear); await E("()=>{S.hf.vModel='nvcosmos';renderAll()}"); await add_pic(pg, E)
-        await E("()=>{const q=document.getElementById('hfq');q.value='walking through this field #image1 @Saba';S.hf.prompt=q.value;TOASTS.length=0;SENT.length=0;hfSend()}"); await pg.wait_for_timeout(1500)
-        cl = await E("()=>({sent:SENT.length,toasts:TOASTS.slice()})"); R["closed"] = cl
-        ok(cl["sent"] == 0 and any("NVIDIA Cosmos isn't open" in t for t in cl["toasts"]), f"{tag}: NVIDIA closed → refused at once, nothing made or paid {cl}")
-        # 7. a fal.ai key changes nothing: NVIDIA Cosmos is NVIDIA's only, still refused while closed, fal.ai never asked
+        await E("()=>{const q=document.getElementById('hfq');q.value='walking through this field #image1 @Saba';S.hf.prompt=q.value;TOASTS.length=0;SENT.length=0;hfSend()}")
+        await pg.wait_for_function("SENT.length>0", timeout=30000); await pg.wait_for_timeout(500)
+        cl = await E("()=>({sent:SENT.map(x=>x.model),toasts:TOASTS.slice()})"); R["closed"] = cl
+        ok(cl["sent"] and "nvcosmos" not in cl["sent"] and not any("isn't open" in t for t in cl["toasts"]) and len(stats()["nv"]) == n6, f"{tag}: NVIDIA closed → NVIDIA + Agents makes it, never refused, Cosmos never asked {cl}")
+        # 7. a fal.ai key changes nothing: NVIDIA Cosmos has nothing to do with fal.ai, fal.ai never asked
         api("/v1/admin/providers/fal", {"apiKey": "fal-test-key"}, "PUT"); await E("async()=>{API.cfg=await API.req('/v1/config')}")
         f0 = len(stats()["fal"])
-        await E(clear); await E("()=>{S.hf.vModel='nvcosmos';const q=document.getElementById('hfq');q.value='a red car on a coast road at sunset';S.hf.prompt=q.value;TOASTS.length=0;SENT.length=0;hfSend()}"); await pg.wait_for_timeout(1500)
-        fz = await E("()=>({sent:SENT.length,toasts:TOASTS.slice()})"); R["fal"] = fz
-        ok(fz["sent"] == 0 and any("NVIDIA Cosmos isn't open" in t for t in fz["toasts"]) and len(stats()["fal"]) == f0, f"{tag}: a fal.ai key changes nothing — NVIDIA Cosmos still refused while NVIDIA is closed {fz}")
+        await E(clear); await E("()=>{S.hf.vModel='nvcosmos';const q=document.getElementById('hfq');q.value='a red car on a coast road at sunset';S.hf.prompt=q.value;TOASTS.length=0;SENT.length=0;hfSend()}")
+        await pg.wait_for_function("SENT.length>0", timeout=30000); await pg.wait_for_timeout(500)
+        fz = await E("()=>({sent:SENT.map(x=>x.model),toasts:TOASTS.slice()})"); R["fal"] = fz
+        ok(fz["sent"] and "nvcosmos" not in fz["sent"] and not any("isn't open" in t for t in fz["toasts"]) and len(stats()["fal"]) == f0, f"{tag}: a fal.ai key changes nothing — fal.ai never asked {fz}")
+        nano("open"); api("/v1/admin/nvidia/check", {})   # (the next run starts with NVIDIA open again)
     w = await E("()=>document.documentElement.scrollWidth<=innerWidth+1"); ok(w, f"{tag}: nothing wider than the screen")
     out[tag] = R; ok(not errs, f"{tag}: page errors {errs}"); await br.close()
 

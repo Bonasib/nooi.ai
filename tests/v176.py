@@ -136,11 +136,12 @@ async def run(p, phone, lang):
     pg = await c.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e)[:300])); E = pg.evaluate; R = {}
     await pg.goto(B + "/"); await pg.wait_for_function("typeof API!=='undefined'&&API.mode==='server'&&API.cfg", timeout=20000)
     await E("(l)=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.lang=l;S.user={name:'T',method:'google'};AU.showAuth=false;renderAll()}", lang)
-    # the picture engine list: FLUX.1's line says it isn't open
+    # the picture engine list: only the NVIDIA engines that passed the check
     await E("()=>{S.hf.tab='image';go('home');renderAll()}"); await pg.wait_for_timeout(500)
     sh = await E("""async()=>{const b=document.querySelector('.hfmi.eng171');if(!b)return'no chip';b.click();await new Promise(r=>setTimeout(r,400));const f=document.querySelector('#modalRoot .hfmodel[data-v="nvflux"]'),s=document.querySelector('#modalRoot .hfmodel[data-v="nvsd35"]');
       const r={flux:f&&{off:f.classList.contains('off173'),txt:(f.querySelector('.nm small')||{}).textContent||''},sd:s&&s.classList.contains('off173')};closeSheet();return r}""")
-    R["sheet"] = sh; ok(isinstance(sh, dict) and sh["flux"] and sh["flux"]["off"] and ("غير متاح لهذا الموقع" in sh["flux"]["txt"] if ar else "Not open to this site right now" in sh["flux"]["txt"]) and not sh["sd"], f"{tag}: FLUX.1's line says it isn't open, SD 3.5's doesn't {sh}")
+    # (v179: only the NVIDIA engines that passed the check are offered — FLUX.1, closed, isn't in the list; SD 3.5 is)
+    R["sheet"] = sh; ok(isinstance(sh, dict) and sh["flux"] is None and sh["sd"] is False, f"{tag}: FLUX.1 (closed) isn't offered, SD 3.5 is {sh}")
     # Admin → AI providers → NVIDIA AI → Check NVIDIA engines
     await E("()=>{S.admTab='models';go('admin');renderAll()}"); await pg.wait_for_function("document.querySelector('#nvchk176 [data-act=\"nv176-check\"]')", timeout=15000)
     await E("()=>{const b=document.querySelector('#nvchk176 [data-act=\"nv176-check\"]');b.scrollIntoView();b.click()}")
