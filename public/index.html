@@ -20874,6 +20874,24 @@ document.addEventListener("animationstart",e=>{const t=e.target;if(!t||!t.closes
 .hfref small{overflow-wrap:anywhere;white-space:normal}
 .hft136 .hfref:not(:has(img)){height:auto;min-height:54px;overflow:visible;padding:4px 2px}`;document.head.appendChild(st)})();
 
+/* ================= v174: notifications on phones come down from the top, across the screen (like the phone's own) —
+   above everything, under the notch; a swipe up puts one away (its × and its timer stay) ================= */
+(()=>{const st=document.createElement("style");st.textContent=`
+@media (max-width:767px){
+html .toast{top:calc(env(safe-area-inset-top,0px) + 8px)!important;bottom:auto!important;left:8px!important;right:8px!important;width:auto!important;max-width:none!important;margin:0!important;
+  border-radius:16px!important;padding:12px 8px 12px 14px!important;font-size:14px;line-height:1.4;box-shadow:0 12px 32px rgba(0,0,0,.35);z-index:10200!important;touch-action:pan-x;
+  animation:none!important;transition:opacity .22s ease,translate .32s cubic-bezier(.2,.8,.2,1)!important}
+html .toast:not(.show){translate:0 -24px}
+html .toast.drag174{transition:none!important}
+html .toast{padding-inline-end:40px!important}html .toast .tx81{position:absolute;top:8px;inset-inline-end:6px}
+}
+@media (max-width:767px) and (prefers-reduced-motion:reduce){html .toast{transition:opacity .2s!important}html .toast:not(.show){translate:none}}`;document.head.appendChild(st)})();
+const TS174={y:0,dy:0,on:false};
+document.addEventListener("touchstart",e=>{const t=e.target.closest&&e.target.closest("#toast.show");if(!t||innerWidth>767||e.target.closest("button"))return;TS174.on=true;TS174.y=e.touches[0].clientY;TS174.dy=0;t.classList.add("drag174")},{passive:true});
+document.addEventListener("touchmove",e=>{if(!TS174.on)return;const t=$("#toast");TS174.dy=Math.min(0,e.touches[0].clientY-TS174.y);if(t)t.style.translate="0 "+TS174.dy+"px"},{passive:true});
+document.addEventListener("touchend",()=>{if(!TS174.on)return;TS174.on=false;const t=$("#toast");if(!t)return;t.classList.remove("drag174");t.style.translate="";
+  if(TS174.dy<-28){clearTimeout(toastT);t.classList.remove("show","open81");toastAct=null}});
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
