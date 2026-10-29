@@ -12036,7 +12036,10 @@ addJob=(o=>function(j){if(NO87||!j||!["image","video"].includes(j.kind)||(j.meta
   // the characters named with @ — and the one picked in the page's own character list (Video, Images: "@ Name"), which used to
   // reach the engine as a bare id it ignored
   const cs=charsIn87(j.prompt),pk=j.meta&&j.meta.char?charById(j.meta.char):null;if(pk&&!cs.includes(pk))cs.push(pk);cs.splice(3);
-  const pics=j.kind==="video"&&j.meta&&Array.isArray(j.meta.pics177)?j.meta.pics177.slice(0,4-Math.min(cs.length,3)):[];if(!cs.length&&!pics.length)return o(j);   // (v177: # pictures for an engine that starts from one picture)
+  if(!cs.length)return o(j);
+  // v178: a video on an engine the customer picked that starts from one picture → no picture made first: the people are read into
+  // the words on the server (their saved look and face photo, by the site's vision AI) and the picked engine makes the video
+  if(j.kind==="video"&&typeof direct178==="function"&&direct178(j)){j.meta=Object.assign({},j.meta,{chars178:cs.map(c=>({name:c.name,look:[c.look,c.outfit].filter(Boolean).join(", "),face:face87(c)||""}))});j.prompt=plain87(j.prompt,cs);return o(j)}
   const none=cs.filter(c=>!face87(c));
   if(none.length){                                                    // make the missing faces first, then this job
     const waits=[];for(const c of none){const busy=S.jobs.find(x=>x.kind==="look"&&x.meta&&x.meta.char===c.id&&x.meta.real87&&["queued","rendering"].includes(x.status));let w=busy;if(!w){NO87++;try{w=withSlots87({chRef:null},()=>addJob({kind:"look",model:FACE87(),prompt:c.name+" · "+(c.look||""),title:c.name,cost:faceCost87(),secs:8,art:"portrait",aspect:"3:4",opt:charOpt(c),meta:{char:c.id,real87:1}}))}finally{NO87--}}if(w)waits.push(w.id)}
@@ -12049,12 +12052,11 @@ addJob=(o=>function(j){if(NO87||!j||!["image","video"].includes(j.kind)||(j.meta
     if(!IMG_MODELS[j.model]||["auto","dotimg","sdxl","flux","zimage"].includes(j.model))j.model=FACE87();return withSlots87(map,()=>o(j))}
   // video: a start picture of this scene with these people → the video from it (unless the user gave a first frame)
   if(M.vStart||M.startImage||(j.meta&&j.meta.start)){j.prompt+=" Keep these people exactly as they appear in the first frame.";return o(j)}
-  const SL=["iRef","iRef2","iRef3","iRef4"],map={};faces.forEach((u,i)=>{map[SL[i]]={type:"image",remote:u,url:u,name:"face"+(i+1)+".jpg"}});pics.forEach((p,i)=>{map[SL[faces.length+i]]=Object.assign({},p.obj)});const fm=FACE87();
-  const picWords=pics.length?" "+pics.map((p,i)=>"#"+p.tag+" is reference picture "+(faces.length+i+1)).join("; ")+" — use what they show as it looks.":"";
-  const pic=withSlots87(map,()=>{NO87++;try{return o({kind:"image",model:fm,prompt:"The first frame of a video: "+plain87(j.prompt,cs)+picWords+(cs.length?" Photorealistic, cinematic, natural light.":" Keep the look and style of the reference pictures."),title:(j.title||String(j.prompt).slice(0,40))+" · "+L("first frame","الإطار الأول"),aspect:j.aspect||"16:9",cost:(IMG_MODELS[fm]||{cr:4}).cr,secs:8,art:"scene",meta:{chars87:j.meta.chars87,face87:1,frame87:1,for177:j.model}})}finally{NO87--}});
-  if(!pic)return null;const job=Object.assign({},j,{prompt:j.prompt+(cs.length?" Keep these people exactly as they appear in the first frame.":" Keep everything exactly as it appears in the first frame."),meta:Object.assign({},j.meta)});delete job.id;delete job.meta.pics177;
+  const map={};faces.forEach((u,i)=>{map[["iRef","iRef2","iRef3"][i]]={type:"image",remote:u,url:u,name:"face"+(i+1)+".jpg"}});const fm=FACE87();
+  const pic=withSlots87(map,()=>{NO87++;try{return o({kind:"image",model:fm,prompt:"The first frame of a video: "+plain87(j.prompt,cs)+" Photorealistic, cinematic, natural light.",title:(j.title||String(j.prompt).slice(0,40))+" · "+L("first frame","الإطار الأول"),aspect:j.aspect||"16:9",cost:(IMG_MODELS[fm]||{cr:4}).cr,secs:8,art:"scene",meta:{chars87:j.meta.chars87,face87:1,frame87:1,for177:j.model}})}finally{NO87--}});
+  if(!pic)return null;const job=Object.assign({},j,{prompt:j.prompt+" Keep these people exactly as they appear in the first frame."});delete job.id;
   S.flow87.push({id:uid(),at:Date.now(),wait:[pic.id],then:job,start:pic.id,grab:!!HF_GRAB});persist();
-  const en177=(MODELS[j.model]||{}).name||"";toast(cs.length?L("First a picture of "+cs.map(c=>c.name).join(" and ")+" in your scene — the video starts from it.","أولاً صورة لـ "+cs.map(c=>c.name).join(" و")+" في مشهدك — ثم يبدأ الفيديو منها."):L("First the opening frame from your pictures — then "+(en177||"the engine")+" makes the video from it.","أولاً الإطار الأول من صورك — ثم يصنع "+(en177||"المحرك")+" الفيديو منه."),{type:"ok"});return pic})(addJob);
+  toast(L("First a picture of "+cs.map(c=>c.name).join(" and ")+" in your scene — the video starts from it.","أولاً صورة لـ "+cs.map(c=>c.name).join(" و")+" في مشهدك — ثم يبدأ الفيديو منها."),{type:"ok"});return pic})(addJob);
 // a waited-for step finished → run the next one
 setInterval(()=>{if(!S.flow87.length)return;let ch=false;
   for(const f of S.flow87.slice()){const js=f.wait.map(id=>S.jobs.find(x=>x.id===id));if(js.some(x=>!x||x.status==="failed")){S.flow87=S.flow87.filter(x=>x!==f);ch=true;toast(L("A step failed — nothing more was made.","فشلت خطوة — لم يُصنع شيء آخر."),{type:"warn"});continue}
@@ -14796,7 +14798,7 @@ makeVideo=(o=>function(){const R=S.view==="video"||S.view==="home"?refs130():[];
   REFGO130=R.map(r=>({slot:r.s,tag:r.tag}));try{return o.apply(this,arguments)}finally{REFGO130=null}})(makeVideo);
 addJob=(o=>function(j){if(REFGO130&&j&&j.kind==="video")j.meta=Object.assign({},j.meta,{refs130:REFGO130.slice()});return o.apply(this,arguments)})(addJob);
 // another video (a story, an ad…) doesn't take the Video page's pictures
-serverSubmit=(o=>function(obj,kind,payload){if(kind!=="video"||(payload&&payload.meta&&Array.isArray(payload.meta.refs130)))return o.apply(this,arguments);
+serverSubmit=(o=>function(obj,kind,payload){if(kind!=="video"||(payload&&payload.meta&&(Array.isArray(payload.meta.refs130)||Array.isArray(payload.meta.read178))))return o.apply(this,arguments);
   const keep={};REF130.forEach(s=>{if(M[s]){keep[s]=M[s];M[s]=null}});try{return o.apply(this,arguments)}finally{Object.assign(M,keep)}})(serverSubmit);
 (()=>{const st=document.createElement("style");st.textContent=`
 .cz98 .rf130{display:flex;align-items:flex-start;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 4px;margin:0}
@@ -20760,7 +20762,7 @@ hfMRow=(o=>function(t){const h=o.apply(this,arguments),H=S.hf;if(((t==="video"?H
 // 1. NVIDIA's logo on its engines (a green tile with the eye) — in the lists, the chip and the agents' lines
 LOGO_SRC.nvidia="data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#76B900"/><path d="M7 33C15 21 25 15 34 15c10 0 18 6 24 18-6 11-14 17-24 17-9 0-19-5-27-17z" fill="#fff"/><path d="M19 33c4-7 9-10 15-10 6 0 11 4 13 10-2 6-7 9-12 9-5 0-8-3-8-7 0-3 3-6 6-6" fill="none" stroke="#76B900" stroke-width="4.6" stroke-linecap="round"/></svg>');
 // (NVIDIA's video model closed to this site's key → its line in the list says so; nothing is charged if it is tried)
-hfModelSheet=(o=>function(){const r=o.apply(this,arguments);try{const P=API.cfg&&API.cfg.providers;if(P&&P.nvDown&&P.nvDown.video&&!P.cosmosFal177){const b=document.querySelector('#modalRoot .hfmodel[data-v="nvcosmos"]');
+hfModelSheet=(o=>function(){const r=o.apply(this,arguments);try{const P=API.cfg&&API.cfg.providers;if(P&&P.nvDown&&P.nvDown.video){const b=document.querySelector('#modalRoot .hfmodel[data-v="nvcosmos"]');
   if(b){b.classList.add("off173");const s=b.querySelector(".nm small");if(s)s.textContent=L("Not open to this site right now — nothing is charged if you try","غير متاح لهذا الموقع الآن — لا يُخصم شيء إن جرّبت")}}}catch(e){}return r})(hfModelSheet);
 
 // 2. the agents react: an engine picked → the producer says which engine makes every shot; words typed → the agent whose part
@@ -20934,8 +20936,7 @@ thumb=(o=>function(ref,op){if(op&&op.tag&&/^j:/.test(String(ref))){const n=names
 (()=>{const p=AI_PROVIDERS.find(x=>x[0]==="nvidia");const f=p&&p[4].find(x=>x[0]==="videoUrl");if(f)f[1]="Video URL (default …/cosmos/nvidia/cosmos3-nano)"})();
 const NV176={busy:false,r:null};
 function nvCheckHTML176(){const r=NV176.r,st={open:[L("Open to this key","متاح لهذا المفتاح"),"ok"],closed:[L("Not open to this key","غير متاح لهذا المفتاح"),"bad"],key:[L("Key refused","المفتاح مرفوض"),"bad"],
-  credits:[L("Out of NVIDIA credits","نفد رصيد NVIDIA"),"bad"],error:[L("NVIDIA answered with an error","ردّت NVIDIA بخطأ"),"warn"],unreachable:[L("Couldn't reach NVIDIA","تعذّر الوصول إلى NVIDIA"),"warn"],
-  ready:[L("Ready — used while NVIDIA's own API is closed","جاهز — يُستخدم ما دامت واجهة NVIDIA مغلقة"),"ok"],nokey:[L("No fal.ai key saved — add it under fal.ai to use it","لا يوجد مفتاح fal.ai — أضفه في fal.ai لاستخدامه"),"warn"]};
+  credits:[L("Out of NVIDIA credits","نفد رصيد NVIDIA"),"bad"],error:[L("NVIDIA answered with an error","ردّت NVIDIA بخطأ"),"warn"],unreachable:[L("Couldn't reach NVIDIA","تعذّر الوصول إلى NVIDIA"),"warn"]};
   return'<div class="nvchk176" id="nvchk176"><button class="btn sm" data-act="nv176-check"'+(NV176.busy?" disabled":"")+">"+ic(NV176.busy?"refresh":"check")+L("Check NVIDIA engines","افحص محركات NVIDIA")+'</button><p class="small mute">'+L("Asks each NVIDIA engine with an empty request — nothing is made and nothing is spent.","يسأل كل محرك NVIDIA بطلب فارغ — لا يُصنع شيء ولا يُستهلك شيء.")+"</p>"+
     (r&&r.error?'<p class="small nverr176" dir="auto">'+esc(r.error)+"</p>":"")+
     (r&&r.engines?'<div class="nvrows176">'+r.engines.map(e=>{const s=st[e.state]||[e.state,"warn"];return'<div class="nvrow176 '+s[1]+'" data-task="'+esc(e.task)+'"><b dir="ltr">'+esc(e.label)+"</b><span>"+esc(s[0])+(e.status?" · "+e.status:"")+'</span><small dir="ltr">'+esc(String(e.url).replace(/^https:\/\/ai\.api\.nvidia\.com/,"…"))+"</small>"+(e.note?'<small dir="ltr">'+esc(e.note)+"</small>":"")+"</div>"}).join("")+"</div>"+
@@ -20952,32 +20953,37 @@ hfModelSheet=(o=>function(){const r=o.apply(this,arguments);try{const D=API.cfg&
 .nvrows176{display:grid;gap:6px;margin:10px 0}.nvrow176{display:grid;gap:2px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);min-width:0}.nvrow176 small{overflow-wrap:anywhere;color:var(--mute)}
 .nvrow176.ok span{color:var(--lime,#9be15d)}.nvrow176.bad span{color:var(--red,#ff6b6b)}.nvrow176.warn span{color:var(--amber,#e0a23a)}.nverr176{color:var(--red,#ff6b6b)}`;document.head.appendChild(st)})();
 
-/* ================= v177: the engine you pick stays — pictures go through a first frame; NVIDIA Cosmos on the second provider ================= */
+/* ================= v177/v178: the engine you pick stays and makes the video itself ================= */
 // Adding a # picture switched a picked engine to Seedance (only Seedance and Kling 4.0 take reference pictures), and from Home the
-// pictures never reached the video at all (they were sent only from the Video page). Now: an engine that starts from one picture
-// (NVIDIA Cosmos, Kling 3.0, WAN, Veo…) keeps being the engine — nooi first makes the opening frame from your # pictures (and your
-// @ characters) with the picture engine, then your engine makes the video from it. The opening frame is priced on the button and
-// its card says what it is for. An NVIDIA engine the site's key can't run is refused before anything is made or paid.
+// pictures never reached the video (they were sent only from the Video page). Now an engine that starts from one picture (NVIDIA
+// Cosmos, Kling 3.0, WAN, Veo…) stays the engine, and makes the video directly (v178 — no picture made first by another engine):
+// the first picture named in the words is its first frame (unless one was given), and every picture — and the @ characters'
+// looks and face photos — is read on the server by the site's own vision AI into the words for it (lib/read178.js). An NVIDIA
+// engine the site's key can't run is refused before anything is made or paid.
 if(MODELS.kling40&&!REFOK130.includes("kling40"))REFOK130.push("kling40");   // (Kling 4.0 takes reference pictures on the server too)
 const frame177=m=>!!(m&&m!=="auto"&&MODELS[m]&&!REFOK130.includes(m)&&!/^mc/.test(m));
-const NOTE177={t:0,m:""};function note177(m){if(Date.now()-NOTE177.t<3000&&NOTE177.m===m)return;NOTE177.t=Date.now();NOTE177.m=m;const n=(MODELS[m]||{}).name||m;toast(L(n+" starts from one picture — nooi first makes the opening frame from your pictures, then "+n+" makes the video. The opening frame is in the price.","يبدأ "+n+" من صورة واحدة — يصنع nooi أولاً الإطار الأول من صورك، ثم يصنع "+n+" الفيديو. الإطار الأول ضمن السعر."),{type:"ok"})}
+const direct178=j=>!!(j&&frame177(j.model)&&!(j.meta&&(j.meta.studio||j.meta.auto||j.meta.from87)));   // (from87: the v87 flow's own video, after its first frame)
+const NOTE177={t:0,m:""};function note177(m){if(Date.now()-NOTE177.t<3000&&NOTE177.m===m)return;NOTE177.t=Date.now();NOTE177.m=m;const n=(MODELS[m]||{}).name||m;
+  toast(L(n+" makes the video from your picture: the first picture named in your words is its first frame, and nooi reads every picture you add into the words for "+n+".","يصنع "+n+" الفيديو من صورتك: أول صورة تذكرها في الوصف هي إطاره الأول، ويقرأ nooi كل صورة تضيفها ويضعها في الوصف لـ "+n+"."),{type:"ok"})}
 const NVT177={nvcosmos:"video",nvflux:"image",nvsd35:"image2",nvkontext:"edit"};
-function nvClosed177(m){const t=NVT177[m],P=API.cfg&&API.cfg.providers;return!!(t&&P&&P.nvDown&&P.nvDown[t]&&!(t==="video"&&P.cosmosFal177))}
+function nvClosed177(m){const t=NVT177[m],P=API.cfg&&API.cfg.providers;return!!(t&&P&&P.nvDown&&P.nvDown[t])}
 const nvNo177=m=>{const n=(MODELS[m]||IMG_MODELS[m]||{}).name||m;toast(L(n+" isn't open to this site right now — nothing was charged. Pick another engine or nooi Auto.",n+" غير متاح لهذا الموقع الآن — لم يُخصم شيء. اختر محركاً آخر أو nooi تلقائي."),{type:"warn"})};
-let PIC177=null;
-// Generate: a closed NVIDIA engine is refused at once; # pictures for an engine that starts from one picture → the first-frame step
+let READ178=null;
+const tagRe178=t=>new RegExp("#"+String(t).replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"(?![\\p{L}\\p{N}_])","u");
+// Generate: a closed NVIDIA engine is refused at once; # pictures for an engine that starts from one picture → the first one named is
+// the first frame, all of them go up to be read into the words (not as references the engine can't take)
 makeVideo=(o=>function(){const m=S.draft&&S.draft.model;if(nvClosed177(m)){nvNo177(m);return}
   const R=S.view==="video"||S.view==="home"?refs130():[];if(!R.length||!frame177(m))return o.apply(this,arguments);
-  const keep=S.draft.refs130;
-  if(M.vStart){toast(L("Your first frame starts the video — "+((MODELS[m]||{}).name||m)+" can't use other pictures as well, so they were left out.","إطارك الأول يبدأ الفيديو — لا يستطيع "+((MODELS[m]||{}).name||m)+" استخدام صور أخرى معه، لذلك تُركت."),{type:"warn"});
-    S.draft.refs130=[];try{return o.apply(this,arguments)}finally{S.draft.refs130=keep}}
-  PIC177=R.map(r=>({tag:r.tag,obj:Object.assign({},M[r.s])}));S.draft.refs130=[];try{return o.apply(this,arguments)}finally{S.draft.refs130=keep;PIC177=null}})(makeVideo);
+  const d=S.draft,keep=d.refs130,ks=M.vStart,p=String(d.prompt||""),first=R.find(r=>tagRe178(r.tag).test(p))||R[0];
+  READ178=R.map(r=>({slot:r.s,tag:r.tag}));if(!ks&&first&&M[first.s])M.vStart=Object.assign({},M[first.s]);
+  d.refs130=[];try{return o.apply(this,arguments)}finally{d.refs130=keep;M.vStart=ks;READ178=null}})(makeVideo);
 addJob=(o=>function(j){if(j&&!(j.meta&&(j.meta.studio||j.meta.auto))&&nvClosed177(j.model)){nvNo177(j.model);return null}
-  if(PIC177&&j&&j.kind==="video"&&!(j.meta&&j.meta.pics177))j.meta=Object.assign({},j.meta,{pics177:PIC177});return o.apply(this,arguments)})(addJob);
-// the price on Home's button: the opening frame (a picture) when one will be made — characters, or # pictures for such an engine
+  if(READ178&&j&&j.kind==="video"&&!(j.meta&&j.meta.read178))j.meta=Object.assign({},j.meta,{read178:READ178});return o.apply(this,arguments)})(addJob);
+// the price on Home's button: the opening frame (a picture) when one will be made — @ characters with nooi Auto or an engine that
+// takes pictures (an engine that starts from one picture makes the video itself — nothing extra)
 hfCost=(o=>function(){const c=o.apply(this,arguments),H=S.hf;if(H.tab!=="video"||M.hfRef)return c;const p=((document.getElementById("hfq")||{}).value||H.prompt||""),m=H.vModel;
-  const need=(typeof charsIn87==="function"&&charsIn87(p).length)||(refs130().length&&frame177(m));return need?c+((IMG_MODELS[FACE87()]||{cr:4}).cr):c})(hfCost);
-// the opening frame's card says what it is for
+  const need=typeof charsIn87==="function"&&charsIn87(p).length&&!frame177(m);return need?c+((IMG_MODELS[FACE87()]||{cr:4}).cr):c})(hfCost);
+// the opening frame's card (characters with nooi Auto / an engine that takes pictures) says what it is for
 hfrCard=(o=>function(j){const h=o(j);if(!j||!j.meta||!j.meta.frame87)return h;const e=(MODELS[j.meta.for177]||{}).name,mn=(IMG_MODELS[j.model]||{}).name||"";
   return h.replace(/(<small[^>]*>)[^<]*(<\/small>)/,"$1"+esc(e?L("First frame for "+e,"الإطار الأول لـ "+e):L("First frame","الإطار الأول"))+(mn?" · "+esc(mn):"")+"$2")})(hfrCard);
 

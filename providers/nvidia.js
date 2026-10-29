@@ -8,7 +8,7 @@
 // switched on or off ("use"). Picture / 3D / video jobs that fail on NVIDIA fall back to the site's other engine (lib/jobs.js).
 // NVIDIA answers synchronously (200 + JSON with base64) or, for long jobs, 202 + NVCF-REQID → poll the NVCF status URL.
 import zlib from "zlib";
-import { cfg, S, configured } from "../lib/settings.js";
+import { cfg, S } from "../lib/settings.js";
 import { save } from "../lib/store.js";
 import { saveBuffer } from "../lib/media.js";
 
@@ -178,8 +178,6 @@ export async function nvCheck176() {
     } catch (e) { return { task, label, url, state: "unreachable", status: 0, ms: Date.now() - t0, note: e.name === "AbortError" ? "Timed out" : String(e.message).slice(0, 160) }; }
     finally { clearTimeout(to); } };
   const out = await Promise.all(rows.map(one)), v = out.find((r) => r.task === "video"), a2 = out.find((r) => /^video-/.test(r.task) && r.state === "open");
-  // (v177: NVIDIA Cosmos on fal.ai — used while NVIDIA's own API is closed; not asked, only whether a fal key is saved)
-  out.push({ task: "video-fal", label: "NVIDIA Cosmos 2.5 on fal.ai (video)", url: "fal.ai", state: configured("fal") ? "ready" : "nokey", status: 0, ms: 0, note: "" });
   return { ok: true, at: Date.now(), engines: out, ...(v && v.state !== "open" && a2 ? { suggest: { videoUrl: a2.url, label: a2.label.replace(/ \(video\)$/, "") } } : {}) };
 }
 // which NVIDIA task (if any) runs this job: explicit NVIDIA models always; "nooi Auto" when that capability is switched on

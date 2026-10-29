@@ -196,15 +196,17 @@ async def main():
         ok((t2 or {}).get("model") == "bytedance/seedance-2" and len(i2.get("reference_image_urls") or []) == 2 and i2.get("prompt", "").startswith("Create UGC video where @Image2 enjoys the frozen @Image1 in a shop")
            and "first_frame_url" not in i2, f"Generate: Seedance gets both pictures and the words with @Image2 / @Image1 {out['gen']}")
         ok(after["v"] == "" and after["strip"] == ["girl", "image2"] and after["job"] == [{"slot": "vRef1", "tag": "girl"}, {"slot": "vRef2", "tag": "image2"}], f"the box is empty for the next idea, the pictures stay {after}")
-        # another engine (v177): it stays — the opening frame is made from the pictures first, with the picture engine
+        # another engine (v177/v178): it stays and makes the video itself — #girl (named in the words) is its first frame, the pictures go up to be read into its words
         n3 = len(tasks())
         await E("()=>{S.draft.model='kling30';S.draft.prompt='#girl waves';renderView()}"); await pg.wait_for_timeout(1300)   # (a second Generate within 1.2 s is a double tap)
         jobs0 = await E("()=>{window.__t=[];toast=(o=>function(m){__t.push(String(m));return o.apply(this,arguments)})(toast);return S.jobs.length}")
         await pg.click("#main .cz98 [data-act='gen-video']"); await pg.wait_for_timeout(500)
         no = await E("()=>({jobs:S.jobs.length,toast:__t.join(' | ').slice(0,300)})")
         t3 = wait(lambda: len(tasks()) > n3 and tasks()[-1]); i3 = (t3 or {}).get("input", {})
-        ok(no["jobs"] == jobs0 + 1 and t3 and "nano-banana" in t3.get("model", "") and len(i3.get("image_input") or []) == 2 and "#girl is reference picture 1" in i3.get("prompt", "") and "Kling 3.0" in no["toast"] and "Seedance" not in no["toast"],
-           f"another engine: the opening frame is made from the pictures first, then Kling 3.0 (no switch, no refusal) {no} {(t3 or {}).get('model')} {i3.get('image_input')}")
+        vj = await E("()=>{const j=S.jobs.filter(x=>x.kind==='video').pop();return j&&{model:j.model,read:(j.meta||{}).read178||null,refs:(j.meta||{}).refs130||null}}")
+        ok(no["jobs"] == jobs0 + 1 and t3 and "kling" in t3.get("model", "") and "nano-banana" not in t3.get("model", "") and "/media/" in json.dumps(i3) and "Seedance" not in no["toast"]
+           and vj and vj["model"] == "kling30" and [r["tag"] for r in (vj["read"] or [])] == ["girl", "image2"] and not vj["refs"],
+           f"another engine: Kling 3.0 makes the video itself from #girl, the pictures read into its words (no switch, no picture made first) {no} {(t3 or {}).get('model')} {vj}")
         # a video made elsewhere (a story, an ad…) doesn't take the Video page's pictures
         n4 = len(tasks())
         await E("()=>{S.draft.model='seedance20';addJob({kind:'video',prompt:'a lighthouse at night',model:'seedance20',dur:5,aspect:'16:9',cost:1,meta:{}})}")

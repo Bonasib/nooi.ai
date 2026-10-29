@@ -26,14 +26,10 @@ export function falInput(model, p) {
 // v117: Sync Lipsync 2 Pro — the lips of a video matched to a voice (video_url + audio_url; the video keeps its length: cut_off)
 export const FAL_LIPS = "fal-ai/sync-lipsync/v2/pro";
 const lipsInput = (p) => ({ video_url: abs(p.inputs?.lsV), audio_url: abs(p.inputs?.lsA), sync_mode: "cut_off" });
-// v177: NVIDIA Cosmos on fal.ai (Cosmos Predict 2.5) — used for "NVIDIA Cosmos" when NVIDIA's own API is closed to the site's key:
-// text-to-video { prompt }, image-to-video { prompt, image_url } → { video: { url } } (fal's model pages; the 5-second shot it makes)
-export const FAL_COSMOS177 = { t2v: "fal-ai/cosmos-predict-2.5/text-to-video", i2v: "fal-ai/cosmos-predict-2.5/image-to-video" };
-const cosmosInput = (p) => { const img = p.inputs?.startImage || p.inputs?.vStart; return { prompt: String(p.prompt || "").slice(0, 2000), ...(img ? { image_url: abs(img) } : {}) }; };
 export const falVideo = (model) => ({
   name: "fal.ai", configured: configured("fal"),
   async submit(p) {
-    const input = model === FAL_LIPS ? lipsInput(p) : /cosmos-predict/.test(model) ? cosmosInput(p) : falInput(model, p);
+    const input = model === FAL_LIPS ? lipsInput(p) : falInput(model, p);
     const d = await json(await fetch(QUEUE() + "/" + model, { method: "POST", headers: head(), body: JSON.stringify(input) }));
     if (!d.request_id || !d.status_url || !d.response_url) throw new Error("AI engine: no request id");
     return { remoteId: "fal:" + JSON.stringify({ s: d.status_url, r: d.response_url }), sent: { model, input } };
