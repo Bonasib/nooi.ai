@@ -8,7 +8,7 @@
 // switched on or off ("use"). Picture / 3D / video jobs that fail on NVIDIA fall back to the site's other engine (lib/jobs.js).
 // NVIDIA answers synchronously (200 + JSON with base64) or, for long jobs, 202 + NVCF-REQID → poll the NVCF status URL.
 import zlib from "zlib";
-import { cfg, S } from "../lib/settings.js";
+import { cfg, S, configured } from "../lib/settings.js";
 import { save } from "../lib/store.js";
 import { saveBuffer } from "../lib/media.js";
 
@@ -165,7 +165,11 @@ export async function nvCheck176() {
   const raw = cfg("nvidia"), c = nvCfg(); if (!c.key) return { ok: false, error: "No NVIDIA key saved" };
   const rows = [["video", "NVIDIA Cosmos (video)", urlOf176(raw, "video")], ["image", "NVIDIA FLUX.1 (pictures)", urlOf176(raw, "image")], ["image2", "NVIDIA SD 3.5 (pictures)", urlOf176(raw, "image2")],
     ["edit", "NVIDIA FLUX Kontext (picture edits)", urlOf176(raw, "edit")], ["3d", "NVIDIA TRELLIS (3D)", urlOf176(raw, "3d")]];
-  const vu = urlOf176(raw, "video"), alt = (/\/cosmos3-nano$/.test(vu) ? vu : DEF.video).replace(/cosmos3-nano$/, "cosmos3-super"); if (alt !== vu) rows.push(["video-alt", "NVIDIA Cosmos 3 Super (video)", alt]);
+  // (v177: other Cosmos 3 addresses on the same host — NVIDIA's own pages disagree about the hosted path, and an address that
+  // doesn't exist answers a bare "404 page not found" — the first one that answers is offered)
+  const vu = urlOf176(raw, "video"), base = /\/cosmos3-nano$/.test(vu) ? vu : DEF.video;
+  for (const [t, label, u] of [["video-super", "NVIDIA Cosmos 3 Super (video)", base.replace(/cosmos3-nano$/, "cosmos3-super")], ["video-edge", "NVIDIA Cosmos 3 Edge (video)", base.replace(/cosmos3-nano$/, "cosmos3-edge")],
+    ["video-genai", "NVIDIA Cosmos 3 Nano · another address (video)", base.replace("/v1/cosmos/", "/v1/genai/")]]) if (u !== vu) rows.push([t, label, u]);
   const one = async ([task, label, url]) => { const t0 = Date.now(), ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 20000);
     try { const r = await fetch(url, { method: "POST", signal: ctl.signal, headers: hdr(), body: "{}" }), txt = (await r.text()).slice(0, 400), st = r.status;
       const state = st === 400 || st === 422 || st === 429 || (st >= 200 && st < 300) ? "open" : st === 404 || st === 410 ? "closed" : st === 401 || st === 403 ? "key" : st === 402 ? "credits" : "error";
@@ -173,8 +177,10 @@ export async function nvCheck176() {
       return { task, label, url, state, status: st, ms: Date.now() - t0, note: state === "open" ? "" : txt.replace(/\s+/g, " ").slice(0, 200) };
     } catch (e) { return { task, label, url, state: "unreachable", status: 0, ms: Date.now() - t0, note: e.name === "AbortError" ? "Timed out" : String(e.message).slice(0, 160) }; }
     finally { clearTimeout(to); } };
-  const out = await Promise.all(rows.map(one)), v = out.find((r) => r.task === "video"), a2 = out.find((r) => r.task === "video-alt");
-  return { ok: true, at: Date.now(), engines: out, ...(v && v.state !== "open" && a2 && a2.state === "open" ? { suggest: { videoUrl: a2.url } } : {}) };
+  const out = await Promise.all(rows.map(one)), v = out.find((r) => r.task === "video"), a2 = out.find((r) => /^video-/.test(r.task) && r.state === "open");
+  // (v177: NVIDIA Cosmos on fal.ai — used while NVIDIA's own API is closed; not asked, only whether a fal key is saved)
+  out.push({ task: "video-fal", label: "NVIDIA Cosmos 2.5 on fal.ai (video)", url: "fal.ai", state: configured("fal") ? "ready" : "nokey", status: 0, ms: 0, note: "" });
+  return { ok: true, at: Date.now(), engines: out, ...(v && v.state !== "open" && a2 ? { suggest: { videoUrl: a2.url, label: a2.label.replace(/ \(video\)$/, "") } } : {}) };
 }
 // which NVIDIA task (if any) runs this job: explicit NVIDIA models always; "nooi Auto" when that capability is switched on
 export function nvRoute(cap, body) {

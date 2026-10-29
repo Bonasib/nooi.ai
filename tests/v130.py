@@ -149,7 +149,7 @@ async def main():
         await pg.set_input_files("#am130 input[data-ref130]", [D + "/girl.png", D + "/can.png"]); await pg.wait_for_timeout(900)
         s = await E("()=>({names:[...document.querySelectorAll('#main .rf130 [data-ref130n]')].map(i=>i.value),model:S.draft.model,menu:!document.getElementById('am130')||document.getElementById('am130').hidden,imgs:[...document.querySelectorAll('#main .rf130 .rf130p img')].filter(i=>i.naturalWidth>0).length,refs:S.draft.refs130.length})")
         out["added"] = s
-        ok(s["names"] == ["image1", "image2"] and s["model"] == "seedance20" and s["menu"] and s["imgs"] == 2 and s["refs"] == 2, f"two pictures added with names, the engine switched to Seedance 2.0, the menu closed {s}")
+        ok(s["names"] == ["image1", "image2"] and s["model"] == "kling30" and s["menu"] and s["imgs"] == 2 and s["refs"] == 2, f"two pictures added with names, the picked engine stays (v177: no switch to Seedance), the menu closed {s}")
         await pg.click("#dprompt"); await pg.keyboard.type("Create UGC video where #"); await pg.wait_for_timeout(150)
         h = await E("()=>{const x=document.getElementById('hp130');return x?{opts:[...x.querySelectorAll('[role=option] b')].map(b=>b.textContent),sel:x.querySelector('[aria-selected=true] b')?.textContent,ad:document.getElementById('dprompt').getAttribute('aria-activedescendant')}:null}")
         out["hash"] = h
@@ -185,7 +185,8 @@ async def main():
         await pg.fill("#main .rf130 [data-ref130n='vRef2']", "girl"); await pg.keyboard.press("Enter"); await pg.wait_for_timeout(150)
         dup = await E("()=>({tag:S.draft.refs130[1].tag,val:document.querySelector(\"#main .rf130 [data-ref130n='vRef2']\").value})")
         ok(dup == {"tag": "image2", "val": "image2"}, f"two pictures can't share a name {dup}")
-        # Generate → Seedance with both pictures and the names as @Image1 / @Image2
+        # Generate → Seedance with both pictures and the names as @Image1 / @Image2 (picked)
+        await E("()=>{S.draft.model='seedance20';renderView()}"); await pg.wait_for_timeout(200)
         n2 = len(tasks())
         await pg.click("#main .cz98 [data-act='gen-video']")
         t2 = wait(lambda: len(tasks()) > n2 and tasks()[-1])
@@ -195,13 +196,15 @@ async def main():
         ok((t2 or {}).get("model") == "bytedance/seedance-2" and len(i2.get("reference_image_urls") or []) == 2 and i2.get("prompt", "").startswith("Create UGC video where @Image2 enjoys the frozen @Image1 in a shop")
            and "first_frame_url" not in i2, f"Generate: Seedance gets both pictures and the words with @Image2 / @Image1 {out['gen']}")
         ok(after["v"] == "" and after["strip"] == ["girl", "image2"] and after["job"] == [{"slot": "vRef1", "tag": "girl"}, {"slot": "vRef2", "tag": "image2"}], f"the box is empty for the next idea, the pictures stay {after}")
-        # another engine: Generate says so and makes nothing
+        # another engine (v177): it stays — the opening frame is made from the pictures first, with the picture engine
         n3 = len(tasks())
         await E("()=>{S.draft.model='kling30';S.draft.prompt='#girl waves';renderView()}"); await pg.wait_for_timeout(1300)   # (a second Generate within 1.2 s is a double tap)
         jobs0 = await E("()=>{window.__t=[];toast=(o=>function(m){__t.push(String(m));return o.apply(this,arguments)})(toast);return S.jobs.length}")
         await pg.click("#main .cz98 [data-act='gen-video']"); await pg.wait_for_timeout(500)
         no = await E("()=>({jobs:S.jobs.length,toast:__t.join(' | ').slice(0,300)})")
-        ok(no["jobs"] == jobs0 and len(tasks()) == n3 and "Seedance" in no["toast"], f"another engine: Generate says so and makes nothing {no}")
+        t3 = wait(lambda: len(tasks()) > n3 and tasks()[-1]); i3 = (t3 or {}).get("input", {})
+        ok(no["jobs"] == jobs0 + 1 and t3 and "nano-banana" in t3.get("model", "") and len(i3.get("image_input") or []) == 2 and "#girl is reference picture 1" in i3.get("prompt", "") and "Kling 3.0" in no["toast"] and "Seedance" not in no["toast"],
+           f"another engine: the opening frame is made from the pictures first, then Kling 3.0 (no switch, no refusal) {no} {(t3 or {}).get('model')} {i3.get('image_input')}")
         # a video made elsewhere (a story, an ad…) doesn't take the Video page's pictures
         n4 = len(tasks())
         await E("()=>{S.draft.model='seedance20';addJob({kind:'video',prompt:'a lighthouse at night',model:'seedance20',dur:5,aspect:'16:9',cost:1,meta:{}})}")

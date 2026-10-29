@@ -5,8 +5,8 @@ import { cfg, configured, S as settingsS } from "../lib/settings.js";
 import { elevenlabs } from "./elevenlabs.js";
 import { nanoBanana, midjourney, gptImage } from "./images2.js";
 import { kie, kieDefault, kieAuto, kieVariant, KIE_BUILTIN, swapEngine } from "./kie.js";
-import { falVideo, FAL_SWAP } from "./fal.js";   // v116: Replace the person on fal.ai when the owner picks it
-import { nvRoute, nvAdapter } from "./nvidia.js";
+import { falVideo, FAL_SWAP, FAL_COSMOS177 } from "./fal.js";   // v116: Replace the person on fal.ai when the owner picks it
+import { nvRoute, nvAdapter, nvReady, nvDown176 } from "./nvidia.js";
 import { gen3dRoute, GEN3D } from "./gen3d.js";
 import { fpsAdapter } from "../lib/fps96.js";
 import { slowAdapter163 } from "../lib/slowmo163.js";
@@ -56,6 +56,8 @@ export const minimax = (mo) => { const c = cfg("minimax"); const base = (c.baseU
 export function adapterFor(cap, body, PROVIDERS) {
   if (cap === "enhance" && body.meta?.tool === "interp") return { key: "fps96", a: fpsAdapter() };   // v96: smooth motion on this server
   if (cap === "enhance" && body.meta?.tool === "slowmo") return { key: "slow163", a: slowAdapter163() };   // v163: super slow motion on this server
+  // v177: NVIDIA Cosmos while NVIDIA's own API is closed to this key → the same NVIDIA model (Cosmos Predict 2.5) on fal.ai, when a fal key is saved
+  const fc = cosmosFal177(cap, body); if (fc) return fc;
   // NVIDIA AI first when it handles this job (explicit NVIDIA model, or "nooi Auto" with that capability switched on)
   const nt = nvRoute(cap, body); if (nt) return { key: "nv@" + nt, a: nvAdapter(nt) };
   if (cap === "video" && body.model === "mcswap" && swapEngine() === "fal") return { key: "fal@" + FAL_SWAP, a: falVideo(FAL_SWAP) };   // v116
@@ -75,6 +77,9 @@ export function adapterFor(cap, body, PROVIDERS) {
     const d = r.key === cap && !own ? kieDefault(cap, body.kind) : null; const k = (d && kieVariant(d, cap, body)) || kieAuto(cap, body); if (k) return { key: "kie@" + k, a: kie(k) }; }
   return r;
 }
+export function cosmosFal177(cap, body) {
+  if (cap !== "video" || !body || body.model !== "nvcosmos" || body.noFal177 || !configured("fal") || (nvReady() && !nvDown176("video"))) return null;
+  const m = body.inputs?.startImage || body.inputs?.vStart ? FAL_COSMOS177.i2v : FAL_COSMOS177.t2v; return { key: "fal@" + m, a: falVideo(m) }; }
 function directAdapter(cap, body, PROVIDERS) {
   if (body.kind === "voice" && body.meta?.engine === "elevenlabs") return { key: "elevenlabs", a: elevenlabs() };
   if (cap === "image" && (body.model === "nano" || body.model === "nanopro")) return { key: "nano@" + body.model, a: nanoBanana(body.model) };

@@ -90,8 +90,8 @@ def server_part():
     c, _ = api("/v1/admin/providers/nvidia", PROV, "PUT"); ok(c == 200, f"NVIDIA set up (stand-in) {c}")
     # 1. the free check
     n0 = len(stats()["calls"]); c, r = api("/v1/admin/nvidia/check", {}); calls = stats()["calls"][n0:]; out["check"] = {"states": STATES(r), "statuses": {e["task"]: e["status"] for e in r.get("engines", [])}}
-    ok(c == 200 and STATES(r) == {"video": "open", "image": "closed", "image2": "open", "edit": "key", "3d": "error", "video-alt": "open"}, f"the check: each engine's state {out['check']}")
-    ok(len(calls) == 6 and all(x["empty"] and x["auth"] == "Bearer test-nv-key" for x in calls), f"the check sent empty requests only (nothing made) {calls}")
+    ok(c == 200 and STATES(r) == {"video": "open", "image": "closed", "image2": "open", "edit": "key", "3d": "error", "video-super": "open", "video-edge": "closed", "video-genai": "open", "video-fal": "nokey"}, f"the check: each engine's state {out['check']}")
+    ok(len(calls) == 8 and all(x["empty"] and x["auth"] == "Bearer test-nv-key" for x in calls), f"the check sent empty requests only (nothing made) {calls}")
     ok("suggest" not in r, f"no suggestion while Cosmos 3 Nano is open {r.get('suggest')}")
     cfg = api("/v1/config")[1].get("providers", {}); out["cfg"] = {"nvDown": cfg.get("nvDown"), "nvUse": cfg.get("nvUse")}
     ok(cfg.get("nvDown") == {"image": True} and (cfg.get("nvUse") or {}).get("image") is False, f"FLUX marked closed: nooi Auto's NVIDIA pictures off {out['cfg']}")
@@ -149,7 +149,7 @@ async def run(p, phone, lang):
       inCard:!!(card&&card.querySelector('[data-pv="nvidia"]')),use:!!w.querySelector('[data-act="nv176-use"]'),useTxt:(w.querySelector('[data-act="nv176-use"]')||{}).textContent||'',wide:document.documentElement.scrollWidth<=innerWidth+1,
       fit:[...w.querySelectorAll('.nvrow176')].every(r=>r.getBoundingClientRect().right<=w.getBoundingClientRect().right+1)}}""")
     R["admin"] = a; rows = {x[0]: x for x in a["rows"]}
-    ok(a["inCard"] and rows.get("video", [0, ""])[1] == "bad" and rows.get("image", [0, ""])[1] == "bad" and rows.get("image2", [0, ""])[1] == "ok" and rows.get("video-alt", [0, ""])[1] == "ok",
+    ok(a["inCard"] and rows.get("video", [0, ""])[1] == "bad" and rows.get("image", [0, ""])[1] == "bad" and rows.get("image2", [0, ""])[1] == "ok" and rows.get("video-super", [0, ""])[1] == "ok",
        f"{tag}: the NVIDIA card lists each engine and its state {a['rows']}")
     words = (["غير متاح لهذا المفتاح", "متاح لهذا المفتاح", "المفتاح مرفوض"] if ar else ["Not open to this key", "Open to this key", "Key refused"])
     ok(words[0] in rows["image"][2] and words[1] in rows["image2"][2] and words[2] in rows.get("edit", [0, 0, ""])[2], f"{tag}: states in the reader's language {a['rows']}")
