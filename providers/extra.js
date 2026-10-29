@@ -10,7 +10,7 @@ import { nvRoute, nvAdapter } from "./nvidia.js";
 import { gen3dRoute, GEN3D } from "./gen3d.js";
 import { fpsAdapter } from "../lib/fps96.js";
 import { slowAdapter163 } from "../lib/slowmo163.js";
-import { mmRoute183, MM_KEYS183 } from "./minimax183.js";   // v183: MiniMax voices, pictures and music with the owner's own key
+import { mmRoute183, MM_KEYS183, mmVideo185 } from "./minimax183.js";   // v183: MiniMax voices, pictures and music with the owner's own key (v185: + videos)
 // Flagship models → provider + API model id set by the admin (Admin → Models)
 const FLAGSHIP = { kling40: "kling", kling30: "kling", seedance25: "seedance", seedance20: "seedance", hailuoh3: "minimax" };
 const makers = () => ({ kling, seedance, minimax });
@@ -45,14 +45,8 @@ export const dashscope = (what) => { const c = cfg("qwen"); const base = (c.base
       const d = await j(await fetch(url, { method: "POST", headers: h, body: JSON.stringify(body) }), "DashScope"); return { remoteId: d.output?.task_id }; },
     async poll(id) { const d = await j(await fetch(base + "/tasks/" + id, { headers: { Authorization: "Bearer " + c.apiKey } }), "DashScope"); const o = d.output || {}; const s = o.task_status;
       return s === "SUCCEEDED" ? { status: "done", url: o.video_url || o.results?.[0]?.url } : s === "FAILED" || s === "CANCELED" ? { status: "failed", error: o.message || "DashScope failed" } : { status: s === "PENDING" ? "queued" : "rendering" }; } }; };
-// MiniMax Hailuo (video) — ⚠ verify endpoints/model id in the MiniMax docs before launch
-export const minimax = (mo) => { const c = cfg("minimax"); const base = (c.baseUrl || "https://api.minimax.io/v1").replace(/\/$/, ""); const h = { Authorization: "Bearer " + c.apiKey, "Content-Type": "application/json" };
-  return { name: "MiniMax Hailuo", configured: configured("minimax"),
-    async submit(p) { const body = { model: mo || c.model || "MiniMax-Hailuo-02", prompt: fullPrompt(p), duration: p.dur >= 10 ? 10 : 6, resolution: "1080P" }; if (startImg(p)) body.first_frame_image = startImg(p);
-      const d = await j(await fetch(base + "/video_generation", { method: "POST", headers: h, body: JSON.stringify(body) }), "MiniMax"); if (d.base_resp && d.base_resp.status_code) throw new Error("MiniMax: " + d.base_resp.status_msg); return { remoteId: d.task_id }; },
-    async poll(id) { const d = await j(await fetch(base + "/query/video_generation?task_id=" + encodeURIComponent(id), { headers: h }), "MiniMax"); const s = String(d.status || "").toLowerCase();
-      if (s === "success" && d.file_id) { const f = await j(await fetch(base + "/files/retrieve?file_id=" + encodeURIComponent(d.file_id), { headers: h }), "MiniMax"); return { status: "done", url: f.file && f.file.download_url }; }
-      return s === "fail" || s === "failed" ? { status: "failed", error: (d.base_resp && d.base_resp.status_msg) || "MiniMax failed" } : { status: s === "queueing" ? "queued" : "rendering" }; } }; };
+// MiniMax Hailuo (video) — v185: MiniMax's own API as in providers/minimax183.js (the old call here sent the paths without /v1)
+export const minimax = (mo) => mmVideo185(mo);
 // Pick the adapter for a job: video models can be routed to Seedance / Kling / Qwen / MiniMax, or to Kie AI
 export function adapterFor(cap, body, PROVIDERS) {
   if (cap === "enhance" && body.meta?.tool === "interp") return { key: "fps96", a: fpsAdapter() };   // v96: smooth motion on this server

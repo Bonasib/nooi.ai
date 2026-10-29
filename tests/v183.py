@@ -80,7 +80,7 @@ def server_part():
     for _ in range(80):
         try: urllib.request.urlopen(B + "/v1/health", timeout=2); break
         except Exception: time.sleep(0.25)
-    ok(api("/v1/config")[1].get("providers", {}).get("minimax183") == {"voice": False, "image": False, "music": False}, "no key → MiniMax used for nothing")
+    ok(api("/v1/config")[1].get("providers", {}).get("minimax183") == {"voice": False, "image": False, "music": False, "video": False}, "no key → MiniMax used for nothing")
     # a wrong key → refused; the right key → works, with MiniMax's voices
     ok(api("/v1/admin/providers/minimax", {"apiKey": "mm-wrong", "baseUrl": M}, method="PUT")[0] == 200, "saving the key failed")
     c, r = api("/v1/admin/minimax183/check", {}); out["check_wrong"] = r
@@ -89,7 +89,7 @@ def server_part():
     c, r = api("/v1/admin/minimax183/check", {}); out["check_good"] = {k: r.get(k) for k in ("state", "note", "voices")}
     ok(r.get("state") == "online" and r.get("voices") == 5 and "5 voices" in r.get("note", ""), f"the right key should work with 5 voices: {r}")
     ok(all(x["key"] for x in stats()["mm"]) and all(x["p"] == "/v1/get_voice" for x in stats()["mm"]), "the check must only read the free voice list")
-    ok(api("/v1/config")[1].get("providers", {}).get("minimax183") == {"voice": True, "image": True, "music": True}, "with the key, voices, pictures and music are on")
+    ok(api("/v1/config")[1].get("providers", {}).get("minimax183") == {"voice": True, "image": True, "music": True, "video": True}, "with the key, voices, pictures, music (and v185 videos) are on")
     ok(api("/v1/admin/minimax183", {"voice": False}, method="PUT", tok=TOKEN)[0] == 403, "a customer must not switch MiniMax")
     k0 = len(stats()["kie"])
     # voices: Arabic for a woman, English for a man
@@ -131,7 +131,7 @@ def server_part():
     ok(len(mm_last("/v1/t2a_v2")) == n0 and len(stats()["kie"]) > k0, f"voices off → not MiniMax: {j.get('status')} {j.get('error')}")
     b0 = bal(); c, r = api("/v1/jobs", {"kind": "image", "model": "mmimage", "prompt": "a red door, v183 off", "aspect": "1:1"}, tok=TOKEN)
     ok(c >= 400 and bal() == b0, f"pictures off → refused at once, nothing charged: {c} {r}")
-    ok(api("/v1/config")[1]["providers"]["minimax183"] == {"voice": False, "image": False, "music": True}, "config should follow the switches")
+    ok(api("/v1/config")[1]["providers"]["minimax183"] == {"voice": False, "image": False, "music": True, "video": True}, "config should follow the switches")
     api("/v1/admin/minimax183", {"voice": True, "image": True}, method="PUT")
 
 async def page_part(p, phone, lang):
@@ -161,7 +161,7 @@ async def page_part(p, phone, lang):
           region:[...c.querySelectorAll('[data-act="mm183-region"]')].map(b=>b.dataset.v+':'+b.getAttribute('aria-pressed')),models:[...c.querySelectorAll('[data-mm183]')].map(i=>i.dataset.mm183),
           wide:[...c.querySelectorAll('*')].filter(e=>{const b=e.getBoundingClientRect();return b.width&&(b.right>W+1||b.left<-1)}).length,st:document.getElementById('mm183st').textContent}}""")
         out[tag + "-card"] = {k: v[k] for k in ("sw", "region", "models", "wide", "st")}
-        ok(v["sw"] == ["voice:true", "image:true", "music:true"] and v["region"] == ["intl:true", "cn:false"] and v["models"] == ["speechModel", "imageModel", "musicModel"] and not v["wide"], f"{tag}: the MiniMax box: {out[tag + '-card']}")
+        ok(v["sw"] == ["voice:true", "image:true", "music:true", "video:true"] and v["region"] == ["intl:true", "cn:false"] and v["models"] == ["speechModel", "imageModel", "musicModel", "videoModel"] and not v["wide"], f"{tag}: the MiniMax box: {out[tag + '-card']}")
         await pg.screenshot(path=D + f"/{tag}-card.png")
         # MiniMax Image-01 among the picture engines; switched off → gone
         has = lambda: E("()=>{S.hf.tab='image';hfModelSheet();const t=(document.getElementById('modalRoot').innerText||'');document.getElementById('modalRoot').innerHTML='';return t.includes('MiniMax Image-01')}")
