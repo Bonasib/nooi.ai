@@ -2894,7 +2894,7 @@ function drawTextLayer(ctx,tx,ow,oh,t){
 function wrapText(ctx,s,max){const words=String(s).split(/\s+/);const out=[];let line="";words.forEach(w=>{const tt=line?line+" "+w:w;if(ctx.measureText(tt).width>max&&line){out.push(line);line=w}else line=tt});if(line)out.push(line);return out.length?out:[""]}
 function edTick(now){
   // the preview draws at 1080 on the long side; an export at ED.hq on the long side (v93: up to the format's own size)
-  const cv=$("#wk");if(!cv||S.view!=="edit")return;const F=fmt(),k=(ED.hq||1080)/Math.max(F[2],F[3]),ow=ED.hq?Math.round(F[2]*k/2)*2:Math.round(F[2]*k),oh=ED.hq?Math.round(F[3]*k/2)*2:Math.round(F[3]*k);if(cv.width!==ow||cv.height!==oh){cv.width=ow;cv.height=oh}
+  const cv=$("#wk");if(!cv||S.view!=="edit")return;const F=fmt(),k=(ED.hq||pqW198())/Math.max(F[2],F[3]),ow=ED.hq?Math.round(F[2]*k/2)*2:Math.round(F[2]*k),oh=ED.hq?Math.round(F[3]*k/2)*2:Math.round(F[3]*k);if(cv.width!==ow||cv.height!==oh){cv.width=ow;cv.height=oh}
   const ctx=cv.getContext("2d"),total=edTotal(),dt=ED.last?(now-ED.last)/1000:0;ED.last=now;
   if(ED.playing&&total){ED.t+=dt;if(ED.t>=total){if(ED.rec){ED.t=total}else ED.t=0}}
   if(!S.ed.clips.length){ctx.fillStyle="#0c0e0c";ctx.fillRect(0,0,ow,oh);ctx.fillStyle="#666";ctx.font="500 "+Math.round(oh*.028)+"px Geist, sans-serif";ctx.textAlign="center";ctx.fillText(L("Add clips to start","أضف مقاطع للبدء"),ow/2,oh/2);ctx.textAlign="start";syncClipMedia(-1,0,false);return}
@@ -16859,7 +16859,7 @@ VIEWS.edit=function(){if(HIST.i<0)histPush();try{edxInit()}catch(e){}const E=S.e
   // (v146: the timeline and its tool row are drawn by tl146() and edbar146())
   const bar146=edbar146(),tlh146=tl146(),bt146=document.createElement("template");bt146.innerHTML=bar146;const qb=s=>bt146.content.querySelector(s);
   // the preview keeps its size while the page is drawn again (the same size the player gives it), so nothing under it jumps
-  const wk=q("#wk");if(wk){const F=fmt(),k=(ED.hq||1080)/Math.max(F[2],F[3]),r=v=>ED.hq?Math.round(v*k/2)*2:Math.round(v*k);wk.setAttribute("width",r(F[2]));wk.setAttribute("height",r(F[3]))}
+  const wk=q("#wk");if(wk){const F=fmt(),k=(ED.hq||pqW198())/Math.max(F[2],F[3]),r=v=>ED.hq?Math.round(v*k/2)*2:Math.round(v*k);wk.setAttribute("width",r(F[2]));wk.setAttribute("height",r(F[3]))}
   const fb=q(".fmtbtn"),fbn=fb&&fb.querySelector("b");if(fbn){fb.setAttribute("title",fbn.textContent);fb.setAttribute("aria-label",L("Format","المقاس")+": "+fbn.textContent)}
   const st=q(".edstage");if(st)st.insertAdjacentHTML("beforeend",guides143());
   const tr=q(".transport"),zm=tr&&tr.querySelector('[data-act="ed-zoom"]');if(zm){const gm=E.guides143&&E.guides143!=="off";
@@ -16914,7 +16914,7 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
   if(act==="clip143"){edSetPick("clip",v);E.tab="clip";E.dt143="clip";persist();renderView();return}
   if(act==="guides143"){const i=GUIDES143.indexOf(E.guides143||"off");E.guides143=GUIDES143[(i+1)%GUIDES143.length];persist();renderView();
     toast(L(...{off:["Guides off","إيقاف خطوط الإرشاد"],thirds:["Guides: thirds","الإرشاد: الأثلاث"],center:["Guides: centre","الإرشاد: المنتصف"],safe:["Guides: safe margins","الإرشاد: الهوامش الآمنة"],short:["Guides: keep-out zones of short videos","الإرشاد: مناطق تجنّب في الفيديو القصير"]}[E.guides143]));return}
-  if(act==="fs143"){const s=document.querySelector(".ed143 .edstage");const f=s&&(s.requestFullscreen||s.webkitRequestFullscreen);if(f)try{f.call(s)}catch(err){}return}},true);
+  if(act==="fs143"){const s=document.querySelector(".ed143 .edstage");const f=s&&(s.requestFullscreen||s.webkitRequestFullscreen);if(f)try{const pr=f.call(s);if(pr&&pr.catch)pr.catch(()=>{})}catch(err){}return}},true);   // (v198: a refused full-screen request — no gesture, the stage redrawn meanwhile — is not a page error)
 // the panel you were in when you touched the timeline (a tap on a clip keeps its settings open only if you were in them)
 let TAP143=null;window.addEventListener("pointerdown",e=>{if(S.view==="edit"&&e.target.closest&&e.target.closest("#tlin .blk"))TAP143=S.ed.tab},true);
 // tapping the music or the captions on the timeline selects them too (their settings open in the details)
@@ -22756,6 +22756,142 @@ async function joinCheck196(){const m=/[#&]join196=([A-Za-z0-9_-]{16,40})/.exec(
   delete S.join196;if(m)history.replaceState(null,"",location.pathname+location.search);try{const r=await API.req("/v1/projects196/join",{json:{token:tok}});toast(L("You joined “","انضممت إلى «")+(r.name||"")+L("” — ","» — ")+(r.role==="edit"?L("you can edit.","يمكنك التحرير."):r.role==="owner"?L("it's yours.","إنه مشروعك."):L("you can review and comment.","يمكنك المراجعة والتعليق.")),{type:"ok"});PJ139.list=null;await open139(r.id);return true}
   catch(e){toast((S.lang==="ar"&&e.errorAr)?e.errorAr:String(e.message||e),{type:"warn"});return false}}
 window.addEventListener("hashchange",()=>{joinCheck196()});setTimeout(()=>{joinCheck196();let n=0;const iv=setInterval(()=>{if(++n>40||!S.join196){if(!S.join196)clearInterval(iv);return}joinCheck196().then(ok=>{if(ok)clearInterval(iv)})},3000)},1500);
+
+/* ================= v198: THE EDITOR TOWARDS AFTER EFFECTS / PREMIERE / DAVINCI — PHASE 4 =================
+   Roadmap rows 16–19 (docs/EDITOR_PRO_ROADMAP.md): a stopwatch beside every slider — any value animates with keyframes and
+   easing (AE's stopwatch, Premiere's keyframes on effects); editing by the transcript — tap the words to take out and the
+   video is cut there, everything after closes the gap (Premiere's text-based editing); playback quality for the preview
+   only (full / ½ / ¼, Premiere's playback resolution); media management — missing files relinked in one sheet, everything
+   consolidated to the account (Premiere's Link Media / Consolidate). Our own code; the big tools' public behaviour as the idea. */
+ICONS.transcript198='<path d="M4 6h16M4 10h10M4 14h16M4 18h7"/><path d="M17 15l2 2 3-3"/>';
+ICONS.relink198='<path d="M10 14a4 4 0 0 0 5.7 0l2.6-2.6a4 4 0 0 0-5.7-5.7l-1.3 1.3"/><path d="M14 10a4 4 0 0 0-5.7 0l-2.6 2.6a4 4 0 0 0 5.7 5.7l1.3-1.3"/><path d="M4 4l16 16"/>';
+(()=>{const st=document.createElement("style");st.textContent=`.kf198{border:0;background:none;color:var(--mute,#888);padding:0;width:20px;height:20px;display:inline-grid;place-items:center;border-radius:6px;cursor:pointer;vertical-align:-5px;margin-inline-start:4px;position:relative}
+.kf198 svg{width:14px;height:14px}.kf198.on{color:var(--lime,#CFE13E)}.kf198.at svg{fill:currentColor}.kf198[data-n]:not([data-n=""])::after{content:attr(data-n);position:absolute;top:-4px;inset-inline-end:-6px;font-size:9px;line-height:1;background:var(--card,#141614);color:inherit;padding:1px 3px;border-radius:6px;border:1px solid var(--line)}
+.tx198{display:flex;flex-wrap:wrap;gap:4px 3px;max-height:220px;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:12px;margin:6px 0 8px;line-height:1.5}.tx198w{border:1px solid transparent;background:none;color:inherit;font:inherit;padding:1px 5px;border-radius:7px;cursor:pointer}
+.tx198w[aria-pressed=true]{background:rgba(255,80,80,.18);border-color:rgba(255,80,80,.55);text-decoration:line-through}.tx198w.now{border-color:var(--lime,#CFE13E)}.tx198w.fill{color:var(--mute,#888);font-style:italic}
+.rl198{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}.rl198 b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rl198 small{color:var(--mute,#888)}`;document.head.appendChild(st)})();
+
+// ---- 18. playback quality: the preview's long side (an export keeps its own size; ED.hq is the export's)
+function pqW198(){const q=(S.ed&&+S.ed.pq198)||1;return q===2?540:q===4?270:1080}
+
+// ---- 16. keyframes on every slider. A key names the object and its field: "ly:<id>|sc", "clip:<id>|cg.exposure", "text:<id>|size",
+//          "look|bri", "cap|size", "ed|musicVol". Times are the timeline's. The value the object keeps is what is stored (a layer's
+//          x / y are fractions; the control shows them ×100).
+const KF198={armed:{},pt:0,long:false,lt:0,btnT:0};
+const KFEZ198=[["smooth","Smooth","ناعم"],["linear","Linear","خطي"],["in","Ease in","تسارع"],["out","Ease out","تباطؤ"],["hold","Hold","ثبات"]];
+function kfStore198(){const E=S.ed;if(!E.kf198||typeof E.kf198!=="object"||Array.isArray(E.kf198))E.kf198={};return E.kf198}
+function kfKey198(inp){if(!inp||inp.type!=="range"||!inp.dataset)return null;const E=S.ed;if(!E)return null;
+  if(inp.dataset.edx){const [g,k]=inp.dataset.edx.split(".");if(!k)return null;if(g==="ly"){if(!E.selLayer||k==="start"||k==="end")return null;const Ly=(E.layers||[]).find(x=>x.id===E.selLayer);return Ly&&Ly.kind!=="adj"?"ly:"+E.selLayer+"|"+k:null}
+    if(g==="cg"){return E.sel?"clip:"+E.sel+"|cg."+k:null}if(g==="cap")return"cap|"+k;return null}
+  const p=inp.dataset.bind;if(!p)return null;if(p.startsWith("tools.edit.")&&p.split(".").length===3)return"look|"+p.slice(11);
+  if(p.startsWith("edtext.")){const k=p.slice(7);return E.selText&&k!=="start"&&k!=="end"?"text:"+E.selText+"|"+k:null}if(p==="ed.musicVol")return"ed|musicVol";return null}
+function kfTarget198(key){const E=S.ed,i=key.indexOf("|"),tg=key.slice(0,i),f=key.slice(i+1),[kind,id]=tg.split(":");
+  if(kind==="ly"){const Ly=(E.layers||[]).find(x=>x.id===id);return Ly?{o:Ly,k:f,sc:f==="x"||f==="y"?100:1}:null}
+  if(kind==="clip"){const c=E.clips.find(x=>x.id===id);if(!c)return null;if(f.startsWith("cg.")){c.cg=c.cg||{};return{o:c.cg,k:f.slice(3),sc:1}}return{o:c,k:f,sc:1}}
+  if(kind==="text"){const t=(E.texts||[]).find(x=>x.id===id);return t?{o:t,k:f,sc:1}:null}
+  if(kind==="look")return{o:S.tools.edit,k:f,sc:1};if(kind==="cap"){E.caps=E.caps||{};return{o:E.caps,k:f,sc:1}}if(kind==="ed")return{o:E,k:f,sc:1};return null}
+function kfKeys198(key){const a=kfStore198()[key];return Array.isArray(a)?a:[]}
+function kfSet198(key,t,v,ez){const S0=kfStore198(),a=S0[key]||(S0[key]=[]),tt=+Math.max(0,+t).toFixed(3);let k=a.find(x=>Math.abs(x.t-tt)<.05);if(k){k.v=v;if(ez)k.ez=ez}else{k={t:tt,v,ez:ez||"smooth"};a.push(k);a.sort((x,y)=>x.t-y.t)}return k}
+function kfDel198(key,t){const S0=kfStore198(),a=S0[key];if(!a)return;const b=a.filter(x=>Math.abs(x.t-t)>=.05);if(b.length)S0[key]=b;else{delete S0[key];delete KF198.armed[key]}}
+function kfAt198(keys,t){if(!keys.length)return undefined;if(t<=keys[0].t)return keys[0].v;const last=keys[keys.length-1];if(t>=last.t)return last.v;let i=0;while(i<keys.length-1&&keys[i+1].t<=t)i++;const a=keys[i],b=keys[i+1],u=Math.min(1,Math.max(0,(t-a.t)/Math.max(1e-6,b.t-a.t)));return a.v+(b.v-a.v)*(EZ196[a.ez]||EZ196.smooth)(u)}
+// every frame (an export's frames too): a keyframed field takes its value at the playhead
+function kfApply198(t){const E=S.ed,S0=E&&E.kf198;if(!S0||typeof S0!=="object")return;for(const key in S0){const keys=S0[key];if(!Array.isArray(keys)||!keys.length){delete S0[key];continue}const tg=kfTarget198(key);if(!tg)continue;const v=kfAt198(keys,t);if(typeof v==="number"&&isFinite(v)&&tg.o[tg.k]!==v)tg.o[tg.k]=v}}
+function kfToggle198(key){const tg=kfTarget198(key);if(!tg)return;const keys=kfKeys198(key),at=keys.find(k=>Math.abs(k.t-ED.t)<.05);
+  if(at){kfDel198(key,at.t);toast(kfKeys198(key).length?L("Keyframe removed","أُزيل الإطار المفتاحي"):L("No more keyframes — the value stays as it is now.","لا إطارات مفتاحية بعد الآن — تبقى القيمة كما هي."),{type:"info"})}
+  else{const v=+tg.o[tg.k];kfSet198(key,ED.t,isFinite(v)?v:0);KF198.armed[key]=1;if(kfKeys198(key).length===1)toast(L("Animating — move the playhead, change the value, and a keyframe is set there.","يتحرّك — حرّك المؤشر وغيّر القيمة فيُضبط إطار مفتاحي هناك."),{type:"ok"})}
+  persist();kfBtns198()}
+// a stopwatch beside every slider that can animate; the slider shows the value at the playhead when it has keyframes
+function kfBtns198(){if(S.view!=="edit"||!S.ed)return;const now=ED.t;document.querySelectorAll("label.ctrl input[type=range]").forEach(inp=>{const lab=inp.closest("label.ctrl"),sp=lab&&lab.querySelector("span");if(!sp)return;const key=kfKey198(inp);let b=sp.querySelector(".kf198");
+    if(!key){if(b)b.remove();return}
+    if(!b){b=document.createElement("button");b.type="button";b.className="kf198";b.innerHTML=ic("kf");sp.appendChild(b)}
+    const keys=kfKeys198(key),at=keys.some(k=>Math.abs(k.t-now)<.05);b.dataset.kf198=key;b.classList.toggle("on",keys.length>0||!!KF198.armed[key]);b.classList.toggle("at",at);b.dataset.n=keys.length?String(keys.length):"";
+    b.setAttribute("aria-label",(keys.length?keys.length+" "+L("keyframes · tap: a keyframe here · hold: the list","إطارات مفتاحية · لمسة: إطار هنا · ضغطة طويلة: القائمة"):L("Animate this value from here","حرّك هذه القيمة من هنا")));b.setAttribute("aria-pressed",String(keys.length>0||!!KF198.armed[key]));
+    if(keys.length&&document.activeElement!==inp){const tg=kfTarget198(key);if(tg&&typeof tg.o[tg.k]==="number"){const shown=Math.round(tg.o[tg.k]*tg.sc*100)/100;if(+inp.value!==shown){inp.value=shown;const out=inp.dataset.out&&document.getElementById(inp.dataset.out);if(out)out.textContent=shown+(inp.dataset.unit||out.textContent.replace(/^[-\d.]+/,""))}}}})}
+function kfSheet198(key){const keys=kfKeys198(key),tg=kfTarget198(key),nm=(document.querySelector('.kf198[data-kf198="'+key.replace(/"/g,'\\"')+'"]')||{}).closest?.("label.ctrl")?.querySelector("span")?.firstChild?.textContent?.trim()||key.split("|")[1];
+  hfSheet(L("Keyframes · ","إطارات مفتاحية · ")+nm,'<p class="small dim" style="margin:0 0 8px">'+L("Each keyframe holds the value at its moment; between two the value eases from one to the next. Tap a time to go there.","يحمل كل إطار مفتاحي قيمته في لحظته؛ وبين اثنين تنتقل القيمة من أحدهما إلى الآخر. المس وقتاً للذهاب إليه.")+"</p>"+
+    (keys.length?'<div class="tm196l">'+keys.map(k=>'<div class="kf196"><button type="button" class="chip" data-act="kf198-go" data-v="'+esc(key)+'" data-t="'+k.t+'" dir="ltr">'+mmss(k.t)+'</button><span class="mono small" style="flex:1" dir="ltr">'+(Math.round(k.v*(tg?tg.sc:1)*100)/100)+'</span><select data-kf198ez="'+esc(key)+'" data-t="'+k.t+'" aria-label="'+esc(L("Easing","التسارع"))+'">'+KFEZ198.map(z=>'<option value="'+z[0]+'"'+((k.ez||"smooth")===z[0]?" selected":"")+">"+esc(L(z[1],z[2]))+"</option>").join("")+'</select><button type="button" class="btn sm ghost danger" data-act="kf198-del" data-v="'+esc(key)+'" data-t="'+k.t+'" aria-label="'+esc(L("Remove keyframe","أزل الإطار المفتاحي"))+'">'+ic("trash")+"</button></div>").join("")+"</div>":'<p class="small dim">'+L("No keyframes yet.","لا إطارات مفتاحية بعد.")+"</p>")+
+    '<div class="row" style="margin-top:12px;gap:8px"><button type="button" class="btn sm ghost danger" data-act="kf198-clear" data-v="'+esc(key)+'">'+ic("trash")+L("Clear all","امسح الكل")+'</button><button type="button" class="btn sm primary" data-act="close-sheet">'+L("Done","تم")+"</button></div>")}
+document.addEventListener("input",e=>{const t=e.target;if(S.view!=="edit"||!t||t.type!=="range"||!t.dataset)return;const key=kfKey198(t);if(!key)return;if(!kfKeys198(key).length&&!KF198.armed[key])return;const tg=kfTarget198(key);if(!tg)return;
+  const v=tg.o[tg.k];if(typeof v!=="number"||!isFinite(v))return;kfSet198(key,ED.t,v);clearTimeout(KF198.pt);KF198.pt=setTimeout(()=>{persist();kfBtns198()},250)});
+document.addEventListener("pointerdown",e=>{const b=e.target.closest&&e.target.closest(".kf198");if(!b)return;KF198.long=false;clearTimeout(KF198.lt);KF198.lt=setTimeout(()=>{KF198.long=true;kfSheet198(b.dataset.kf198)},480)},true);
+document.addEventListener("pointerup",()=>clearTimeout(KF198.lt),true);document.addEventListener("pointercancel",()=>clearTimeout(KF198.lt),true);
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest(".kf198");if(b){e.preventDefault();e.stopPropagation();if(KF198.long){KF198.long=false;return}kfToggle198(b.dataset.kf198);return}
+  const a=e.target.closest&&e.target.closest('[data-act^="kf198"]');if(!a)return;const key=a.dataset.v,t=+a.dataset.t;
+  if(a.dataset.act==="kf198-go"){ED.t=t;ED.playing=false;closeSheet();return}if(a.dataset.act==="kf198-del"){kfDel198(key,t);persist();kfSheet198(key);return}
+  if(a.dataset.act==="kf198-clear"){delete kfStore198()[key];delete KF198.armed[key];persist();closeSheet();kfBtns198();return}});
+document.addEventListener("contextmenu",e=>{const b=e.target.closest&&e.target.closest(".kf198");if(!b)return;e.preventDefault();kfSheet198(b.dataset.kf198)});
+document.addEventListener("change",e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.kf198ez)return;const k=kfKeys198(t.dataset.kf198ez).find(x=>Math.abs(x.t-+t.dataset.t)<.001);if(k){k.ez=t.value;persist()}});
+
+// ---- 17. editing by the transcript: the caption words are the video's words; the ones you tap are cut out and the rest closes up
+const TX198={sel:new Set(),last:-1,t:0};
+const FILL198=/^(um+|uh+|uhm+|erm+|hmm+|mm+|ah+|er+|like|y'?know|آآ+|اا+|آه+|إم+|امم+|أمم+|يعني|إيه|اه+|هاا+)[.,،؟?!…]*$/i;
+function txWords198(){const C=S.ed&&S.ed.caps;return ((C&&C.words)||[]).map((w,i)=>({i,s:+w.s||0,e:+w.e||0,w:String(w.w||"").trim()})).filter(x=>x.w)}
+function txRanges198(idx){const W=txWords198(),sel=W.filter(x=>idx.has(x.i)).sort((a,b)=>a.s-b.s),out=[];
+  for(const w of sel){const nx=W.find(x=>x.s>=w.e-1e-6&&!idx.has(x.i)),e=nx&&nx.s-w.e<.3?nx.s:w.e,r=out[out.length-1];if(r&&w.s<=r[1]+.12)r[1]=Math.max(r[1],e);else out.push([w.s,e])}
+  return out.map(r=>[+r[0].toFixed(3),+Math.max(r[0]+.04,r[1]).toFixed(3)])}
+// take the moment a → b out of the timeline: clips are trimmed or split, everything after closes the gap, what sat inside goes
+function cutRange198(a,b){const E=S.ed,d=b-a;if(!(d>.01))return 0;const st=edStarts(),out=[];
+  E.clips.forEach((c,i)=>{const cs=st[i],ce=cs+clipDur(c),sp=c.speed||1,m=t=>+(c.in+(t-cs)*sp).toFixed(3);
+    if(ce<=a+1e-6||cs>=b-1e-6){out.push(c);return}
+    if(a<=cs+1e-6&&b>=ce-1e-6)return;
+    if(a<=cs+1e-6){c.in=m(b);out.push(c);return}
+    if(b>=ce-1e-6){c.out=m(a);out.push(c);return}
+    const p=JSON.parse(JSON.stringify(c));p.id=uid();try{edCopyMedia91(c,p)}catch(e){}delete p.ain;p.in=m(b);p.trans=c.trans;if(c.aout)p.aout=c.aout;c.out=m(a);c.trans="cut";delete c.aout;out.push(c,p)});
+  E.clips=out;
+  const sh=t=>t>=b-1e-6?t-d:(t>a?a:t),pt=x=>{if(x>=b-1e-6)return x-d;if(x>a)return null;return x},span=x=>{x.start=+sh(+x.start||0).toFixed(3);x.end=+sh(+x.end||0).toFixed(3);return x.end-x.start>.04};
+  ["texts","layers","vfx","infos","regions"].forEach(k=>{if(Array.isArray(E[k]))E[k]=E[k].filter(x=>!(x&&x.start!=null&&x.end!=null)||span(x))});
+  const pts=(arr,f)=>Array.isArray(arr)?arr.filter(x=>{const t=pt(+x[f]||0);if(t==null)return false;x[f]=+t.toFixed(3);return true}):arr;
+  E.sfx=pts(E.sfx,"t");E.marks146=pts(E.marks146,"t");if(E.cam196)E.cam196.kf=pts(E.cam196.kf,"t");if(E.mc196&&Array.isArray(E.mc196.cuts))E.mc196.cuts=[E.mc196.cuts[0]].concat(pts(E.mc196.cuts.slice(1),"t"));
+  if(E.caps&&Array.isArray(E.caps.words))E.caps.words=E.caps.words.filter(w=>{if(w.s>=b-1e-6){w.s=+(w.s-d).toFixed(3);w.e=+(w.e-d).toFixed(3);return true}return w.e<=a+1e-6});
+  const K=E.kf198;if(K&&typeof K==="object")for(const key in K){K[key]=pts(K[key],"t");if(!K[key].length)delete K[key]}
+  if(E.sel&&!E.clips.some(c=>c.id===E.sel))E.sel=E.clips[0]?E.clips[0].id:null;return d}
+function txRemove198(idx,why){const rs=txRanges198(idx);if(!rs.length){toast(L("Tap the words to take out first.","المس الكلمات التي تريد حذفها أولاً."));return 0}
+  if(typeof histPush==="function")try{histPush()}catch(e){}let cut=0;rs.slice().sort((x,y)=>y[0]-x[0]).forEach(r=>{cut+=cutRange198(r[0],r[1])});
+  TX198.sel.clear();ED.t=Math.min(ED.t,Math.max(0,edTotal()-.01));ED.playing=false;persist();renderView();
+  toast((why||L("Removed ","أُزيلت "))+idx.size+L(" word(s) · "," كلمة · ")+cut.toFixed(1)+L(" s shorter. Undo puts them back."," ث أقصر. التراجع يعيدها."),{type:"ok",ms:5000});return cut}
+function txPanel198(){const W=txWords198();if(!W.length)return'<span class="lbl">'+L("Edit by the words","التحرير بالكلمات")+'</span><p class="small dim" style="margin:0">'+L("Make captions first (above) — then tap the words to take out and the video is cut there.","اصنع الترجمة أولاً (أعلاه) — ثم المس الكلمات التي تريد حذفها فيُقص الفيديو عندها.")+"</p>";
+  const sel=TX198.sel,rs=txRanges198(sel),secs=rs.reduce((a,r)=>a+r[1]-r[0],0),fill=W.filter(w=>FILL198.test(w.w)),shown=W.slice(0,2000);
+  return'<span class="lbl">'+L("Edit by the words","التحرير بالكلمات")+" · "+W.length+'</span><p class="small dim" style="margin:0 0 4px">'+L("Tap the words to take out — the video is cut there and what follows closes the gap. Tap a word to jump to it; undo puts everything back.","المس الكلمات التي تريد حذفها — يُقص الفيديو عندها ويُغلق ما بعدها الفجوة. لمسة على كلمة تنقلك إليها؛ التراجع يعيد كل شيء.")+"</p>"+
+    '<div class="tx198" role="listbox" aria-multiselectable="true" aria-label="'+esc(L("Transcript","النص"))+'">'+shown.map(w=>'<button type="button" class="tx198w'+(FILL198.test(w.w)?" fill":"")+'" role="option" data-tx198="'+w.i+'" aria-selected="'+sel.has(w.i)+'" aria-pressed="'+sel.has(w.i)+'" dir="auto" title="'+mmss(w.s)+'">'+esc(w.w)+"</button>").join("")+(W.length>shown.length?'<span class="small dim">… +'+(W.length-shown.length)+"</span>":"")+"</div>"+
+    '<div class="row" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn sm primary" data-act="tx198-rm"'+(sel.size?"":" disabled")+">"+ic("transcript198")+L("Remove ","احذف ")+sel.size+L(" word(s) · "," كلمة · ")+secs.toFixed(1)+" s</button>"+
+    '<button type="button" class="btn sm" data-act="tx198-fill"'+(fill.length?"":" disabled")+">"+L("Remove filler words","احذف كلمات الحشو")+" ("+fill.length+")</button>"+(sel.size?'<button type="button" class="btn sm ghost" data-act="tx198-clear">'+L("Clear","مسح")+"</button>":"")+"</div>"}
+EDX_PANELS.words=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="string")return h;return h+txPanel198()})(EDX_PANELS.words);
+document.addEventListener("click",e=>{const w=e.target.closest&&e.target.closest(".tx198w");if(w){const i=+w.dataset.tx198,W=txWords198(),x=W.find(y=>y.i===i);
+    if(e.shiftKey&&TX198.last>=0){const a=Math.min(TX198.last,i),b=Math.max(TX198.last,i);W.forEach(y=>{if(y.i>=a&&y.i<=b)TX198.sel.add(y.i)})}else{if(TX198.sel.has(i))TX198.sel.delete(i);else TX198.sel.add(i)}
+    TX198.last=i;if(x&&!ED.playing)ED.t=x.s+.01;const p=w.closest(".tx198"),sc=p?p.scrollTop:0;renderView();const p2=document.querySelector(".tx198");if(p2)p2.scrollTop=sc;return}
+  const a=e.target.closest&&e.target.closest('[data-act^="tx198"]');if(!a)return;const act=a.dataset.act;
+  if(act==="tx198-rm"){txRemove198(new Set(TX198.sel));return}if(act==="tx198-clear"){TX198.sel.clear();renderView();return}
+  if(act==="tx198-fill"){const idx=new Set(txWords198().filter(w=>FILL198.test(w.w)).map(w=>w.i));if(!idx.size){toast(L("No filler words found.","لا كلمات حشو."));return}txRemove198(idx,L("Removed filler words: ","أُزيلت كلمات الحشو: "));return}});
+
+// ---- 19. media management: what is missing, relinked in one sheet; what is only on this device, put on the account
+const RL198={warned:""};
+function missing198(){const E=S.ed,out=[];if(!E)return out;
+  E.clips.forEach((c,i)=>{if(!c.src||c.src.k==="demo"||c.src.k==="seq")return;const m=M["c_"+c.id];
+    const gone=!m||(m.type==="video"&&m.el&&m.el.error)||(m.type==="image"&&m.el&&m.el._err)||(c.src.k==="job"&&!S.jobs.some(j=>j.id===c.src.job)&&!c.src.url139&&(!m||m.type==="proc"))||(c.src.k==="upload"&&m&&!m.file&&!m.url&&!m._srv139&&m.type!=="proc");
+    if(gone)out.push({k:"c_"+c.id,name:(()=>{try{return clipName(c)}catch(e){return""}})()||(L("Clip ","مقطع ")+(i+1)),kind:L("clip","مقطع"),accept:"video/*,image/*"})});
+  (E.layers||[]).forEach((Ly,i)=>{if(Ly.kind==="adj")return;const m=M["ly_"+Ly.id];if(!m||(m.el&&m.el.error))out.push({k:"ly_"+Ly.id,name:Ly.name||(L("Layer ","طبقة ")+(i+1)),kind:L("layer","طبقة"),accept:"video/*,image/*"})});
+  (E.sfx||[]).forEach((x,i)=>{if(x.n!=="file")return;const m=M["sx_"+x.id];if(!m)out.push({k:"sx_"+x.id,name:x.name||(L("Sound ","صوت ")+(i+1)),kind:L("sound","صوت"),accept:"audio/*"})});
+  return out}
+function local198(){const E=S.ed;if(!E)return 0;const keys=E.clips.map(c=>"c_"+c.id).concat((E.layers||[]).map(L=>"ly_"+L.id),(E.sfx||[]).map(x=>"sx_"+x.id),["edMusic","edVoice"]);return keys.filter(k=>{const m=M[k];return m&&m.file&&!m._srv139&&!(m.url&&/^(https?:)?\/\//.test(String(m.url))&&!/^blob:/.test(String(m.url)))}).length}
+function rlSheet198(){const miss=missing198();hfSheet(L("Missing files","ملفات مفقودة"),(miss.length?'<p class="small dim" style="margin:0 0 8px">'+L("These are on the timeline but their file isn't on this device or the server any more — choose the file again and the edit keeps its cuts, timing and settings.","هذه على الخط الزمني لكن ملفها لم يعد على هذا الجهاز أو الخادم — اختر الملف من جديد ويحتفظ المونتاج بقصّاته وتوقيته وإعداداته.")+"</p><div id=\"rl198\">"+miss.map(x=>'<div class="rl198"><b dir="auto">'+esc(x.name)+'</b><small>'+esc(x.kind)+'</small><label class="btn sm" style="position:relative">'+ic("upload")+L("Choose file","اختر الملف")+'<input type="file" accept="'+x.accept+'" data-rl198="'+esc(x.k)+'" aria-label="'+esc(L("Replace ","استبدل ")+x.name)+'" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label></div>').join("")+"</div>":'<p class="small" style="margin:0">'+L("Every file on the timeline is in place.","كل ملف على الخط الزمني في مكانه.")+"</p>")+
+    '<div class="row" style="margin-top:12px;gap:8px"><button type="button" class="btn sm primary" data-act="close-sheet">'+L("Done","تم")+"</button></div>")}
+document.addEventListener("change",e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.rl198||!t.files||!t.files[0])return;const k=t.dataset.rl198,f=t.files[0],E=S.ed;
+  try{const old=M[k];if(old&&old.el&&old.el.pause)try{old.el.pause()}catch(err){}delete M[k];loadSlot(k,f);const m=M[k];if(m&&m.el&&m.type==="video"){m.el.pause();m.el.loop=!/^c_/.test(k)}
+    if(k.startsWith("c_")){const c=E.clips.find(x=>"c_"+x.id===k);if(c){c.src={k:"upload",name:f.name};delete c.src.url139}}
+    persist();renderView();toast(L("Relinked: ","أُعيد الربط: ")+f.name,{type:"ok"});const left=missing198();if(left.length)rlSheet198();else closeSheet()}catch(err){toast(L("Couldn't read that file.","تعذّرت قراءة هذا الملف."),{type:"warn"})}},true);
+media143=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="string")return h;const E=S.ed,miss=missing198().length,loc=local198(),srv=API.mode==="server"&&S.user;
+  return h+'<span class="lbl">'+L("Files & playback","الملفات والتشغيل")+'</span><div class="row" style="gap:10px;flex-wrap:wrap;align-items:center">'+
+    (miss?'<button type="button" class="btn sm danger" data-act="rl198">'+ic("relink198")+L("Relink missing files","أعد ربط الملفات المفقودة")+" ("+miss+")</button>":'<span class="small dim">'+L("Every file is in place.","كل ملف في مكانه.")+"</span>")+
+    (srv&&loc?'<button type="button" class="btn sm" data-act="rl198-consolidate">'+ic("upload")+L("Put ","ارفع ")+loc+L(" file(s) on my account"," ملف إلى حسابي")+"</button>":"")+"</div>"+
+    '<div class="row" style="gap:10px;align-items:center;margin-top:8px"><span class="small">'+L("Playback quality","جودة التشغيل")+'</span>'+edxSeg("pq198",[["1","Full","كاملة"],["2","½ · faster","½ · أسرع"],["4","¼ · fastest","¼ · الأسرع"]],String(E.pq198||1))+'<span class="small dim">'+L("preview only — exports keep their size","للمعاينة فقط — يحتفظ التصدير بحجمه")+"</span></div>"})(media143);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="rl198"],[data-act="rl198-consolidate"],[data-act="pq198"]');if(!a)return;const act=a.dataset.act;
+  if(act==="rl198"){rlSheet198();return}if(act==="pq198"){S.ed.pq198=+a.dataset.v||1;persist();renderView();return}
+  if(act==="rl198-consolidate"){if(typeof save139!=="function")return;a.disabled=true;try{await save139(false)}finally{renderView()}}});
+// every frame: keyframed values at the playhead, the stopwatches' state, the transcript's current word, a missing-files notice once per project
+edTick=(o=>function(now){const nested=typeof SQ194!=="undefined"&&SQ194.depth;if(!nested)try{kfApply198(ED.t)}catch(e){}const r=o.apply(this,arguments);if(nested||S.view!=="edit")return r;
+  if(now-KF198.btnT>250){KF198.btnT=now;try{kfBtns198()}catch(e){}try{const ws=document.querySelectorAll(".tx198w");if(ws.length){const W=txWords198(),t=ED.t;let cur=-1;for(const w of W){if(t>=w.s&&t<w.e+.05){cur=w.i;break}}ws.forEach(b=>b.classList.toggle("now",+b.dataset.tx198===cur))}}catch(e){}}return r})(edTick);
+renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="edit"){try{kfBtns198()}catch(e){}
+  try{const proj=String(S.ed.srv139||S.cur.edit||"local"),now=Date.now();if(RL198.proj!==proj){RL198.proj=proj;RL198.openAt=now}const n=now-RL198.openAt>3000?missing198().length:0,sig=proj+"|"+n;if(n&&RL198.warned!==sig){RL198.warned=sig;toast(L(n+" file(s) on the timeline are missing — Media → Relink missing files.",n+" ملف على الخط الزمني مفقود — الوسائط ← أعد ربط الملفات المفقودة."),{type:"warn",ms:6000})}else if(!n)RL198.warned=""}catch(e){}}return r})(renderView);
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

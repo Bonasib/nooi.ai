@@ -31,6 +31,10 @@ languages, translation · AI: reframe, stabilise, silences, voices, dubbing, sou
 | 13 | Multicam — the other angles lined up by their sound (a late one trimmed, an early one shifted), stacked as full-frame layers, switched with cuts from a tile per angle (keys 1–9), undoable; proxies — a 540 px copy made on the server for the preview, the export reads the original | **v196** |
 | 14 | A 3D camera over every layer — depth and tilt per layer, dolly / pan / tilt / focal length with keyframes and easing, presets (dolly, push, orbit, rack focus, drift), depth of field by distance from the focus plane and the aperture; point lights that shade the layers by tilt and distance and cast their shadows; ambient level | **v196** |
 | 15 | Team review — comments pinned on a frame (a pin at that moment for everyone), done / delete, named versions with restore, projects shared by email invite or link with a review or edit role; the Team button beside Projects | **v196** |
+| 16 | **Keyframes on every property** (AE's stopwatch on each control; Premiere's effect keyframes) — a stopwatch beside every slider in the editor (layers, colour grade, look, text, captions, music), a key set at the playhead, a slider change at another moment sets the next, easing per key (smooth / linear / in / out / hold), a sheet that lists them; the same values in the preview and the export | **v198** |
+| 17 | **Text-based editing** (Premiere) — the caption words as the video's transcript: tap words to take out, the clips are trimmed or split there and every track closes the gap (texts, layers, sounds, markers, words, camera keys, the keyframes above); filler words (um, uh, آآ, يعني…) in one tap; undo puts it back | **v198** |
+| 18 | **Playback quality** (Premiere's playback resolution) — Full / ½ / ¼ for the preview canvas only; an export keeps its size | **v198** |
+| 19 | **Media management** (Premiere's Link Media, Consolidate) — missing clips, layers and sounds listed in one sheet and relinked by choosing the file again (cuts, timing and settings kept); everything only on this device put on the account in one tap; a notice when a project opens with files gone | **v198** |
 
 ## What phase 2 did not do (honest limits)
 - Power-window tracking is block matching of a luma patch at 8 steps a second on a 160-px copy — it follows a subject that moves and
@@ -53,6 +57,17 @@ languages, translation · AI: reframe, stabilise, silences, voices, dubbing, sou
   shadow from one layer onto another's depth, and no shading of the clips track.
 - Sharing is by email (claimed at the invitee's first sign-in) or a link token; a review member can't save (the page says so); versions
   are capped at 30 per project; the agents' operation log (v148) stays the owner's — a member sees an empty one.
+
+## What phase 4 did not do (honest limits)
+- The stopwatch animates numbers (sliders). Colours, pickers and switches aren't keyframed; a clip's own position / size / rotation keep
+  the v91 keyframes they already had (`mo.*`), and the camera keeps its own (v196). Keys sit on timeline time, so a clip moved by hand
+  keeps its keys where they were (a transcript cut moves them along with everything else).
+- Text-based editing works on the caption words the editor already has (auto captions or imported subtitles); their timing is the
+  cut's timing — a word boundary 100 ms off cuts 100 ms off. The transcript shows up to 2000 words.
+- Playback quality lowers only the preview canvas; a browser that is slow for other reasons (a heavy 3D stack at ¼ is still a 3D
+  stack) stays slow, and the scopes read the smaller picture.
+- Relinking needs the file chosen by hand (no search of the device's folders — a browser can't); a relinked clip becomes an upload
+  (its link to the result it came from is dropped).
 
 ## Rules for every phase
 - Our own code and sounds; ideas only from the big tools' public behaviour. Licences noted in `docs/THIRD_PARTY.md`.
