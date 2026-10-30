@@ -21770,6 +21770,94 @@ document.addEventListener("click",async e=>{const a=e.target.closest('[data-act^
 .mset190 .m190b{display:flex;gap:8px;flex-wrap:wrap}.mset190 .warn190{color:#f5a524}.mset190 .warn190 svg{width:13px;height:13px;vertical-align:-2px}.mset190 .codebox{margin-top:8px}
 `;document.head.appendChild(st)})();
 
+/* ================= v191: ADMIN → PAYMENTS — EACH PROVIDER ON ITS OWN ROW ================= */
+/* The owner's screenshots of Admin → Payments on a phone: a giant orange warning sign (an icon with no size), "Test key saved" on
+   PayPal and Airwallex that had no keys at all (their default sandbox/demo mode was read as a saved test key), and five long loose
+   forms. Payments now looks like AI providers (v184): two groups (Saudi Arabia & the Gulf · Worldwide), each provider a row with its
+   mark, whether it shows at checkout and its state (Not set · Test mode · Live); a tap opens its keys right below. Each provider asks
+   for what its official docs need — PayPal's Webhook ID and Airwallex's webhook secret were missing (now checked on the server,
+   lib/webhook191.js), PayPal Sandbox/Live and Airwallex Demo/Production are a choice instead of typed words — with where to set the
+   webhook in its own dashboard and the last notice that came. Moyasar's setup steps (v190) live in Moyasar's row. */
+const PAY191={open:{moyasar:true},hooks:null,hAt:0,mode:{},typed:{}};
+const PAY_G191=[["gulf","Saudi Arabia & the Gulf","السعودية والخليج"],["world","Worldwide","حول العالم"]];
+const PAY_M191={
+  moyasar:{g:"gulf",c:"#2D5BFF",m:"M",name:["Moyasar","ميسّر"],what:["mada · Visa · Mastercard · Apple Pay · STC Pay — in SAR","مدى · فيزا · ماستركارد · Apple Pay · STC Pay — بالريال"],
+    f:[["secretKey","Secret key","المفتاح السري","sk_test_… / sk_live_…"],["webhookSecret","Webhook secret token","الرمز السري للإشعارات",""]],hook:1,
+    help:["Easiest: tap Connect webhook in the steps above. By hand: in Moyasar: Settings → Webhooks → add this address, choose payment paid, failed and refunded, and type the same secret token you saved above.","الأسهل: اضغط «اربط الإشعارات» في الخطوات أعلاه. يدوياً: في ميسّر: الإعدادات ← Webhooks ← أضف هذا العنوان، واختر الدفع الناجح والفاشل والمسترد، واكتب نفس الرمز السري الذي حفظته أعلاه."]},
+  tap:{g:"gulf",c:"#18A07E",m:"T",name:["Tap Payments","تاب"],what:["mada · KNET · BENEFIT · cards · Apple Pay — Gulf currencies","مدى · كي نت · بنفت · البطاقات · Apple Pay — عملات الخليج"],
+    f:[["secretKey","Secret key","المفتاح السري","sk_test_… / sk_live_…"]],hook:0,
+    help:["Nothing to set for notices: each payment tells Tap where to send its notice.","لا شيء لإعداده للإشعارات: كل دفعة تُخبر تاب بعنوان إشعارها."]},
+  stripe:{g:"world",c:"#635BFF",m:"S",name:["Stripe","سترايب"],what:["Cards worldwide · Apple Pay · Google Pay","البطاقات حول العالم · Apple Pay · Google Pay"],
+    f:[["secretKey","Secret key","المفتاح السري","sk_test_… / sk_live_…"],["webhookSecret","Webhook signing secret","سرّ توقيع الإشعارات","whsec_…"]],hook:1,
+    help:["In the Stripe Dashboard: Webhooks → Add endpoint → this address, event checkout.session.completed → copy its Signing secret (whsec_…) into the field above.","في لوحة Stripe: Webhooks ← Add endpoint ← هذا العنوان، والحدث checkout.session.completed ← انسخ Signing secret (whsec_…) إلى الحقل أعلاه."]},
+  paypal:{g:"world",c:"#003087",m:"P",name:["PayPal","باي بال"],what:["PayPal balance and cards — charged in USD","رصيد PayPal والبطاقات — بالدولار"],
+    f:[["clientId","Client ID","معرّف العميل (Client ID)",""],["secret","Secret","السرّ (Secret)",""],["webhookId","Webhook ID","معرّف الإشعارات (Webhook ID)",""]],mode:["mode",[["sandbox","Sandbox","تجريبي (Sandbox)"],["live","Live","حقيقي (Live)"]]],hook:1,
+    help:["In PayPal Developer: Apps & Credentials → your app → Add webhook → this address, events Checkout order approved and Payment capture completed → copy its Webhook ID into the field above. PayPal then confirms every notice itself.","في PayPal Developer: Apps & Credentials ← تطبيقك ← Add webhook ← هذا العنوان، والأحداث Checkout order approved وPayment capture completed ← انسخ Webhook ID إلى الحقل أعلاه. بعدها يؤكد PayPal كل إشعار بنفسه."]},
+  airwallex:{g:"world",c:"#FF5A1F",m:"A",name:["Airwallex","إيرواليكس"],what:["Cards worldwide, many currencies","البطاقات حول العالم بعملات كثيرة"],
+    f:[["clientId","Client ID","معرّف العميل (Client ID)",""],["apiKey","API key","مفتاح API",""],["webhookSecret","Webhook secret","سرّ الإشعارات",""]],mode:["env",[["demo","Demo","تجريبي (Demo)"],["prod","Production","حقيقي (Production)"]]],hook:1,
+    help:["In Airwallex: Developer → Webhooks → Add webhook → this address, event payment_intent.succeeded → copy its secret into the field above.","في Airwallex: Developer ← Webhooks ← Add webhook ← هذا العنوان، والحدث payment_intent.succeeded ← انسخ السرّ إلى الحقل أعلاه."]}};
+function pay191Pill(st){return!st.configured?["off",L("Not set","غير مُعد")]:st.mode==="test"?["warn",L("Test mode","وضع تجريبي")]:["ok",L("Live","حقيقي")]}
+function pay191Notes(k,st){const M=PAY_M191[k],H=(PAY191.hooks||{})[k]||{};let h="";
+  if(st.test)h+='<p class="small p191warn">'+ic("warn")+"<span>"+L("Test key saved — test cards add real credits. Save the live key before customers pay.","مفتاح تجريبي محفوظ — بطاقات الاختبار تضيف رصيداً حقيقياً. احفظ المفتاح الحقيقي قبل أن يدفع العملاء.")+"</span></p>";
+  if(M.hook)h+='<p class="small '+(st.webhookSecret?"p191ok":"dim")+'">'+(st.webhookSecret?ic("check")+"<span>"+(k==="paypal"?L("Webhook ID saved — PayPal confirms every notice.","معرّف الإشعارات محفوظ — يؤكد PayPal كل إشعار."):L("Webhook secret saved","سرّ الإشعارات محفوظ"))+"</span>":ic("info")+"<span>"+L("No webhook secret yet — payments are still checked with the provider before credits are added.","لا يوجد سرّ للإشعارات بعد — ما زالت كل دفعة تُراجع لدى المزوّد قبل إضافة الرصيد.")+"</span>")+"</p>";
+  if(H.ok)h+='<p class="small dim p191ok2">'+ic("bell")+"<span>"+L("Last notice: ","آخر إشعار: ")+fmtT(H.ok.at)+(H.ok.type?' · <span dir="ltr">'+esc(H.ok.type)+"</span>":"")+"</span></p>";
+  if(H.refused&&(!H.ok||H.refused.at>H.ok.at))h+='<p class="small p191warn">'+ic("warn")+"<span>"+L("A notice was refused at "+fmtT(H.refused.at)+": its signature doesn't match what is saved here.","رُفض إشعار في "+fmtT(H.refused.at)+": توقيعه لا يطابق المحفوظ هنا.")+"</span></p>";
+  if(M.hook)h+='<label class="lbl">'+L("Webhook address","عنوان الإشعارات (Webhook)")+"</label>"+codeBox("wh189-"+k,(location.origin||"")+"/v1/billing/webhook/"+k);
+  return h+'<p class="small dim p191help">'+L(M.help[0],M.help[1])+"</p>"}
+function pay191Mode(k,st){const M=PAY_M191[k];if(!M.mode)return"";const fl=M.mode[0],o=M.mode[1],cur=PAY191.mode[k]||(st.mode==="live"?o[1][0]:o[0][0]);
+  return'<label class="lbl">'+L("Mode","الوضع")+'</label><div class="seg191" role="radiogroup">'+o.map(x=>'<button type="button" class="'+(x[0]===cur?"on":"")+'" role="radio" aria-checked="'+(x[0]===cur)+'" data-act="pay191-mode" data-k="'+k+'" data-v="'+x[0]+'">'+esc(L(x[1],x[2]))+"</button>").join("")+'</div><input type="hidden" data-pp="'+k+'" data-fl="'+fl+'" value="'+cur+'">'}
+function pay191Body(k,st){const M=PAY_M191[k];let h=k==="moyasar"&&typeof mset190==="function"?'<div class="p191steps">'+mset190()+"</div>":"";
+  h+='<p class="small mute p191what">'+esc(L(M.what[0],M.what[1]))+"</p>";
+  h+='<div class="trows p191on">'+toggleRow(!!st.enabled,"adm-pay",k,L("Show at checkout","إظهار عند الدفع"),L("Customers see only the methods that are on.","يرى العملاء الوسائل المفعّلة فقط."))+"</div>";
+  h+=M.f.map(fl=>'<label class="lbl">'+esc(L(fl[1],fl[2]))+'</label><input type="'+(/key|secret/i.test(fl[0])?"password":"text")+'" dir="ltr" data-pp="'+k+'" data-fl="'+fl[0]+'" placeholder="'+esc(st.configured&&/secretKey|clientId/.test(fl[0])?L("Saved — type to replace","محفوظ — اكتب للاستبدال"):fl[3]||"")+'" autocomplete="off">').join("");
+  h+=pay191Mode(k,st)+'<div class="p191act"><button class="btn sm primary" data-act="adm-pp" data-k="'+k+'" '+(API.mode==="server"?"":"disabled")+">"+ic("check")+L("Save","حفظ")+"</button></div>";
+  return h+'<div class="p191notes" id="p191n-'+k+'">'+pay191Notes(k,st)+"</div>"}
+admPayments=function(){const D=A(),P=D.payments||{},ks=Object.keys(PAY_M191);
+  if(API.mode==="server"&&Date.now()-PAY191.hAt>20000){PAY191.hAt=Date.now();setTimeout(pay191Hooks,0)}
+  const on=ks.filter(k=>(P[k]||{}).enabled).length,live=ks.filter(k=>(P[k]||{}).mode==="live").length,test=ks.filter(k=>(P[k]||{}).mode==="test").length;
+  return'<section class="pay191"><div class="p191top"><div style="min-width:0"><h2 class="p191t">'+ic("card")+" "+L("Payments","المدفوعات")+'</h2><p class="small mute" style="margin:2px 0 0">'+L("Tap a provider to open its keys and settings. Every payment is checked with the provider before credits are added.","اضغط على أي مزوّد لفتح مفاتيحه وإعداداته. تُراجع كل دفعة لدى المزوّد قبل إضافة الرصيد.")+'</p></div><div class="p191sum"><b>'+on+"</b> "+L("on","مفعّل")+" · <b>"+live+"</b> "+L("live","حقيقي")+" · <b>"+test+"</b> "+L("test","تجريبي")+"</div></div>"+
+    PAY_G191.map(g=>'<div class="p191grp"><div class="p191gh">'+esc(L(g[1],g[2]))+'</div><div class="p191list">'+ks.filter(k=>PAY_M191[k].g===g[0]).map(k=>{const M=PAY_M191[k],st=P[k]||{},pl=pay191Pill(st),open=!!PAY191.open[k];
+      return'<div class="p191row" data-k="'+k+'" data-open="'+open+'"><button type="button" class="p191head" data-act="pay191" data-k="'+k+'" aria-expanded="'+open+'" aria-controls="p191b-'+k+'"><span class="p191logo" style="--c:'+M.c+'" aria-hidden="true">'+M.m+'</span><span class="p191name"><b>'+esc(L(M.name[0],M.name[1]))+"</b><small>"+(st.enabled?L("On at checkout","يظهر عند الدفع"):L("Off at checkout","مخفي عند الدفع"))+'</small></span><span class="p191pill s-'+pl[0]+'"><i></i>'+esc(pl[1])+'</span><span class="p191chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></button>'+
+        '<div class="p191body provc" id="p191b-'+k+'"'+(open?"":" hidden")+">"+pay191Body(k,st)+"</div></div>"}).join("")+"</div></div>").join("")+"</section>"};
+async function pay191Hooks(){try{PAY191.hooks=await API.req("/v1/admin/pay191/hooks");const P=A().payments||{};Object.keys(PAY_M191).forEach(k=>{const el=document.getElementById("p191n-"+k);if(el)el.innerHTML=pay191Notes(k,P[k]||{})})}catch(e){}}
+// open / close a row in place; Sandbox/Live as a choice; what is typed stays while the page redraws (memory only) and goes once saved
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="pay191"],[data-act="pay191-mode"],[data-act="adm-pp"]');if(!a)return;const k=a.dataset.k;
+  if(a.dataset.act==="adm-pp"){Object.keys(PAY191.typed).forEach(x=>{if(x.startsWith(k+"|"))delete PAY191.typed[x]});return}
+  if(a.dataset.act==="pay191-mode"){PAY191.mode[k]=a.dataset.v;const box=a.parentNode;box.querySelectorAll("button").forEach(b=>{const on=b===a;b.classList.toggle("on",on);b.setAttribute("aria-checked",String(on))});const hid=box.nextElementSibling;if(hid&&hid.dataset.pp===k)hid.value=a.dataset.v;return}
+  const r=a.closest(".p191row"),b=r&&r.querySelector(".p191body");if(!b)return;const open=!PAY191.open[k];PAY191.open[k]=open;r.dataset.open=String(open);a.setAttribute("aria-expanded",String(open));b.hidden=!open},true);
+document.addEventListener("input",e=>{const t=e.target;if(t&&t.dataset&&t.dataset.pp&&t.type!=="hidden")PAY191.typed[t.dataset.pp+"|"+t.dataset.fl]=t.value});
+renderView=(o=>function(){const r=o.apply(this,arguments);try{if(S.view==="admin")document.querySelectorAll(".pay191 [data-pp]").forEach(i=>{const v=PAY191.typed[i.dataset.pp+"|"+i.dataset.fl];if(v&&!i.value&&i.type!=="hidden")i.value=v})}catch(e){}return r})(renderView);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.pay191{margin:0 0 16px;padding:16px;border:1px solid var(--line);border-radius:18px;background:var(--panel)}
+.pay191 .p191top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 16px}
+.pay191 .p191t{margin:0;font-size:18px;display:flex;align-items:center;gap:8px}.pay191 .p191t svg{width:18px;height:18px}
+.pay191 .p191sum{font-size:12px;color:var(--mute);white-space:nowrap}.pay191 .p191sum b{color:var(--text)}
+.pay191 .p191grp{margin-top:14px}.pay191 .p191gh{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin:0 2px 6px}
+.pay191 .p191list{display:flex;flex-direction:column;gap:6px}
+.pay191 .p191row{border:1px solid var(--line);border-radius:14px;background:var(--panel2);overflow:hidden;transition:border-color .2s}
+.pay191 .p191row[data-open="true"]{border-color:color-mix(in srgb,var(--lime) 40%,var(--line))}
+.pay191 .p191head{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:12px;padding:10px 12px;cursor:pointer;min-height:56px}
+.pay191 .p191head:focus-visible{outline:2px solid var(--lime);outline-offset:-2px;border-radius:14px}
+.pay191 .p191logo{flex:none;width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--c);color:#fff;font-weight:800;font-size:17px;font-family:inherit;letter-spacing:-.02em}
+.pay191 .p191name{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pay191 .p191name b{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pay191 .p191name small{color:var(--dim);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pay191 .p191pill{flex:none;display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;background:var(--panel3);color:var(--mute);white-space:nowrap}
+.pay191 .p191pill i{width:7px;height:7px;border-radius:50%;background:currentColor}
+.pay191 .p191pill.s-ok{color:var(--lime-ink);background:color-mix(in srgb,var(--lime) 16%,transparent)}.pay191 .p191pill.s-warn{color:var(--gold);background:color-mix(in srgb,var(--gold) 14%,transparent)}
+.pay191 .p191chev{flex:none;color:var(--dim);display:grid;place-items:center;transition:transform .2s}.pay191 .p191chev svg{width:18px;height:18px}
+.pay191 .p191row[data-open="true"] .p191chev{transform:rotate(180deg)}
+.pay191 .p191body{padding:4px 14px 14px;border-top:1px solid var(--line);animation:aip184in .2s ease-out}.pay191 .p191body[hidden]{display:none}
+.pay191 .p191steps .mset190{margin:12px 0 4px;background:var(--panel)}.pay191 .p191what{margin:10px 0 0}.pay191 .p191on{margin-top:8px}
+.pay191 .p191act{display:flex;gap:8px;margin-top:10px}
+.pay191 .p191notes{margin-top:10px;display:flex;flex-direction:column;gap:6px}.pay191 .p191notes p{margin:0;display:flex;gap:6px;align-items:flex-start;overflow-wrap:anywhere}
+.pay191 .p191notes p>svg{flex:none;width:15px;height:15px;margin-top:2px}.pay191 .p191warn{color:var(--gold)}.pay191 .p191ok{color:var(--lime-ink)}
+.pay191 .p191notes .codebox{margin-top:0}.pay191 .p191help{display:block!important}
+.pay191 .seg191{display:flex;gap:4px;padding:3px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.pay191 .seg191 button{all:unset;box-sizing:border-box;flex:1;text-align:center;padding:8px 10px;border-radius:9px;font-size:13px;cursor:pointer;color:var(--mute)}
+.pay191 .seg191 button.on{background:var(--lime);color:#10130b;font-weight:600}.pay191 .seg191 button:focus-visible{outline:2px solid var(--lime)}
+@media (prefers-reduced-motion:reduce){.pay191 .p191body{animation:none}.pay191 .p191chev{transition:none}}
+</style>`);
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

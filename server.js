@@ -28,8 +28,7 @@ import { spawn } from "child_process";
 import { saveBuffer } from "./lib/media.js";
 import { LIMITS, planOf } from "./lib/plans.js";
 import { refillPlans, priceTable, ENGINE_COST, engineCost, basePrice, CREDIT_FLOOR_USD, priceFactor, hold, settle, release } from "./lib/billing.js";
-import { S as platform, featureOn, configured, biz, cfg } from "./lib/settings.js";
-import crypto from "crypto";   // (v189: the Moyasar webhook's secret, compared in constant time)
+import { S as platform, featureOn, configured, biz } from "./lib/settings.js";
 import { modelNames, publicRegistry } from "./lib/models.js";
 import { shotsTable133, probe132, fileOf132 } from "./lib/long132.js";
 import { clean134, quote134, ready134 } from "./lib/sound134.js";
@@ -88,6 +87,7 @@ import { registerRefer173 } from "./lib/refer173.js";   // v173: invite friends 
 import { registerLaunch182, launchMode182, gate182 } from "./lib/launch182.js";   // v182: Coming soon — the team only
 import { registerDownload187 } from "./lib/download187.js";
 import { registerMoyasar190, hookSeen190 } from "./lib/moyasar190.js";   // v190: the Moyasar setup steps in Admin → Payments (webhook connected in one tap)
+import { checkHook191 } from "./lib/webhook191.js";   // v191: Stripe, Airwallex, PayPal (and Moyasar) webhook signatures
 import { registerSpace188 } from "./lib/space188.js";   // v188: what fills the disk (Admin), "Free space now", the site's old temporary files cleared
 import { mmOn183, mmState183, mmRegion183 } from "./providers/minimax183.js";   // v183: MiniMax voices, pictures and music (v185: + videos)
 import { sendEmail, emailConfigured } from "./lib/email.js";
@@ -97,7 +97,7 @@ import { noteExport } from "./lib/xstats.js";
 
 const app = express();
 app.use(cors({ origin: process.env.PUBLIC_BASE_URL || true }));
-app.use(express.json({ limit: "12mb" }));
+app.use(express.json({ limit: "12mb", verify: (req, _res, buf) => { if (req.url.startsWith("/v1/billing/webhook/")) req.rawBody = buf; } }));   // (v191: payment notices keep their exact bytes for the signature check)
 // The browser never sees which AI provider runs the models: every JSON answer says "engine" instead
 // (keys kie/kieModel/kieRoutes → engine/engineModel/engineRoutes, "kie@model" → "engine@model"), and the admin
 // may address the provider as "engine" (/v1/admin/providers/engine, modelCat[id].engineModel).
@@ -299,16 +299,18 @@ app.post("/v1/billing/webhook/:provider", wrap(async (req, res) => {
   // Never trust the webhook body: we re-fetch the payment from the provider before crediting — always the payment this server made
   // for the order (v189), so a forged or replayed webhook can't pay an order with another payment.
   const b = req.body || {}, prov = String(req.params.provider || "");
-  // v189: Moyasar sends the secret typed in its dashboard (Settings → Webhooks) as secret_token — when one is saved here, it must match
-  if (prov === "moyasar") { const want = String(cfg("moyasar").webhookSecret || ""), got = String(b.secret_token || "");
-    if (want && (got.length !== want.length || !crypto.timingSafeEqual(Buffer.from(got), Buffer.from(want)))) { console.warn("webhook moyasar: wrong secret token"); hookSeen190("moyasar", false); return res.status(401).json({ error: "Wrong secret token" }); }
-    hookSeen190("moyasar", true, b.type, !!want); }   // v190: Admin's setup steps show the last one taken / refused
-  const id = b.id || b.data?.id || b.data?.object?.id; let ref = b.reference?.transaction || b.metadata?.ref || b.data?.metadata?.ref || b.data?.object?.client_reference_id;
+  // v189/v191: each provider's own signature when the owner saved what it needs (Moyasar's secret token, Stripe's signing secret,
+  // Airwallex's webhook secret, PayPal's webhook ID — lib/webhook191.js); a notice that fails it is refused and shown in Admin
+  const chk = await checkHook191(prov, req);
+  if (!chk.ok) { console.warn("webhook " + prov + ": the signature didn't match"); hookSeen190(prov, false); return res.status(401).json({ error: "Wrong signature" }); }
+  hookSeen190(prov, true, b.type || b.event_type || b.name, chk.checked);
+  const R = b.resource || {}, O = b.data?.object || {};   // (PayPal: resource — the order, or a capture of it; Airwallex/Stripe: data.object)
+  const id = b.id || b.data?.id || O.id; let ref = b.reference?.transaction || b.metadata?.ref || b.data?.metadata?.ref || O.client_reference_id || O.merchant_order_id || O.metadata?.ref || R.custom_id || R.purchase_units?.[0]?.custom_id;
   let owner = ref && findPayment(ref);
-  if (!owner) { const hit = findByProviderId(b.data?.invoice_id) || findByProviderId(b.data?.id) || findByProviderId(id); if (hit) [owner, ref] = hit; }   // (Moyasar: the invoice the payment was made on)
+  if (!owner) { const hit = findByProviderId(b.data?.invoice_id) || findByProviderId(b.data?.id) || findByProviderId(O.id) || findByProviderId(R.supplementary_data?.related_ids?.order_id) || findByProviderId(R.id) || findByProviderId(id); if (hit) [owner, ref] = hit; }   // (Moyasar: the invoice the payment was made on; PayPal: the order a capture belongs to)
   res.json({ received: true });   // (answered at once — the provider waits for nothing)
   if (!owner) return;
-  try { await finishCheckout(owner, ref); if (/refund|void/i.test(String(b.type || b.event || b.data?.status || ""))) await checkRefund189(owner, ref); } catch (e) { console.warn("webhook", e.message); }
+  try { await finishCheckout(owner, ref); if (/refund|void/i.test(String(b.type || b.event || b.event_type || b.name || b.data?.status || ""))) await checkRefund189(owner, ref); } catch (e) { console.warn("webhook", e.message); }
 }));
 app.get("/v1/billing/catalog", (_, res) => res.json(CATALOG));
 
