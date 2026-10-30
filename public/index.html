@@ -7974,7 +7974,7 @@ let hf109=false;   // (v109: never two rounds at once)
 setInterval(async()=>{if(API.mode!=="server"||!S.hf||!(S.hf.out||[]).length||hf109)return;const now=Date.now();hf109=true;try{
   for(const id of S.hf.out){const o=S.jobs.find(x=>x.id===id);if(!o||!o.remote)continue;const sceneWait=o.meta&&o.meta.scene&&o.status==="complete"&&!o.sceneCheck&&now-(o.created||now)<15*60e3;
     if(!["queued","rendering"].includes(o.status)&&!sceneWait&&!(o.sceneCheck&&o.sceneCheck.retrying&&o.status!=="failed"))continue;
-    if(["queued","rendering"].includes(o.status)){const exp=(o.kind==="video"?((MODELS[o.model]||{}).sec||70)*Math.max(1,(o.dur||5)/5):({music:90,voice:15,sfx:20,lipsync:120})[o.kind]||25)*1000,est=Math.min(.93,(now-(o.created||now))/exp);if(!(o.progress>est))o.progress=est}
+    if(["queued","rendering"].includes(o.status)){const exp=(o.kind==="video"?(typeof sec188==="function"?sec188(o):((MODELS[o.model]||{}).sec||70))*Math.max(1,(o.dur||5)/5):({music:90,voice:15,sfx:20,lipsync:120})[o.kind]||25)*1000,est=Math.min(.93,(now-(o.created||now))/exp);if(!(o.progress>est))o.progress=est}
     try{const r=await API.req("/v1/jobs/"+o.remote);const before=o.status+"|"+JSON.stringify(o.sceneCheck||null);
       if(r.status==="queued"||r.status==="rendering")o.status="rendering";else if(r.status==="done")o.status="complete";else if(r.status==="failed")o.status="failed";
       if(r.url)o.resultUrl=r.url;if(r.segments)o.segments=r.segments;if(r.error)o.error=r.error;if(r.errorAr)o.errorAr=r.errorAr;o.stage=r.stage||null;o.parts108=r.partsTotal?[r.partsDone||0,r.partsTotal]:null;o.inLine112=!!r.inLine;o.line124=r.line||null;o.note115=r.note115||null;o.note154=r.note154||null;o.remade154=!!r.remade154;if(r.detail)o.detail=r.detail;if(r.progress)o.progress=Math.max(o.progress||0,r.progress);if(r.sceneCheck)o.sceneCheck=r.sceneCheck;
@@ -21639,6 +21639,75 @@ document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.c
 .sh187dl .dl187{display:flex;flex-direction:column;gap:6px}
 .sh187dl .dl187i{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--panel2);color:var(--text);text-align:start;font:inherit;cursor:pointer}
 .sh187dl .dl187i[disabled]{opacity:.5;cursor:not-allowed}.sh187dl .dlic svg{width:20px;height:20px}.sh187dl .dlt{display:flex;flex-direction:column}.sh187dl .dlt small{color:var(--mute)}
+`;document.head.appendChild(st)})();
+
+/* ================= v188: WHAT FILLS THE SERVER'S DISK (ADMIN) · MINIMAX'S REAL TIME ================= */
+/* The owner: "even with MiniMax picked, making is slow — and the disk is still full after the update".
+   1. A full disk: the update can't even unpack (so its clearing never ran), and a finished video can't be saved here (it was
+      downloaded again three times before giving up). The server's own timer now clears what nooi doesn't need at 90 % or when asked;
+      Admin shows what fills the disk (lib/space188.js, deploy/space.sh --json) and a "Free space now" button.
+   2. MiniMax takes minutes, not the 70 s the page assumed: the bar crept to the end and sat there. The card now says how long MiniMax
+      usually takes, the bar follows that time (1080P longer), and the settings sheet says 1080P on MiniMax takes longer. */
+const SP188={d:null,busy:false,err:""};
+MODELS.hailuo=Object.assign(MODELS.hailuo||{name:"MiniMax Hailuo",cr:18},{sec:150});
+const sec188=o=>{const b=(MODELS[o.model]||{}).sec||70;return o.model==="hailuo"&&/1080|2k|4k/i.test(String((o.meta&&o.meta.res)||""))?b*1.6:b};
+const mmTime188=o=>/1080|2k|4k/i.test(String((o&&o.meta&&o.meta.res)||""))?L("MiniMax usually takes 3–6 minutes at 1080P.","يستغرق MiniMax عادةً 3–6 دقائق بدقة 1080P."):L("MiniMax usually takes 2–4 minutes.","يستغرق MiniMax عادةً 2–4 دقائق.");
+// the card while MiniMax makes it: how long that usually takes
+hfrCard=(o=>function(j){let h=o.apply(this,arguments);if(!j||j.kind!=="video"||j.model!=="hailuo"||!["queued","rendering"].includes(j.status))return h;
+  return h.replace(/(<div class="hfrb"><p dir="auto">[\s\S]*?<\/p><small>[\s\S]*?<\/small>)/,"$1"+'<small class="mm188">'+ic("clock")+" "+esc(mmTime188(j))+"</small>")})(hfrCard);
+// the settings sheet: 1080P on MiniMax takes longer
+set187=(o=>function(){o.apply(this,arguments);const H=S.hf;if(H.tab!=="video"||H.vModel!=="hailuo")return;const r=document.querySelector('#modalRoot .sh187 [data-act="hf187-res"]');const row=r&&r.closest(".r187");
+  if(row&&!row.querySelector(".h188")){const s=document.createElement("small");s.className="h187 h188";s.textContent=L("1080P on MiniMax takes longer (about 3–6 min); 768P is faster (2–4 min).","دقة 1080P على MiniMax تستغرق وقتاً أطول (نحو 3–6 دقائق)؛ ودقة 768P أسرع (2–4 دقائق).");row.appendChild(s)}})(set187);
+
+// ---- the disk: what fills it, and "Free space now"
+async function space188load(){SP188.busy=true;SP188.err="";try{SP188.d=await API.req("/v1/admin/space188")}catch(e){SP188.err=String(e.message||e)}finally{SP188.busy=false}}
+const gb188=x=>(+x||0)>=10?Math.round(+x)+" GB":(Math.round((+x||0)*10)/10)+" GB";
+function kind188(p){p=String(p||"");
+  if(/\/opt\/nooi\/media/.test(p))return L("your customers' pictures and videos (kept)","صور وفيديوهات عملائك (تبقى)");
+  if(/\/var\/backups\/nooi\/media/.test(p))return L("the backup copy of the media (shares the space with it)","نسخة الوسائط الاحتياطية (تشاركها المساحة نفسها)");
+  if(/\/var\/backups\/nooi/.test(p))return L("nooi's backups","نسخ nooi الاحتياطية");
+  if(/\/opt\/nooi/.test(p))return L("nooi","nooi");
+  if(/\/var\/lib\/docker|containerd/.test(p))return L("Docker — not nooi","Docker — ليس من nooi");
+  if(/\/var\/log|journal/.test(p))return L("system logs","سجلات النظام");
+  if(/^\/tmp|systemd-private/.test(p))return L("temporary files","ملفات مؤقتة");
+  if(/\/var\/crash|coredump/.test(p))return L("crash dumps","ملفات أعطال");
+  if(/swap/.test(p))return L("swap (memory on disk)","ذاكرة التبديل على القرص");
+  if(/^\/(usr|lib|boot|snap|var\/lib\/snapd)/.test(p))return L("the system itself","النظام نفسه");
+  if(/^\/root|^\/home/.test(p))return L("files in a home folder","ملفات في مجلد شخصي");
+  return""}
+function sheet188(){const d=SP188.d,r=d&&d.report,now=(d&&d.now)||(r&&r.disk)||null;
+  let b='<div class="sp188">';
+  if(SP188.busy&&!d)b+='<p class="small dim">'+L("Reading the server…","تُقرأ حالة الخادم…")+"</p>";
+  if(SP188.err)b+='<p class="small bad188">'+esc(SP188.err)+"</p>";
+  if(now)b+='<div class="spbar188" role="img" aria-label="'+esc(now.pct+"%")+'"><i style="width:'+Math.min(100,+now.pct||0)+'%"></i></div><p class="spnow188"><b>'+L(now.pct+"% full","ممتلئ بنسبة "+now.pct+"%")+"</b> · "+L(gb188(now.freeGb)+" free of "+gb188(now.totalGb),gb188(now.freeGb)+" متبقية من "+gb188(now.totalGb))+"</p>";
+  if(r&&r.cleared)b+='<p class="small ok188">'+ic("check")+" "+L("Last cleared "+new Date(r.cleared.at).toLocaleString()+" — about "+gb188(r.cleared.gb)+" freed.","آخر تنظيف "+new Date(r.cleared.at).toLocaleString()+" — تحرّر نحو "+gb188(r.cleared.gb)+".")+"</p>";
+  if(r&&r.oldArchives>0)b+='<p class="small warn188">'+L(r.oldArchives+" old backup archives each hold all the media again — “Free space now” removes them (the newest is kept).",r.oldArchives+" أرشيفات نسخ احتياطية قديمة يحمل كلٌّ منها كل الوسائط من جديد — «حرّر المساحة الآن» يحذفها (ويبقى الأحدث).")+"</p>";
+  if(r&&(r.top||[]).length){b+='<h4 class="h188t">'+L("The biggest folders","أكبر المجلدات")+'</h4><ul class="sp188l">';
+    r.top.slice(0,12).forEach(x=>{const k=kind188(x.path);b+='<li><span dir="ltr">'+esc(x.path)+"</span>"+(k?"<small>"+esc(k)+"</small>":"")+"<b>"+gb188(x.gb)+"</b></li>"});b+="</ul>"}
+  if(r&&(r.files||[]).length){b+='<h4 class="h188t">'+L("Single big files","ملفات كبيرة منفردة")+'</h4><ul class="sp188l">';r.files.slice(0,8).forEach(x=>{b+='<li><span dir="ltr">'+esc(x.path)+"</span><b>"+gb188(x.gb)+"</b></li>"});b+="</ul>"}
+  if(r&&(r.held||[]).length){b+='<h4 class="h188t">'+L("Held by programs (deleted files still open)","تحتجزها برامج (ملفات محذوفة ما زالت مفتوحة)")+'</h4><ul class="sp188l">';r.held.forEach(x=>{b+='<li><span dir="ltr">'+esc(x.program)+"</span><b>"+gb188(x.gb)+"</b></li>"});b+="</ul>"}
+  if(r)b+='<p class="small dim">'+L("Checked "+new Date(r.at).toLocaleString()+" (every hour).","فُحص "+new Date(r.at).toLocaleString()+" (كل ساعة).")+"</p>";
+  else if(d)b+='<p class="small dim">'+L("No report from the server yet — it starts with the next update (the server's timer writes it every hour). Until then, on the server: ","لا يوجد تقرير من الخادم بعد — يبدأ مع التحديث القادم (مؤقّت الخادم يكتبه كل ساعة). حتى ذلك الحين شغّل على الخادم: ")+'<code dir="ltr">bash /opt/nooi/deploy/space.sh</code></p>';
+  b+='<p class="small dim">'+L("“Free space now” clears only what nooi doesn't need: old backup archives, old temporary files, crash dumps, logs over 300 MB, download caches. Your customers' pictures, videos and data are never touched.","«حرّر المساحة الآن» ينظّف فقط ما لا يحتاجه nooi: أرشيفات النسخ القديمة، الملفات المؤقتة القديمة، ملفات الأعطال، السجلات فوق 300 ميغابايت، ذاكرة التنزيلات. صور وفيديوهات وبيانات عملائك لا تُلمس أبداً.")+"</p>";
+  b+='<button type="button" class="btn primary big" data-act="sp188-free"'+(d&&d.requested?" disabled":"")+">"+(d&&d.requested?L("Asked — the server clears within 5 minutes","طُلب — ينظّف الخادم خلال 5 دقائق"):L("Free space now","حرّر المساحة الآن"))+"</button></div>";
+  hfSheet(L("What fills the disk","ما الذي يملأ القرص"),b);const s=document.querySelector("#modalRoot .hfsheet");if(s)s.classList.add("sh188")}
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="sp188"],[data-act="sp188-free"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
+  if(a.dataset.act==="sp188"){sheet188();await space188load();if(document.querySelector("#modalRoot .sh188"))sheet188();return}
+  if(a.disabled)return;a.disabled=true;try{SP188.d=await API.req("/v1/admin/space188/free",{method:"POST",json:{}});toast(L("Asked — the server clears what nooi doesn't need within 5 minutes.","طُلب — ينظّف الخادم ما لا يحتاجه nooi خلال 5 دقائق."),{type:"ok"})}catch(err){toast(String((err&&err.message)||err))}
+  if(document.querySelector("#modalRoot .sh188"))sheet188()},true);
+// the red line (from 85 %) opens it; Admin's overview has it always
+line186=(o=>function(){const h=o.apply(this,arguments);return h?h.replace(/<\/div><\/div>$/,'<br><button type="button" class="btn sm" data-act="sp188">'+ic("search")+L("What fills the disk","ما الذي يملأ القرص")+"</button></div></div>"):h})(line186);
+VIEWS.admin=(o=>function(){const h=o.apply(this,arguments);if((S.admTab||"overview")!=="overview"||!S.user)return h;
+  const c='<div class="card dsk188"><div class="dsk188r">'+ic("folder","width:18px;height:18px")+"<b>"+L("Server disk","قرص الخادم")+"</b>"+(DK186?'<span class="pill bad188">'+DK186.pct+"%</span>":"")+'<button type="button" class="btn sm ghost" data-act="sp188">'+L("What fills it","ما الذي يملؤه")+"</button></div></div>";
+  return h.replace(/<\/div>\s*$/,c+"</div>")})(VIEWS.admin);
+(function(){const st=document.createElement("style");st.textContent=`
+.hfrb small.mm188{display:flex;align-items:center;gap:5px;color:var(--mute);margin-top:4px}.hfrb small.mm188 svg{width:13px;height:13px}
+.sh188 .sp188{display:flex;flex-direction:column;gap:8px}.sh188 .spbar188{height:10px;border-radius:99px;background:var(--line);overflow:hidden}.sh188 .spbar188 i{display:block;height:100%;background:linear-gradient(90deg,#9CD245,#f5a524 75%,#e5484d)}
+.sh188 .spnow188{margin:0}.sh188 .h188t{margin:8px 0 0;font-size:13px}.sh188 .sp188l{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.sh188 .sp188l li{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+.sh188 .sp188l li span{min-width:0;overflow-wrap:anywhere;font-size:12.5px}.sh188 .sp188l li small{grid-column:1;color:var(--mute);font-size:12px}.sh188 .sp188l li b{grid-row:1;grid-column:2;white-space:nowrap}
+.sh188 .ok188{color:#9CD245}.sh188 .warn188,.sh188 .bad188{color:#f5a524}.sh188 code{user-select:all}
+.dsk188 .dsk188r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.dsk188 .dsk188r .btn{margin-inline-start:auto}.dsk188 .pill.bad188{background:#e5484d22;color:#e5484d;border-radius:99px;padding:2px 8px;font-size:12px}
 `;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
