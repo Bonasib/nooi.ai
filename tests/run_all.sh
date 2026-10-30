@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Full UI check. Usage: bash tests/run_all.sh   (NOOI_URL=https://nooi.ai to test the live site)
+pkill -f "/tmp/nooi-[^ ]*/mock\.(js|py)" 2>/dev/null; pkill -f "/tmp/nooi-[^ ]*/eng" 2>/dev/null   # (v197: stand-in engines left by a killed run hold their ports and fail the next test that needs them)
 set -e
 cd "$(dirname "$0")/.."
 export FREE_PERIOD="${FREE_PERIOD:-false}"   # the suite checks charging; tests/free_period.py checks the free period

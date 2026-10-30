@@ -5,7 +5,7 @@
 # export: an MP4 at the exact size of the format (1080×1920 for Reels) with sound and the right length.
 import asyncio, json, os, shutil, subprocess, sys, tempfile, time, urllib.request
 from playwright.async_api import async_playwright
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); PORT = 8086
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); PORT = 8661   # (v197: its own port — 8086 is the render-review test's stand-in engine, and a killed run left it listening)
 D = tempfile.mkdtemp(prefix="nooi-edp-"); os.makedirs(D + "/data"); os.makedirs(D + "/media"); os.symlink(ROOT + "/public", D + "/public")
 json.dump({"users": {"local": {"plan": "studio", "credits": 5000, "jobs": {}, "ledger": []}}}, open(D + "/data/db.json", "w"))
 FF = os.environ.get("FFMPEG_PATH", "ffmpeg"); M = D + "/media/"
