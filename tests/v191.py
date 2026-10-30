@@ -119,7 +119,7 @@ async def page_part(p, phone, lang):
         ok(v["groups"] == (["السعودية والخليج", "حول العالم"] if ar else ["SAUDI ARABIA & THE GULF", "WORLDWIDE"]) and [r[0] for r in v["rows"]] == ["moyasar", "tap", "stripe", "paypal", "airwallex"], f"{tag}: two groups, five rows: {v['groups']} {v['rows']}")
         pills = {r[0]: r[3] for r in v["rows"]}
         want = {"moyasar": "غير مُعد", "tap": "غير مُعد", "stripe": "وضع تجريبي", "paypal": "حقيقي", "airwallex": "وضع تجريبي"} if ar else {"moyasar": "Not set", "tap": "Not set", "stripe": "Test mode", "paypal": "Live", "airwallex": "Test mode"}
-        ok(pills == want and [r[2] for r in v["rows"]] == ["M", "T", "S", "P", "A"] and v["rows"][0][1] == "true", f"{tag}: marks and states: {pills}")
+        ok(pills == want and [r[2] for r in v["rows"]] == ["M", "T", "", "", "A"] and v["rows"][0][1] == "true", f"{tag}: marks and states (v192: Stripe and PayPal show their logos): {pills} {[r[2] for r in v['rows']]}")
         ok(v["big"] == 0 and v["steps"] and not v["tapWarn"] and not v["moyWarn"] and not v["wide"], f"{tag}: no giant icon, Moyasar's steps inside, no test warning without keys, fits: {v}")
         # PayPal: open, Live chosen, Sandbox → the hidden value; the Webhook ID field; the address
         await pg.click('.p191row[data-k="paypal"] .p191head'); await pg.wait_for_selector('#p191b-paypal:not([hidden])', timeout=5000)

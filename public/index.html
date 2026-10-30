@@ -12132,7 +12132,10 @@ function vpUpgrade87(v){if(!v||v.dataset.vp87||v.closest(".vp87")||v.closest(".e
   ["play","pause","ended","timeupdate","durationchange","loadedmetadata","volumechange"].forEach(ev=>v.addEventListener(ev,sync));
   v.addEventListener("play",show);v.addEventListener("pause",()=>{w.classList.add("show");clearTimeout(hideT)});
   big.addEventListener("click",e=>{e.stopPropagation();toggle()});pp.addEventListener("click",e=>{e.stopPropagation();toggle()});
-  v.addEventListener("click",e=>{e.stopPropagation();e.preventDefault();if(w.classList.contains("show")||v.paused)toggle();else show()});
+  // v192: on a phone a tap on the picture shows or hides the buttons and never pauses (the round button in the middle plays and
+  // pauses); a mouse click still plays / pauses
+  let pt92="mouse";v.addEventListener("pointerdown",e=>{pt92=e.pointerType||"mouse"});
+  v.addEventListener("click",e=>{e.stopPropagation();e.preventDefault();if(pt92==="touch"||pt92==="pen"){if(w.classList.contains("show")&&!v.paused&&!v.ended){w.classList.remove("show");clearTimeout(hideT)}else show();return}if(w.classList.contains("show")||v.paused)toggle();else show()});
   w.addEventListener("pointermove",e=>{if(e.pointerType==="mouse")show()});
   seek.addEventListener("input",()=>{drag=true;if(isFinite(v.duration)){v.currentTime=seek.value/1000*v.duration;seek.style.setProperty("--p",seek.value/10+"%");tm.textContent=fmt87(v.currentTime)}show()});
   seek.addEventListener("change",()=>{drag=false;sync()});["pointerdown","click"].forEach(ev=>seek.addEventListener(ev,e=>e.stopPropagation()));
@@ -21737,7 +21740,7 @@ function mset190(){if(API.mode!=="server")return"";const d=M190.d;
   const btn=(act,label,icon,dis,ghost)=>'<button type="button" class="btn sm '+(ghost?"ghost":"primary")+(busy===act?" busy":"")+'" data-act="'+act+'"'+(dis||busy?" disabled":"")+">"+ic(icon)+esc(label)+"</button>";
   const row=(i,s,title,text,more)=>'<li class="'+(s.done?"done190":"")+'"><span class="m190n">'+(s.done?ic("check"):i)+'</span><div><b>'+title+'</b><p class="small">'+text+"</p>"+(more||"")+"</div></li>";
   let h='<details class="card mset190"'+((M190.open??n<6)?" open":"")+'><summary class="m190h">'+ic("card","width:18px;height:18px")+"<b>"+L("Moyasar — set up step by step","ميسّر — الإعداد خطوة بخطوة")+'</b><span class="pill m190p">'+n+" / 6</span></summary><ol class=\"m190l\">";
-  h+=row(1,k,L("Secret key","المفتاح السري"),k.done?(live?L("Saved — live key.","محفوظ — مفتاح حقيقي."):k.mode==="test"?L("Saved — test key. Test cards add real credits here, so don't open payments to customers yet.","محفوظ — مفتاح تجريبي. بطاقات الاختبار تضيف رصيداً حقيقياً هنا، فلا تفتح الدفع للعملاء بعد."):L("Saved.","محفوظ.")):L("In Moyasar: Settings → API Keys → copy the Secret key (start with the test one, sk_test_…) and save it in the Moyasar card below. The Publishable key isn't needed.","في ميسّر: الإعدادات ← API Keys ← انسخ المفتاح السري (ابدأ بالتجريبي sk_test_…) واحفظه في بطاقة ميسّر بالأسفل. المفتاح العام غير مطلوب."),
+  h+=row(1,k,L("Secret key","المفتاح السري"),k.wrong?'<span class="warn190">'+L("The saved key isn't a Secret key — it must start with sk_test_ or sk_live_. In Moyasar: Settings → API Keys → copy the Secret key (not the Publishable pk_ key) and save it below.","المفتاح المحفوظ ليس مفتاحاً سرياً — يجب أن يبدأ بـ sk_test_ أو sk_live_. في ميسّر: الإعدادات ← API Keys ← انسخ المفتاح السري (وليس المفتاح العام pk_) واحفظه بالأسفل.")+"</span>":k.done?(live?L("Saved — live key.","محفوظ — مفتاح حقيقي."):k.mode==="test"?L("Saved — test key. Test cards add real credits here, so don't open payments to customers yet.","محفوظ — مفتاح تجريبي. بطاقات الاختبار تضيف رصيداً حقيقياً هنا، فلا تفتح الدفع للعملاء بعد."):L("Saved.","محفوظ.")):L("In Moyasar: Settings → API Keys → copy the Secret key (start with the test one, sk_test_…) and save it in the Moyasar card below. The Publishable key isn't needed.","في ميسّر: الإعدادات ← API Keys ← انسخ المفتاح السري (ابدأ بالتجريبي sk_test_…) واحفظه في بطاقة ميسّر بالأسفل. المفتاح العام غير مطلوب."),
     k.done?"":btn("m190-key",L("Go to the key field","اذهب إلى حقل المفتاح"),"arrow",false,true));
   h+=row(2,d.https,L("Site address (https)","عنوان الموقع (https)"),d.https.done?'<span dir="ltr">'+esc(d.https.url)+"</span>":L("Moyasar sends payment notices only to an https address. On the server run bash /opt/nooi/deploy/activate.sh — it asks for your https address.","يرسل ميسّر إشعارات الدفع إلى عنوان https فقط. شغّل على الخادم bash /opt/nooi/deploy/activate.sh — سيسألك عن عنوانك بـ https."));
   const wm=w.connected&&w.mode&&k.mode&&w.mode!==k.mode;
@@ -21856,6 +21859,83 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 .pay191 .seg191 button{all:unset;box-sizing:border-box;flex:1;text-align:center;padding:8px 10px;border-radius:9px;font-size:13px;cursor:pointer;color:var(--mute)}
 .pay191 .seg191 button.on{background:var(--lime);color:#10130b;font-weight:600}.pay191 .seg191 button:focus-visible{outline:2px solid var(--lime)}
 @media (prefers-reduced-motion:reduce){.pay191 .p191body{animation:none}.pay191 .p191chev{transition:none}}
+</style>`);
+
+/* ================= v192: FULL-SCREEN VIDEO THAT DOESN'T STOP · ONE ADMIN LOOK · ADMIN THAT SHOWS WHAT IS SAVED ================= */
+/* The owner, on a phone: (1) the full-screen video stopped at a tap and a swipe down did nothing — the card's full-screen button put the
+   bare video in the browser's own full screen, where the card's tap-to-pause still listened; (2) "weak design, consistency, templates,
+   official icons and errors in the dashboard": eleven tabs in two uneven columns (one wrapping onto two lines, one alone), every tab
+   with its own kind of heading, payment marks that weren't the providers' logos, a big blue flash at every tap, the out-of-credits
+   line sending to a place that is now called AI providers, and Payments saying "Not set" while its own steps said the key was saved
+   (Admin read the server once per visit — a key saved later, or from another device, didn't show). */
+// ---- 1. full screen from a result card = our player in a real full screen, from the same moment; a tap shows the buttons; swipe down closes
+function fs192(v){const t=v.currentTime||0,src=v.currentSrc||v.getAttribute("src")||"";if(!src)return;try{v.pause()}catch(e){}
+  viewMedia80(src,"video");const d=document.querySelector(".mv80:last-of-type");if(!d)return;d.classList.add("fs192");
+  const mv=d.querySelector("video.mvm");if(mv){const go=()=>{try{if(t>0.2)mv.currentTime=t}catch(e){}};if(mv.readyState>=1)go();else mv.addEventListener("loadedmetadata",go,{once:true})}
+  const rq=d.requestFullscreen||d.webkitRequestFullscreen;if(rq)try{const p=rq.call(d);if(p&&p.catch)p.catch(()=>{})}catch(e){}}
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="hfvf"]');if(!a)return;const box=a.closest(".hfrm"),v=box&&box.querySelector("video");if(!v)return;e.preventDefault();e.stopImmediatePropagation();fs192(v)},true);
+// leaving the browser's full screen (its back gesture) closes the viewer it was opened for; closing the viewer leaves full screen
+document.addEventListener("fullscreenchange",()=>{const d=document.querySelector(".mv80.fs192");if(!document.fullscreenElement&&d&&d.dataset.fsOn){d.dataset.fsOn="";const x=d.querySelector(".mvx");if(x)x.click()}else if(document.fullscreenElement&&document.fullscreenElement.classList.contains("fs192"))document.fullscreenElement.dataset.fsOn="1"});
+new MutationObserver(()=>{if(document.fullscreenElement&&document.fullscreenElement.classList&&document.fullscreenElement.classList.contains("mv80")&&!document.fullscreenElement.isConnected)try{document.exitFullscreen()}catch(e){}}).observe(document.body,{childList:true});
+// a swipe down (from anywhere but the seek bar) closes the viewer / leaves our player's full screen
+let sw192=null;
+document.addEventListener("touchstart",e=>{const t=e.touches[0],box=e.target.closest&&e.target.closest(".mv80,.vp87");if(!box||e.touches.length>1||e.target.closest("input,.vpbar"))return;sw192={x:t.clientX,y:t.clientY,at:Date.now(),box}},{passive:true});
+document.addEventListener("touchend",e=>{const s=sw192;sw192=null;if(!s)return;const t=e.changedTouches[0],dy=t.clientY-s.y,dx=Math.abs(t.clientX-s.x);if(dy<90||dx>dy*0.6||Date.now()-s.at>900)return;
+  const mv=s.box.closest(".mv80")||(s.box.classList.contains("mv80")?s.box:null);
+  if(mv){const x=mv.querySelector(".mvx");if(x)x.click();if(document.fullscreenElement)try{document.exitFullscreen()}catch(err){}return}
+  if(document.fullscreenElement&&(document.fullscreenElement===s.box||document.fullscreenElement.contains(s.box)))try{document.exitFullscreen()}catch(err){}},{passive:true});
+// ---- 2. no blue flash over large areas at a tap (focus rings for the keyboard stay)
+document.head.insertAdjacentHTML("beforeend","<style>html{-webkit-tap-highlight-color:transparent}</style>");
+// ---- 3. Admin reads the server again when it opens, when a tab changes, when the page comes back — and a save during a read is not lost
+admLoad=(o=>async function(){if(ADM.loading){ADM.again=true;return}await o.apply(this,arguments);ADM.at=Date.now();if(ADM.again){ADM.again=false;await o.apply(this,arguments);ADM.at=Date.now()}})(admLoad);
+const admFresh192=(ms)=>{if(API.mode==="server"&&S.view==="admin"&&ADM.data&&Date.now()-(ADM.at||0)>ms)admLoad()};
+document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest('[data-act="adm-tab"],[data-go="admin"]'))setTimeout(()=>admFresh192(15000),0)},true);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")admFresh192(5000)});
+// ---- 4. one look: one line of tabs with short names, and the same heading (icon · title · one line) on every tab
+ATABS.forEach(t=>{if(t[0]==="team"){t[1]="Team & roles";t[2]="الفريق والصلاحيات"}if(t[0]==="erp"){t[1]="Finance";t[2]="المالية"}if(t[0]==="crm"){t[2]="العملاء المحتملون (CRM)"}});
+const ADM_D192={overview:["Clients, revenue and making at a glance.","العملاء والإيرادات والإنتاج بنظرة واحدة."],users:["Every client: plan, credits and last visit.","كل العملاء: الباقة والرصيد وآخر زيارة."],
+  crm:["The client pipeline, deals and follow-ups.","مسار العملاء والصفقات والمتابعات."],erp:["Profit and loss, expenses and invoices.","الأرباح والخسائر والمصروفات والفواتير."],
+  tickets:["Questions and problems from clients.","أسئلة العملاء ومشاكلهم."],emails:["Write to clients and see what was sent.","راسل العملاء وراجع ما أُرسل."],
+  features:["Switch features on or off for every client.","شغّل الميزات أو أوقفها لكل العملاء."],team:["Who manages the site and what each role can do.","من يدير الموقع وصلاحيات كل دور."],
+  audit:["Every change made in Admin, newest first.","كل تغيير في الإدارة، الأحدث أولاً."]};
+VIEWS.admin=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string")return h;const tabs=ATABS.filter(t=>can(t[4])),tab=S.admTab&&tabs.some(t=>t[0]===S.admTab)?S.admTab:(tabs[0]||[])[0],T=tabs.find(t=>t[0]===tab),d=ADM_D192[tab];
+  if(!T||!d)return h;const s=h.indexOf('<div class="admtabs">'),e=s<0?-1:h.indexOf("</div>",s);if(e<0)return h;
+  return h.slice(0,e+6)+'<div class="admh192"><h2>'+ic(T[3])+" "+esc(L(T[1],T[2]))+'</h2><p class="small mute">'+esc(L(d[0],d[1]))+"</p></div>"+h.slice(e+6)})(VIEWS.admin);
+renderView=(o=>function(){const r=o.apply(this,arguments);try{if(S.view==="admin"){const b=document.querySelector('.admtabs [aria-pressed="true"]');if(b){const bar=b.parentNode,br=bar.getBoundingClientRect(),r2=b.getBoundingClientRect();if(r2.left<br.left||r2.right>br.right)bar.scrollLeft+=(r2.left+r2.width/2)-(br.left+br.width/2)}}}catch(e){}return r})(renderView);
+// ---- 5. the out-of-credits line says where to go now, with the button that goes there
+line138=function(){if(!AL138)return"";const n=AL138.count||1,at=hm138(AL138.since);
+  return'<div class="al138" role="alert">'+ic("warn","width:18px;height:18px;flex:none")+'<div><b>'+L("The AI engine account is out of credits","نفد رصيد حساب محرّك الذكاء")+"</b><br>"+
+    L(n+(n===1?" job":" jobs")+" failed since "+at+" — customers were not charged. Top up the engine account, then open AI providers and tap Test all.","فشل "+n+" من الأعمال منذ "+at+" — لم يُخصم شيء من العملاء. اشحن رصيد حساب المحرّك، ثم افتح «مزودو الذكاء» واضغط «اختبر الكل».")+
+    '<div><button type="button" class="btn sm al192" data-act="adm-tab" data-v="models" data-go192="conn">'+ic("key")+L("Open AI providers","افتح مزودي الذكاء")+"</button></div></div></div>"};
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest("[data-go192]");if(!a)return;setTimeout(()=>{const want=L("Connections & live status","الاتصالات والحالة المباشرة"),h=[...document.querySelectorAll(".view h3")].find(x=>x.innerText.trim().startsWith(want));(h||document.querySelector(".aip184")||document.body).scrollIntoView({block:"start",behavior:"smooth"})},80)});
+// ---- 6. Payments: the providers' own logos where they publish one under an open licence (Stripe, PayPal — Simple Icons, CC0); a
+//      method switched on without keys or with the wrong kind of key says so (customers don't see it until it can take payments)
+PAY_M191.stripe.svg='<path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z"/>';
+PAY_M191.stripe.c="#635BFF";
+PAY_M191.paypal.svg='<path d="M15.607 4.653H8.941L6.645 19.251H1.82L4.862 0h7.995c3.754 0 6.375 2.294 6.473 5.513-.648-.478-2.105-.86-3.722-.86m6.57 5.546c0 3.41-3.01 6.853-6.958 6.853h-2.493L11.595 24H6.74l1.845-11.538h3.592c4.208 0 7.346-3.634 7.153-6.949a5.24 5.24 0 0 1 2.848 4.686M9.653 5.546h6.408c.907 0 1.942.222 2.363.541-.195 2.741-2.655 5.483-6.42 5.483H8.714Z"/>';
+PAY_M191.paypal.c="#002991";
+pay191Pill=(o=>function(st){if(st&&st.configured&&st.keyOk===false)return["bad",L("Wrong key","مفتاح خاطئ")];if(st&&st.enabled&&!st.configured)return["bad",L("On without keys","مفعّل بلا مفاتيح")];return o.apply(this,arguments)})(pay191Pill);
+pay191Notes=(o=>function(k,st){let h="";if(st.configured&&st.keyOk===false)h+='<p class="small p191bad">'+ic("warn")+"<span>"+L("The saved key isn't a Secret key — it must start with sk_test_ or sk_live_ (the Publishable pk_ key can't take payments). Paste the Secret key and save.","المفتاح المحفوظ ليس مفتاحاً سرياً — يجب أن يبدأ بـ sk_test_ أو sk_live_ (المفتاح العام pk_ لا يقبل المدفوعات). الصق المفتاح السري واحفظه.")+"</span></p>";
+  if(st.enabled&&!st.configured)h+='<p class="small p191bad">'+ic("warn")+"<span>"+L("It is switched on, but no keys are saved — customers don't see it until the keys are saved.","مفعّل، لكن لا توجد مفاتيح محفوظة — لن يراه العملاء حتى تُحفظ المفاتيح.")+"</span></p>";
+  return h+o.apply(this,arguments)})(pay191Notes);
+admPayments=(o=>function(){let h=o.apply(this,arguments);const P=A().payments||{},ks=Object.keys(PAY_M191),off=ks.filter(k=>(P[k]||{}).enabled&&!(P[k]||{}).configured).length,on=ks.filter(k=>(P[k]||{}).enabled&&(P[k]||{}).configured&&(P[k]||{}).keyOk!==false).length;
+  const good=k=>(P[k]||{}).configured&&(P[k]||{}).keyOk!==false,live=ks.filter(k=>good(k)&&P[k].mode==="live").length,test=ks.filter(k=>good(k)&&P[k].mode==="test").length;
+  h=h.replace(/<div class="p191sum">[\s\S]*?<\/div>/,'<div class="p191sum"><b>'+on+"</b> "+L("on","مفعّل")+" · <b>"+live+"</b> "+L("live","حقيقي")+" · <b>"+test+"</b> "+L("test","تجريبي")+"</div>");
+  if(off)h=h.replace('<div class="p191grp">','<p class="small p191bad p191top2">'+ic("warn")+"<span>"+L(off+" switched on without keys — customers don't see "+(off===1?"it":"them")+" until the keys are saved.",off+" مفعّلة بلا مفاتيح — لا يراها العملاء حتى تُحفظ المفاتيح.")+'</span></p><div class="p191grp">');
+  ks.forEach(k=>{const M=PAY_M191[k];if(M.svg)h=h.replace('<span class="p191logo" style="--c:'+M.c+'" aria-hidden="true">'+M.m+"</span>",'<span class="p191logo p191svg" style="--c:'+M.c+'" aria-hidden="true"><svg viewBox="0 0 24 24" fill="#fff">'+M.svg+"</svg></span>")});
+  return h})(admPayments);
+document.head.insertAdjacentHTML("beforeend",`<style>
+#main .view .admtabs{display:flex!important;flex-wrap:nowrap!important;justify-content:flex-start!important;align-self:stretch;min-width:0;width:auto;max-width:none;gap:6px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;margin:4px -16px 14px;padding:2px 16px 4px;scroll-padding:16px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 16px,#000 calc(100% - 16px),transparent);mask-image:linear-gradient(90deg,transparent 0,#000 16px,#000 calc(100% - 16px),transparent)}
+#main .view .admtabs::-webkit-scrollbar{display:none}
+#main .view .admtabs button{flex:0 0 auto!important;width:auto!important;min-width:0!important;max-width:none!important;margin:0!important;justify-content:flex-start!important;white-space:nowrap;display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--mute);font-size:13px;font-weight:500}
+#main .view .admtabs button svg{width:16px;height:16px;flex:none}
+#main .view .admtabs button[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+@media (min-width:900px){#main .view .admtabs{margin-inline:0;padding-inline:2px}}
+.admh192{margin:2px 0 14px}.admh192 h2{margin:0;font-size:18px;display:flex;align-items:center;gap:8px}.admh192 h2 svg{width:18px;height:18px;flex:none}.admh192 p{margin:3px 0 0}
+.al138 .al192{margin-top:8px}
+.pay191 .p191logo.p191svg svg{width:20px;height:20px}
+.pay191 .p191pill.s-bad{color:var(--red,#e5484d);background:color-mix(in srgb,var(--red,#e5484d) 13%,transparent)}
+.pay191 .p191bad{color:var(--red,#e5484d)}.pay191 .p191top2{margin:12px 0 0;display:flex;gap:6px;align-items:flex-start}.pay191 .p191top2 svg{flex:none;width:15px;height:15px;margin-top:2px}
 </style>`);
 
 /* ================= LOOP + BOOT ================= */

@@ -87,7 +87,7 @@ def server_part1():
         ok(api(p, b, tok=TOKEN)[0] == 403, f"a customer can't use {p}")
     # the test key
     ok(api("/v1/admin/payments/moyasar", {"secretKey": "sk_test_v190"}, method="PUT")[0] == 200, "the key saves")
-    s = setup(); ok(s["key"] == {"done": True, "mode": "test"}, f"step 1 test: {s['key']}")
+    s = setup(); ok(s["key"]["done"] is True and s["key"]["mode"] == "test" and not s["key"].get("wrong"), f"step 1 test: {s['key']}")
     # connect: the old one to our address goes, the other stays, a new one with our address, events and a new secret
     c, r = api("/v1/admin/pay190/moyasar/webhook", {}); out["connect"] = {k: r.get(k) for k in ("connected", "removed", "mode", "events")}
     h = mine(); out["hooks"] = [{k: v for k, v in x.items() if k != "_secret"} for x in HOOKS.values()]
