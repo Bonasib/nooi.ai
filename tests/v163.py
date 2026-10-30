@@ -150,23 +150,14 @@ async def page_checks():
             ok((t["chip"] or "").startswith(want[0]) and t["h"] == want[1] and not t["model"], f"{lang}: the box says engine {t}")
         await pg.evaluate("()=>{S.lang='en'}")
         fr = json.load(open(ROOT + "/public/i18n/fr.json")); ok(fr.get("Video engine") == "Moteur vidéo" and "Video model" not in fr, "the shipped French says moteur")
-        # super slow motion on the Video page: tiles with price and length, the Generate price, the job
-        r = await pg.evaluate("""async()=>{const R={};S.view='video';S.draft.dur=5;S.draft.slow163='off';S.draft.variations=1;S.draft.model='kling30';const st=ST93();st.open='fps';renderView();await new Promise(r=>setTimeout(r,600));
-          R.tiles=[...document.querySelectorAll('#sec93-fps .sl163 .tile')].map(b=>[b.dataset.v,b.querySelector('small').textContent,b.disabled]);
-          const cost=()=>+document.querySelector('.dock98 [data-act="gen-video"] .crc b').textContent;R.c0=cost();
-          document.querySelector('#sec93-fps .sl163 [data-v="super"]').click();await new Promise(r=>setTimeout(r,600));R.c1=cost();R.chip=document.querySelector('[data-o93="fps"] .o93v').textContent;
-          const ad=addJob,sp=spend;let got=null;spend=()=>false;addJob=function(j){const r=ad.apply(this,arguments);got={cost:j.cost,slow:j.meta&&j.meta.slow163};return r};
-          try{S.draft.prompt='A drop of water falls into a glass';const d=$('#dprompt');if(d)d.value=S.draft.prompt;await makeVideo()}catch(e){R.err=String(e)}addJob=ad;spend=sp;R.job=got;
-          S.draft.dur=30;renderView();await new Promise(r=>setTimeout(r,400));R.long=[...document.querySelectorAll('#sec93-fps .sl163 .tile')].map(b=>[b.dataset.v,b.disabled]);S.draft.dur=5;
-          S.view='home';S.hf.tab='video';S.hf.dur=5;S.draft.slow163='off';renderView();await new Promise(r=>setTimeout(r,400));const hc=document.querySelector('[data-act="sl163h"]');R.hchip=hc&&hc.innerText;hc.click();await new Promise(r=>setTimeout(r,300));
-          R.hsheet=document.querySelectorAll('.hfsheet .sl163 .tile').length;document.querySelector('.hfsheet [data-v="ramp"]').click();await new Promise(r=>setTimeout(r,300));R.hafter=[S.draft.slow163,document.querySelector('[data-act="sl163h"]').innerText,!!document.querySelector('.hfsheet')];
-          S.draft.slow163='off';return R}""")
+        # v187: no slow-motion buttons any more (the Video page's tiles, the home box's Slow-mo chip) — the words turn it on, priced
+        # on the Video page's Generate button too (tests/v187.py goes further)
+        r = await pg.evaluate("""async()=>{const R={};S.view='video';S.draft.dur=5;S.draft.slow163='off';S.draft.variations=2;S.draft.model='kling30';S.draft.prompt='A drop of water falls into a glass';const st=ST93();st.open='fps';renderView();await new Promise(r=>setTimeout(r,600));
+          R.tiles=document.querySelectorAll('#main .sl163').length;const cost=()=>+document.querySelector('.dock98 [data-act="gen-video"] .crc b').textContent;R.c0=cost();
+          S.draft.prompt='A drop of water falls into a glass in super slow motion';renderView();await new Promise(r=>setTimeout(r,400));R.c1=cost();S.draft.variations=1;S.draft.prompt='';
+          S.view='home';S.hf.tab='video';S.hf.dur=5;renderView();await new Promise(r=>setTimeout(r,400));R.hchip=!!document.querySelector('[data-act="sl163h"]');return R}""")
         out["slow_page"] = r
-        ok([t[0] for t in r["tiles"]] == ["off", "slow", "super", "ultra", "ramp"] and "5 s → 20 s" in r["tiles"][2][1] and "+4" in r["tiles"][2][1] and "5 s → 40 s" in r["tiles"][3][1], f"tiles with length and price {r['tiles']}")
-        ok(r["c1"] == r["c0"] + 4 and r["chip"] == "Super slow", f"Generate price +4, the chip says Super slow {r['c0']} → {r['c1']} {r['chip']!r}")
-        ok(r["job"] == {"cost": r["c1"], "slow": "super"}, f"the job carries super slow and its price {r['job']} {r.get('err')}")
-        ok(dict(r["long"]).get("ultra") is True and dict(r["long"]).get("super") is False, f"30 s at 0.125× would be over 2 minutes → that choice is off (0.25× is exactly 2 minutes) {r['long']}")
-        ok(r["hchip"] == "Slow-mo" and r["hsheet"] == 5 and r["hafter"][0] == "ramp" and r["hafter"][1] == "Cinematic ramp" and not r["hafter"][2], f"home: a Slow-mo chip with the same choices {r['hchip']!r} {r['hsheet']} {r['hafter']}")
+        ok(r["tiles"] == 0 and not r["hchip"] and r["c1"] == r["c0"] + 2 * 4, f"no slow-motion buttons; 'super slow motion' in the words adds +4 for each of the 2 takes {r}")
         # the editor: a slowed clip is smooth by itself — the engine's version starts by itself, free (v168: tests/v168.py goes further)
         r = await pg.evaluate("""async()=>{const R={};const j={id:'lj1',remote:'x',kind:'video',status:'complete',progress:1,resultUrl:'/media/none.mp4',title:'Clip',prompt:'x',created:Date.now(),dur:3,aspect:'16:9',art:'scene',seed:1,pal:PALS[0]};S.jobs.push(j);
           S.ed.clips=[{id:'c1',src:{k:'job',job:'lj1'},in:0,out:3,speed:1}];S.ed.sel='c1';S.view='edit';renderView();await new Promise(r=>setTimeout(r,500));const c=S.ed.clips[0];

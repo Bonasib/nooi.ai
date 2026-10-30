@@ -56,6 +56,7 @@ import { registerCaptions169 } from "./lib/captions169.js";   // v169: the edito
 import { registerMotion150 } from "./lib/motion150.js";   // v150: motion ads planned by the text AI (or without it) + agent tools
 import { startKeepMedia } from "./lib/v89.js";   // v89: results that still point at an engine's (expiring) link are kept here
 import "./lib/alert138.js";   // v138: an engine out of credits is said at once (Admin, staff line, one email)
+import { CAPS187 } from "./lib/caps187.js";   // v187: each video engine's resolutions and sound; slow motion from the words
 import "./lib/intent.js";   // v96: the page's choices (style, camera move, type, motion, what to avoid, voice-over) reach the engine as words
 import "./lib/words100.js";   // v100: a picture with no words gets plain words for the engine (Kling 3.0 refused "prompt is required")
 import "./lib/voices161.js";   // v161: Kling 4.0 hears each character's own voice (library sample or the customer's clip) — speech and lips in one pass
@@ -84,6 +85,7 @@ import { registerInvoices } from "./lib/invoices.js";
 import { registerExplore } from "./lib/explore.js";
 import { registerRefer173 } from "./lib/refer173.js";   // v173: invite friends (the member dashboard)
 import { registerLaunch182, launchMode182, gate182 } from "./lib/launch182.js";   // v182: Coming soon — the team only
+import { registerDownload187 } from "./lib/download187.js";
 import { mmOn183, mmState183, mmRegion183 } from "./providers/minimax183.js";   // v183: MiniMax voices, pictures and music (v185: + videos)
 import { sendEmail, emailConfigured } from "./lib/email.js";
 import { renderEmail } from "./public/email-templates.js";
@@ -179,7 +181,7 @@ app.post("/v1/jobs/:id/again136", requireUser, wrap(async (req, res) => res.json
 app.get("/v1/config", (_, res) => res.json({
   firebase: firebaseWebConfig(), localAI: { tfUrl: fs.existsSync(TF_DIR + "/transformers.min.js") ? "/vendor/transformers/transformers.min.js" : null, ortBase: fs.existsSync(ORT_DIR) ? "/vendor/ort/" : null, modelsHost: process.env.MODELS_DIR ? "/models/" : null, models: platform().localModels || {} }, emailCode: canSendSignInLinks() && emailConfigured(), kieRoutes: kieRoutes(),
   llm: llmConfigured() ? { on: true } : null,   // (which provider and model: the owner's "Test connection" only — this reply is public)
-  billing: enabledPayments().length > 0, freeCredits: freeCredits(), stage: process.env.NOOI_STAGE === "1", launch182: launchMode182(), biz: biz(), registry: publicRegistry(), shots133: shotsTable133((m) => { const r = adapterFor("video", { kind: "video", model: m }, PROVIDERS); return r && r.key; }), payments: enabledPayments(), modelLogos: platform().modelLogos || {}, worldEngine: !!(process.env.WORLD_API_URL || (platform().providers || {}).world), modelCat: Object.fromEntries(Object.entries(platform().modelCat || {}).map(([k, v]) => [k, { cr: v.cr, verified: !!v.verified, kie: !!v.kieModel }])), features: platform().features, models: platform().models, prices: priceTable(), support: "contact@nooi.ai",
+  billing: enabledPayments().length > 0, freeCredits: freeCredits(), stage: process.env.NOOI_STAGE === "1", launch182: launchMode182(), biz: biz(), registry: publicRegistry(), caps187: CAPS187, shots133: shotsTable133((m) => { const r = adapterFor("video", { kind: "video", model: m }, PROVIDERS); return r && r.key; }), payments: enabledPayments(), modelLogos: platform().modelLogos || {}, worldEngine: !!(process.env.WORLD_API_URL || (platform().providers || {}).world), modelCat: Object.fromEntries(Object.entries(platform().modelCat || {}).map(([k, v]) => [k, { cr: v.cr, verified: !!v.verified, kie: !!v.kieModel }])), features: platform().features, models: platform().models, prices: priceTable(), support: "contact@nooi.ai",
   providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || !!kieDefault(k) || !!kieAuto(k, { kind: k === "tts" ? "voice" : k }) || (k === "image" && (nvOn("image") || nvOn("edit"))) || (k === "edit" && nvOn("edit")) || (k === "video" && nvOn("video"))])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!rtEngine(), realtimeEngine: rtEngine(), vss: vssServer(), localize: (() => { try { const e = locEngines(); return { nooi: e.nooi, elevenlabs: e.elevenlabs, camb: e.camb, nvidia: e.nvidia, stt: e.stt }; } catch { return null; } })(), gen3d: { tripo: configured("tripo"), meshy: configured("meshy"), skybox: configured("blockade") }, nvidia: nvReady(), nvUse: nvReady() ? nvCfg().use : null, nvDown: nvReady() ? ((d) => (Object.keys(d).length ? d : null))(Object.fromEntries(["video", "image", "image2", "edit", "3d"].filter((t) => nvDown176(t)).map((t) => [t, true]))) : null, nvI2v: !!nvI2v181(), minimax183: { voice: mmOn183("voice"), image: mmOn183("image"), music: mmOn183("music"), video: mmOn183("video") }, billing: enabledPayments().length > 0 }
 }));
 
@@ -334,6 +336,7 @@ registerEdit147(app, requireUser);
 registerEdit148(app, requireUser); registerEdit149(app, requireUser, isStaff); registerCaptions169(app, requireUser, isStaff); registerMotion150(app, requireUser);
 registerIngest(app);
 registerExplore(app); registerShowcase(app); registerGifts(app); registerInvoices(app); registerRefer173(app); registerLaunch182(app, requireUser);
+registerDownload187(app, requireUser);   // v187: the Download menu — MP4, MP3 (when there is sound), a PNG of a frame
 // Low-latency voice preview (ElevenLabs stream, key never leaves the server)
 app.post("/v1/tts/stream", requireUser, async (req, res) => { try { const { planOf } = await import("./lib/plans.js"); const plan = planOf(user(req.user.uid)); if (!["pro", "studio"].includes(plan)) return res.status(402).json({ error: "ElevenLabs voices start from the Pro plan" }); await streamTTS(res, req.body || {}); } catch (e) { if (!res.headersSent) res.status(502).json({ error: e.message }); } });
 // Export: convert a browser WebM recording to MP4 (H.264/AAC) with ffmpeg

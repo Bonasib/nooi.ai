@@ -115,7 +115,8 @@ async def page_checks():
             {id:'U155',kind:'video',model:'kling30',prompt:'never sent',status:'queued',progress:0,created:now-11*60e3,dur:5,aspect:'16:9',art:'scene',meta:{}},
             {id:'S155',kind:'video',model:'kling30',prompt:'being sent',status:'queued',progress:0,created:now-11*60e3,dur:5,aspect:'16:9',art:'scene',meta:{}});
           SEND155.add('S155');S.hf.out=(S.hf.out||[]).concat(['L155']);const run=agStart();agWatch(run,['L155']);window.__run=run;renderAll()}""", sid)
-        n = await E("()=>link155()")
+        # (a background run may hold the lock at this moment — wait for it, then run it; the state is read once it has settled)
+        n = await E("async()=>{let n=0;for(let i=0;i<60;i++){while(busy155)await new Promise(r=>setTimeout(r,50));n+=await link155();const g=id=>S.jobs.find(x=>x.id===id);if(g('L155').remote&&g('U155').status==='failed')break;await new Promise(r=>setTimeout(r,150))}return n}")
         st = await E("()=>{const g=id=>S.jobs.find(x=>x.id===id);const L=g('L155'),U=g('U155'),Sd=g('S155');return {n:0,L:L&&[L.remote,L.status,!!L.resultUrl],dup:!!g('D155'),U:U&&[U.status,U.errorType,U.error,U.errorAr],S:Sd&&Sd.status}}")
         out["lost"] = st
         ok(st["L"] and st["L"][0] == sid and st["L"][1] == "complete" and st["L"][2] and not st["dup"], f"the page's copy found its job (complete, the sync's copy gone) {st}")

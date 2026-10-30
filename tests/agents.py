@@ -101,7 +101,7 @@ async def ui(p, w):
             await asyncio.sleep(.25)
         return False
     await E("()=>{window.__t=[];const t0=toast;toast=function(m,o){window.__t.push(String(m));return t0.apply(this,arguments)};S.langAsked=true;document.getElementById('langsug')?.remove();S.lang='%s';S.user={name:'T',method:'google'};AU.showAuth=false;S.hf.tab='video';S.hf.vModel='auto';S.hf.bots=true;S.hf.sb=false;S.hf.dur=20;S.hf.out=[];go('home');renderAll()}" % ("ar" if mob else "en"))
-    ok(await wait_for("()=>!!document.querySelector('.hfbox [data-act=agx-sb]')", 10), f"{tag}: Storyboard option in the box")
+    ok(await wait_for("()=>!!document.querySelector('.hfbox [data-act=hf187-set]')", 10) and await E("()=>{document.querySelector('.hfbox [data-act=hf187-set]').click();const ok=!!document.querySelector('#modalRoot [data-act=agx-sb]');closeSheet();return ok}"), f"{tag}: Storyboard option in the box's settings")   # (v187: in the settings sheet)
     await pg.click("#hfq"); await pg.keyboard.type("A 20 second ad for my coffee shop")
     ok(await wait_for("()=>document.querySelectorAll('#agstrip .agb').length===1&&AG.cur==='writer'", 5), f"{tag}: typing shows Quill")
     # sending: the icons appear one at a time
@@ -117,7 +117,7 @@ async def ui(p, w):
     ok(await wait_for("()=>!AG.busy&&!!AG.summary", 30), f"{tag}: Iris finishes with a summary")
     # Storyboard option
     await E("()=>{go('home');renderAll()}"); await pg.wait_for_timeout(300)
-    await E("()=>document.querySelector('[data-act=agx-sb]').click()"); await pg.wait_for_timeout(200)
+    await E("()=>{document.querySelector('.hfbox [data-act=hf187-set]').click();document.querySelector('#modalRoot [data-act=agx-sb]').click();closeSheet()}"); await pg.wait_for_timeout(200)
     r["sbcost"] = await E("()=>[S.hf.sb,document.querySelector('.hfbox .hfcost')&&document.querySelector('.hfbox .hfcost').textContent.trim()]")
     ok(r["sbcost"][0] is True and r["sbcost"][1], f"{tag}: storyboard on + price {r['sbcost']}")
     await E("()=>{const q=document.querySelector('#hfq');q.value='A girl chases her kite across Riyadh';q.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('.hfsend').click()}")

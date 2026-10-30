@@ -131,7 +131,8 @@ export const mmVideo185 = (mo) => ({ name: "MiniMax Hailuo", configured: configu
     let img = p.inputs?.startImage || p.inputs?.vStart || "";
     if (!img && p.aspect && p.aspect !== "16:9") { const d = await call("/v1/image_generation", { model: c.imageModel, prompt: prompt.slice(0, 1500), aspect_ratio: RATIOS.includes(p.aspect) ? p.aspect : "9:16", n: 1, response_format: "url", prompt_optimizer: true });
       img = (d.data && (d.data.image_urls || [])[0]) || ""; }
-    const duration = +p.dur > 7 ? 10 : 6, resolution = duration === 10 || !/^1080p$/i.test(String(c.videoResolution || "")) ? "768P" : "1080P";
+    // (v187: the resolution the customer chose — 1080P when the length allows it, 6 s; else the setting in Admin)
+    const duration = +p.dur > 7 ? 10 : 6, want = String(p.meta?.res || c.videoResolution || ""), resolution = duration === 10 || !/^(1080p|2k|4k)$/i.test(want) ? "768P" : "1080P";
     const d = await call("/v1/video_generation", { model, prompt, duration, resolution, prompt_optimizer: true, ...(img ? { first_frame_image: asData(img) } : {}) }, 60000);
     if (!d.task_id) throw new Error("MiniMax gave no task for the video");
     return { remoteId: String(d.task_id), sent: { prompt, model, duration, resolution, ...(img ? { pictures: 1 } : {}) } };

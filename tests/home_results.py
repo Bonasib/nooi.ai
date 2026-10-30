@@ -42,9 +42,9 @@ async def main():
                 # the bots keep the model the client picked (never switch back to nooi) and allow 30 s with it
                 await E("()=>{go('home');S.hf.tab='video';S.hf.vModel='auto';S.hf.bots=true;renderView()}")
                 await E("()=>document.querySelector('.hfmi[data-act=hf-model]').click()"); await pg.wait_for_timeout(200); await E("()=>document.querySelector('.hfmodel[data-v=kling30]').click()"); await pg.wait_for_timeout(200)
-                await E("()=>document.querySelector('.hfmi[data-act=hfx-bots]').click()"); await pg.wait_for_timeout(150)
+                await E("()=>{document.querySelector('[data-act=hf187-set]').click();document.querySelector('#modalRoot [data-act=hfx-bots]').click();closeSheet()}"); await pg.wait_for_timeout(150)
                 off = await E("()=>[S.hf.vModel,S.hf.bots,!!document.querySelector('.hfbots'),Math.max(...HF_DURS.filter(hfDurOK))]")
-                await E("()=>document.querySelector('.hfmi[data-act=hfx-bots]').click()"); await pg.wait_for_timeout(150)
+                await E("()=>{document.querySelector('[data-act=hf187-set]').click();document.querySelector('#modalRoot [data-act=hfx-bots]').click();closeSheet()}"); await pg.wait_for_timeout(150)
                 on = await E("()=>[S.hf.vModel,S.hf.bots,!!document.querySelector('.hfbots .botstrip'),Math.max(...HF_DURS.filter(hfDurOK))]")
                 bots_keep = off == ["kling30", False, False, 30] and on == ["kling30", True, True, 30]   # (v132: any engine goes long — the server's agents plan the parts either way)
                 # audio results: compact player with play/pause, time and sound; the right example and price per audio type
@@ -72,7 +72,7 @@ async def main():
                 if not refx or plan != [3, True, True, True, True, True]: fails.append(f"{w}: photo x {refx} / studio plan {plan}")
                 await E("()=>{S.hf.out=['aud1'];S.hf.tab='audio';renderView()}"); await pg.wait_for_timeout(300)
                 # v67: send bar above the bots, the plan written by the bots, results grouped by type, select many → folder / project
-                lay = await E("()=>{S.hf.tab='video';renderView();const b=document.querySelector('.hfbox .hfbar'),t=document.querySelector('.hfbox .hfbots');return[!!b&&!!t&&b.getBoundingClientRect().top<t.getBoundingClientRect().top,document.querySelectorAll('.hbl').length>=7,document.querySelectorAll('.hbl .mdl').length===3]}")
+                lay = await E("()=>{S.hf.tab='video';renderView();const b=document.querySelector('.hfbox .hf187row'),t=document.querySelector('.hfbox .hfbots');return[!!b&&!!t&&b.getBoundingClientRect().top<t.getBoundingClientRect().top,document.querySelectorAll('.hbl').length>=7,document.querySelectorAll('.hbl .mdl').length===3]}")
                 await E("()=>{const mk=(id,kind)=>({id,kind,status:'complete',prompt:id,created:Date.now(),progress:1,pal:PALS[0],seed:1,dur:5,aspect:'16:9'});S.jobs.push(mk('gv','video'),mk('gi','image'),mk('gm','music'));S.hf.out=['gv','gi','gm'];S.hf.tab='video';renderView()}")
                 grp = await E("()=>[...document.querySelectorAll('.hfgrp')].map(g=>g.dataset.g)")
                 await E("()=>{document.querySelector('[data-act=hfs-mode]').click();document.querySelector('.hfrc[data-id=gv]').click();document.querySelector('.hfrc[data-id=gi]').click();document.querySelector('[data-act=hfs-folder]').click();document.querySelector('#hffdn').value='F1';document.querySelector('[data-act=hfs-fdnew]').click()}")

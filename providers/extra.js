@@ -22,7 +22,8 @@ const startImg = (p) => p.inputs?.startImage || p.inputs?.vStart || undefined;
 
 export const seedance = (mo) => { const c = cfg("seedance"); const base = (c.baseUrl || "https://ark.ap-southeast.bytepluses.com/api/v3").replace(/\/$/, ""); const h = { Authorization: "Bearer " + c.apiKey, "Content-Type": "application/json" };
   return { name: "Seedance", configured: configured("seedance"),
-    async submit(p) { const content = [{ type: "text", text: `${fullPrompt(p)} --rt ${ratio(p.aspect)} --dur ${p.dur >= 10 ? 10 : 5}` }]; if (startImg(p)) content.push({ type: "image_url", image_url: { url: startImg(p) } });
+    async submit(p) { const rs = /1080|2k|4k/i.test(p.meta?.res || "") ? "1080p" : /480/.test(p.meta?.res || "") ? "480p" : "720p";   // (v187: the resolution asked for)
+      const content = [{ type: "text", text: `${fullPrompt(p)} --rt ${ratio(p.aspect)} --dur ${p.dur >= 10 ? 10 : 5} --rs ${rs}` }]; if (startImg(p)) content.push({ type: "image_url", image_url: { url: startImg(p) } });
       const d = await j(await fetch(base + "/contents/generations/tasks", { method: "POST", headers: h, body: JSON.stringify({ model: mo || c.model || "seedance-1-0-pro-250528", content }) }), "Seedance"); return { remoteId: d.id }; },
     async poll(id) { const d = await j(await fetch(base + "/contents/generations/tasks/" + id, { headers: h }), "Seedance"); const s = d.status;
       return s === "succeeded" ? { status: "done", url: d.content?.video_url } : s === "failed" || s === "cancelled" ? { status: "failed", error: d.error?.message || "Seedance failed" } : { status: s === "queued" ? "queued" : "rendering" }; } }; };
@@ -32,7 +33,7 @@ function klingToken(ak, sk) { const now = Math.floor(Date.now() / 1000); const h
 export const kling = (mo) => { const c = cfg("kling"); const base = (c.baseUrl || "https://api.klingai.com").replace(/\/$/, ""); const h = () => ({ Authorization: "Bearer " + klingToken(c.accessKey, c.secretKey), "Content-Type": "application/json" });
   return { name: "Kling", configured: !!(c.accessKey && c.secretKey),
     async submit(p) { const img = startImg(p); const type = img ? "image2video" : "text2video";
-      const d = await j(await fetch(`${base}/v1/videos/${type}`, { method: "POST", headers: h(), body: JSON.stringify({ model_name: mo || c.model || "kling-v1", prompt: fullPrompt(p), negative_prompt: p.meta?.neg, duration: p.dur >= 10 ? "10" : "5", aspect_ratio: ratio(p.aspect), ...(img ? { image: img } : {}) }) }), "Kling");
+      const d = await j(await fetch(`${base}/v1/videos/${type}`, { method: "POST", headers: h(), body: JSON.stringify({ model_name: mo || c.model || "kling-v1", prompt: fullPrompt(p), negative_prompt: p.meta?.neg, duration: p.dur >= 10 ? "10" : "5", aspect_ratio: ratio(p.aspect), mode: /1080|2k|4k/i.test(p.meta?.res || "") ? "pro" : "std", ...(img ? { image: img } : {}) }) }), "Kling");   // (v187: pro = 1080p)
       return { remoteId: type + ":" + d.data?.task_id }; },
     async poll(rid) { const [type, id] = rid.split(":"); const d = await j(await fetch(`${base}/v1/videos/${type}/${id}`, { headers: h() }), "Kling"); const s = d.data?.task_status;
       return s === "succeed" ? { status: "done", url: d.data?.task_result?.videos?.[0]?.url } : s === "failed" ? { status: "failed", error: d.data?.task_status_msg || "Kling failed" } : { status: s === "submitted" ? "queued" : "rendering" }; } }; };

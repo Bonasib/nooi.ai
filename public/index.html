@@ -21436,6 +21436,211 @@ VIEWS.admin=(o=>function(){const h=o.apply(this,arguments);return DK186&&typeof 
 setTimeout(disk186,3000);setInterval(disk186,600000);
 (function(){const st=document.createElement("style");st.textContent=`.dk186 code.dk186c{display:inline-block;margin-top:6px;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,.25);font-size:12px;word-break:break-all;user-select:all}`;document.head.appendChild(st)})();
 
+/* ================= v187: THE PROMPT BOX IN ONE ROW · VIDEOS IN THEIR REAL SHAPE · A DOWNLOAD MENU · WHAT EACH ENGINE MAKES · SLOW MOTION FROM THE WORDS ================= */
+/* The owner asked:
+   1. result cards: a video in its own shape (videoWidth / videoHeight), contained on a dark backdrop — nothing cut (a square
+      MiniMax video was cut to 16:9 because the card used the format asked for);
+   2. the format and resolution reach every engine, 1080P where the engine makes it (the server: lib/caps187.js, providers/*);
+   3. Sound per engine (/v1/config.caps187[id].audio): silent engines (MiniMax Hailuo…) — off, greyed, with a hint; "always" —
+      on, greyed; the others — a switch whose choice is sent (meta.audio);
+   4. Download opens a menu: the video (MP4), its sound (MP3, only when it has a sound track) or a PNG of the frame on screen / the
+      first / the last — made by ffmpeg on the server and sent as a file (lib/download187.js);
+   5. the box: the words, then one row [+][engine][⚙][Generate · cost]; + opens what can be added (characters, start frame,
+      pictures, clip, voice); ⚙ opens the settings in a bottom sheet — format, how many, quality, length, sound, bitrate, and the
+      agents, scene and storyboard — with the price live; RTL and LTR;
+   6. no slow-motion buttons: "slow motion", "slow-mo", "سلو موشن", "حركة بطيئة", "تصوير بطيء" in the words turn it on (the server
+      makes it — lib/caps187.js), the editor's speed tool (0.5× / 0.25×) makes its own smooth one (v168). */
+const HF187={add:false};
+S.hf=Object.assign({batch:1,sound:false,br:"high"},S.hf||{});
+["360P","480P","540P","768P"].forEach(r=>{if(!HF_RES.video.includes(r))HF_RES.video.push(r)});
+const RANK187=["360P","480P","540P","720P","768P","1080P","2K","4K"];
+const near187=(list,want)=>{const w=RANK187.indexOf(String(want||"").toUpperCase());if(!list||!list.length)return want;if(w<0)return list[0];return list.slice().sort((a,b)=>Math.abs(RANK187.indexOf(a)-w)-Math.abs(RANK187.indexOf(b)-w)||RANK187.indexOf(b)-RANK187.indexOf(a))[0]};
+function cap187(m){const C=(API.cfg&&API.cfg.caps187)||{};return C[m]||C.auto||{res:["720P","1080P"],audio:true}}
+const resList187=()=>S.hf.tab==="image"?HF_RES.image:cap187(S.hf.vModel).res;
+// the resolution asked for: the one picked, else 1080P where the engine makes it (else the nearest)
+function res187(){const H=S.hf;if(H.tab!=="video")return H.res;const l=resList187(),r=near187(l,H.res187||"1080P");if(H.res!==r){H.res=r}return r}
+const snd187=()=>{const a=cap187(S.hf.vModel).audio;return a==="always"?true:a?!!S.hf.sound:false};
+// slow motion from the words (the same words the server reads)
+const SLOW_RE187=/\b(?:(?:super|ultra|very)[-\s]?)?slow[-\s]?(?:motion|mo)\b|\b(?:super|ultra)[-\s]?slow\b|\bslowmo\b|سلو\s*موشن|(?:بال|ب)?حركة\s+(?:ال)?بطيئة(?:\s+جداً|\s+جدا)?|تصوير\s+بطيء(?:\s+جداً|\s+جدا)?/i;
+// "slow motion" → 0.5× · "super / very slow", "… جداً" → 0.25× · "ultra slow" → 0.125× (the same as the server)
+const slowK187=t=>{const m=String(t||"").match(SLOW_RE187);return m?(/ultra/i.test(m[0])?"ultra":/super|very|جد/i.test(m[0])?"super":"slow"):null};
+const slowEx187=t=>{const k=slowK187(t),r=k&&SLOW163P.find(x=>x[0]===k);return r?r[4]:0};
+const hfWords187=()=>((document.getElementById("hfq")||{}).value||S.hf.prompt||"");
+// no more slow-motion buttons: a choice kept from before is dropped
+if(S.draft&&S.draft.slow163&&S.draft.slow163!=="off"){S.draft.slow163="off";persist()}
+// the price: how many videos, and the slow-motion extra when the words ask for it
+hfCost=(o=>function(){const c=o.apply(this,arguments),H=S.hf;if(c==null||H.tab!=="video")return c;return(c+slowEx187(hfWords187()))*Math.max(1,+H.batch||1)})(hfCost);
+
+// ---- 5. the box: the words, then [+][engine][⚙][Generate · cost]
+function box187(h){
+  const T=document.createElement("template");T.innerHTML=h;const box=T.content.querySelector(".hfbox");if(!box)return h;
+  const H=S.hf,t=box.dataset.tab||H.tab;if(t==="video")res187();box.classList.add("hf187");
+  // what can be added → the + menu; what was added (a picture, a chosen voice…) stays above the words
+  const add=[],top=box.querySelector(".hft136");
+  if(top)[...top.children].forEach(el=>{if(el.matches(".add:not(.on),.ch87b")||(el.matches("label.hfref")&&!el.querySelector("img")))add.push(el)});
+  const main=box.querySelector(".hfmain");
+  if(!top&&main){const r=main.querySelector(":scope>label.hfref");if(r&&!r.querySelector("img"))add.push(r)}
+  let menu=null;
+  if(add.length){menu=document.createElement("div");menu.className="hf187add";menu.id="hf187add";menu.setAttribute("role","group");menu.setAttribute("aria-label",L("Add to your words","أضف إلى وصفك"));if(!HF187.add)menu.hidden=true;add.forEach(el=>menu.appendChild(el))}
+  if(top&&!top.children.length)top.remove();
+  // the old rows go; their parts move into the one row
+  const model=box.querySelector('[data-act="hf-model"]'),seg=box.querySelector(".hfbar .hfseg"),avf=box.querySelector(".hfbar label.hfchip"),send=box.querySelector('[data-act="hf-send"]');
+  const cost=hfCost(),row=document.createElement("div");row.className="hfmrow g hf187row";
+  const btn=(cls,act,icon,label,extra)=>{const b=document.createElement("button");b.type="button";b.className=cls;b.dataset.act=act;b.setAttribute("aria-label",label);b.title=label;b.innerHTML=icon;if(extra)Object.entries(extra).forEach(([k,v])=>b.setAttribute(k,v));return b};
+  if(menu)row.appendChild(btn("hf187plus","hf187-add",ic("plus"),L("Add characters, pictures, a clip or a voice","أضف شخصيات أو صوراً أو مقطعاً أو صوتاً"),{"aria-expanded":String(!!HF187.add),"aria-controls":"hf187add"}));
+  const slot=model||seg||avf;if(slot)row.appendChild(slot);
+  if(t==="video"||t==="image")row.appendChild(btn("hf187gear","hf187-set",svg('<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>'),L("Settings","الإعدادات"),{"aria-haspopup":"dialog"}));
+  const go=document.createElement("button");go.type="button";go.className="hfsend hf187go";go.dataset.act="hf-send";go.setAttribute("aria-label",L("Generate","إنشاء"));
+  go.innerHTML='<span class="g187">'+L("Generate","إنشاء")+"</span>"+(cost!=null?'<span class="hfcost">'+ic("coin")+cost+"</span>":"");row.appendChild(go);
+  box.querySelectorAll(".hfmrow:not(.hf187row),.hfbar").forEach(x=>x.remove());if(send&&send.parentNode)send.remove();
+  const after=box.querySelector(".hfangs")||main;
+  if(after&&after.parentNode===box){after.after(row);if(menu)row.before(menu)}else{box.appendChild(row);if(menu)row.before(menu)}
+  const note=box.querySelector(".nai172");if(note)row.after(note);
+  return T.innerHTML}
+hfBox=(o=>function(){const h=o.apply(this,arguments);try{return box187(h)}catch(e){console.warn("v187 box",e);return h}})(hfBox);
+// on a narrow phone a long engine name comes first: if it doesn't fit, the word "Generate" steps aside (the button and its price stay)
+function fit187(){const row=document.querySelector(".hfbox .hf187row");if(!row)return;row.classList.remove("tight187");const b=row.querySelector('[data-act="hf-model"] b');if(b&&b.scrollWidth>b.clientWidth+1)row.classList.add("tight187")}
+renderView=(o=>function(){const r=o.apply(this,arguments);try{fit187()}catch(e){}return r})(renderView);
+addEventListener("resize",()=>{try{fit187()}catch(e){}});
+// + opens and closes what can be added; using one of them closes it
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="hf187-add"]');
+  if(a){e.preventDefault();e.stopImmediatePropagation();const q=$("#hfq");if(q)S.hf.prompt=q.value;HF187.add=!HF187.add;const m=$("#hf187add");if(m)m.hidden=!HF187.add;a.setAttribute("aria-expanded",String(HF187.add));return}
+  if(HF187.add&&!(e.target.closest&&e.target.closest("#hf187add,#modalRoot"))){HF187.add=false;const m=$("#hf187add");if(m)m.hidden=true;const b=document.querySelector('[data-act="hf187-add"]');if(b)b.setAttribute("aria-expanded","false")}},true);
+document.addEventListener("change",e=>{if(e.target&&e.target.closest&&e.target.closest("#hf187add"))HF187.add=false},true);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest("#hf187add [data-act]");if(a)HF187.add=false},false);
+
+// ---- the settings sheet: format, how many, quality, length, sound, bitrate (+ the agents, scene, storyboard); the price live
+function set187(){const H=S.hf,t=H.tab,vid=t==="video",c=vid?cap187(H.vModel):null,res=vid?res187():(HF_RES.image.includes(H.res)?H.res:"2K"),mn=vid?hfModelName("video",H.vModel):"";
+  const seg=(act,list,cur,lab)=>'<div class="s187" role="radiogroup">'+list.map(v=>'<button type="button" role="radio" data-act="'+act+'" data-v="'+v+'" aria-checked="'+(String(cur)===String(v))+'">'+(lab?lab(v):esc(String(v)))+"</button>").join("")+"</div>";
+  const row=(icon,name,ctl,hint)=>'<div class="r187"><div class="rh187"><span class="n187">'+icon+"<b>"+esc(name)+"</b></span>"+ctl+"</div>"+(hint?'<small class="h187">'+hint+"</small>":"")+"</div>";
+  const sw=(act,on,dis)=>'<button type="button" class="sw187'+(on?" on":"")+'" role="switch" aria-checked="'+!!on+'" data-act="'+act+'"'+(dis?" disabled":"")+"><i></i></button>";
+  const I={ar:svg('<rect x="3" y="6" width="18" height="12" rx="2"/>'),n:svg('<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>'),q:svg('<path d="M6 3h12l3 6-9 12L3 9z"/><path d="M3 9h18"/>'),d:ic("clock"),s:svg('<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/>'),b:svg('<path d="M4 20V10M9 20V4M14 20v-8M19 20V7"/>')};
+  let b='<div class="set187">'+row(I.ar,L("Aspect ratio","الأبعاد"),seg("hf187-ar",HF_RATIOS,H.aspect,v=>'<i class="hfar" style="aspect-ratio:'+v.replace(":","/")+'"></i>'+v));
+  b+=vid?row(I.n,L("Batch size","العدد"),seg("hf187-n",[1,2,3,4],H.batch||1,v=>v+" "+(v>1?L("videos","فيديوهات"):L("video","فيديو"))))
+    :row(I.n,L("Batch size","العدد"),seg("hf187-n",[1,2,4,8],H.n||1,v=>v+" "+(v>1?L("pictures","صور"):L("picture","صورة"))));
+  b+=row(I.q,L("Quality","الجودة"),seg("hf187-res",vid?c.res:HF_RES.image,res),vid&&!c.res.includes("1080P")?esc(L(mn+" makes at most "+c.res[c.res.length-1]+".","أعلى دقة يصنعها "+mn+": "+c.res[c.res.length-1]+".")):"");
+  if(vid){const cap=Math.max(5,capDur132());
+    b+=row(I.d,L("Duration","المدة"),'<div class="dur187"><input type="range" min="3" max="'+cap+'" step="1" value="'+Math.min(cap,H.dur)+'" data-hf187dur aria-label="'+esc(L("Duration in seconds","المدة بالثواني"))+'"><output>'+H.dur+L("s","ث")+"</output></div>");
+    const a=c.audio;b+=row(I.s,L("Sound","الصوت"),sw("hf187-snd",snd187(),a===false||a==="always"),a===false?esc(L(mn+" makes silent videos — Sound can't be turned on for it.",mn+" يصنع فيديوهات صامتة — لا يمكن تشغيل الصوت معه.")):a==="always"?esc(L(mn+" always makes sound.",mn+" يصنع الصوت دائماً.")):"");
+    b+=row(I.b,L("Bitrate","معدل البت"),seg("hf187-br",["high","standard"],H.br||"high",v=>v==="high"?L("High","عالٍ"):L("Standard","عادي")),(H.br||"high")==="standard"?L("A smaller file, made on the server after the engine.","ملف أصغر يُصنع على الخادم بعد المحرك."):"");
+    b+=row(ic("users"),L("AI agents","وكلاء الذكاء"),sw("hfx-bots",hfBotsOn()));
+    b+=row(svg('<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>'),L("Scene","المشهد"),'<button type="button" class="btn sm ghost" data-act="hfx-scene">'+esc(H.scene?(H.sceneName||L("Scene","مشهد")):L("Off","إيقاف"))+"</button>");
+    b+=row(ic("image"),L("Storyboard","لوحة القصة"),sw("agx-sb",!!H.sb));
+    const k=slowK187(hfWords187()),r=k&&SLOW163P.find(x=>x[0]===k);
+    b+='<p class="slow187">'+(r?ic("check")+" "+L("Smooth slow motion is on — from your words ("+L(r[1],r[2]).split(" · ")[1]+", +"+r[4]+" cr). Take the words out to turn it off.","الحركة البطيئة الناعمة مفعّلة — من كلماتك ("+L(r[1],r[2]).split(" · ")[1]+"، +"+r[4]+" رصيد). احذف الكلمات لإيقافها."):L("For smooth slow motion, write “slow motion” in your words.","للحركة البطيئة الناعمة اكتب «حركة بطيئة» في وصفك."))+"</p>"}
+  b+='</div><button type="button" class="btn primary big apply187" data-act="hf187-ok">'+L("Apply","تطبيق")+' <span class="c187">'+ic("coin")+'<b id="c187">'+(hfCost()??"")+"</b></span></button>";
+  hfSheet(L("Settings","الإعدادات"),b);const s=document.querySelector("#modalRoot .hfsheet");if(s)s.classList.add("sh187")}
+const live187=()=>{const c=hfCost(),x=$("#c187");if(x)x.textContent=c??"";const y=document.querySelector(".hfbox .hfcost");if(y&&c!=null)y.innerHTML=ic("coin")+c};
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act^="hf187-"]');if(!a||a.dataset.act==="hf187-add")return;e.preventDefault();e.stopImmediatePropagation();
+  const H=S.hf,v=a.dataset.v,q=$("#hfq");if(q)H.prompt=q.value;
+  switch(a.dataset.act){
+    case"hf187-set":set187();return;
+    case"hf187-ok":closeSheet();renderView();return;
+    case"hf187-ar":H.aspect=v;break;
+    case"hf187-n":if(H.tab==="video")H.batch=+v;else H.n=+v;break;
+    case"hf187-res":if(H.tab==="video"){H.res187=v;H.res=v}else H.res=v;break;
+    case"hf187-snd":if(a.disabled)return;H.sound=!H.sound;break;
+    case"hf187-br":H.br=v;break}
+  persist();renderView();set187()},true);
+// the agents and the storyboard switches inside the sheet: the sheet follows them
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('.set187 [data-act="hfx-bots"],.set187 [data-act="agx-sb"]');if(a)setTimeout(()=>{if(document.querySelector("#modalRoot .sh187"))set187()},0)},true);
+document.addEventListener("input",e=>{const r=e.target;if(!r||!r.matches||!r.matches("[data-hf187dur]"))return;S.hf.dur=+r.value;const o=r.parentNode.querySelector("output");if(o)o.textContent=r.value+L("s","ث");live187()});
+document.addEventListener("change",e=>{const r=e.target;if(!r||!r.matches||!r.matches("[data-hf187dur]"))return;S.hf.dur=+r.value;persist();renderView();live187()});
+document.addEventListener("input",e=>{if(e.target&&e.target.id==="hfq")live187()});
+// what the job carries: the sound (only where the engine makes it), the resolution, the bitrate, how many videos
+hfSend=(o=>async function(){const H=S.hf;if(H.tab==="video"){res187();HF187.send=true}try{return await o.apply(this,arguments)}finally{HF187.send=false}})(hfSend);
+makeVideo=(o=>function(){if(HF187.send&&S.draft){S.draft.variations=Math.max(1,Math.min(4,+S.hf.batch||1));S.draft.audio=snd187()}return o.apply(this,arguments)})(makeVideo);
+addJob=(o=>function(j){if(j&&j.kind==="video"){const H=S.hf,m=j.meta=Object.assign({},j.meta);
+    if(HF187.send){if(m.audio==null)m.audio=snd187();if(!m.res)m.res=H.res;if((H.br||"high")==="standard")m.bitrate187="standard"}
+    // (slow motion: the server reads the words and charges the extra — the card shows it now)
+    const ex=m.slow163?0:slowEx187(j.prompt);if(ex&&typeof j.cost==="number")j.cost+=ex}
+  return o.apply(this,arguments)})(addJob);
+
+// ---- 6. the slow-motion buttons go (the home chip, nooi Studio's tiles); the words do it — the Video page's Generate price says so
+VIEWS.video=(o=>function(){const h=o.apply(this,arguments),ex=slowEx187(S.draft&&S.draft.prompt)*(+(S.draft&&S.draft.variations)||1);if(typeof h!=="string"||!ex)return h;
+  return h.replace(/(<button class="btn primary big" data-act="gen-video"[^>]*>[\s\S]*?<span class="cost">)(\d+)( cr<\/span>)/,(m,a,n,z)=>a+(+n+ex)+z)})(VIEWS.video);
+studio163=function(){document.querySelectorAll("#main .sl163").forEach(x=>{const p=x.previousElementSibling;if(p&&p.classList.contains("lbl")&&/slow|بطيئة|البطء/i.test(p.textContent))p.remove();x.remove()});if(S.draft&&S.draft.slow163&&S.draft.slow163!=="off")S.draft.slow163="off"};
+
+// ---- 1. the card: the video (or picture) in its own shape, on a dark backdrop, nothing cut
+const AR187={};
+const arOf187=u=>AR187[String(u||"").split("#")[0]];
+hfrCard=(o=>function(j){let h=o.apply(this,arguments);const u=mediaUrl(j),r=arOf187(u);if(r)h=h.replace(/(<article class="hfrc[^"]*" style="--ar:)[^"]*"/,"$1"+r+'"');
+  // the download button opens the menu
+  h=h.replace(/<a class="btn sm ghost" href="([^"]*)" download aria-label="([^"]*)">([\s\S]*?)<\/a>/,(m,href,lab,inner)=>'<button type="button" class="btn sm ghost" data-act="dl187" data-u="'+href+'" data-id="'+esc(j.id)+'" aria-haspopup="dialog" aria-label="'+lab+'">'+inner+"</button>");
+  return h})(hfrCard);
+document.addEventListener("loadedmetadata",e=>{const v=e.target;if(!v||v.tagName!=="VIDEO"||!v.videoWidth||!v.videoHeight)return;const box=v.closest(".hfrm");if(!box)return;
+  const r=v.videoWidth+"/"+v.videoHeight;AR187[String(v.getAttribute("src")||"").split("#")[0]]=r;box.style.setProperty("--ar",r);const c=box.closest(".hfrc");if(c)c.style.setProperty("--ar",r)},true);
+document.addEventListener("load",e=>{const i=e.target;if(!i||i.tagName!=="IMG"||!i.naturalWidth)return;const box=i.closest(".hfrm");if(!box||box.querySelector("video"))return;
+  const r=i.naturalWidth+"/"+i.naturalHeight;AR187[String(i.getAttribute("src")||"").split("#")[0]]=r;box.style.setProperty("--ar",r);const c=box.closest(".hfrc");if(c)c.style.setProperty("--ar",r)},true);
+
+// ---- 4. the download menu: MP4 · MP3 (only with a sound track) · PNG of the frame on screen / the first / the last
+const DL187={};
+function dlName187(j){return String((j&&(j.title||j.prompt))||"nooi").replace(/[#@]\S+/g,"").replace(/\s+/g," ").trim().slice(0,40)||"nooi"}
+async function dlInfo187(u){if(DL187[u])return DL187[u];try{const r=await fetch("/v1/media/info187?u="+encodeURIComponent(u),{headers:await authH()});DL187[u]=r.ok?await r.json():{err:r.status}}catch(e){DL187[u]={err:0}}return DL187[u]}
+function dlSheet187(u,j,t){const kind=/\.(png|jpe?g|webp|gif|avif)(\?|#|$)/i.test(u)?"image":/\.(mp3|wav|m4a|aac|ogg|opus|flac)(\?|#|$)/i.test(u)?"audio":"video",inf=DL187[u];
+  const it=(as,tt,icon,name,sub,dis)=>'<button type="button" class="dl187i" data-act="dl187go" data-as="'+as+'" data-t="'+(tt==null?"":tt)+'"'+(dis?" disabled":"")+'><span class="dlic">'+icon+'</span><span class="dlt"><b>'+esc(name)+"</b><small>"+esc(sub)+"</small></span></button>";
+  let b='<div class="dl187" data-u="'+esc(u)+'" data-id="'+esc(j?j.id:"")+'">';
+  if(kind==="video"){const snd=!inf?null:!!inf.audio;
+    b+=it("mp4",null,ic("video"),L("Video · MP4","فيديو · MP4"),L("The whole video","الفيديو كاملاً"));
+    b+=it("mp3",null,svg('<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'),L("Sound · MP3","صوت · MP3"),snd==null?L("Checking for a sound track…","يُفحص وجود مسار صوت…"):snd?L("The video's sound track","مسار صوت الفيديو"):L("This video has no sound","هذا الفيديو بلا صوت"),snd!==true);
+    b+=it("png",t!=null?t.toFixed(2):"first",ic("image"),L("Picture · PNG — this frame","صورة · PNG — هذا الإطار"),t!=null?L("At "+t.toFixed(1)+" s","عند "+t.toFixed(1)+" ث"):L("The frame on screen","الإطار الظاهر"));
+    b+=it("png","first",ic("image"),L("Picture · PNG — first frame","صورة · PNG — الإطار الأول"),L("The very start","البداية تماماً"));
+    b+=it("png","last",ic("image"),L("Picture · PNG — last frame","صورة · PNG — الإطار الأخير"),L("The very end","النهاية تماماً"))}
+  else if(kind==="image"){b+=it("file",null,ic("image"),L("Picture · original","صورة · الأصل"),L("As it was made","كما صُنعت"));b+=it("png",null,ic("image"),L("Picture · PNG","صورة · PNG"),L("Lossless","بلا فقدان"))}
+  else b+=it("file",null,svg('<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'),L("Sound · original","صوت · الأصل"),L("As it was made","كما صُنع"));
+  hfSheet(L("Download","تنزيل"),b+"</div>");const s=document.querySelector("#modalRoot .hfsheet");if(s)s.classList.add("sh187dl")}
+async function dlOpen187(u,id,vid){const j=id?S.jobs.find(x=>x.id===id):null,t=vid&&vid.currentTime>0.05?vid.currentTime:null;u=String(u||"").replace(location.origin,"");
+  if(!/^\/media\//.test(u)||API.mode!=="server"){const a=document.createElement("a");a.href=u;a.download="";document.body.appendChild(a);a.click();a.remove();return}
+  dlSheet187(u,j,t);if(!/\.(png|jpe?g|webp|gif|avif|mp3|wav|m4a|aac|ogg|opus|flac)(\?|#|$)/i.test(u)&&!DL187[u]){await dlInfo187(u);if(document.querySelector('#modalRoot .dl187[data-u="'+CSS.escape(u)+'"]'))dlSheet187(u,j,t)}}
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="dl187"],[data-act="dl187go"],a[download][href*="/media/"]');if(!a)return;
+  if(a.matches("a[download]")){const href=a.getAttribute("href")||"";if(!/\/media\/[\w.-]+\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(href)||API.mode!=="server")return;e.preventDefault();e.stopImmediatePropagation();const card=a.closest("article,.card,.stage,.preview-col");dlOpen187(href,null,card&&card.querySelector("video"));return}
+  e.preventDefault();e.stopImmediatePropagation();
+  if(a.dataset.act==="dl187"){const card=a.closest(".hfrc");dlOpen187(a.dataset.u,a.dataset.id,card&&card.querySelector("video"));return}
+  if(a.disabled)return;const box=a.closest(".dl187"),u=box.dataset.u,j=S.jobs.find(x=>x.id===box.dataset.id);a.disabled=true;
+  try{const r=await API.req("/v1/media/dl187",{json:{u,as:a.dataset.as,t:a.dataset.t||undefined,name:dlName187(j)}});const l=document.createElement("a");l.href=r.href;l.download="";document.body.appendChild(l);l.click();l.remove();closeSheet();toast(L("Downloading…","جارٍ التنزيل…"),{type:"ok"})}
+  catch(err){a.disabled=false;toast(String((err&&err.message)||err))}},true);
+
+(function(){const st=document.createElement("style");st.textContent=`
+.hfrm{background:#0b0b0c!important}.hfrm>video,.hfrm>img{object-fit:contain!important;background:#0b0b0c!important}
+.hfbox.hf187 .hf187row{display:flex!important;flex-wrap:nowrap!important;align-items:center;gap:8px;border-top:1px solid var(--line);padding:10px 2px 2px;margin-top:8px}
+.hfbox.hf187 .hf187row>.hf187plus,.hfbox.hf187 .hf187row>.hf187gear{flex:none;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--panel2);color:var(--text);display:grid;place-items:center;cursor:pointer;padding:0}
+.hfbox.hf187 .hf187row>.hf187plus svg,.hfbox.hf187 .hf187row>.hf187gear svg{width:18px;height:18px}
+.hfbox.hf187 .hf187row>.hf187plus[aria-expanded="true"]{background:var(--text);color:var(--bg)}
+.hfbox.hf187 .hf187row>[data-act="hf-model"],.hfbox.hf187 .hf187row>.hfseg,.hfbox.hf187 .hf187row>label.hfchip{flex:1 1 auto;min-width:0;height:42px;margin:0}
+.hfbox.hf187 .hf187row>[data-act="hf-model"] b,.hfbox.hf187 .hf187row>[data-act="hf-model"] span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hfbox.hf187 .hf187row>.hf187go{flex:none;width:auto;min-width:0;height:42px;border-radius:999px;padding:0 14px;gap:8px;display:inline-flex;align-items:center;margin-inline-start:auto;font-weight:700;font-size:14px;white-space:nowrap}
+.hfbox.hf187 .hf187go .hfcost{display:inline-flex;align-items:center;gap:3px;font-size:13px;font-weight:700;background:none;border:0;padding:0;color:inherit}
+.hfbox.hf187 .hf187go .hfcost svg{width:14px!important;height:14px!important}
+.hfbox.hf187 .hf187add{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px;padding:10px 0 2px}
+.hfbox.hf187 .hf187add[hidden]{display:none!important}
+.hfbox.hf187 .hf187add>*{width:auto!important;height:62px!important;margin:0!important;order:0!important;transform:none!important;min-width:0}
+.hfbox.hf187 .hf187add>.ch87b{grid-column:1/-1;height:44px!important;justify-content:center}
+.hfbox.hf187 .hf187row{container-type:inline-size}
+@media (max-width:420px){.hfbox.hf187 .hf187row{gap:4px}.hfbox.hf187 .hf187row>[data-act="hf-model"] .lg{width:22px;height:22px}.hfbox.hf187 .hf187row>[data-act="hf-model"] .lg img{width:17px;height:17px}.hfbox.hf187 .hf187row>[data-act="hf-model"]>svg:last-child{width:12px!important;height:12px!important}.hfbox.hf187 .hf187go .hfcost svg{width:12px!important;height:12px!important}.hfbox.hf187 .hf187row>.hf187plus,.hfbox.hf187 .hf187row>.hf187gear{width:36px;height:36px}.hfbox.hf187 .hf187row>[data-act="hf-model"]{height:38px;gap:3px;padding-inline-end:8px!important}.hfbox.hf187 .hf187row>.hf187go{height:38px;padding:0 10px;gap:5px;font-size:13px}.hfbox.hf187 .hf187go .hfcost{font-size:12.5px;gap:2px}}
+@container (max-width:340px){.hfbox.hf187 .hf187row>[data-act="hf-model"]>svg:last-child{display:none}.hfbox.hf187 .hf187row>.hf187plus,.hfbox.hf187 .hf187row>.hf187gear{width:34px;height:34px}.hfbox.hf187 .hf187row>.hf187go{padding:0 9px;font-size:12.5px}}
+@container (max-width:296px){.hfbox.hf187 .hf187row>.hf187go .g187{display:none}}
+.hfbox.hf187 .hf187row.tight187>.hf187go .g187{display:none}
+.sh187 .set187{display:flex;flex-direction:column;gap:4px}
+.sh187 .r187{padding:10px 0;border-bottom:1px solid var(--line)}
+.sh187 .rh187{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.sh187 .n187{display:inline-flex;align-items:center;gap:10px}.sh187 .n187 svg{width:18px;height:18px;opacity:.85}
+.sh187 .s187{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;max-width:100%}
+.sh187 .s187>button{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:999px;padding:6px 11px;font:inherit;font-size:13px;display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.sh187 .s187>button[aria-checked="true"]{background:var(--brand-m,#9CD245);color:#0b0b0c;border-color:transparent;font-weight:700}
+.sh187 .s187>button[aria-checked="true"]::before{content:"";width:12px;height:12px;flex:none;background:var(--tick179) center/12px no-repeat}
+.sh187 .s187 .hfar{width:14px;height:auto;border:1.5px solid currentColor;border-radius:2px;display:inline-block}
+.sh187 .h187{display:block;margin-top:6px;color:var(--mute);font-size:12px}
+.sh187 .dur187{display:flex;align-items:center;gap:10px;flex:1 1 180px;max-width:280px}.sh187 .dur187 input{flex:1;min-width:0}.sh187 .dur187 output{min-width:38px;text-align:end;font-weight:700}
+.sw187{width:46px;height:28px;border-radius:999px;border:0;background:var(--line);position:relative;cursor:pointer;flex:none;padding:0}
+.sw187 i{position:absolute;top:3px;inset-inline-start:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:inset-inline-start .15s}
+.sw187.on{background:var(--lime,#c6f432)}.sw187.on i{inset-inline-start:21px}.sw187[disabled]{opacity:.45;cursor:not-allowed}
+.sh187 .slow187{margin:10px 0 0;font-size:13px;color:var(--mute)}.sh187 .slow187 svg{width:14px;height:14px;vertical-align:-2px}
+.sh187 .apply187{width:100%;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:10px}.sh187 .c187{display:inline-flex;align-items:center;gap:4px}.sh187 .c187 svg{width:16px;height:16px}
+.sh187dl .dl187{display:flex;flex-direction:column;gap:6px}
+.sh187dl .dl187i{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--panel2);color:var(--text);text-align:start;font:inherit;cursor:pointer}
+.sh187dl .dl187i[disabled]{opacity:.5;cursor:not-allowed}.sh187dl .dlic svg{width:20px;height:20px}.sh187dl .dlt{display:flex;flex-direction:column}.sh187dl .dlt small{color:var(--mute)}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

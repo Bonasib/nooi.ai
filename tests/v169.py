@@ -235,7 +235,7 @@ async def agents_checks(p, phone):
     pg.on("pageerror", lambda e: errs.append(str(e)[:300]))
     await pg.goto(B + "/"); await pg.wait_for_function("typeof API!=='undefined'&&API.mode==='server'", timeout=20000)
     r = await pg.evaluate("""async()=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.lang='en';AU.showAuth=false;S.view='home';S.hf.tab='video';S.hf.bots=false;renderView();await new Promise(r=>setTimeout(r,300));
-      document.querySelector('[data-act="hfx-bots"]').click();await new Promise(r=>setTimeout(r,600));const s=document.querySelector('.hfbots .botstrip'),bs=[...s.querySelectorAll('.sbot')],l=document.querySelector('.hfstplan.bots .hbls'),ls=l?[...l.querySelectorAll('.hbl')]:[];
+      document.querySelector('[data-act="hf187-set"]').click();document.querySelector('#modalRoot [data-act="hfx-bots"]').click();closeSheet();await new Promise(r=>setTimeout(r,1500));const s=document.querySelector('.hfbots .botstrip'),bs=[...s.querySelectorAll('.sbot')],l=document.querySelector('.hfstplan.bots .hbls'),ls=l?[...l.querySelectorAll('.hbl')]:[];
       const top=a=>new Set(a.map(x=>Math.round(x.getBoundingClientRect().top))).size;s.scrollIntoView({block:'center'});
       return {on:hfBotsOn(),n:bs.length,ids:bs.map(x=>x.dataset.bot),planIds:ls.map(x=>x.dataset.bot),rows:top(bs),h:Math.round(s.getBoundingClientRect().height),sw:s.scrollWidth,cw:s.clientWidth,plan:ls.length,planRows:top(ls),shown:ls.filter(x=>getComputedStyle(x).visibility!=='hidden').length,ov:getComputedStyle(s).overflowX}}""")
     out["agents_" + ("phone" if phone else "desk")] = r

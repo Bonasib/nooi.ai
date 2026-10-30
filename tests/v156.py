@@ -150,11 +150,12 @@ async def page_checks():
         print('step 5.', flush=True)
         # 5. the box: Characters first and seen, Picture from your pictures, the @ list
         await E("()=>{S.hf.tab='video';go('home');renderAll()}"); await pg.wait_for_timeout(500)
-        r = await E("""()=>{const row=document.querySelector('.hft136');if(!row)return {none:1};const c=row.querySelector('.ch87b');if(!c)return {nochip:1};const a=c.getBoundingClientRect(),b=row.getBoundingClientRect();
-          const kids=[...row.children].filter(x=>getComputedStyle(x).display!=='none').sort((x,y)=>x.getBoundingClientRect().left-y.getBoundingClientRect().left);
+        await E("()=>document.querySelector('.hfbox [data-act=hf187-add]').click()"); await pg.wait_for_timeout(200)   # (v187: they are in the + menu)
+        r = await E("""()=>{const row=document.getElementById('hf187add');if(!row||row.hidden)return {none:1};const c=row.querySelector('.ch87b');if(!c)return {nochip:1};const a=c.getBoundingClientRect(),b=row.getBoundingClientRect();
+          const kids=[...row.children].filter(x=>getComputedStyle(x).display!=='none').sort((x,y)=>{const p=x.getBoundingClientRect(),q=y.getBoundingClientRect();return p.top-q.top||p.left-q.left});
           return {first:kids[0]===c,inside:a.left>=b.left-1&&a.right<=b.right+1,face:!!c.querySelector('img'),pic:!!row.querySelector('[data-act="pic156"]')}}""")
         ok(r.get("first") and r.get("inside") and r.get("face") and r.get("pic"), f"Characters is first in the row and fully seen; Picture is a button {r}")
-        await E("()=>document.querySelector('[data-act=\"pic156\"]').click()"); await pg.wait_for_timeout(400)
+        await E("()=>document.querySelector('#hf187add [data-act=\"pic156\"]').click()"); await pg.wait_for_timeout(400)
         r = await E("()=>({up:!!document.querySelector('#modalRoot .pkup156 input[data-ref130][data-hf136]'),tiles:[...document.querySelectorAll('#modalRoot .pk156')].map(x=>x.dataset.job||('c:'+x.dataset.char))})")
         ok(r["up"] and "IM1" in r["tiles"] and "c:c1" in r["tiles"], f"Picture: from the phone, your characters, your pictures {r}")
         await E("()=>document.querySelector('#modalRoot .pk156[data-job=\"IM1\"]').click()")

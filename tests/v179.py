@@ -120,23 +120,17 @@ async def run(p, phone, lang, full):
     await words(E, "a red car on a coast road at sunset")
     pr = await E("()=>({nv:hfCost(),cosmos:vcost('nvcosmos',S.hf.dur)})"); R["price"] = pr
     ok(pr["nv"] == pr["cosmos"], f"{tag}: NVIDIA Cosmos costs its own price {pr}")
-    # 3. the options under the prompt
-    lay = await E("""()=>{const bar=document.querySelector('.hfbox .hfbar'),chips=[...bar.querySelectorAll('.hfchip')],go=bar.querySelector('.hfgo'),eng=document.querySelector('.eng171'),bots=document.querySelector('.hfmrow .bots'),r=e=>e.getBoundingClientRect();
-      return{grid:getComputedStyle(bar).display,scene:!!bar.querySelector('.hfchip.sc179[data-act=hfx-scene]'),sceneTop:!!document.querySelector('.hfmrow [data-act=hfx-scene]'),widths:chips.map(c=>Math.round(r(c).width)),lefts:[...new Set(chips.map(c=>Math.round(r(c).left)))].length,
-        goRight:Math.round(r(go).right),barRight:Math.round(r(bar).right),sameLine:Math.abs(r(eng).top-r(bots).top)<3,wide:document.documentElement.scrollWidth<=innerWidth+1}}""")
+    # 3. the options under the prompt — v187: one row [+][engine][⚙][Create · price]; Scene and the rest in the settings sheet
+    lay = await E("""()=>{const row=document.querySelector('.hfbox .hf187row'),eng=row&&row.querySelector('.eng171'),go=row&&row.querySelector('.hf187go'),r=e=>e.getBoundingClientRect();
+      return{row:!!row,sceneRow:!!document.querySelector('.hfbox [data-act=hfx-scene]'),sameLine:!!(eng&&go)&&Math.abs(r(eng).top-r(go).top)<4,fit:!!row&&row.scrollWidth<=row.clientWidth+1,wide:document.documentElement.scrollWidth<=innerWidth+1}}""")
     R["layout"] = lay
-    ok(lay["scene"] and not lay["sceneTop"] and lay["wide"], f"{tag}: Scene is among the options, nothing wider than the screen {lay}")
-    if phone:
-        ok(lay["grid"] == "grid" and lay["lefts"] == 2 and max(lay["widths"]) - min(lay["widths"]) <= 2 and abs(lay["goRight"] - lay["barRight"]) <= 2 and lay["sameLine"],
-           f"{tag}: the options in two even columns, Create in the last column, the engine and Agents on one line {lay}")
+    ok(lay["row"] and not lay["sceneRow"] and lay["sameLine"] and lay["fit"] and lay["wide"], f"{tag}: one row under the words (the engine and Create on one line), Scene in the settings sheet, nothing wider than the screen {lay}")
     # 4. the ticks
     tk = {}
-    await E("()=>document.querySelector('[data-act=hf-ratio]').click()"); await pg.wait_for_timeout(500)
-    tk["res_on"] = await E(TICK, ['#modalRoot .seg>button[aria-pressed="true"]', "::before"]); tk["res_off"] = await E(TICK, ['#modalRoot .seg>button[aria-pressed="false"]', "::before"])
-    tk["ar"] = await E("()=>!!document.querySelector('#modalRoot .pk84o[aria-pressed=true] .pk84ok')")
-    await E("()=>{document.getElementById('modalRoot').innerHTML='';document.querySelector('[data-act=sl163h]').click()}"); await pg.wait_for_timeout(500)
-    tk["slow_on"] = await E(TICK, ['#modalRoot .tile[aria-checked="true"]', "::after"]); tk["slow_off"] = await E(TICK, ['#modalRoot .tile[aria-checked="false"]', "::after"])
-    await E("()=>{document.getElementById('modalRoot').innerHTML='';document.querySelector('[data-act=hfx-scene]').click()}"); await pg.wait_for_timeout(500)
+    await E("()=>document.querySelector('.hfbox [data-act=hf187-set]').click()"); await pg.wait_for_timeout(500)   # (v187: the settings sheet)
+    tk["res_on"] = await E(TICK, ['#modalRoot [data-act=hf187-res][aria-checked="true"]', "::before"]); tk["res_off"] = await E(TICK, ['#modalRoot .s187>button[aria-checked="false"]', "::before"])   # (NVIDIA Cosmos makes 720P only — an unchosen option of another row)
+    tk["ar"] = await E(TICK, ['#modalRoot [data-act=hf187-ar][aria-checked="true"]', "::before"]) == "tick"
+    await E("()=>document.querySelector('#modalRoot [data-act=hfx-scene]').click()"); await pg.wait_for_timeout(500)
     tk["scene_on"] = await E(TICK, ["#modalRoot .scopt.on", "::after"])
     await E("()=>{document.getElementById('modalRoot').innerHTML='';document.querySelector('.eng171').click()}"); await pg.wait_for_timeout(600)
     tk["eng_on"] = await E(TICK, ['#modalRoot .hfmodel[aria-pressed="true"]', "::after"]); tk["eng_off"] = await E(TICK, ['#modalRoot .hfmodel[aria-pressed="false"]', "::after"])
@@ -145,7 +139,7 @@ async def run(p, phone, lang, full):
     imgs = await E("()=>[...document.querySelectorAll('#modalRoot .hfmodel')].map(b=>b.dataset.v)")
     await E("()=>{document.getElementById('modalRoot').innerHTML='';S.hf.tab='video';S.hf.vModel='nvcosmos';renderAll()}"); await pg.wait_for_timeout(300)
     R["ticks"] = tk; R["tile"] = tile; R["imgList"] = [m for m in imgs if m.startswith("nv")]
-    ok(tk["res_on"] == "tick" and tk["res_off"] == "none" and tk["ar"] and tk["slow_on"] == "tick" and tk["slow_off"] == "none" and tk["scene_on"] == "tick" and tk["eng_on"] == "tick" and tk["eng_off"] == "none",
+    ok(tk["res_on"] == "tick" and tk["res_off"] == "none" and tk["ar"] and tk["scene_on"] == "tick" and tk["eng_on"] == "tick" and tk["eng_off"] == "none",
        f"{tag}: every chosen option shows a tick, the others don't {tk}")
     ok(tile and tile["off"] and ("غير متاح" if ar else "Not open to this site right now") in tile["t"] and "Agents" not in tile["t"], f"{tag}: the list keeps NVIDIA Cosmos, marked not open while NVIDIA keeps it closed {tile}")
     ok("nvflux" in imgs and "nvsd35" not in imgs, f"{tag}: pictures: only the NVIDIA engines that passed the check {R['imgList']}")

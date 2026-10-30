@@ -120,7 +120,7 @@ async def page_checks():
         await E("()=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.lang='en';S.user={name:'Sara',method:'google'};AU.showAuth=false;S.chars=[{id:'c1',name:'Rami',photo:'/media/x.png',voice:{dialect:'msa'}}];S.hf.tab='video';S.hf.vModel='kling30';S.hf.bots=false;S.hf.dur=5;go('home');renderAll()}")
         await pg.wait_for_timeout(500)
         # the Voice tile and sheet
-        ok(await E("()=>!!document.querySelector('.hft136 [data-act=\"vc157\"]')"), "the box has a Voice tile")
+        ok(await E("()=>!!document.querySelector('#hf187add [data-act=\"vc157\"]')"), "the box has a Voice tile (v187: in the + menu until a voice is chosen)")
         await E("()=>{const q=$('#hfq');q.value='@Rami says \"welcome to nooi\" in a cafe';q.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('[data-act=\"vc157\"]').click()}"); await pg.wait_for_timeout(400)
         r = await E("()=>({n:document.querySelectorAll('#modalRoot [data-act=\"vc157-v\"]').length,play:document.querySelectorAll('#modalRoot [data-act=\"vc157-play\"]').length,up:!!document.querySelector('#modalRoot input[data-vc157up]'),who:document.querySelector('#modalRoot').innerText.includes('@Rami')})")
         ok(r["n"] == 20 and r["play"] == 20 and r["up"] and r["who"], f"the sheet: 20 voices to hear and pick, upload a clip, for @Rami {r}")

@@ -232,14 +232,15 @@ async def phone(b):
     await E("()=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.lang='en';S.user={name:'T',method:'google'};AU.showAuth=false;S.myPlan='studio';S.credits=99999;S.hf.tab='video';S.hf.vModel='auto';S.hf.bots=true;go('home');renderAll()}")
     await pg.wait_for_timeout(500)
     # the home box: no Agent tab; nooi Auto says what it is; what to use at the top, the words below
-    h = await E("""()=>{const box=document.querySelector('.hfbox').getBoundingClientRect(),top=document.querySelector('.hfmain .hft136'),q=document.getElementById('hfq').getBoundingClientRect(),t=top&&top.getBoundingClientRect();
+    await E("()=>document.querySelector('.hfbox [data-act=hf187-add]').click()"); await pg.wait_for_timeout(200)   # (v187: what can be added is in the + menu, under the words)
+    h = await E("""()=>{const box=document.querySelector('.hfbox').getBoundingClientRect(),top=document.getElementById('hf187add'),q=document.getElementById('hfq').getBoundingClientRect(),t=top&&!top.hidden&&top.getBoundingClientRect();
       const n=document.querySelector('.hfmi.eng171');return{tabs:[...document.querySelectorAll('[data-act=hf-tab]')].map(e=>e.dataset.v),nooi:n&&n.textContent.trim(),title:n&&n.title,
-      top:top?[...top.children].map(e=>e.dataset.act||e.className.split(' ')[0]+(e.querySelector('input[data-ref130]')?':pic':'')):null,above:t&&t.bottom<=q.top+1,wide:Math.round(q.width)>=Math.round(box.width)-60,inside:t&&t.right<=box.right+1}}""")
+      top:top?[...top.children].map(e=>e.dataset.act||e.className.split(' ')[0]+(e.querySelector('input[data-ref130]')?':pic':'')):null,above:t&&t.top>=q.bottom-1,wide:Math.round(q.width)>=Math.round(box.width)-60,inside:t&&t.right<=box.right+1}}""")
     out["box"] = h
-    chk("home box: Video · Image · Audio · Avatar (no Agent tab); the nooi chip reads nooi Auto and says the agents pick the engine; the start frame, pictures, a clip and characters sit at the top, the words below at full width",
+    chk("home box: Video · Image · Audio · Avatar (no Agent tab); the nooi chip reads nooi Auto and says the agents pick the engine; the start frame, pictures, a clip and characters are in the + menu under the words, the words at full width",
         h["tabs"] == ["video", "image", "audio", "avatar"] and h["nooi"] == "nooi Auto" and "agents pick" in (h["title"] or "") and h["top"] and h["top"][0] == "ch87-open" and "hfref" in h["top"] and "pic156" in h["top"] and "hf136-clip" in h["top"] and h["above"] and h["wide"] and h["inside"], h)
     # # in the box's words: the pictures, inside the box
-    await E("()=>document.querySelector('.hft136 [data-act=\"pic156\"]').click()"); await pg.wait_for_timeout(300)   # (v156: Picture opens a sheet — from the phone there)
+    await E("()=>document.querySelector('#hf187add [data-act=\"pic156\"]').click()"); await pg.wait_for_timeout(300)   # (v156: Picture opens a sheet — from the phone there)
     await pg.set_input_files("#modalRoot .pkup156 input[data-hf136]", D + "/media/pic1.png"); await pg.wait_for_timeout(600)
     await pg.wait_for_function("refs130().length===1&&!!document.querySelector('.hft136 .t136.pic')", timeout=15000); await pg.wait_for_timeout(1200)
     await pg.locator("#hfq").fill(""); await pg.locator("#hfq").type("a fox walks past #"); await pg.wait_for_timeout(300)
