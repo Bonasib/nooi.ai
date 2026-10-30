@@ -24,13 +24,22 @@ languages, translation · AI: reframe, stabilise, silences, voices, dubbing, sou
 | 6 | **Export presets** with frame rate and bitrate per platform, a size estimate (Premiere / Media Encoder) | **v193** |
 | 7 | **Pro shortcuts**: J / K / L shuttle, I / O, ripple delete, Home / End, a shortcuts sheet | **v193** |
 | 8 | **One-tap AI "pro polish"**: ducking, loudness, easing, exposure match across clips | **v193** |
-| 9 | RGB curves per channel, hue-vs-hue / hue-vs-sat curves, qualifiers (secondaries), power windows with tracking | phase 2 |
-| 10 | Nested compositions (pre-comps) and reusable motion templates (MOGRT-like) with editable fields | phase 2 |
-| 11 | Shape layers with path animation, trim paths, repeaters; text on a path | phase 2 |
-| 12 | Audio: EQ, compressor, de-esser, noise gate per track; sidechain ducking per track | phase 2 |
+| 9 | RGB curves per channel, hue-vs-hue / hue-vs-sat / hue-vs-lum curves, qualifiers (secondaries) with an eyedropper and a mask view, power windows with tracking | **v194** |
+| 10 | Nested compositions (pre-comps — a timeline as a clip, drawn live, its sound in the export) and motion templates with editable fields (built in + the selection saved as one) | **v194** |
+| 11 | Shape paths drawn with a pen, trim paths with a write-on / erase, a repeater, words along a path | **v194** |
+| 12 | Sound per track: EQ, compressor, de-esser, noise gate; side-chain ducking per track (export; EQ / compressor / de-esser live) | **v194** |
 | 13 | Multicam sync by sound; proxies for heavy footage | phase 3 |
 | 14 | 3D camera with depth of field across all layers (AE's 3D), light sources | phase 3 |
 | 15 | Collaboration: comments on frames, versions, shared projects (team review) | phase 3 |
+
+## What phase 2 did not do (honest limits)
+- Power-window tracking is block matching of a luma patch at 8 steps a second on a 160-px copy — it follows a subject that moves and
+  keeps its look; it loses one that spins, hides or changes size a lot (re-track from that moment).
+- A pre-comp nests one level (a timeline inside a timeline inside a timeline is refused); the music and voice-over belong to the
+  project, so a nested timeline brings its clips' sound and its sound effects, not a music of its own.
+- The noise gate and the side-chain ducking act in the export mix (they need the whole sound); EQ, compressor and de-esser also play
+  live. A clip already routed through the voice changer or voice cleanup keeps that chain in the preview.
+- Words along a path: letters one by one for Latin scripts; whole words for Arabic (a letter at a time would break the joining).
 
 ## Rules for every phase
 - Our own code and sounds; ideas only from the big tools' public behaviour. Licences noted in `docs/THIRD_PARTY.md`.

@@ -22074,7 +22074,7 @@ drawFit=(o=>function(ctx,m,ow,oh,lt,filter){if(MB193.on||!(typeof R139!=="undefi
   MB193.on=true;try{const T=edxCv("mb193",ow,oh),x=T.getContext("2d");T.id="wk";/* off-screen, never in the page: the id lets the editor's own passes (motion, keying, looks) run on it */ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation="source-over";ctx.filter="none";ctx.globalAlpha=1;ctx.fillStyle="#000";ctx.fillRect(0,0,ow,oh);ctx.globalCompositeOperation="lighter";ctx.globalAlpha=1/N;
     const mo0=edxMo;/* the shutter moves the clip's motion only — the video frame itself stays the frame of this instant */
     try{for(let i=0;i<N;i++){const d=-sh/2+sh*i/(N-1);edxMo=function(cc,t){return mo0(cc,cc===c?Math.max(0,t+d):t)};x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation="source-over";x.filter="none";x.fillStyle="#000";x.fillRect(0,0,ow,oh);o.call(this,x,m,ow,oh,lt,filter);ctx.drawImage(T,0,0)}}finally{edxMo=mo0}
-    ctx.restore();if(wOn193(c.cg))pass193(ctx,ow,oh,c.cg)}finally{MB193.on=false}})(drawFit);
+    ctx.restore()}finally{MB193.on=false}})(drawFit);   // (each sub-frame is already graded by the colour pass below this wrapper)
 // ---- 5. loudness (K-weighted, gated — the broadcast measure) and Normalise ----------------------------------------------------------
 const LD193={v:null,peak:null,busy:false};
 async function loudness193(){const total=edTotal();if(!total||LD193.busy)return null;LD193.busy=true;try{const buf=await mix139(total);if(!buf)return null;const SR=buf.sampleRate,off=new OfflineAudioContext(buf.numberOfChannels,buf.length,SR),s=off.createBufferSource();s.buffer=buf;
@@ -22148,6 +22148,339 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 .ex193 .tile{min-height:0}.keys193{display:grid;grid-template-columns:1fr;gap:6px;margin-top:10px}.keys193 div{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center;font-size:13px}.keys193 kbd{font:inherit;font-size:12px;padding:3px 8px;border-radius:8px;border:1px solid var(--line);background:var(--panel2)}
 </style>`);
 
+/* ================= v194: THE EDITOR TOWARDS AFTER EFFECTS / PREMIERE / DAVINCI — PHASE 2 ================= */
+/* Phase 2 of docs/EDITOR_PRO_ROADMAP.md (gaps 9–12). 9. colour secondaries — RGB curves per channel on top of the luma curve;
+   hue-vs-hue / hue-vs-sat / hue-vs-lum curves (the colour-by-colour engine of v140, drawn and dragged as curves); a qualifier
+   (a colour range picked from the picture with soft edges) and power windows (ellipse / rectangle, a soft edge, tracked forward
+   through the clip's frames by block matching), the mask shown on request, a grade that applies only inside it. 10. pre-comps —
+   a timeline of the project placed as one clip in another, drawn live (its own clips, texts, layers, looks), its sound in the
+   export; motion templates with editable fields (built in + the selection saved as a template). 11. shape paths drawn with a
+   pen (points, smooth, closed), trim paths with a write-on / erase, a repeater, words along the path. 12. sound per track —
+   EQ, compressor, de-esser, noise gate and side-chain ducking on clips / music / voice-over / effects in the export mix; EQ,
+   compressor and de-esser live in the preview. Own code throughout; the big tools gave only the names and the behaviour. */
+S.ed.cvch194=S.ed.cvch194||"l";S.ed.hc194=S.ed.hc194||"h";
+// ---- 9a. RGB curves per channel ---------------------------------------------------------------------------------------------------
+const CVCH194=[["l","Luma","الإضاءة","#e6e6e6"],["r","Red","أحمر","#ff5a5a"],["g","Green","أخضر","#5ad66a"],["b","Blue","أزرق","#5a9cff"]];
+const rgbOn194=g=>!!(g&&g.cvRGB194&&Object.values(g.cvRGB194).some(cv=>cv&&cv.some((v,i)=>Math.abs(v-i/4)>.004)));
+// a path "clip|r" is the red curve of the clip's node (a view onto cvRGB194.r); "sec" is the clip's secondary node (qualifier + window)
+cgOf193=(o=>function(path){if(path==null)return o.apply(this,arguments);const s=String(path),bar=s.indexOf("|"),base=bar<0?s:s.slice(0,bar),ch=bar<0?"":s.slice(bar+1);
+  let g;if(base==="sec"){const c=edxPick();if(!c)return null;c.cg=c.cg||{};g=c.cg.sec194=c.cg.sec194||{}}else g=o(base);
+  if(!g||!ch||ch==="l")return g;
+  return{get curve193(){return(g.cvRGB194||{})[ch]},set curve193(v){if(v==null){if(g.cvRGB194)delete g.cvRGB194[ch]}else{g.cvRGB194=g.cvRGB194||{};g.cvRGB194[ch]=v}},get w193(){return g.w193},set w193(v){g.w193=v}}})(cgOf193);
+lut193=(o=>function(g){if(!rgbOn194(g))return o.apply(this,arguments);const key="rgb194:"+JSON.stringify([g.w193||0,g.curve193||0,g.cvRGB194]);let L3=LUT193.get(key);if(L3)return L3;
+  const base=o({w193:g.w193,curve193:g.curve193});L3=[0,1,2].map(ch=>{const cv=(g.cvRGB194||{})[["r","g","b"][ch]],a=new Uint8ClampedArray(256);for(let i=0;i<256;i++){const v=base[ch][i]/255;a[i]=Math.round(clamp(cv?curve193(cv,v):v,0,1)*255)}return a});
+  if(LUT193.size>40)LUT193.clear();LUT193.set(key,L3);return L3})(lut193);
+curveUI193=(o=>function(path,pts){let h=o.apply(this,arguments);const s=String(path||""),i=s.indexOf("|");if(i<0)return h;const col=(CVCH194.find(x=>x[0]===s.slice(i+1))||[])[3];return col?h.replace('class="cv193"','class="cv193 ch194" style="--ch:'+col+'"'):h})(curveUI193);
+function cvSeg194(path){const g=cgOf193(path)||{};return'<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:6px"><div class="seg cvch194">'+CVCH194.map(x=>'<button type="button" data-act="cvch194" data-v="'+x[0]+'" aria-pressed="'+(S.ed.cvch194===x[0])+'"><i style="background:'+x[3]+'"></i>'+esc(L(x[1],x[2]))+"</button>").join("")+"</div>"+
+  (rgbOn194(g)?'<button type="button" class="btn sm ghost" data-act="cvch194-reset" data-v="'+esc(path)+'">'+ic("refresh")+L("Reset RGB","أعد ضبط RGB")+"</button>":"")+"</div>"}
+colorPro193=(o=>function(path){let h=o.apply(this,arguments);const ch=S.ed.cvch194||"l";
+  h=h.replace(/<svg class="cv193"[\s\S]*?<\/svg>/,m=>{const g=cgOf193(path)||{};return'<div class="cvbox194">'+cvSeg194(path)+(ch==="l"?m:curveUI193(path+"|"+ch,(g.cvRGB194||{})[ch]))+"</div>"});
+  if(path!=="clip")return h;const c=edxPick();return c?h+hueCurves194(c)+secUI194(c):h})(colorPro193);
+// (the v193 wrappers only run the pixel pass for wheels or the luma curve; a clip or adjustment layer with RGB curves alone needs it too)
+drawFit=(o=>function(ctx,m,ow,oh,lt,filter){const r=o.apply(this,arguments);try{if(S.view==="edit"&&ctx&&ctx.canvas&&ctx.canvas.id==="wk"){const c=edxClipOf(m,lt);if(c&&c.cg){if(rgbOn194(c.cg)&&!wOn193(c.cg))pass193(ctx,ow,oh,c.cg);if(secOn194(c.cg.sec194))pass194(ctx,ow,oh,c.cg.sec194,lt)}}}catch(e){}return r})(drawFit);
+edxDrawLayers=(o=>function(ctx,W,H,t){try{(S.ed.layers||[]).forEach(Ly=>{if(Ly.kind!=="adj"||t<Ly.start||t>Ly.end)return;const g=Ly.cg||{};if(rgbOn194(g)&&!wOn193(g))pass193(ctx,W,H,g)})}catch(e){}return o.apply(this,arguments)})(edxDrawLayers);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="cvch194"],[data-act="cvch194-reset"]');if(!a||S.view!=="edit")return;e.stopImmediatePropagation();
+  if(a.dataset.act==="cvch194"){S.ed.cvch194=a.dataset.v;persist();renderView();return}const g=cgOf193(a.dataset.v);if(g){delete g.cvRGB194;persist();renderView()}},true);
+// ---- 9b. hue curves: the eight colour bands of v140 as draggable dots on a curve (hue vs hue · hue vs sat · hue vs lum) --------------
+const HC194=[["h","Hue vs Hue","اللون مقابل اللون",0,30,"°"],["s","Hue vs Sat","اللون مقابل التشبع",1,100,"%"],["l","Hue vs Lum","اللون مقابل الإضاءة",2,100,"%"]];
+function hueCurves194(c){if(typeof GL140==="undefined"||GL140.no)return"";const g=c.cg||{},Hs=g.hsl||{},W=240,Hh=72,P=8,cur=HC194.find(x=>x[0]===S.ed.hc194)||HC194[0],idx=cur[3],n=HSL140.length;
+  const vals=HSL140.map(b=>+((Hs[b[0]]||[0,0,0])[idx])||0),Y=v=>Hh/2-clamp(v/cur[4],-1,1)*(Hh/2-P-4),X=u=>P+u/(n-1)*(W-2*P);
+  let d="";for(let i=0;i<=64;i++){const u=i/64*(n-1),k=Math.min(n-2,Math.floor(u)),t=u-k,p0=vals[Math.max(0,k-1)],p1=vals[k],p2=vals[k+1],p3=vals[Math.min(n-1,k+2)];const v=.5*((2*p1)+(-p0+p2)*t+(2*p0-5*p1+4*p2-p3)*t*t+(-p0+3*p1-3*p2+p3)*t*t*t);d+=(i?" L":"M")+X(u).toFixed(1)+" "+Y(v).toFixed(1)}
+  return'<span class="lbl">'+L("Hue curves","منحنيات اللون")+'</span><div class="seg hc194s">'+HC194.map(x=>'<button type="button" data-act="hc194" data-v="'+x[0]+'" aria-pressed="'+(cur[0]===x[0])+'">'+esc(L(x[1],x[2]))+"</button>").join("")+"</div>"+
+    '<svg class="hc194" viewBox="0 0 '+W+" "+Hh+'" data-idx="'+idx+'" data-max="'+cur[4]+'" aria-label="'+esc(L(cur[1],cur[2]))+'"><defs><linearGradient id="hc194g" x1="0" x2="1" y1="0" y2="0">'+HSL140.map((b,i)=>'<stop offset="'+(i/(n-1)*100).toFixed(1)+'%" stop-color="'+b[3]+'"/>').join("")+'</linearGradient></defs><rect x="'+P+'" y="'+(Hh-5)+'" width="'+(W-2*P)+'" height="4" rx="2" fill="url(#hc194g)"/><line x1="'+P+'" x2="'+(W-P)+'" y1="'+(Hh/2)+'" y2="'+(Hh/2)+'" class="hc194m"/><path d="'+d+'"/>'+
+    HSL140.map((b,i)=>'<circle data-band="'+b[0]+'" cx="'+X(i).toFixed(1)+'" cy="'+Y(vals[i]).toFixed(1)+'" r="6" style="fill:'+b[3]+'"/>').join("")+"</svg>"+
+    '<p class="small dim" style="margin:2px 0 0">'+L("Drag a dot up or down; the change blends into the neighbouring colours.","اسحب نقطة لأعلى أو لأسفل؛ يمتزج التغيير مع الألوان المجاورة.")+"</p>"}
+document.addEventListener("pointerdown",e=>{const dot=e.target.closest&&e.target.closest(".hc194 circle");if(!dot)return;const c=edxPick();if(!c)return;const svg=dot.closest("svg"),idx=+svg.dataset.idx,mx=+svg.dataset.max,band=dot.dataset.band,r=svg.getBoundingClientRect(),Hh=72,P=8;
+  e.preventDefault();e.stopPropagation();c.cg=c.cg||{};c.cg.hsl=c.cg.hsl||{};
+  const mv=ev=>{const y=(ev.clientY-r.top)/r.height*Hh,v=clamp((Hh/2-y)/(Hh/2-P-4),-1,1)*mx;const a=c.cg.hsl[band]=(c.cg.hsl[band]||[0,0,0]).slice();a[idx]=Math.round(v);const el=document.querySelector(".hc194");if(el)el.outerHTML=hueCurves194(c).replace(/^[\s\S]*?(<svg class="hc194")/,"$1").replace(/<\/svg>[\s\S]*$/,"</svg>")},
+    up=()=>{removeEventListener("pointermove",mv);removeEventListener("pointerup",up);persist();renderView()};mv(e);addEventListener("pointermove",mv);addEventListener("pointerup",up)},true);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="hc194"]');if(!a||S.view!=="edit")return;e.stopImmediatePropagation();S.ed.hc194=a.dataset.v;persist();renderView()},true);
+// ---- 9c. the secondary: a qualifier (a colour range) and a power window (ellipse / rectangle, tracked) -----------------------------
+const PK194={on:false};
+const secGrade194=s=>!!s&&(wOn193(s)||rgbOn194(s)||!!(+s.sat||+s.hue||+s.exp));
+const secOn194=s=>!!(s&&s.on&&(s.show||secGrade194(s)));
+function winAt194(w,lt){const kf=w.kf;if(!kf||!kf.length)return{cx:w.cx??.5,cy:w.cy??.5};if(lt<=kf[0].t)return kf[0];if(lt>=kf[kf.length-1].t)return kf[kf.length-1];let i=0;while(i<kf.length-2&&kf[i+1].t<lt)i++;const a=kf[i],b=kf[i+1],k=(lt-a.t)/Math.max(1e-6,b.t-a.t);return{cx:a.cx+(b.cx-a.cx)*k,cy:a.cy+(b.cy-a.cy)*k}}
+const h2r194=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<.5)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p};
+function pass194(ctx,ow,oh,s,lt){const full=(typeof R139!=="undefined"&&R139.on)||Math.max(ow,oh)<=960;let W=ow,H=oh,x=ctx,tmp=null;
+  if(!full){tmp=edxCv("sec194",ow>>1,oh>>1);x=tmp.getContext("2d");x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation="source-over";x.filter="none";x.drawImage(ctx.canvas,0,0,tmp.width,tmp.height);W=tmp.width;H=tmp.height}
+  let im;try{im=x.getImageData(0,0,W,H)}catch(e){return}const d=im.data,q=s.q&&s.q.on?s.q:null,w=s.win&&s.win.on?s.win:null;
+  const L3=(wOn193(s)||rgbOn194(s))?lut193(s):null,sat=(+s.sat||0)/100,hue=(+s.hue||0)/360,exp=(+s.exp||0)/100,inv=!!s.inv,show=!!s.show,tune=!!(sat||hue);
+  let wc=null;if(w){const p=winAt194(w,lt),rot=(+w.rot||0)*Math.PI/180;wc={cx:p.cx*W,cy:p.cy*H,rx:Math.max(1,(w.rx??40)/100*W/2),ry:Math.max(1,(w.ry??40)/100*H/2),soft:Math.max(.001,(w.soft??15)/100),cos:Math.cos(-rot),sin:Math.sin(-rot),rect:w.shape==="rect"}}
+  const qh=q?(+q.h||0)/360:0,qhw=q?(q.hw==null?12:+q.hw)/360:0,qsoft=q?Math.max(.002,(q.soft==null?10:+q.soft)/100):.1,qs0=q?(+q.s0||0)/100:0,qs1=q?(q.s1==null?1:+q.s1/100):1,ql0=q?(+q.l0||0)/100:0,ql1=q?(q.l1==null?1:+q.l1/100):1;
+  const rs=(v,a,b)=>v<a?(a-v>=qsoft?0:1-(a-v)/qsoft):v>b?(v-b>=qsoft?0:1-(v-b)/qsoft):1;
+  for(let p=0,i=0;p<d.length;p+=4,i++){const r=d[p]/255,g=d[p+1]/255,b=d[p+2]/255;let m=1;
+    if(q){const mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,dd=mx-mn;let h=0,sv=0;if(dd>1e-5){sv=l>.5?dd/(2-mx-mn):dd/(mx+mn);h=mx===r?((g-b)/dd+(g<b?6:0)):mx===g?((b-r)/dd+2):((r-g)/dd+4);h/=6}
+      let dh=Math.abs(h-qh);if(dh>.5)dh=1-dh;m*=dh<=qhw?1:dh>=qhw+qsoft?0:1-(dh-qhw)/qsoft;if(m>0)m*=rs(sv,qs0,qs1)*rs(l,ql0,ql1)}
+    if(wc&&m>0){const X=i%W,Y=(i/W)|0,dx0=X-wc.cx,dy0=Y-wc.cy,dx=dx0*wc.cos-dy0*wc.sin,dy=dx0*wc.sin+dy0*wc.cos,dn=wc.rect?Math.max(Math.abs(dx)/wc.rx,Math.abs(dy)/wc.ry):Math.hypot(dx/wc.rx,dy/wc.ry);m*=dn<=1?1:dn>=1+wc.soft?0:1-(dn-1)/wc.soft}
+    if(inv)m=1-m;
+    if(show){const v=Math.round(m*255);d[p]=v;d[p+1]=v;d[p+2]=v;continue}
+    if(m<=.002)continue;let nr=r,ng=g,nb=b;
+    if(L3){nr=L3[0][d[p]]/255;ng=L3[1][d[p+1]]/255;nb=L3[2][d[p+2]]/255}
+    if(exp){nr=clamp(nr*(1+exp),0,1);ng=clamp(ng*(1+exp),0,1);nb=clamp(nb*(1+exp),0,1)}
+    if(tune){const mx=Math.max(nr,ng,nb),mn=Math.min(nr,ng,nb),l=(mx+mn)/2,dd=mx-mn;let h=0,sv=0;if(dd>1e-5){sv=l>.5?dd/(2-mx-mn):dd/(mx+mn);h=mx===nr?((ng-nb)/dd+(ng<nb?6:0)):mx===ng?((nb-nr)/dd+2):((nr-ng)/dd+4);h/=6}
+      h=((h+hue)%1+1)%1;sv=clamp(sv*(1+sat),0,1);if(sv<=0){nr=ng=nb=l}else{const qq=l<.5?l*(1+sv):l+sv-l*sv,pp=2*l-qq;nr=h2r194(pp,qq,h+1/3);ng=h2r194(pp,qq,h);nb=h2r194(pp,qq,h-1/3)}}
+    d[p]=Math.round((r+(nr-r)*m)*255);d[p+1]=Math.round((g+(ng-g)*m)*255);d[p+2]=Math.round((b+(nb-b)*m)*255)}
+  x.putImageData(im,0,0);if(tmp){ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";ctx.filter="none";ctx.drawImage(tmp,0,0,ow,oh);ctx.restore()}}
+// the eyedropper: a tap on the picture reads a 5×5 patch and sets the qualifier around that colour
+function pick194(pt){const c=edxPick(),cv=$("#wk");if(!c||!cv||!cv.width)return null;const x=clamp(Math.round(pt.x*cv.width),2,cv.width-3),y=clamp(Math.round(pt.y*cv.height),2,cv.height-3);let d;try{d=cv.getContext("2d").getImageData(x-2,y-2,5,5).data}catch(e){return null}
+  let r=0,g=0,b=0;for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2]}r/=25*255;g/=25*255;b/=25*255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,dd=mx-mn;let h=0,s=0;if(dd>1e-5){s=l>.5?dd/(2-mx-mn):dd/(mx+mn);h=mx===r?((g-b)/dd+(g<b?6:0)):mx===g?((b-r)/dd+2):((r-g)/dd+4);h/=6}
+  c.cg=c.cg||{};const sec=c.cg.sec194=c.cg.sec194||{};sec.on=true;sec.q={on:true,h:Math.round(h*360),hw:14,soft:10,s0:Math.max(0,Math.round(s*100)-25),s1:Math.min(100,Math.round(s*100)+25),l0:Math.max(0,Math.round(l*100)-22),l1:Math.min(100,Math.round(l*100)+22)};
+  persist();renderView();toast(L("Colour picked — the secondary now covers that range (Show the mask to check it).","التُقط اللون — يغطي الثانوي الآن هذا النطاق (أظهر القناع للتأكد)."),{type:"ok"});return sec.q}
+// a thin layer over the preview while the eyedropper or the pen is on: it takes the tap itself, so the preview's own tools don't react
+function ov194(){const on=(PK194.on||(typeof PEN194!=="undefined"&&PEN194.on))&&S.view==="edit",cv=$("#wk");let o=document.getElementById("ov194");if(!on||!cv){if(o)o.remove();return}
+  if(!o){o=document.createElement("div");o.id="ov194";o.style.cssText="position:fixed;z-index:60;cursor:crosshair;touch-action:none";document.body.appendChild(o);
+    o.addEventListener("pointerdown",e=>{e.preventDefault();e.stopPropagation();const w=$("#wk");if(!w)return;const r=w.getBoundingClientRect(),p={x:clamp((e.clientX-r.left)/r.width,0,1),y:clamp((e.clientY-r.top)/r.height,0,1)};
+      if(PK194.on){PK194.on=false;ov194();pick194(p);return}const it=edItem(edPick());if(!it||it.type!=="sh141"||it.sh!=="path"){PEN194.on=false;ov194();renderView();return}
+      it.pts=(it.pts||[]).concat([[+p.x.toFixed(4),+p.y.toFixed(4)]]);persist();const c=document.querySelector(".pen194n");if(c)c.textContent=it.pts.length});
+    o.addEventListener("dblclick",e=>{e.preventDefault();PEN194.on=false;PK194.on=false;ov194();renderView()})}
+  const r=cv.getBoundingClientRect();o.style.left=r.left+"px";o.style.top=r.top+"px";o.style.width=r.width+"px";o.style.height=r.height+"px"}
+edTick=(o=>function(now){const r=o.apply(this,arguments);if(!SQ194.depth)try{ov194()}catch(e){}return r})(edTick);
+// tracking: the window's centre follows the subject — block matching of its patch on a 160-px copy of each frame, 8 frames a second
+const TK194={busy:false,id:0};
+edTick=(o=>function(now){if(TK194.busy){ED.last=now;return}return o.apply(this,arguments)})(edTick);
+async function track194(c){const s=c&&c.cg&&c.cg.sec194,w=s&&s.win;if(!w||TK194.busy)return null;const m=clipMedia(c);
+  if(!m||m.type!=="video"||!m.el||!(m.el.duration>0)||!m.el.videoWidth){toast(L("Tracking needs a video clip.","التتبع يحتاج مقطع فيديو."),{type:"warn"});return null}
+  TK194.busy=true;ED.playing=false;const el=m.el,was=el.currentTime,W=160,H=Math.max(2,Math.round(W*el.videoHeight/el.videoWidth)),cv=edxCv("trk194",W,H),x=cv.getContext("2d",{willReadFrequently:true});
+  const seek=t=>new Promise(res=>{let done=false;const f=()=>{if(done)return;done=true;el.removeEventListener("seeked",f);res()};el.addEventListener("seeked",f);try{el.currentTime=t}catch(e){}setTimeout(f,600)});
+  const lum=()=>{x.drawImage(el,0,0,W,H);const d=x.getImageData(0,0,W,H).data,o=new Float32Array(W*H);for(let i=0;i<o.length;i++)o[i]=d[i*4]*.299+d[i*4+1]*.587+d[i*4+2]*.114;return o};
+  const t0=clamp(c.in+edxLocal(c)*(c.speed||1),c.in,c.out),t1=Math.min(c.out,el.duration),step=1/8,p0=winAt194(w,t0);let cx=p0.cx*W,cy=p0.cy*H;
+  const rx=clamp(Math.round((w.rx??40)/100*W/2*.8),3,W>>2),ry=clamp(Math.round((w.ry??40)/100*H/2*.8),3,H>>2),R=10,kf=[{t:+t0.toFixed(3),cx:+(cx/W).toFixed(4),cy:+(cy/H).toFixed(4)}],pid=TK194.id=Date.now();
+  toast(L("Tracking the window…","جارٍ تتبع النافذة…"),{type:"info"});
+  try{await seek(t0);let ref=lum();cx=clamp(cx,rx,W-1-rx);cy=clamp(cy,ry,H-1-ry);
+    for(let t=t0+step;t<=t1+1e-6&&TK194.id===pid;t+=step){await seek(Math.min(t,t1));const cur=lum();let best=Infinity,bx=0,by=0;const ocx=Math.round(cx),ocy=Math.round(cy);
+      for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const ncx=ocx+dx,ncy=ocy+dy;if(ncx-rx<0||ncy-ry<0||ncx+rx>=W||ncy+ry>=H)continue;let sad=0;
+        for(let yy=-ry;yy<=ry;yy+=2)for(let xx=-rx;xx<=rx;xx+=2)sad+=Math.abs(ref[(ocy+yy)*W+ocx+xx]-cur[(ncy+yy)*W+ncx+xx]);if(sad<best){best=sad;bx=dx;by=dy}}
+      cx=clamp(cx+bx,rx,W-1-rx);cy=clamp(cy+by,ry,H-1-ry);ref=cur;kf.push({t:+Math.min(t,t1).toFixed(3),cx:+(cx/W).toFixed(4),cy:+(cy/H).toFixed(4)})}
+    w.kf=kf;persist();toast(kf.length+L(" frames tracked — the window follows the subject.","  إطاراً تُتبِّع — النافذة تتبع الهدف."),{type:"ok"});return kf}
+  finally{TK194.busy=false;try{el.currentTime=was}catch(e){}renderView()}}
+function secUI194(c){const s=(c.cg&&c.cg.sec194)||{},q=s.q||{},w=s.win||{},K=k=>"osec194"+k.replace(/\./g,"_"),
+  sl=(k,label,val,min,max,unit)=>'<label class="ctrl"><span>'+label+'</span><input type="range" min="'+min+'" max="'+max+'" step="1" value="'+val+'" data-sec194="'+k+'" data-out="'+K(k)+'" data-unit="'+(unit||"")+'"><output id="'+K(k)+'">'+val+(unit||"")+"</output></label>",
+  sw=(k,label,on)=>'<label class="laisw"><input type="checkbox" data-sec194="'+k+'"'+(on?" checked":"")+'><span>'+label+"</span></label>";
+  let h='<span class="lbl">'+L("Secondary grade — a colour range or a window","تدريج ثانوي — نطاق لون أو نافذة")+'</span><div class="row" style="gap:10px;flex-wrap:wrap">'+sw("on",L("On","مفعّل"),s.on)+(s.on?sw("show",L("Show the mask","أظهر القناع"),s.show)+sw("inv",L("Invert","اعكس"),s.inv):"")+"</div>";
+  if(!s.on)return'<div class="sec194">'+h+'<p class="small dim" style="margin:4px 0 0">'+L("Pick a colour from the picture or draw a window, then grade only what it covers — a sky, a shirt, a face.","التقط لوناً من الصورة أو ارسم نافذة، ثم درّج ما تغطيه فقط — سماء، قميص، وجه.")+"</p></div>";
+  h+='<span class="lbl">'+L("Qualifier — a colour range","المؤهِّل — نطاق لون")+'</span><div class="row" style="gap:8px;flex-wrap:wrap">'+sw("q.on",L("On","مفعّل"),q.on)+'<button type="button" class="btn sm'+(PK194.on?" primary":"")+'" data-act="sec194-pick" aria-pressed="'+PK194.on+'">'+ic("drop")+L("Pick from the picture","التقط من الصورة")+"</button></div>"+
+    sl("q.h",L("Hue","درجة اللون"),Math.round(+q.h||0),0,360,"°")+sl("q.hw",L("Hue width","اتساع اللون"),Math.round(q.hw==null?12:+q.hw),0,90,"°")+sl("q.soft",L("Softness","النعومة"),Math.round(q.soft==null?10:+q.soft),0,50,"%")+
+    sl("q.s0",L("Saturation from","التشبع من"),Math.round(+q.s0||0),0,100,"%")+sl("q.s1",L("Saturation to","التشبع إلى"),Math.round(q.s1==null?100:+q.s1),0,100,"%")+sl("q.l0",L("Lightness from","الإضاءة من"),Math.round(+q.l0||0),0,100,"%")+sl("q.l1",L("Lightness to","الإضاءة إلى"),Math.round(q.l1==null?100:+q.l1),0,100,"%");
+  h+='<span class="lbl">'+L("Power window","النافذة")+'</span><div class="row" style="gap:8px;flex-wrap:wrap">'+sw("win.on",L("On","مفعّلة"),w.on)+'<div class="seg">'+[["ellipse","Ellipse","بيضاوية"],["rect","Rectangle","مستطيلة"]].map(x=>'<button type="button" data-act="sec194-shape" data-v="'+x[0]+'" aria-pressed="'+((w.shape||"ellipse")===x[0])+'">'+esc(L(x[1],x[2]))+"</button>").join("")+"</div></div>"+
+    sl("win.cx",L("Centre X","المركز أفقياً"),Math.round((w.cx??.5)*100),0,100,"%")+sl("win.cy",L("Centre Y","المركز رأسياً"),Math.round((w.cy??.5)*100),0,100,"%")+sl("win.rx",L("Width","العرض"),Math.round(w.rx??40),4,120,"%")+sl("win.ry",L("Height","الارتفاع"),Math.round(w.ry??40),4,120,"%")+sl("win.soft",L("Soft edge","نعومة الحافة"),Math.round(w.soft??15),0,60,"%")+sl("win.rot",L("Rotation","الدوران"),Math.round(+w.rot||0),-90,90,"°")+
+    '<div class="row" style="gap:8px;margin-top:6px;flex-wrap:wrap"><button type="button" class="btn sm" data-act="sec194-track"'+(TK194.busy?" disabled":"")+">"+ic("track")+L("Track forward","تتبّع للأمام")+"</button>"+(w.kf&&w.kf.length?'<span class="small dim">'+w.kf.length+L(" tracked frames"," إطاراً متتبَّعاً")+'</span><button type="button" class="btn sm ghost" data-act="sec194-untrack">'+ic("x")+L("Clear tracking","امسح التتبع")+"</button>":"")+"</div>";
+  h+='<span class="lbl">'+L("Grade inside it","التدريج داخله")+"</span>"+sl("sat",L("Saturation","التشبع"),Math.round(+s.sat||0),-100,100,"")+sl("hue",L("Hue shift","إزاحة اللون"),Math.round(+s.hue||0),-180,180,"°")+sl("exp",L("Exposure","الإضاءة"),Math.round(+s.exp||0),-50,50,"")+wheelUI193("sec",s.w193)+'<div class="row" style="align-items:flex-start;gap:12px;flex-wrap:wrap;margin-top:6px">'+curveUI193("sec",s.curve193)+"</div>"+
+    '<button type="button" class="btn sm ghost" style="margin-top:6px" data-act="cw193-reset" data-v="sec">'+ic("refresh")+L("Reset the secondary's wheels & curve","أعد ضبط عجلات الثانوي ومنحناه")+"</button>";
+  return'<div class="sec194">'+h+"</div>"}
+document.addEventListener("input",e=>{const t=e.target;if(!t||!t.dataset||t.dataset.sec194==null||S.view!=="edit")return;const c=edxPick();if(!c)return;c.cg=c.cg||{};const s=c.cg.sec194=c.cg.sec194||{},k=t.dataset.sec194.split(".");let o=s;if(k.length>1)o=s[k[0]]=s[k[0]]||{};const key=k[k.length-1];
+  if(t.type==="checkbox")o[key]=t.checked;else{let v=+t.value;if(key==="cx"||key==="cy")v/=100;o[key]=v}if(k[0]==="win"&&o.on&&!o.shape)o.shape="ellipse";
+  const out=t.dataset.out&&document.getElementById(t.dataset.out);if(out)out.textContent=t.value+(t.dataset.unit||"");
+  if(t.type==="checkbox"){persist();renderView()}else{clearTimeout(PK194.pt);PK194.pt=setTimeout(persist,400)}});
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="sec194-pick"],[data-act="sec194-shape"],[data-act="sec194-track"],[data-act="sec194-untrack"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();const c=edxPick();if(!c)return;c.cg=c.cg||{};const s=c.cg.sec194=c.cg.sec194||{},act=a.dataset.act;
+  if(act==="sec194-pick"){PK194.on=!PK194.on;if(PK194.on)toast(L("Tap the colour on the picture.","اضغط اللون في الصورة."),{type:"info"});renderView();return}
+  s.win=s.win||{};if(act==="sec194-shape"){s.win.shape=a.dataset.v;s.win.on=true}else if(act==="sec194-untrack")delete s.win.kf;else{track194(c);return}persist();renderView()},true);
+// ---- 10a. pre-comps: a timeline of the project placed as one clip in another ------------------------------------------------------
+const SQ194={depth:0};
+function seqData194(id){const q=seqQ148(false);if(!q)return null;const s=q.list.find(x=>x.id===id);if(!s)return null;return s.id===q.cur?{self:true,s}:{s,d:s.data}}
+function seqDur194(d){let t=0;for(const c of(d&&d.clips)||[])t+=clipDur(c);return t||3}
+function seqMedia194(c){const r=seqData194(c.src.seq),F=FORMATS.find(f=>f[0]===(r&&r.d&&r.d.format))||FORMATS.find(f=>f[0]===S.ed.format)||FORMATS[0];
+  return{type:"proc",kind:"seq194",seq:c.src.seq,w:F[2],h:F[3],name:(r&&r.s.name)||c.src.name||L("Timeline","خط زمني"),paused:true,t0:performance.now(),pt:0,dur:r&&r.d?seqDur194(r.d):3}}
+clipMedia=(o=>function(c){if(c&&c.src&&c.src.k==="seq"){let m=M["c_"+c.id];if(!m||m.kind!=="seq194")m=M["c_"+c.id]=seqMedia194(c);return m}return o.apply(this,arguments)})(clipMedia);
+function seqDraw194(ctx,m,x,y,w,h,lt){const r=seqData194(m.seq);
+  if(!r||r.self||SQ194.depth>0||!r.d){ctx.save();ctx.fillStyle="#141814";ctx.fillRect(x,y,w,h);ctx.fillStyle="#9aa39a";ctx.font="500 "+Math.round(h*.05)+"px Geist, sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.fillText(!r?L("That timeline is gone","ذلك الخط الزمني لم يعد موجوداً"):r.self?L("A timeline can't hold itself","لا يمكن للخط الزمني أن يحوي نفسه"):L("Nested too deep","تداخل أعمق من اللازم"),x+w/2,y+h/2);ctx.restore();return}
+  const real=document.getElementById("wk");if(!real)return;const tmp=edxCv("seq194_"+m.seq,m.w,m.h);if(!tmp.style.position)tmp.style.cssText="position:fixed;left:-99999px;top:0;width:2px;height:2px;pointer-events:none";
+  const E0=S.ed,t0=ED.t,last=ED.last,hit=ED.hit,E1=Object.assign(Object.create(E0),r.d,{sel:null,selText:null,selLayer:null,selSfx:null,selReg:null,pick:null,safe:false,ms146:[],msMode146:false,tab:"clip"});
+  SQ194.depth++;real.id="wk194_outer";tmp.id="wk";document.body.appendChild(tmp);
+  try{S.ed=E1;ED.t=clamp(lt,0,Math.max(0,seqDur194(r.d)-.001));ED.last=0;ED.hit=[];edTick(performance.now())}catch(e){console.warn("v194 pre-comp:",e)}
+  finally{S.ed=E0;ED.t=t0;ED.last=last;ED.hit=hit;tmp.id="";tmp.remove();real.id="wk";SQ194.depth--}
+  ctx.drawImage(tmp,x,y,w,h)}
+drawSrcAt=(o=>function(ctx,m,x,y,w,h,lt){if(m&&m.type==="proc"&&m.kind==="seq194")return seqDraw194(ctx,m,x,y,w,h,lt);return o.apply(this,arguments)})(drawSrcAt);
+// the nested timeline's videos pause when the outer playhead isn't on their clip
+edTick=(o=>function(now){const r=o.apply(this,arguments);if(SQ194.depth||S.view!=="edit")return r;try{const E=S.ed,seqs=E.clips.filter(c=>c.src&&c.src.k==="seq");if(!seqs.length)return r;const at=edAt(Math.min(ED.t,Math.max(0,edTotal()-.001))).i;
+    for(const c of seqs){if(ED.playing&&E.clips.indexOf(c)===at)continue;const q=seqData194(c.src.seq);for(const n of(q&&q.d&&q.d.clips)||[]){const nm=M["c_"+n.id];if(nm&&nm.type==="video"&&nm.el&&!nm.el.paused)try{nm.el.pause()}catch(e){}}}}catch(e){}return r})(edTick);
+function seqClipAdd194(id){const r=seqData194(id);if(!r){toast(L("That timeline is gone.","ذلك الخط الزمني لم يعد موجوداً."),{type:"warn"});return null}if(r.self){toast(L("A timeline can't hold itself — open another one first.","لا يمكن للخط الزمني أن يحوي نفسه — افتح خطاً آخر أولاً."),{type:"warn"});return null}
+  if((r.d.clips||[]).some(c=>c.src&&c.src.k==="seq")){toast(L("That timeline already holds a timeline — one level only.","ذلك الخط يحوي خطاً آخر — مستوى واحد فقط."),{type:"warn"});return null}
+  const E=S.ed,dur=seqDur194(r.d),c={id:uid(),src:{k:"seq",seq:id,name:r.s.name},in:0,out:+dur.toFixed(3),speed:1,trans:"cut",vol:100};
+  const i=E.clips.findIndex(x=>x.id===E.sel);E.clips.splice(i>=0?i+1:E.clips.length,0,c);M["c_"+c.id]=seqMedia194(c);E.sel=c.id;E.tab="clip";persist();renderView();
+  toast(L("“","«")+r.s.name+L("” placed as one clip — it draws live; edit it from the Timelines menu.","» وُضع كمقطع واحد — يُرسم حيّاً؛ عدّله من قائمة الخطوط الزمنية."),{type:"ok"});return c}
+media143=(o=>function(){const h=o.apply(this,arguments),q=seqQ148(false);if(!q||q.list.length<2||typeof h!=="string")return h;
+  const sec='<span class="lbl">'+L("Timelines as clips (pre-comps)","خطوط زمنية كمقاطع")+'</span><div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:8px">'+q.list.filter(s=>s.id!==q.cur).map(s=>'<button type="button" class="btn sm" data-act="seq194-add" data-v="'+esc(s.id)+'">'+ic("seq148")+esc(s.name)+"</button>").join("")+"</div>";
+  const lab='<span class="lbl">'+L("Your videos & pictures","فيديوهاتك وصورك")+"</span>",i=h.indexOf(lab);return i<0?h+sec:h.slice(0,i)+sec+h.slice(i)})(media143);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="seq194-add"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();seqClipAdd194(a.dataset.v)},true);
+// the nested clips' sound in the export (their own video sound and sound effects; the music and voice-over belong to the project)
+const AUD194=new Map();
+async function decode194(off,m){const key=m.url||(m.el&&(m.el.currentSrc||m.el.src));if(!key)return null;if(AUD139.has(key))return AUD139.get(key);if(AUD194.has(key))return AUD194.get(key);let b=null;
+  try{const bl=m.file instanceof Blob?m.file:await(await fetch(key)).blob();b=await off.decodeAudioData(await bl.arrayBuffer())}catch(e){b=null}AUD194.set(key,b);return b}
+function add194(out,b,at,o0,dur,gain,rate){if(!b||!(gain>0)||!(dur>0))return;const SR=out.sampleRate,i0=Math.max(0,Math.round(at*SR)),n=Math.min(out.length-i0,Math.round(dur*SR)),r=rate*b.sampleRate/SR,o=o0*b.sampleRate;
+  for(let ch=0;ch<out.numberOfChannels;ch++){const d=out.getChannelData(ch),s=b.getChannelData(Math.min(ch,b.numberOfChannels-1));for(let i=0;i<n;i++){const j=Math.floor(o+i*r);if(j>=s.length)break;d[i0+i]+=s[j]*gain}}}
+mix139=(o=>async function(total){const out0=await o.apply(this,arguments),E=S.ed,seqs=E.clips.filter(c=>c.src&&c.src.k==="seq"&&c.vol>0);if(!seqs.length||E.clipSound===false)return out0;
+  const SR=48000,len=Math.max(1,Math.ceil(total*SR)),out=out0||new AudioBuffer({numberOfChannels:2,length:len,sampleRate:SR}),off=new OfflineAudioContext(1,1,SR),st=edStarts(),bus=typeof bus150==="function"?bus150("clips"):1;
+  for(const c of seqs){const r=seqData194(c.src.seq);if(!r||!r.d)continue;const i=E.clips.indexOf(c),at=st[i],dur=clipDur(c),sp=c.speed||1,g=(c.vol/100)*bus;let ns=0;
+    for(const n of r.d.clips||[]){const nd=clipDur(n),m=M["c_"+n.id];const a0=ns;ns+=nd;if(!m||m.type!=="video"||!n.vol)continue;
+      const from=Math.max(c.in,a0),to=Math.min(c.out,a0+nd);if(to-from<.02)continue;const b=await decode194(off,m);if(!b)continue;
+      add194(out,b,at+(from-c.in)/sp,n.in+(from-a0)*(n.speed||1),(to-from)/sp,g*n.vol/100,sp*(n.speed||1))}
+    for(const it of r.d.sfx||[]){if(it.t<c.in||it.t>=c.out)continue;let b=null;try{b=await edxBuffer(it)}catch(e){}if(b)add194(out,b,at+(it.t-c.in)/sp,0,Math.min(b.duration,(c.out-it.t))/sp,g*clamp((it.vol??100)/100,0,2),sp)}}
+  return out})(mix139);
+// ---- 10b. motion templates with editable fields ---------------------------------------------------------------------------------------
+const TPL194=[
+  {id:"lower3",en:"Lower third",ar:"شريط اسم",icon:"text",fields:[["name","Name","الاسم","text","Sara Ali","سارة علي"],["role","Role","الصفة","text","Creative director","مديرة إبداعية"],["accent","Colour","اللون","color","#CFE13E"]],
+    make:(f,t,d)=>({texts:[{text:f.name,start:t,end:t+d,pos:"bottom",style:"clean",size:5.6,anim:"t152_maskrise",x:.3,y:.76,weight:700},{text:f.role,start:t+.2,end:t+d,pos:"bottom",style:"clean",size:3.2,anim:"t152_blurrise",x:.3,y:.84}],
+      infos:[{type:"sh141",sh:"rect",accent:f.accent,lw:0,x:.075,y:.8,k:.9,ar:.1,rad:4,anim:"in",start:t,end:t+d}]})},
+  {id:"title",en:"Title card",ar:"بطاقة عنوان",icon:"text",fields:[["title","Title","العنوان","text","The Big Idea","الفكرة الكبيرة"],["sub","Subtitle","العنوان الفرعي","text","A short film","فيلم قصير"]],
+    make:(f,t,d)=>({texts:[{text:f.title,start:t,end:t+d,pos:"center",style:"serif",size:9,anim:"t152_tracking",x:.5,y:.46,weight:700},{text:f.sub,start:t+.35,end:t+d,pos:"center",style:"clean",size:3.4,anim:"fade",x:.5,y:.58}],infos:[]})},
+  {id:"callout",en:"Call-out",ar:"إشارة توضيحية",icon:"marker",fields:[["label","Label","التسمية","text","Look here","انظر هنا"],["accent","Colour","اللون","color","#5ec8ff"]],
+    make:(f,t,d)=>({texts:[{text:f.label,start:t+.2,end:t+d,pos:"center",style:"box",size:3.6,anim:"pop",x:.68,y:.3}],infos:[{type:"sh141",sh:"circle",accent:f.accent,fill:"none",lw:5,line:f.accent,x:.4,y:.5,k:.7,anim:"in",start:t,end:t+d},{type:"sh141",sh:"line",accent:f.accent,lw:4,x:.54,y:.4,k:.8,rot:-35,anim:"in",start:t+.1,end:t+d}]})},
+  {id:"handle",en:"Social handle",ar:"حساب التواصل",icon:"text",fields:[["handle","Handle","الحساب","text","@nooi.ai"],["accent","Colour","اللون","color","#ffffff"]],
+    make:(f,t,d)=>({texts:[{text:f.handle,start:t,end:t+d,pos:"bottom",style:"box",size:3.6,anim:"slide",x:.5,y:.9}],infos:[]})},
+  {id:"quote",en:"Quote",ar:"اقتباس",icon:"text",fields:[["quote","Quote","الاقتباس","text","Make it simple, but significant.","اجعلها بسيطة، لكن ذات معنى."],["who","Who said it","القائل","text","Don Draper","دون دريبر"]],
+    make:(f,t,d)=>({texts:[{text:"“"+f.quote+"”",start:t,end:t+d,pos:"center",style:"serif",size:5.2,anim:"t152_blurrise",x:.5,y:.46},{text:"— "+f.who,start:t+.5,end:t+d,pos:"center",style:"clean",size:3,anim:"fade",x:.5,y:.6}],infos:[]})},
+  {id:"endcard",en:"End card",ar:"بطاقة ختام",icon:"text",fields:[["cta","Call to action","دعوة للإجراء","text","Follow for more","تابع للمزيد"],["sub","Line under it","سطر تحتها","text","New videos every week","فيديوهات جديدة كل أسبوع"],["accent","Colour","اللون","color","#CFE13E"]],
+    make:(f,t,d)=>({texts:[{text:f.cta,start:t,end:t+d,pos:"center",style:"clean",size:5,anim:"pop",x:.5,y:.5,weight:800},{text:f.sub,start:t+.3,end:t+d,pos:"center",style:"clean",size:3,anim:"fade",x:.5,y:.62}],infos:[{type:"sh141",sh:"rect",accent:f.accent,lw:0,x:.5,y:.5,k:1.1,ar:3.2,rad:40,op:28,anim:"in",start:t,end:t+d}]})}];
+const tplAll194=()=>TPL194.concat(S.tpl194||[]);
+function tplApply194(id,f){const T=tplAll194().find(x=>x.id===id);if(!T)return null;const E=S.ed,t=+Math.max(0,ED.t).toFixed(2),d=Math.max(1,+(f&&f.dur)||4),vals={};
+  for(const fd of T.fields||[])vals[fd[0]]=(f&&f[fd[0]]!=null&&f[fd[0]]!=="")?f[fd[0]]:(S.lang==="ar"&&fd[5]?fd[5]:fd[4]);
+  let made;if(T.make)made=T.make(vals,t,d);else{const sub=s=>String(s==null?"":s).replace(/\{(\w+)\}/g,(m,k)=>vals[k]!=null?vals[k]:m);made={texts:(T.items.texts||[]).map(x=>Object.assign({},x,{text:sub(x.text),start:t+x.start,end:t+x.end})),infos:(T.items.infos||[]).map(x=>Object.assign({},x,{t1:sub(x.t1),start:t+x.start,end:t+x.end}))}}
+  const keys=[];E.texts=E.texts||[];E.infos=E.infos||[];for(const x of made.texts||[]){x.id=uid();E.texts.push(x);keys.push("text:"+x.id)}for(const x of made.infos||[]){x.id=uid();E.infos.push(x);keys.push("info:"+x.id)}
+  if(keys.length>1){E.groups146=E.groups146||[];E.groups146.push({id:uid(),keys:keys.slice()});E.ms146=keys.slice()}
+  if(made.texts&&made.texts.length){E.selText=made.texts[0].id;E.tab="text"}persist();renderView();toast(L("“","«")+L(T.en,T.ar||T.en)+L("” added — its items move as one group.","» أُضيفت — عناصرها تتحرك كمجموعة واحدة."),{type:"ok"});return keys}
+function tplSheet194(){const tile=T=>'<button type="button" class="tile tpl194" data-act="tpl194-pick" data-v="'+esc(T.id)+'"><span class="gl">'+ic(T.icon||"text")+'</span><span class="lb">'+esc(L(T.en,T.ar||T.en))+"</span></button>";
+  hfSheet(L("Motion templates","قوالب الحركة"),'<p class="small dim" style="margin:0 0 8px">'+L("Ready-made title moves with fields to fill — the way the big tools' motion templates work. Tap one, fill the words, add.","حركات عناوين جاهزة بحقول تُملأ — كقوالب الحركة في البرامج الكبرى. اضغط واحداً، املأ الكلمات، أضف.")+'</p><div class="tiles">'+TPL194.map(tile).join("")+"</div>"+
+    ((S.tpl194||[]).length?'<span class="lbl">'+L("Your templates","قوالبك")+'</span><div class="tiles">'+S.tpl194.map(T=>tile(T).replace("</button>",'</button>')).join("")+"</div>"+'<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">'+S.tpl194.map(T=>'<button type="button" class="btn sm ghost danger" data-act="tpl194-del" data-v="'+esc(T.id)+'">'+ic("trash")+esc(T.en)+"</button>").join("")+"</div>":""))}
+function tplForm194(id){const T=tplAll194().find(x=>x.id===id);if(!T)return;const ar=S.lang==="ar";
+  hfSheet(L(T.en,T.ar||T.en),(T.fields||[]).map(fd=>'<label class="lbl">'+esc(L(fd[1],fd[2]))+"</label>"+(fd[3]==="color"?'<input type="color" data-tplf194="'+esc(fd[0])+'" value="'+esc(fd[4])+'">':'<input type="text" dir="auto" data-tplf194="'+esc(fd[0])+'" value="'+esc(ar&&fd[5]?fd[5]:fd[4])+'" maxlength="120">')).join("")+
+    '<label class="lbl">'+L("Lasts","المدة")+'</label><div class="seg">'+[3,4,6,8].map(v=>'<button type="button" data-tpld194="'+v+'" aria-pressed="'+(v===4)+'">'+v+L("s","ث")+"</button>").join("")+"</div>"+
+    '<button type="button" class="btn primary big" style="margin-top:14px;width:100%" data-act="tpl194-go" data-v="'+esc(T.id)+'">'+ic("plus")+L("Add at the playhead","أضف عند المؤشر")+"</button>")}
+// the selection saved as a template: every text becomes a field, times are kept relative to the earliest item
+function tplSave194(name){const E=S.ed,keys=typeof sel146==="function"?sel146():[],texts=[],infos=[];for(const k of keys){const[kind,id]=kk146(k);if(kind==="text"){const x=E.texts.find(t=>t.id===id);if(x)texts.push(x)}else if(kind==="info"){const x=(E.infos||[]).find(t=>t.id===id);if(x)infos.push(x)}}
+  if(!texts.length&&!infos.length){toast(L("Select the texts and shapes to save first (two or more).","حدّد النصوص والأشكال أولاً (اثنين أو أكثر)."),{type:"warn"});return null}
+  const t0=Math.min(...texts.concat(infos).map(x=>x.start)),fields=[],clone=x=>{const y=JSON.parse(JSON.stringify(x));delete y.id;y.start=+(x.start-t0).toFixed(2);y.end=+(x.end-t0).toFixed(2);return y};
+  const T={id:"u"+uid(),en:(name||L("My template","قالبي")).slice(0,40),ar:(name||"قالبي").slice(0,40),icon:"text",fields,items:{texts:texts.map((x,i)=>{const y=clone(x);fields.push(["t"+i,L("Text ","نص ")+(i+1),"نص "+(i+1),"text",x.text]);y.text="{t"+i+"}";return y}),infos:infos.map(clone)}};
+  S.tpl194=(S.tpl194||[]).concat([T]).slice(-20);persist();toast(L("Saved as a template — find it under Templates.","حُفظ كقالب — تجده تحت القوالب."),{type:"ok"});return T}
+VIEWS.edit=(o=>function(){let h=o.apply(this,arguments);if(S.ed.tab!=="text"||typeof h!=="string")return h;const i=h.indexOf('<button class="btn sm primary" data-act="ed-addtext">');if(i<0)return h;
+  return h.slice(0,i)+'<div class="row tplrow194" style="gap:6px;flex-wrap:wrap;margin-bottom:8px"><button type="button" class="btn sm" data-act="tpl194">'+ic("motion")+L("Templates","القوالب")+'</button><button type="button" class="btn sm ghost" data-act="tpl194-save">'+ic("copy146")+L("Save selection as a template","احفظ التحديد كقالب")+"</button></div>"+h.slice(i)})(VIEWS.edit);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="tpl194"],[data-act="tpl194-pick"],[data-act="tpl194-go"],[data-act="tpl194-del"],[data-act="tpl194-save"],[data-tpld194]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();
+  if(a.dataset.tpld194){a.parentElement.querySelectorAll("[data-tpld194]").forEach(b=>b.setAttribute("aria-pressed",String(b===a)));return}const act=a.dataset.act;
+  if(act==="tpl194")return tplSheet194();if(act==="tpl194-pick")return tplForm194(a.dataset.v);
+  if(act==="tpl194-del"){S.tpl194=(S.tpl194||[]).filter(T=>T.id!==a.dataset.v);persist();return tplSheet194()}
+  if(act==="tpl194-save"){hfSheet(L("Save as a template","احفظ كقالب"),'<label class="lbl">'+L("Name","الاسم")+'</label><input type="text" dir="auto" data-tpln194="1" value="'+esc(L("My template","قالبي"))+'" maxlength="40"><button type="button" class="btn primary big" style="margin-top:14px;width:100%" data-act="tpl194-save-go">'+ic("copy146")+L("Save","احفظ")+"</button>");return}
+  const f={};document.querySelectorAll("#modalRoot [data-tplf194]").forEach(i=>{f[i.dataset.tplf194]=i.value});const dd=document.querySelector('#modalRoot [data-tpld194][aria-pressed="true"]');f.dur=dd?+dd.dataset.tpld194:4;closeSheet();tplApply194(a.dataset.v,f)},true);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="tpl194-save-go"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const inp=document.querySelector("#modalRoot [data-tpln194]"),name=inp?inp.value.trim():"";closeSheet();tplSave194(name)},true);
+// ---- 11. shape paths: a pen, trim paths with a write-on, a repeater, words along the path -----------------------------------------
+SH141.push(["path","Pen path","مسار بالقلم"]);SHI141.path='<path d="M4 18c4-9 6-9 8-3s4 6 8-3"/><circle cx="4" cy="18" r="1.5"/><circle cx="20" cy="12" r="1.5"/>';
+const PEN194={on:false};
+infoAdd131=(o=>function(ob){if(ob&&ob.type==="sh141"&&ob.sh==="path")Object.assign(ob,{pts:[[.3,.58],[.5,.42],[.7,.58]],smooth:true,lw:4,fill:"none",line:"#ffffff",tanim:"draw",tdur:1.2,x:.5,y:.5});return o.apply(this,arguments)})(infoAdd131);
+// the path as a polyline in pixels (smooth = Catmull-Rom through the points) with the running length at each vertex
+function pathPoly194(it,W,H){const P=(it.pts||[]).map(p=>[p[0]*W,p[1]*H]);if(P.length<2)return{pts:P,len:[0],L:0};let out=[];
+  if(it.smooth&&P.length>2){const n=P.length,cl=!!it.closed,at=i=>cl?P[(i%n+n)%n]:P[clamp(i,0,n-1)],segs=cl?n:n-1;
+    for(let i=0;i<segs;i++){const p0=at(i-1),p1=at(i),p2=at(i+1),p3=at(i+2);for(let k=0;k<10;k++){const t=k/10,t2=t*t,t3=t2*t;out.push([.5*((2*p1[0])+(-p0[0]+p2[0])*t+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*t2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*t3),.5*((2*p1[1])+(-p0[1]+p2[1])*t+(2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*t2+(-p0[1]+3*p1[1]-3*p2[1]+p3[1])*t3)])}}
+    out.push(cl?P[0].slice():P[n-1].slice())}
+  else{out=P.map(p=>p.slice());if(it.closed)out.push(P[0].slice())}
+  const len=[0];for(let i=1;i<out.length;i++)len.push(len[i-1]+Math.hypot(out[i][0]-out[i-1][0],out[i][1]-out[i-1][1]));return{pts:out,len,L:len[len.length-1]}}
+function pathAt194(poly,d){const{pts,len,L}=poly;if(!pts.length)return{x:0,y:0,a:0};d=clamp(d,0,L);let i=1;while(i<len.length-1&&len[i]<d)i++;const a=pts[i-1],b=pts[i],seg=len[i]-len[i-1],k=seg>1e-6?(d-len[i-1])/seg:0;return{x:a[0]+(b[0]-a[0])*k,y:a[1]+(b[1]-a[1])*k,a:Math.atan2(b[1]-a[1],b[0]-a[0])}}
+function pathSlice194(poly,a,b){const{pts,len,L}=poly,out=[];if(L<=0||b<=a)return out;out.push(pathAt194(poly,a));for(let i=0;i<pts.length;i++)if(len[i]>a&&len[i]<b)out.push({x:pts[i][0],y:pts[i][1]});out.push(pathAt194(poly,b));return out}
+function pathDraw194(ctx,W,H,t,it){if(t<it.start||t>it.end)return;const pts=it.pts||[];if(pts.length<2)return;const lt=t-it.start,len=it.end-it.start,U=Math.min(W,H),out=it.anim&&it.anim!=="none"?clamp((len-lt)/.3,0,1):1;
+  const poly=pathPoly194(it,W,H),trim=it.trim||{};let s=clamp((+trim.s||0)/100,0,1),e=clamp(trim.e==null?1:+trim.e/100,0,1);const off=((+trim.off||0)/100%1+1)%1,ta=it.tanim||"none",td=Math.max(.1,+it.tdur||1.2),k=clamp(lt/td,0,1),ek=1-Math.pow(1-k,3);
+  if(ta==="draw")e=s+(e-s)*ek;else if(ta==="erase")s=s+(e-s)*ek;
+  const rep=it.rep||{},n=clamp(Math.round(+rep.n||1),1,24);let cx=0,cy=0;for(const p of pts){cx+=p[0]*W/pts.length;cy+=p[1]*H/pts.length}
+  ctx.save();ctx.globalAlpha=out*clamp((it.op??100)/100,0,1);if(it.rot){ctx.translate(cx,cy);ctx.rotate(it.rot*Math.PI/180);ctx.translate(-cx,-cy)}
+  for(let i=0;i<n;i++){ctx.save();if(i){ctx.translate(cx,cy);ctx.translate((+rep.dx||0)/100*W*i,(+rep.dy||0)/100*H*i);ctx.rotate((+rep.rot||0)*Math.PI/180*i);const sc=Math.pow(clamp((+rep.sc||100)/100,.1,3),i);ctx.scale(sc,sc);ctx.translate(-cx,-cy)}
+    pathStroke194(ctx,poly,s,e,off,it,U);ctx.restore()}
+  ctx.restore();let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const p of pts){x0=Math.min(x0,p[0]*W);y0=Math.min(y0,p[1]*H);x1=Math.max(x1,p[0]*W);y1=Math.max(y1,p[1]*H)}
+  (ED.hit=ED.hit||[]).push({k:"info",id:it.id,x:x0-8,y:y0-8,w:x1-x0+16,h:y1-y0+16,cx:(x0+x1)/2,cy:(y0+y1)/2})}
+function pathStroke194(ctx,poly,s,e,off,it,U){const L0=poly.L;if(L0<=0)return;const a=s*L0+off*L0,b=e*L0+off*L0,parts=[];
+  if(b<=L0)parts.push([a,b]);else if(a>=L0)parts.push([a-L0,b-L0]);else{parts.push([a,L0]);parts.push([0,b-L0])}
+  const lw=U*.004*Math.max(+it.lw||0,2),ac=it.accent||"#CFE13E";ctx.lineCap="round";ctx.lineJoin="round";
+  for(const[p,q]of parts){const seg=pathSlice194(poly,p,q);if(seg.length<2)continue;ctx.beginPath();seg.forEach((v,i)=>i?ctx.lineTo(v.x,v.y):ctx.moveTo(v.x,v.y));
+    if(it.closed&&it.fill!=="none"){ctx.closePath();ctx.fillStyle=ac;ctx.fill()}
+    if(!(it.closed&&it.fill!=="none")||+it.lw>0){ctx.lineWidth=lw;ctx.strokeStyle=it.line||"#ffffff";ctx.stroke()}}
+  if(it.t1&&it.onPath){const F=U*.05*(it.k||1);ctx.font=infoFont(700,F);ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillStyle=it.fill==="none"?(it.line||"#ffffff"):onAcc131(ac);
+    const rtl=isRtl(it.t1),units=rtl?String(it.t1).split(/\s+/).filter(Boolean).reverse():Array.from(String(it.t1)),gap=rtl?ctx.measureText(" ").width:0,lift=-lw*.9-F*.45;let d=a+F*.1;
+    for(const u of units){const w=ctx.measureText(u).width;const mid=d+w/2;if(mid>b)break;const P=pathAt194(poly,((mid%L0)+L0)%L0);ctx.save();ctx.translate(P.x,P.y);ctx.rotate(P.a);ctx.direction=rtl?"rtl":"ltr";ctx.fillText(u,0,lift);ctx.restore();d+=w+gap}}}
+shDraw141=(o=>function(ctx,W,H,t,it){if(it&&it.sh==="path")return pathDraw194(ctx,W,H,t,it);return o.apply(this,arguments)})(shDraw141);
+// the pen: with it on, a tap on the picture adds a point to the chosen path
+// (the pen's taps arrive through the layer above the preview — ov194)
+function pathUI194(it){const tr=it.trim||{},rep=it.rep||{},K=k=>"osh194"+k.replace(/\./g,"_"),sl=(k,label,val,min,max,unit)=>'<label class="ctrl"><span>'+label+'</span><input type="range" min="'+min+'" max="'+max+'" step="1" value="'+val+'" data-sh194="'+k+'" data-out="'+K(k)+'" data-unit="'+(unit||"")+'"><output id="'+K(k)+'">'+val+(unit||"")+"</output></label>",
+  sw=(k,label,on)=>'<label class="laisw"><input type="checkbox" data-sh194="'+k+'"'+(on?" checked":"")+'><span>'+label+"</span></label>";
+  return'<div class="path194"><span class="lbl">'+L("Pen path","مسار القلم")+'</span><div class="row" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn sm'+(PEN194.on?" primary":"")+'" data-act="sh194-pen" aria-pressed="'+PEN194.on+'">'+ic("pen")+L("Add points on the picture","أضف نقاطاً على الصورة")+'</button><span class="small dim"><b class="pen194n">'+(it.pts||[]).length+"</b> "+L("points","نقطة")+'</span><button type="button" class="btn sm ghost" data-act="sh194-undo">'+ic("undo")+L("Last point","آخر نقطة")+'</button><button type="button" class="btn sm ghost" data-act="sh194-clear">'+ic("trash")+L("Clear","امسح")+"</button></div>"+
+    '<div class="row" style="gap:10px;flex-wrap:wrap;margin-top:6px">'+sw("closed",L("Closed","مغلق"),it.closed)+sw("smooth",L("Smooth","ناعم"),it.smooth)+sw("onPath",L("Words along the path","كلمات على المسار"),it.onPath)+"</div>"+
+    '<span class="lbl">'+L("Trim path","قصّ المسار")+"</span>"+sl("trim.s",L("Start","البداية"),Math.round(+tr.s||0),0,100,"%")+sl("trim.e",L("End","النهاية"),Math.round(tr.e==null?100:+tr.e),0,100,"%")+sl("trim.off",L("Offset","الإزاحة"),Math.round(+tr.off||0),0,100,"%")+
+    '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><div class="seg">'+[["none","Still","ثابت"],["draw","Write on","يُرسم"],["erase","Erase","يُمحى"]].map(x=>'<button type="button" data-act="sh194-tanim" data-v="'+x[0]+'" aria-pressed="'+((it.tanim||"none")===x[0])+'">'+esc(L(x[1],x[2]))+"</button>").join("")+"</div></div>"+((it.tanim||"none")!=="none"?sl("tdur",L("Over","خلال"),Math.round(+it.tdur||1.2),1,8,L("s","ث")):"")+
+    '<span class="lbl">'+L("Repeater","المكرِّر")+"</span>"+sl("rep.n",L("Copies","النسخ"),Math.round(+rep.n||1),1,24,"")+sl("rep.dx",L("Shift X","إزاحة أفقية"),Math.round(+rep.dx||0),-50,50,"%")+sl("rep.dy",L("Shift Y","إزاحة رأسية"),Math.round(+rep.dy||0),-50,50,"%")+sl("rep.rot",L("Turn each","دوران كل نسخة"),Math.round(+rep.rot||0),-90,90,"°")+sl("rep.sc",L("Scale each","تكبير كل نسخة"),Math.round(+rep.sc||100),50,150,"%")+"</div>"}
+VIEWS.edit=(o=>function(){let h=o.apply(this,arguments);if(S.ed.tab!=="info"||typeof h!=="string")return h;const p=edPick(),it=p&&p.k==="info"&&edItem(p);if(!it||it.type!=="sh141"||it.sh!=="path")return h;
+  const m=/<div class="st131g sm sh141g">[\s\S]*?<\/div>/.exec(h);return m?h.slice(0,m.index+m[0].length)+pathUI194(it)+h.slice(m.index+m[0].length):h+pathUI194(it)})(VIEWS.edit);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="sh194-pen"],[data-act="sh194-undo"],[data-act="sh194-clear"],[data-act="sh194-tanim"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();const it=edItem(edPick());if(!it||it.type!=="sh141"||it.sh!=="path")return;const act=a.dataset.act;
+  if(act==="sh194-pen"){PEN194.on=!PEN194.on;ED.playing=false;if(PEN194.on)toast(L("Tap the picture to add points; double-tap to finish.","اضغط الصورة لإضافة نقاط؛ اضغط مرتين للإنهاء."),{type:"info"})}
+  else if(act==="sh194-undo")it.pts=(it.pts||[]).slice(0,-1);else if(act==="sh194-clear"){it.pts=[];PEN194.on=true}else it.tanim=a.dataset.v;persist();renderView()},true);
+document.addEventListener("input",e=>{const t=e.target;if(!t||!t.dataset||t.dataset.sh194==null||S.view!=="edit")return;const it=edItem(edPick());if(!it||it.type!=="sh141"||it.sh!=="path")return;const k=t.dataset.sh194.split(".");let o=it;if(k.length>1)o=it[k[0]]=it[k[0]]||{};
+  if(t.type==="checkbox")o[k[k.length-1]]=t.checked;else o[k[k.length-1]]=+t.value;const out=t.dataset.out&&document.getElementById(t.dataset.out);if(out)out.textContent=t.value+(t.dataset.unit||"");if(t.type==="checkbox"){persist();renderView()}else{clearTimeout(PEN194.pt);PEN194.pt=setTimeout(persist,400)}});
+// ---- 12. sound per track: EQ · compressor · de-esser · noise gate · side-chain ducking ------------------------------------------------
+const FXK194=["clips","music","voice","sfx"];
+const fxOf194=k=>((S.ed.fx194||{})[k])||{};
+const fxLive194=f=>!!f&&!!((f.eq&&(+f.eq.lo||+f.eq.mid||+f.eq.hi))||(f.comp&&f.comp.on)||(f.dess&&f.dess.on));
+const fxOn194=f=>fxLive194(f)||!!(f&&((f.gate&&f.gate.on)||(f.duck&&f.duck.src&&f.duck.src!=="none")));
+const fxAny194=()=>FXK194.some(k=>fxOn194(fxOf194(k)));
+// the live part of the chain (what the preview can also run): EQ → compressor → de-esser (the band above 5 kHz compressed hard, the rest passes)
+// the make-up gain the browser's compressor adds on its own: (1 / its output for a full-scale input) ^ 0.6, in dB
+const mkup194=(thr,ratio)=>-.6*(thr+(0-thr)/Math.max(1,ratio));
+function fxChain194(ac,f){const eq=f.eq||{},comp=f.comp||{},dess=f.dess||{},inp=ac.createGain();let n=inp;
+  const bq=(type,freq,gain,Q)=>{const b=ac.createBiquadFilter();b.type=type;b.frequency.value=freq;if(gain!=null)b.gain.value=gain;if(Q!=null)b.Q.value=Q;n.connect(b);n=b};
+  if(+eq.lo)bq("lowshelf",160,+eq.lo);if(+eq.mid)bq("peaking",1200,+eq.mid,.9);if(+eq.hi)bq("highshelf",5000,+eq.hi);
+  if(comp.on){const thr=comp.thr==null?-24:+comp.thr,ratio=comp.ratio==null?4:+comp.ratio,c=ac.createDynamicsCompressor();c.threshold.value=thr;c.ratio.value=ratio;c.knee.value=6;c.attack.value=.005;c.release.value=.15;n.connect(c);n=c;const g=ac.createGain();g.gain.value=Math.pow(10,((+comp.gain||0)-mkup194(thr,ratio))/20);n.connect(g);n=g}
+  if(dess.on){const mk2=t=>{const a=ac.createBiquadFilter(),b=ac.createBiquadFilter();a.type=b.type=t;a.frequency.value=b.frequency.value=4500;a.connect(b);return{inp:a,out:b}},lp=mk2("lowpass"),hp=mk2("highpass");const thr=-56+(100-clamp(dess.amt==null?50:+dess.amt,0,100))*.3,dc=ac.createDynamicsCompressor();dc.threshold.value=thr;dc.ratio.value=16;dc.knee.value=3;dc.attack.value=.002;dc.release.value=.08;const un=ac.createGain();un.gain.value=Math.pow(10,-mkup194(thr,16)/20);
+    const sum=ac.createGain();n.connect(lp.inp);lp.out.connect(sum);n.connect(hp.inp);hp.out.connect(dc);dc.connect(un);un.connect(sum);n=sum}
+  return{inp,out:n}}
+// the whole chain on a rendered track: the live part through an offline graph, then the gate and the ducking as a gain curve (10 ms steps)
+async function fxApply194(buf,f,side){let out=buf;const SR=buf.sampleRate;
+  if(fxLive194(f)){const oc=new OfflineAudioContext(buf.numberOfChannels,buf.length,SR),src=oc.createBufferSource();src.buffer=buf;const ch=fxChain194(oc,f);src.connect(ch.inp);ch.out.connect(oc.destination);src.start(0);out=await oc.startRendering()}
+  const gate=f.gate||{},duck=f.duck||{},dk=!!(duck.src&&duck.src!=="none"&&side);if(!gate.on&&!dk)return out;
+  const per=Math.max(1,Math.round(SR/100)),nb=Math.ceil(out.length/per)+1,g=new Float32Array(nb).fill(1);
+  const env=b=>{const e=new Float32Array(nb),ch=b.numberOfChannels,per2=Math.max(1,Math.round(b.sampleRate/100));for(let c=0;c<ch;c++){const d=b.getChannelData(c);for(let i=0;i<d.length;i++){const k=(i/per2)|0;if(k<nb)e[k]+=d[i]*d[i]}}for(let k=0;k<nb;k++)e[k]=Math.sqrt(e[k]/(per2*ch));return e};
+  if(gate.on){const e=env(out),thr=Math.pow(10,(gate.thr==null?-40:+gate.thr)/20);let open=0;for(let k=0;k<nb;k++){const want=e[k]>thr?1:0;open+=(want-open)*(want>open?.6:.08);g[k]*=clamp(open,0,1)}}
+  if(dk){const e=env(side),thr=Math.pow(10,-45/20),amt=clamp((duck.amt==null?70:+duck.amt)/100,0,1);let lv=0;for(let k=0;k<nb;k++){const want=e[k]>thr?1:0;lv+=(want-lv)*(want>lv?.35:.04);g[k]*=1-amt*lv}}
+  for(let c=0;c<out.numberOfChannels;c++){const d=out.getChannelData(c);for(let i=0;i<d.length;i++)d[i]*=g[(i/per)|0]}return out}
+// each track rendered alone (the others silenced the way the mixer does), processed, then summed
+async function busRender194(o,self,args,k){const E=S.ed,keep={clips:E.clips.map(c=>c.vol),mv:E.musicVol,vv:E.voiceVol,sfx:(E.sfx||[]).map(x=>x.vol),ly:(E.layers||[]).map(x=>x.vol)};
+  if(k!=="clips"){E.clips.forEach(c=>{c.vol=0});(E.layers||[]).forEach(x=>{x.vol=0})}if(k!=="music")E.musicVol=0;if(k!=="voice")E.voiceVol=0;if(k!=="sfx")(E.sfx||[]).forEach(x=>{x.vol=0});
+  try{return await o.apply(self,args)}finally{E.clips.forEach((c,i)=>{c.vol=keep.clips[i]});E.musicVol=keep.mv;E.voiceVol=keep.vv;(E.sfx||[]).forEach((x,i)=>{x.vol=keep.sfx[i]});(E.layers||[]).forEach((x,i)=>{x.vol=keep.ly[i]})}}
+mix139=(o=>async function(total){if(!fxAny194())return o.apply(this,arguments);const bufs={};for(const k of FXK194)bufs[k]=await busRender194(o,this,arguments,k);
+  const SR=48000,len=Math.max(1,Math.ceil(total*SR));let out=null;
+  for(const k of FXK194){let b=bufs[k];if(!b)continue;const f=fxOf194(k);if(fxOn194(f)){const side=f.duck&&f.duck.src&&f.duck.src!==k?bufs[f.duck.src]||null:null;try{b=await fxApply194(b,f,side)}catch(e){console.warn("v194 sound fx",k,e)}}
+    if(!out)out=new AudioBuffer({numberOfChannels:2,length:len,sampleRate:SR});for(let c=0;c<2;c++){const d=out.getChannelData(c),s=b.getChannelData(Math.min(c,b.numberOfChannels-1));for(let i=0;i<d.length&&i<s.length;i++)d[i]+=s[i]}}
+  return out})(mix139);
+// the preview: a track with EQ / compressor / de-esser plays through that chain (unless the voice changer or voice cleanup already owns the element)
+const PFX194=new WeakMap();
+function fxRoute194(el,k){if(!el||typeof safe140!=="function"||!safe140(el))return;const f=fxOf194(k),want=fxLive194(f)?JSON.stringify([f.eq,f.comp,f.dess]):"",cur=PFX194.get(el);if((cur?cur.key:"")===want)return;
+  if(typeof VR145!=="undefined"&&VR145.get(el))return;if(typeof VC140!=="undefined"&&VC140.on&&VC140.on.has(el))return;
+  try{const n=audioNode(el);n.disconnect();if(cur&&cur.fx)try{cur.fx.out.disconnect()}catch(e){}if(want){const fx=fxChain194(audioCtx,f);n.connect(fx.inp);fx.out.connect(audioCtx.destination);PFX194.set(el,{key:want,fx})}else{n.connect(audioCtx.destination);PFX194.delete(el)}
+    if(audioCtx.state==="suspended")audioCtx.resume().catch(()=>{})}catch(e){}}
+edTick=(o=>function(now){const r=o.apply(this,arguments);if(SQ194.depth||S.view!=="edit"||!S.ed.fx194)return r;try{if(M.edMusic&&M.edMusic.el)fxRoute194(M.edMusic.el,"music");if(M.edVoice&&M.edVoice.el)fxRoute194(M.edVoice.el,"voice");
+    const E=S.ed;if(E.clips.length){const c=E.clips[edAt(Math.min(ED.t,Math.max(0,edTotal()-.001))).i],m=c&&M["c_"+c.id];if(m&&m.type==="video"&&m.el)fxRoute194(m.el,"clips")}}catch(e){}return r})(edTick);
+const FXN194={clips:["Clips","المقاطع"],music:["Music","الموسيقى"],voice:["Voice-over","التعليق"],sfx:["Effects","المؤثرات"]};
+function fxSheet194(k){const f=fxOf194(k),eq=f.eq||{},comp=f.comp||{},dess=f.dess||{},gate=f.gate||{},duck=f.duck||{},K=p=>"ofx194"+p.replace(/\./g,"_"),
+  sl=(p,label,val,min,max,unit,step)=>'<label class="ctrl"><span>'+label+'</span><input type="range" min="'+min+'" max="'+max+'" step="'+(step||1)+'" value="'+val+'" data-fx194="'+k+":"+p+'" data-out="'+K(p)+'" data-unit="'+(unit||"")+'"><output id="'+K(p)+'">'+val+(unit||"")+"</output></label>",
+  sw=(p,label,on)=>'<label class="laisw"><input type="checkbox" data-fx194="'+k+":"+p+'"'+(on?" checked":"")+'><span>'+label+"</span></label>";
+  hfSheet(L(FXN194[k][0],FXN194[k][1])+" · "+L("Sound effects chain","سلسلة معالجة الصوت"),'<p class="small dim" style="margin:0 0 8px">'+L("Applied to this track in the exported video. EQ, compressor and de-esser also play live in the preview.","تُطبّق على هذا المسار في الفيديو المُصدَّر. الموازن والضاغط ومزيل الصفير تعمل حيّاً في المعاينة أيضاً.")+"</p>"+
+    '<span class="lbl">'+L("EQ","الموازن")+"</span>"+sl("eq.lo",L("Low (160 Hz)","منخفض (160 هرتز)"),Math.round(+eq.lo||0),-18,18," dB")+sl("eq.mid",L("Mid (1.2 kHz)","متوسط (1.2 كيلوهرتز)"),Math.round(+eq.mid||0),-18,18," dB")+sl("eq.hi",L("High (5 kHz)","عالٍ (5 كيلوهرتز)"),Math.round(+eq.hi||0),-18,18," dB")+
+    '<span class="lbl">'+L("Compressor","الضاغط")+"</span>"+sw("comp.on",L("On","مفعّل"),comp.on)+(comp.on?sl("comp.thr",L("Threshold","العتبة"),Math.round(comp.thr==null?-24:+comp.thr),-60,0," dB")+sl("comp.ratio",L("Ratio","النسبة"),Math.round(comp.ratio==null?4:+comp.ratio),1,20,":1")+sl("comp.gain",L("Make-up gain","تعويض الكسب"),Math.round(+comp.gain||0),0,24," dB"):"")+
+    '<span class="lbl">'+L("De-esser","مزيل الصفير")+"</span>"+sw("dess.on",L("On","مفعّل"),dess.on)+(dess.on?sl("dess.amt",L("Amount","المقدار"),Math.round(dess.amt==null?50:+dess.amt),0,100,"%"):"")+
+    '<span class="lbl">'+L("Noise gate","بوابة الضجيج")+"</span>"+sw("gate.on",L("On","مفعّلة"),gate.on)+(gate.on?sl("gate.thr",L("Opens above","تفتح فوق"),Math.round(gate.thr==null?-40:+gate.thr),-70,-10," dB"):"")+
+    '<span class="lbl">'+L("Side-chain ducking — lower this track while another plays","خفض جانبي — يخفض هذا المسار حين يعمل مسار آخر")+'</span><div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><select data-fx194="'+k+':duck.src" aria-label="'+esc(L("Ducked by","يخفضه"))+'"><option value="none"'+(!duck.src||duck.src==="none"?" selected":"")+">"+L("Nothing","لا شيء")+"</option>"+FXK194.filter(x=>x!==k).map(x=>'<option value="'+x+'"'+(duck.src===x?" selected":"")+">"+L(FXN194[x][0],FXN194[x][1])+"</option>").join("")+"</select></div>"+(duck.src&&duck.src!=="none"?sl("duck.amt",L("Lower by","يخفض بمقدار"),Math.round(duck.amt==null?70:+duck.amt),10,100,"%"):"")+
+    '<div class="row" style="margin-top:14px;gap:8px"><button type="button" class="btn sm ghost" data-act="fx194-reset" data-v="'+k+'">'+ic("refresh")+L("Reset this track","أعد ضبط هذا المسار")+'</button><button type="button" class="btn sm primary" data-act="close-sheet">'+L("Done","تم")+"</button></div>")}
+mixPanel150=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string")return h;
+  return h.replace(/<button type="button" class="btn sm ghost mx150x" data-act="mx150-mute" data-v="(clips|music|voice|sfx)"/g,(m,k)=>'<button type="button" class="btn sm ghost fx194b" data-act="fx194" data-v="'+k+'" aria-pressed="'+fxOn194(fxOf194(k))+'" aria-label="'+esc(L("Sound effects for ","مؤثرات صوت ")+L(FXN194[k][0],FXN194[k][1]))+'">FX</button>'+m)})(mixPanel150);
+EDX_PANELS.mix150=mixPanel150;
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="fx194"],[data-act="fx194-reset"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();const k=a.dataset.v;
+  if(a.dataset.act==="fx194-reset"){if(S.ed.fx194)delete S.ed.fx194[k];persist();renderView()}fxSheet194(k)},true);
+document.addEventListener("input",e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.fx194||S.view!=="edit")return;const[k,path]=t.dataset.fx194.split(":"),p=path.split("."),E=S.ed;E.fx194=E.fx194||{};const f=E.fx194[k]=E.fx194[k]||{};let o=f;if(p.length>1)o=f[p[0]]=f[p[0]]||{};
+  const key=p[p.length-1];if(t.type==="checkbox")o[key]=t.checked;else if(t.tagName==="SELECT")o[key]=t.value;else o[key]=+t.value;const out=t.dataset.out&&document.getElementById(t.dataset.out);if(out)out.textContent=t.value+(t.dataset.unit||"");
+  if(t.type==="checkbox"||t.tagName==="SELECT"){persist();fxSheet194(k);renderView()}else{clearTimeout(PFX194.t);PFX194.t=setTimeout(persist,400)}});
+// ---- styles ---------------------------------------------------------------------------------------------------------------------------
+(()=>{const st=document.createElement("style");st.textContent=`
+.cvch194 button i,.hc194s button i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-inline-end:5px;vertical-align:1px}
+.cv193.ch194 path{stroke:var(--ch)}.cv193.ch194 circle{fill:var(--ch)}
+.hc194{width:240px;max-width:100%;height:72px;border-radius:10px;background:var(--panel2,rgba(127,127,127,.12));border:1px solid var(--line);touch-action:none;display:block;margin-top:6px}
+.hc194 path{fill:none;stroke:#fff;stroke-width:2}.hc194 .hc194m{stroke:rgba(127,127,127,.35);stroke-dasharray:3 3}.hc194 circle{stroke:#111;stroke-width:1.5;cursor:ns-resize}
+.sec194{margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}.sec194 .wh193wrap{margin-top:6px}
+.path194{margin-top:8px}.tplrow194 .btn{min-height:36px}.tiles .tile.tpl194 .gl{font-size:22px}
+.fx194b{min-width:34px;font-weight:700;letter-spacing:.02em}.fx194b[aria-pressed="true"]{color:var(--accent,#9CD245);border-color:var(--accent,#9CD245)}
+.mx150r .fx194b{margin-inline-start:4px}
+`;document.head.appendChild(st)})();
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

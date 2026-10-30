@@ -113,7 +113,7 @@ async def editor(p):
     half = await E(PIX, [1, .5, .5])
     out["shapes"] = {"n": nsh, "item": sh, "star": c_star, "draws": draws, "hollow": hollow, "half": half}
     acc = (207, 225, 62)
-    chk("shapes: 8 in the Infographics tab; a star added, with its settings (fill, outline, width, rotation, opacity …), named Shape on the timeline", nsh == 8 and sh and sh["sh"] == "star" and sh["ctl"] >= 5 and sh["label"] == "Shape", sh)
+    chk("shapes: 9 in the Infographics tab (8 + the v194 pen path); a star added, with its settings (fill, outline, width, rotation, opacity …), named Shape on the timeline", nsh == 9 and sh and sh["sh"] == "star" and sh["ctl"] >= 5 and sh["label"] == "Shape", sh)
     chk("…each shape drawn in its colour over the picture's middle; unfilled shows the picture through; 50% opacity halves it", near(c_star, acc) and all(near(draws[k], acc) for k in draws) and near(hollow, (0, 0, 0)) and near(half, (104, 113, 31), 30), out["shapes"])
     chk("editor (desktop): no errors", not errs, errs)
     await b.close()
