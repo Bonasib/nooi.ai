@@ -22482,6 +22482,281 @@ document.addEventListener("input",e=>{const t=e.target;if(!t||!t.dataset||!t.dat
 .fx194b{min-width:34px;font-weight:700;letter-spacing:.02em}.fx194b[aria-pressed="true"]{color:var(--accent,#9CD245);border-color:var(--accent,#9CD245)}
 .mx150r .fx194b{margin-inline-start:4px}
 `;document.head.appendChild(st)})();
+/* ================= v196: THE EDITOR TOWARDS AFTER EFFECTS / PREMIERE / DAVINCI — PHASE 3 =================
+   Roadmap rows 13–15 (docs/EDITOR_PRO_ROADMAP.md): multicam — the angles stacked as full-frame layers, lined up by their sound
+   and switched with cuts; proxies — a light copy of heavy footage for the preview while the export reads the original; a 3D
+   camera — depth per layer, dolly / pan / tilt / focal length with keyframes, depth of field by distance from the focus plane,
+   point lights that shade the layers and cast their shadows; team review — comments pinned on frames, versions, projects shared
+   for review or editing. Our own code; the big tools' public behaviour is the idea. */
+ICONS.multicam196='<rect x="2" y="7" width="11" height="8" rx="1.5"/><path d="M13 10l5-3v8l-5-3"/><rect x="5" y="17" width="11" height="4" rx="1.2"/>';
+ICONS.cam3d196='<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>';
+ICONS.light196='<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.6.6 1 1.4 1 2.5h6c0-1.1.4-1.9 1-2.5A6 6 0 0 0 12 3z"/>';
+ICONS.team196='<circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.5A4.5 4.5 0 0 1 21 19"/>';
+ICONS.comment196='<path d="M4 5h16v10H9l-5 4z"/>';
+ICONS.proxy196='<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M3 11h18M8 21h8"/>';
+(()=>{const st=document.createElement("style");st.textContent=`.mc196g{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0}.mc196a{display:grid;gap:4px;padding:6px;border:1px solid var(--line);border-radius:10px;background:none;color:inherit;text-align:start;cursor:pointer}
+.mc196a[aria-pressed=true]{border-color:var(--lime,#CFE13E);box-shadow:0 0 0 1px var(--lime,#CFE13E) inset}.mc196a canvas{width:100%;aspect-ratio:16/9;border-radius:6px;background:#000;display:block}.mc196a span{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mc196l,.tm196l{display:grid;gap:6px;margin-top:8px}.mc196c,.tm196c{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}.tm196c{align-items:flex-start}.tm196c.dim{opacity:.55}.tm196x{flex:1;min-width:0}.tm196x small{color:var(--mute,#888);display:block}
+.cmf196{position:fixed;z-index:70;width:min(320px,calc(100vw - 24px));background:var(--card,#141614);border:1px solid var(--line);border-radius:12px;padding:10px;box-shadow:0 12px 40px rgba(0,0,0,.4)}.cmf196 textarea{width:100%;min-height:64px;margin-bottom:8px}
+.lt196{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:8px}.kf196{display:flex;gap:8px;align-items:center;padding:4px 0}.tm196b .n{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--lime,#CFE13E);color:#0c0e0c;font-size:11px;font-weight:700}
+@media(max-width:560px){.tm196b span.w{display:none}}`;document.head.appendChild(st)})();
+const rgba196=(hex,a)=>{const m=/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(hex||"")||[0,"ff","f2","d0"];return"rgba("+parseInt(m[1],16)+","+parseInt(m[2],16)+","+parseInt(m[3],16)+","+a.toFixed(3)+")"};
+
+// ---- 13a. multicam: the other angles become full-frame layers lined up by sound; a cut says which angle shows from when
+const MC196={iv:0,busy:false};
+function mcState196(){const E=S.ed;return E&&E.mc196&&Array.isArray(E.mc196.angles)?E.mc196:null}
+function mcAngleOf196(Ly){const mc=mcState196();if(!mc||!Ly.mc196)return 0;const i=mc.angles.findIndex(a=>a.ly===Ly.id);return i<0?0:i+1}
+function mcCutAt196(t){const mc=mcState196();if(!mc)return 0;let a=0;for(const c of mc.cuts||[]){if(c.t<=t+1e-6)a=c.a;else break}return a}
+function mcVisible196(Ly,t){if(!Ly.mc196)return true;const mc=mcState196();if(!mc)return true;return mcCutAt196(t)===mcAngleOf196(Ly)}
+// the sound's loudness envelope at 100 Hz, zero mean, unit variance
+function mcEnv196(buf){const SR=buf.sampleRate,hop=Math.max(1,Math.round(SR/100)),n=Math.floor(buf.length/hop),out=new Float32Array(n),ch=[];for(let c=0;c<buf.numberOfChannels;c++)ch.push(buf.getChannelData(c));
+  for(let i=0;i<n;i++){let s=0;for(const d of ch){for(let j=i*hop,e=j+hop;j<e;j++)s+=d[j]*d[j]}out[i]=Math.sqrt(s/(hop*ch.length))}
+  let m=0;for(let i=0;i<n;i++)m+=out[i];m/=n||1;let v=0;for(let i=0;i<n;i++){out[i]-=m;v+=out[i]*out[i]}v=Math.sqrt(v/(n||1))||1;for(let i=0;i<n;i++)out[i]/=v;return out}
+const mcDec196=(a,k)=>{const n=Math.floor(a.length/k),o=new Float32Array(n);for(let i=0;i<n;i++){let s=0;for(let j=0;j<k;j++)s+=a[i*k+j];o[i]=s/k}return o};
+// the lag L (in samples) with Σ a[i]·b[i+L] largest: b[i] ≈ a[i−L], so a positive L means b runs later than a
+function mcLag196(a,b,from,to){let best=-Infinity,bl=0;for(let L=from;L<=to;L++){const i0=Math.max(0,-L),i1=Math.min(a.length,b.length-L);if(i1-i0<20)continue;let s=0;for(let i=i0;i<i1;i++)s+=a[i]*b[i+L];s/=(i1-i0);if(s>best){best=s;bl=L}}return{lag:bl,score:best}}
+function mcOffset196(ea,eb){const k=5,da=mcDec196(ea,k),db=mcDec196(eb,k),span=Math.min(Math.max(da.length,db.length),20*90);const c=mcLag196(da,db,-span,span);const f=mcLag196(ea,eb,c.lag*k-k*2,c.lag*k+k*2);return{off:f.lag/100,score:f.score}}
+async function mcDecode196(m){const blob=m.file||(await(await fetch(String(m._srv139||m.url).replace(location.origin,""))).blob());return await decodeAudio(blob)}
+// the chosen clips leave the clips track and sit over the main angle as layers, each starting where its sound says
+async function mcMake196(mainId,others){const E=S.ed;if(MC196.busy)return null;MC196.busy=true;
+  try{const base=E.clips.find(c=>c.id===mainId);if(!base)throw new Error(L("Pick the main angle first.","اختر الزاوية الرئيسية أولاً."));const bm=clipMedia(base);if(!bm||bm.type!=="video")throw new Error(L("The main angle must be a video clip.","يجب أن تكون الزاوية الرئيسية مقطع فيديو."));
+    toast(L("Listening to the angles…","جارٍ الاستماع إلى الزوايا…"));const ea=mcEnv196(await mcDecode196(bm)),st=edStarts(),bi=E.clips.indexOf(base),bStart=st[bi],bDur=clipDur(base),bEnd=bStart+bDur;
+    const angles=[],fails=[];
+    for(const id of others){const c=E.clips.find(x=>x.id===id);if(!c||c.id===mainId||angles.some(a=>a.clip.id===id))continue;const m=clipMedia(c);if(!m||m.type!=="video"){fails.push(clipName(c));continue}
+      let off=0,score=0;try{const r=mcOffset196(ea,mcEnv196(await mcDecode196(m)));off=r.off;score=r.score}catch(e){fails.push(clipName(c));continue}
+      let start=bStart+(-off-(base.in||0))/(base.speed||1),inn=0;if(start<bStart){inn=bStart-start;start=bStart}
+      const dur=(m.el&&isFinite(m.el.duration)&&m.el.duration)||(bDur+Math.abs(off)),end=Math.min(bEnd,start+Math.max(.2,dur-inn));if(end-start<.2){fails.push(clipName(c));continue}
+      const Ly={id:uid(),name:clipName(c),start:+start.toFixed(3),end:+end.toFixed(3),x:.5,y:.5,sc:100,rot:0,op:100,key:"none",tol:40,soft:20,anim:"none",shape:"none",blend:"source-over",mc196:true,in196:+inn.toFixed(3),off196:+off.toFixed(3),score196:+score.toFixed(3),sound:false};
+      if(m.file)loadSlot("ly_"+Ly.id,m.file);else slotUrl139("ly_"+Ly.id,{url:String(m._srv139||m.url).replace(location.origin,""),type:"video",name:Ly.name});const lm=M["ly_"+Ly.id];if(lm&&lm.el){lm.el.pause();lm.el.muted=true;lm.el.loop=false}
+      E.layers.push(Ly);angles.push({ly:Ly.id,name:Ly.name,clip:JSON.parse(JSON.stringify(c))})}
+    if(!angles.length)throw new Error(L("No angle could be lined up — the other clips need sound of the same moment.","تعذّرت مطابقة أي زاوية — تحتاج المقاطع الأخرى إلى صوت اللحظة نفسها.")+(fails.length?" ("+fails.join(", ")+")":""));
+    E.clips=E.clips.filter(c=>!angles.some(a=>a.clip.id===c.id));E.sel=base.id;E.mc196={base:base.id,angles,cuts:[{t:0,a:0}]};persist();renderView();
+    toast(L(angles.length+1+" angles lined up by sound — tap an angle to cut to it.",(angles.length+1)+" زوايا تمت مطابقتها بالصوت — المس زاوية للقطع إليها.")+(fails.length?" "+L("Not lined up: ","لم تُطابق: ")+fails.join(", "):""),{type:"ok"});return E.mc196}
+  catch(e){toast(String(e.message||e),{type:"warn"});return null}finally{MC196.busy=false}}
+function mcCut196(a){const mc=mcState196();if(!mc||a<0||a>mc.angles.length)return;const t=+Math.max(0,ED.t).toFixed(2);mc.cuts=(mc.cuts||[]).filter(c=>Math.abs(c.t-t)>.15);mc.cuts.push({t,a});mc.cuts.sort((x,y)=>x.t-y.t);if(!mc.cuts.length||mc.cuts[0].t>0)mc.cuts.unshift({t:0,a:mc.cuts[0]&&mc.cuts[0].t===0?mc.cuts[0].a:0});persist();mcList196()}
+function mcOff196(){const E=S.ed,mc=mcState196();if(!mc)return;const bi=E.clips.findIndex(c=>c.id===mc.base);const back=mc.angles.map(a=>a.clip).filter(c=>c&&c.id&&!E.clips.some(x=>x.id===c.id));E.clips.splice(bi<0?E.clips.length:bi+1,0,...back);
+  mc.angles.forEach(a=>{const m=M["ly_"+a.ly];if(m&&m.el&&m.el.pause)m.el.pause();delete M["ly_"+a.ly]});E.layers=E.layers.filter(Ly=>!mc.angles.some(a=>a.ly===Ly.id));if(mc.angles.some(a=>a.ly===E.selLayer))E.selLayer=null;delete E.mc196;persist();renderView()}
+function mcList196(){const el=document.getElementById("mc196cuts");const mc=mcState196();if(!el||!mc)return;const nm=a=>a===0?L("Main","الرئيسية"):(mc.angles[a-1]||{}).name||("#"+(a+1));
+  el.innerHTML=(mc.cuts||[]).map((c,i)=>'<div class="mc196c"><span class="mono" dir="ltr">'+mmss(c.t)+'</span><span style="flex:1" dir="auto">'+esc(nm(c.a))+(i===0?' <small class="dim">· '+L("from the start","من البداية")+"</small>":"")+"</span>"+(i>0?'<button type="button" class="btn sm ghost danger" data-act="mc196-cutdel" data-v="'+i+'" aria-label="'+esc(L("Remove this cut","أزل هذا القطع"))+'">'+ic("trash")+"</button>":"")+"</div>").join("");
+  const n=document.getElementById("mc196n");if(n)n.textContent=(mc.cuts||[]).length}
+function mcTiles196(){const g=document.getElementById("mc196tiles");if(!g){clearInterval(MC196.iv);MC196.iv=0;return}const mc=mcState196();if(!mc)return;const E=S.ed,cur=mcCutAt196(ED.t);
+  g.querySelectorAll("canvas[data-a]").forEach(cv=>{const a=+cv.dataset.a;let m=null;if(a===0){const c=E.clips.find(x=>x.id===mc.base);m=c?clipMedia(c):null}else m=M["ly_"+(mc.angles[a-1]||{}).ly];
+    const x=cv.getContext("2d");x.fillStyle="#000";x.fillRect(0,0,cv.width,cv.height);if(m&&srcReady(m)){const sw=srcW(m),sh=srcH(m),s=Math.min(cv.width/sw,cv.height/sh),dw=sw*s,dh=sh*s;try{drawSrcAt(x,m,(cv.width-dw)/2,(cv.height-dh)/2,dw,dh,0)}catch(e){}}
+    cv.parentElement.setAttribute("aria-pressed",String(a===cur))});
+  const t=document.getElementById("mc196t");if(t)t.textContent=mmss(ED.t);const pb=document.getElementById("mc196play");if(pb)pb.innerHTML=ic(ED.playing?"stop":"play")+(ED.playing?L("Pause","إيقاف مؤقت"):L("Play","تشغيل"))}
+function mcSheet196(){const E=S.ed,mc=mcState196();
+  if(!mc){const vids=E.clips.filter(c=>{const m=clipMedia(c);return m&&m.type==="video"});const main=vids.find(c=>c.id===E.sel)||vids[0];
+    hfSheet(L("Multicam","تعدد الكاميرات"),'<p class="small dim" style="margin:0 0 8px">'+L("Two or more cameras filmed the same moment? Put the clips on the timeline, choose the main angle, tick the others — their sound lines them up, then you cut between angles with a tap.","صوّرت كاميرتان أو أكثر اللحظة نفسها؟ ضع المقاطع على الخط الزمني، واختر الزاوية الرئيسية، وأشّر على الأخرى — يضبطها صوتها ثم تقطع بين الزوايا بلمسة.")+"</p>"+
+      (vids.length<2?'<p class="small">'+L("Add at least two video clips to the timeline first.","أضف مقطعي فيديو على الأقل إلى الخط الزمني أولاً.")+"</p>":
+      '<span class="lbl">'+L("Main angle","الزاوية الرئيسية")+'</span><div class="mc196l">'+vids.map(c=>'<label class="laisw"><input type="radio" name="mc196m" value="'+c.id+'"'+(main&&c.id===main.id?" checked":"")+'><span dir="auto">'+esc(clipName(c))+'</span></label>').join("")+"</div>"+
+      '<span class="lbl">'+L("Other angles","الزوايا الأخرى")+'</span><div class="mc196l">'+vids.map(c=>'<label class="laisw"><input type="checkbox" data-mc196c="'+c.id+'"'+(main&&c.id!==main.id?" checked":"")+'><span dir="auto">'+esc(clipName(c))+"</span></label>").join("")+"</div>"+
+      '<div class="row" style="margin-top:14px;gap:8px"><button type="button" class="btn primary" data-act="mc196-sync"'+(MC196.busy?" disabled":"")+">"+ic("multicam196")+L("Line up by sound","طابِق بالصوت")+'</button><button type="button" class="btn ghost" data-act="close-sheet">'+L("Cancel","إلغاء")+"</button></div>"));return}
+  const names=[L("Main","الرئيسية")].concat(mc.angles.map(a=>a.name));
+  hfSheet(L("Multicam · switch angles","تعدد الكاميرات · بدّل الزوايا"),'<p class="small dim" style="margin:0 0 6px">'+L("Play and tap the angle that should show from this moment (keys 1–9 too). Every tap is a cut you can remove below; the cuts stay editable, nothing is split.","شغّل والمس الزاوية التي يجب أن تظهر من هذه اللحظة (المفاتيح 1–9 أيضاً). كل لمسة قطع يمكنك إزالته أدناه؛ تبقى القطعات قابلة للتعديل ولا يُقسَّم شيء.")+"</p>"+
+    '<div class="row" style="gap:8px;align-items:center"><button type="button" class="btn sm" id="mc196play" data-act="mc196-play">'+ic("play")+L("Play","تشغيل")+'</button><span class="mono" id="mc196t" dir="ltr">'+mmss(ED.t)+'</span><span class="small dim">'+L("cuts","قطعات")+': <b id="mc196n">'+(mc.cuts||[]).length+"</b></span></div>"+
+    '<div class="mc196g" id="mc196tiles">'+names.map((n,a)=>'<button type="button" class="mc196a" data-act="mc196-cut" data-v="'+a+'" aria-pressed="'+(mcCutAt196(ED.t)===a)+'" aria-label="'+esc(L("Cut to ","اقطع إلى ")+n)+'"><canvas width="160" height="90" data-a="'+a+'"></canvas><span dir="auto">'+(a+1)+" · "+esc(n)+"</span></button>").join("")+"</div>"+
+    '<span class="lbl">'+L("Cuts","القطعات")+'</span><div id="mc196cuts"></div>'+
+    '<div class="row" style="margin-top:14px;gap:8px;flex-wrap:wrap"><button type="button" class="btn sm ghost" data-act="mc196-clear">'+ic("refresh")+L("Clear cuts","امسح القطعات")+'</button><button type="button" class="btn sm ghost danger" data-act="mc196-off">'+ic("trash")+L("Undo multicam (clips back on the track)","ألغِ تعدد الكاميرات (المقاطع تعود إلى المسار)")+'</button><button type="button" class="btn sm primary" data-act="close-sheet">'+L("Done","تم")+"</button></div>");
+  mcList196();if(!MC196.iv)MC196.iv=setInterval(mcTiles196,150);mcTiles196()}
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act^="mc196"]');if(!a)return;const act=a.dataset.act,mc=mcState196();
+  if(act==="mc196"){mcSheet196();return}
+  if(act==="mc196-sync"){const main=(document.querySelector('input[name="mc196m"]:checked')||{}).value,others=[...document.querySelectorAll("[data-mc196c]:checked")].map(x=>x.dataset.mc196c).filter(id=>id!==main);if(!main||!others.length){toast(L("Pick the main angle and at least one other.","اختر الزاوية الرئيسية وزاوية أخرى على الأقل."));return}a.disabled=true;const r=await mcMake196(main,others);if(r)mcSheet196();else a.disabled=false;return}
+  if(!mc)return;
+  if(act==="mc196-cut"){mcCut196(+a.dataset.v);mcTiles196();return}
+  if(act==="mc196-play"){ED.playing=!ED.playing;if(ED.playing&&ED.t>=edTotal()-.01)ED.t=0;mcTiles196();return}
+  if(act==="mc196-cutdel"){mc.cuts.splice(+a.dataset.v,1);persist();mcList196();return}
+  if(act==="mc196-clear"){mc.cuts=[{t:0,a:0}];persist();mcList196();mcTiles196();return}
+  if(act==="mc196-off"){mcOff196();closeSheet();toast(L("Multicam undone — the angle clips are back after the main one.","أُلغي تعدد الكاميرات — عادت مقاطع الزوايا بعد الرئيسية."));return}});
+document.addEventListener("keydown",e=>{if(!document.getElementById("mc196tiles")||e.metaKey||e.ctrlKey||e.altKey)return;const tg=e.target;if(tg&&/INPUT|TEXTAREA|SELECT/.test(tg.tagName))return;const n=+e.key;if(e.key>="1"&&e.key<="9"&&mcState196()&&n-1<=mcState196().angles.length){e.preventDefault();mcCut196(n-1);mcTiles196()}});
+// an angle layer plays from its own trimmed start (in196) instead of looping from 0; the v141 layer sync skips them
+syncClipMedia=(o=>function(i,lt,playing){const E=S.ed,all=E.layers||[],mine=all.filter(Ly=>Ly&&Ly.in196>0);if(mine.length)E.layers=all.filter(Ly=>!(Ly&&Ly.in196>0));
+  try{o.apply(this,arguments)}finally{if(mine.length)E.layers=all}
+  mine.forEach(Ly=>{const m=M["ly_"+Ly.id];if(!m||m.type!=="video"||!m.el)return;m.el.muted=!Ly.sound;m.el.loop=false;const on=ED.t>=Ly.start&&ED.t<=Ly.end,want=Ly.in196+(ED.t-Ly.start);
+    if(on&&Math.abs(m.el.currentTime-want)>(playing?.35:.05)){try{m.el.currentTime=want}catch(e){}}if(on&&playing){if(m.el.paused)m.el.play().catch(()=>{})}else if(!m.el.paused)m.el.pause()})})(syncClipMedia);
+
+// ---- 13b. proxies: a 540 px copy made on the server; the preview reads it, the export reads the original
+const PX196={poll:0,busy:false,st:{},el:{}};
+function pxCfg196(){const E=S.ed;if(!E.px196||typeof E.px196!=="object")E.px196={on:false,map:{}};if(!E.px196.map||typeof E.px196.map!=="object")E.px196.map={};return E.px196}
+const pxUrl196=m=>{const u=m&&(m._srv139||m.url);return u&&/^(https?:\/\/[^/]+)?\/media\//.test(String(u))?String(u).replace(location.origin,""):null};
+const pxOrig196=m=>m&&m.px196?m.orig:m;
+function pxUrls196(){return S.ed.clips.map(c=>{const m=pxOrig196(M["c_"+c.id]);return m&&m.type==="video"?pxUrl196(m):null}).filter((u,i,a)=>u&&a.indexOf(u)===i)}
+function pxText196(){const cfg=pxCfg196(),urls=pxUrls196();if(!urls.length)return L("No video clips on the timeline yet.","لا مقاطع فيديو على الخط الزمني بعد.");const ready=urls.filter(u=>cfg.map[u]).length,busy=urls.filter(u=>PX196.st[u]==="busy").length,small=urls.filter(u=>PX196.st[u]==="small").length,failed=urls.filter(u=>PX196.st[u]==="failed").length;
+  return ready+" / "+urls.length+" "+L("ready","جاهزة")+(busy?" · "+busy+" "+L("in the making","قيد الصنع"):"")+(small?" · "+small+" "+L("already light","خفيفة أصلاً"):"")+(failed?" · "+failed+" "+L("failed","فشلت"):"")}
+function pxPanel196(){const el=document.getElementById("px196s");if(el)el.textContent=pxText196();const b=document.querySelector('[data-act="px196-make"]');if(b)b.disabled=PX196.busy}
+async function pxMake196(){const cfg=pxCfg196();if(API.mode!=="server"){toast(L("Proxies are made on the nooi server.","تُصنع النسخ الخفيفة على خادم nooi."));return}
+  const list=pxUrls196().filter(u=>!cfg.map[u]&&PX196.st[u]!=="small");if(!list.length){toast(L("Every video clip here already has a proxy or is light already.","كل مقطع فيديو هنا له نسخة خفيفة أو هو خفيف أصلاً."));return}
+  cfg.on=true;PX196.busy=true;pxPanel196();
+  for(const u of list){try{const r=await API.req("/v1/edit/proxy196",{method:"POST",json:{url:u}});PX196.st[u]=r.status;if(r.status==="done")cfg.map[u]=r.url}catch(e){PX196.st[u]="failed"}}
+  persist();pxPanel196();if(!PX196.poll)PX196.poll=setInterval(pxPoll196,2500);setTimeout(pxPoll196,400)}
+async function pxPoll196(){const cfg=pxCfg196(),pend=Object.keys(PX196.st).filter(u=>PX196.st[u]==="busy");if(!pend.length){clearInterval(PX196.poll);PX196.poll=0;PX196.busy=false;pxPanel196();return}
+  for(const u of pend){try{const r=await API.req("/v1/edit/proxy196?url="+encodeURIComponent(u));PX196.st[u]=r.status;if(r.status==="done"){cfg.map[u]=r.url;persist()}}catch(e){}}pxPanel196()}
+// swapped at the top of every frame: the preview's clips point at the proxy element, an export (or the old recording) at the original
+function pxSwap196(){const E=S.ed;if(!E||!Array.isArray(E.clips))return;const cfg=E.px196;const want=!!(cfg&&cfg.on&&cfg.map&&!R139.on&&!ED.rec&&Object.keys(cfg.map).length);let changed=false;
+  E.clips.forEach(c=>{const m=M["c_"+c.id];if(!m)return;
+    if(want&&!m.px196){if(m.type!=="video")return;const u=pxUrl196(m),p=u&&cfg.map[u];if(!p)return;let pm=PX196.el[c.id];
+      if(!pm||pm.orig!==m||pm.pxUrl!==p){const v=document.createElement("video");v.crossOrigin="anonymous";v.muted=true;v.playsInline=true;v.setAttribute("playsinline","");v.preload="auto";v.src=p;mediaHost().appendChild(v);pm=PX196.el[c.id]=Object.assign({},m,{el:v,px196:true,orig:m,pxUrl:p})}
+      try{pm.el.currentTime=m.el.currentTime||0}catch(e){}if(!m.el.paused)m.el.pause();M["c_"+c.id]=pm;changed=true}
+    else if(!want&&m.px196){const o=m.orig;try{o.el.currentTime=m.el.currentTime||0}catch(e){}if(!m.el.paused)m.el.pause();M["c_"+c.id]=o;changed=true}});
+  if(changed)ED.active=-1}
+media143=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="string")return h;const cfg=pxCfg196(),mc=mcState196(),srv=API.mode==="server";
+  return h+'<span class="lbl">'+L("Heavy footage","اللقطات الثقيلة")+"</span>"+(srv?'<div class="row" style="gap:10px;flex-wrap:wrap;align-items:center">'+edxSw("px196-on",cfg.on,L("Preview with light proxies","المعاينة بنسخ خفيفة"))+'<button type="button" class="btn sm" data-act="px196-make"'+(PX196.busy?" disabled":"")+">"+ic("proxy196")+L("Make proxies","اصنع نسخاً خفيفة")+'</button><span class="small dim" id="px196s">'+esc(pxText196())+"</span></div>"
+    :'<p class="small dim" style="margin:0">'+L("Proxies are made on the nooi server.","تُصنع النسخ الخفيفة على خادم nooi.")+"</p>")+
+    '<span class="lbl">'+L("Multicam","تعدد الكاميرات")+'</span><div class="row" style="gap:10px;align-items:center"><button type="button" class="btn sm" data-act="mc196">'+ic("multicam196")+(mc?L("Switch angles","بدّل الزوايا"):L("Angles lined up by sound","زوايا متطابقة بالصوت"))+"</button>"+(mc?'<span class="small dim">'+(mc.angles.length+1)+" "+L("angles","زوايا")+" · "+(mc.cuts||[]).length+" "+L("cuts","قطعات")+"</span>":"")+"</div>"})(media143);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act^="px196"]');if(!a)return;if(a.dataset.act==="px196-on"){pxCfg196().on=!!a.checked;persist()}else if(a.dataset.act==="px196-make")pxMake196()});
+
+// ---- 14. the 3D camera: depth per layer, a camera with dolly / pan / tilt / focal length keyframes, depth of field, lights
+const CAMD196={on:false,x:0,y:0,z:0,fl:50,focus:0,ap:16,rx:0,ry:0,amb:100},CAMK196=["x","y","z","fl","focus","rx","ry","ap"],CAM0196=Object.assign({},CAMD196),CAMU196={t:0};
+const EZ196={linear:u=>u,smooth:u=>u*u*(3-2*u),in:u=>u*u*u,out:u=>1-Math.pow(1-u,3),hold:u=>u<1?0:1};
+function camCfg196(){const E=S.ed;if(!E.cam196||typeof E.cam196!=="object")E.cam196={};const c=E.cam196;for(const k in CAMD196)if(c[k]==null)c[k]=CAMD196[k];if(!Array.isArray(c.kf))c.kf=[];return c}
+const camOn196=()=>!!(S.ed&&S.ed.cam196&&S.ed.cam196.on);
+const camPick196=o=>{const r={};CAMK196.forEach(k=>{if(o&&o[k]!=null)r[k]=+o[k]});return r};
+function camAt196(t){const c=camCfg196(),kf=c.kf.slice().sort((a,b)=>a.t-b.t);if(!kf.length)return c;if(t<=kf[0].t)return Object.assign({},c,camPick196(kf[0]));const last=kf[kf.length-1];if(t>=last.t)return Object.assign({},c,camPick196(last));
+  let i=0;while(i<kf.length-1&&kf[i+1].t<=t)i++;const a=kf[i],b=kf[i+1],u=Math.min(1,Math.max(0,(t-a.t)/Math.max(1e-6,b.t-a.t))),e=(EZ196[a.ez]||EZ196.smooth)(u),out=Object.assign({},c);
+  CAMK196.forEach(k=>{const va=a[k]==null?c[k]:+a[k],vb=b[k]==null?c[k]:+b[k];out[k]=va+(vb-va)*e});return out}
+// the camera sits at the origin looking down +z; a depth unit is a hundredth of the frame's width; the frame plane is at D (from the focal length, 36 mm film)
+function proj196(C,W,H,x,y,z){const u=W/100,D=(W/2)/Math.tan(Math.atan(18/Math.max(8,+C.fl||50)));let px=(x-.5)*W-(+C.x||0)*u,py=(y-.5)*H-(+C.y||0)*u,pz=D+((+z||0)-(+C.z||0))*u;
+  const ya=(+C.ry||0)*Math.PI/180,pa=(+C.rx||0)*Math.PI/180;if(ya){const c=Math.cos(ya),s=Math.sin(ya),x2=px*c-(pz-D)*s;pz=D+px*s+(pz-D)*c;px=x2}if(pa){const c=Math.cos(pa),s=Math.sin(pa),y2=py*c-(pz-D)*s;pz=D+py*s+(pz-D)*c;py=y2}
+  if(pz<D*.08)return null;const k=D/pz;return{X:W/2+px*k,Y:H/2+py*k,k,pz,D,u}}
+function shade196(C,W,H,X,Y,z,rx,ry,lights,amb){let lum=amb;const hits=[],u=W/100,nx=Math.sin(ry)*Math.cos(rx),ny=-Math.sin(rx),nz=-Math.cos(rx)*Math.cos(ry);
+  for(const l of lights){const lz=l.z==null?-40:+l.z,lp=proj196(C,W,H,l.x==null?.5:+l.x,l.y==null?.5:+l.y,lz);if(!lp)continue;const dx=lp.X-X,dy=lp.Y-Y,dz=(lz-z)*u,dist=Math.hypot(dx,dy,dz)||1,nd=(nx*dx+ny*dy+nz*dz)/dist,r=Math.max(5,+l.r||70)*u;
+    const f=Math.max(0,nd)*((l.int==null?90:+l.int)/100)/(1+(dist/r)*(dist/r));if(f>.01)hits.push({l,lp,f,dx,dy});lum+=f}
+  return{lum,hits}}
+function drawOne196(o,ctx,W,H,t,Ly,C,lights,amb){const E=S.ed,all=E.layers,z=+Ly.z196||0,rx=(+Ly.rx196||0)*Math.PI/180,ry=(+Ly.ry196||0)*Math.PI/180;
+  const one=(c,L2)=>{E.layers=[L2];try{o(c,W,H,t)}finally{E.layers=all}};
+  if(Ly.kind==="adj"||!(C||z||rx||ry||lights.length||amb!==1)){one(ctx,Ly);return}
+  const cam=C||CAM0196,p=proj196(cam,W,H,Ly.x==null?.5:+Ly.x,Ly.y==null?.5:+Ly.y,z);if(!p)return;
+  const L2=Object.assign({},Ly,{x:p.X/W,y:p.Y/H,sc:(+Ly.sc||40)*p.k}),blur=C?Math.min(W*.03,Math.abs((z-(+C.focus||0))*p.u)*(1.4/Math.max(1,+C.ap||16))*.06):0;
+  const sh=lights.length?shade196(cam,W,H,p.X,p.Y,z,rx,ry,lights,amb):null,lum=Math.max(.05,Math.min(2.5,sh?sh.lum:amb));
+  const tilt=c=>{if(rx||ry){c.translate(p.X,p.Y);c.transform(Math.cos(ry),-Math.sin(ry)*.22,Math.sin(rx)*.22,Math.cos(rx),0,0);c.translate(-p.X,-p.Y)}};
+  if(!sh||!sh.hits.length){const f=(blur>.3?"blur("+blur.toFixed(1)+"px) ":"")+(Math.abs(lum-1)>.02?"brightness("+lum.toFixed(3)+")":"");ctx.save();ctx.filter=f||"none";tilt(ctx);one(ctx,L2);ctx.restore();return}
+  // lit: the layer alone on a scratch canvas — darkened to the ambient level, each light painted over it, its shadow cast first
+  const sc=edxCv("l196",W,H),x=sc.getContext("2d");x.save();x.setTransform(1,0,0,1,0,0);x.globalCompositeOperation="source-over";x.globalAlpha=1;x.filter="none";x.clearRect(0,0,W,H);tilt(x);one(x,L2);x.restore();
+  x.save();x.globalCompositeOperation="source-atop";if(amb<1){x.fillStyle="rgba(0,0,0,"+(1-amb).toFixed(3)+")";x.fillRect(0,0,W,H)}
+  for(const h of sh.hits){const g=x.createRadialGradient(h.lp.X,h.lp.Y,0,h.lp.X,h.lp.Y,Math.max(5,+h.l.r||70)*p.u*1.6),a=Math.min(.85,h.f*.9);g.addColorStop(0,rgba196(h.l.col||"#fff2d0",a));g.addColorStop(1,rgba196(h.l.col||"#fff2d0",0));x.fillStyle=g;x.fillRect(0,0,W,H)}x.restore();
+  ctx.save();ctx.globalCompositeOperation=Ly.blend||"source-over";
+  if(Ly.shd196)for(const h of sh.hits){const d=Math.hypot(h.dx,h.dy)||1,k=W*.025*Math.min(1,h.f*2);ctx.save();ctx.globalAlpha=Math.min(.5,.6*h.f);ctx.filter="brightness(0) blur("+(W*.008).toFixed(1)+"px)";ctx.drawImage(sc,-h.dx/d*k,-h.dy/d*k);ctx.restore()}
+  ctx.filter=blur>.3?"blur("+blur.toFixed(1)+"px)":"none";ctx.drawImage(sc,0,0);ctx.restore()}
+edxDrawLayers=(o=>function(ctx,W,H,t){const E=S.ed,Ls=E.layers||[];if(!Ls.length)return o.apply(this,arguments);
+  const C=camOn196()?camAt196(t):null,lights=(E.lights196||[]).filter(l=>l&&l.on!==false),amb=Math.max(0,Math.min(2,((E.cam196&&E.cam196.amb)==null?100:+E.cam196.amb)/100));
+  if(!(C||lights.length||amb!==1||Ls.some(Ly=>Ly&&(Ly.mc196||Ly.z196||Ly.rx196||Ly.ry196))))return o.apply(this,arguments);
+  const vis=Ls.filter(Ly=>Ly&&mcVisible196(Ly,t)).map((Ly,i)=>({Ly,i,z:+Ly.z196||0}));if(C||lights.length)vis.sort((a,b)=>(b.z-a.z)||(a.i-b.i));
+  for(const v of vis)try{drawOne196(o,ctx,W,H,t,v.Ly,C,lights,amb)}catch(e){}})(edxDrawLayers);
+function camKfHere196(){const c=camCfg196(),t=+Math.max(0,ED.t).toFixed(2);let k=c.kf.find(x=>Math.abs(x.t-t)<.05);if(!k){k=Object.assign({id:uid(),t,ez:"smooth"},camPick196(camAt196(ED.t)));c.kf.push(k);c.kf.sort((a,b)=>a.t-b.t)}return k}
+function camPreset196(name){const c=camCfg196(),t0=+Math.max(0,ED.t).toFixed(2),t1=+Math.min(Math.max(t0+.5,edTotal()||t0+3),t0+3).toFixed(2),cur=camPick196(camAt196(t0)),A=Object.assign({id:uid(),t:t0,ez:"smooth"},cur),B=Object.assign({id:uid(),t:t1,ez:"smooth"},cur);
+  if(name==="dolly"){A.z=0;B.z=35}else if(name==="rack"){A.focus=60;B.focus=-10;A.ap=B.ap=2}else if(name==="orbit"){A.ry=-8;B.ry=8;A.x=-6;B.x=6}else if(name==="drift"){A.x=-5;B.x=5;A.y=2;B.y=-2}else if(name==="push"){A.fl=35;B.fl=70}
+  c.on=true;c.kf=c.kf.filter(k=>k.t<t0-.05||k.t>t1+.05).concat([A,B]).sort((a,b)=>a.t-b.t);persist()}
+function camSheet196(){const E=S.ed,c=camCfg196(),cur=camAt196(ED.t),K=p=>"ocam196"+p.replace(/[^a-z0-9]/gi,"_"),
+  sl=(p,label,val,min,max,unit,step)=>'<label class="ctrl"><span>'+label+'</span><input type="range" min="'+min+'" max="'+max+'" step="'+(step||1)+'" value="'+val+'" data-cam196="'+p+'" data-out="'+K(p)+'" data-unit="'+(unit||"")+'"><output id="'+K(p)+'">'+val+(unit||"")+"</output></label>";
+  const lights=E.lights196||[];
+  hfSheet(L("3D camera & lights","الكاميرا ثلاثية الأبعاد والإضاءة"),'<p class="small dim" style="margin:0 0 8px">'+L("Give layers a depth (Layers tab) and move one camera over them all: nearer layers slide more, far ones less; what is off the focus distance blurs by the aperture. Lights shade the layers by their tilt and distance and can cast their shadows.","أعطِ الطبقات عمقاً (تبويب الطبقات) وحرّك كاميرا واحدة فوقها كلها: الأقرب تنزلق أكثر والأبعد أقل؛ وما يبعد عن مسافة التركيز يتموّه بحسب الفتحة. تظلّل الأضواء الطبقات بحسب ميلها وبعدها ويمكنها أن تلقي ظلالها.")+"</p>"+
+    edxSw("cam196-on",c.on,L("3D camera on","الكاميرا ثلاثية الأبعاد مفعّلة"))+
+    '<span class="lbl">'+L("Camera at this moment","الكاميرا في هذه اللحظة")+(c.kf.length?' <small class="dim">· '+L("a change here sets a keyframe","أي تغيير هنا يضبط إطاراً مفتاحياً")+"</small>":"")+"</span>"+
+    sl("x",L("Pan X","إزاحة أفقية"),Math.round(cur.x),-100,100,"")+sl("y",L("Pan Y","إزاحة رأسية"),Math.round(cur.y),-100,100,"")+sl("z",L("Dolly (back ↔ forward)","دولي (للخلف ↔ للأمام)"),Math.round(cur.z),-150,150,"")+sl("fl",L("Focal length","البعد البؤري"),Math.round(cur.fl),14,200," mm")+
+    sl("ry",L("Pan angle","زاوية الالتفات"),Math.round(cur.ry),-45,45,"°")+sl("rx",L("Tilt angle","زاوية الإمالة"),Math.round(cur.rx),-45,45,"°")+sl("focus",L("Focus distance (depth)","مسافة التركيز (عمق)"),Math.round(cur.focus),-100,200,"")+sl("ap",L("Aperture f/","الفتحة f/"),(+cur.ap).toFixed(1),1.4,22,"",.1)+
+    '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button type="button" class="btn sm" data-act="cam196-kf">'+ic("kf")+L("Keyframe here","إطار مفتاحي هنا")+'</button><span class="small dim">'+L("Presets:","قوالب:")+"</span>"+[["dolly","Dolly in","دولي للأمام"],["push","Push in (zoom)","دفع للداخل (تقريب)"],["orbit","Orbit","دوران"],["rack","Rack focus","نقل التركيز"],["drift","Drift","انجراف"]].map(p=>'<button type="button" class="chip" data-act="cam196-preset" data-v="'+p[0]+'">'+esc(L(p[1],p[2]))+"</button>").join("")+"</div>"+
+    (c.kf.length?'<div class="tm196l" id="cam196kf">'+c.kf.slice().sort((a,b)=>a.t-b.t).map(k=>'<div class="kf196"><button type="button" class="chip" data-act="cam196-go" data-v="'+k.id+'" dir="ltr">'+mmss(k.t)+'</button><span class="small dim" style="flex:1" dir="ltr">z '+Math.round(k.z==null?c.z:k.z)+" · "+Math.round(k.fl==null?c.fl:k.fl)+"mm · f/"+(+(k.ap==null?c.ap:k.ap)).toFixed(1)+'</span><select data-cam196ez="'+k.id+'" aria-label="'+esc(L("Easing","التسارع"))+'">'+[["smooth","Smooth","ناعم"],["linear","Linear","خطي"],["in","Ease in","تسارع"],["out","Ease out","تباطؤ"],["hold","Hold","ثبات"]].map(z=>'<option value="'+z[0]+'"'+((k.ez||"smooth")===z[0]?" selected":"")+">"+esc(L(z[1],z[2]))+"</option>").join("")+'</select><button type="button" class="btn sm ghost danger" data-act="cam196-kfdel" data-v="'+k.id+'" aria-label="'+esc(L("Remove keyframe","أزل الإطار المفتاحي"))+'">'+ic("trash")+"</button></div>").join("")+"</div>":"")+
+    '<span class="lbl">'+L("Lights","الإضاءة")+"</span>"+sl("amb",L("Ambient light","الإضاءة المحيطة"),Math.round(c.amb),0,150,"%")+
+    lights.map((l,i)=>'<div class="lt196"><div class="row" style="gap:8px;align-items:center"><b>'+ic("light196")+L("Light","ضوء")+" "+(i+1)+'</b><input type="color" value="'+esc(l.col||"#fff2d0")+'" data-cam196col="'+l.id+'" aria-label="'+esc(L("Light colour","لون الضوء"))+'" style="margin-inline-start:auto"><button type="button" class="btn sm ghost danger" data-act="cam196-ldel" data-v="'+l.id+'" aria-label="'+esc(L("Remove light","أزل الضوء"))+'">'+ic("trash")+"</button></div>"+
+      sl("light."+l.id+".x",L("Position X","الموضع الأفقي"),Math.round((l.x==null?.5:l.x)*100),-50,150,"%")+sl("light."+l.id+".y",L("Position Y","الموضع الرأسي"),Math.round((l.y==null?.5:l.y)*100),-50,150,"%")+sl("light."+l.id+".z",L("Depth (negative = nearer the camera)","العمق (سالب = أقرب إلى الكاميرا)"),Math.round(l.z==null?-40:l.z),-150,150,"")+
+      sl("light."+l.id+".int",L("Intensity","الشدة"),Math.round(l.int==null?90:l.int),0,200,"%")+sl("light."+l.id+".r",L("Reach","المدى"),Math.round(l.r==null?70:l.r),10,250,"")+"</div>").join("")+
+    '<div class="row" style="margin-top:12px;gap:8px"><button type="button" class="btn sm" data-act="cam196-ladd">'+ic("light196")+L("Add a light","أضف ضوءاً")+'</button><button type="button" class="btn sm ghost" data-act="cam196-reset">'+ic("refresh")+L("Reset camera","أعد ضبط الكاميرا")+'</button><button type="button" class="btn sm primary" data-act="close-sheet">'+L("Done","تم")+"</button></div>")}
+document.addEventListener("input",e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.cam196||S.view!=="edit")return;const k=t.dataset.cam196,c=camCfg196(),v=+t.value,out=t.dataset.out&&document.getElementById(t.dataset.out);if(out)out.textContent=t.value+(t.dataset.unit||"");
+  if(k.startsWith("light.")){const [,id,f]=k.split(".");const l=(S.ed.lights196||[]).find(x=>x.id===id);if(l)l[f]=f==="x"||f==="y"?v/100:v}
+  else if(k==="amb")c.amb=v;else if(c.kf.length){camKfHere196()[k]=v}else c[k]=v;
+  clearTimeout(CAMU196.t);CAMU196.t=setTimeout(persist,400)});
+document.addEventListener("change",e=>{const t=e.target;if(!t||!t.dataset)return;if(t.dataset.cam196col){const l=(S.ed.lights196||[]).find(x=>x.id===t.dataset.cam196col);if(l){l.col=t.value;persist()}}if(t.dataset.cam196ez){const k=camCfg196().kf.find(x=>x.id===t.dataset.cam196ez);if(k){k.ez=t.value;persist()}}});
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act^="cam196"],[data-act="ly196-shd"]');if(!a)return;const act=a.dataset.act,c=camCfg196(),E=S.ed;
+  if(act==="cam196"){camSheet196();return}if(act==="cam196-on"){c.on=!!a.checked;persist();return}
+  if(act==="cam196-kf"){camKfHere196();c.on=true;persist();camSheet196();return}if(act==="cam196-kfdel"){c.kf=c.kf.filter(k=>k.id!==a.dataset.v);persist();camSheet196();return}
+  if(act==="cam196-go"){const k=c.kf.find(x=>x.id===a.dataset.v);if(k){ED.t=k.t;ED.playing=false}camSheet196();return}
+  if(act==="cam196-preset"){camPreset196(a.dataset.v);camSheet196();toast(L("Camera move set from here — play to see it.","ضُبطت حركة الكاميرا من هنا — شغّل لتراها."),{type:"ok"});return}
+  if(act==="cam196-ladd"){(E.lights196=E.lights196||[]).push({id:uid(),x:.3,y:.25,z:-40,col:"#fff2d0",int:90,r:70,on:true});persist();camSheet196();return}
+  if(act==="cam196-ldel"){E.lights196=(E.lights196||[]).filter(l=>l.id!==a.dataset.v);persist();camSheet196();return}
+  if(act==="cam196-reset"){Object.assign(c,CAMD196,{kf:[],on:c.on});persist();camSheet196();return}
+  if(act==="ly196-shd"){const Ly=(E.layers||[]).find(x=>x.id===E.selLayer);if(Ly){Ly.shd196=!!a.checked;persist()}}});
+EDX_PANELS.layers=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string")return h;const E=S.ed,Ly=(E.layers||[]).find(x=>x.id===E.selLayer),c=camCfg196(),mc=mcState196();
+  const bar='<div class="row" style="margin-top:12px;gap:8px;flex-wrap:wrap"><button type="button" class="btn sm" data-act="cam196" aria-pressed="'+c.on+'">'+ic("cam3d196")+L("3D camera & lights","الكاميرا ثلاثية الأبعاد والإضاءة")+((E.lights196||[]).length?" · "+(E.lights196||[]).length:"")+'</button><button type="button" class="btn sm" data-act="mc196">'+ic("multicam196")+(mc?L("Switch angles","بدّل الزوايا"):L("Multicam","تعدد الكاميرات"))+"</button></div>";
+  const d3=Ly&&Ly.kind!=="adj"?'<span class="lbl">'+L("Depth & tilt (3D)","العمق والميل (ثلاثي الأبعاد)")+"</span>"+edxSlider("ly.z196",L("Depth (positive = farther)","العمق (موجب = أبعد)"),Math.round(+Ly.z196||0),-80,200,1,"")+edxSlider("ly.rx196",L("Tilt X","ميل X"),Math.round(+Ly.rx196||0),-60,60,1,"°")+edxSlider("ly.ry196",L("Tilt Y","ميل Y"),Math.round(+Ly.ry196||0),-60,60,1,"°")+'<div style="margin-top:6px">'+edxSw("ly196-shd",Ly.shd196,L("Casts a shadow from the lights","يلقي ظلاً من الأضواء"))+"</div>"+(Ly.mc196?'<p class="small dim" style="margin:6px 0 0">'+L("Multicam angle — shown when its cut is active.","زاوية تعدد كاميرات — تظهر حين يكون قطعها فعّالاً.")+"</p>":""):"";
+  return h+d3+bar})(EDX_PANELS.layers);
+
+// ---- 15. team review: comments pinned on frames, versions, projects shared for review or editing
+const TEAM196={pid:null,role:null,owner:"",me:"",comments:[],versions:[],share:null,tab:"comments",sure:null,place:false,draft:null,busy:false};
+const tmReq196=(p,o)=>API.req("/v1/projects/"+S.ed.srv139+p,o);
+const tmWhen196=t=>t?new Intl.DateTimeFormat(locale(),{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}).format(new Date(t)):"";
+const tmCanEdit196=()=>TEAM196.role==="owner"||TEAM196.role==="edit";
+async function tmLoad196(full){const id=S.ed&&S.ed.srv139;if(!id||API.mode!=="server"||!S.user)return;if(TEAM196.pid!==id)Object.assign(TEAM196,{pid:id,role:null,comments:[],versions:[],share:null,sure:null});
+  try{const [r,c]=await Promise.all([tmReq196("/role196"),tmReq196("/comments196")]);if(S.ed.srv139!==id)return;TEAM196.role=r.role;TEAM196.owner=r.owner||"";TEAM196.me=r.me||"";TEAM196.uid=r.uid||null;TEAM196.comments=c.comments||[];S.ed.ro196=r.role==="review"}catch(e){}
+  if(full){try{TEAM196.versions=(await tmReq196("/versions196")).versions||[]}catch(e){}if(TEAM196.role==="owner"){try{TEAM196.share=await tmReq196("/share196")}catch(e){}}}
+  tmDraw196();tmBadge196()}
+function tmBadge196(){const b=document.querySelector(".tm196b .n");const n=TEAM196.pid===(S.ed&&S.ed.srv139)?TEAM196.comments.filter(c=>!c.done).length:0;if(b){b.textContent=n;b.style.display=n?"":"none"}}
+function tmDraw196(){const el=document.getElementById("tm196");if(!el)return;const T=TEAM196,owner=T.role==="owner",tabs=[["comments","Comments","التعليقات"],["versions","Versions","النسخ"]].concat(owner?[["share","Share","المشاركة"]]:[["about","Shared with me","مشارك معي"]]);
+  let body="";
+  if(T.tab==="comments"){const open=T.comments.filter(c=>!c.done).sort((a,b)=>a.t-b.t),done=T.comments.filter(c=>c.done).sort((a,b)=>a.t-b.t),row=c=>'<div class="tm196c'+(c.done?" dim":"")+'"><button type="button" class="chip" data-act="tm196-go" data-v="'+c.id+'" dir="ltr">'+mmss(c.t)+'</button><div class="tm196x"><div dir="auto">'+esc(c.text)+"</div><small>"+esc(c.byName||"")+" · "+tmWhen196(c.at)+'</small></div><label class="laisw" title="'+esc(L("Resolved","تم"))+'"><input type="checkbox" data-act="tm196-done" data-v="'+c.id+'"'+(c.done?" checked":"")+'><span>'+L("Done","تم")+"</span></label>"+((owner||(T.uid&&c.by===T.uid))?'<button type="button" class="btn sm ghost danger" data-act="tm196-del" data-v="'+c.id+'" aria-label="'+esc(L("Delete comment","احذف التعليق"))+'">'+ic("trash")+"</button>":"")+"</div>";
+    body='<button type="button" class="btn sm primary" data-act="tm196-add">'+ic("comment196")+L("Comment on this frame","علّق على هذا الإطار")+'</button><p class="small dim" style="margin:6px 0 0">'+L("Then tap the spot on the picture — the pin shows for everyone at that moment.","ثم المس الموضع على الصورة — يظهر الدبوس للجميع في تلك اللحظة.")+"</p>"+(T.comments.length?'<div class="tm196l">'+open.map(row).join("")+done.map(row).join("")+"</div>":'<p class="small dim" style="margin-top:12px">'+L("No comments yet.","لا تعليقات بعد.")+"</p>")}
+  else if(T.tab==="versions"){body=(tmCanEdit196()?'<div class="row" style="gap:8px"><input type="text" id="tm196vn" placeholder="'+esc(L("Version name (optional)","اسم النسخة (اختياري)"))+'" maxlength="60" style="flex:1;min-width:0"><button type="button" class="btn sm primary" data-act="tm196-vsave">'+ic("check")+L("Save a version","احفظ نسخة")+"</button></div>":"")+
+    (T.versions.length?'<div class="tm196l">'+T.versions.slice().reverse().map(v=>'<div class="tm196c" style="align-items:center"><div class="tm196x"><b dir="auto">'+esc(v.name)+"</b><small>"+tmWhen196(v.at)+" · "+esc(v.byName||"")+" · "+(v.clips||0)+" "+L("clips","مقاطع")+"</small></div>"+(tmCanEdit196()?'<button type="button" class="btn sm'+(T.sure==="v"+v.n?" danger":"")+'" data-act="tm196-vrestore" data-v="'+v.n+'">'+(T.sure==="v"+v.n?L("Restore?","استعادة؟"):L("Restore","استعد"))+"</button>":"")+"</div>").join("")+"</div>":'<p class="small dim" style="margin-top:12px">'+L("No versions yet — a version is a named copy of the saved project you can come back to.","لا نسخ بعد — النسخة صورة مسمّاة من المشروع المحفوظ يمكنك العودة إليها.")+"</p>")}
+  else if(T.tab==="share"){const s=T.share||{members:[],invites:[],link:null},url=s.link?location.origin+location.pathname+"#join196="+s.link.token:"";
+    body='<div class="row" style="gap:8px;flex-wrap:wrap"><input type="email" id="tm196em" placeholder="name@example.com" style="flex:1;min-width:160px" dir="ltr"><select id="tm196role" aria-label="'+esc(L("Role","الدور"))+'"><option value="review">'+L("Review (comment)","مراجعة (تعليق)")+'</option><option value="edit">'+L("Edit (save too)","تحرير (وحفظ)")+'</option></select><button type="button" class="btn sm primary" data-act="tm196-inv">'+ic("mail")+L("Invite","ادعُ")+"</button></div>"+
+      (s.members.length||s.invites.length?'<div class="tm196l">'+s.members.map(m=>'<div class="tm196c" style="align-items:center"><div class="tm196x"><b dir="ltr">'+esc(m.email)+'</b><small>'+(m.role==="edit"?L("can edit","يمكنه التحرير"):L("can review","يمكنه المراجعة"))+"</small></div>"+'<button type="button" class="btn sm ghost danger" data-act="tm196-rm" data-v="'+esc(m.uid)+'" aria-label="'+esc(L("Remove","أزل"))+'">'+ic("trash")+"</button></div>").join("")+
+        s.invites.map(i=>'<div class="tm196c dim" style="align-items:center"><div class="tm196x"><b dir="ltr">'+esc(i.email)+'</b><small>'+(i.role==="edit"?L("can edit","يمكنه التحرير"):L("can review","يمكنه المراجعة"))+" · "+L("waiting for their first sign-in","بانتظار أول تسجيل دخول")+"</small></div>"+'<button type="button" class="btn sm ghost danger" data-act="tm196-rm" data-v="'+esc(i.email)+'" aria-label="'+esc(L("Remove","أزل"))+'">'+ic("trash")+"</button></div>").join("")+"</div>":'<p class="small dim" style="margin-top:10px">'+L("Nobody yet. An invited person sees this project in their Projects list.","لا أحد بعد. يرى المدعو هذا المشروع في قائمة مشاريعه.")+"</p>")+
+      '<span class="lbl">'+L("Link","رابط")+"</span>"+(s.link?'<div class="row" style="gap:8px"><input type="text" readonly value="'+esc(url)+'" id="tm196url" dir="ltr" style="flex:1;min-width:0"><button type="button" class="btn sm" data-act="tm196-copy">'+ic("link")+L("Copy","انسخ")+'</button><button type="button" class="btn sm ghost danger" data-act="tm196-link" data-v="">'+L("Remove","أزل")+'</button></div><p class="small dim" style="margin:6px 0 0">'+(s.link.role==="edit"?L("Anyone signed in with this link can edit.","كل من يسجّل الدخول بهذا الرابط يمكنه التحرير."):L("Anyone signed in with this link can review and comment.","كل من يسجّل الدخول بهذا الرابط يمكنه المراجعة والتعليق."))+"</p>":
+      '<div class="row" style="gap:8px"><button type="button" class="btn sm" data-act="tm196-link" data-v="review">'+ic("link")+L("Review link","رابط مراجعة")+'</button><button type="button" class="btn sm" data-act="tm196-link" data-v="edit">'+ic("link")+L("Edit link","رابط تحرير")+"</button></div>")}
+  else body='<p class="small">'+L("Shared by ","شاركه ")+"<b>"+esc(T.owner)+"</b> · "+(T.role==="edit"?L("you can edit and save.","يمكنك التحرير والحفظ."):L("you can review and comment — saving is off.","يمكنك المراجعة والتعليق — الحفظ متوقف."))+'</p><button type="button" class="btn sm ghost danger" data-act="tm196-leave">'+ic("logout")+L("Leave this project","غادر هذا المشروع")+"</button>";
+  el.innerHTML='<div class="seg" style="margin-bottom:10px">'+tabs.map(x=>'<button type="button" data-act="tm196-tab" data-v="'+x[0]+'" aria-pressed="'+(T.tab===x[0])+'">'+esc(L(x[1],x[2]))+(x[0]==="comments"&&T.comments.some(c=>!c.done)?" · "+T.comments.filter(c=>!c.done).length:"")+"</button>").join("")+"</div>"+(T.role?body:'<p class="small dim">'+L("Loading…","جارٍ التحميل…")+"</p>")}
+function teamSheet196(){if(API.mode!=="server"||!S.user){toast(L("Team review needs you signed in on the nooi server.","تحتاج مراجعة الفريق إلى تسجيل الدخول على خادم nooi."));return}
+  if(!S.ed.srv139){hfSheet(L("Team review","مراجعة الفريق"),'<p class="small" style="margin:0 0 10px">'+L("Save this edit to your account first — then your team can open it, comment on frames and keep versions.","احفظ هذا المونتاج في حسابك أولاً — ثم يستطيع فريقك فتحه والتعليق على الإطارات وحفظ النسخ.")+'</p><button type="button" class="btn primary" data-act="tm196-save">'+ic("check")+L("Save to my account","احفظ في حسابي")+"</button>");return}
+  hfSheet(L("Team review","مراجعة الفريق"),'<div id="tm196"></div>');if(!["comments","versions","share","about"].includes(TEAM196.tab))TEAM196.tab="comments";if(TEAM196.tab==="share"&&TEAM196.role&&TEAM196.role!=="owner")TEAM196.tab="about";tmDraw196();tmLoad196(true)}
+// placing a comment: a tap on the picture (an overlay over the preview, like the pen) then a small box for the words
+function ov196(){const on=TEAM196.place&&S.view==="edit",cv=$("#wk");let o=document.getElementById("ov196");if(!on||!cv){if(o)o.remove();return}
+  if(!o){o=document.createElement("div");o.id="ov196";o.style.cssText="position:fixed;z-index:60;cursor:crosshair;touch-action:none;outline:2px dashed rgba(207,225,62,.75);outline-offset:-2px";document.body.appendChild(o);
+    o.addEventListener("pointerdown",e=>{e.preventDefault();e.stopPropagation();const w=$("#wk");if(!w)return;const r=w.getBoundingClientRect(),p={x:clamp((e.clientX-r.left)/r.width,0,1),y:clamp((e.clientY-r.top)/r.height,0,1)};TEAM196.place=false;ov196();cmForm196(p,e.clientX,e.clientY)})}
+  const r=cv.getBoundingClientRect();o.style.left=r.left+"px";o.style.top=r.top+"px";o.style.width=r.width+"px";o.style.height=r.height+"px"}
+function cmForm196(p,cx,cy){let f=document.getElementById("cmf196");if(f)f.remove();TEAM196.draft={t:+Math.max(0,ED.t).toFixed(2),x:+p.x.toFixed(4),y:+p.y.toFixed(4)};f=document.createElement("div");f.id="cmf196";f.className="cmf196";
+  f.innerHTML='<textarea maxlength="1000" placeholder="'+esc(L("What should change here?","ما الذي يجب تغييره هنا؟"))+'" aria-label="'+esc(L("Comment","تعليق"))+'"></textarea><div class="row" style="gap:8px;justify-content:flex-end"><button type="button" class="btn sm ghost" data-act="tm196-cancel">'+L("Cancel","إلغاء")+'</button><button type="button" class="btn sm primary" data-act="tm196-send">'+ic("comment196")+L("Send","أرسل")+"</button></div>";
+  document.body.appendChild(f);const w=f.offsetWidth||320,h=f.offsetHeight||120;f.style.left=Math.max(8,Math.min(innerWidth-w-8,cx-w/2))+"px";f.style.top=Math.max(8,Math.min(innerHeight-h-8,cy+14))+"px";const ta=f.querySelector("textarea");if(ta)setTimeout(()=>ta.focus(),30)}
+async function cmSend196(){const f=document.getElementById("cmf196"),ta=f&&f.querySelector("textarea"),text=ta?ta.value.trim():"",d=TEAM196.draft;if(!text){toast(L("Write the comment first.","اكتب التعليق أولاً."));return}
+  try{const r=await tmReq196("/comments196",{method:"POST",json:{text,t:d.t,x:d.x,y:d.y,name:(S.user&&S.user.name)||""}});TEAM196.comments=r.comments||TEAM196.comments;if(f)f.remove();TEAM196.draft=null;tmBadge196();toast(L("Comment pinned at ","ثُبّت التعليق عند ")+mmss(d.t),{type:"ok"})}
+  catch(e){toast(L("Couldn't send: ","تعذّر الإرسال: ")+(S.lang==="ar"&&e.errorAr?e.errorAr:e.message),{type:"warn"})}}
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act^="tm196"]');if(!a)return;const act=a.dataset.act,T=TEAM196,msg=err=>toast((S.lang==="ar"&&err.errorAr)?err.errorAr:String(err.message||err),{type:"warn"});
+  try{
+    if(act==="tm196"){teamSheet196();return}
+    if(act==="tm196-save"){closeSheet();await save139(false);if(S.ed.srv139)teamSheet196();return}
+    if(act==="tm196-tab"){T.tab=a.dataset.v;T.sure=null;tmDraw196();return}
+    if(act==="tm196-add"){closeSheet();T.place=true;ED.playing=false;ov196();toast(L("Tap the spot on the picture for the comment.","المس موضع التعليق على الصورة."));return}
+    if(act==="tm196-cancel"){const f=document.getElementById("cmf196");if(f)f.remove();T.draft=null;return}
+    if(act==="tm196-send"){await cmSend196();return}
+    if(act==="tm196-go"){const c=T.comments.find(x=>x.id===a.dataset.v);if(c){ED.t=c.t;ED.playing=false;closeSheet()}return}
+    if(act==="tm196-done"){const r=await tmReq196("/comments196/"+a.dataset.v,{method:"PATCH",json:{done:!!a.checked}});T.comments=r.comments||T.comments;tmDraw196();tmBadge196();return}
+    if(act==="tm196-del"){const r=await tmReq196("/comments196/"+a.dataset.v,{method:"DELETE"});T.comments=r.comments||[];tmDraw196();tmBadge196();return}
+    if(act==="tm196-vsave"){const nm=(document.getElementById("tm196vn")||{}).value||"";await save139(false);const r=await tmReq196("/versions196",{method:"POST",json:{name:nm}});T.versions=r.versions||T.versions;tmDraw196();toast(L("Version saved: ","حُفظت النسخة: ")+(r.version&&r.version.name||""),{type:"ok"});return}
+    if(act==="tm196-vrestore"){const n=a.dataset.v;if(T.sure!=="v"+n){T.sure="v"+n;tmDraw196();return}T.sure=null;const id=S.ed.srv139;await tmReq196("/versions196/"+n+"/restore",{method:"POST",json:{}});closeSheet();await open139(id);toast(L("Version restored.","استُعيدت النسخة."),{type:"ok"});return}
+    if(act==="tm196-inv"){const em=((document.getElementById("tm196em")||{}).value||"").trim(),role=(document.getElementById("tm196role")||{}).value||"review";T.share=await tmReq196("/share196",{method:"POST",json:{email:em,role}});tmDraw196();toast(L("Invited ","دُعي ")+em,{type:"ok"});return}
+    if(act==="tm196-rm"){T.share=await tmReq196("/share196/"+encodeURIComponent(a.dataset.v),{method:"DELETE"});tmDraw196();return}
+    if(act==="tm196-link"){T.share=await tmReq196("/share196/link",{method:"POST",json:{role:a.dataset.v||null}});tmDraw196();return}
+    if(act==="tm196-copy"){const u=(document.getElementById("tm196url")||{}).value||"";try{await navigator.clipboard.writeText(u);toast(L("Link copied","نُسخ الرابط"),{type:"ok"})}catch(err){const i=document.getElementById("tm196url");if(i){i.select();toast(L("Copy the link from the box.","انسخ الرابط من الحقل."))}}return}
+    if(act==="tm196-leave"){const id=S.ed.srv139;await API.req("/v1/projects/"+id,{method:"DELETE"});delete S.ed.srv139;S.ed.ro196=false;T.pid=null;persist();closeSheet();PJ139.list=null;toast(L("You left the project — your copy stays on this device.","غادرت المشروع — تبقى نسختك على هذا الجهاز."),{type:"ok"});return}
+    if(act==="tm196-leave-list"){const id=a.dataset.id;await API.req("/v1/projects/"+id,{method:"DELETE"});if(S.ed.srv139===id){delete S.ed.srv139;S.ed.ro196=false;persist()}PJ139.list=(PJ139.list||[]).filter(p=>p.id!==id);draw139();toast(L("You left the project.","غادرت المشروع."),{type:"ok"});return}
+  }catch(err){msg(err)}});
+// pins on the picture at their moment (not in an export), the overlay while placing, and the heavy-footage swap — every frame
+edTick=(o=>function(now){const nested=typeof SQ194!=="undefined"&&SQ194.depth;if(!nested)try{pxSwap196()}catch(e){}const r=o.apply(this,arguments);if(nested)return r;
+  try{ov196();if(S.view==="edit"&&!R139.on&&!ED.rec&&S.ed.srv139&&TEAM196.pid===S.ed.srv139&&TEAM196.comments.length){const cv=$("#wk");if(cv){const x=cv.getContext("2d"),W=cv.width,H=cv.height,rad=Math.max(9,W*.016);
+    TEAM196.comments.forEach(c=>{if(c.done||Math.abs(c.t-ED.t)>.6)return;const X=c.x*W,Y=c.y*H;x.save();x.beginPath();x.arc(X,Y,rad,0,Math.PI*2);x.fillStyle="rgba(207,225,62,.92)";x.fill();x.lineWidth=Math.max(1.5,W*.002);x.strokeStyle="#0c0e0c";x.stroke();x.fillStyle="#0c0e0c";x.font="700 "+Math.round(rad*1.1)+"px Geist, sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText((c.byName||"?").trim().charAt(0).toUpperCase()||"?",X,Y+rad*.05);x.restore()})}}}catch(e){}return r})(edTick);
+// the Team button beside Projects; comments load once per project so the pins show without opening the sheet
+VIEWS.edit=(o=>function(){const h=o.apply(this,arguments);if(API.mode!=="server"||typeof h!=="string")return h;const i=h.indexOf('<button class="btn pj139b"');if(i<0||h.includes('data-act="tm196"'))return h;
+  if(S.ed.srv139&&TEAM196.pid!==S.ed.srv139&&!TEAM196.busy){TEAM196.busy=true;tmLoad196(false).finally(()=>{TEAM196.busy=false})}
+  const n=TEAM196.pid===S.ed.srv139?TEAM196.comments.filter(c=>!c.done).length:0;
+  return h.slice(0,i)+'<button class="btn tm196b" data-act="tm196" aria-haspopup="dialog" aria-label="'+esc(L("Team review","مراجعة الفريق"))+'">'+ic("team196")+'<span class="w">'+L("Team","الفريق")+'</span><span class="n"'+(n?"":' style="display:none"')+">"+n+"</span></button>"+h.slice(i)})(VIEWS.edit);
+// a project opened from the account: who am I on it (a review-only share can't save); shared rows in the Projects list say so
+open139=(o=>async function(id){TEAM196.pid=null;const r=await o.apply(this,arguments);if(S.ed&&S.ed.srv139===id)await tmLoad196(false);return r})(open139);
+save139=(o=>function(auto){if(S.ed&&S.ed.ro196&&S.ed.srv139&&TEAM196.pid===S.ed.srv139&&TEAM196.role==="review"){if(!auto)toast(L("This project is shared with you for review — comment on it; saving is off.","هذا المشروع مشارك معك للمراجعة — علّق عليه؛ الحفظ متوقف."),{type:"warn"});return Promise.resolve(null)}return o.apply(this,arguments)})(save139);
+draw139=(o=>function(){const r=o.apply(this,arguments);try{const rows=document.querySelectorAll("#pj139 .pj139i"),list=PJ139.list||[];list.forEach((p,i)=>{const row=rows[i];if(!row||!p.shared196)return;const t=row.querySelector(".pj139t small");if(t&&!t.dataset.tm196){t.dataset.tm196="1";t.insertAdjacentHTML("beforeend"," · "+esc(L("shared by ","شاركه ")+p.shared196.owner)+" · "+(p.shared196.role==="edit"?L("edit","تحرير"):L("review","مراجعة")))}
+    const d=row.querySelector('[data-act="pj139-del"]');if(d){d.dataset.act="tm196-leave-list";d.dataset.id=p.id;d.setAttribute("aria-label",L("Leave","غادر"));d.innerHTML=ic("logout")}})}catch(e){}return r})(draw139);
+// a share link: #join196=TOKEN → join, then open the project (after sign-in if needed)
+async function joinCheck196(){const m=/[#&]join196=([A-Za-z0-9_-]{16,40})/.exec(location.hash||"");const tok=m?m[1]:S.join196;if(!tok)return false;if(API.mode!=="server"||!S.user){S.join196=tok;if(m)history.replaceState(null,"",location.pathname+location.search);return false}
+  delete S.join196;if(m)history.replaceState(null,"",location.pathname+location.search);try{const r=await API.req("/v1/projects196/join",{json:{token:tok}});toast(L("You joined “","انضممت إلى «")+(r.name||"")+L("” — ","» — ")+(r.role==="edit"?L("you can edit.","يمكنك التحرير."):r.role==="owner"?L("it's yours.","إنه مشروعك."):L("you can review and comment.","يمكنك المراجعة والتعليق.")),{type:"ok"});PJ139.list=null;await open139(r.id);return true}
+  catch(e){toast((S.lang==="ar"&&e.errorAr)?e.errorAr:String(e.message||e),{type:"warn"});return false}}
+window.addEventListener("hashchange",()=>{joinCheck196()});setTimeout(()=>{joinCheck196();let n=0;const iv=setInterval(()=>{if(++n>40||!S.join196){if(!S.join196)clearInterval(iv);return}joinCheck196().then(ok=>{if(ok)clearInterval(iv)})},3000)},1500);
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

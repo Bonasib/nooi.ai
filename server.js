@@ -22,6 +22,8 @@ import { runPost } from "./lib/scheduler.js";
 import { balance, charge, freeCredits, TEXT_PRICE, startCheckout, finishCheckout, findPayment, findByProviderId, checkRefund189, provider, providerName, enabledPayments, CATALOG } from "./lib/billing.js";
 import { registerAdmin } from "./lib/admin.js";
 import { registerProjects139 } from "./lib/projects139.js";   // v139: editor projects kept on the server
+import { registerCollab196 } from "./lib/collab196.js";   // v196: team review — comments on frames, versions, shared projects
+import { registerProxy196 } from "./lib/proxy196.js";   // v196: light proxies of heavy footage for the editor's preview
 import { streamTTS } from "./providers/elevenlabs.js";
 import { testAll } from "./lib/health.js";
 import { spawn } from "child_process";
@@ -331,7 +333,7 @@ app.post("/v1/billing/webhook/:provider", wrap(async (req, res) => {
 }));
 app.get("/v1/billing/catalog", (_, res) => res.json(CATALOG));
 
-registerAdmin(app, requireUser); registerProjects139(app, requireUser);
+registerAdmin(app, requireUser); registerCollab196(app, requireUser); registerProjects139(app, requireUser);   // (v196: team review routes first — a member's GET/PUT of a shared project is answered there, the owner's fall through)
 registerSlideshow(app, requireUser);
 registerPhysics(app, requireUser);
 // admin: engine cost per model → credits charged → margin; costs and margin are editable (prices recompute)
@@ -368,7 +370,7 @@ registerAgents(app);
 registerMotion(app);
 registerSketch(app);
 registerWorld(app);
-registerV88(app, requireUser); startKeepMedia(); registerScrub131(app, requireUser); registerEdit145(app, requireUser);
+registerV88(app, requireUser); startKeepMedia(); registerScrub131(app, requireUser); registerEdit145(app, requireUser); registerProxy196(app, requireUser);
 registerEdit147(app, requireUser);
 registerEdit148(app, requireUser); registerEdit149(app, requireUser, isStaff); registerCaptions169(app, requireUser, isStaff); registerMotion150(app, requireUser);
 registerIngest(app);

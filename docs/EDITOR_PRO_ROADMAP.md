@@ -28,9 +28,9 @@ languages, translation · AI: reframe, stabilise, silences, voices, dubbing, sou
 | 10 | Nested compositions (pre-comps — a timeline as a clip, drawn live, its sound in the export) and motion templates with editable fields (built in + the selection saved as one) | **v194** |
 | 11 | Shape paths drawn with a pen, trim paths with a write-on / erase, a repeater, words along a path | **v194** |
 | 12 | Sound per track: EQ, compressor, de-esser, noise gate; side-chain ducking per track (export; EQ / compressor / de-esser live) | **v194** |
-| 13 | Multicam sync by sound; proxies for heavy footage | phase 3 |
-| 14 | 3D camera with depth of field across all layers (AE's 3D), light sources | phase 3 |
-| 15 | Collaboration: comments on frames, versions, shared projects (team review) | phase 3 |
+| 13 | Multicam — the other angles lined up by their sound (a late one trimmed, an early one shifted), stacked as full-frame layers, switched with cuts from a tile per angle (keys 1–9), undoable; proxies — a 540 px copy made on the server for the preview, the export reads the original | **v196** |
+| 14 | A 3D camera over every layer — depth and tilt per layer, dolly / pan / tilt / focal length with keyframes and easing, presets (dolly, push, orbit, rack focus, drift), depth of field by distance from the focus plane and the aperture; point lights that shade the layers by tilt and distance and cast their shadows; ambient level | **v196** |
+| 15 | Team review — comments pinned on a frame (a pin at that moment for everyone), done / delete, named versions with restore, projects shared by email invite or link with a review or edit role; the Team button beside Projects | **v196** |
 
 ## What phase 2 did not do (honest limits)
 - Power-window tracking is block matching of a luma patch at 8 steps a second on a 160-px copy — it follows a subject that moves and
@@ -40,6 +40,19 @@ languages, translation · AI: reframe, stabilise, silences, voices, dubbing, sou
 - The noise gate and the side-chain ducking act in the export mix (they need the whole sound); EQ, compressor and de-esser also play
   live. A clip already routed through the voice changer or voice cleanup keeps that chain in the preview.
 - Words along a path: letters one by one for Latin scripts; whole words for Arabic (a letter at a time would break the joining).
+
+## What phase 3 did not do (honest limits)
+- Multicam lines angles up by their loudness envelope (100 Hz, up to ±90 s); angles with no shared sound (or silent ones) are refused with a
+  message, and a drifting camera clock (different sample rates over a long take) isn't corrected. The angles stay full-frame layers, so
+  the timeline shows them as layer lanes rather than one multicam clip; cuts live in the multicam sheet, not as splits.
+- A proxy is one 540 px VP9 copy per clip (made once, kept with the account). Picture and sound in the preview come from it, which is why
+  waveforms and colour scopes read a touch differently until the export, which always uses the original.
+- The 3D camera moves the layers over a fixed background (the clips track is the set); layer tilt is an affine foreshortening (cos) with a
+  small shear, not a true perspective warp, and the selection outline / drag handles stay at the layer's flat position. Lights are
+  point lights painted as radial tints on the lit layer; shadows are the layer's silhouette offset away from each light — there is no
+  shadow from one layer onto another's depth, and no shading of the clips track.
+- Sharing is by email (claimed at the invitee's first sign-in) or a link token; a review member can't save (the page says so); versions
+  are capped at 30 per project; the agents' operation log (v148) stays the owner's — a member sees an empty one.
 
 ## Rules for every phase
 - Our own code and sounds; ideas only from the big tools' public behaviour. Licences noted in `docs/THIRD_PARTY.md`.
