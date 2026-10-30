@@ -96,6 +96,17 @@ import { uiLang, uiDict, uiTranslate, rateOk } from "./lib/uit.js";
 import { noteExport } from "./lib/xstats.js";
 
 const app = express();
+app.disable("x-powered-by");
+// v195: browser safety headers on every answer — no content-type guessing, the site can't be framed by another site (click-jacking),
+// no <base> tricks or plug-ins, a short referrer to other sites, camera/microphone for this site only, and HTTPS kept (HSTS) once
+// a visit arrives over HTTPS (behind Nginx, trust proxy below). The page's own scripts and styles are inline, so no script policy here.
+const PERMS195 = "camera=(self), microphone=(self), geolocation=()";
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff"); res.setHeader("X-Frame-Options", "SAMEORIGIN"); res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", PERMS195); res.setHeader("Content-Security-Policy", "frame-ancestors 'self'; base-uri 'self'; object-src 'none'");
+  if (req.secure) res.setHeader("Strict-Transport-Security", "max-age=15552000");
+  next();
+});
 app.use(cors({ origin: process.env.PUBLIC_BASE_URL || true }));
 app.use(express.json({ limit: "12mb", verify: (req, _res, buf) => { if (req.url.startsWith("/v1/billing/webhook/")) req.rawBody = buf; } }));   // (v191: payment notices keep their exact bytes for the signature check)
 // The browser never sees which AI provider runs the models: every JSON answer says "engine" instead
@@ -111,7 +122,10 @@ app.use((req, res, next) => {
   const j = res.json.bind(res); res.json = (d) => j(engOut(d)); next();
 });
 app.set("trust proxy", 1);   // behind Nginx on the VPS
-app.use("/media", express.static(MEDIA_DIR, { maxAge: "7d" }));
+// v195: a file in /media is a picture, a sound, a video or a model — never a page: anything that a browser could run as a document
+// (html, svg, xml, scripts, styles) is answered as plain text inside a sandbox, so an uploaded file can't become a page on the site's own address
+const DOC195 = /\.(x?html?|shtml|xml|xsl|xslt|svgz?|mathml|js|mjs|cjs|css)$/i, TEXT195 = /\.(x?html?|shtml|xml|xsl|xslt|mathml|js|mjs|cjs|css)$/i;
+app.use("/media", express.static(MEDIA_DIR, { maxAge: "7d", setHeaders: (res, f) => { if (DOC195.test(f)) { res.setHeader("Content-Security-Policy", "default-src 'none'; sandbox"); if (TEXT195.test(f)) res.setHeader("Content-Type", "text/plain; charset=utf-8"); } } }));
 app.use(fastFiles("public")); warm("public", ["index.html"]);
 app.use(express.static(path.resolve("public")));
 // On-device AI: ONNX Runtime's WebAssembly/WebGPU files come from our own server (npm onnxruntime-web), and an
@@ -189,7 +203,10 @@ app.get("/v1/config", (_, res) => res.json({
 }));
 
 // Uploads (start frames, references, exports, music…)
-const upload = multer({ storage: multer.diskStorage({ destination: MEDIA_DIR, filename: (_, f, cb) => cb(null, uid() + (path.extname(f.originalname) || ".bin").toLowerCase()) }), limits: { fileSize: 1024 * 1024 * 1024 } });
+// v195: an upload keeps its extension only when it is a media/data kind the site works with; anything else (a page, a script, an unknown kind) is stored as .bin
+const UP_EXT195 = new Set(".png .jpg .jpeg .webp .gif .avif .heic .heif .bmp .tif .tiff .svg .mp4 .webm .mov .m4v .mkv .avi .mpg .mpeg .3gp .ogv .mp3 .wav .m4a .aac .ogg .oga .opus .flac .weba .aif .aiff .wma .glb .gltf .obj .fbx .stl .ply .usdz .splat .spz .ksplat .json .srt .vtt .ass .ssa .txt .csv .tsv .md .pdf .zip .cube .3dl .lottie .ttf .otf .woff .woff2 .bin".split(" "));
+const upExt195 = (name) => { const e = path.extname(String(name || "")).toLowerCase(); return UP_EXT195.has(e) ? e : ".bin"; };
+const upload = multer({ storage: multer.diskStorage({ destination: MEDIA_DIR, filename: (_, f, cb) => cb(null, uid() + upExt195(f.originalname)) }), limits: { fileSize: 1024 * 1024 * 1024, files: 1 } });
 app.post("/v1/uploads", requireUser, upload.single("file"), (req, res) => { noteUpload(req.user.uid, req.file.filename); res.json({ url: publicUrl(req.file.filename) }); });   // (v125: noted on the account, so Delete my account removes it)
 // v125: Delete my account — the customer, by themselves, with a typed confirmation (lib/account125.js)
 app.post("/v1/me/delete", requireUser, wrap(async (req, res) => { if (req.user.viaToken) throw Object.assign(new Error("An account can only be deleted from the site, not through a connection."), { code: 403, errorAr: "لا يُحذف الحساب إلا من الموقع، لا عبر اتصال." }); res.json({ ok: true, ...(await deleteAccount(req.user.uid, req.body?.confirm)) }); }));

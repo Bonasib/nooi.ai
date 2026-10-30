@@ -11,6 +11,7 @@ import zlib from "zlib";
 import { cfg, S } from "../lib/settings.js";
 import { save } from "../lib/store.js";
 import { saveBuffer } from "../lib/media.js";
+import { toDataUrl as toDataUrl195 } from "../lib/safeurl.js";
 
 const DEF = {
   chat: "https://integrate.api.nvidia.com/v1", vision: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning", text: "nvidia/nemotron-3-super-120b-a12b",
@@ -115,7 +116,7 @@ export async function nvChat(prompt, { image, images, system, maxTokens = 1500, 
 
 // ── pictures, edits, 3D, video ────────────────────────────────
 const SIZES = { "1:1": [1024, 1024], "16:9": [1344, 768], "9:16": [768, 1344], "4:3": [1152, 896], "3:4": [896, 1152], "3:2": [1216, 832], "2:3": [832, 1216], "4:5": [896, 1120], "5:4": [1120, 896], "21:9": [1536, 640] };
-const toDataUrl = async (u) => { if (!u) return null; if (u.startsWith("data:")) return u; const r = await fetch(u); if (!r.ok) throw new Error("Couldn't read the reference picture"); const b = Buffer.from(await r.arrayBuffer()); return "data:" + (r.headers.get("content-type") || "image/png").split(";")[0] + ";base64," + b.toString("base64"); };
+const toDataUrl = (u) => toDataUrl195(u);   // v195: a customer's picture address goes through the public-address guard (own media read from disk)
 const fullPrompt = (p) => [p.prompt, p.character && `Main character: ${p.character.description}`, ...(p.meta?.refs || []).map((r) => `${r.type}: ${r.description}`), !p.meta?.words96 && p.meta?.style && `Style: ${p.meta.style}`].filter(Boolean).join("\n").slice(0, 2000);
 const refOf = (p) => { const i = p.inputs || {}; return i.iRef || i.skImg || i.chRef || i.eRef || i.dmIn || i.s3dImg || i.s3dCap || i.frame || null; };
 function imageBody(url, p) { const [w, h] = SIZES[p.aspect] || SIZES["1:1"], seed = Math.abs(+p.seed || 0) % 4294967295;

@@ -21607,7 +21607,7 @@ document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.c
 .hfrm{background:#0b0b0c!important}.hfrm>video,.hfrm>img{object-fit:contain!important;background:#0b0b0c!important}
 .hfbox.hf187 .hf187row{display:flex!important;flex-wrap:nowrap!important;align-items:center;gap:8px;border-top:1px solid var(--line);padding:10px 2px 2px;margin-top:8px}
 .hfbox.hf187 .hf187row>.hf187plus,.hfbox.hf187 .hf187row>.hf187gear{flex:none;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--panel2);color:var(--text);display:grid;place-items:center;cursor:pointer;padding:0}
-.hfbox.hf187 .hf187row>.hf187plus svg,.hfbox.hf187 .hf187row>.hf187gear svg{width:18px;height:18px}
+.hfbox.hf187 .hf187row>.hf187plus svg,.hfbox.hf187 .hf187row>.hf187gear svg{width:16px;height:16px}   /* (v90 sizes: 14 · 16 · 20) */
 .hfbox.hf187 .hf187row>.hf187plus[aria-expanded="true"]{background:var(--text);color:var(--bg)}
 .hfbox.hf187 .hf187row>[data-act="hf-model"],.hfbox.hf187 .hf187row>.hfseg,.hfbox.hf187 .hf187row>label.hfchip{flex:1 1 auto;min-width:0;height:42px;margin:0}
 .hfbox.hf187 .hf187row>[data-act="hf-model"] b,.hfbox.hf187 .hf187row>[data-act="hf-model"] span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -21619,7 +21619,7 @@ document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.c
 .hfbox.hf187 .hf187add>*{width:auto!important;height:62px!important;margin:0!important;order:0!important;transform:none!important;min-width:0}
 .hfbox.hf187 .hf187add>.ch87b{grid-column:1/-1;height:44px!important;justify-content:center}
 .hfbox.hf187 .hf187row{container-type:inline-size}
-@media (max-width:420px){.hfbox.hf187 .hf187row{gap:4px}.hfbox.hf187 .hf187row>[data-act="hf-model"] .lg{width:22px;height:22px}.hfbox.hf187 .hf187row>[data-act="hf-model"] .lg img{width:17px;height:17px}.hfbox.hf187 .hf187row>[data-act="hf-model"]>svg:last-child{width:12px!important;height:12px!important}.hfbox.hf187 .hf187go .hfcost svg{width:12px!important;height:12px!important}.hfbox.hf187 .hf187row>.hf187plus,.hfbox.hf187 .hf187row>.hf187gear{width:36px;height:36px}.hfbox.hf187 .hf187row>[data-act="hf-model"]{height:38px;gap:3px;padding-inline-end:8px!important}.hfbox.hf187 .hf187row>.hf187go{height:38px;padding:0 10px;gap:5px;font-size:13px}.hfbox.hf187 .hf187go .hfcost{font-size:12.5px;gap:2px}}
+@media (max-width:420px){.hfbox.hf187 .hf187row{gap:4px}.hfbox.hf187 .hf187row>[data-act="hf-model"] .lg{width:22px;height:22px}.hfbox.hf187 .hf187row>[data-act="hf-model"] .lg img{width:17px;height:17px}.hfbox.hf187 .hf187row>[data-act="hf-model"]>svg:last-child{width:14px!important;height:14px!important}.hfbox.hf187 .hf187go .hfcost svg{width:14px!important;height:14px!important}.hfbox.hf187 .hf187row>.hf187plus,.hfbox.hf187 .hf187row>.hf187gear{width:36px;height:36px}.hfbox.hf187 .hf187row>[data-act="hf-model"]{height:38px;gap:3px;padding-inline-end:8px!important}.hfbox.hf187 .hf187row>.hf187go{height:38px;padding:0 10px;gap:5px;font-size:13px}.hfbox.hf187 .hf187go .hfcost{font-size:12.5px;gap:2px}}
 @container (max-width:340px){.hfbox.hf187 .hf187row>[data-act="hf-model"]>svg:last-child{display:none}.hfbox.hf187 .hf187row>.hf187plus,.hfbox.hf187 .hf187row>.hf187gear{width:34px;height:34px}.hfbox.hf187 .hf187row>.hf187go{padding:0 9px;font-size:12.5px}}
 @container (max-width:296px){.hfbox.hf187 .hf187row>.hf187go .g187{display:none}}
 .hfbox.hf187 .hf187row.tight187>.hf187go .g187{display:none}
@@ -22122,7 +22122,8 @@ document.addEventListener("keydown",e=>{if(S.view!=="edit"||!S.user||e.metaKey||
   if(k==="Home"||k==="End"){e.preventDefault();ED.playing=false;ED.t=k==="Home"?0:Math.max(0,edTotal()-.001);renderView();return}
   if(k==="ArrowUp"||k==="ArrowDown"){e.preventDefault();const st=edStarts().concat([edTotal()]),t=ED.t;ED.playing=false;ED.t=k==="ArrowDown"?(st.find(s=>s>t+.02)??t):([...st].reverse().find(s=>s<t-.02)??0);renderView();return}
   if((k==="Delete"||k==="Backspace")&&e.shiftKey&&S.ed.sel){e.preventDefault();e.stopImmediatePropagation();const E=S.ed,i=E.clips.findIndex(c=>c.id===E.sel);if(i<0)return;const st=edStarts();E.clips.splice(i,1);E.sel=null;ED.t=Math.min(st[i]||0,Math.max(0,edTotal()-.001));persist();renderView();toast(L("Clip removed, the gap closed.","أُزيل المقطع وأُغلقت الفجوة."));return}},true);
-document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest('[data-act="ed-play"]'))shuttle193(0)},true);
+// the play button only ends a J/L shuttle — it must not touch ED.playing itself, or the button's own toggle flips a pause back into play
+document.addEventListener("click",e=>{if(!e.target.closest||!e.target.closest('[data-act="ed-play"]'))return;SH193.rate=0;if(SH193.raf){cancelAnimationFrame(SH193.raf);SH193.raf=0}},true);
 // ---- 8. one-tap AI pro polish: ducking, loudness, smooth easing, exposure matched across the clips ----------------------------------
 async function polish193(){const E=S.ed,done=[];if(!E.clips.length){toast(L("Add clips first.","أضف مقاطع أولاً."));return}
   if(M.edMusic&&M.edMusic.el&&!E.duck144){E.duck144=true;done.push(L("music ducks under voices","الموسيقى تنخفض تحت الكلام"))}
