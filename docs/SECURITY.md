@@ -63,3 +63,33 @@ Write to contact@nooi.ai with the address, the steps and the time. Nothing from 
 - تشديد أنماط أسماء الوسائط في أربعة ملفات؛ تحديث التبعيات: صفر ثغرات عالية (كانت 4).
 
 **نصائح للمالك بالترتيب:** (1) بيئة الإنتاج: `FIREBASE_PROJECT_ID` و`FIREBASE_SERVICE_ACCOUNT` و`PUBLIC_BASE_URL=https://nooi.ai` و`SECRET_KEY` طويل؛ لا يعمل وضع «بلا تسجيل دخول» على الإنترنت أبدًا. (2) Nginx: HTTPS فقط، تمرير `X-Forwarded-Proto`، حدّ حجم الجسم 1g لمسار الرفع فقط، `limit_req` على `/v1/`. (3) جدار ناري 22/80/443 فقط، SSH بالمفاتيح، fail2ban. (4) المفاتيح تُدخل من لوحة الإدارة فقط؛ أي مفتاح لُصق يومًا في محادثة يُبدَّل الآن؛ تحقّق بخطوتين على كل الحسابات. (5) نسخ احتياطي ليلي لمجلد `data/` خارج الخادم واختبار الاستعادة. (6) `npm audit` شهريًا، Node LTS، ترقية `firebase-admin` إلى 14. (7) Firebase: النطاقات المصرّح بها `nooi.ai` فقط. (8) مراقبة `doctor.sh` وسجل التدقيق. (9) لاحقًا في الكود: سياسة CSP كاملة للسكربت، وروابط تنزيل موقّعة قصيرة العمر بدل `?token=`.
+
+## 5. The 20-point checklist (v200)
+
+How the owner's checklist maps to nooi, after v200. ✓ = in code, ⚙ = the owner's step on the server, — = not applicable.
+
+| # | Item | nooi |
+|---|---|---|
+| 1 | Hide API keys | ✓ keys are entered in Admin and stored AES-256-GCM encrypted (`lib/secrets.js`, `SECRET_KEY`); the browser only ever gets `••••1234` |
+| 2 | Environment variables | ✓ `.env` on the server, never in the repository (`deploy/update.sh` excludes it); `doctor.sh` checks the required ones |
+| 3 | Secrets leaked in git | ✓ the suite step "no secrets in the browser bundle"; before every commit the diff is grepped for provider keys (CLAUDE.md habit). ⚙ Add a pre-commit hook: `git config core.hooksPath .githooks` with a grep for `nvapi-\|sk-\|key=` |
+| 4 | Authentication | ✓ Firebase ID tokens verified on the server; API tokens stored as SHA-256 hashes |
+| 5 | 2FA for admins | ✓ **v200**: Admin → Security → "Step-up for admin changes": every change under `/v1/admin` (anything but GET) needs a 6-digit code from the admin's own verified email, once per 12 hours (`lib/guard200.js`). ⚙ Also turn on 2-step verification on the Google accounts admins sign in with |
+| 6 | User access (roles) | ✓ owner / admin / support / finance / moderator / viewer with permissions per route |
+| 7 | Protect admin routes | ✓ `requireUser` + `requireAdmin(permission)` on every `/v1/admin/*`, now plus the step-up gate |
+| 8 | Secure API endpoints | ✓ sign-in on every write, rate limits on the heavy routes, MCP daily caps, SSRF guard on fetched addresses |
+| 9 | Secure the database | ✓ a JSON store under `data/` (mode 700, root) that the web server never serves; nightly backup (`deploy/backup.sh`) |
+| 10 | Row-level security | — no SQL; every read and write is scoped by `req.user.uid` in code (projects, jobs, posts, comments) and staff checks are explicit |
+| 11 | Hash passwords | — nooi keeps no passwords (Firebase); sign-in codes and API tokens are stored as hashes |
+| 12 | Encrypt sensitive data | ✓ provider and payment keys encrypted at rest (item 1); the C2PA signing key too (`lib/label127.js`) |
+| 13 | Don't send extra data | ✓ public shapes (`pub()` in `lib/explore.js` / `lib/explore200.js`): no account ids, emails or internal fields leave the server |
+| 14 | Sanitise forms | ✓ `esc()` on every interpolation in the page; the Acceptable Use Policy word list on prompts, titles and **comments** (v200) |
+| 15 | Rate limiting | ✓ `tooMany`/`rateOk` on the heavy routes, 30 shares and 30 comments a day, step-up codes at most every 45 s with 5 tries. ⚙ Nginx `limit_req` on `/v1/` as in §3.2 |
+| 16 | Spending cap | ✓ **v200**: Account → Spending cap — the most credits an account may spend a day; a hold or charge past it is refused with the reason before any engine is called (`hooks200.cap` in `lib/billing.js`). ⚙ Set a monthly budget on each provider's own dashboard too (Kie, MiniMax, Google, NVIDIA) |
+| 17 | Update dependencies | ✓ `npm audit` 0 high (v195). ⚙ monthly `npm audit`, `firebase-admin` 12 → 14 |
+| 18 | Remove unused packages | ✓ checked in v200: every one of the 19 dependencies is imported by the server, the page or a tool; nothing to remove |
+| 19 | Logs & alerts | ✓ **v200**: 401 / 403 / 429 / 5xx answers and refused step-ups counted per hour (7 days) in Admin → Security; owners are emailed once when the last hour passes 200 refused requests (at most every 6 hours). Admin actions already go to the audit log. ⚙ Nginx access log + fail2ban as in §3.3 |
+| 20 | Full security audit | ✓ v195 (this document) and the whole-site reviews after every phase |
+
+### ملخّص v200 بالعربية
+ثلاث فجوات من قائمة الأمان أُغلقت في الكود: **سقف إنفاق يومي** لكل حساب (الحساب ← سقف الإنفاق؛ أي عملية تتجاوزه تُرفض مع السبب قبل استدعاء أي محرك)، **تأكيد إضافي للمشرفين** (الإدارة ← الأمان: كل تغيير في الإدارة يحتاج رمزاً من 6 أرقام من بريد المشرف مرة كل 12 ساعة)، و**سجل أحداث أمنية** (الردود المرفوضة 401/403/429/5xx لكل ساعة، ويُراسَل المالكون حين تتجاوز آخر ساعة 200 طلب مرفوض). المفاتيح مشفّرة أصلاً، والحزم كلها مستخدمة.

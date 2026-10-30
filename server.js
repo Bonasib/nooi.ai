@@ -21,6 +21,7 @@ import { OAUTH, pkcePair } from "./social/oauth.js";
 import { runPost } from "./lib/scheduler.js";
 import { balance, charge, freeCredits, TEXT_PRICE, startCheckout, finishCheckout, findPayment, findByProviderId, checkRefund189, provider, providerName, enabledPayments, CATALOG } from "./lib/billing.js";
 import { registerAdmin } from "./lib/admin.js";
+import { registerGuard200, stepGate200, secMiddleware200 } from "./lib/guard200.js";
 import { registerProjects139 } from "./lib/projects139.js";   // v139: editor projects kept on the server
 import { registerCollab196 } from "./lib/collab196.js";   // v196: team review — comments on frames, versions, shared projects
 import { registerProxy196 } from "./lib/proxy196.js";   // v196: light proxies of heavy footage for the editor's preview
@@ -85,6 +86,7 @@ import { fastFiles, warm } from "./lib/static124.js";   // v124: the page compre
 import { registerGifts } from "./lib/gifts.js";
 import { registerInvoices } from "./lib/invoices.js";
 import { registerExplore } from "./lib/explore.js";
+import { registerExplore200 } from "./lib/explore200.js";
 import { registerRefer173 } from "./lib/refer173.js";   // v173: invite friends (the member dashboard)
 import { registerLaunch182, launchMode182, gate182 } from "./lib/launch182.js";   // v182: Coming soon — the team only
 import { registerDownload187 } from "./lib/download187.js";
@@ -109,6 +111,7 @@ app.use((req, res, next) => {
   if (req.secure) res.setHeader("Strict-Transport-Security", "max-age=15552000");
   next();
 });
+app.use(secMiddleware200);   // (v200: 401/403/429/5xx counted per hour for Admin → Security)
 app.use(cors({ origin: process.env.PUBLIC_BASE_URL || true }));
 app.use(express.json({ limit: "12mb", verify: (req, _res, buf) => { if (req.url.startsWith("/v1/billing/webhook/")) req.rawBody = buf; } }));   // (v191: payment notices keep their exact bytes for the signature check)
 // The browser never sees which AI provider runs the models: every JSON answer says "engine" instead
@@ -333,7 +336,8 @@ app.post("/v1/billing/webhook/:provider", wrap(async (req, res) => {
 }));
 app.get("/v1/billing/catalog", (_, res) => res.json(CATALOG));
 
-registerAdmin(app, requireUser); registerCollab196(app, requireUser); registerProjects139(app, requireUser);   // (v196: team review routes first — a member's GET/PUT of a shared project is answered there, the owner's fall through)
+app.use("/v1/admin", (req, res, next) => (req.method === "GET" || req.method === "HEAD" ? next() : requireUser(req, res, () => stepGate200(req, res, next))));   // (v200: step-up for admin changes)
+registerGuard200(app); registerAdmin(app, requireUser); registerCollab196(app, requireUser); registerProjects139(app, requireUser);   // (v196: team review routes first — a member's GET/PUT of a shared project is answered there, the owner's fall through)
 registerSlideshow(app, requireUser);
 registerPhysics(app, requireUser);
 // admin: engine cost per model → credits charged → margin; costs and margin are editable (prices recompute)
@@ -374,7 +378,7 @@ registerV88(app, requireUser); startKeepMedia(); registerScrub131(app, requireUs
 registerEdit147(app, requireUser);
 registerEdit148(app, requireUser); registerEdit149(app, requireUser, isStaff); registerCaptions169(app, requireUser, isStaff); registerMotion150(app, requireUser);
 registerIngest(app);
-registerExplore(app); registerShowcase(app); registerGifts(app); registerInvoices(app); registerRefer173(app); registerLaunch182(app, requireUser);
+registerExplore(app); registerExplore200(app); registerShowcase(app); registerGifts(app); registerInvoices(app); registerRefer173(app); registerLaunch182(app, requireUser);
 registerDownload187(app, requireUser);   // v187: the Download menu — MP4, MP3 (when there is sound), a PNG of a frame
 registerMoyasar190(app, requireUser, requireAdmin, audit, wrap);   // v190: GET /v1/admin/pay190/moyasar · POST …/webhook · …/ip · …/mark
 registerSpace188(app, requireUser, isStaff);   // v188: GET /v1/admin/space188 · POST /v1/admin/space188/free

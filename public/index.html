@@ -3877,7 +3877,7 @@ ICONS.search='<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>';ICONS.fold
 const _e5=ensureV3;ensureV3=function(){_e5();if(!S.projects)S.projects=[];if(!S.cur)S.cur={edit:null,story:null}};ensureV3();
 const PJ={
   pack(kind){return kind==="edit"?{ed:JSON.parse(JSON.stringify({clips:S.ed.clips,texts:S.ed.texts,format:S.ed.format,fit:S.ed.fit,musicVol:S.ed.musicVol,clipSound:S.ed.clipSound})),look:JSON.parse(JSON.stringify(S.tools.edit))}:{story:JSON.parse(JSON.stringify(S.story)),board:JSON.parse(JSON.stringify(S.board))}},
-  name(kind){if(kind==="story")return S.story.title||L("Untitled story","قصة بلا عنوان");const n=S.ed.clips.length;return L("Edit","مونتاج")+" · "+n+" "+L("clips","مقاطع")+" · "+new Intl.DateTimeFormat(locale(),{day:"numeric",month:"short"}).format(new Date())},
+  name(kind){if(kind==="story")return S.story.title||L("Untitled story","قصة بلا عنوان");const n=S.ed.clips.length;return L("Edit","مونتاج")+" · "+new Intl.DateTimeFormat(locale(),{day:"numeric",month:"short"}).format(new Date())},
   empty(kind){return kind==="edit"?(kind==="edit"&&(!S.ed.clips.length&&!S.ed.texts.length)):false},
   saveCurrent(kind,asNew){if(PJ.empty(kind))return null;let p=!asNew&&S.cur[kind]&&S.projects.find(x=>x.id===S.cur[kind]);if(!p){p={id:uid(),kind,name:PJ.name(kind),created:Date.now()};S.projects.unshift(p)}p.data=PJ.pack(kind);p.updated=Date.now();if(kind==="story")p.name=S.story.title||p.name;p.thumb=kind==="story"?{seed:S.story.baseSeed,pal:S.story.palette}:{seed:(S.ed.clips[0]&&S.ed.clips[0].src.seed)||hashStr(p.id),pal:S.story.palette};S.cur[kind]=p.id;if(S.projects.length>30)S.projects.length=30;return p},
   load(p){PJ.saveCurrent(p.kind);const d=JSON.parse(JSON.stringify(p.data));if(p.kind==="edit"){Object.assign(S.ed,d.ed,{sel:null,selText:null,tab:"clip"});S.tools.edit=d.look||S.tools.edit;HIST.stack=[];HIST.i=-1;ED.t=0}else{S.story=d.story;S.board=d.board;S.focus=0}S.cur[p.kind]=p.id;persist()},
@@ -8186,7 +8186,7 @@ document.addEventListener("input",e=>{if(e.target&&e.target.id==="hfq"){clearTim
 /* nooi Studio 2.0 panel: a premium look + what the bots will do */
 hfBox=(o=>function(){let h=o();const H=S.hf;if(!/class="hfbots"/.test(h))return h;lrnLoad();const nooi=nooiOn(),learned=(LRN.n||0)+(lrnLocal().n||0);
   h=h.replace('<div class="hfbots">','<div class="hfbots pro'+(nooi?" nooi":"")+'">').replace(/<div class="hfbh"><b>nooi Studio 2.0<\/b><span class="small mute">([\s\S]*?)<\/span>(<button class="btn sm ghost" data-go="crew">[^<]*<\/button>)<\/div>/,(m0,desc,btn)=>
-    '<div class="hfbh"><span class="nst"><span class="nstw">nooi Studio</span><em>2.0</em></span>'+btn+'</div><p class="hfstd">'+(nooi?L("9 AI agents direct every shot and pick the right engine for each one — the strongest where it shows, a lighter one where it doesn't. Better videos, fewer credits.","9 وكلاء ذكاء اصطناعي يخرجون كل لقطة ويختارون المحرك المناسب لكل واحدة — الأقوى حيث يظهر الفرق، والأخف حيث لا يظهر. فيديو أفضل برصيد أقل."):desc)+"</p>"+
+    '<div class="hfbh"><span class="nst"><span class="nstw">nooi Studio</span><em>2.0</em></span>'+btn+'</div><p class="hfstd">'+(nooi?L("9 agents plan every shot and pick the right engine for each. Better videos, fewer credits.","9 وكلاء يخططون كل لقطة ويختارون المحرك المناسب لكل واحدة. فيديو أفضل برصيد أقل."):desc)+"</p>"+
     '<div class="hfstf"><span>'+ic("users")+L("9 AI agents","9 وكلاء ذكاء اصطناعي")+"</span><span>"+ic("layers")+L("Best engine per shot","أفضل محرك لكل لقطة")+"</span><span>"+ic("coin")+L("Saves credits","يوفّر الرصيد")+'</span><span class="hflearn">'+ic("spark")+L("Learned from ","تعلّمت من ")+"<b>"+learned+"</b>"+L(" results"," نتيجة")+"</span></div>"+
     '<div class="hfstplanw">'+hfStudioPlanHTML()+"</div>");
   return h})(hfBox);
@@ -16288,8 +16288,8 @@ async function open139(id){if(API.mode!=="server")return;
   catch(e){toast(L("Couldn't open it: ","تعذّر فتحه: ")+(S.lang==="ar"&&e.errorAr?e.errorAr:e.message),{type:"warn"})}}
 const when139=t=>t?new Intl.DateTimeFormat(locale(),{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}).format(new Date(t)):"";
 function draw139(){const el=$("#pj139");if(!el)return;const list=PJ139.list,cur=S.ed.srv139;
-  const now=cur?'<p class="small" style="margin:0 0 10px">'+ic("check","width:15px;vertical-align:-3px")+" "+L("This edit is on your account","هذا المونتاج في حسابك")+(PJ139.at?" · "+L("saved ","حُفظ ")+when139(PJ139.at):"")+" — "+L("it keeps itself up to date.","ويُحدَّث تلقائياً.")+
-      (PJ139.local?" "+L(PJ139.local+" file(s) are only on this device — Save to put them on your account too.",PJ139.local+" ملف على هذا الجهاز فقط — احفظ لرفعها إلى حسابك أيضاً."):"")+"</p>":'<p class="small mute" style="margin:0 0 10px">'+L("This edit is only on this device. Save it to your account to open it anywhere.","هذا المونتاج على هذا الجهاز فقط. احفظه في حسابك لتفتحه من أي مكان.")+"</p>";
+  const now=cur?'<p class="small" style="margin:0 0 10px">'+ic("check","width:15px;vertical-align:-3px")+" "+L("Saved on your account","محفوظ في حسابك")+(PJ139.at?" · "+when139(PJ139.at):"")+
+      (PJ139.local?" "+L(PJ139.local+" file(s) only on this device — Save uploads them.",PJ139.local+" ملف على هذا الجهاز فقط — الحفظ يرفعها."):"")+"</p>":'<p class="small mute" style="margin:0 0 10px">'+L("It's only on this device — save it to open it anywhere.","إنه على هذا الجهاز فقط — احفظه لتفتحه من أي مكان.")+"</p>";
   el.innerHTML=now+'<button class="btn primary" data-act="pj139-save"'+(PJ139.busy?" disabled":"")+">"+ic("check")+(PJ139.busy?L("Saving…","جارٍ الحفظ…"):L("Save to my account","احفظ في حسابي"))+"</button>"+
     (list==null?'<p class="small mute">'+L("Loading…","جارٍ التحميل…")+"</p>":list.length?'<div class="pj139l">'+list.map(p=>'<div class="pj139i'+(p.id===cur?" on":"")+'"><div class="pj139t"><b dir="auto">'+esc(p.name)+"</b><small>"+mmss(p.dur||0)+" · "+(p.clips||0)+" "+L("clips","مقاطع")+" · "+when139(p.updated)+"</small></div>"+
       (p.id===cur?'<span class="badge b-complete">'+L("Open now","مفتوح الآن")+"</span>":'<button class="btn sm" data-act="pj139-open" data-id="'+p.id+'">'+ic("folder")+L("Open","فتح")+"</button>")+
@@ -18392,7 +18392,7 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
   if(B&&B.same&&S.ed.srv139===B.id){S.ed.at149=B.at;persist()}renderView()},true);
 // (the Projects sheet says so, and can turn it off)
 draw139=(o=>function(){o.apply(this,arguments);const el=$("#pj139");if(!el||el.querySelector(".cl149s"))return;el.insertAdjacentHTML("afterbegin",'<label class="laisw cl149s"><input type="checkbox" data-act="cloud149"'+(S.cloud149!==false?" checked":"")+"><span>"+
-  L("Keep my edits on my account — the same project on every device (its files go up once).","احفظ مونتاجي في حسابي — نفس المشروع على كل أجهزتي (تُرفع ملفاته مرة واحدة).")+"</span></label>")})(draw139);
+  L("Save edits to my account","احفظ مونتاجي في حسابي")+"<small class=\"dim\" style=\"display:block\">"+L("The same project on every device.","المشروع نفسه على كل أجهزتك.")+"</small>"+"</span></label>")})(draw139);
 
 // ---- 3. a steadier phone editor
 // 3a. the play row stays pinned under the preview (it slid behind it when the page scrolled); a sheet opens under both
@@ -20753,8 +20753,7 @@ hfModelSheet=(o=>function(){const r=o.apply(this,arguments);const s=document.que
 Object.keys(MODELS).forEach(k=>{const m=MODELS[k],f=typeof MFEAT!=="undefined"&&MFEAT[(typeof M_ALIAS!=="undefined"&&M_ALIAS[k])||k];if(m&&m.d&&m.d[0]==="Video engine"&&f)m.d=[f[0],f[1]]});
 // 2. nooi Auto chosen → one line under the box's chips says what it does (an engine picked by hand → no line)
 hfMRow=(o=>function(t){const h=o.apply(this,arguments),H=S.hf;if(((t==="video"?H.vModel:H.iModel)||"auto")!=="auto")return h;
-  const d=t==="video"?L("nooi Auto: 9 AI agents read your words and pick the best engine for every shot — the strongest where it shows, a lighter one where it doesn't — then keep faces, clothes and places the same and check every frame.",
-      "nooi تلقائي: 9 وكلاء ذكاء اصطناعي يقرؤون وصفك ويختارون أفضل محرك لكل لقطة — الأقوى حيث يظهر الفرق، والأخف حيث لا يظهر — ثم يحافظون على الوجوه والملابس والأماكن ويراجعون كل إطار.")
+  const d=t==="video"?L("nooi Auto: 9 agents read your words, pick the best engine for every shot and keep faces, clothes and places the same.","nooi Auto: 9 وكلاء يقرؤون كلماتك ويختارون أفضل محرك لكل لقطة ويحافظون على الوجوه والملابس والأماكن.")
     :L("nooi Auto: reads your words and picks the best picture engine for them — text, faces, products or art — and checks every picture.","nooi تلقائي: يقرأ وصفك ويختار أفضل محرك صور له — نص أو وجوه أو منتجات أو فن — ويراجع كل صورة.");
   return h+'<p class="nai172" data-t="'+t+'"><img src="'+esc(logoFor("auto"))+'" alt=""><span>'+esc(d)+"</span></p>"})(hfMRow);
 (()=>{const st=document.createElement("style");st.textContent=`
@@ -22892,6 +22891,191 @@ edTick=(o=>function(now){const nested=typeof SQ194!=="undefined"&&SQ194.depth;if
   if(now-KF198.btnT>250){KF198.btnT=now;try{kfBtns198()}catch(e){}try{const ws=document.querySelectorAll(".tx198w");if(ws.length){const W=txWords198(),t=ED.t;let cur=-1;for(const w of W){if(t>=w.s&&t<w.e+.05){cur=w.i;break}}ws.forEach(b=>b.classList.toggle("now",+b.dataset.tx198===cur))}}catch(e){}}return r})(edTick);
 renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="edit"){try{kfBtns198()}catch(e){}
   try{const proj=String(S.ed.srv139||S.cur.edit||"local"),now=Date.now();if(RL198.proj!==proj){RL198.proj=proj;RL198.openAt=now}const n=now-RL198.openAt>3000?missing198().length:0,sig=proj+"|"+n;if(n&&RL198.warned!==sig){RL198.warned=sig;toast(L(n+" file(s) on the timeline are missing — Media → Relink missing files.",n+" ملف على الخط الزمني مفقود — الوسائط ← أعد ربط الملفات المفقودة."),{type:"warn",ms:6000})}else if(!n)RL198.warned=""}catch(e){}}return r})(renderView);
+
+/* ================= v200: EXPLORE — a feed worth opening every day. The Community tab becomes nooi's own "explore": a carousel of
+   what nooi can do (own cards, no stock pictures), one row of tool doors, the creators people follow, then "Recreate with one tap" —
+   the community's videos, pictures and sounds in a masonry with a search that filters as you type (docked at the bottom on phones).
+   A tap opens the full-screen viewer: one post per screen, swipe up for the next, the title and who made it, a column with the
+   maker (+ follow), heart, comments, share and more, the prompt one tap away, and a big "Recreate · ✦ cost" pill that says the
+   price before anything is spent. Comments live on the server (lib/explore200.js). Deep link: #xp=<id>. ================= */
+Object.assign(ICONS,{heart200:'<path d="M12 20.5s-7.5-4.6-9.3-9.4C1.5 7.7 3.6 4.5 6.8 4.5c2 0 3.4 1.1 4.2 2.4.8-1.3 2.2-2.4 4.2-2.4 3.2 0 5.3 3.2 4.1 6.6-1.8 4.8-9.3 9.4-9.3 9.4z"/>',
+  bubble200:'<path d="M4 5.5h16v10H9l-5 4z"/>',more200:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
+  back200:'<path d="M15 5l-7 7 7 7"/>',stack200:'<rect x="7" y="3" width="12" height="14" rx="2"/><path d="M5 7v12h12"/>'});
+const XP200={idx:0,q:"",open:null,counts:{},creators:null,crAt:0,touched:0,timer:null,list:[]};
+// own feature cards: [view, title EN, AR, line EN, AR, icon, gradient]
+const XP200F=[["crew","nooi Studio","استوديو nooi","9 AI agents direct every shot and pick the right engine for it.","9 وكلاء ذكاء يُخرجون كل لقطة ويختارون لها المحرك المناسب.","crew","linear-gradient(135deg,#0f2a1a,#3f8a3a 60%,#b9ff3d)"],
+ ["video","Replace the person","استبدال الشخص","Your character in any video — face, body and lips in step.","شخصيتك في أي فيديو — الوجه والجسد والشفاه متناسقة.","video","linear-gradient(135deg,#2a0f1f,#8a2a5a 60%,#ff6fb1)"],
+ ["w3ai","3D worlds","عوالم 3D","Words or a photo become a world you can walk through.","كلمات أو صورة تصبح عالماً تمشي فيه.","cube","linear-gradient(135deg,#0f1a2a,#2a5a8a 60%,#6fd1ff)"],
+ ["edit","Pro editor","المحرر الاحترافي","Keyframes, colour wheels, multicam, 3D camera — in the browser.","إطارات مفتاحية وعجلات ألوان وكاميرات متعددة وكاميرا 3D — في المتصفح.","edit","linear-gradient(135deg,#1a1a0f,#6a5a1a 60%,#ffd56f)"],
+ ["chars","Characters & voices","الشخصيات والأصوات","One face, one voice — the same in every shot.","وجه واحد وصوت واحد — نفسهما في كل لقطة.","char","linear-gradient(135deg,#1f0f2a,#5a2a8a 60%,#c79bff)"],
+ ["image","Pictures that sell","صور تبيع","Product shots, posters and covers from one line.","لقطات منتجات وملصقات وأغلفة من سطر واحد.","image","linear-gradient(135deg,#2a1a0f,#8a4a1a 60%,#ffb36f)"]];
+const XP200T=[["image","image","Image","صورة"],["video","video","Video","فيديو"],["chars","char","Characters","الشخصيات"],["edit","edit","Edit","التحرير"],["w3ai","cube","3D","ثلاثي الأبعاد"]];
+function xpHero200(){return'<div class="xph200" role="region" aria-label="'+esc(L("What nooi can do","ما يقدر عليه nooi"))+'"><div class="xph200s" id="xph200s">'+XP200F.map((f,i)=>'<button type="button" class="xph200c" data-go="'+f[0]+'" style="background:'+f[6]+'" aria-label="'+esc(L(f[1],f[2]))+'">'+ic(f[5])+'<span class="xph200t"><b>'+esc(L(f[1],f[2]))+"</b><small>"+esc(L(f[3],f[4]))+"</small></span></button>").join("")+'</div><div class="xph200d" aria-hidden="true">'+XP200F.map((f,i)=>'<i'+(i===XP200.idx?' class="on"':"")+"></i>").join("")+"</div></div>"}
+function xpTools200(){return'<div class="xpt200">'+XP200T.map(t=>'<button type="button" class="xpt200b" data-go="'+t[0]+'"><span class="xpt200i hub-'+t[0]+'">'+ic(t[1])+"</span><span>"+esc(L(t[2],t[3]))+"</span></button>").join("")+"</div>"}
+function xpCreators200(){const c=XP200.creators;if(!c||!c.length)return"";
+  return'<div class="spread xps200h"><h2>'+L("Creators","المبدعون")+"</h2></div>"+'<div class="xpcr200">'+c.map(x=>'<button type="button" class="xpcr200b" data-act="xpf-creator" data-pid="'+esc(x.pid)+'"><span class="xpav200">'+esc(String(x.name||"?").trim().charAt(0).toUpperCase())+"</span><b dir=\"auto\">"+esc(x.name)+"</b><small>"+esc(L(x.followers+" followers",x.followers+" متابع"))+"</small></button>").join("")+"</div>"}
+function xpQ200(list){const q=XP200.q.trim().toLowerCase();if(!q)return list;return list.filter(x=>((x.title||"")+" "+(x.prompt||"")+" "+(x.author||"")).toLowerCase().includes(q))}
+async function xpCounts200(){if(API.mode!=="server")return;try{const r=await API.req("/v1/explore/comments-count");XP200.counts=r.counts||{};if(S.view==="discover")xpGrid200()}catch(e){}}
+async function xpCrLoad200(){if(API.mode!=="server"||Date.now()-XP200.crAt<60e3)return;XP200.crAt=Date.now();try{const r=await API.req("/v1/explore/creators");XP200.creators=r.items||[];const el=document.getElementById("xpcr200");if(el&&S.view==="discover")el.innerHTML=xpCreators200()}catch(e){}}
+function xpGrid200(){const g=document.querySelector(".view .xpgrid");if(!g||S.view!=="discover")return;const list=xpQ200(xpList().filter(x=>(S.xpType||"all")==="all"||x.kind===S.xpType));
+  g.innerHTML=list.length?list.map(x=>xpCard(x)).join(""):'<p class="mute">'+(XP200.q?L("Nothing matches those words.","لا شيء يطابق هذه الكلمات."):L("Nothing in this category yet.","لا شيء في هذه الفئة بعد."))+"</p>";XP200.list=list.map(x=>x.id)}
+VIEWS.discover=(o=>function(){let h=o.apply(this,arguments).replace(/<button class="btn sm primary" data-go="home">[\s\S]*?<\/button>/,"");if(!XP200.creators)setTimeout(xpCrLoad200,0);if(!Object.keys(XP200.counts).length)setTimeout(xpCounts200,0);
+  const head='<div class="spread xps200h"><div><small class="xps200k">'+ic("spark")+" "+L("Recreate with one tap","أعد الإنشاء بلمسة")+'</small><h2>'+L("Community presets","قوالب المجتمع")+"</h2></div>"+
+    '<label class="xpsrch200"><span class="sr98">'+L("Search the feed","ابحث في الخلاصة")+"</span>"+ic("search")+'<input type="search" id="xpq200" dir="auto" placeholder="'+esc(L("Search","بحث"))+'" value="'+esc(XP200.q)+'" autocomplete="off"></label></div>';
+  h=h.replace('<div class="hftop">',xpHero200()+xpTools200()+'<div id="xpcr200">'+xpCreators200()+"</div>"+head+'<div class="hftop xpflt200">');
+  h=h.replace(/<p class="lede">[\s\S]*?<\/p>/,"");                                   // the hero says it — no lede
+  return h})(VIEWS.discover);
+// the card: comment count beside the likes; a tap opens the full-screen viewer instead of the sheet
+xpCard=(o=>function(x){let h=o.apply(this,arguments);if(!x)return h;const n=XP200.counts[x.id];if(n)h=h.replace('</div></div><button class="xprec"','<span class="xpcm200">'+ic("bubble200")+n+"</span></div></div>"+'<button class="xprec"');return h})(xpCard);
+function xpCost200(x){if(x.kind==="image")return(IMG_MODELS[x.model]||{}).cr||IMG_MODELS.dotimg.cr||2;if(x.kind==="audio")return 3;return vcost(MODELS[x.model]?x.model:"wan22",5)}
+function xpSlide200(x){const lg=x.model&&logoFor(x.model),mname=x.model&&((MODELS[x.model]||IMG_MODELS[x.model]||{}).name||x.model);
+  const media=x.ex!=null?thumb("s:"+x.ex,{}):x.kind==="image"?'<img src="'+esc(x.url)+'" alt="">':x.kind==="audio"?'<div class="xpf200au">'+ic(x.sub==="music"?"music":"voice")+'<audio src="'+esc(x.url)+'" controls></audio></div>':'<video src="'+esc(x.url)+'#t=0.1" muted loop playsinline preload="metadata"></video>';
+  const n=XP200.counts[x.id]||0,canFollow=!!(x.program&&x.creator&&!x.mine);
+  return'<section class="xpf200s" data-id="'+esc(x.id)+'"><div class="xpf200m">'+media+'</div><div class="xpf200g"></div>'+
+    '<div class="xpf200l"><small>'+esc(L("by ","من ")+(x.author||L("Community","المجتمع")))+'</small><h3 dir="auto">'+esc(x.title||(x.prompt||"").slice(0,70)||L("From the community","من المجتمع"))+"</h3>"+
+      '<div class="xpf200e">'+(lg?'<img src="'+lg+'" alt="">':"")+"<span>"+esc(mname||L("AI engine","محرك الذكاء"))+(x.aspect?" · "+esc(x.aspect):"")+"</span></div>"+
+      '<button type="button" class="xpf200p" data-act="xpf-prompt" aria-expanded="false">'+ic("words")+L("See the prompt","اعرض الوصف")+'</button><p class="xpf200q serif" dir="auto" hidden>“'+esc(x.prompt||"")+'”</p></div>'+
+    '<div class="xpf200r"><button type="button" class="xpf200a" data-act="'+(canFollow?"xpf-creator":"xpf-by")+'" data-pid="'+esc(x.creator||"")+'" aria-label="'+esc(x.author||"")+'"><span class="xpav200">'+esc(String(x.author||"n").trim().charAt(0).toUpperCase())+"</span>"+(canFollow&&!x.following?'<i class="xpf200plus">+</i>':"")+"</button>"+
+      '<button type="button" class="xpf200b'+(x.liked?" on":"")+'" data-act="xpf-like" aria-label="'+esc(L("Like","إعجاب"))+'">'+ic("heart200")+"<b>"+(x.likes||0)+"</b></button>"+
+      '<button type="button" class="xpf200b" data-act="xpf-comments" aria-label="'+esc(L("Comments","التعليقات"))+'">'+ic("bubble200")+"<b>"+n+"</b></button>"+
+      '<button type="button" class="xpf200b" data-act="xpf-share" aria-label="'+esc(L("Share","مشاركة"))+'">'+ic("share")+"</button>"+
+      '<button type="button" class="xpf200b" data-act="xpf-more" aria-label="'+esc(L("More","المزيد"))+'">'+ic("more200")+"</button></div>"+
+    '<div class="xpf200bar"><button type="button" class="xpf200rec" data-act="xpf-recreate">'+(x.program?L("Use this prompt","استخدم هذا الوصف"):L("Recreate","أعد الإنشاء"))+' <b>'+ic("spark")+xpCost200(x)+"</b></button>"+
+      '<button type="button" class="xpf200stk" data-act="xpf-by" aria-label="'+esc(L("More like this","المزيد مثله"))+'">'+ic("stack200")+"</button></div></section>"}
+function xpFull200(id){const hd=document.querySelector("header");if(hd)document.documentElement.style.setProperty("--hdr200",Math.round(hd.getBoundingClientRect().bottom)+"px");const ids=XP200.list.length?XP200.list:xpList().map(x=>x.id);const items=ids.map(i=>xpFind(i)).filter(Boolean);if(!items.length)return;
+  let el=document.getElementById("xpf200");if(!el){el=document.createElement("div");el.id="xpf200";document.body.appendChild(el)}
+  XP200.open=id;document.documentElement.classList.add("xpf200open");
+  el.innerHTML='<div class="xpf200top"><button type="button" class="xpf200x" data-act="xpf-close" aria-label="'+esc(L("Back","رجوع"))+'">'+ic("back200")+"</button><span>"+L("Explore","استكشف")+"</span>"+(S.user?'<span class="xpf200cr" title="'+esc(L("Your credits","رصيدك"))+'">'+ic("spark")+(S.credits||0)+"</span>":'<button type="button" class="xpf200su" data-act="xpf-signin">'+L("Sign up","سجّل")+"</button>")+"</div>"+
+    '<div class="xpf200sc" id="xpf200sc">'+items.map(xpSlide200).join("")+"</div>";
+  const sc=el.querySelector("#xpf200sc"),k=Math.max(0,items.findIndex(x=>x.id===id));sc.scrollTop=k*sc.clientHeight;
+  if(xpIO)el.querySelectorAll("video").forEach(v=>xpIO.observe(v));try{paintThumbs()}catch(e){}
+  sc.onscroll=()=>{clearTimeout(XP200.timer);XP200.timer=setTimeout(()=>{const i=Math.round(sc.scrollTop/sc.clientHeight),s=sc.children[i];if(s)XP200.open=s.dataset.id},80)}}
+function xpClose200(){const el=document.getElementById("xpf200");if(el){el.querySelectorAll("video").forEach(v=>{try{v.pause()}catch(e){}});el.remove()}document.documentElement.classList.remove("xpf200open");XP200.open=null;if(location.hash.startsWith("#xp="))history.replaceState(null,"",location.pathname+location.search)}
+function xpCur200(a){const s=a.closest(".xpf200s");return s?xpFind(s.dataset.id):null}
+function xpSlideRefresh200(x){const s=document.querySelector('#xpf200 .xpf200s[data-id="'+CSS.escape(x.id)+'"]');if(!s)return;const q=s.querySelector(".xpf200q"),open=q&&!q.hidden;s.outerHTML=xpSlide200(x);if(open){const n=document.querySelector('#xpf200 .xpf200s[data-id="'+CSS.escape(x.id)+'"]');if(n){n.querySelector(".xpf200q").hidden=false;n.querySelector(".xpf200p").setAttribute("aria-expanded","true")}}}
+async function xpComments200(x){let items=[];try{items=((await API.req("/v1/explore/"+encodeURIComponent(x.id)+"/comments")).items)||[]}catch(e){}
+  const fm=t=>new Intl.DateTimeFormat(locale(),{day:"numeric",month:"short"}).format(new Date(t));
+  hfSheet(L("Comments","التعليقات")+(items.length?" · "+items.length:""),'<div class="xpcl200" id="xpcl200">'+(items.length?items.map(c=>'<div class="xpc200"><div class="spread"><b dir="auto">'+esc(c.name)+'</b><span class="small mute">'+esc(fm(c.t))+(c.mine||["owner","admin"].includes(ME.role)?' <button type="button" class="btn sm ghost" data-act="xpf-cdel" data-id="'+esc(x.id)+'" data-cid="'+esc(c.id)+'" aria-label="'+esc(L("Delete","حذف"))+'">'+ic("trash")+"</button>":"")+'</span></div><p dir="auto">'+esc(c.text)+"</p></div>").join(""):'<p class="mute">'+L("Be the first to say something.","كن أول من يعلّق.")+"</p>")+"</div>"+
+    (S.user?'<div class="xpcf200"><textarea id="xpct200" dir="auto" rows="2" maxlength="500" placeholder="'+esc(L("Write a comment…","اكتب تعليقاً…"))+'"></textarea><button type="button" class="btn primary" data-act="xpf-csend" data-id="'+esc(x.id)+'">'+ic("send")+L("Send","أرسل")+"</button></div>":'<p class="small mute">'+L("Sign in to comment.","سجّل الدخول للتعليق.")+"</p>"))}
+function xpSignIn200(){closeSheet();xpClose200();AU.showAuth=true;renderView();$("#main").scrollTop=0}
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest("[data-act]");if(!a)return;const act=a.dataset.act;if(!act.startsWith("xpf-"))return;e.preventDefault();e.stopImmediatePropagation();const x=xpCur200(a)||(a.dataset.id&&xpFind(a.dataset.id));
+  if(act==="xpf-close"){xpClose200();return}
+  if(act==="xpf-signin"){xpSignIn200();return}
+  if(act==="xpf-prompt"){const q=a.parentElement.querySelector(".xpf200q");q.hidden=!q.hidden;a.setAttribute("aria-expanded",String(!q.hidden));return}
+  if(act==="xpf-creator"){if(!S.user){toast(L("Sign in to follow creators.","سجّل الدخول لمتابعة المبدعين."));return}if(a.dataset.pid)crOpen157(a.dataset.pid);return}
+  if(act==="xpf-by"&&x){XP200.q=x.author||"";const q=$("#xpq200");if(q)q.value=XP200.q;xpClose200();xpGrid200();const g=document.querySelector(".view .xpgrid");if(g)g.scrollIntoView({block:"start",behavior:"smooth"});return}
+  if(act==="xpf-recreate"&&x){xpClose200();xpRecreate(x);return}
+  if(act==="xpf-share"&&x){const url=location.origin+location.pathname+"#xp="+encodeURIComponent(x.id);try{if(navigator.share)await navigator.share({title:x.title||"nooi",url});else{await navigator.clipboard.writeText(url);toast(L("Link copied.","نُسخ الرابط."),{type:"ok"})}}catch(err){}return}
+  if(act==="xpf-more"&&x){hfSheet(x.title||L("From the community","من المجتمع"),'<div class="xpm200">'+(x.url?'<button type="button" class="btn" data-act="xp-dl" data-id="'+esc(x.id)+'">'+ic("download")+L("Download","تنزيل")+"</button>":"")+
+      (x.mine||["owner","admin"].includes(ME.role)?'<button type="button" class="btn ghost danger" data-act="xp-del" data-id="'+esc(x.id)+'">'+ic("trash")+L("Remove","إزالة")+"</button>":"")+(["owner","admin"].includes(ME.role)&&x.ex==null?'<button type="button" class="btn ghost" data-act="xp-feat" data-id="'+esc(x.id)+'">'+(x.featured?L("Unfeature","إلغاء التمييز"):L("Feature","ميّزه"))+"</button>":"")+
+      '<button type="button" class="btn ghost" data-act="xpf-report" data-id="'+esc(x.id)+'">'+ic("shield")+L("Report","إبلاغ")+"</button></div>");return}
+  if(act==="xpf-report"){closeSheet();toast(L("Thanks — write to contact@nooi.ai with the link and we'll look.","شكراً — راسل contact@nooi.ai مع الرابط وسننظر فيه."));return}
+  if(act==="xpf-like"&&x){if(!S.user){xpSignIn200();return}if(x.ex!=null||API.mode!=="server")return;try{const r=await API.req("/v1/explore/"+x.id+"/like",{json:{}});Object.assign(x,r);xpSlideRefresh200(x)}catch(err){toast(String(err.message||err))}return}
+  if(act==="xpf-comments"&&x){if(x.ex!=null||API.mode!=="server"){toast(L("Comments open once real posts are shared.","تُفتح التعليقات حين تُشارك منشورات حقيقية."));return}xpComments200(x);return}
+  if(act==="xpf-csend"&&x){const t=$("#xpct200"),text=t?t.value.trim():"";if(text.length<2){toast(L("Write a comment first.","اكتب تعليقاً أولاً."));return}a.disabled=true;
+    try{const r=await API.req("/v1/explore/"+encodeURIComponent(x.id)+"/comments",{json:{text}});XP200.counts[x.id]=r.count;xpComments200(x);xpSlideRefresh200(x);xpGrid200()}catch(err){a.disabled=false;toast(S.lang==="ar"&&err.errorAr?err.errorAr:String(err.message||err))}return}
+  if(act==="xpf-cdel"&&x){try{const r=await API.req("/v1/explore/"+encodeURIComponent(x.id)+"/comments/"+encodeURIComponent(a.dataset.cid),{method:"DELETE"});XP200.counts[x.id]=r.count;xpComments200(x);xpSlideRefresh200(x);xpGrid200()}catch(err){toast(String(err.message||err))}return}},true);
+// a card tap → the viewer (the Recreate corner button keeps its job); typing in the search filters the grid
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="xp-open"]');if(!a||e.target.closest(".xprec"))return;if(!document.querySelector(".view .xpgrid")||!a.closest(".view"))return;const x=xpFind(a.dataset.id);if(!x)return;e.preventDefault();e.stopImmediatePropagation();xpFull200(x.id)},true);
+document.addEventListener("input",e=>{if(e.target&&e.target.id==="xpq200"){XP200.q=e.target.value;xpGrid200()}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.getElementById("xpf200")){xpClose200();e.stopImmediatePropagation()}},true);
+// the carousel moves by itself (every 4.5 s, not after a touch, not with reduced motion); the dots follow the scroll
+function xpHeroTick200(){const s=document.getElementById("xph200s");if(!s||S.view!=="discover")return;if(Date.now()-XP200.touched<8000||matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const n=s.children.length,w=s.children[0]?s.children[0].offsetWidth+12:0;if(!w)return;XP200.idx=(XP200.idx+1)%n;s.scrollTo({left:(document.documentElement.dir==="rtl"?-1:1)*XP200.idx*w,behavior:"smooth"})}
+setInterval(xpHeroTick200,4500);
+document.addEventListener("scroll",e=>{const s=e.target;if(!s||s.id!=="xph200s")return;const w=s.children[0]?s.children[0].offsetWidth+12:1;const i=Math.round(Math.abs(s.scrollLeft)/w);if(i!==XP200.idx){XP200.idx=i}s.parentElement.querySelectorAll(".xph200d i").forEach((d,k)=>d.classList.toggle("on",k===i))},true);
+document.addEventListener("pointerdown",e=>{if(e.target.closest&&e.target.closest("#xph200s"))XP200.touched=Date.now()},true);
+// deep link #xp=<id>: open Explore on that post once the feed has loaded
+function xpHash200(){const m=location.hash.match(/^#xp=([A-Za-z0-9_-]+)/);if(!m)return;const id=decodeURIComponent(m[1]);if(S.view!=="discover"){go("discover")}
+  let n=0;const iv=setInterval(()=>{if(++n>40)clearInterval(iv);if(XP.items&&xpFind(id)){clearInterval(iv);XP200.list=[];xpFull200(id)}else if(!XP.loading&&!XP.items)xpLoad(true)},250)}
+window.addEventListener("hashchange",xpHash200);setTimeout(xpHash200,400);
+renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view!=="discover"&&document.getElementById("xpf200"))xpClose200();if(S.view==="discover"){const g=document.querySelector(".view .xpgrid");if(g&&XP200.q)xpGrid200();else XP200.list=[]}return r})(renderView);
+(()=>{const st=document.createElement("style");st.id="v200";st.textContent=`
+.xph200{margin:4px 0 12px;position:relative}.xph200s{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding-bottom:2px;-webkit-overflow-scrolling:touch}.xph200s::-webkit-scrollbar{display:none}
+.xph200c{flex:0 0 min(100%,520px);scroll-snap-align:start;min-height:168px;border:0;border-radius:18px;color:#fff;text-align:start;padding:18px;display:flex;flex-direction:column;justify-content:space-between;gap:14px;cursor:pointer;position:relative;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.xph200c>svg{width:28px;height:28px;stroke:#fff;opacity:.9}.xph200c::after{content:"";position:absolute;inset:auto -20% -40% auto;width:60%;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.12);filter:blur(10px)}
+.xph200t{display:grid;gap:4px;position:relative;z-index:1}.xph200t b{font-size:20px;font-weight:700;letter-spacing:-.01em}.xph200t small{font-size:13px;opacity:.9;max-width:36ch}
+.xph200d{display:flex;justify-content:center;gap:5px;margin-top:8px}.xph200d i{width:5px;height:5px;border-radius:3px;background:var(--line);transition:width .25s,background .25s}.xph200d i.on{width:16px;background:var(--lime)}
+.xpt200{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:0 0 16px}.xpt200b{border:0;background:none;color:inherit;display:grid;justify-items:center;gap:6px;padding:4px 0;font-size:12px;cursor:pointer}
+.xpt200i{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;background:var(--panel);border:1px solid var(--line)}.xpt200i svg{width:24px;height:24px}
+.xpt200i.hub-image{background:linear-gradient(135deg,#ff8a3d,#ffc23d);color:#1a1000}.xpt200i.hub-video{background:linear-gradient(135deg,#7c5cff,#c84bff);color:#fff}.xpt200i.hub-chars{background:linear-gradient(135deg,#ff5c8a,#ff9ab8);color:#2a0010}.xpt200i.hub-edit{background:linear-gradient(135deg,#2bd4a7,#7ef0c9);color:#002a1e}.xpt200i.hub-w3ai{background:linear-gradient(135deg,#3d8bff,#6fd1ff);color:#001a33}
+.xpt200i svg{stroke:currentColor}
+.xps200h{align-items:end;gap:12px;margin:6px 0 8px}.xps200h h2{margin:0;font-size:20px}.xps200k{display:inline-flex;align-items:center;gap:4px;color:var(--lime);font-weight:600;font-size:12px}.xps200k svg{width:13px;height:13px}
+.xpsrch200{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:0 12px;height:40px;min-width:200px;flex:0 1 320px}.xpsrch200 svg{width:16px;height:16px;flex:none;opacity:.7}.xpsrch200 input{border:0;background:none;color:inherit;font:inherit;flex:1;min-width:0;outline:none}
+.xpcr200{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding:2px 0 12px}.xpcr200::-webkit-scrollbar{display:none}.xpcr200b{flex:0 0 auto;border:0;background:none;color:inherit;display:grid;justify-items:center;gap:3px;font-size:12px;cursor:pointer;min-width:72px}.xpcr200b b{max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.xpcr200b small{color:var(--mute)}
+.xpav200{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--lime),#2bd4a7);color:#000;font-weight:800;font-size:18px}
+.xpcm200{display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--mute)}.xpcm200 svg{width:12px;height:12px}
+.xpme157{flex-wrap:nowrap}.xpme157>.small{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#xpf200{position:fixed;inset:0;z-index:38;background:#000;color:#fff;display:flex;flex-direction:column}html.xpf200open{overflow:hidden}
+.xpf200top{position:absolute;top:0;left:0;right:0;z-index:3;display:flex;align-items:center;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;background:linear-gradient(rgba(0,0,0,.6),transparent)}.xpf200top>span{font-weight:600}
+.xpf200x{border:0;background:rgba(255,255,255,.12);color:#fff;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;cursor:pointer}.xpf200x svg{width:20px;height:20px}
+.xpf200cr{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.14);border-radius:999px;padding:6px 10px;font-weight:700;font-size:13px}.xpf200cr svg{width:14px;height:14px;stroke:var(--lime)}
+.xpf200su{border:0;background:var(--lime);color:#000;font-weight:700;border-radius:999px;padding:7px 14px;cursor:pointer}
+.xpf200sc{flex:1;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none}.xpf200sc::-webkit-scrollbar{display:none}
+.xpf200s{position:relative;height:100%;scroll-snap-align:start;scroll-snap-stop:always;display:grid}.xpf200m{position:absolute;inset:0;display:grid;place-items:center;background:#000}.xpf200m video,.xpf200m img,.xpf200m canvas{max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain}
+.xpf200au{display:grid;place-items:center;gap:16px;width:min(90%,420px)}.xpf200au svg{width:72px;height:72px;stroke:var(--lime)}.xpf200au audio{width:100%}
+.xpf200g{position:absolute;inset:auto 0 0 0;height:46%;background:linear-gradient(transparent,rgba(0,0,0,.78));pointer-events:none}
+.xpf200l{position:absolute;left:14px;right:84px;bottom:92px;display:grid;gap:6px;z-index:2}[dir="rtl"] .xpf200l{left:84px;right:14px}.xpf200l small{opacity:.8;font-size:12px}.xpf200l h3{margin:0;font-size:17px;line-height:1.3;font-weight:700;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.xpf200e{display:inline-flex;align-items:center;gap:6px;font-size:12px;opacity:.85}.xpf200e img{width:16px;height:16px;border-radius:4px;background:#fff}
+.xpf200p{justify-self:start;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.35);color:#fff;border-radius:999px;padding:5px 10px;font-size:12px;display:inline-flex;align-items:center;gap:5px;cursor:pointer}.xpf200p svg{width:13px;height:13px}
+.xpf200q{margin:0;font-size:14px;line-height:1.45;max-height:34vh;overflow:auto;background:rgba(0,0,0,.45);border-radius:12px;padding:10px 12px}
+.xpf200r{position:absolute;right:10px;bottom:96px;display:grid;gap:14px;justify-items:center;z-index:2}[dir="rtl"] .xpf200r{right:auto;left:10px}
+.xpf200a{border:0;background:none;padding:0;position:relative;cursor:pointer}.xpf200a .xpav200{width:44px;height:44px;font-size:16px;box-shadow:0 0 0 2px #fff}.xpf200plus{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);width:18px;height:18px;border-radius:50%;background:var(--lime);color:#000;font-style:normal;font-weight:800;font-size:13px;line-height:18px;text-align:center}
+.xpf200b{border:0;background:none;color:#fff;display:grid;justify-items:center;gap:2px;font-size:12px;cursor:pointer;padding:0}.xpf200b svg{width:30px;height:30px;stroke:#fff;fill:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}.xpf200b.on svg{fill:#ff4d6d;stroke:#ff4d6d}.xpf200b b{font-weight:600}
+.xpf200bar{position:absolute;left:12px;right:12px;bottom:calc(16px + env(safe-area-inset-bottom));display:flex;gap:10px;align-items:center;z-index:2}
+.xpf200rec{flex:1;border:0;border-radius:999px;background:var(--lime);color:#000;font-weight:700;font-size:15px;height:48px;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}.xpf200rec b{display:inline-flex;align-items:center;gap:2px;font-weight:700;opacity:.85}.xpf200rec svg{width:14px;height:14px;stroke:#000}
+.xpf200stk{width:48px;height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;display:grid;place-items:center;cursor:pointer}.xpf200stk svg{width:22px;height:22px}
+.xpcl200{display:grid;gap:10px;max-height:46vh;overflow:auto}.xpc200{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.xpc200 p{margin:4px 0 0}.xpcf200{display:grid;gap:8px;margin-top:12px}.xpcf200 textarea{width:100%}
+.xpm200{display:flex;flex-wrap:wrap;gap:8px}
+@media (min-width:768px){#xpf200{top:var(--hdr200,64px);padding:0 max(0px,calc((100vw - 1180px)/2))}.xpf200s{grid-template-columns:1fr}.xpf200m{inset:0}.xph200c{flex-basis:calc(50% - 6px)}.xpf200l{bottom:28px;left:24px;right:120px}[dir="rtl"] .xpf200l{left:120px;right:24px}.xpf200r{bottom:110px;right:24px}[dir="rtl"] .xpf200r{left:24px;right:auto}.xpf200bar{left:auto;right:24px;width:320px;bottom:28px}[dir="rtl"] .xpf200bar{right:auto;left:24px}}
+@media (max-width:767px){.xpt200b{font-size:11px}.xpt200i{width:52px;height:52px;border-radius:14px}.xph200c{min-height:160px;padding:16px}.xph200t b{font-size:18px}
+  .xpsrch200{position:fixed;left:12px;right:12px;bottom:calc(74px + env(safe-area-inset-bottom));z-index:5;flex:none;min-width:0;box-shadow:0 6px 24px rgba(0,0,0,.35);background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(10px)}html.xpf200open .xpsrch200{display:none}.view .xpgrid{padding-bottom:56px}}
+`;document.head.appendChild(st)})();
+
+/* ================= v200s: SECURITY — three checklist gaps on the page: a spending cap in Account (the most credits a day; the server
+   refuses a job past it before any engine is called), a step-up code for admin changes (a 428 answer opens one sheet: send the
+   6-digit code to the admin's email, type it, the change goes through), and Admin → Security (refused requests per hour, the step-up
+   switch, who is confirmed right now). Server: lib/guard200.js. ================= */
+const SEC200={cap:null,sum:null,resolve:null,busy:false};
+async function capLoad200(){if(API.mode!=="server"||!S.user)return;try{SEC200.cap=await API.req("/v1/me/cap200");const s=$("#cap200s");if(s)s.textContent=capLine200()}catch(e){}}
+function capLine200(){const c=SEC200.cap||{day:0,spent:0};return L("Spent today: ","أُنفق اليوم: ")+c.spent+(c.day?" / "+c.day:"")}
+function capPanel200(){const c=SEC200.cap||{day:0,spent:0};
+  return'<div class="panel set cap200"><h2>'+ic("shield","width:18px;vertical-align:-3px")+" "+L("Spending cap","سقف الإنفاق")+'</h2><p class="small mute" style="margin-top:0">'+L("The most credits this account may spend in a day. 0 = no cap.","أقصى رصيد يمكن لهذا الحساب إنفاقه في اليوم. 0 = بلا سقف.")+'</p>'+
+    '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><input type="number" id="cap200" min="0" max="100000" step="10" value="'+(c.day||0)+'" style="width:120px" aria-label="'+esc(L("Credits a day","رصيد في اليوم"))+'"><span class="small">'+L("credits a day","رصيد في اليوم")+'</span><button type="button" class="btn sm" data-act="cap200-save">'+ic("check")+L("Save","حفظ")+'</button></div><p class="small mute" id="cap200s" style="margin:8px 0 0">'+capLine200()+"</p></div>"}
+VIEWS.account=(o=>function(){let h=o.apply(this,arguments);if(API.mode!=="server"||!S.user||typeof h!=="string")return h;if(!SEC200.cap)setTimeout(capLoad200,0);
+  const re=new RegExp('<div class="panel set">(?=[^]{0,160}?'+L("Preferences","التفضيلات").replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+')');return re.test(h)?h.replace(re,capPanel200()+'<div class="panel set">'):h.replace("</div></div>$",capPanel200()+"</div></div>")})(VIEWS.account);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="cap200-save"]');if(!a)return;e.stopImmediatePropagation();const v=Math.round(+($("#cap200")||{}).value||0);if(!(v>=0&&v<=100000)){toast(L("A whole number from 0 to 100000.","رقم صحيح من 0 إلى 100000."));return}
+  a.disabled=true;try{SEC200.cap=await API.req("/v1/me/cap200",{json:{day:v},method:"PUT"});const s=$("#cap200s");if(s)s.textContent=capLine200();toast(v?L("Cap saved: "+v+" credits a day.","حُفظ السقف: "+v+" رصيد في اليوم."):L("Cap removed.","أُزيل السقف."),{type:"ok"})}catch(err){toast(String(err.message||err))}finally{a.disabled=false}},true);
+// ---- step-up: a 428 from the server opens the sheet; the request is sent again once the code is confirmed
+function stepupSheet200(){return new Promise(res=>{SEC200.resolve=res;hfSheet(L("Confirm it's you","أكّد هويتك"),'<p class="small mute" style="margin-top:0">'+L("Admin changes need a 6-digit code from your email — once, then for 12 hours.","تغييرات الإدارة تحتاج رمزاً من 6 أرقام من بريدك — مرة واحدة، ثم لمدة 12 ساعة.")+'</p>'+
+  '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><button type="button" class="btn" data-act="su200-send">'+ic("mail")+L("Send the code","أرسل الرمز")+'</button><span class="small mute" id="su200m"></span></div>'+
+  '<div class="row" style="gap:8px;align-items:center;margin-top:12px"><input id="su200c" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" style="width:130px;letter-spacing:.25em;text-align:center" aria-label="'+esc(L("Code","الرمز"))+'"><button type="button" class="btn primary" data-act="su200-ok">'+ic("check")+L("Confirm","تأكيد")+"</button></div>")})}
+function stepupDone200(ok){const r=SEC200.resolve;SEC200.resolve=null;if(r)r(!!ok)}
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest("[data-act]");if(!a)return;const act=a.dataset.act;
+  if(act==="close-sheet"&&SEC200.resolve){stepupDone200(false);return}
+  if(!/^su200-/.test(act))return;e.stopImmediatePropagation();e.preventDefault();
+  if(act==="su200-send"){a.disabled=true;try{const r=await API.req("/v1/admin/stepup200/send",{json:{}});const m=$("#su200m");if(m)m.textContent=r.to?L("Sent to "+r.to,"أُرسل إلى "+r.to):L("Sent.","أُرسل.");if(r.code){const c=$("#su200c");if(c)c.value=r.code}}catch(err){toast(S.lang==="ar"&&err.errorAr?err.errorAr:String(err.message||err))}finally{a.disabled=false}return}
+  if(act==="su200-ok"){const code=String(($("#su200c")||{}).value||"").replace(/\D/g,"");if(code.length!==6){toast(L("Type the 6 digits.","اكتب الأرقام الستة."));return}a.disabled=true;
+    try{await API.req("/v1/admin/stepup200/verify",{json:{code}});closeSheet();stepupDone200(true);toast(L("Confirmed for 12 hours.","تم التأكيد لمدة 12 ساعة."),{type:"ok"})}catch(err){toast(S.lang==="ar"&&err.errorAr?err.errorAr:String(err.message||err));a.disabled=false}return}},true);
+API.req=(o=>async function(p,opt){try{return await o.apply(this,arguments)}catch(e){if(e&&e.status===428&&!SEC200.busy&&String(p).startsWith("/v1/admin/")){SEC200.busy=true;try{const ok=await stepupSheet200();if(ok)return await o.apply(this,arguments)}finally{SEC200.busy=false}}throw e}})(API.req);
+// ---- Admin → Security
+ATABS.push(["security200","Security","الأمان","shield","analytics.view"]);
+async function secLoad200(){try{SEC200.sum=await API.req("/v1/admin/security200")}catch(e){SEC200.sum={error:String(e.message||e)}}if(S.view==="admin"&&S.admTab==="security200")renderView()}
+function secBody200(){const s=SEC200.sum;if(!s)return'<p class="small mute">'+L("Loading…","جارٍ التحميل…")+"</p>";if(s.error)return'<p class="mute">'+esc(s.error)+"</p>";
+  const K=[["401",L("Not signed in","بلا تسجيل دخول")],["403",L("Not allowed","غير مسموح")],["429",L("Too many requests","طلبات كثيرة")],["5xx",L("Server errors","أخطاء الخادم")],["stepup",L("Step-up refused","تأكيد مرفوض")]];
+  const row=(t,o)=>'<div class="sec200r"><b>'+t+"</b>"+K.map(k=>'<span><small>'+k[1]+"</small><em>"+(o[k[0]]||0)+"</em></span>").join("")+"</div>";
+  const fm=t=>t?new Intl.DateTimeFormat(locale(),{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}).format(new Date(t)):L("never","لم يحدث");
+  return'<div class="sec200"><div class="panel set"><label class="laisw" style="display:inline-flex;align-items:center;gap:10px;cursor:pointer"><input type="checkbox" data-act="sec200-stepup"'+(s.stepup?" checked":"")+'><span><b>'+L("Step-up for admin changes","تأكيد إضافي لتغييرات الإدارة")+'</b><small class="dim" style="display:block">'+L("A 6-digit code from the admin's email, once every 12 hours, before any change in Admin.","رمز من 6 أرقام من بريد المشرف، مرة كل 12 ساعة، قبل أي تغيير في الإدارة.")+"</small></span></label>"+
+    '<p class="small mute" style="margin:10px 0 0">'+esc(L(s.grants+" admin(s) confirmed right now.",s.grants+" مشرف مؤكَّد الآن."))+"</p></div>"+
+    '<div class="panel set"><h2>'+L("Refused requests","الطلبات المرفوضة")+"</h2>"+row(L("Last hour","آخر ساعة"),s.last1h||{})+row(L("Last 24 hours","آخر 24 ساعة"),s.last24h||{})+
+    '<p class="small mute" style="margin:10px 0 0">'+esc(L("Owners are emailed when the last hour passes "+s.threshold+" refused requests (at most every 6 hours). Last alert: "+fm(s.alertedAt)+".","يُراسَل المالكون حين تتجاوز آخر ساعة "+s.threshold+" طلباً مرفوضاً (كل 6 ساعات على الأكثر). آخر تنبيه: "+fm(s.alertedAt)+"."))+"</p></div>"+
+    '<div class="panel set"><h2>'+L("Last 7 days","آخر 7 أيام")+'</h2><div class="sec200d">'+(s.days||[]).map(d=>row(d.day.slice(5),d)).join("")+"</div></div></div>"}
+VIEWS.admin=(o=>function(){const h=o.apply(this,arguments);if(S.admTab!=="security200"||typeof h!=="string")return h;if(!SEC200.sum)setTimeout(secLoad200,0);return h.replace(/(<div class="admtabs">[\s\S]*?<\/div>)/,"$1"+secBody200())})(VIEWS.admin);
+document.addEventListener("change",async e=>{const a=e.target;if(!a||a.dataset.act!=="sec200-stepup")return;a.disabled=true;try{SEC200.sum=await API.req("/v1/admin/security200",{json:{stepup:a.checked},method:"PUT"});toast(a.checked?L("Step-up on — admins confirm by email before changes.","التأكيد مفعّل — يؤكد المشرفون عبر البريد قبل التغييرات."):L("Step-up off.","التأكيد متوقف."),{type:"ok"})}catch(err){a.checked=!a.checked;toast(String(err.message||err))}finally{a.disabled=false;renderView()}},true);
+(()=>{const st=document.createElement("style");st.textContent=`
+.sec200r{display:grid;grid-template-columns:90px repeat(5,minmax(0,1fr));gap:6px;align-items:end;padding:8px 0;border-bottom:1px solid var(--line)}.sec200r:last-child{border-bottom:0}.sec200r>b{font-size:13px}.sec200r span{display:grid;gap:2px}.sec200r small{color:var(--mute);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sec200r em{font-style:normal;font-weight:700;font-size:15px}
+@media (max-width:560px){.sec200r{grid-template-columns:70px repeat(5,minmax(0,1fr))}.sec200r small{font-size:10px}}
+`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;
