@@ -24,6 +24,9 @@ SETUP = """async(l)=>{S.langAsked=true;document.getElementById('langsug')?.remov
 READY = "S.ed.clips.length===3&&document.querySelector('.ed143 #wk')&&S.ed.clips.every(c=>{const m=clipMedia(c);return m&&srcReady(m)})"
 SCAN = open(os.path.join(ROOT, "tests", "v144.py")).read().split('SCAN = r"""', 1)[1].split('"""', 1)[0]
 PIX = """async([t,x,y,w,h])=>{ED.playing=false;ED.t=t;for(let i=0;i<3;i++)await new Promise(r=>requestAnimationFrame(r));await new Promise(r=>setTimeout(r,250));
+ /* the clip under the playhead may still be seeking (a replaced file): wait for its frame, up to 2 s */
+ for(let i=0;i<40;i++){const st=edStarts(),k=S.ed.clips.findIndex((c,j)=>t>=st[j]&&t<st[j]+clipDur(c)),m=k>=0&&M['c_'+S.ed.clips[k].id];if(!m||!m.el||m.type!=='video'||(m.el.readyState>=2&&!m.el.seeking))break;await new Promise(r=>setTimeout(r,50))}
+ for(let i=0;i<2;i++)await new Promise(r=>requestAnimationFrame(r));
  const cv=document.getElementById('wk'),c=cv.getContext('2d'),d=c.getImageData(Math.round(cv.width*x),Math.round(cv.height*y),Math.max(1,Math.round(cv.width*w)),Math.max(1,Math.round(cv.height*h))).data;let r=0,g=0,b=0,n=d.length/4;
  for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2]}return [Math.round(r/n),Math.round(g/n),Math.round(b/n)]}"""
 fails, out = [], {}
