@@ -21720,6 +21720,56 @@ function pay189(p,st){const k=p[0],wh=(location.origin||"")+"/v1/billing/webhook
   if(k==="moyasar")h+='<div class="small dim" style="margin-top:6px">'+L("In Moyasar: Settings → Webhooks → add this address, choose payment paid, failed and refunded, and type the same secret token you saved above.","في ميسّر: الإعدادات ← Webhooks ← أضف هذا العنوان، واختر الدفع الناجح والفاشل والمسترد، واكتب نفس الرمز السري الذي حفظته أعلاه.")+"</div>";
   return h}
 
+/* ================= v190: THE MOYASAR SETUP STEPS IN ADMIN → PAYMENTS ================= */
+/* The owner: "add them into the dashboard" — the six Moyasar steps from v189's answer now live in Admin → Payments, each one checked by
+   the server (lib/moyasar190.js), with a tick when it's done: the secret key (test or live), the https address, the webhook (one tap
+   creates it in the Moyasar account with a new secret token and keeps the token here), a test payment, the IP whitelist (the server finds
+   its own address; the owner ticks it, Moyasar has no API for it) and going live. The keys never come to the page. */
+const M190={d:null,at:0,busy:"",fp:"",open:null};
+const m190Err=e=>S.lang==="ar"&&e&&e.errorAr?e.errorAr:String((e&&e.message)||e);
+function m190Load(force){if(API.mode!=="server"||M190.busy)return;if(!force&&M190.d&&Date.now()-M190.at<15000)return;M190.busy="load";
+  API.req("/v1/admin/pay190/moyasar").then(d=>{M190.d=d;M190.at=Date.now();M190.fp=JSON.stringify((A().payments||{}).moyasar||{})}).catch(()=>{}).finally(()=>{M190.busy="";m190Paint()})}
+function m190Paint(){const el=document.querySelector(".mset190");if(el)el.outerHTML=mset190()}
+function mset190(){if(API.mode!=="server")return"";const d=M190.d;
+  if(!d||JSON.stringify((A().payments||{}).moyasar||{})!==M190.fp)setTimeout(()=>m190Load(!!d),0);
+  if(!d)return'<div class="card mset190"><div class="m190h">'+ic("card","width:18px;height:18px")+"<b>"+L("Moyasar — set up step by step","ميسّر — الإعداد خطوة بخطوة")+'</b><span class="dim small">'+L("Checking…","جارٍ الفحص…")+"</span></div></div>";
+  const k=d.key,w=d.webhook,t=d.test,ip=d.ip,steps=[k,d.https,w,t,ip,d.live],n=steps.filter(s=>s.done).length,live=k.mode==="live",busy=M190.busy;
+  const btn=(act,label,icon,dis,ghost)=>'<button type="button" class="btn sm '+(ghost?"ghost":"primary")+(busy===act?" busy":"")+'" data-act="'+act+'"'+(dis||busy?" disabled":"")+">"+ic(icon)+esc(label)+"</button>";
+  const row=(i,s,title,text,more)=>'<li class="'+(s.done?"done190":"")+'"><span class="m190n">'+(s.done?ic("check"):i)+'</span><div><b>'+title+'</b><p class="small">'+text+"</p>"+(more||"")+"</div></li>";
+  let h='<details class="card mset190"'+((M190.open??n<6)?" open":"")+'><summary class="m190h">'+ic("card","width:18px;height:18px")+"<b>"+L("Moyasar — set up step by step","ميسّر — الإعداد خطوة بخطوة")+'</b><span class="pill m190p">'+n+" / 6</span></summary><ol class=\"m190l\">";
+  h+=row(1,k,L("Secret key","المفتاح السري"),k.done?(live?L("Saved — live key.","محفوظ — مفتاح حقيقي."):k.mode==="test"?L("Saved — test key. Test cards add real credits here, so don't open payments to customers yet.","محفوظ — مفتاح تجريبي. بطاقات الاختبار تضيف رصيداً حقيقياً هنا، فلا تفتح الدفع للعملاء بعد."):L("Saved.","محفوظ.")):L("In Moyasar: Settings → API Keys → copy the Secret key (start with the test one, sk_test_…) and save it in the Moyasar card below. The Publishable key isn't needed.","في ميسّر: الإعدادات ← API Keys ← انسخ المفتاح السري (ابدأ بالتجريبي sk_test_…) واحفظه في بطاقة ميسّر بالأسفل. المفتاح العام غير مطلوب."),
+    k.done?"":btn("m190-key",L("Go to the key field","اذهب إلى حقل المفتاح"),"arrow",false,true));
+  h+=row(2,d.https,L("Site address (https)","عنوان الموقع (https)"),d.https.done?'<span dir="ltr">'+esc(d.https.url)+"</span>":L("Moyasar sends payment notices only to an https address. On the server run bash /opt/nooi/deploy/activate.sh — it asks for your https address.","يرسل ميسّر إشعارات الدفع إلى عنوان https فقط. شغّل على الخادم bash /opt/nooi/deploy/activate.sh — سيسألك عن عنوانك بـ https."));
+  const wm=w.connected&&w.mode&&k.mode&&w.mode!==k.mode;
+  h+=row(3,w,L("Payment notices (webhook)","إشعارات الدفع (Webhook)"),w.done?(w.connected?L("Connected in your Moyasar account ("+(w.mode==="live"?"live":"test")+") · the secret token is kept here.","متصل في حسابك على ميسّر ("+(w.mode==="live"?"حقيقي":"تجريبي")+") · الرمز السري محفوظ هنا."):L("Set up by hand · a notice with the right secret token arrived.","أُعدّ يدوياً · وصل إشعار بالرمز السري الصحيح.")):wm?L("Connected for test mode — connect again now that the live key is saved.","متصل لوضع الاختبار — اتصل مجدداً بعد حفظ المفتاح الحقيقي."):L("One tap: nooi adds the webhook to your Moyasar account (paid, failed, refunded, voided) with a new secret token and keeps the token here.","بلمسة واحدة: يضيف nooi الإشعارات إلى حسابك في ميسّر (ناجح، فاشل، مسترد، ملغى) برمز سري جديد ويحفظ الرمز هنا."),
+    btn("m190-wh",w.connected?L("Connect again","اتصل مجدداً"):L("Connect webhook in Moyasar","اربط الإشعارات في ميسّر"),"link",!k.done||!d.https.done,w.done));
+  const last=t.lastHook?'<p class="small dim">'+L("Last payment notice: ","آخر إشعار دفع: ")+fmtT(t.lastHook.at)+(t.lastHook.type?' · <span dir="ltr">'+esc(t.lastHook.type)+"</span>":"")+"</p>":"";
+  const bad=t.refused?'<p class="small warn190">'+ic("warn")+" "+L("A payment notice was refused at "+fmtT(t.refused.at)+": its secret token doesn't match. Tap Connect again in step 3.","رُفض إشعار دفع في "+fmtT(t.refused.at)+": رمزه السري لا يطابق. اضغط «اتصل مجدداً» في الخطوة 3.")+"</p>":"";
+  h+=row(4,t,L("A test payment","دفعة تجريبية"),t.done?L(t.testPaid+" test and "+t.livePaid+" live payment(s) went through.",t.testPaid+" دفعة تجريبية و"+t.livePaid+" دفعة حقيقية تمّت."):L("Buy a small top-up on this site with a Moyasar test card. This step ticks itself once it's paid.","اشترِ شحناً صغيراً في هذا الموقع ببطاقة اختبار من ميسّر. تُعلَّم هذه الخطوة تلقائياً بعد الدفع."),last+bad);
+  h+=row(5,ip,L("IP whitelist","قائمة عناوين IP المسموحة"),L("In Moyasar: Settings → IP Whitelist → add this server's address, so your secret key works only from your server. If the server's address ever changes, update it there or payments stop.","في ميسّر: الإعدادات ← IP Whitelist ← أضف عنوان هذا الخادم، فلا يعمل مفتاحك السري إلا من خادمك. وإن تغيّر عنوان الخادم يوماً فحدّثه هناك وإلا ستتوقف المدفوعات."),
+    (ip.ip?codeBox("ip190",ip.ip):"")+'<div class="m190b">'+btn("m190-ip",ip.ip?L("Find it again","ابحث مجدداً"):L("Find the server's address","اعرف عنوان الخادم"),"search",false,true)+btn("m190-ipdone",ip.done?L("Done — undo","تم — تراجع"):L("Mark as done","علّمها كمنجزة"),"check",false,ip.done)+"</div>");
+  h+=row(6,d.live,L("Go live","التشغيل الحقيقي"),d.live.done?L("Live key saved — customers pay for real.","المفتاح الحقيقي محفوظ — العملاء يدفعون فعلياً."):L("After Moyasar activates your account (Go Live), save the live secret key (sk_live_…) in the card below, then connect the webhook again (step 3).","بعد أن يفعّل ميسّر حسابك (Go Live)، احفظ المفتاح السري الحقيقي (sk_live_…) في البطاقة بالأسفل، ثم اربط الإشعارات مجدداً (الخطوة 3)."));
+  return h+"</ol></details>"}
+admPayments=(o=>function(){return mset190()+o.apply(this,arguments)})(admPayments);
+document.addEventListener("toggle",e=>{if(e.target&&e.target.classList&&e.target.classList.contains("mset190"))M190.open=e.target.open},true);
+document.addEventListener("click",async e=>{const a=e.target.closest('[data-act^="m190-"]');if(!a||a.disabled)return;const act=a.dataset.act;
+  if(act==="m190-key"){const i=document.querySelector('[data-pp="moyasar"][data-fl="secretKey"]');if(i){i.scrollIntoView({block:"center",behavior:"smooth"});i.focus({preventScroll:true})}return}
+  const call={"m190-wh":["/v1/admin/pay190/moyasar/webhook",{}],"m190-ip":["/v1/admin/pay190/moyasar/ip",{}],"m190-ipdone":["/v1/admin/pay190/moyasar/mark",{step:"ip",done:!(M190.d&&M190.d.ip.done)}]}[act];if(!call)return;
+  M190.busy=act;m190Paint();try{const r=await API.req(call[0],{json:call[1]});if(r.setup){M190.d=r.setup;M190.at=Date.now()}
+    if(act==="m190-wh")toast(L("Webhook connected in Moyasar — the secret token is saved.","تم ربط الإشعارات في ميسّر — والرمز السري محفوظ."));
+    if(act==="m190-ip"&&r.ip)toast(L("Copy the address into Moyasar → IP Whitelist.","انسخ العنوان إلى ميسّر ← IP Whitelist."))}
+  catch(err){toast(m190Err(err),{type:"warn"})}M190.busy="";m190Paint();if(act==="m190-wh")admLoad()});
+(function(){const st=document.createElement("style");st.textContent=`
+.mset190{padding:0;margin-bottom:12px;overflow:hidden}.mset190 .m190h{display:flex;align-items:center;gap:8px;padding:12px 14px;cursor:pointer;list-style:none}.mset190 .m190h::-webkit-details-marker{display:none}
+.mset190 .m190h b{flex:1;min-width:0}.mset190 .m190p{border-radius:99px;padding:2px 9px;font-size:12px;background:var(--panel2);border:1px solid var(--line)}
+.mset190 .m190l{list-style:none;margin:0;padding:0 14px 12px;display:flex;flex-direction:column;gap:8px}
+.mset190 .m190l li{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
+.mset190 .m190l li>div{min-width:0}.mset190 .m190l li p{margin:3px 0 0;overflow-wrap:anywhere}.mset190 .m190l li .btn{margin-top:8px}
+.mset190 .m190n{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--panel)}
+.mset190 .done190 .m190n{background:#9CD245;border-color:#9CD245;color:#0b0b0b}.mset190 .done190 .m190n svg{width:15px;height:15px}
+.mset190 .m190b{display:flex;gap:8px;flex-wrap:wrap}.mset190 .warn190{color:#f5a524}.mset190 .warn190 svg{width:13px;height:13px;vertical-align:-2px}.mset190 .codebox{margin-top:8px}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

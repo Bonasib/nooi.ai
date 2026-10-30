@@ -135,7 +135,7 @@ async def page_part(p, phone, lang):
         ok(v["wh"] == B + "/v1/billing/webhook/moyasar" and v["secret"] and v["copy"] and not v["wide"], f"{tag}: Moyasar card — secret field, full webhook address with Copy, fits: {R_}")
         t = v["text"]
         ok((("سرّ الإشعارات محفوظ" in t and "مفتاح تجريبي محفوظ" in t and "Webhooks" in t) if ar else ("Webhook secret saved" in t and "Test key saved" in t and "Settings → Webhooks" in t)), f"{tag}: secret saved + test-key warning + where to paste: {t}")
-        ok("sk_test" not in await E("()=>document.body.innerHTML"), f"{tag}: the key is never on the page")
+        ok("sk_test_v189" not in await E("()=>document.documentElement.outerHTML+JSON.stringify(A())"), f"{tag}: the key is never on the page")
         await pg.screenshot(path=D + f"/{tag}.png", full_page=False)
         ok(not errs, f"{tag}: page errors {errs[:3]}")
     finally:

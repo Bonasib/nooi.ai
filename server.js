@@ -87,6 +87,7 @@ import { registerExplore } from "./lib/explore.js";
 import { registerRefer173 } from "./lib/refer173.js";   // v173: invite friends (the member dashboard)
 import { registerLaunch182, launchMode182, gate182 } from "./lib/launch182.js";   // v182: Coming soon — the team only
 import { registerDownload187 } from "./lib/download187.js";
+import { registerMoyasar190, hookSeen190 } from "./lib/moyasar190.js";   // v190: the Moyasar setup steps in Admin → Payments (webhook connected in one tap)
 import { registerSpace188 } from "./lib/space188.js";   // v188: what fills the disk (Admin), "Free space now", the site's old temporary files cleared
 import { mmOn183, mmState183, mmRegion183 } from "./providers/minimax183.js";   // v183: MiniMax voices, pictures and music (v185: + videos)
 import { sendEmail, emailConfigured } from "./lib/email.js";
@@ -288,13 +289,20 @@ app.get("/v1/billing/return", wrap(async (req, res) => {
   const p = user(owner).payments[ref]; try { await finishCheckout(owner, ref, req.query.id || p.providerId); } catch (e) { console.warn("payment", e.message); }
   const pd = user(owner).payments[ref]; res.redirect("/?paid=" + (pd.status === "paid" ? "1" : "0") + (pd.giftCode ? "&gift=" + encodeURIComponent(pd.giftCode) : "") + (pd.invoice ? "&inv=" + encodeURIComponent(pd.invoice) : "") + (pd.giftCode ? "#wallet" : "#account"));
 }));
+// v190: Moyasar also POSTs the paid invoice to its callback_url (the address above) from its own servers — that only asks for the
+// same check of the payment this server made for the order, so it needs no secret; it answers at once
+app.post("/v1/billing/return", wrap(async (req, res) => {
+  const ref = String(req.query.ref || ""), owner = ref && findPayment(ref); res.json({ received: true }); if (!owner) return;
+  try { await finishCheckout(owner, ref); } catch (e) { console.warn("payment callback", e.message); }
+}));
 app.post("/v1/billing/webhook/:provider", wrap(async (req, res) => {
   // Never trust the webhook body: we re-fetch the payment from the provider before crediting — always the payment this server made
   // for the order (v189), so a forged or replayed webhook can't pay an order with another payment.
   const b = req.body || {}, prov = String(req.params.provider || "");
   // v189: Moyasar sends the secret typed in its dashboard (Settings → Webhooks) as secret_token — when one is saved here, it must match
   if (prov === "moyasar") { const want = String(cfg("moyasar").webhookSecret || ""), got = String(b.secret_token || "");
-    if (want && (got.length !== want.length || !crypto.timingSafeEqual(Buffer.from(got), Buffer.from(want)))) { console.warn("webhook moyasar: wrong secret token"); return res.status(401).json({ error: "Wrong secret token" }); } }
+    if (want && (got.length !== want.length || !crypto.timingSafeEqual(Buffer.from(got), Buffer.from(want)))) { console.warn("webhook moyasar: wrong secret token"); hookSeen190("moyasar", false); return res.status(401).json({ error: "Wrong secret token" }); }
+    hookSeen190("moyasar", true, b.type, !!want); }   // v190: Admin's setup steps show the last one taken / refused
   const id = b.id || b.data?.id || b.data?.object?.id; let ref = b.reference?.transaction || b.metadata?.ref || b.data?.metadata?.ref || b.data?.object?.client_reference_id;
   let owner = ref && findPayment(ref);
   if (!owner) { const hit = findByProviderId(b.data?.invoice_id) || findByProviderId(b.data?.id) || findByProviderId(id); if (hit) [owner, ref] = hit; }   // (Moyasar: the invoice the payment was made on)
@@ -347,6 +355,7 @@ registerEdit148(app, requireUser); registerEdit149(app, requireUser, isStaff); r
 registerIngest(app);
 registerExplore(app); registerShowcase(app); registerGifts(app); registerInvoices(app); registerRefer173(app); registerLaunch182(app, requireUser);
 registerDownload187(app, requireUser);   // v187: the Download menu — MP4, MP3 (when there is sound), a PNG of a frame
+registerMoyasar190(app, requireUser, requireAdmin, audit, wrap);   // v190: GET /v1/admin/pay190/moyasar · POST …/webhook · …/ip · …/mark
 registerSpace188(app, requireUser, isStaff);   // v188: GET /v1/admin/space188 · POST /v1/admin/space188/free
 // Low-latency voice preview (ElevenLabs stream, key never leaves the server)
 app.post("/v1/tts/stream", requireUser, async (req, res) => { try { const { planOf } = await import("./lib/plans.js"); const plan = planOf(user(req.user.uid)); if (!["pro", "studio"].includes(plan)) return res.status(402).json({ error: "ElevenLabs voices start from the Pro plan" }); await streamTTS(res, req.body || {}); } catch (e) { if (!res.headersSent) res.status(502).json({ error: e.message }); } });
