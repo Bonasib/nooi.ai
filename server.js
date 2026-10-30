@@ -19,7 +19,7 @@ function kieRoutes() { const o = {}; if (!configured("kie")) return o; for (cons
 import { llmConfigured, llmJson, llm, llmInfo } from "./providers/anthropic.js";
 import { OAUTH, pkcePair } from "./social/oauth.js";
 import { runPost } from "./lib/scheduler.js";
-import { balance, charge, freeCredits, TEXT_PRICE, startCheckout, finishCheckout, findPayment, provider, providerName, enabledPayments, CATALOG } from "./lib/billing.js";
+import { balance, charge, freeCredits, TEXT_PRICE, startCheckout, finishCheckout, findPayment, findByProviderId, checkRefund189, provider, providerName, enabledPayments, CATALOG } from "./lib/billing.js";
 import { registerAdmin } from "./lib/admin.js";
 import { registerProjects139 } from "./lib/projects139.js";   // v139: editor projects kept on the server
 import { streamTTS } from "./providers/elevenlabs.js";
@@ -28,7 +28,8 @@ import { spawn } from "child_process";
 import { saveBuffer } from "./lib/media.js";
 import { LIMITS, planOf } from "./lib/plans.js";
 import { refillPlans, priceTable, ENGINE_COST, engineCost, basePrice, CREDIT_FLOOR_USD, priceFactor, hold, settle, release } from "./lib/billing.js";
-import { S as platform, featureOn, configured, biz } from "./lib/settings.js";
+import { S as platform, featureOn, configured, biz, cfg } from "./lib/settings.js";
+import crypto from "crypto";   // (v189: the Moyasar webhook's secret, compared in constant time)
 import { modelNames, publicRegistry } from "./lib/models.js";
 import { shotsTable133, probe132, fileOf132 } from "./lib/long132.js";
 import { clean134, quote134, ready134 } from "./lib/sound134.js";
@@ -288,10 +289,18 @@ app.get("/v1/billing/return", wrap(async (req, res) => {
   const pd = user(owner).payments[ref]; res.redirect("/?paid=" + (pd.status === "paid" ? "1" : "0") + (pd.giftCode ? "&gift=" + encodeURIComponent(pd.giftCode) : "") + (pd.invoice ? "&inv=" + encodeURIComponent(pd.invoice) : "") + (pd.giftCode ? "#wallet" : "#account"));
 }));
 app.post("/v1/billing/webhook/:provider", wrap(async (req, res) => {
-  // Never trust the webhook body: we re-fetch the payment from the provider before crediting.
-  const b = req.body || {}; const id = b.id || b.data?.id || b.data?.object?.id; const ref = b.reference?.transaction || b.metadata?.ref || b.data?.metadata?.ref || b.data?.object?.client_reference_id;
-  const owner = ref && findPayment(ref); if (owner) { try { await finishCheckout(owner, ref, id); } catch (e) { console.warn("webhook", e.message); } }
-  res.json({ received: true });
+  // Never trust the webhook body: we re-fetch the payment from the provider before crediting — always the payment this server made
+  // for the order (v189), so a forged or replayed webhook can't pay an order with another payment.
+  const b = req.body || {}, prov = String(req.params.provider || "");
+  // v189: Moyasar sends the secret typed in its dashboard (Settings → Webhooks) as secret_token — when one is saved here, it must match
+  if (prov === "moyasar") { const want = String(cfg("moyasar").webhookSecret || ""), got = String(b.secret_token || "");
+    if (want && (got.length !== want.length || !crypto.timingSafeEqual(Buffer.from(got), Buffer.from(want)))) { console.warn("webhook moyasar: wrong secret token"); return res.status(401).json({ error: "Wrong secret token" }); } }
+  const id = b.id || b.data?.id || b.data?.object?.id; let ref = b.reference?.transaction || b.metadata?.ref || b.data?.metadata?.ref || b.data?.object?.client_reference_id;
+  let owner = ref && findPayment(ref);
+  if (!owner) { const hit = findByProviderId(b.data?.invoice_id) || findByProviderId(b.data?.id) || findByProviderId(id); if (hit) [owner, ref] = hit; }   // (Moyasar: the invoice the payment was made on)
+  res.json({ received: true });   // (answered at once — the provider waits for nothing)
+  if (!owner) return;
+  try { await finishCheckout(owner, ref); if (/refund|void/i.test(String(b.type || b.event || b.data?.status || ""))) await checkRefund189(owner, ref); } catch (e) { console.warn("webhook", e.message); }
 }));
 app.get("/v1/billing/catalog", (_, res) => res.json(CATALOG));
 
