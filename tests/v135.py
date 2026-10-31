@@ -252,7 +252,7 @@ async def page(b):
     mj = await E("()=>{const j=S.jobs.find(x=>x.id===S.lastVideo);return j&&{id:j.id,meta:j.meta,cost:j.cost}}"); md = await done(mj["id"]) if mj else None
     out["pageMerge"] = {"buttons": btn, "open": s1, "picked": s2, "job": mj, "end": md}
     chk("nooi Studio: the opened video offers Edit with words and Merge videos; Merge lists your videos with this one first, picked in order, free; the merged video comes back", btn == ["extend-job", "snd134", "ew135", "mg135"]
-        and s1["tiles"] >= 4 and s1["sel"] == [ids["jl1"]] and s1["go"] and s1["styles"] == ["So the join can't be seen", "Clean cuts"] and s2["n"] == ["1", "2"] and not s2["go"] and "free" in s2["note"]
+        and s1["tiles"] >= 4 and s1["sel"] == [ids["jl1"]] and s1["go"] and s1["styles"] == ["So the join can't be seen", "Clean cuts", "Soft blend"] and s2["n"] == ["1", "2"] and not s2["go"] and "free" in s2["note"]
         and mj and mj["meta"]["merge135"] == {"items": [{"job": "jl1"}, {"job": "jl2"}], "style": "seamless"} and mj["cost"] == 0 and md and md["st"] == "complete", out["pageMerge"])
     # Edit with words from the opened video: some seconds, the price first
     await E("id=>{S.lastVideo=id;const st=ST98();st.lb='video';renderView()}", ids["jl1"]); await pg.wait_for_timeout(500)

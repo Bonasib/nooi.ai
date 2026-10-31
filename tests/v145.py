@@ -126,7 +126,7 @@ async def desktop(b, lang):
     await D_('[data-act="an145"][data-w="out"][data-v="fade"]'); await pg.wait_for_timeout(200); await E("()=>{ED.playing=false}")
     a1 = await E("()=>({ain:S.ed.clips[0].ain,aout:S.ed.clips[0].aout,d:!!document.querySelector('.e-details [data-an145d=\"in\"]')})")
     rt = await E(PIX, [.1, .9, .4, .08, .2]); rt2 = await E(PIX, [2, .9, .4, .08, .2]); fo = await E(PIX, [5.9, .3, .3, .4, .4]); fo0 = await E(PIX, [4.5, .3, .3, .4, .4])
-    chk(f"{tag}: Animation: 12 ins and outs; slide in from the left (the right side still empty at the start), fade out (darker at the end)", an == {"in": 12, "out": 12} and a1["ain"]["k"] == "slidel" and a1["aout"]["k"] == "fade" and a1["d"] and sum(rt) < 60 and sum(rt2) > 80 and sum(fo) < sum(fo0) * .6, {"an": an, "a1": a1, "rt": rt, "rt2": rt2, "fo": fo, "fo0": fo0})
+    chk(f"{tag}: Animation: 21 ins and outs (12 + the 9 of v201); slide in from the left (the right side still empty at the start), fade out (darker at the end)", an == {"in": 21, "out": 21} and a1["ain"]["k"] == "slidel" and a1["aout"]["k"] == "fade" and a1["d"] and sum(rt) < 60 and sum(rt2) > 80 and sum(fo) < sum(fo0) * .6, {"an": an, "a1": a1, "rt": rt, "rt2": rt2, "fo": fo, "fo0": fo0})
     await E("()=>{delete S.ed.clips[0].ain;delete S.ed.clips[0].aout;renderView()}")
     # ---- audio: fades, voice changer, extract audio
     await tab("audio145")
