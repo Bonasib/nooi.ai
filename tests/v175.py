@@ -135,7 +135,7 @@ async def run(p, phone, lang, lo, lk, lf):
     # a film: every engine named — the plan first, then the engines that made it — on every card, inside the card
     FC = """(f)=>{const j=S.jobs.find(x=>x.remote===f),w=document.createElement('div');w.style.cssText='position:fixed;left:0;top:0;width:170px';w.innerHTML=card98(j,0);document.body.appendChild(w);
       const t=w.querySelector('.tag98,.m'),c=w.firstElementChild.getBoundingClientRect(),r=t&&t.getBoundingClientRect(),res={m:j.model,tag:t&&t.textContent,fits:!!r&&r.left>=c.left-1&&r.right<=c.right+1&&r.bottom<=c.bottom+1,
-        hf:(/<small[^>]*>([^<]*)<\/small>/.exec(hfrCard(j))||[])[1]||'',th:(/<span class="m">([^<]*)<\/span>/.exec(thumb('j:'+j.id,{tag:'x',dur:10}))||[])[1]||'',
+        hf:(()=>{const h=hfrCard(j),e=/class="eng203"[\s\S]*?<\/div>/.exec(h);return e?[...e[0].matchAll(/aria-label="([^"]*)"/g)].map(x=>x[1]).join(' + '):(/<small[^>]*>([^<]*)<\/small>/.exec(h)||[])[1]||''})(),th:(/<span class="m">([^<]*)<\/span>/.exec(thumb('j:'+j.id,{tag:'x',dur:10}))||[])[1]||'',
         note:(/<p class="small mute note175"[^>]*>[\s\S]*?<\/svg>([\s\S]*?)<\/p>/.exec(previewCol(j,[]))||[])[1]||''};w.remove();return res}"""
     f0 = await E(FC, "nope175"); R["film_plan"] = f0
     ok(f0["tag"] == "NVIDIA Cosmos + Seedance" and "NVIDIA Cosmos + Seedance" in f0["hf"] and f0["th"] == "NVIDIA Cosmos + Seedance" and f0["fits"] and not f0["note"], f"{tag}: a film's card names both planned engines (before the server says which made it) {f0}")
@@ -146,7 +146,7 @@ async def run(p, phone, lang, lo, lk, lf):
     ok(all(x in f1["note"] for x in fw), f"{tag}: the open view says each shot's engine and why {f1['note']}")
     # Make it again uses the engine that made it
     ag = await E("""(a)=>new Promise(res=>{const j=S.jobs.find(x=>x.remote===a),o=addJob;addJob=function(x){addJob=o;res(x&&x.model||null);return null};
-      S.hf.out=[j.id];go('home');renderAll();setTimeout(()=>{const b=document.querySelector('[data-act="hfr-again"][data-id="'+j.id+'"]');if(b)b.click();else{addJob=o;res('no button')}},300);setTimeout(()=>{addJob=o;res('nothing made')},3000)})""", lo["id"])
+      S.hf.out=[j.id];go('home');renderAll();setTimeout(()=>{const mo=document.querySelector('[data-act="more203"][data-id="'+j.id+'"]');if(mo)mo.click();const b=document.querySelector('[data-act="hfr-again"][data-id="'+j.id+'"]');if(b)b.click();else{addJob=o;res('no button')}},300);setTimeout(()=>{addJob=o;res('nothing made')},3000)})""", lo["id"])
     R["again"] = ag; ok(ag == "kling30", f"{tag}: Make it again uses Kling 3.0 {ag}")
     w = await E("()=>document.documentElement.scrollWidth<=innerWidth+1"); ok(w, f"{tag}: nothing wider than the screen")
     out[tag] = R; ok(not [e for e in errs if "stop" not in e], f"{tag}: page errors {errs}"); await br.close()
