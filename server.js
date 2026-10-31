@@ -25,7 +25,8 @@ import { registerGuard200, stepGate200, secMiddleware200 } from "./lib/guard200.
 import { registerProjects139 } from "./lib/projects139.js";   // v139: editor projects kept on the server
 import { registerCollab196 } from "./lib/collab196.js";   // v196: team review — comments on frames, versions, shared projects
 import { registerProxy196 } from "./lib/proxy196.js";
-import { registerExport202, range202 } from "./lib/export202.js";   // v202: transparent renders (WebM alpha / ProRes 4444) + a part of the timeline   // v196: light proxies of heavy footage for the editor's preview
+import { registerExport202, range202 } from "./lib/export202.js";
+import { registerSocial204 } from "./lib/social204.js";   // v204: profiles + permissions, stories, views, Community shelves   // v202: transparent renders (WebM alpha / ProRes 4444) + a part of the timeline   // v196: light proxies of heavy footage for the editor's preview
 import { streamTTS } from "./providers/elevenlabs.js";
 import { testAll } from "./lib/health.js";
 import { spawn } from "child_process";
@@ -379,7 +380,7 @@ registerV88(app, requireUser); startKeepMedia(); registerScrub131(app, requireUs
 registerEdit147(app, requireUser);
 registerEdit148(app, requireUser); registerEdit149(app, requireUser, isStaff); registerCaptions169(app, requireUser, isStaff); registerMotion150(app, requireUser);
 registerIngest(app);
-registerExplore(app); registerExplore200(app); registerShowcase(app); registerGifts(app); registerInvoices(app); registerRefer173(app); registerLaunch182(app, requireUser);
+registerExplore(app); registerExplore200(app); registerSocial204(app); registerShowcase(app); registerGifts(app); registerInvoices(app); registerRefer173(app); registerLaunch182(app, requireUser);
 registerDownload187(app, requireUser);   // v187: the Download menu — MP4, MP3 (when there is sound), a PNG of a frame
 registerMoyasar190(app, requireUser, requireAdmin, audit, wrap);   // v190: GET /v1/admin/pay190/moyasar · POST …/webhook · …/ip · …/mark
 registerSpace188(app, requireUser, isStaff);   // v188: GET /v1/admin/space188 · POST /v1/admin/space188/free

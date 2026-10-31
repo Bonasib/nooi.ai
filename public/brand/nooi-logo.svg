@@ -1,5 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="188 196 704 704" role="img" aria-label="nooi.ai">
-  <defs><linearGradient id="nooiG" gradientUnits="userSpaceOnUse" x1="230" y1="780" x2="850" y2="300"><stop offset="0" stop-color="#6EC046"/><stop offset=".5" stop-color="#9CD245"/><stop offset="1" stop-color="#D2E33C"/></linearGradient></defs>
-  <path d="M260.2 765V523.2A71.05 71.05 0 0 1 402.3 523.2V665.6A65.2 65.2 0 0 0 532.7 665.6V479A69.45 69.45 0 0 1 671.6 479V662A67 67 0 0 0 805.6 662V391" fill="none" stroke="url(#nooiG)" stroke-width="82" stroke-linejoin="round"/>
-  <circle cx="802.5" cy="312.7" r="49.2" fill="#CFE13E"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="384 522 732 456" role="img" aria-label="nooi.ai"><rect x="384.3" y="522" width="731.4" height="456" rx="75" fill="#c1ff72"/><path d="M443.3 783.6V726A77.5 77.5 0 0 1 598.3 726V805.6A76.7 76.7 0 0 0 751.7 805.6V771.6A76.1 76.1 0 0 1 903.9 771.6V795.7A76.6 76.6 0 0 0 1057.1 795.7V706.3" fill="none" stroke="#000" stroke-width="59.5"/><circle cx="1056.6" cy="663.9" r="29.5" fill="#000"/></svg>

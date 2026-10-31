@@ -45,7 +45,7 @@ c, r = req(f"/v1/explore/{p1['id']}/comments/{cid}", method="DELETE", who="noor"
 c, r = req(f"/v1/explore/{p1['id']}/comments/{cid}", method="DELETE", who="maya"); chk("the author deletes", c == 200, [c, r])
 n0 = req(f"/v1/explore/{p1['id']}/comments")[1]["items"]
 c, r = req("/v1/explore/comments-count"); chk("count call", c == 200 and r.get("counts", {}).get(p1["id"]) == len(n0), [c, r, len(n0)])
-c, r = req("/v1/explore/creators"); chk("creators list: the program member, no account ids", c == 200 and len(r.get("items", [])) == 1 and r["items"][0]["pid"] == p1["creator"] and "uid" not in r["items"][0], r)
+c, r = req("/v1/explore/creators"); chk("creators list: everyone who shared (v204: every sharer can be followed), most posts first, no account ids", c == 200 and len(r.get("items", [])) == 2 and r["items"][0]["pid"] == p1["creator"] and all("uid" not in i for i in r["items"]), r)
 c, r = req("/v1/explore/nope/comments"); chk("unknown post → 404", c == 404, c)
 COUNT0 = len(n0)
 
@@ -60,7 +60,7 @@ async def page_checks(pg, tag, lang, phone):
       wide:[...document.querySelectorAll('.view *')].filter(e=>!e.closest('.xph200s')&&e.getBoundingClientRect().right>innerWidth+1).map(e=>e.className).slice(0,5)})""")
     out[tag] = st
     chk(tag + ": six feature cards + dots, five tool doors, a creator, the header, the search, three posts, a comment count on the card, nothing wider than the screen",
-        st["cards"] == 6 and st["dots"] == 6 and st["tools"] == 5 and st["creators"] == 1 and st["head"] and st["search"] and st["posts"] == 3 and st["cm"].strip().endswith(str(COUNT0)) and not st["create"] and not st["wide"], st)
+        st["cards"] == 6 and st["dots"] == 6 and st["tools"] == 5 and st["creators"] == 2 and st["head"] and st["search"] and st["posts"] == 3 and st["cm"].strip().endswith(str(COUNT0)) and not st["create"] and not st["wide"], st)
     # search filters as you type
     await pg.fill("#xpq200", "osaka"); await pg.wait_for_timeout(150)
     n = await pg.evaluate("()=>document.querySelectorAll('.xpgrid .xpcard').length"); chk(tag + ": search 'osaka' → one card", n == 1, n)
