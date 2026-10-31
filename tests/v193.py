@@ -56,6 +56,7 @@ async def main():
         out["graph"] = g; chk("graph: 3 dots, the one at the playhead lit, 5 properties, 'hold' pressed, motion-blur switch", g["dots"] == 3 and g["on"] == 1 and g["props"] == 5 and g["ease"] == "hold" and g["mb"], g)
         await pg.click('[data-act="ease193"][data-v="back"]'); e2 = await E("()=>S.ed.clips[0].mo.kf[1].e"); chk("ease seg sets k.e", e2 == "back", e2)
         await pg.click('[data-act="ease193"][data-v="bezier"]'); bz = await E("()=>[Array.isArray(S.ed.clips[0].mo.kf[1].e),document.querySelectorAll('.bz193 input').length]"); chk("custom bezier: 4 numbers", bz == [True, 4], bz)
+        await E("()=>document.querySelector('.gp193g').scrollIntoView({block:'center'})"); await pg.wait_for_timeout(150)   # (the Bezier click above scrolled the panel past the graph)
         dot = await pg.locator(".gp193k").nth(1).bounding_box(); svg = await pg.locator(".gp193g").bounding_box()
         await pg.mouse.move(dot["x"] + dot["width"] / 2, dot["y"] + dot["height"] / 2); await pg.mouse.down(); await pg.mouse.move(dot["x"] + svg["width"] * .15, dot["y"], steps=6); await pg.mouse.up(); await pg.wait_for_timeout(200)
         t1 = await E("()=>S.ed.clips[0].mo.kf[1].t"); out["drag"] = t1; chk("a dot dragged right moves the keyframe later (1 → ~1.15 on a 1 s clip)", 1.06 < t1 < 1.75, t1)

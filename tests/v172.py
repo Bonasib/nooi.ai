@@ -34,7 +34,7 @@ async def run(p, phone, lang):
     await E("(l)=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.lang=l;S.user={name:'T',method:'google'};AU.showAuth=false;S.hf.vModel='auto';S.hf.iModel='auto';S.hf.bots=false;go('home');renderAll()}", lang)
     await pg.wait_for_timeout(500); R = {}
     v = await E(LINE, "video"); R["video_line"] = v
-    ok(v and v["t"] == "video" and v["vis"] and v["after"] and v["w"] and ("9 وكلاء" in v["txt"] if ar else ("9 AI agents" in v["txt"] and v["txt"].startswith("nooi Auto:"))), f"{tag}: nooi Auto chosen — a line under the chips says what it does {v}")
+    ok(v and v["t"] == "video" and v["vis"] and v["after"] and v["w"] and ("9 وكلاء" in v["txt"] if ar else (("9 AI agents" in v["txt"] or "9 agents" in v["txt"]) and v["txt"].startswith("nooi Auto:"))), f"{tag}: nooi Auto chosen — a line under the chips says what it does {v}")
     i = await E(LINE, "image"); R["image_line"] = i
     ok(i and i["t"] == "image" and i["vis"] and ("محرك صور" in i["txt"] if ar else "picture engine" in i["txt"]), f"{tag}: the picture tab has its own line {i}")
     await E("()=>{S.hf.tab='video';S.hf.vModel='kling30';renderView()}"); n = await E("()=>!!document.querySelector('.hfbox .nai172')")

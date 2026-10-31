@@ -155,7 +155,7 @@ async def phone(b, lang):
     await cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []}); await pg.wait_for_timeout(500)
     c = await E("()=>({ctx:document.querySelector('.e-bar').classList.contains('ctx'),tools:[...document.querySelectorAll('.e-bar button')].map(b=>b.dataset.v||b.dataset.act),sheet:!!document.querySelector('.e-sheet'),kind:kind143()})")
     out[tag + "_ctx"] = c
-    want = ["desel143", "clip", "ed-split", "speed145", "audio145", "anim145", "motion", "color", "trans143", "clip#crop", "90", "rev145", "edx-freeze", "fh", "ed-dup", "ed-move", "ed-move", "ed-extend91", "bg144", "clip#replace", "xa145", "track", "ai140", "cp146", "msm146", "ed-del", "snap141"]   # (v146: Copy, Select more · v144: Background · v145: Speed/Volume/Animation tabs, Crop, Rotate, Reverse, Replace, Extract audio)
+    want = ["desel143", "clip", "ed-split", "ed-del", "speed145", "audio145", "anim145", "motion", "color", "trans143", "clip#crop", "90", "rev145", "edx-freeze", "fh", "ed-dup", "ed-move", "ed-move", "ed-extend91", "bg144", "clip#replace", "xa145", "track", "ai140", "cp146", "msm146", "snap141"]   # (v146: Copy, Select more · v144: Background · v145: Speed/Volume/Animation tabs, Crop, Rotate, Reverse, Replace, Extract audio)   # (v208: Delete beside Split)
     chk(f"{tag}: a long press on a clip shows its own tools at the foot (Split, Speed, Volume, Motion, Filters, Transition, Freeze, Mirror, Duplicate, Earlier, Later, Extend, Background, Tracking, AI, Delete) and opens its settings", c["ctx"] and c["kind"] == "clip" and c["tools"] == want and c["sheet"], c)
     await E("()=>{const b=document.querySelector('.e-bar [data-v=\"speed145\"]');b.scrollIntoView({inline:'center'});b.click()}"); await pg.wait_for_timeout(600)
     sp = await E("()=>{const s=document.querySelector('.e-sheet'),st=document.querySelector('.edstage').getBoundingClientRect(),l=[...s.querySelectorAll('.lbl')].find(x=>/speed|السرعة/i.test(x.textContent));return{tab:S.ed.tab,lbl:l?Math.round(l.getBoundingClientRect().top):null,under:Math.round(st.bottom),bar:Math.round(document.querySelector('.e-bar').getBoundingClientRect().top)}}")
@@ -170,7 +170,9 @@ async def phone(b, lang):
     # a long press on a text opens its settings (v171: a tap does nothing); ✓ closes; another tool opens again
     await E("()=>document.querySelector('#tlin .blk[data-textl=\"t1\"]').scrollIntoView({block:'center'})"); await pg.wait_for_timeout(150); bb = await pg.locator('#tlin .blk[data-textl="t1"]').bounding_box()
     await pg.touchscreen.tap(bb["x"] + bb["width"] / 2, bb["y"] + bb["height"] / 2); await pg.wait_for_timeout(600)
-    t0 = await E("()=>({tab:S.ed.tab,pick:S.ed.pick&&S.ed.pick.k})"); chk(f"{tag}: a tap on a text does nothing", t0["tab"] != "text" and t0["pick"] != "text", t0)
+    # (v208: a tap picks the text — its tools at the foot; a panel that was open stays open, so the timeline never jumps under the finger)
+    t0 = await E("()=>({pick:S.ed.pick&&S.ed.pick.k})"); bb2 = await pg.locator('#tlin .blk[data-textl="t1"]').bounding_box()
+    chk(f"{tag}: a tap on a text picks it, the timeline stays where it was", t0["pick"] == "text" and abs(bb2["y"] - bb["y"]) < 3, [t0, bb["y"], bb2["y"]])
     await cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": bb["x"] + bb["width"] / 2, "y": bb["y"] + bb["height"] / 2}]}); await pg.wait_for_timeout(750)
     await cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []}); await pg.wait_for_timeout(600)
     tx = await E("()=>({tab:S.ed.tab,edit:!!document.querySelector('.e-sheet [data-bind=\"edtext.text\"]')})")

@@ -12576,7 +12576,7 @@ const AGENT90=[
  ["cine","Sets light, lens and colour, and writes each shot's final prompt.","يضبط الإضاءة والعدسة والألوان، ويكتب الوصف النهائي لكل لقطة."],
  ["sound","Writes the music, sound effects and spoken lines for every shot.","يكتب الموسيقى والمؤثرات الصوتية والجمل المنطوقة لكل لقطة."],
  ["editor","Joins the shots into one film: order, timing and transitions.","يركّب اللقطات في فيلم واحد: الترتيب والتوقيت والانتقالات."],
- ["producer","Picks the AI model for each shot and keeps the film within your credits.","يختار نموذج الذكاء لكل لقطة ويُبقي الفيلم ضمن رصيدك."],
+ ["producer","Picks the engine for each shot and keeps the film within your credits.","يختار المحرك لكل لقطة ويُبقي الفيلم ضمن رصيدك."],
  ["proof","Checks everything, then approves it or sends it back to be fixed.","يراجع كل شيء، ثم يعتمده أو يعيده للتصحيح."]];
 const ORDER90=AGENT90.map(a=>a[0]),byOrder90=(a,b)=>ORDER90.indexOf(a)-ORDER90.indexOf(b);
 BOTS.sort((a,b)=>byOrder90(a.id,b.id));HF_BOT_IDS.sort(byOrder90);
@@ -23512,8 +23512,11 @@ document.addEventListener("keydown",e=>{if(!P204.sv)return;if(e.key==="Escape"){
 document.addEventListener("pointerdown",e=>{if(P204.sv&&e.target.closest&&e.target.closest("#st204 .st204m"))P204.sv.paused=true},true);document.addEventListener("pointerup",()=>{if(P204.sv)P204.sv.paused=false},true);
 // ---- 8. where the pages sit: Explore (the feed) and Community (the shelves) side by side; the profile from Account and the avatar
 (()=>{const d=TOOLS82.find(t=>t[1]==="discover");if(d){d[3]="Explore";d[4]="استكشف"}if(!TOOLS82.some(t=>t[1]==="community204")){const k=TOOLS82.findIndex(t=>t[1]==="discover");TOOLS82.splice(k+1,0,["explore","community204","trophy204","Community","المجتمع"])}
-  HUBS.length=0;Object.keys(HUB82).forEach(h=>{const tabs=TOOLS82.filter(t=>t[0]===h).map(t=>[t[1],t[3],t[4],t[5]]);HUBS.push([h,HUB82[h][0],HUB82[h][1],HUB82[h][2],tabs])});
-  ALLNAV.length=0;TOOLS82.forEach(t=>ALLNAV.push([t[1],t[2],t[3],t[4]]))})();
+  // (v208: only the new tab is added — rebuilding the hubs from TOOLS82 here dropped what later blocks had put on them, e.g. the
+  //  agents' film and Cinema Studio living under the Video tab, so those pages lost their tab row)
+  const xh=HUBS.find(x=>x[0]==="explore");if(xh){const dd=xh[4].find(t=>t[0]==="discover");if(dd){dd[1]="Explore";dd[2]="استكشف"}
+    if(!xh[4].some(t=>t[0]==="community204")){const k=xh[4].findIndex(t=>t[0]==="discover");xh[4].splice(k+1,0,["community204","Community","المجتمع"])}}
+  const dn=ALLNAV.find(x=>x[0]==="discover");if(dn){dn[2]="Explore";dn[3]="استكشف"}if(!ALLNAV.some(x=>x[0]==="community204"))ALLNAV.push(["community204","trophy204","Community","المجتمع"])})();
 VIEWS.account=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="string"||API.mode!=="server"||!S.user)return h;return h.replace(/(<div class="view[^"]*"[^>]*>(?:\s*<h1[^>]*>[\s\S]*?<\/h1>)?)/,'$1<button type="button" class="btn pfacc204" data-act="prof204-open" data-pid="me">'+ic("char")+L("My public profile","ملفي العام")+" "+ic("back200")+"</button>")})(VIEWS.account);
 // ---- 9. looks
 (()=>{const st=document.createElement("style");st.textContent=`
@@ -24177,17 +24180,23 @@ document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest
 document.addEventListener("contextmenu",e=>{if(e.target.closest&&e.target.closest("#edundo")){e.preventDefault();histSheet202()}},true);
 
 // (the tool bar at a phone's foot: Delete beside Split, as in the big editors, and every button within the screen)
-function bar208(){const bar=document.querySelector(".ed143 .e-bar.ctx");if(!bar)return;const del=bar.querySelector('[data-act="ed-del"]'),sp=bar.querySelector('[data-act="ed-split"]');if(del&&sp&&sp.nextElementSibling!==del)sp.after(del)}
+function bar208(){const bar=document.querySelector(".ed143 .e-bar.ctx");if(!bar)return;const del=bar.querySelector('[data-act="ed-del"]'),sp=bar.querySelector('[data-act="ed-split"]');if(del&&sp&&sp.nextElementSibling!==del)sp.after(del);
+  // (on a phone the long label is the short word, so every label stays on one line and the bar fits)
+  const ms=innerWidth<768&&bar.querySelector('[data-act="msm146"]>span');if(ms)ms.textContent=L("Select","تحديد")}
 renderView=(o=>function(){const r=o.apply(this,arguments);try{bar208()}catch(e){}return r})(renderView);
 
-// (a tap on a timeline item picks it — highlighted, the bar at the foot acts on it — without opening its settings; a long press
+// (a tap on a timeline item picks it — highlighted, the bar at the foot acts on it — without opening a closed panel; a long press
 //  still opens them, a drag still scrolls. Since v171 a tap did nothing, and the timeline felt dead)
 const TP208={b:null,x:0,y:0,t:0};
 window.addEventListener("pointerdown",e=>{TP208.b=null;if(S.view!=="edit"||e.pointerType==="mouse"||!e.isPrimary)return;const bk=e.target.closest&&e.target.closest("#tlin .blk");
   if(bk&&!e.target.closest(".hdl,.h146,[data-hdl]")){TP208.b=bk;TP208.x=e.clientX;TP208.y=e.clientY;TP208.t=performance.now()}},true);
+window.addEventListener("pointermove",e=>{if(TP208.b&&Math.hypot(e.clientX-TP208.x,e.clientY-TP208.y)>10)TP208.b=null},true);   // (a finger that moved is a scrub or a scroll, never a tap)
+window.addEventListener("pointercancel",()=>{TP208.b=null},true);
 window.addEventListener("pointerup",e=>{const bk=TP208.b;TP208.b=null;if(!bk||!bk.isConnected||performance.now()-TP208.t>470||Math.hypot(e.clientX-TP208.x,e.clientY-TP208.y)>10)return;
   if(LP171.fired&&performance.now()-LP171.fired<600)return;const E=S.ed;if(E.msMode146)return;let kk=null;try{kk=blkKey131(bk)}catch(err){}if(!kk||kk[0]==="music"||kk[0]==="sfx")return;
-  const cur=edPick();if(cur&&cur.k===kk[0]&&cur.id===kk[1])return;edSetPick(kk[0],kk[1]);E.tab=(KIND143[kk[0]]||[E.tab])[0];if(kk[0]==="clip")E.dt143=E.tab;E.pclosed143=E.tab;persist();renderView()},true);
+  const cur=edPick();if(cur&&cur.k===kk[0]&&cur.id===kk[1])return;const open=!!document.querySelector(".ed143 .e-sheet");edSetPick(kk[0],kk[1]);E.tab=(KIND143[kk[0]]||[E.tab])[0];if(kk[0]==="clip")E.dt143=E.tab;
+  // (a panel already open stays open and shows what was picked — the timeline never jumps under the finger; none open stays none)
+  E.pclosed143=open?null:E.tab;persist();renderView()},true);
 
 // ---- 4. no image menu on a long press; thumbnails of your videos load when seen
 document.addEventListener("contextmenu",e=>{if(e.target.closest&&e.target.closest(".pk206b,.pk206p,.pv207"))e.preventDefault()},true);
@@ -24203,17 +24212,33 @@ const SM208={};
 img206=(o=>function(u){const im=o.apply(this,arguments);if(!im||R139.on||!im.naturalWidth)return im;const m=Math.max(im.naturalWidth,im.naturalHeight);if(m<=1280)return im;
   let c=SM208[u];if(!c){const k=1280/m;c=document.createElement("canvas");c.width=Math.round(im.naturalWidth*k);c.height=Math.round(im.naturalHeight*k);try{c.getContext("2d").drawImage(im,0,0,c.width,c.height)}catch(e){return im}c.naturalWidth=c.width;c.naturalHeight=c.height;SM208[u]=c}return c})(img206);
 
+// ---- 6. (found by the whole-site check) v205's twelve new looks: an icon each, and the Style picker takes up to 40 choices — with
+//         22 it had dropped to a plain list (picture chips stopped at 16)
+(()=>{const m={an205paint:"watercolor",an205chibi:"anime",an205felt:"clay",an205paper:"comic",an205pixel:"",an205lowpoly:"render3d",an205toy:"clay",an205retro:"comic",an205cel:"anime",an205sketch:"comic",an205neon:"anim3d",an205oil:"watercolor"};
+  Object.keys(m).forEach(k=>{if(!OI[k])OI[k]=(m[k]&&OI[m[k]])||ICONS.grid})})();
+sel=(o=>function(path,opts,cur,oo){if(/(^|\.)style$/.test(path)&&opts.length>16&&opts.length<=40){const keys=opts.map(v=>Array.isArray(v)?v[0]:v);if(keys.every(k=>k!==""&&hasGlyph(path,k)))return chips(path,opts,cur,{})}return o.apply(this,arguments)})(sel);
+
+// (and v203's new result card had dropped the line that says what an opening frame is for — "First frame for NVIDIA Cosmos ·
+//  Nano Banana Pro" — it is under the card's words again)
+hfrCard=(o=>function(j){const h=o.apply(this,arguments);if(!j||!j.meta||!j.meta.frame87||typeof h!=="string"||/<small[^>]*>/.test(h)||!h.includes('class="t203"'))return h;
+  const e=(MODELS[j.meta.for177]||{}).name,mn=(IMG_MODELS[j.model]||{}).name||"",tx=(e?L("First frame for "+e,"الإطار الأول لـ "+e):L("First frame","الإطار الأول"))+(mn?" · "+mn:"");
+  return h.replace(/(<p class="t203"[^>]*>[\s\S]*?<\/p>)/,'$1<small class="fr208" dir="auto">'+esc(tx)+"</small>")})(hfrCard);
+
 (()=>{const st=document.createElement("style");st.id="v208";st.textContent=`
 .pk206b img,.pk206b video,.pk206p img,.pk206p video{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none}
 .pk206p,.pk206b{-webkit-tap-highlight-color:transparent}
 #edundo{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.cm204 h1 .tchip90>svg{width:20px;height:20px}.xps200k svg{width:14px;height:14px}.xps200h h2{font-size:16px}.xpt200i{border-radius:16px}.agc201n svg{width:20px;height:20px}
+@media (min-width:821px){.pf204head h1{font-size:27px}}
+.c203 .fr208{display:block;font-size:11px;line-height:1.3;color:var(--mute,#8a8f98);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hfrph:has(.ln124){padding:10px;gap:6px}.hfrph .ln124{font-size:11px;line-height:1.3}.hfrph:has(.ln124)>svg{width:34px;height:34px}   /* (a waiting job's message and its star fit a small result card) */   /* (the one icon scale 14 · 16 · 20, the one title scale 22 · 16 · 14) */
 @media (max-width:767px){
   .ed143.mob .e-player .transport{gap:3px!important;justify-content:space-between;overflow-x:hidden}
   .ed143.mob .e-player .transport>.btn.sm{padding-inline:0!important;min-width:32px;width:32px;justify-content:center}
   .ed143.mob .transport .tc{font-size:10.5px!important;letter-spacing:-.2px;padding-inline:0}
   .ed143.mob .e-bar.ctx>button{min-width:0!important;flex:0 0 auto;padding-inline:5px!important;font-size:10.5px!important;gap:2px}
-  .ed143.mob .e-bar.ctx>button>span{white-space:normal;max-width:58px;text-align:center;line-height:1.1}}
-@media (max-width:379px){.ed143.mob .e-player .transport{gap:2px!important}.ed143.mob .e-player .transport>.btn.sm{min-width:29px;width:29px}.ed143.mob .transport .tc{font-size:10px!important}.ed143.mob .e-bar.ctx>button{padding-inline:2px!important;font-size:9.5px!important}.ed143.mob .e-bar.ctx>button>span{max-width:50px}}`;document.head.appendChild(st)})();
+  .ed143.mob .e-bar.ctx>button>span{white-space:nowrap}}
+@media (max-width:379px){.ed143.mob .e-player .transport{gap:2px!important}.ed143.mob .e-player .transport>.btn.sm{min-width:29px;width:29px}.ed143.mob .transport .tc{font-size:10px!important}.ed143.mob .e-bar.ctx>button{padding-inline:2px!important;font-size:9.5px!important}}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

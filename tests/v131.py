@@ -106,8 +106,9 @@ async def phone(b):
     await pg.screenshot(path=D + "/clean.png")
     await touch(cdp, cx, cy); await pg.wait_for_timeout(300)
     a = await E("()=>({playing:ED.playing,clean:!!ED.clean131})"); res["tap2"] = a; chk("second tap: guides back, still playing", a["playing"] and not a["clean"], a)
-    # clean view draws the picture as with no guides and nothing picked
-    d = await E("""async(id)=>{ED.playing=false;await new Promise(r=>setTimeout(r,200));const H=%s;edSetPick('clip',id);S.ed.safe=true;ED.t=1;
+    # clean view draws the picture as with no guides and nothing picked (v208: on a portrait format — since v201 the format follows the
+    # first clip, and the safe-zone guides are drawn for portrait formats only)
+    d = await E("""async(id)=>{ED.playing=false;await new Promise(r=>setTimeout(r,200));const H=%s;S.ed.format='reels';S.ed.fmtSet201=1;edSetPick('clip',id);S.ed.safe=true;ED.t=1;
       ED.clean131=false;edTick(performance.now());const h1=H();ED.clean131=true;edTick(performance.now());const h2=H();ED.clean131=false;S.ed.safe=false;const pk=S.ed.pick;S.ed.pick=null;edTick(performance.now());const h3=H();S.ed.safe=true;S.ed.pick=pk;
       return{h1,h2,h3,pick:!!S.ed.pick,safe:S.ed.safe}}""" % HASH, c0)
     res["cleanDraw"] = d; chk("clean view = the picture without guides or handles", d["h1"] != d["h2"] and d["h2"] == d["h3"] and d["pick"] and d["safe"], d)

@@ -78,8 +78,8 @@ async def main():
             cols:getComputedStyle(document.querySelector('.hfres .hfrgrid')).gridTemplateColumns.split(' ').length,lime,brandBg:br&&getComputedStyle(br).backgroundColor,brandColor:br&&getComputedStyle(br.querySelector('.nlogo')||br).color,
             mark:!!mk&&getComputedStyle(mk).backgroundColor,markFilter:mk&&getComputedStyle(mk.querySelector('.hfmark')).filter,wide:[...document.querySelectorAll('.view *')].filter(e=>!e.closest('.agc201s')&&e.getBoundingClientRect().right>innerWidth+1).length}}""")
         out["home"] = h
-        chk("home: nine agent cards with dots (arrows hidden on phones), the old row hidden, results in two columns, lime #d9f43b, the brand black on lime, the hero mark black on lime, nothing wider than the screen",
-            h["cards"] == 9 and h["dots"] == 9 and h["strip"] == "none" and h["cols"] == 2 and h["lime"] == "#d9f43b" and h["brandBg"] == "rgb(217, 244, 59)" and h["brandColor"] == "rgb(11, 13, 8)" and h["mark"] == "rgb(217, 244, 59)" and "brightness(0)" in (h["markFilter"] or "") and h["wide"] == 0, h)
+        chk("home: nine agent cards with dots (arrows hidden on phones), the old row hidden, results in two columns, lime #d9f43b, nothing wider than the screen",
+            h["cards"] == 9 and h["dots"] == 9 and h["strip"] == "none" and h["cols"] == 2 and h["lime"] == "#d9f43b" and h["wide"] == 0, h)   # (v204: the brand and the hero mark became the attached logo — checked in v204.py)
         await pg.evaluate("()=>agcGo201(3,false)"); await pg.wait_for_timeout(400)
         on = await pg.evaluate("()=>[...document.querySelectorAll('.agc201d i')].findIndex(d=>d.classList.contains('on'))"); chk("home: the dots follow the carousel", on == 3, on)
         # the editor: the format icon, the auto format, the light theme, the lists, the Extend chips

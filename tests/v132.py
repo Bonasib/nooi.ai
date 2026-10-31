@@ -223,7 +223,7 @@ async def page(b):
         await pg.wait_for_timeout(400)
     sent = [x for x in stats()["reqs"][n0:] if x["path"].endswith("createTask")]
     out["pageExtend"] = {"sheet": ex, "end": s, "sent": [inp(x).get("prompt", "")[:120] for x in sent]}
-    chk("Extend…: +5 / +10 / +15 s with the price; it continues the video and comes back as one longer video", ex["opts"] == ["+5 s", "+10 s", "+15 s"] and ex["cost10"][0] == ex["cost10"][1] and s and s["st"] == "complete" and (s["ext"] or {}).get("joined")
+    chk("Extend…: +5 … +30 s (v201) with the price; it continues the video and comes back as one longer video", ex["opts"] == ["+5 s", "+10 s", "+15 s", "+20 s", "+25 s", "+30 s"] and ex["cost10"][0] == ex["cost10"][1] and s and s["st"] == "complete" and (s["ext"] or {}).get("joined")
         and sent and "she lifts the lantern and smiles" in inp(sent[0]).get("prompt", ""), out["pageExtend"])
     # Extend in a made video's right-click menu
     await E("()=>{document.querySelectorAll('.lb98').forEach(x=>x.remove());const st=ST98&&ST98();if(st)st.lb='';renderView()}"); await pg.wait_for_timeout(400)

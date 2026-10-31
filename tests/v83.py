@@ -185,7 +185,7 @@ async def browser_checks(p):
         # Recipes: five ready recipes, steps with prices, a run makes the steps one after another
         await pg.evaluate("()=>{go('recipes');renderAll()}"); await pg.wait_for_timeout(400)
         r = await pg.evaluate("()=>({h1:document.querySelector('#main h1').textContent,cards:document.querySelectorAll('.rc83').length,steps:document.querySelectorAll('.rsteps83 li').length,tabs:[...document.querySelectorAll('.hubtabs [data-go]')].map(e=>e.dataset.go),over:document.documentElement.scrollWidth>innerWidth})")
-        ok(r["h1"] in ("Recipes", "الوصفات") and r["cards"] == 5 and r["steps"] == 3 and r["tabs"] == ["explore", "discover", "recipes"] and not r["over"], f"{tag}: Recipes page {r}")
+        ok(r["h1"] in ("Recipes", "الوصفات") and r["cards"] == 5 and r["steps"] == 3 and r["tabs"] == ["explore", "discover", "community204", "recipes"] and not r["over"], f"{tag}: Recipes page {r}")
         await pg.click('[data-act="rec-run"]'); await pg.wait_for_timeout(300)
         ok(await pg.evaluate("()=>(S.rec83.runs||[]).length") == 0, f"{tag}: a recipe needs the idea first")
         if lang == "en":

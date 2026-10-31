@@ -40,7 +40,7 @@ PAGES = r"""async()=>{const wait=ms=>new Promise(r=>setTimeout(r,ms)),vis=e=>{co
     for(const h of m.querySelectorAll('h1,h2,h3')){if(!vis(h))continue;const fs=parseFloat(getComputedStyle(h).fontSize),want={H1,H2:16,H3:14}[h.tagName];
       if(fs!==want&&!(v==='home'&&h.tagName==='H1')&&!(v==='edit'&&h.matches('.e-h')))(res.titles[h.tagName+' '+fs]=res.titles[h.tagName+' '+fs]||[]).push(v)}
     // the icon's own size (an icon that breathes or pops is measured at rest)
-    for(const s of m.querySelectorAll('svg')){const r=s.getBoundingClientRect();if(r.width<2||r.width>34||!vis(s))continue;if(s.closest('.thumb,.tplcov,.frame,canvas,svg.bot,.bot,.sfly,.hfmark'))continue;
+    for(const s of m.querySelectorAll('svg')){const r=s.getBoundingClientRect();if(r.width<2||r.width>34||!vis(s))continue;if(s.closest('.thumb,.tplcov,.frame,canvas,svg.bot,.bot,.sfly,.hfmark,.xph200c,.xpt200i'))continue;   /* (v200: Explore's feature cards and tool tiles carry tile art, like covers) */
       const w=Math.round(parseFloat(getComputedStyle(s).width));if(w>30)continue;if(![14,16,20].includes(w))(res.icons[w+' '+cl(s.parentElement)]=res.icons[w+' '+cl(s.parentElement)]||[]).push(v)}
     const t=tool82(v);if(v!=='home'&&t){const h=m.querySelector('h1'),c=h&&h.querySelector('.tchip90');
       const want=getComputedStyle(document.body).getPropertyValue('--c-'+sec90(v)).trim();

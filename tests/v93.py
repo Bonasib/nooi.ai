@@ -187,7 +187,7 @@ async def editor(b):
     await E("""()=>{S.ed.fadeIn93=0;S.ed.tab='export';renderView();
       window.__cap=[];const cs=HTMLCanvasElement.prototype.captureStream;HTMLCanvasElement.prototype.captureStream=function(){if(this.id==='wk')window.__cap.push([this.width,this.height]);return cs.apply(this,arguments)}}"""); await pg.wait_for_timeout(200)
     r = await E("()=>({q:[...document.querySelectorAll('[data-set=\"ed.q93\"]')].map(b=>b.textContent),fades:document.querySelectorAll('[data-set=\"ed.fadeIn93\"],[data-set=\"ed.fadeOut93\"]').length,prev:[document.getElementById('wk').width,document.getElementById('wk').height]})")
-    ok(len(r["q"]) == 2 and "1080×1920" in r["q"][0] and r["fades"] == 6 and r["prev"] == [608, 1080], f"{tag}: Export has Quality (full size shown) and the fades; the preview stays light {r}")
+    ok(len(r["q"]) == 2 and "1080×1920" in r["q"][0] and r["fades"] == 6 and r["prev"][1] in (540, 1080) and abs(r["prev"][0] / r["prev"][1] - 608 / 1080) < .01, f"{tag}: Export has Quality (full size shown) and the fades; the preview stays light (v207: 540 on a phone's Auto) {r}")
     # the size follows how fast this device draws a frame (a recording is real time): fast → the format's own size,
     # medium → the largest size that keeps 30 fps, slow → the preview size (this test machine draws slowly, so it's stubbed)
     sz = await E("""()=>{const k1=ED.tk93,k2=ED.ti93,real=[med93(k1),med93(k2)],out=[];
@@ -202,7 +202,8 @@ async def editor(b):
     out["export"] = r
     ok((r["cap"] and r["cap"][0] == [1080, 1920]) or r["st"] == ["frames", 1080, 1920], f"{tag}: the export is made at 1080×1920 (recorded, or drawn frame by frame since v139) {r}")
     await pg.wait_for_timeout(400)
-    ok(await E("()=>[document.getElementById('wk').width,document.getElementById('wk').height]") == [608, 1080], f"{tag}: the preview goes back to its light size after the export")
+    pv = await E("()=>[document.getElementById('wk').width,document.getElementById('wk').height,pqW198()]")   # (v207: on a phone the preview's own size is 540 on the long side)
+    ok(pv[1] == pv[2] and abs(pv[0] / pv[1] - 608 / 1080) < .01, f"{tag}: the preview goes back to its own size after the export {pv}")
     await E("()=>{edHQ93=window.__hq}")
     ok(not errs, f"{tag}: page errors {errs[:3]}"); await ctx.close()
 

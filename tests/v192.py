@@ -17,7 +17,7 @@ def ok(c, m):
     if not c: fails.append(m)
 
 D = tempfile.mkdtemp(prefix="nooi-v192-"); os.makedirs(D + "/data"); os.makedirs(D + "/media"); os.symlink(ROOT + "/public", D + "/public"); os.symlink(ROOT + "/node_modules", D + "/node_modules")
-subprocess.run(["ffmpeg", "-v", "error", "-f", "lavfi", "-i", "testsrc=size=320x180:rate=24:duration=6", "-c:v", "libvpx-vp9", "-b:v", "200k", "-y", D + "/media/t192.webm"], check=True, timeout=120)
+subprocess.run(["ffmpeg", "-v", "error", "-f", "lavfi", "-i", "testsrc=size=320x180:rate=24:duration=12", "-c:v", "libvpx-vp9", "-b:v", "200k", "-y", D + "/media/t192.webm"], check=True, timeout=120)   # (v208: 12 s — the full-screen checks run past 6 s since full screen moved into the More sheet)
 json.dump({"users": {"local": {"plan": "studio", "credits": 5000, "ledger": [], "posts": {}, "accounts": {}, "jobs": {}}}}, open(D + "/data/db.json", "w"))
 SK = "b" * 40
 env = {k: v for k, v in os.environ.items() if not k.startswith(("LLM_", "ANTHROPIC_", "NVIDIA_", "OPENAI_", "KIE_", "FAL_", "GOOGLE_", "DASHSCOPE_", "FIREBASE_", "LOCAL_LLM", "GEMMA_", "FREE_PERIOD", "NOOI_", "MINIMAX_", "MOYASAR_", "PAYMENT_", "STRIPE_", "TAP_", "PAYPAL_", "AIRWALLEX_"))}
@@ -50,12 +50,12 @@ async def video_part(p):
     try:
         await pg.goto(B + "/"); await pg.wait_for_function("typeof API!=='undefined'&&API.mode==='server'&&API.cfg", timeout=20000)
         await E("()=>{S.lang='en';S.user=S.user||{name:'Owner',method:'email',contact:'owner@nooi.ai'};S.jobs.unshift({id:'v192',remote:'',kind:'video',status:'complete',resultUrl:'/media/t192.webm',prompt:'A test card',model:'kling',created:Date.now(),aspect:'16:9',dur:6});S.hf.out=['v192'];S.hf.tab='video';persist();go('home')}")
-        await pg.wait_for_selector('.hfrm [data-act="hfvf"]', timeout=15000)
+        await pg.wait_for_selector('.hfrm video', timeout=15000)   # (v203: full screen is in the card's More sheet)
         R_["tap0"] = await E("()=>getComputedStyle(document.documentElement).webkitTapHighlightColor")
         ok(R_["tap0"] in ("rgba(0, 0, 0, 0)", "transparent"), f"no blue tap flash: {R_['tap0']}")
         # the card's video plays to ~2 s, then full screen
         await E("()=>{const v=document.querySelector('.hfrm video');v.muted=true;return v.play()}"); await pg.wait_for_function("document.querySelector('.hfrm video').currentTime>1.5", timeout=15000)
-        await pg.tap('.hfrm [data-act="hfvf"]'); await pg.wait_for_selector(".mv80.fs192 .vp87 video", timeout=10000)
+        await pg.tap('.hfrc [data-act="more203"]'); await pg.wait_for_selector('#modalRoot [data-act="full203"]', timeout=5000); await pg.tap('#modalRoot [data-act="full203"]'); await pg.wait_for_selector(".mv80.fs192 .vp87 video", timeout=10000)
         await pg.wait_for_function("(()=>{const v=document.querySelector('.mv80.fs192 video');return v&&v.readyState>=2&&v.currentTime>1.2})()", timeout=10000)
         st = await E("()=>{const v=document.querySelector('.mv80.fs192 video'),c=document.querySelector('.hfrm video');return {t:v.currentTime,card:c.paused,player:!!v.closest('.vp87')}}"); R_["fs"] = st
         ok(st["t"] > 1.2 and st["card"] and st["player"], f"full screen = our player from the same moment, the card stopped: {st}")

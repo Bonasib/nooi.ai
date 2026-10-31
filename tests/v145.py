@@ -164,7 +164,7 @@ async def desktop(b, lang):
 async def phone(b, lang):
     tag = f"phone {lang}"; ctx, pg, errs = await open_page(b, 390, 844, lang, True); E = pg.evaluate
     c = await E("()=>{const c=S.ed.clips[0];S.ed.sel=c.id;edSetPick('clip',c.id);S.ed.tab='clip';S.ed.pclosed143='clip';renderView();return[...document.querySelectorAll('.e-bar button')].map(b=>b.dataset.v||b.dataset.act)}")
-    want = ["desel143", "clip", "ed-split", "speed145", "audio145", "anim145", "motion", "color", "trans143", "clip#crop", "90", "rev145", "edx-freeze", "fh", "ed-dup", "ed-move", "ed-move", "ed-extend91", "bg144", "clip#replace", "xa145", "track", "ai140", "cp146", "msm146", "ed-del", "snap141"]   # (v146: Copy, Select more)
+    want = ["desel143", "clip", "ed-split", "ed-del", "speed145", "audio145", "anim145", "motion", "color", "trans143", "clip#crop", "90", "rev145", "edx-freeze", "fh", "ed-dup", "ed-move", "ed-move", "ed-extend91", "bg144", "clip#replace", "xa145", "track", "ai140", "cp146", "msm146", "snap141"]   # (v146: Copy, Select more)   # (v208: Delete beside Split)
     chk(f"{tag}: the clip's tools: … Speed, Volume, Animation … Crop, Rotate, Reverse … Background, Replace, Extract audio …", c == want, c)
     async def bar(sel): await E("(s)=>{const b=document.querySelector('.e-bar '+s);b.scrollIntoView({inline:'center'});b.click()}", sel); await pg.wait_for_timeout(500)
     await bar('[data-v="speed145"]'); s1 = await E("()=>({tab:S.ed.tab,sheet:!!document.querySelector('.e-sheet [data-act=\"edx-slow\"]')})")

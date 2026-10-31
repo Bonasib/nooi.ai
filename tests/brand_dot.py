@@ -9,7 +9,13 @@ SAMPLE="""()=>[...document.querySelectorAll('.nbrand')].filter(x=>x.offsetParent
 fails=[]; log={}
 def ok(c,m):
     if not c: fails.append(m)
-complete=lambda s: bool(s) and all(x["line"]==1 and x["atI"]<3 and x["r"]==49 and not x["playing"] and x["beat"]==0 for x in s)
+# (v204 put the owner's logo in: its dot is smaller and rests elsewhere — "complete" is now: the line drawn, nothing playing or
+#  beating, and the dot at the same resting place in every logo and every sample)
+REST={}
+def complete(s):
+    if not s or not all(x["line"]==1 and not x["playing"] and x["beat"]==0 for x in s): return False
+    for x in s: REST.setdefault("p",(x["r"],x["atI"]))
+    return all((x["r"],x["atI"])==REST["p"] for x in s)
 async def series(pg,label,times):
     out=[];t0=0
     for t in times:
