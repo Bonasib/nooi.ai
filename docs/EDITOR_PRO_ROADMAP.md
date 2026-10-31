@@ -35,6 +35,11 @@ languages, translation · AI: reframe, stabilise, silences, voices, dubbing, sou
 | 17 | **Text-based editing** (Premiere) — the caption words as the video's transcript: tap words to take out, the clips are trimmed or split there and every track closes the gap (texts, layers, sounds, markers, words, camera keys, the keyframes above); filler words (um, uh, آآ, يعني…) in one tap; undo puts it back | **v198** |
 | 18 | **Playback quality** (Premiere's playback resolution) — Full / ½ / ¼ for the preview canvas only; an export keeps its size | **v198** |
 | 19 | **Media management** (Premiere's Link Media, Consolidate) — missing clips, layers and sounds listed in one sheet and relinked by choosing the file again (cuts, timing and settings kept); everything only on this device put on the account in one tap; a notice when a project opens with files gone | **v198** |
+| 20 | **Track mattes** (AE's alpha / luma mattes) — a layer shows only where another layer is: by its shape (alpha) or its brightness (luma), inverted or not; the matte layer itself is not drawn; "the layer above" or any layer by name | **v202** |
+| 21 | **Expressions, the two everyone uses** (AE's `loopOut` and `wiggle`) — on any keyframed slider: after the last key loop or go back and forth; a wiggle (amount, times a second) on top, the same every play | **v202** |
+| 22 | **Render with alpha** (AE's RGB+Alpha, Premiere's ProRes 4444) — the clips hidden, titles / layers / shapes over nothing: WebM VP9 with alpha for web pages and OBS, ProRes 4444 .mov for Premiere / AE / DaVinci / Final Cut; sound included | **v202** |
+| 23 | **Export a part + a still** (Premiere's work area / Export Frame) — from … to … seconds or "This clip", cut on the server exactly; the current frame saved as a PNG | **v202** |
+| 24 | **History panel** (Premiere / Photoshop) — every step named after the control that made it; tap any to go back there | **v202** |
 
 ## What phase 2 did not do (honest limits)
 - Power-window tracking is block matching of a luma patch at 8 steps a second on a 160-px copy — it follows a subject that moves and
@@ -68,6 +73,19 @@ languages, translation · AI: reframe, stabilise, silences, voices, dubbing, sou
   stack) stays slow, and the scopes read the smaller picture.
 - Relinking needs the file chosen by hand (no search of the device's folders — a browser can't); a relinked clip becomes an upload
   (its link to the result it came from is dropped).
+
+## What phase 5 did not do (honest limits)
+- A matte is one layer over another: no chains (a matte of a matted layer is drawn without its own matte), adjustment layers can't be
+  mattes, and a luma matte is read on a copy at most 960 px wide (fine edges soften a touch on a 4K export).
+- Loop and wiggle apply to the v198 slider keyframes only (not to a clip's own `mo.*` motion keys or the 3D camera); the wiggle is a
+  smooth, repeatable mix of three sines, not true noise, and the stopwatch's live number shows the keyframed value without the wiggle.
+- A transparent render hides the clips track entirely (the overlay is everything else); it is capped at 30 s and 1920 px, the frames go
+  to the server as WebP (lossy, quality 92) so the encode happens there, and the music / voice-over / sound effects are included but the
+  hidden clips' sound is not. A colour grade set on a clip does not touch the overlay. Browsers that can't make WebP are refused.
+- A part is cut by the server (needs the nooi server; the exact H.264 pass-through is skipped so the cut lands on the frame); the
+  library keeps the whole timeline's length in its row. The still is the preview canvas (1080 px on the long side), not a 4K frame.
+- History names a step after the control last touched before the save (a change made by the AI agents or a keyboard shortcut reads
+  "Change"); the list is the undo stack (60 steps).
 
 ## Rules for every phase
 - Our own code and sounds; ideas only from the big tools' public behaviour. Licences noted in `docs/THIRD_PARTY.md`.

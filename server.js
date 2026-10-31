@@ -24,7 +24,8 @@ import { registerAdmin } from "./lib/admin.js";
 import { registerGuard200, stepGate200, secMiddleware200 } from "./lib/guard200.js";
 import { registerProjects139 } from "./lib/projects139.js";   // v139: editor projects kept on the server
 import { registerCollab196 } from "./lib/collab196.js";   // v196: team review — comments on frames, versions, shared projects
-import { registerProxy196 } from "./lib/proxy196.js";   // v196: light proxies of heavy footage for the editor's preview
+import { registerProxy196 } from "./lib/proxy196.js";
+import { registerExport202, range202 } from "./lib/export202.js";   // v202: transparent renders (WebM alpha / ProRes 4444) + a part of the timeline   // v196: light proxies of heavy footage for the editor's preview
 import { streamTTS } from "./providers/elevenlabs.js";
 import { testAll } from "./lib/health.js";
 import { spawn } from "child_process";
@@ -374,7 +375,7 @@ registerAgents(app);
 registerMotion(app);
 registerSketch(app);
 registerWorld(app);
-registerV88(app, requireUser); startKeepMedia(); registerScrub131(app, requireUser); registerEdit145(app, requireUser); registerProxy196(app, requireUser);
+registerV88(app, requireUser); startKeepMedia(); registerScrub131(app, requireUser); registerEdit145(app, requireUser); registerProxy196(app, requireUser); registerExport202(app);
 registerEdit147(app, requireUser);
 registerEdit148(app, requireUser); registerEdit149(app, requireUser, isStaff); registerCaptions169(app, requireUser, isStaff); registerMotion150(app, requireUser);
 registerIngest(app);
@@ -401,13 +402,13 @@ app.post("/v1/media/transcode", requireUser, express.raw({ type: ["video/webm", 
   const fit = W && H ? `scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1` : "";
   const args = F === "wav" ? ["-y", "-i", inp.file, "-vn", "-c:a", "pcm_s24le", "-ar", "48000", out]
     : F === "gif" ? ["-y", "-i", inp.file, "-vf", `fps=12,scale=${Math.min(W || 540, 720)}:-2:flags=lanczos,split[a][b];[a]palettegen=max_colors=160[p];[b][p]paletteuse=dither=sierra2_4a`, out]
-    : ["-y", "-i", inp.file, ...(fit ? ["-vf", fit] : []), "-r", String(fps), ...PRESET[F][1], out];
+    : ["-y", "-i", inp.file, ...range202(req.query), ...(fit ? ["-vf", fit] : []), "-r", String(fps), ...PRESET[F][1], out];   // (v202: a=…&b=… exports only that part)
   // v119: a recording that is already H.264 at the format's exact size (the browser recorded MP4 at full size) is only
   // re-packed into a proper MP4 — about a second, whatever the server — instead of being made again frame by frame
   const t0 = Date.now(), probe = spawn(process.env.FFPROBE_PATH || "ffprobe", ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name,width,height:format=duration", "-of", "json", inp.file]); let pj = "";
   probe.stdout.on("data", (d) => (pj += d)); probe.on("error", () => go(null)); probe.on("close", () => { let v = null; try { v = JSON.parse(pj); } catch {} go(v); });
   function go(v) {
-    const st = v?.streams?.[0] || {}, secs = +v?.format?.duration || 0, copy = F === "mp4" && st.codec_name === "h264" && (!W || (st.width === W && st.height === H));
+    const st = v?.streams?.[0] || {}, secs = +v?.format?.duration || 0, copy = F === "mp4" && st.codec_name === "h264" && (!W || (st.width === W && st.height === H)) && !range202(req.query).length;
     const a = copy ? ["-y", "-i", inp.file, "-map", "0:v:0", "-map", "0:a:0?", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", out] : args;
     const p = spawn(process.env.FFMPEG_PATH || "ffmpeg", a);
     p.on("error", (e) => res.status(500).json({ error: "ffmpeg: " + e.message }));
