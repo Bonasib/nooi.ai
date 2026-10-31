@@ -22882,9 +22882,9 @@ media143=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="string")r
   return h+'<span class="lbl">'+L("Files & playback","الملفات والتشغيل")+'</span><div class="row" style="gap:10px;flex-wrap:wrap;align-items:center">'+
     (miss?'<button type="button" class="btn sm danger" data-act="rl198">'+ic("relink198")+L("Relink missing files","أعد ربط الملفات المفقودة")+" ("+miss+")</button>":'<span class="small dim">'+L("Every file is in place.","كل ملف في مكانه.")+"</span>")+
     (srv&&loc?'<button type="button" class="btn sm" data-act="rl198-consolidate">'+ic("upload")+L("Put ","ارفع ")+loc+L(" file(s) on my account"," ملف إلى حسابي")+"</button>":"")+"</div>"+
-    '<div class="row" style="gap:10px;align-items:center;margin-top:8px"><span class="small">'+L("Playback quality","جودة التشغيل")+'</span>'+edxSeg("pq198",[["1","Full","كاملة"],["2","½ · faster","½ · أسرع"],["4","¼ · fastest","¼ · الأسرع"]],String(E.pq198||1))+'<span class="small dim">'+L("preview only — exports keep their size","للمعاينة فقط — يحتفظ التصدير بحجمه")+"</span></div>"})(media143);
+    '<div class="row" style="gap:10px;align-items:center;margin-top:8px"><span class="small">'+L("Playback quality","جودة التشغيل")+'</span>'+edxSeg("pq198",[["0","Auto","تلقائي"],["1","Full","كاملة"],["2","½ · faster","½ · أسرع"],["4","¼ · fastest","¼ · الأسرع"]],String(+E.pq198||0)).replace('class="seg"','class="seg eq pq207"')+'<span class="small dim">'+L("preview only — exports keep their size","للمعاينة فقط — يحتفظ التصدير بحجمه")+"</span></div>"})(media143);
 document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="rl198"],[data-act="rl198-consolidate"],[data-act="pq198"]');if(!a)return;const act=a.dataset.act;
-  if(act==="rl198"){rlSheet198();return}if(act==="pq198"){S.ed.pq198=+a.dataset.v||1;persist();renderView();return}
+  if(act==="rl198"){rlSheet198();return}if(act==="pq198"){S.ed.pq198=+a.dataset.v||0;persist();renderView();return}
   if(act==="rl198-consolidate"){if(typeof save139!=="function")return;a.disabled=true;try{await save139(false)}finally{renderView()}}});
 // every frame: keyframed values at the playhead, the stopwatches' state, the transcript's current word, a missing-files notice once per project
 edTick=(o=>function(now){const nested=typeof SQ194!=="undefined"&&SQ194.depth;if(!nested)try{kfApply198(ED.t)}catch(e){}const r=o.apply(this,arguments);if(nested||S.view!=="edit")return r;
@@ -23944,7 +23944,7 @@ const grp206=sc=>MG206.fx.some(x=>x[0]===sc)?"fx":MG206.show.some(x=>x[0]===sc)?
 const tile206=(x,base)=>'<button type="button" class="'+(base?"mg150t":"mg206t")+'" data-act="edi-add" data-v="mg150:'+x[0]+'">'+(base?'<span class="mg150i mg150-'+x[0]+'"></span>':'<canvas class="mg206c" data-sc="'+x[0]+'" width="192" height="108" aria-hidden="true"></canvas>')+"<span>"+esc(L(x[1],x[2]))+"</span></button>";
 VIEWS.edit=(o=>function(){let h=o.apply(this,arguments);const E=S.ed;if(typeof h!=="string"||E.tab!=="info")return h;
   const base=MG150.filter(x=>!ALL206.some(y=>y[0]===x[0])),sec=(t,list,b)=>'<span class="lbl mg206h">'+esc(t)+'</span><div class="mg150g mg206g">'+list.map(x=>tile206(x,b)).join("")+"</div>";
-  const groups=sec(L("Motion effects","مؤثرات الحركة")+" · 20",MG206.fx)+sec(L("Showcase — up to 12 pictures","عرض — حتى 12 صورة"),MG206.show)+sec(L("Like the reference videos","مثل الفيديوهات المرجعية"),MG206.ref)+
+  const groups=sec(L("Motion effects","مؤثرات الحركة")+" · 20",MG206.fx)+sec(L("Showcase — up to 12 pictures or videos","عرض — حتى 12 صورة أو فيديو"),MG206.show)+sec(L("Like the reference videos","مثل الفيديوهات المرجعية"),MG206.ref)+
     '<span class="lbl mg206h">'+esc(L("One-tap recipes (a timeline of their own)","وصفات بلمسة (خط زمني خاص)"))+'</span><div class="chips mg206r">'+RC206().map(r=>'<button type="button" class="chip" data-act="mg206-rec" data-v="'+r[0]+'">'+ic("mg150")+esc(r[1])+"</button>").join("")+"</div>"+
     '<span class="lbl mg206h">'+esc(L("Classic scenes","المشاهد الكلاسيكية"))+'</span><div class="mg150g">'+base.map(x=>tile206(x,true)).join("")+"</div>";
   h=h.replace(/<div class="mg150g">[\s\S]*?<\/div>/,groups);
@@ -23971,6 +23971,173 @@ edExport=(o=>async function(){try{await pics206Ready()}catch(e){}return o.apply(
 .pk206b img{width:100%;height:100%;object-fit:cover;display:block}.pk206b b{font-size:20px;font-weight:600}
 .pk206s{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.pk206p{aspect-ratio:1;padding:0;border:0;border-radius:10px;overflow:hidden;cursor:pointer;background:var(--soft,#eee)}.pk206p img{width:100%;height:100%;object-fit:cover;display:block}
 `;document.head.appendChild(st)})();
+/* ================= v207: MOTION SCENES ON A PHONE — FAST, ONE AFTER ANOTHER, WITH YOUR PICTURES AND VIDEOS ================= */
+// What a phone showed (Oct 31): scenes added at the same moment were drawn on top of each other, a frame of the preview cost
+// ~100 ms here (several times that on a phone, so the page stopped answering taps while it played), the picture boxes sat under
+// 29 tiles at the bottom of the sheet, and the time under the preview was covered by the wand. Now:
+//  1) speed — the preview size picks itself (a phone draws at 540 on the long side, smaller again while frames stay slow; a size
+//     picked by hand stays), a phone's preview leaves out soft shadows (the export keeps them), the scene tiles are drawn once and
+//     copied, and the playing preview never takes more than about half of the device's time, so taps always get through;
+//  2) a new scene goes after the scenes already there (not on top of them); "Line them up" fixes a project where they overlap;
+//     an empty timeline gets a background clip so the scene plays;
+//  3) pictures AND videos in a scene: a "Pictures & videos" box at the top of the scene's settings, several at once from the
+//     device, your results or the timeline's clips; a video in a box plays with the scene in the preview and is decoded frame by
+//     frame for the export (the same decoder as the timeline's videos);
+//  4) the chosen scene's settings come first in its sheet; the time under the preview keeps its room (the buttons scroll);
+//     the "changed on your other device" note wraps instead of being cut.
+
+// ---- 1. speed
+const PF207={lv:null,ema:0,slow:0,fast:0,next:0};
+const touch207=()=>innerWidth<768||!!(window.matchMedia&&matchMedia("(pointer:coarse)").matches);
+// (Auto is the default; S.ed.pq198 = 1 / 2 / 4 is a size picked by hand)
+pqW198=(o=>function(){const q=S.ed&&+S.ed.pq198;if(q)return o.apply(this,arguments);if(PF207.lv==null)PF207.lv=touch207()?1:0;return[1080,540,270][PF207.lv]})(pqW198);
+edTick=(o=>function(now){if(S.view!=="edit"||ED.rec||ED.hq||R139.on||recording)return o.apply(this,arguments);const a=performance.now(),r=o.apply(this,arguments),d=performance.now()-a;
+  PF207.ema=PF207.ema?PF207.ema*.85+d*.15:d;
+  // (a phone on Auto: slow frames for a while → a smaller preview; fast again for a long while → back up to 540)
+  if(!(S.ed&&+S.ed.pq198)&&touch207()){if(PF207.ema>45){if(++PF207.slow>12&&PF207.lv<2){PF207.lv++;PF207.slow=0;PF207.ema=0}}else PF207.slow=0;
+    if(PF207.ema<7&&PF207.lv>1){if(++PF207.fast>150){PF207.lv--;PF207.fast=0}}else PF207.fast=0}
+  const t=performance.now();for(const k in VM207){const m=VM207[k];if(m.el&&!m.el.paused&&t-m.seen>350)try{m.el.pause()}catch(e){}}
+  return r})(edTick);
+// (the loop asks draw170 whether to draw: a frame that costs more than ~18 ms leaves the next one a gap, so input is never starved)
+draw170=(o=>function(now){const r=o.apply(this,arguments);if(!r||ED.rec||ED.hq||R139.on||recording)return r;const c=PF207.ema||0;
+  if(c>18&&now<PF207.next){DR170.dirty=true;return false}PF207.next=now+c*1.2;return true})(draw170);
+// (a phone's preview: no soft shadows inside the scenes — the blur is the costliest thing a canvas does; the export has them)
+const NB207={configurable:true,get(){return 0},set(v){}},CUR207={};
+draw164=(o=>function(ctx,W,H,t,it,part){if(it&&it.id)CUR207[it.id]=t-it.start;if(part==="bg"||part==="grain")return o.apply(this,arguments);
+  try{const c=cv164(MG164.sub?"fgS":"fg",W,H).getContext("2d");if(light164()){if(!c.nb207){Object.defineProperty(c,"shadowBlur",NB207);c.nb207=1}}else if(c.nb207){delete c.shadowBlur;c.nb207=0}}catch(e){}
+  return o.apply(this,arguments)})(draw164);
+// (the tiles: each scene drawn once per size and language, then copied — a tap on the sheet no longer redraws 29 scenes)
+const TILE207={};
+paint206=function(){document.querySelectorAll("canvas.mg206c:not([data-p])").forEach(c=>{const sc=c.dataset.sc,f=SC164[sc];if(!f)return;c.dataset.p="1";const w=c.width,h=c.height,key=sc+"|"+w+"x"+h+"|"+(S.lang||"");let b=TILE207[key];
+  if(!b){b=document.createElement("canvas");b.width=w;b.height=h;const x=b.getContext("2d"),d=DEF206()[sc]||{},len=d.dur||4,it=Object.assign({id:"tile_"+sc,type:"mg150",sc,t1:"",t2:"",items:"",val:"",pics:[]},d);
+    try{bg150(x,w,h,"#c1ff72",1.2);x.save();x.translate(w/2,h/2);f(x,{W:w,H:h,U:Math.min(w,h),lt:len*.72,len,ac:"#c1ff72",it});x.restore()}catch(e){}TILE207[key]=b}
+  c.getContext("2d").drawImage(b,0,0)})};
+
+// ---- 2. one scene after another
+const mgs207=()=>((S.ed&&S.ed.infos)||[]).filter(x=>x&&x.type==="mg150");
+// the first start at or after the scene's own where it overlaps no other scene (null: none)
+function free207(it){const os=mgs207().filter(x=>x!==it),len=Math.max(.2,it.end-it.start),fits=s=>os.every(o=>s+len<=o.start+.01||s>=o.end-.01);
+  if(fits(it.start))return it.start;for(const s of os.map(o=>o.end).filter(e=>e>=it.start-.01).sort((a,b)=>a-b))if(fits(s))return s;return null}
+// room up to `end`: the motion background clip at the end of the timeline grows; a real video timeline doesn't
+function room207(end){const E=S.ed,tot=edTotal();if(end<=tot+.01)return true;const last=E.clips[E.clips.length-1];
+  if(last&&last.src&&last.src.k==="demo"){const st=tot-clipDur(last);last.out=+((last.in||0)+(end-st)*(last.speed||1)).toFixed(2);return true}return false}
+const bgClip207=()=>({id:uid(),src:{k:"demo",kind:"mg150",ac:(S.ad150&&S.ad150.col)||"#7CFF4F",name:"Motion background"},in:0,out:5,speed:1,trans:"cut",vol:0});
+mgAdd150=(o=>function(sc,opt){const E=S.ed;if(!E.clips.length)E.clips.push(bgClip207());const it=o.apply(this,arguments);
+  if(!it||(opt&&opt.start!=null))return it;   // (a caller that names the time keeps it)
+  const len=+(it.end-it.start).toFixed(2),s=free207(it),T0=edTotal();
+  if(s!=null&&room207(s+len)){const mv=Math.abs(s-it.start)>.005;if(mv){it.start=+s.toFixed(2);it.end=+(s+len).toFixed(2);ED.t=it.start}if(mv||edTotal()!==T0){persist();renderView()}}
+  else toast(L("This scene plays over another one — drag it on the timeline to move it.","يُعرض هذا المشهد فوق مشهد آخر — اسحبه على الخط الزمني لنقله."),{type:"info"});
+  return it})(mgAdd150);
+// how many scenes start before the ones before them have ended
+function over207(){const l=mgs207().slice().sort((a,b)=>a.start-b.start);let n=0,end=-1;l.forEach(x=>{if(x.start<end-.05)n++;end=Math.max(end,x.end)});return n}
+function line207(){const l=mgs207().slice().sort((a,b)=>a.start-b.start||a.end-b.end);if(l.length<2)return;if(typeof histPush==="function")try{histPush()}catch(e){}
+  let t=Math.max(0,l[0].start);l.forEach(x=>{const len=Math.max(.2,x.end-x.start);x.start=+t.toFixed(2);x.end=+(t+len).toFixed(2);t+=len});
+  const fit=room207(t);ED.t=l[0].start;persist();renderView();
+  toast(fit?L("Done — the scenes play one after another.","تم — المشاهد تُعرض واحداً تلو الآخر."):L("Lined up — the last scenes run past the end of your video; make it longer to see them.","رُتّبت — آخر المشاهد بعد نهاية الفيديو؛ أطِل الفيديو لتظهر."),{type:fit?"ok":"info"})}
+
+// ---- 3. pictures and videos in a scene
+const VEXT207=/\.(mp4|webm|mov|m4v|ogv|mkv)([?#]|$)/i;
+function isVid207(u){if(!u)return false;u=String(u);if(VEXT207.test(u)||/^data:video\//.test(u))return true;if(S.ed&&S.ed.vk207&&S.ed.vk207[u])return true;
+  const j=(S.jobs||[]).find(j=>j.resultUrl===u);return!!(j&&j.kind==="video")}
+// one muted video per address (also the export decoder's key: R139.fr holds its frame for the moment being drawn)
+const VM207={};
+function vm207(u){let m=VM207[u];if(m)return m;const v=document.createElement("video");v.muted=true;v.defaultMuted=true;v.playsInline=true;v.setAttribute("playsinline","");v.setAttribute("muted","");v.loop=true;v.preload="auto";
+  if(!/^(blob|data):/.test(u))v.crossOrigin="anonymous";m=VM207[u]={type:"video",url:u,el:v,seen:0};
+  m.p=new Promise(r=>{v.addEventListener("loadeddata",()=>r(),{once:true});v.addEventListener("error",()=>r(),{once:true});setTimeout(r,10000)});v.src=u;try{v.load()}catch(e){}return m}
+// the frame for the scene's moment: the export's decoded frame, or the video moved to the moment (playing along while the preview plays)
+function vframe207(u,it){const m=vm207(u);m.seen=performance.now();if(R139.on){const f=R139.fr&&R139.fr.get(m);return f?f.c:null}
+  const v=m.el,lt=Math.max(0,CUR207[it.id]||0),dur=isFinite(v.duration)&&v.duration>0?v.duration:0,tg=dur?lt%dur:lt;
+  if(v.readyState>=1){if(ED.playing){if(v.paused){const p=v.play();if(p&&p.catch)p.catch(()=>{})}if(Math.abs(v.currentTime-tg)>.35&&!v.seeking)try{v.currentTime=tg}catch(e){}}
+    else{if(!v.paused)v.pause();if(Math.abs(v.currentTime-tg)>.04&&!v.seeking)try{v.currentTime=tg}catch(e){}}}
+  return v.readyState>=2&&v.videoWidth?v:null}
+img206=(o=>function(u){if(u&&isVid207(u))return null;return o.apply(this,arguments)})(img206);
+pic206=(o=>function(ctx,it,i,x,y,w,h,r){const u=(it.pics||[])[i];if(!u||!isVid207(u))return o.apply(this,arguments);const f=vframe207(u,it),fw=f&&(f.videoWidth||f.naturalWidth||f.width),fh=f&&(f.videoHeight||f.naturalHeight||f.height);
+  if(!fw||!fh)return o.call(this,ctx,{pics:[]},i,x,y,w,h,r);
+  ctx.save();if(r)rr150(ctx,x,y,w,h,r);else{ctx.beginPath();ctx.rect(x,y,w,h)}ctx.clip();const s=Math.max(w/fw,h/fh),dw=fw*s,dh=fh*s;ctx.drawImage(f,x+(w-dw)/2,y+(h-dh)/2,dw,dh);ctx.restore()})(pic206);
+// the export: each frame also needs the videos inside the scenes playing at that moment
+needs139=(o=>function(t){const out=o.apply(this,arguments);try{mgs207().forEach(it=>{if(t<it.start||t>it.end)return;(it.pics||[]).forEach(u=>{if(u&&isVid207(u))out.push({m:vm207(u),t:Math.max(0,t-it.start),ly:1})})})}catch(e){}return out})(needs139);
+pics206Ready=function(){const ps=[];mgs207().forEach(it=>(it.pics||[]).forEach(u=>{if(!u)return;if(isVid207(u))ps.push(vm207(u).p);else{img206(u);if(IMG206[u])ps.push(IMG206[u].p)}}));
+  return Promise.race([Promise.all(ps),new Promise(r=>setTimeout(r,8000))])};
+const nPics207=it=>((F206[it.sc]||{}).pics)||0;
+const empty207=(it,N)=>{const P=it.pics||[];for(let i=0;i<N;i++)if(!P[i])return i;return-1};
+// the timeline's own clips that have a lasting address (a file only on this device can't be used inside a scene)
+function tl207(){const out=[],seen={};(S.ed.clips||[]).forEach(c=>{try{let u="",v=false;if(c.src&&c.src.k==="job"){const j=(S.jobs||[]).find(x=>x.id===c.src.job);if(j&&j.resultUrl){u=j.resultUrl;v=j.kind==="video"}}
+    else if(c.src&&c.src.k!=="demo"){const m=M["c_"+c.id];u=(m&&m.url)||c.src.url||"";v=m?m.type==="video":VEXT207.test(u)}if(u&&!/^(blob|data):/.test(u)&&!seen[u]){seen[u]=1;out.push({u,v})}}catch(e){}});return out}
+const th207=(u,vid)=>vid?'<video src="'+esc(u)+'#t=0.1" muted playsinline preload="metadata"></video><i class="pv207v">'+ic("play")+"</i>":'<img src="'+esc(u)+'" alt="" loading="lazy">';
+// the sheet: i = one box (change or remove it); null = fill the empty boxes in order (a second tap on a used one takes it out)
+function picSheet207(i){const it=edItem(edPick());if(!it||it.type!=="mg150")return;const N=nPics207(it)||1,P=it.pics||[],one=i!=null&&i>=0,used=P.filter(Boolean).length;
+  const mine=(S.jobs||[]).filter(j=>(j.kind==="image"||j.kind==="video")&&j.status==="complete"&&j.resultUrl).slice(-30).reverse(),clips=tl207();
+  const cell=(u,vid)=>{const k=P.indexOf(u);return'<button type="button" class="pk206p'+(k>=0?" on":"")+'" data-act="pv207-use" data-u="'+esc(u)+'"'+(vid?' data-vid="1"':"")+(one?' data-i="'+i+'"':"")+'>'+th207(u,vid)+(k>=0?'<i class="pv207n">'+(k+1)+"</i>":"")+"</button>"};
+  hfSheet(one?L("Box "+(i+1),"المربع "+(i+1)):L("Pictures & videos","الصور والفيديوهات")+" · "+used+"/"+N,
+    '<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:10px"><label class="btn primary">'+ic("upload")+esc(one?L("Upload a picture or video","ارفع صورة أو فيديو"):L("Upload pictures or videos","ارفع صوراً أو فيديوهات"))+'<input type="file" accept="image/*,video/*"'+(one?"":" multiple")+' data-mg206up="'+(one?i:-1)+'" hidden></label>'+
+    (one&&P[i]?'<button type="button" class="btn ghost" data-act="mg206-del" data-i="'+i+'">'+ic("trash")+esc(L("Remove","إزالة"))+"</button>":"")+"</div>"+
+    (one?"":'<p class="small mute" style="margin:0 0 10px">'+esc(L("Tap to add in order; tap again to take one out.","المس للإضافة بالترتيب، والمس مرة أخرى للإزالة."))+"</p>")+
+    (mine.length?'<span class="lbl">'+esc(L("Your results","نتائجك"))+'</span><div class="pk206s">'+mine.map(j=>cell(j.resultUrl,j.kind==="video")).join("")+"</div>":'<p class="small mute">'+esc(L("Pictures and videos you make on nooi show up here too.","تظهر هنا أيضاً الصور والفيديوهات التي تصنعها على nooi."))+"</p>")+
+    (clips.length?'<span class="lbl">'+esc(L("Clips on the timeline","مقاطع الخط الزمني"))+'</span><div class="pk206s">'+clips.map(c=>cell(c.u,c.v)).join("")+"</div>":""))}
+picSheet206=i=>picSheet207(i);
+async function upv207(f){if(API.mode==="server"){const r=await API.upload(f,f.name);return r&&r.url}
+  toast(L("This video stays until you close the page — sign in to keep it in the project.","يبقى هذا الفيديو حتى تغلق الصفحة — سجّل الدخول ليبقى في المشروع."),{type:"info"});return URL.createObjectURL(f)}
+const mark207=u=>{(S.ed.vk207=S.ed.vk207||{})[u]=1};
+async function addFiles207(files,i){const it=edItem(edPick());if(!it||it.type!=="mg150")return;const N=nPics207(it)||1;let k=0,first=true;toast(L("Uploading…","جارٍ الرفع…"),{type:"info",ms:1500});
+  for(const f of files){const vid=/^video\//.test(f.type||"")||VEXT207.test(f.name||""),slot=first&&i>=0?i:empty207(it,N);first=false;
+    if(slot<0){toast(L("All the boxes are full — tap one to change it.","كل المربعات ممتلئة — المس واحداً لتغييره."),{type:"warn"});break}
+    try{const u=vid?await upv207(f):await up206(f);if(u){if(vid)mark207(u);setPic206(slot,u);k++}}
+    catch(err){toast(vid?L("The video couldn't be added.","تعذّرت إضافة الفيديو."):L("The picture couldn't be added.","تعذّرت إضافة الصورة."),{type:"warn"})}}
+  if(k){$("#modalRoot").innerHTML="";persist();renderView()}}
+// (window, capture: before the older one-picture handler on the document)
+window.addEventListener("change",e=>{const t=e.target;if(!t||!t.dataset||t.dataset.mg206up==null||!t.files||!t.files.length)return;e.stopImmediatePropagation();const fs=[...t.files];t.value="";addFiles207(fs,+t.dataset.mg206up)},true);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="pv207-add"],[data-act="pv207-use"],[data-act="mg207-line"],[data-act="sc207-more"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const act=a.dataset.act;
+  if(act==="mg207-line"){line207();return}
+  if(act==="sc207-more"){const h=document.querySelector(".mg206h");if(h)h.scrollIntoView({block:"start",behavior:"smooth"});return}
+  if(act==="pv207-add"){picSheet207(null);return}
+  const it=edItem(edPick());if(!it||it.type!=="mg150")return;const u=a.dataset.u,N=nPics207(it)||1,P=it.pics||[];if(a.dataset.vid)mark207(u);
+  if(a.dataset.i!=null){setPic206(+a.dataset.i,u);$("#modalRoot").innerHTML="";return}
+  const k=P.indexOf(u);if(k>=0){setPic206(k,"");picSheet207(null);return}
+  const s=empty207(it,N);if(s<0){toast(L("All the boxes are full — tap one to take it out.","كل المربعات ممتلئة — المس واحداً لإزالته."),{type:"warn"});return}
+  setPic206(s,u);if(empty207(it,N)<0)$("#modalRoot").innerHTML="";else picSheet207(null)},true);
+// the scene's box of pictures & videos (in place of v206's row of slots)
+function strip207(si){const N=nPics207(si),P=si.pics||[],n=P.filter(Boolean).length;
+  return'<div class="pv207"><div class="pv207h"><b>'+ic("image")+esc(L("Pictures & videos","الصور والفيديوهات"))+"</b><small>"+n+"/"+N+"</small></div>"+
+    (n?"":'<p class="small mute" style="margin:0 0 8px">'+esc(L("This scene shows your own pictures and videos — up to "+N+".","يعرض هذا المشهد صورك وفيديوهاتك — حتى "+N+"."))+"</p>")+
+    (n<N?'<button type="button" class="btn primary pv207add" data-act="pv207-add">'+ic("plus")+esc(n?L("Add more","أضف المزيد"):L("Add pictures or videos","أضف صوراً أو فيديوهات"))+"</button>":"")+
+    '<div class="pk206">'+Array.from({length:N},(_,i)=>'<button type="button" class="pk206b" data-act="mg206-pic" data-i="'+i+'" aria-label="'+esc(L("Box "+(i+1),"المربع "+(i+1)))+'">'+(P[i]?th207(P[i],isVid207(P[i])):"<b>+</b>")+"</button>").join("")+"</div>"+
+    (n?'<p class="small dim" style="margin:8px 0 0">'+esc(L("Tap a box to change or remove it. Videos play with the scene.","المس مربعاً لتغييره أو إزالته. الفيديوهات تعمل مع المشهد."))+"</p>":"")+"</div>"}
+const ovBar207=n=>'<div class="ov207" role="status">'+ic("layers")+"<span>"+esc(L(n+1+" scenes play at the same time and cover each other.",(n+1)+" مشاهد تُعرض في الوقت نفسه ويغطي بعضها بعضاً."))+'</span><button type="button" class="btn sm primary" data-act="mg207-line">'+esc(L("Line them up","رتّبها"))+"</button></div>";
+VIEWS.edit=(o=>function(){let h=o.apply(this,arguments);const E=S.ed;if(typeof h!=="string"||E.tab!=="info")return h;
+  const si=edPick()&&edPick().k==="info"&&edItem(edPick()),ov=over207();
+  if(si&&si.type==="mg150"&&nPics207(si))h=h.replace(/<span class="lbl">[^<]*<small class="mute">\d+\/\d+<\/small><\/span><div class="pk206">[\s\S]*?<\/div>/,strip207(si));
+  if(ov&&!(si&&si.type==="mg150"))h=h.replace('<span class="lbl mg206h">',ovBar207(ov)+'<span class="lbl mg206h">');
+  if(si&&si.type==="mg150"){const nm=(ALL206.concat(MG150).find(x=>x[0]===si.sc)||[si.sc,si.sc,si.sc]);
+    h=h.replace(/(<input dir="auto" data-ib="t1")/,'<div class="sc207" data-l207><div><b>'+esc(L(nm[1],nm[2]))+"</b> <small>· "+(+(si.end-si.start).toFixed(1))+" s</small></div>"+'<button type="button" class="btn sm ghost" data-act="sc207-more">'+ic("plus")+esc(L("Another scene","مشهد آخر"))+"</button></div>"+(ov?ovBar207(ov):"")+"$1")}
+  return h})(VIEWS.edit);
+// the chosen scene's settings first in its sheet (its title, the pictures & videos, then its words), in view when it was just chosen
+const LAY207={id:null};
+function lay207(){if(S.view!=="edit"||S.ed.tab!=="info")return;const si=edPick()&&edPick().k==="info"&&edItem(edPick());if(!si||si.type!=="mg150"){LAY207.id=null;return}
+  const hd=document.querySelector(".sc207[data-l207]"),box=hd&&hd.parentElement;if(!box)return;
+  const pv=box.querySelector(".pv207"),ov=box.querySelector(".ov207");box.prepend(hd);if(ov)hd.after(ov);if(pv)(ov||hd).after(pv);
+  const pan=box.parentElement;if(pan&&pan.firstElementChild!==box)pan.prepend(box);
+  if(LAY207.id!==si.id){LAY207.id=si.id;let p=box.parentElement;while(p&&p!==document.body){const cs=getComputedStyle(p);if(/(auto|scroll)/.test(cs.overflowY)&&p.scrollHeight>p.clientHeight+2){p.scrollTop=0;break}p=p.parentElement}}}
+renderView=(o=>function(){const r=o.apply(this,arguments);try{lay207()}catch(e){}if(S.view!=="edit")for(const k in VM207)try{VM207[k].el.pause()}catch(e){}return r})(renderView);
+
+(()=>{const st=document.createElement("style");st.id="v207";st.textContent=`
+.pv207{margin:0 0 12px;padding:12px;border:1px solid color-mix(in srgb,var(--lime) 40%,var(--line2));border-radius:14px;background:color-mix(in srgb,var(--lime) 6%,var(--panel2))}
+.pv207h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}.pv207h b{display:flex;align-items:center;gap:6px;font-size:14px}.pv207h svg{width:18px;height:18px}.pv207h small{color:var(--mute)}
+.pv207add{width:100%;justify-content:center;margin:2px 0 10px}
+.pk206b,.pk206p{position:relative}.pk206b video,.pk206p video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.pv207v{position:absolute;inset-inline-end:4px;bottom:4px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.6);display:grid;place-items:center;color:#fff;font-style:normal}.pv207v svg{width:10px;height:10px}
+.pk206p.on{outline:2px solid var(--lime);outline-offset:-2px}
+.pv207n{position:absolute;top:4px;inset-inline-start:4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--lime);color:var(--on-lime);font:700 11px/18px var(--sans);text-align:center;font-style:normal}
+.sc207{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px}.sc207>div{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sc207 b{font-size:15px}.sc207 small{color:var(--mute)}.sc207 .btn{flex:none}
+.ov207{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;margin:0 0 12px;border-radius:12px;border:1px solid color-mix(in srgb,var(--gold) 50%,var(--line2));background:color-mix(in srgb,var(--gold) 10%,var(--panel2));font-size:13px}
+.ov207>svg{width:18px;height:18px;flex:none}.ov207 span{flex:1;min-width:150px}
+.seg.pq207{grid-auto-columns:minmax(0,1fr)}.seg.pq207>button{min-width:0;white-space:normal;line-height:1.15;overflow-wrap:anywhere}
+@media (max-width:767px){.pv207 .pk206{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .ed143.mob .e-player .transport{flex-wrap:nowrap!important;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
+  .ed143.mob .e-player .transport::-webkit-scrollbar{display:none}
+  .ed143.mob .e-player .transport>*{flex:none}
+  .ed143.mob .transport .tc{flex:none!important;min-width:max-content!important;font-size:11px!important;font-variant-numeric:tabular-nums;padding-inline:2px}
+  html.studio151 .ed143.mob>.dv149>span{white-space:normal!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.25;font-size:11.5px}}`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

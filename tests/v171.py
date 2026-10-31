@@ -146,9 +146,9 @@ async def home(p, lang):
     ONE = """()=>{const P=document.querySelector('.hfstplan.bots'),li=[...document.querySelectorAll('.hfstplan .hbls>li.hbl')],on=li.filter(x=>x.classList.contains('on171')),pr=P.getBoundingClientRect();
       const vis=li.filter(x=>getComputedStyle(x).visibility!=='hidden'&&+getComputedStyle(x).opacity>.5),b=on[0]&&on[0].querySelector('.hbt').getBoundingClientRect();
       return {one:P.classList.contains('one171'),n:li.length,on:on.map(x=>x.dataset.bot),vis:vis.map(x=>x.dataset.bot),spk:[...document.querySelectorAll('.hfbots .sbot.spk171')].map(x=>x.dataset.bot),
-        inside:!!b&&b.left>=pr.left-1&&b.right<=pr.right+1&&b.width>120,txt:on[0]?on[0].querySelector('.hbt>span').textContent.trim():''}}"""
+        inside:!!b&&b.left>=pr.left-1&&b.right<=pr.right+1&&b.width>120,carousel:getComputedStyle(document.querySelector('.hfstplan .hbls')).display==='none'&&!!document.querySelector('.agc201'),txt:on[0]?on[0].querySelector('.hbt>span').textContent.trim():''}}"""
     o1 = await E(ONE); R["agent1"] = o1
-    ok(o1["one"] and o1["n"] == 9 and len(o1["on"]) == 1 and o1["vis"] == o1["on"] and o1["spk"] == o1["on"] and o1["inside"] and len(o1["txt"]) > 10, f"{lang}: one agent of the 9 speaks, lit in the row below {o1}")
+    ok(o1["one"] and o1["n"] == 9 and len(o1["on"]) == 1 and o1["vis"] == o1["on"] and o1["spk"] == o1["on"] and (o1["inside"] or o1.get("carousel")) and len(o1["txt"]) > 10, f"{lang}: one agent of the 9 speaks, lit in the row below (or the v201 agents carousel takes the line's place) {o1}")
     await pg.wait_for_timeout(4600); o2 = await E(ONE); R["agent2"] = o2["on"]
     ok(len(o2["on"]) == 1 and o2["on"] != o1["on"] and o2["spk"] == o2["on"], f"{lang}: a few seconds later the next one {o1['on']}→{o2['on']}")
     await E("()=>document.querySelector('.hfbots .sbot[data-bot=\"proof\"]').click()"); await pg.wait_for_timeout(300); o3 = await E(ONE); an = await E("()=>!!document.querySelector('.hfstplan li.on171.anim171')")
