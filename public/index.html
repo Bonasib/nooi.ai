@@ -2912,7 +2912,7 @@ function edTick(now){
   overlayVignette(ctx,ow,oh,fx.vig?.6:0);overlayGrain(ctx,ow,oh,fx.grain?.3:0);
   if(fx.box){const bh=Math.max(0,(oh-ow/2.39)/2);ctx.fillStyle="#000";ctx.fillRect(0,0,ow,bh);ctx.fillRect(0,oh-bh,ow,bh)}
   S.ed.texts.forEach(tx=>drawTextLayer(ctx,tx,ow,oh,ED.t));
-  if(S.ed.safe&&!ED.rec&&F[3]>F[2]){ctx.save();ctx.fillStyle="rgba(255,80,80,.14)";ctx.strokeStyle="rgba(255,120,120,.6)";ctx.setLineDash([6,5]);ctx.fillRect(0,0,ow,oh*.12);ctx.fillRect(0,oh*.78,ow,oh*.22);ctx.fillRect(ow*.86,oh*.12,ow*.14,oh*.66);ctx.strokeRect(0,oh*.12,ow*.86,oh*.66);ctx.restore()}
+  if(S.ed.safe&&!ED.rec&&F[3]>F[2]){ctx.save();ctx.fillStyle="rgba(255,80,80,.14)";ctx.strokeStyle="rgba(255,120,120,.6)";ctx.setLineDash([6,5]);zones210(F).forEach(z=>{ctx.fillRect(z[0]*ow,z[1]*oh,z[2]*ow,z[3]*oh);ctx.strokeRect(z[0]*ow,z[1]*oh,z[2]*ow,z[3]*oh)});   /* (v210: the zones of the app picked) */ctx.restore()}
   const ph=$("#ph");if(ph)ph.style.left=(40+ED.t*S.ed.zoom)+"px";const tc=$("#tc");if(tc)tc.textContent=mmss(ED.t)+" / "+mmss(total);
 }
 function edStarts(){let s=0;return S.ed.clips.map(c=>{const r=s;s+=clipDur(c);return r})}
@@ -6716,7 +6716,7 @@ function edxDrawCaps(ctx,W,H,t){const C=S.ed.caps;if(!C||!C.on||!(C.words||[]).l
   const fs=Math.round(Math.min(W,H)*C.size/100),rtl=/[֐-ࣿ]/.test(g.map(x=>x.w).join(" "));ctx.save();ctx.font="800 "+fs+"px 'Geist','IBM Plex Sans Arabic',sans-serif";ctx.textAlign="center";ctx.textBaseline="alphabetic";ctx.direction=rtl?"rtl":"ltr";
   const words=g.map(x=>Object.assign({},x,{w:C.upper&&!rtl?x.w.toUpperCase():x.w})),sp=ctx.measureText(" ").width,ws=words.map(x=>ctx.measureText(x.w).width),max=W*.86;
   const lines=[];let ln=[],lw=0;words.forEach((x,i)=>{if(ln.length&&lw+sp+ws[i]>max){lines.push({ln,lw});ln=[];lw=0}lw+=(ln.length?sp:0)+ws[i];ln.push(i)});if(ln.length)lines.push({ln,lw});
-  const lh=fs*1.25,y0=C.pos==="top"?H*.18:C.pos==="center"?H/2-(lines.length-1)*lh/2:H*.76-(lines.length-1)*lh,age=t-g[0].s,ga=C.style==="minimal"?1:clamp(age/.12,0,1),gsc=C.style==="minimal"?1:.85+.15*Math.min(1,age/.12);
+  const lh=fs*1.25,y0=C.pos==="top"?H*.18:C.pos==="center"?H/2-(lines.length-1)*lh/2:H*(C.y210||.76)-(lines.length-1)*lh,age=t-g[0].s,ga=C.style==="minimal"?1:clamp(age/.12,0,1),gsc=C.style==="minimal"?1:.85+.15*Math.min(1,age/.12);
   lines.forEach((L0,li)=>{let x=rtl?W/2+L0.lw/2:W/2-L0.lw/2;const y=y0+li*lh;L0.ln.forEach(i=>{const wd=words[i],w=ws[i],cx=rtl?x-w/2:x+w/2;x+=rtl?-(w+sp):(w+sp);
       const now=t>=wd.s&&t<wd.e+.02,said=t>=wd.s;let col=C.color,sc=gsc,dy=0,box=false;
       if(C.style==="pop"&&now){col=C.hl;sc*=1.14}else if(C.style==="karaoke"&&said)col=C.hl;else if(C.style==="box"&&now)box=true;else if(C.style==="bounce"&&now){col=C.hl;dy=-fs*.18*Math.sin(Math.min(1,(t-wd.s)/.18)*Math.PI)}else if(C.style==="one")sc=gsc*1.25;
@@ -16841,7 +16841,7 @@ edSetPick=(o=>function(k){const E=S.ed;if(k){E.aux143=null;if(k!=="text")E.selTe
 const GUIDES143=["off","thirds","center","safe","short"];
 function guides143(){const g=S.ed.guides143;if(!g||g==="off")return"";const ln=(x1,y1,x2,y2)=>'<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'"/>';
   const body=g==="thirds"?ln(33.33,0,33.33,100)+ln(66.67,0,66.67,100)+ln(0,33.33,100,33.33)+ln(0,66.67,100,66.67):g==="center"?ln(50,0,50,100)+ln(0,50,100,50)+'<circle cx="50" cy="50" r="3"/>':
-    g==="safe"?'<rect x="5" y="5" width="90" height="90"/><rect x="10" y="10" width="80" height="80"/>':'<rect class="ko" x="0" y="0" width="100" height="12"/><rect class="ko" x="0" y="78" width="100" height="22"/><rect class="ko" x="84" y="38" width="16" height="40"/>';
+    g==="safe"?'<rect x="5" y="5" width="90" height="90"/><rect x="10" y="10" width="80" height="80"/>':(zones210(fmt()).length?zones210(fmt()):SZ210.tiktok.map(z=>z.map(v=>v/100))).map(z=>'<rect class="ko" x="'+(z[0]*100)+'" y="'+(z[1]*100)+'" width="'+(z[2]*100)+'" height="'+(z[3]*100)+'"/>').join("");   // (v210: the zones of the app picked)
   return'<svg class="gd143" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'+body+"</svg>"}
 function placeGuides143(){const s=document.querySelector(".ed143 .edstage"),c=s&&s.querySelector("#wk"),g=s&&s.querySelector(".gd143");if(!g||!c)return;const a=s.getBoundingClientRect(),b=c.getBoundingClientRect();
   Object.assign(g.style,{left:(b.left-a.left)+"px",top:(b.top-a.top)+"px",width:b.width+"px",height:b.height+"px"})}
@@ -18266,7 +18266,7 @@ edxDrawCaps=function(ctx,W,H,t){const C=S.ed.caps;if(!C||!C.on||!(C.words||[]).l
   const lay=()=>{ctx.font="800 "+fs+"px 'Geist','IBM Plex Sans Arabic',sans-serif";const pad=st==="box"?fs*.18:0;ws=words.map(x=>ctx.measureText(x.w).width);slot=ws.map(w=>w*kmax+2*pad+fs*.16);gap=fs*.26;
     lines=[];let ln=[],lw=0;words.forEach((x,i)=>{if(ln.length&&lw+gap+slot[i]>max){lines.push({ln,lw});ln=[];lw=0}lw+=(ln.length?gap:0)+slot[i];ln.push(i)});if(ln.length)lines.push({ln,lw});return Math.max(...lines.map(l=>l.lw))};
   const wid=lay();if(wid>max){fs=Math.max(8,Math.floor(fs*max/wid));lay()}
-  const lh=fs*(st==="box"?1.38:1.25),y0=C.pos==="top"?H*.18:C.pos==="center"?H/2-(lines.length-1)*lh/2:H*.76-(lines.length-1)*lh,age=t-g[0].s,ga=st==="minimal"?1:clamp(age/.12,0,1),gsc=st==="minimal"?1:.85+.15*Math.min(1,age/.12);
+  const lh=fs*(st==="box"?1.38:1.25),y0=C.pos==="top"?H*.18:C.pos==="center"?H/2-(lines.length-1)*lh/2:H*(C.y210||.76)-(lines.length-1)*lh,age=t-g[0].s,ga=st==="minimal"?1:clamp(age/.12,0,1),gsc=st==="minimal"?1:.85+.15*Math.min(1,age/.12);
   lines.forEach((L0,li)=>{let x=rtl?W/2+L0.lw/2:W/2-L0.lw/2;const y=y0+li*lh;L0.ln.forEach(i=>{const wd=words[i],w=ws[i],sl=slot[i],cx=rtl?x-sl/2:x+sl/2;x+=rtl?-(sl+gap):(sl+gap);
       const now=t>=wd.s&&t<wd.e+.02,said=t>=wd.s;let col=C.color,sc=gsc,dy=0,box=false;
       if(st==="pop"&&now){col=C.hl;sc*=1.14}else if(st==="karaoke"&&said)col=C.hl;else if(st==="box"&&now)box=true;else if(st==="bounce"&&now){col=C.hl;dy=-fs*.18*Math.sin(Math.min(1,(t-wd.s)/.18)*Math.PI)}else if(st==="one")sc=gsc*1.25;
@@ -24782,6 +24782,154 @@ hfBox=(o=>function(){let h=o.apply(this,arguments);if(S.hf.tab!=="avatar"||typeo
 .v209c{display:flex;align-items:center;gap:4px;flex:0 0 auto;font-size:11px}.v209s{flex:0 0 auto;width:28px;height:28px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:700 12px Geist,sans-serif;cursor:pointer}
 .v209t{flex:1 1 auto;min-width:0;font-size:13px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg)}.v209i svg{width:16px;height:16px;flex:0 0 auto}
 @media (max-width:420px){.st209s,.dj209g{grid-template-columns:repeat(4,minmax(0,1fr))}}`;document.head.appendChild(st)})();
+
+/* ================= v210: READY TO POST · SEVERAL SIZES AT ONCE · THE POST'S WORDS =================
+   The editor's Export panel gets what a post needs before it goes up (own code):
+   1. Ready to post — six checks for the format picked, each with its fix in one tap: the length the app takes (cut to it), words
+      and captions out of the app's own buttons and caption area (moved inside), something to read in the first 2 seconds (a hook
+      title), captions (most people watch with the sound off), loudness at −14 LUFS (v193's meter), a wide clip in a tall frame
+      filled (not bars).
+   2. The app's zones per app — TikTok, Reels, Shorts, Stories, Snapchat and WhatsApp each cover different parts of a tall video;
+      the guide over the preview and the "Show app safe zones" overlay draw the zones of the format picked (approximate areas,
+      rounded up: the apps move their buttons now and then).
+   3. Several sizes at once — tick other formats; one tap exports this edit and then each size, one after another (the words keep
+      their place, a wide clip in a tall size gets the blurred background).
+   4. The post's words — a caption and hashtags from the edit's own words (on the device, nothing charged), counted against each
+      app's limit (TikTok 2,200 · Instagram 2,200 and 5 hashtags · YouTube title 100 · X 280 · LinkedIn 3,000), copied in one tap. */
+Object.assign(ICONS,{ready210:'<rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M9 12.2l2.1 2.1L15.2 10"/>',
+  zone210:'<rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M6 6.5h12M6 17h12M15 8.5v6.5"/>',
+  hook210:'<path d="M5 6h14M5 11h9"/><path d="M15.5 14.5l3 3-3 3"/><path d="M5 17.5h13"/>',
+  hash210:'<path d="M9 3.5L7.5 20.5M16.5 3.5L15 20.5M4 9h16.5M3.5 15H20"/>',
+  sizes210:'<rect x="3" y="7" width="11" height="8" rx="1.5"/><rect x="15.5" y="4" width="5.5" height="16" rx="1.5"/><rect x="5" y="17" width="6" height="4" rx="1"/>'});
+// [x, y, w, h] in % of a tall frame — the parts each app covers with its buttons, names and caption
+const SZ210={tiktok:[[0,0,100,10],[0,79,100,21],[84,40,16,45]],reels:[[0,0,100,8],[0,80,100,20],[86,46,14,38]],shorts:[[0,0,100,8],[0,76,100,24],[84,44,16,36]],
+  story:[[0,0,100,12],[0,86,100,14]],snap:[[0,0,100,10],[0,84,100,16],[88,30,12,40]],wa:[[0,0,100,10],[0,86,100,14]]};
+const SZOF210={reels:"reels",igstory:"story",fbstory:"story",tiktok:"tiktok",shorts:"shorts",snap:"snap",wa:"wa"};
+// the zones of a format, in fractions; a tall format no app is named for gets TikTok's (the largest); wide and square ones none
+function zones210(F){F=F||fmt();if(!F||!(F[3]>F[2]*1.3))return[];return(SZ210[SZOF210[F[0]]]||SZ210.tiktok).map(z=>z.map(v=>v/100))}
+// the longest video each app takes, in seconds (0 = long videos are fine) — as of 2026; the apps change them now and then
+const MAX210={reels:180,igstory:60,igfeed:0,igsq:0,tiktok:600,shorts:180,youtube:0,fbfeed:0,fbstory:60,x:140,xsq:140,linkedin:600,linkedinw:600,snap:60,wa:60,cinema:0};
+// where a text sits (a box in pixels of the format) — the drawn size estimated from its size and length
+function tbox210(tx,ow,oh){const b=laTextBase(tx,ow,oh),fs=Math.min(ow,oh)*(tx.size||7)*(tx.k||1)/100,ls=String(tx.text||"").split("\n"),n=Math.max(1,ls.length);
+  const w=Math.min(ow*.92,Math.max(...ls.map(l=>[...l].length))*fs*.56),h=n*fs*1.2;return[b.x*ow-w/2,b.y*oh-h/2,w,h]}
+function cbox210(C,W,H){const fs=Math.min(W,H)*(C.size||7)/100,lh=fs*1.25,n=(C.per||3)>3?2:1,y0=C.pos==="top"?.18:C.pos==="center"?.5:(C.y210||.76);
+  const top=C.pos==="bottom"||!C.pos?y0*H-(n-1)*lh-fs:C.pos==="top"?y0*H-fs:y0*H-n*lh/2-fs*.5;return[W*.06,top,W*.88,n*lh+fs*.3]}
+// a box is in a zone when an eighth of it or more is under the app's buttons
+function hit210(b,Z,ow,oh){const A=Math.max(1,b[2]*b[3]);return Z.some(z=>{const x0=Math.max(b[0],z[0]*ow),y0=Math.max(b[1],z[1]*oh),x1=Math.min(b[0]+b[2],(z[0]+z[2])*ow),y1=Math.min(b[1]+b[3],(z[1]+z[3])*oh);
+  return x1>x0&&y1>y0&&(x1-x0)*(y1-y0)>=A*.125})}
+function inZone210(){const E=S.ed,F=fmt(),Z=zones210(F),ow=F[2],oh=F[3],T=edTotal(),out=[];if(!Z.length)return out;
+  (E.texts||[]).forEach(tx=>{if(tx.track||!String(tx.text||"").trim()||tx.start>=T)return;if(hit210(tbox210(tx,ow,oh),Z,ow,oh))out.push({k:"text",it:tx})});
+  const C=E.caps;if(C&&C.on&&(C.words||[]).length&&hit210(cbox210(C,ow,oh),Z,ow,oh))out.push({k:"caps",it:C});return out}
+// the edges of the free middle of a tall frame
+function free210(Z){const top=Math.max(0,...Z.filter(z=>z[1]===0&&z[2]>=.99).map(z=>z[3])),bot=Math.min(1,...Z.filter(z=>z[1]>0&&z[1]+z[3]>=.999&&z[2]>=.99).map(z=>z[1])),
+  right=Math.min(1,...Z.filter(z=>z[0]>0&&z[0]+z[2]>=.999).map(z=>z[0]));return{top,bot,right}}
+// move every word out of the app's zones (keyframes moved with them), captions lifted above the caption area
+function fixZones210(){const E=S.ed,F=fmt(),Z=zones210(F),ow=F[2],oh=F[3],fr=free210(Z);let n=0;if(!Z.length)return 0;if(typeof histPush==="function")try{histPush()}catch(e){}
+  inZone210().forEach(h=>{if(h.k==="caps"){const C=h.it,fs=Math.min(ow,oh)*(C.size||7)/100;C.pos="bottom";C.y210=+Math.min(.76,fr.bot-.035-fs*.3/oh).toFixed(3);n++;return}
+    const tx=h.it,b0=laTextBase(tx,ow,oh),bx=tbox210(tx,ow,oh),hh=bx[3]/oh/2,hw=bx[2]/ow/2;let x=b0.x,y=clamp(b0.y,fr.top+hh+.025,fr.bot-hh-.025);
+    if(hit210([(x-hw)*ow,(y-hh)*oh,bx[2],bx[3]],Z,ow,oh))x=Math.max(hw+.03,fr.right-hw-.02);const dx=x-b0.x,dy=y-b0.y;
+    tx.x=+x.toFixed(4);tx.y=+y.toFixed(4);if(tx.kf&&tx.kf.length)tx.kf.forEach(f=>{if(f.x!=null)f.x=+clamp(f.x+dx,.02,.98).toFixed(4);if(f.y!=null)f.y=+clamp(f.y+dy,.02,.98).toFixed(4)});delete tx._la;n++});
+  persist();return n}
+// the hook: words on screen in the first two seconds (a title, captions or a motion scene)
+function hasHook210(){const E=S.ed;return(E.texts||[]).some(x=>x.start<2&&x.end>.4&&String(x.text||"").trim())||!!(E.caps&&E.caps.on&&(E.caps.words||[]).some(w=>w.s<2))||(E.infos||[]).some(x=>(x.start||0)<1.5&&x.type==="mg150")}
+function hookText210(){const E=S.ed,ws=(E.caps&&E.caps.words)||[];if(ws.length){const out=[];for(const w of ws){out.push(String(w.w).trim());if(out.length>=7||/[.!?؟،]$/.test(w.w))break}const s=out.join(" ").replace(/[.,،]+$/,"");if(s.length>3)return s}
+  const t=(E.texts||[]).map(x=>String(x.text||"").trim()).find(Boolean);return t||L("Wait for the end…","انتظر حتى النهاية…")}
+function addHook210(){const E=S.ed,T=edTotal();if(typeof histPush==="function")try{histPush()}catch(e){}const F=fmt(),tall=F[3]>F[2]*1.3;
+  const tx={id:uid(),text:hookText210(),start:0,end:+Math.min(2.6,Math.max(1,T)).toFixed(2),pos:"top",style:"caption",size:tall?8:7,anim:"pop",x:.5,y:tall?.3:.22};
+  E.texts=E.texts||[];E.texts.push(tx);E.selText=tx.id;persist();return tx}
+// a wide clip in a tall frame (or the other way) shown with bars
+function bars210(){const E=S.ed,F=fmt(),fa=F[2]/F[3];if(E.fit!=="fit")return false;return E.clips.some(c=>{const m=M["c_"+c.id],el=m&&(m.el||m),w=el&&(el.videoWidth||el.naturalWidth||el.width),h=el&&(el.videoHeight||el.naturalHeight||el.height);if(!w||!h)return false;const a=w/h;return Math.abs(Math.log(a/fa))>.35})}
+const pname210=F=>fmtName(F).replace(/\s*(?:\d+:\d+|16:9|4:5|1:1)$/,"");
+function checks210(){const E=S.ed,F=fmt(),T=edTotal(),mx=MAX210[F[0]]||0,Z=zones210(F),out=[],nm=pname210(F);
+  out.push(!mx||T<=mx+.05?{k:"len",st:"ok",t:L("Length","المدة"),d:mmss(T)+(mx?L(" — "+nm+" takes up to "+mmss(mx)," — "+nm+" يقبل حتى "+mmss(mx)):L(" — long videos are fine here"," — الفيديو الطويل مناسب هنا"))}
+    :{k:"len",st:"warn",t:L("Too long","أطول من المسموح"),d:mmss(T)+L(" — "+nm+" takes up to "+mmss(mx)," — "+nm+" يقبل حتى "+mmss(mx)),fx:["len",L("Cut to "+mmss(mx),"قصّ إلى "+mmss(mx))]});
+  if(Z.length){const bad=inZone210();out.push(!bad.length?{k:"zone",st:"ok",t:L("Words clear of the app's buttons","الكلمات بعيدة عن أزرار التطبيق"),d:L("Nothing under "+nm+"'s buttons and caption","لا شيء تحت أزرار "+nm+" ووصفه"),fx:["show",E.safe?L("Hide zones","أخفِ المناطق"):L("Show zones","أظهر المناطق")]}
+    :{k:"zone",st:"warn",t:L("Words under the app's buttons","كلمات تحت أزرار التطبيق"),d:L(bad.length+" to move — "+nm+" covers them","يغطيها "+nm+" — تحتاج نقلاً: "+bad.length),fx:["zone",L("Move inside","انقلها للداخل")]})}
+  out.push(hasHook210()?{k:"hook",st:"ok",t:L("A hook in the first 2 s","جذب في أول ثانيتين"),d:L("Words on screen from the start","كلمات على الشاشة من البداية")}
+    :{k:"hook",st:"warn",t:L("No hook in the first 2 s","لا جذب في أول ثانيتين"),d:L("A title at the start keeps people watching","عنوان في البداية يبقي الناس يشاهدون"),fx:["hook",L("Add a hook title","أضف عنوان جذب")]});
+  const cap=!!(E.caps&&E.caps.on&&(E.caps.words||[]).length);out.push(cap?{k:"caps",st:"ok",t:L("Captions","الترجمة على الشاشة"),d:L((E.caps.words||[]).length+" words on screen","كلمات على الشاشة: "+(E.caps.words||[]).length)}
+    :{k:"caps",st:"todo",t:L("No captions","بلا ترجمة على الشاشة"),d:L("Most people watch with the sound off","أغلب الناس يشاهدون بلا صوت"),fx:["caps",L("Add captions","أضف الترجمة")]});
+  const v=LD193.v;out.push(v==null?{k:"loud",st:"todo",t:L("Loudness","علو الصوت"),d:L("Not measured yet — apps play at −14 LUFS","لم يُقس بعد — التطبيقات تشغّل على −14 LUFS"),fx:["measure",L("Measure","قِس")]}
+    :Math.abs(v+14)<=1?{k:"loud",st:"ok",t:L("Loudness","علو الصوت"),d:v+" LUFS"}:v<=-69?{k:"loud",st:"ok",t:L("No sound","بلا صوت"),d:L("Nothing to set","لا شيء لضبطه")}
+    :{k:"loud",st:"warn",t:L(v>-14?"Too loud":"Too quiet",v>-14?"أعلى من اللازم":"أخفض من اللازم"),d:v+" LUFS · "+L("target","الهدف")+" −14",fx:["norm",L("Set to −14","اضبط على −14")]});
+  if(bars210())out.push({k:"fit",st:"warn",t:L("Bars around the picture","أشرطة حول الصورة"),d:L("A clip's shape differs from "+nm+"'s","شكل مقطع يختلف عن "+nm),fx:["fit",L("Blurred background","خلفية ضبابية")]});
+  return out}
+function ready210(){const F=fmt(),cs=checks210(),ok=cs.filter(c=>c.st==="ok").length;
+  return'<div class="rd210" id="rd210"><div class="rd210h"><b>'+ic("ready210")+" "+L("Ready to post on ","جاهز للنشر على ")+esc(pname210(F))+'</b><span class="rd210s'+(ok===cs.length?" all":"")+'" dir="ltr">'+ok+"/"+cs.length+"</span></div>"+
+    '<ul class="rd210l">'+cs.map(c=>'<li class="'+c.st+'" data-k="'+c.k+'"><span class="rd210i">'+ic(c.st==="ok"?"check":c.st==="warn"?"warn":"plus")+"</span><span><b>"+esc(c.t)+"</b><small>"+esc(c.d)+"</small></span>"+
+      (c.fx?'<button type="button" class="btn sm'+(c.st==="ok"?"":" primary")+'" data-act="rd210" data-v="'+c.fx[0]+'">'+esc(c.fx[1])+"</button>":"")+"</li>").join("")+"</ul></div>"}
+// ---- several sizes at once
+const MU210={on:false,i:0,n:0};
+function multi210(){const E=S.ed,F=fmt(),pick=(E.multi210||[]).filter(id=>id!==F[0]&&FORMATS.some(f=>f[0]===id));E.multi210=pick;
+  return'<div class="mu210" id="mu210"><span class="lbl">'+ic("sizes210")+" "+L("Several sizes at once","عدة مقاسات دفعة واحدة")+'</span><p class="small dim">'+L("Tick more sizes: this edit is exported again for each one, one after another — the words keep their place.","اختر مقاسات أخرى: يُصدَّر هذا المونتاج لكل مقاس، واحداً بعد الآخر — وتبقى الكلمات في مكانها.")+"</p>"+
+    '<div class="chips mu210c">'+FORMATS.filter(f=>f[0]!==F[0]).map(f=>'<button type="button" class="chip" data-act="mu210" data-v="'+f[0]+'" aria-pressed="'+pick.includes(f[0])+'"><span class="pi" style="color:'+brandColor(f[4])+'">'+svg(PI[f[4]]||PI[""])+"</span>"+esc(fmtName(f))+"</button>").join("")+"</div>"+
+    '<button type="button" class="btn'+(pick.length?" primary":"")+'" data-act="mu210-go" '+(pick.length&&!MU210.on?"":"disabled")+">"+ic("download")+
+    (MU210.on?L("Exporting "+(MU210.i+1)+" of "+MU210.n+"…","يُصدَّر "+(MU210.i+1)+" من "+MU210.n+"…"):pick.length?L("Export this + "+pick.length+" more","صدّر هذا + "+pick.length+" غيره"):L("Pick sizes above","اختر مقاسات أعلاه"))+"</button></div>"}
+async function runMulti210(){const E=S.ed,keep=E.format,ids=[keep].concat((E.multi210||[]).filter(id=>id!==keep));if(MU210.on||ids.length<2)return 0;MU210.on=true;MU210.n=ids.length;let done=0;
+  try{for(let i=0;i<ids.length;i++){MU210.i=i;E.format=ids[i];persist();renderView();await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));await new Promise(r=>setTimeout(r,150));
+      const n0=S.jobs.filter(j=>j.kind==="export").length;await edExport();if(S.jobs.filter(j=>j.kind==="export").length>n0)done++}}
+  finally{E.format=keep;MU210.on=false;persist();renderView()}
+  toast(L(done+" sizes exported — they are in your library.","صُدّرت المقاسات: "+done+" — تجدها في مكتبتك."));return done}
+// ---- the post's words
+const PW210=[["tiktok","TikTok",2200,5],["instagram","Instagram",2200,5],["youtube","YouTube",100,3],["x","X",280,2],["linkedin","LinkedIn",3000,3],["facebook","Facebook",0,3]];
+const STOP210=new Set(("the a an and or but to of in on for with at by from is are was were be been it its this that these those you your we our they their them i my me he she his her as so not no do does did have has had will would can could "+
+  "just very really about into out up down over more most some any all what which who how when where why there here then than too also get got like one two let lets dont im youre thats okay yeah gonna wanna "+
+  "في من على إلى الى عن مع هذا هذه ذلك تلك التي الذي الذين وهو وهي أو او ثم لكن لا ما لم لن هو هي هم نحن أنا انا أنت انت كان كانت يكون قد كل بعض عند حتى إذا اذا إن ان أن كما بين فوق تحت هنا هناك جدا لقد عندما ايضا أيضا").split(" "));
+function srcWords210(){const E=S.ed;return((E.texts||[]).map(t=>t.text||"").join(" ")+" "+((E.caps&&E.caps.words)||[]).map(w=>w.w).join(" ")).trim()}
+function tags210(text,n){const c=new Map(),first=new Map();String(text||"").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu," ").split(/\s+/).forEach((w,i)=>{if([...w].length<4||STOP210.has(w)||/^\p{N}+$/u.test(w))return;c.set(w,(c.get(w)||0)+1);if(!first.has(w))first.set(w,i)});
+  return[...c.entries()].sort((a,b)=>b[1]-a[1]||first.get(a[0])-first.get(b[0])).slice(0,n).map(e=>"#"+e[0])}
+function pw210(){const E=S.ed;if(!E.post210)E.post210={p:PW210.some(p=>p[0]===fmt()[4])?fmt()[4]:"tiktok",text:"",tags:[]};return E.post210}
+function compose210(P,pl){const n=pl[3],tg=(P.tags||[]).slice(0,n).join(" ");return(String(P.text||"").trim()+(tg?"\n\n"+tg:"")).trim()}
+function count210(P,pl){const s=compose210(P,pl);return pl[0]==="youtube"?[...String(P.text||"").split("\n")[0]].length:[...s].length}
+function pwCount210(P,pl){const n=count210(P,pl),over=pl[2]&&n>pl[2];return'<span class="pw210n'+(over?" over":"")+'" dir="ltr">'+n+(pl[2]?" / "+pl[2].toLocaleString("en"):"")+"</span>"}
+function post210(){const P=pw210(),pl=PW210.find(p=>p[0]===P.p)||PW210[0];
+  return'<div class="pw210" id="pw210"><span class="lbl">'+ic("hash210")+" "+L("The post's words","كلمات المنشور")+'</span><div class="chips pw210p">'+PW210.map(p=>'<button type="button" class="chip" data-act="pw210-p" data-v="'+p[0]+'" aria-pressed="'+(p[0]===P.p)+'"><span class="pi" style="color:'+brandColor(p[0])+'">'+svg(PI[p[0]]||PI[""])+"</span>"+esc(p[1])+"</button>").join("")+"</div>"+
+    '<div class="spread"><span class="small dim">'+(pl[0]==="youtube"?L("The first line is the title (100 characters), the rest the description","السطر الأول هو العنوان (100 حرف) والباقي الوصف"):L("Caption · up to "+pl[3]+" hashtags","الوصف · حتى "+pl[3]+" وسوم"))+"</span>"+pwCount210(P,pl)+"</div>"+
+    '<textarea class="pw210t" data-pw210="1" rows="4" dir="auto" aria-label="'+esc(L("The post's caption","وصف المنشور"))+'" placeholder="'+esc(L("Write the caption, or make one from the video's words","اكتب الوصف أو اصنعه من كلمات الفيديو"))+'">'+esc(P.text||"")+"</textarea>"+
+    ((P.tags||[]).length?'<div class="chips pw210g">'+P.tags.map((t,i)=>'<button type="button" class="chip" data-act="pw210-tag" data-i="'+i+'" aria-pressed="'+(i<pl[3])+'" aria-label="'+esc(L("Remove ","احذف ")+t)+'" dir="auto">'+esc(t)+ic("x")+"</button>").join("")+"</div>":"")+
+    '<div class="row"><button type="button" class="btn sm" data-act="pw210-gen">'+ic("wand")+L("From the video's words","من كلمات الفيديو")+'</button><button type="button" class="btn sm primary" data-act="pw210-copy" '+(compose210(P,pl)?"":"disabled")+">"+ic("copy")+L("Copy","انسخ")+"</button></div>"+
+    '<p class="small dim">'+L("Made on this device from the captions and texts — nothing is charged. X counts a link as 23 characters.","يُصنع على هذا الجهاز من الترجمة والنصوص — بلا أي رسوم. إكس يحسب الرابط 23 حرفاً.")+"</p></div>"}
+function genPost210(){const P=pw210(),src=srcWords210();P.text=hookText210();P.tags=tags210(src,8);if(!P.tags.length)P.tags=[];persist();return P}
+async function copy210(s){try{await navigator.clipboard.writeText(s);return true}catch(e){}try{const t=document.createElement("textarea");t.value=s;t.style.cssText="position:fixed;opacity:0;left:0;top:0";document.body.appendChild(t);t.select();const ok=document.execCommand("copy");t.remove();return ok}catch(e){return false}}
+// into the Export panel: Ready to post at the top; several sizes and the post's words at the end
+VIEWS.edit=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string"||S.ed.tab!=="export")return h;const mk='data-tab="export">';let at=0,out="";
+  while(true){const a=h.indexOf(mk,at);if(a<0){out+=h.slice(at);break}const b=a+mk.length,c=h.indexOf("</div></section>",b);if(c<0){out+=h.slice(at);break}
+    out+=h.slice(at,b)+ready210()+h.slice(b,c)+multi210()+post210();at=c}
+  return out.replace(/ id="(rd210|mu210|pw210)"/g,(m,x,i)=>i>out.indexOf(' id="'+x+'"')?"":m)})(VIEWS.edit);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="rd210"],[data-act="mu210"],[data-act="mu210-go"],[data-act="pw210-p"],[data-act="pw210-tag"],[data-act="pw210-gen"],[data-act="pw210-copy"]');if(!a)return;
+  e.stopImmediatePropagation();e.preventDefault();const E=S.ed,act=a.dataset.act,v=a.dataset.v;
+  if(act==="rd210"){
+    if(v==="len"){const mx=MAX210[fmt()[0]]||0,T=edTotal();if(mx&&T>mx){cutRanges209([[mx,T+1]]);persist();toast(L("Cut to "+mmss(mx)+".","قُصّ إلى "+mmss(mx)+"."))}}
+    else if(v==="zone"){const n=fixZones210();toast(L(n+" moved out of the app's buttons.","نُقلت بعيداً عن أزرار التطبيق: "+n+"."))}
+    else if(v==="show"){E.safe=!E.safe;persist()}
+    else if(v==="hook"){addHook210();toast(L("A hook title at the start — tap it to change the words.","عنوان جذب في البداية — اضغطه لتغيير الكلمات."))}
+    else if(v==="caps"){try{await edxAutoCaps()}catch(err){}}
+    else if(v==="measure"){a.disabled=true;const r=await loudness193();if(!r)toast(L("Nothing with sound to measure yet.","لا شيء بصوت لقياسه بعد."))}
+    else if(v==="norm"){const b=document.createElement("button");b.dataset.act="ld193-norm";b.style.display="none";document.body.appendChild(b);b.click();b.remove();return}
+    else if(v==="fit"){E.fit="blur";persist()}
+    renderView();return}
+  if(act==="mu210"){const s=new Set(E.multi210||[]);s.has(v)?s.delete(v):s.add(v);E.multi210=[...s];persist();renderView();return}
+  if(act==="mu210-go"){runMulti210();renderView();return}
+  const P=pw210();
+  if(act==="pw210-p"){P.p=v;persist();renderView();return}
+  if(act==="pw210-tag"){P.tags.splice(+a.dataset.i,1);persist();renderView();return}
+  if(act==="pw210-gen"){genPost210();renderView();return}
+  if(act==="pw210-copy"){const pl=PW210.find(p=>p[0]===P.p)||PW210[0],ok=await copy210(compose210(P,pl));toast(ok?L("Copied — paste it in "+pl[1]+".","نُسخ — الصقه في "+pl[1]+"."):L("Copy didn't work here — select the text and copy it.","لم ينجح النسخ هنا — حدّد النص وانسخه."))}},true);
+document.addEventListener("input",e=>{const t=e.target;if(!t||!t.matches||!t.matches("textarea[data-pw210]"))return;const P=pw210(),pl=PW210.find(p=>p[0]===P.p)||PW210[0];P.text=t.value;persist();
+  const n=t.closest(".pw210")&&t.closest(".pw210").querySelector(".pw210n");if(n)n.outerHTML=pwCount210(P,pl);const cb=t.closest(".pw210")&&t.closest(".pw210").querySelector('[data-act="pw210-copy"]');if(cb)cb.disabled=!compose210(P,pl)},true);
+(function(){const st=document.createElement("style");st.id="v210";st.textContent=`
+.rd210{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px;background:var(--panel2)}
+.rd210h{display:flex;align-items:center;justify-content:space-between;gap:8px}.rd210h b{display:inline-flex;align-items:center;gap:6px;font-size:14px;min-width:0}.rd210h svg{width:18px;height:18px;flex:none}
+.rd210s{font:600 12px var(--mono,monospace);padding:2px 8px;border-radius:999px;background:var(--panel3,rgba(255,255,255,.08));flex:none}.rd210s.all{background:var(--lime);color:#0b0c0e}
+.rd210l{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}.rd210l li{display:flex;align-items:center;gap:8px;min-height:40px}
+.rd210l li>span:nth-child(2){flex:1;min-width:0}.rd210l b{display:block;font-size:13px;font-weight:600}.rd210l small{display:block;color:var(--mute);font-size:12px;line-height:1.35;overflow-wrap:anywhere}
+.rd210i{width:22px;height:22px;flex:none;display:grid;place-items:center;border-radius:50%;background:var(--line);color:var(--text)}.rd210i svg{width:13px;height:13px}
+.rd210l li.ok .rd210i{background:var(--lime);color:#0b0c0e}.rd210l li.warn .rd210i{background:#f5a524;color:#0b0c0e}.rd210l .btn.sm{flex:none;max-width:46%;white-space:normal;line-height:1.2}
+.mu210,.pw210{margin-top:16px;display:grid;gap:8px}.mu210 .lbl,.pw210 .lbl{display:inline-flex;align-items:center;gap:6px;margin:0}.mu210 .lbl svg,.pw210 .lbl svg{width:16px;height:16px}.mu210 p,.pw210 p{margin:0}
+.mu210c .chip,.pw210p .chip{display:inline-flex;align-items:center;gap:5px}.mu210c .pi,.pw210p .pi{display:inline-flex;width:14px;height:14px}.mu210c .pi svg,.pw210p .pi svg{width:14px;height:14px}
+.pw210t{width:100%;box-sizing:border-box;min-height:88px;resize:vertical;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);padding:8px 10px;font:inherit;font-size:14px}
+.pw210n{font:600 12px var(--mono,monospace);color:var(--mute);flex:none}.pw210n.over{color:var(--red,#ff5c5c)}.pw210g .chip{display:inline-flex;align-items:center;gap:4px}.pw210g .chip svg{width:12px;height:12px}
+.pw210g .chip[aria-pressed="false"]{opacity:.55}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

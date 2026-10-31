@@ -17,7 +17,7 @@ case "${1:-}" in --free) MODE=free ;; --json) MODE=json ;; --auto) MODE=auto ;; 
 DATA="$APP/data"; JSON="$DATA/space188.json"; FLAG="$DATA/space188.free"; STAMP="$DATA/.space188.auto"
 QUIET=0; [ "$MODE" = "report" ] || [ "$MODE" = "free" ] || QUIET=1
 say() { [ "$QUIET" -eq 1 ] || echo "$@"; }
-sz() { du -sh "$@" 2>/dev/null | sort -rh; }
+sz() { timeout 20 du -sh "$@" 2>/dev/null | sort -rh; }   # (v210: each list at most 20 s, so the report keeps to about a minute)
 pct() { df -P "$ROOT" | awk 'NR==2{gsub("%","",$5);print $5}'; }
 availk() { df -Pk "$ROOT" | awk 'NR==2{print $4}'; }
 je() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g' | tr -d '\000-\037'; }
@@ -97,9 +97,9 @@ if [ "$NOLD" -gt 0 ] && [ "$MODE" != "free" ]; then echo "  backup archives from
 echo; echo "== Elsewhere"; sz /tmp /var/log /var/lib/docker /var/lib/containerd /var/crash /root /home /var/lib/snapd /root/.npm /home/nooi/.npm /var/cache/apt /swapfile /swap.img
 H="$(held)"; [ -n "$H" ] && { echo; echo "== Space held by deleted files that programs still have open (it comes back when they restart)"; echo "$H" | awk '{printf "  %.1f GB  %s\n", $1/1048576, $2}'; }
 echo; echo "== The biggest folders on the disk (a minute at most)"
-timeout 90 du -xh --max-depth=2 "$ROOT" 2>/dev/null | sort -rh | head -15
+timeout 40 du -xh --max-depth=2 "$ROOT" 2>/dev/null | sort -rh | head -15
 echo; echo "== Single files bigger than 300 MB"
-timeout 60 find "$ROOT" -xdev -type f -size +300M -printf '%s %p\n' 2>/dev/null | sort -rn | head -10 | awk '{s=$1; $1=""; printf "  %.1f GB%s\n", s/1073741824, $0}'
+timeout 25 find "$ROOT" -xdev -type f -size +300M -printf '%s %p\n' 2>/dev/null | sort -rn | head -10 | awk '{s=$1; $1=""; printf "  %.1f GB%s\n", s/1073741824, $0}'
 [ -d /var/lib/docker ] && echo "(Docker's folder is not touched — if it is big, it belongs to something else on this server.)"
 if [ "$MODE" = "free" ] && [ "$(pct)" -ge 90 ]; then echo; echo "⚠ Still $(pct)% full — the space is used by what the lists above show, not by nooi's leftovers. Send a picture of this screen."; fi
 if [ "$MODE" = "report" ]; then echo; echo "Nothing was changed. To clear what nooi doesn't need: bash $APP/deploy/space.sh --free"; fi   # (a fixed path: the script may come through a pipe)
