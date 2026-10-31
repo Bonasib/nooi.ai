@@ -117,9 +117,9 @@ async def main():
         await E("()=>{const i=document.querySelector('input[data-edx=\"ly.sc\"]');i.value=70;i.dispatchEvent(new Event('input',{bubbles:true}));i.dispatchEvent(new Event('change',{bubbles:true}));persist()}"); await pg.wait_for_timeout(250)
         sc1 = await E("()=>S.ed.layers.find(x=>x.id==='w1').sc"); n1 = await E("()=>HIST.stack.length")
         await E("()=>{histSheet202();return 1}"); await pg.wait_for_selector(".hist202r", timeout=8000)
-        hs = await E("()=>({rows:document.querySelectorAll('.hist202r').length,on:document.querySelector('.hist202r.on')?.dataset.i,names:[...document.querySelectorAll('.hist202r span:nth-child(2)')].map(s=>s.textContent).slice(0,3),btn:!!document.querySelector('[data-act=\"hist202\"]')})")
+        hs = await E("()=>({rows:document.querySelectorAll('.hist202r').length,on:document.querySelector('.hist202r.on')?.dataset.i,names:[...document.querySelectorAll('.hist202r span:nth-child(2)')].map(s=>s.textContent).slice(0,3),btn:!!document.querySelector('#edundo')&&!document.querySelector('[data-act=\"hist202\"]')})")
         await pg.click('.hist202r[data-i="' + str(n1 - 2) + '"]'); await pg.wait_for_timeout(300); sc2 = await E("()=>S.ed.layers.find(x=>x.id==='w1').sc"); out["hist"] = [n0, n1, sc1, sc2, hs]
-        chk("history: two slider steps are two named rows (the current one marked), a tap on the earlier one puts the size back to 50 %, the History button sits in the bar", sc1 == 70 and n1 >= n0 + 2 and hs["rows"] == n1 and hs["on"] == str(n1 - 1) and hs["btn"] and any("Size" in n for n in hs["names"]) and sc2 == 50, out["hist"])
+        chk("history: two slider steps are two named rows (the current one marked), a tap on the earlier one puts the size back to 50 %, the history opens from a long press on Undo (v208: no clock button in the row)", sc1 == 70 and n1 >= n0 + 2 and hs["rows"] == n1 and hs["on"] == str(n1 - 1) and hs["btn"] and any("Size" in n for n in hs["names"]) and sc2 == 50, out["hist"])
         chk("page: no errors", not errs, errs[:3]); await ctx.close(); await b.close()
 try: asyncio.run(main())
 finally:

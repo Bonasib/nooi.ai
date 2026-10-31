@@ -23992,7 +23992,7 @@ const touch207=()=>innerWidth<768||!!(window.matchMedia&&matchMedia("(pointer:co
 // (Auto is the default; S.ed.pq198 = 1 / 2 / 4 is a size picked by hand)
 pqW198=(o=>function(){const q=S.ed&&+S.ed.pq198;if(q)return o.apply(this,arguments);if(PF207.lv==null)PF207.lv=touch207()?1:0;return[1080,540,270][PF207.lv]})(pqW198);
 edTick=(o=>function(now){if(S.view!=="edit"||ED.rec||ED.hq||R139.on||recording)return o.apply(this,arguments);const a=performance.now(),r=o.apply(this,arguments),d=performance.now()-a;
-  PF207.ema=PF207.ema?PF207.ema*.85+d*.15:d;
+  const dd=Math.min(d,300);PF207.ema=PF207.ema?PF207.ema*.85+dd*.15:dd;   // (one stalled frame can't hold the preview back for long)
   // (a phone on Auto: slow frames for a while → a smaller preview; fast again for a long while → back up to 540)
   if(!(S.ed&&+S.ed.pq198)&&touch207()){if(PF207.ema>45){if(++PF207.slow>12&&PF207.lv<2){PF207.lv++;PF207.slow=0;PF207.ema=0}}else PF207.slow=0;
     if(PF207.ema<7&&PF207.lv>1){if(++PF207.fast>150){PF207.lv--;PF207.fast=0}}else PF207.fast=0}
@@ -24000,7 +24000,7 @@ edTick=(o=>function(now){if(S.view!=="edit"||ED.rec||ED.hq||R139.on||recording)r
   return r})(edTick);
 // (the loop asks draw170 whether to draw: a frame that costs more than ~18 ms leaves the next one a gap, so input is never starved)
 draw170=(o=>function(now){const r=o.apply(this,arguments);if(!r||ED.rec||ED.hq||R139.on||recording)return r;const c=PF207.ema||0;
-  if(c>18&&now<PF207.next){DR170.dirty=true;return false}PF207.next=now+c*1.2;return true})(draw170);
+  if(c>18&&now<PF207.next){DR170.dirty=true;return false}PF207.next=now+Math.min(150,c*1.2);return true})(draw170);
 // (a phone's preview: no soft shadows inside the scenes — the blur is the costliest thing a canvas does; the export has them)
 const NB207={configurable:true,get(){return 0},set(v){}},CUR207={};
 draw164=(o=>function(ctx,W,H,t,it,part){if(it&&it.id)CUR207[it.id]=t-it.start;if(part==="bg"||part==="grain")return o.apply(this,arguments);
@@ -24063,11 +24063,11 @@ const empty207=(it,N)=>{const P=it.pics||[];for(let i=0;i<N;i++)if(!P[i])return 
 // the timeline's own clips that have a lasting address (a file only on this device can't be used inside a scene)
 function tl207(){const out=[],seen={};(S.ed.clips||[]).forEach(c=>{try{let u="",v=false;if(c.src&&c.src.k==="job"){const j=(S.jobs||[]).find(x=>x.id===c.src.job);if(j&&j.resultUrl){u=j.resultUrl;v=j.kind==="video"}}
     else if(c.src&&c.src.k!=="demo"){const m=M["c_"+c.id];u=(m&&m.url)||c.src.url||"";v=m?m.type==="video":VEXT207.test(u)}if(u&&!/^(blob|data):/.test(u)&&!seen[u]){seen[u]=1;out.push({u,v})}}catch(e){}});return out}
-const th207=(u,vid)=>vid?'<video src="'+esc(u)+'#t=0.1" muted playsinline preload="metadata"></video><i class="pv207v">'+ic("play")+"</i>":'<img src="'+esc(u)+'" alt="" loading="lazy">';
+const th207=(u,vid,lz)=>vid?'<video src="'+esc(u)+'#t=0.1" muted playsinline preload="'+(lz?'none" data-lz208="1':"metadata")+'"></video><i class="pv207v">'+ic("play")+"</i>":'<img src="'+esc(u)+'" alt="" loading="lazy">';
 // the sheet: i = one box (change or remove it); null = fill the empty boxes in order (a second tap on a used one takes it out)
 function picSheet207(i){const it=edItem(edPick());if(!it||it.type!=="mg150")return;const N=nPics207(it)||1,P=it.pics||[],one=i!=null&&i>=0,used=P.filter(Boolean).length;
   const mine=(S.jobs||[]).filter(j=>(j.kind==="image"||j.kind==="video")&&j.status==="complete"&&j.resultUrl).slice(-30).reverse(),clips=tl207();
-  const cell=(u,vid)=>{const k=P.indexOf(u);return'<button type="button" class="pk206p'+(k>=0?" on":"")+'" data-act="pv207-use" data-u="'+esc(u)+'"'+(vid?' data-vid="1"':"")+(one?' data-i="'+i+'"':"")+'>'+th207(u,vid)+(k>=0?'<i class="pv207n">'+(k+1)+"</i>":"")+"</button>"};
+  const cell=(u,vid)=>{const k=P.indexOf(u);return'<button type="button" class="pk206p'+(k>=0?" on":"")+'" data-act="pv207-use" data-u="'+esc(u)+'"'+(vid?' data-vid="1"':"")+(one?' data-i="'+i+'"':"")+'>'+th207(u,vid,1)+(k>=0?'<i class="pv207n">'+(k+1)+"</i>":"")+"</button>"};
   hfSheet(one?L("Box "+(i+1),"المربع "+(i+1)):L("Pictures & videos","الصور والفيديوهات")+" · "+used+"/"+N,
     '<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:10px"><label class="btn primary">'+ic("upload")+esc(one?L("Upload a picture or video","ارفع صورة أو فيديو"):L("Upload pictures or videos","ارفع صوراً أو فيديوهات"))+'<input type="file" accept="image/*,video/*"'+(one?"":" multiple")+' data-mg206up="'+(one?i:-1)+'" hidden></label>'+
     (one&&P[i]?'<button type="button" class="btn ghost" data-act="mg206-del" data-i="'+i+'">'+ic("trash")+esc(L("Remove","إزالة"))+"</button>":"")+"</div>"+
@@ -24137,6 +24137,83 @@ renderView=(o=>function(){const r=o.apply(this,arguments);try{lay207()}catch(e){
   .ed143.mob .e-player .transport>*{flex:none}
   .ed143.mob .transport .tc{flex:none!important;min-width:max-content!important;font-size:11px!important;font-variant-numeric:tabular-nums;padding-inline:2px}
   html.studio151 .ed143.mob>.dv149>span{white-space:normal!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.25;font-size:11.5px}}`;document.head.appendChild(st)})();
+
+/* ================= v208: THE EDITOR PLAYS ON A PHONE — NEVER STUCK ON A LOADING VIDEO, SCENES SEEN, ONE ROW UNDER THE VIDEO ================= */
+// What a phone showed (Oct 31, a screen recording): Play on, the time held at 00:00 — the timeline waits while the clip's video is
+// still loading (v71), and a long merged video on a phone's network never got far enough, so the clock never moved and taps felt
+// dead; a scene that was just added sat at its first moment, still fading in, so only its background showed; the history clock
+// pushed the row under the video off the screen; long presses on the pictures opened the browser's image menu. Now:
+//  1) waiting for a loading video lasts 2.5 s at most — then the clock runs on (the video catches up), a "Loading the video…" tag
+//     shows on the preview while it loads, and on a phone a light copy of the heavy clip is asked from the server (free, ffmpeg);
+//  2) a new scene puts the playhead where it can be seen (just after its way in), not on its first, empty frame;
+//  3) the history moved off the row: a long press (or right click) on Undo opens it; the row under the video fits a phone's width;
+//  4) picture boxes and lists ignore the long-press image menu; your videos' thumbnails load only when they scroll into view;
+//  5) a picture bigger than 1280 px is drawn from a copy 1280 px across in the preview (the export keeps the original).
+
+// ---- 1. a video that is slow to load never stops the clock
+const BUF208={id:null,since:0,last:0,asked:{}};
+edTick=(o=>function(now){const play=ED.playing&&!ED.rec&&!R139.on&&!recording&&S.view==="edit",t0=ED.t,prev=BUF208.last;BUF208.last=now;const r=o.apply(this,arguments);
+  if(!play||!ED.buffering||!ED.playing){if(!ED.buffering)BUF208.id=null;return r}
+  let key="";try{const tot=edTotal(),a=edAt(Math.min(ED.t,Math.max(0,tot-.001)));key=(S.ed.clips[a.i]||{}).id||""}catch(e){}
+  if(BUF208.id!==key){BUF208.id=key;BUF208.since=now;return r}
+  if(now-BUF208.since>2500&&prev&&ED.t<=t0+1e-4){const tot=edTotal();ED.t=Math.min(tot,ED.t+Math.min(.1,Math.max(0,(now-prev)/1000)));if(ED.t>=tot)ED.t=0;
+    if(touch207()&&API.mode==="server"&&!BUF208.asked[key]){BUF208.asked[key]=1;try{const cfg=pxCfg196();if(!cfg.on&&typeof pxUrls196==="function"&&pxUrls196().some(u=>!cfg.map[u])){pxMake196();toast(L("This video is heavy for a phone — a light copy for the preview is on its way.","هذا الفيديو ثقيل على الهاتف — نسخة خفيفة للمعاينة في الطريق."),{type:"info"})}}catch(e){}}}
+  // (the tag: on the preview only, never in an export)
+  if(now-BUF208.since>600){const cv=$("#wk");if(cv){const c=cv.getContext("2d"),U=Math.min(cv.width,cv.height),f=Math.max(10,Math.round(U*.045)),tx=L("Loading the video…","جارٍ تحميل الفيديو…");
+    c.save();c.font="600 "+f+"px Geist,'IBM Plex Sans Arabic',sans-serif";c.direction=S.lang==="ar"?"rtl":"ltr";const w=c.measureText(tx).width+f*1.4,h=f*1.9,x=f*.6,y=f*.6;
+    c.fillStyle="rgba(0,0,0,.62)";c.beginPath();if(c.roundRect)c.roundRect(x,y,w,h,h/2);else c.rect(x,y,w,h);c.fill();c.fillStyle="#fff";c.textAlign="center";c.textBaseline="middle";c.fillText(tx,x+w/2,y+h/2);c.restore()}}
+  return r})(edTick);
+
+// ---- 2. a new scene shows itself
+mgAdd150=(o=>function(sc,opt){const it=o.apply(this,arguments);if(it&&!(opt&&opt.start!=null)){const len=Math.max(.2,it.end-it.start);ED.t=+(it.start+Math.min(1.2,len*.4)).toFixed(2)}return it})(mgAdd150);
+
+// ---- 3. the history behind a long press on Undo; the row under the video fits
+VIEWS.edit=(o=>function(){const h=o.apply(this,arguments);return typeof h==="string"?h.replace(/<button[^>]*class="[^"]*hist202b[^"]*"[^>]*>[\s\S]*?<\/button>/,""):h})(VIEWS.edit);
+const LP208={t:0,fired:false};
+document.addEventListener("pointerdown",e=>{const b=e.target.closest&&e.target.closest("#edundo");if(!b)return;LP208.fired=false;clearTimeout(LP208.t);
+  LP208.t=setTimeout(()=>{LP208.fired=true;try{if(navigator.vibrate)navigator.vibrate(12)}catch(err){}histSheet202()},550)},true);
+["pointerup","pointercancel","pointerleave"].forEach(n=>document.addEventListener(n,e=>{if(e.target.closest&&e.target.closest("#edundo"))clearTimeout(LP208.t)},true));
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#edundo");if(b&&LP208.fired){LP208.fired=false;e.preventDefault();e.stopImmediatePropagation()}},true);
+document.addEventListener("contextmenu",e=>{if(e.target.closest&&e.target.closest("#edundo")){e.preventDefault();histSheet202()}},true);
+
+// (the tool bar at a phone's foot: Delete beside Split, as in the big editors, and every button within the screen)
+function bar208(){const bar=document.querySelector(".ed143 .e-bar.ctx");if(!bar)return;const del=bar.querySelector('[data-act="ed-del"]'),sp=bar.querySelector('[data-act="ed-split"]');if(del&&sp&&sp.nextElementSibling!==del)sp.after(del)}
+renderView=(o=>function(){const r=o.apply(this,arguments);try{bar208()}catch(e){}return r})(renderView);
+
+// (a tap on a timeline item picks it — highlighted, the bar at the foot acts on it — without opening its settings; a long press
+//  still opens them, a drag still scrolls. Since v171 a tap did nothing, and the timeline felt dead)
+const TP208={b:null,x:0,y:0,t:0};
+window.addEventListener("pointerdown",e=>{TP208.b=null;if(S.view!=="edit"||e.pointerType==="mouse"||!e.isPrimary)return;const bk=e.target.closest&&e.target.closest("#tlin .blk");
+  if(bk&&!e.target.closest(".hdl,.h146,[data-hdl]")){TP208.b=bk;TP208.x=e.clientX;TP208.y=e.clientY;TP208.t=performance.now()}},true);
+window.addEventListener("pointerup",e=>{const bk=TP208.b;TP208.b=null;if(!bk||!bk.isConnected||performance.now()-TP208.t>470||Math.hypot(e.clientX-TP208.x,e.clientY-TP208.y)>10)return;
+  if(LP171.fired&&performance.now()-LP171.fired<600)return;const E=S.ed;if(E.msMode146)return;let kk=null;try{kk=blkKey131(bk)}catch(err){}if(!kk||kk[0]==="music"||kk[0]==="sfx")return;
+  const cur=edPick();if(cur&&cur.k===kk[0]&&cur.id===kk[1])return;edSetPick(kk[0],kk[1]);E.tab=(KIND143[kk[0]]||[E.tab])[0];if(kk[0]==="clip")E.dt143=E.tab;E.pclosed143=E.tab;persist();renderView()},true);
+
+// ---- 4. no image menu on a long press; thumbnails of your videos load when seen
+document.addEventListener("contextmenu",e=>{if(e.target.closest&&e.target.closest(".pk206b,.pk206p,.pv207"))e.preventDefault()},true);
+let IO208=null;
+function lazy208(root){const els=(root||document).querySelectorAll("video[data-lz208]");if(!els.length)return;
+  if(!("IntersectionObserver" in window)){els.forEach(v=>{v.preload="metadata";v.removeAttribute("data-lz208")});return}
+  IO208=IO208||new IntersectionObserver(es=>es.forEach(x=>{if(!x.isIntersecting)return;const v=x.target;IO208.unobserve(v);v.removeAttribute("data-lz208");v.preload="metadata";try{v.load()}catch(e){}}),{rootMargin:"120px"});
+  els.forEach(v=>IO208.observe(v))}
+hfSheet=(o=>function(){const r=o.apply(this,arguments);try{lazy208($("#modalRoot"))}catch(e){}return r})(hfSheet);
+
+// ---- 5. big pictures drawn from a smaller copy in the preview
+const SM208={};
+img206=(o=>function(u){const im=o.apply(this,arguments);if(!im||R139.on||!im.naturalWidth)return im;const m=Math.max(im.naturalWidth,im.naturalHeight);if(m<=1280)return im;
+  let c=SM208[u];if(!c){const k=1280/m;c=document.createElement("canvas");c.width=Math.round(im.naturalWidth*k);c.height=Math.round(im.naturalHeight*k);try{c.getContext("2d").drawImage(im,0,0,c.width,c.height)}catch(e){return im}c.naturalWidth=c.width;c.naturalHeight=c.height;SM208[u]=c}return c})(img206);
+
+(()=>{const st=document.createElement("style");st.id="v208";st.textContent=`
+.pk206b img,.pk206b video,.pk206p img,.pk206p video{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none}
+.pk206p,.pk206b{-webkit-tap-highlight-color:transparent}
+#edundo{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+@media (max-width:767px){
+  .ed143.mob .e-player .transport{gap:3px!important;justify-content:space-between;overflow-x:hidden}
+  .ed143.mob .e-player .transport>.btn.sm{padding-inline:0!important;min-width:32px;width:32px;justify-content:center}
+  .ed143.mob .transport .tc{font-size:10.5px!important;letter-spacing:-.2px;padding-inline:0}
+  .ed143.mob .e-bar.ctx>button{min-width:0!important;flex:0 0 auto;padding-inline:5px!important;font-size:10.5px!important;gap:2px}
+  .ed143.mob .e-bar.ctx>button>span{white-space:normal;max-width:58px;text-align:center;line-height:1.1}}
+@media (max-width:379px){.ed143.mob .e-player .transport{gap:2px!important}.ed143.mob .e-player .transport>.btn.sm{min-width:29px;width:29px}.ed143.mob .transport .tc{font-size:10px!important}.ed143.mob .e-bar.ctx>button{padding-inline:2px!important;font-size:9.5px!important}.ed143.mob .e-bar.ctx>button>span{max-width:50px}}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

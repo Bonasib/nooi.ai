@@ -42,6 +42,7 @@ languages, translation · AI: reframe, stabilise, silences, voices, dubbing, sou
 | 24 | **History panel** (Premiere / Photoshop) — every step named after the control that made it; tap any to go back there | **v202** |
 | 25 | **Motion graphics library** (animos-style) — 20 named effects (Orbit … Checklist), showcases of up to 12 pictures (Totem Wall, Spread Rows, Iso Cascade, Wheel Carousel, Cascade Deck, Orbit), the reference motions (kinetic promo, vlog kit, app burst), picture slots and five one-tap recipes; the same drawing in the preview and the export | **v206** |
 | 26 | **Motion scenes on a phone** — Auto preview size (540 on a phone, smaller while slow), no soft shadows in a phone's preview, frames never starve taps; new scenes after the others + Line them up; Pictures & videos first in the scene's sheet (several at once, from the device, your results or the timeline); videos inside scenes, frame-exact in the export | **v207** |
+| 27 | **Plays on a phone** — a clip still loading never holds the clock past 2.5 s (Loading tag, a light copy asked), a new scene is seen at once, no clock in the row under the video (history on a long press of Undo), the row and the foot bar fit with Delete beside Split, a tap picks a timeline item | **v208** |
 
 ## What phase 2 did not do (honest limits)
 - Power-window tracking is block matching of a luma patch at 8 steps a second on a 160-px copy — it follows a subject that moves and

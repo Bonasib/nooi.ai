@@ -62,7 +62,7 @@ async def run(p, w):
     await E("()=>{go('edit');PJ.fresh('edit');S.ed.clips.push({id:uid(),src:{k:'demo',kind:'scene',seed:11},in:0,out:3,speed:1,trans:'cut',vol:100});S.ed.texts=[{id:uid(),text:'Supercalifragilisticexpialidocious-extraordinarily',start:0,end:3,pos:'bottom',style:'caption',size:9,anim:'pop'}];S.ed.rcheckAI=true;renderAll()}"); await pg.wait_for_timeout(700)
     ok(await E("()=>!!document.querySelector('[data-act=ed-out]')&&document.querySelector('[data-act=ed-out]').getBoundingClientRect().top<400"), f"{tag}: Export video button at the top of the editor")
     await E("()=>document.querySelector('[data-act=ed-out]').click()"); await pg.wait_for_timeout(300)
-    r["fmts"] = await E("()=>[...document.querySelectorAll('[data-act=xout-fmt]')].map(b=>b.dataset.v+(b.disabled?'-off':''))"); ok(r["fmts"] == ["mp4", "prores", "dnxhr", "hevc", "webm", "gif", "wav"], f"{tag}: export formats {r['fmts']}")
+    r["fmts"] = await E("()=>[...document.querySelectorAll('[data-act=xout-fmt]')].map(b=>b.dataset.v+(b.disabled?'-off':''))"); ok(r["fmts"] == ["mp4", "prores", "dnxhr", "hevc", "webm", "gif", "wav", "webma", "mov4444"], f"{tag}: export formats (v202 added the two with a see-through background) {r['fmts']}")
     fmt = "mp4" if mob else "prores"
     await E(f"()=>document.querySelector('[data-act=xout-fmt][data-v={fmt}]').click()"); await pg.wait_for_timeout(200)
     async with pg.expect_download(timeout=120000) as dl:

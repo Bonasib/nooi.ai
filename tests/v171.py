@@ -56,12 +56,12 @@ async def timeline_phone(p):
         return await E(STATE)
     async def geo(sel):
         await E(RESET); return await E(GEO, sel)
-    # 1. a tap does nothing
+    # 1. a tap picks (v208: it did nothing since v171, and the timeline felt dead)
     g = await geo('.blk[data-clip="c1"]'); s0 = await E(STATE); r = await touch((g["l"] + g["r"]) / 2, g["y"], 60); R["tap"] = r
     ok(g and abs(g["ph"] - (g["l"] + g["r"]) / 2) > 60, f"(the playhead is away from the clip) {g}")
-    ok(not r["sel"] and not r["pick"] and not r["menu"] and r["tab"] == s0["tab"] and r["closed"] == s0["closed"], f"a tap on a clip does nothing {r}")
+    ok(r["pick"] == "clip:c1" and not r["menu"] and r["closed"] == r["tab"] and r["c1"] == [0, 3], f"a tap on a clip picks it, its settings stay closed, nothing moves (v208; it did nothing before) {r}")
     g = await geo('.blk[data-textl="t1"]'); r = await touch((g["l"] + g["r"]) / 2, g["y"], 60); R["tap_text"] = r
-    ok(not r["pick"] and not r["menu"] and r["tab"] == "media", f"a tap on a text does nothing {r}")
+    ok(r["pick"] == "text:t1" and not r["menu"] and r["closed"] == r["tab"] and r["t1"] == [3.5, 6], f"a tap on a text picks it, its settings stay closed (v208) {r}")
     # 2. a long press in the middle: the item's settings, no menu
     g = await geo('.blk[data-clip="c1"]'); r = await touch((g["l"] + g["r"]) / 2, g["y"], 750); R["long_clip"] = r
     sh = await E("()=>!!document.querySelector('.ed143 .e-sheet')")
