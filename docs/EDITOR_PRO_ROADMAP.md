@@ -40,6 +40,7 @@ languages, translation · AI: reframe, stabilise, silences, voices, dubbing, sou
 | 22 | **Render with alpha** (AE's RGB+Alpha, Premiere's ProRes 4444) — the clips hidden, titles / layers / shapes over nothing: WebM VP9 with alpha for web pages and OBS, ProRes 4444 .mov for Premiere / AE / DaVinci / Final Cut; sound included | **v202** |
 | 23 | **Export a part + a still** (Premiere's work area / Export Frame) — from … to … seconds or "This clip", cut on the server exactly; the current frame saved as a PNG | **v202** |
 | 24 | **History panel** (Premiere / Photoshop) — every step named after the control that made it; tap any to go back there | **v202** |
+| 25 | **Motion graphics library** (animos-style) — 20 named effects (Orbit … Checklist), showcases of up to 12 pictures (Totem Wall, Spread Rows, Iso Cascade, Wheel Carousel, Cascade Deck, Orbit), the reference motions (kinetic promo, vlog kit, app burst), picture slots and five one-tap recipes; the same drawing in the preview and the export | **v206** |
 
 ## What phase 2 did not do (honest limits)
 - Power-window tracking is block matching of a luma patch at 8 steps a second on a 160-px copy — it follows a subject that moves and
