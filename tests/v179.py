@@ -114,8 +114,9 @@ async def run(p, phone, lang, full):
     st["pop2"] = await E("()=>!!document.querySelector('.hfbots.pro.in179')"); R["chip"] = st
     ok(st["chip"] == "NVIDIA Cosmos" and "NVIDIA Cosmos" in st["std"] and "Agents" not in st["chip"], f"{tag}: NVIDIA Cosmos keeps its own name; the agents plan for it {st}")
     ok(st["pop"] and not st["pop2"], f"{tag}: the agents' panel pops in once, not on every redraw {st}")
-    fit = await E("()=>{agApply171(false);const ul=document.querySelector('.hfstplan.bots.one171 .hbls'),li=ul&&ul.querySelector('li.on171');if(!li)return null;const cs=getComputedStyle(ul);return{ul:ul.getBoundingClientRect().height,li:li.offsetHeight,pad:parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom),box:cs.boxSizing}}")
-    R["fit"] = fit; ok(fit and abs(fit["ul"] - fit["li"] - fit["pad"]) < 3, f"{tag}: the plan box is as tall as the line shown {fit}")
+    fit = await E("()=>{agApply171(false);const ul=document.querySelector('.hfstplan.bots.one171 .hbls'),li=ul&&ul.querySelector('li.on171');if(!li)return null;const cs=getComputedStyle(ul);return{ul:ul.getBoundingClientRect().height,li:li.offsetHeight,pad:parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom),box:cs.boxSizing,carousel:getComputedStyle(ul).display==='none'&&!!document.querySelector('.agc201')}}")
+    # (v201: where the agents carousel shows, it takes the place of this line — the line is hidden on purpose)
+    R["fit"] = fit; ok(fit and (fit.get("carousel") or abs(fit["ul"] - fit["li"] - fit["pad"]) < 3), f"{tag}: the plan box is as tall as the line shown (or the v201 agents carousel takes its place) {fit}")
     # 2. the price: NVIDIA Cosmos's own (no picture made on another engine)
     await words(E, "a red car on a coast road at sunset")
     pr = await E("()=>({nv:hfCost(),cosmos:vcost('nvcosmos',S.hf.dur)})"); R["price"] = pr

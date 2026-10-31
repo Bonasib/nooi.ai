@@ -175,7 +175,7 @@ async def page_part(p, phone, lang):
             slowBtns:document.querySelectorAll('#main .sl163,#main [data-act^="sl163"],#main [data-act="hf136-slow"]').length,
             name:(row.querySelector('[data-act="hf-model"] b')||{}).scrollWidth<=((row.querySelector('[data-act="hf-model"] b')||{}).clientWidth||0)+1}}""")
         R["row"] = v
-        ok(v["acts"] == ["hf187-add", "hf-model", "hf187-set", "hf-send"] and v["below"] and v["inside"] and v["fit"] and v["old"] == 0, f"{tag}: one row [+][engine][⚙][Generate] under the words: {v}")
+        ok(v["acts"] in (["hf187-add", "hf-model", "hf187-set", "hf-send"], ["hf187-add", "hf-model", "hf187-set", "an205-open", "hf-send"]) and v["below"] and v["inside"] and v["fit"] and v["old"] == 0, f"{tag}: one row [+][engine][⚙][Generate] under the words: {v}")
         ok(("إنشاء" if ar else "Generate") in v["go"] and any(ch.isdigit() for ch in v["go"]), f"{tag}: the button should say Generate and the price: {v['go']}")
         ok(v["slowBtns"] == 0, f"{tag}: no slow-motion buttons: {v['slowBtns']}")
         ok(v["name"], f"{tag}: the engine's name should fit in its chip")

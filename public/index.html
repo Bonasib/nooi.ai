@@ -23571,6 +23571,168 @@ VIEWS.account=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="stri
 .cm204adm{margin-bottom:6px}.cm204e{padding:20px 0}
 @media (max-width:600px){.cm204c{width:140px}.pf204cover{height:90px}.pf204stats b{font-size:16px}}
 `;document.head.appendChild(st)})();
+/* ================= v205: ANIMATION STYLES IN THE PROMPT BOX =================
+   The owner: "redesign the animation styles, include them among the options and develop the tools so the customer picks the
+   animation style from the box". 18 looks, each drawn here as the same little cat in that look (nooi's own drawings, plain
+   names — no studio or character names), picked from a button in the box (Video and Image), from Settings, and on the Video
+   and Images pages (their Style picker shows the same drawings). The pick reaches the engine as plain words (lib/intent.js
+   STYLE; a style the customer picked wins over the pages' defaults) and the agents' brief (plan, storyboard, the director). */
+const AN205=[
+ ["anim3d","3D animated film","فيلم ثلاثي الأبعاد","Soft rounded 3D characters with big eyes.","شخصيات ثلاثية الأبعاد ناعمة بعيون كبيرة."],
+ ["anime","Anime","أنمي","Clean lines, cel shading, shiny eyes.","خطوط نظيفة وتظليل مسطح وعيون لامعة."],
+ ["an205paint","Painted storybook","قصة مرسومة","Soft painted worlds, gentle hand-drawn characters.","عوالم مرسومة بنعومة وشخصيات مرسومة باليد."],
+ ["anim2d","2D cartoon","كرتون ثنائي الأبعاد","Flat colours and clean outlines.","ألوان مسطحة وحدود نظيفة."],
+ ["an205chibi","Chibi","تشيبي","Cute big heads and huge eyes.","رؤوس كبيرة لطيفة وعيون ضخمة."],
+ ["clay","Claymation","صلصال","Handmade clay, stop-motion feel.","صلصال يدوي بإحساس التحريك بالإيقاف."],
+ ["an205felt","Felt puppets","دمى صوف","Fuzzy wool figures in a tiny world.","مجسمات صوف ناعمة في عالم مصغّر."],
+ ["an205paper","Paper cut-out","قصاصات ورق","Layered paper shapes, soft shadows.","طبقات ورق ملوّن بظلال ناعمة."],
+ ["comic","Comic book","قصص مصوّرة","Bold ink, halftone dots, vivid colour.","حبر عريض ونقاط طباعة وألوان زاهية."],
+ ["an205pixel","Pixel art","بكسل آرت","Retro game pixels, few colours.","بكسلات ألعاب كلاسيكية بألوان قليلة."],
+ ["an205lowpoly","Low-poly 3D","مضلّعات ثلاثية الأبعاد","Faceted shapes, flat-shaded polygons.","أشكال مضلّعة بتظليل مسطح."],
+ ["an205toy","Vinyl toy","مجسّم لعبة","Glossy collectible figures.","مجسمات لامعة كألعاب المقتنيات."],
+ ["an205retro","Retro cartoon","كرتون كلاسيكي","Black-and-white 1930s bounce.","حركة كرتون الثلاثينيات بالأبيض والأسود."],
+ ["an205cel","Cel-shaded game","تظليل الألعاب","Bold outlines, two-tone shading.","حدود عريضة وتظليل بلونين."],
+ ["watercolor","Watercolor","ألوان مائية","Soft bleeding paint on paper.","ألوان مائية ناعمة على الورق."],
+ ["an205sketch","Pencil sketch","رسم بالقلم","Graphite lines that wobble alive.","خطوط رصاص تتحرك كأنها حيّة."],
+ ["an205neon","Neon lines","خطوط نيون","Glowing outlines on the dark.","خطوط متوهجة على خلفية داكنة."],
+ ["an205oil","Oil painting","لوحة زيتية","Thick brush strokes in motion.","ضربات فرشاة كثيفة تتحرك."]];
+// the words the agents read (the engine gets the same look from lib/intent.js STYLE)
+const AN205W={anim3d:"3D animated feature-film style: stylised CG characters, soft global illumination",anime:"Japanese anime style: cel shading, clean line art, expressive faces",
+ an205paint:"Hand-painted storybook animation: soft painted backgrounds, gentle hand-drawn characters, warm natural light",anim2d:"2D hand-drawn animation style: flat colours, clean outlines",
+ an205chibi:"Chibi animation style: cute super-deformed characters with big heads and huge sparkling eyes",clay:"Claymation stop-motion style: handmade clay figures with fingerprints, slightly stepped motion",
+ an205felt:"Needle-felt stop-motion: fuzzy wool characters and sets, handmade miniature world",an205paper:"Paper cut-out animation: layered coloured paper shapes with soft drop shadows",
+ comic:"Comic-book style: bold ink outlines, halftone shading, vivid flat colours",an205pixel:"Pixel-art animation: crisp low-resolution pixels, limited palette, retro game look",
+ an205lowpoly:"Low-poly 3D style: faceted geometric shapes, flat-shaded polygons",an205toy:"Collectible vinyl toy style: glossy plastic figures, rounded simple shapes",
+ an205retro:"1930s rubber-hose cartoon style: bouncy black-and-white characters with pie-cut eyes, film grain",an205cel:"Cel-shaded 3D game style: bold outlines, two-tone flat shading",
+ watercolor:"Watercolor painting style: soft bleeding edges, paper texture",an205sketch:"Animated pencil sketch: graphite lines on paper, loose hatching",
+ an205neon:"Neon line-art animation: glowing outlines on a dark background",an205oil:"Animated oil painting: thick visible brush strokes, rich textured colour"};
+const an205=k=>AN205.find(x=>x[0]===k)||null;
+// ---- the drawings: one cat, eighteen looks (viewBox 96×72; the head at 48,42)
+let n205=0;
+const EARS205="M30 34L27 13L44 27ZM66 34L69 13L52 27Z",HEAD205='<ellipse cx="48" cy="43" rx="22" ry="18"/>',SHAPE205='<path d="'+EARS205+'"/>'+HEAD205;
+const INEAR205="M32 30L30 18L40 27ZM64 30L66 18L56 27Z";
+const WHISK205='<path d="M22 44h11M22 49l11-2M74 44H63M74 49l-11-2" fill="none"/>',MOUTH205='<path d="M44 50q4 3 4-1q0 4 4 1" fill="none"/>';
+function cat205(k){const u="c205_"+(++n205),g=(s)=>u+s;let defs="",bg="",body="",top="";
+  const base=(fill,stroke,sw,extra)=>'<g fill="'+fill+'"'+(stroke?' stroke="'+stroke+'" stroke-width="'+sw+'" stroke-linejoin="round"':"")+(extra||"")+">"+SHAPE205+"</g>";
+  const inEar=(c,op)=>'<path d="'+INEAR205+'" fill="'+c+'"'+(op?' opacity="'+op+'"':"")+"/>";
+  const dots=(r,c)=>'<circle cx="40" cy="41" r="'+r+'" fill="'+c+'"/><circle cx="56" cy="41" r="'+r+'" fill="'+c+'"/>';
+  const nose=c=>'<path d="M46 46h4l-2 2.4z" fill="'+c+'"/>';
+  const face=(c,sw)=>'<g stroke="'+c+'" stroke-width="'+(sw||1)+'" stroke-linecap="round">'+MOUTH205+WHISK205+"</g>";
+  const lin=(id,a,b,v)=>'<linearGradient id="'+id+'" x1="0" y1="0" x2="'+(v===0?1:0)+'" y2="'+(v===0?0:1)+'"><stop offset="0" stop-color="'+a+'"/><stop offset="1" stop-color="'+b+'"/></linearGradient>';
+  const rad=(id,a,b,cx,cy,r)=>'<radialGradient id="'+id+'" cx="'+(cx??.4)+'" cy="'+(cy??.35)+'" r="'+(r??.75)+'"><stop offset="0" stop-color="'+a+'"/><stop offset="1" stop-color="'+b+'"/></radialGradient>';
+  const disp=(id,f,sc,oct)=>'<filter id="'+id+'" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="'+f+'" numOctaves="'+(oct||2)+'" seed="3"/><feDisplacementMap in="SourceGraphic" scale="'+sc+'" xChannelSelector="R" yChannelSelector="G"/></filter>';
+  const clip=id=>'<clipPath id="'+id+'">'+SHAPE205+"</clipPath>";
+  switch(k){
+  case"anim3d":defs=rad(g("b"),"#f3f9ff","#b8d6f3",.5,.3,.8)+rad(g("h"),"#ffd7a8","#e9782f");bg='<rect width="96" height="72" fill="url(#'+g("b")+')"/><ellipse cx="48" cy="66" rx="20" ry="3.5" fill="#000" opacity=".14"/>';
+    body=base("url(#"+g("h")+")")+inEar("#ffb3a0")+'<ellipse cx="39" cy="32" rx="7" ry="3" fill="#fff" opacity=".45"/>'+
+      '<ellipse cx="40" cy="41" rx="5.4" ry="6.4" fill="#fff"/><ellipse cx="56" cy="41" rx="5.4" ry="6.4" fill="#fff"/><circle cx="40.6" cy="42" r="3.6" fill="#3a2614"/><circle cx="56.6" cy="42" r="3.6" fill="#3a2614"/><circle cx="39.2" cy="40.4" r="1.3" fill="#fff"/><circle cx="55.2" cy="40.4" r="1.3" fill="#fff"/>'+
+      '<circle cx="33" cy="48" r="3" fill="#ff8f8f" opacity=".45"/><circle cx="63" cy="48" r="3" fill="#ff8f8f" opacity=".45"/>'+nose("#c4513a")+face("#9b4a2c",.9);break;
+  case"anime":defs=lin(g("b"),"#ffe1ec","#fff7fb")+lin(g("i"),"#4f86e8","#1a2f6e")+clip(g("c"));bg='<rect width="96" height="72" fill="url(#'+g("b")+')"/>';
+    body=base("#fde4c6")+'<g clip-path="url(#'+g("c")+')"><path d="M48 62Q72 58 72 36L80 70H40Z" fill="#f1c39a"/></g>'+base("none","#3b2626",1.6)+inEar("#f7b5b5")+
+      '<ellipse cx="40" cy="41" rx="4.2" ry="6" fill="url(#'+g("i")+')"/><ellipse cx="56" cy="41" rx="4.2" ry="6" fill="url(#'+g("i")+')"/><circle cx="38.8" cy="38.6" r="1.7" fill="#fff"/><circle cx="54.8" cy="38.6" r="1.7" fill="#fff"/><circle cx="41.4" cy="44" r=".8" fill="#fff"/><circle cx="57.4" cy="44" r=".8" fill="#fff"/>'+
+      nose("#d06070")+face("#3b2626",.9);break;
+  case"an205paint":defs=lin(g("b"),"#cfe7f5","#f8f0da")+disp(g("f"),.05,3);bg='<rect width="96" height="72" fill="url(#'+g("b")+')"/><path d="M0 56q20-8 40-2t56-4v22H0z" fill="#b7d39a" opacity=".8" filter="url(#'+g("f")+')"/>';
+    body='<g filter="url(#'+g("f")+')">'+base("#f3c897","#8a5a3a",1)+inEar("#f2a98d",.8)+dots(2.3,"#3a2a20")+'<circle cx="34" cy="48" r="3.2" fill="#f4a3a3" opacity=".6"/><circle cx="62" cy="48" r="3.2" fill="#f4a3a3" opacity=".6"/>'+nose("#a0584a")+face("#8a5a3a",.8)+"</g>";break;
+  case"anim2d":bg='<rect width="96" height="72" fill="#ffe08a"/><circle cx="82" cy="12" r="6" fill="#ffb84d"/>';
+    body=base("#ff9b3d","#1d1d1d",2.6)+inEar("#ffd09e")+'<circle cx="40" cy="41" r="4.2" fill="#fff" stroke="#1d1d1d" stroke-width="1.6"/><circle cx="56" cy="41" r="4.2" fill="#fff" stroke="#1d1d1d" stroke-width="1.6"/><circle cx="41" cy="42" r="2" fill="#1d1d1d"/><circle cx="57" cy="42" r="2" fill="#1d1d1d"/>'+nose("#1d1d1d")+face("#1d1d1d",1.6);break;
+  case"an205chibi":bg='<rect width="96" height="72" fill="#ffe4f2"/><path d="M14 14l1.5 3 3 1.5-3 1.5-1.5 3-1.5-3-3-1.5 3-1.5zM82 52l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" fill="#ff9ccc"/>';
+    body='<ellipse cx="48" cy="68" rx="9" ry="5" fill="#fff1df" stroke="#6b4a5a" stroke-width="1.3"/><g transform="translate(48 41) scale(1.2) translate(-48 -43)">'+base("#fff1df","#6b4a5a",1.3)+inEar("#ffc3d8")+
+      '<ellipse cx="40" cy="42" rx="5.2" ry="6.4" fill="#3d2a4a"/><ellipse cx="56" cy="42" rx="5.2" ry="6.4" fill="#3d2a4a"/><circle cx="38.4" cy="39.6" r="2" fill="#fff"/><circle cx="54.4" cy="39.6" r="2" fill="#fff"/><circle cx="41.6" cy="45" r=".9" fill="#fff"/><circle cx="57.6" cy="45" r=".9" fill="#fff"/>'+
+      '<ellipse cx="34" cy="49" rx="3" ry="1.8" fill="#ff9cc0" opacity=".7"/><ellipse cx="62" cy="49" rx="3" ry="1.8" fill="#ff9cc0" opacity=".7"/><path d="M45.5 50q2.5 2 5 0" fill="none" stroke="#6b4a5a" stroke-width="1.1" stroke-linecap="round"/></g>';break;
+  case"clay":defs=rad(g("h"),"#ff9d62","#c3532a")+disp(g("f"),.08,2.6);bg='<rect width="96" height="72" fill="#f2e3cf"/><ellipse cx="48" cy="65" rx="21" ry="3.5" fill="#7a5a3a" opacity=".22"/>';
+    body='<g filter="url(#'+g("f")+')">'+base("url(#"+g("h")+")")+inEar("#ffb08a")+'</g><path d="M36 54q6 4 12 4M52 31q6-2 10 1M30 46q-1-5 2-9" fill="none" stroke="#000" stroke-opacity=".12" stroke-width=".8"/>'+
+      dots(2.7,"#1a1210")+'<circle cx="39" cy="40" r=".9" fill="#fff"/><circle cx="55" cy="40" r=".9" fill="#fff"/>'+nose("#7a2a1a")+face("#5a2412",1.2);break;
+  case"an205felt":defs='<filter id="'+g("f")+'" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="1" seed="5"/><feDisplacementMap in="SourceGraphic" scale="2.6" xChannelSelector="R" yChannelSelector="G"/></filter>';
+    bg='<rect width="96" height="72" fill="#d6e8d8"/><rect width="96" height="72" fill="#cfe2d1" filter="url(#'+g("f")+')" opacity=".7"/>';
+    body='<g filter="url(#'+g("f")+')">'+base("#b58bd8")+inEar("#e5c9f6")+"</g>"+'<circle cx="40" cy="41" r="3.3" fill="#3a2a50"/><circle cx="56" cy="41" r="3.3" fill="#3a2a50"/><g fill="#d9c8ea"><circle cx="39.2" cy="40.2" r=".5"/><circle cx="40.8" cy="40.2" r=".5"/><circle cx="39.2" cy="41.8" r=".5"/><circle cx="40.8" cy="41.8" r=".5"/><circle cx="55.2" cy="40.2" r=".5"/><circle cx="56.8" cy="40.2" r=".5"/><circle cx="55.2" cy="41.8" r=".5"/><circle cx="56.8" cy="41.8" r=".5"/></g>'+
+      nose("#7a3a6a")+'<path d="M42 51q6 4 12 0" fill="none" stroke="#5a2a5a" stroke-width="1" stroke-dasharray="1.6 1.4"/>';break;
+  case"an205paper":defs='<filter id="'+g("s")+'" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="1.2" dy="1.6" stdDeviation=".9" flood-opacity=".35"/></filter>';
+    bg='<rect width="96" height="72" fill="#fbefd5"/><path d="M0 58q24-10 48-3t48-5v22H0z" fill="#9fd3a8" filter="url(#'+g("s")+')"/><circle cx="80" cy="14" r="7" fill="#ffc861" filter="url(#'+g("s")+')"/>';
+    body='<g filter="url(#'+g("s")+')"><path d="'+EARS205+'" fill="#e56a6a"/>'+'<ellipse cx="48" cy="43" rx="22" ry="18" fill="#f38b7f"/><path d="'+INEAR205+'" fill="#ffd0c4"/><ellipse cx="48" cy="49" rx="10" ry="6.5" fill="#ffe9de"/></g>'+dots(2.4,"#2a1a1a")+nose("#a83a3a");break;
+  case"comic":defs='<pattern id="'+g("p")+'" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.1" fill="#000" opacity=".22"/></pattern><pattern id="'+g("q")+'" width="5" height="5" patternUnits="userSpaceOnUse"><circle cx="2.5" cy="2.5" r="1.3" fill="#f39c00"/></pattern>'+clip(g("c"));
+    bg='<rect width="96" height="72" fill="#ffd23f"/><rect width="96" height="72" fill="url(#'+g("q")+')"/><path d="M48 42L0 0M48 42L96 0M48 42L0 72M48 42L96 72M48 42L0 36M48 42L96 36" stroke="#fff" stroke-width="5" opacity=".55"/>';
+    body=base("#ff5a5a")+'<g clip-path="url(#'+g("c")+')"><rect x="48" y="30" width="40" height="40" fill="url(#'+g("p")+')"/></g>'+base("none","#111",3)+inEar("#ffb0a0")+'<circle cx="40" cy="41" r="4.4" fill="#fff" stroke="#111" stroke-width="1.8"/><circle cx="56" cy="41" r="4.4" fill="#fff" stroke="#111" stroke-width="1.8"/><circle cx="41" cy="42" r="2.1" fill="#111"/><circle cx="57" cy="42" r="2.1" fill="#111"/>'+nose("#111")+face("#111",1.8);break;
+  case"an205pixel":{let px="";const C=4,inEar=(x,y)=>{const t=(ax,ay,bx,by,cx,cy)=>{const d=(bx-ax)*(y-ay)-(by-ay)*(x-ax),e=(cx-bx)*(y-by)-(cy-by)*(x-bx),f=(ax-cx)*(y-cy)-(ay-cy)*(x-cx);return(d>=0&&e>=0&&f>=0)||(d<=0&&e<=0&&f<=0)};return t(30,34,27,13,44,27)||t(66,34,69,13,52,27)},
+      inside=(x,y)=>((x-48)/22)**2+((y-43)/18)**2<=1||inEar(x,y);
+    for(let y=8;y<68;y+=C)for(let x=20;x<78;x+=C){const cx=x+C/2,cy=y+C/2;if(!inside(cx,cy))continue;const edge=[[C,0],[-C,0],[0,C],[0,-C]].some(([dx,dy])=>!inside(cx+dx,cy+dy));
+      const eye=(Math.abs(cx-40)<3&&Math.abs(cy-41)<5)||(Math.abs(cx-56)<3&&Math.abs(cy-41)<5),nz=Math.abs(cx-48)<3&&Math.abs(cy-48)<2;
+      px+='<rect x="'+x+'" y="'+y+'" width="'+C+'" height="'+C+'" fill="'+(edge?"#6b3a10":eye?"#1d1b2e":nz?"#ff5d8f":cy>50?"#ffd28a":"#f0a23c")+'"/>'}
+    bg='<rect width="96" height="72" fill="#2b2d6b"/><g fill="#ffe680"><rect x="8" y="8" width="2" height="2"/><rect x="84" y="20" width="2" height="2"/><rect x="14" y="56" width="2" height="2"/><rect x="80" y="60" width="2" height="2"/></g><rect y="64" width="96" height="8" fill="#4ad66d"/>';
+    body='<g shape-rendering="crispEdges">'+px+"</g>";break}
+  case"an205lowpoly":{const N=10,P=[];for(let i=0;i<N;i++){const a=i/N*Math.PI*2-Math.PI/2;P.push([48+22*Math.cos(a),43+18*Math.sin(a)])}
+    let tri="";for(let i=0;i<N;i++){const a=P[i],b=P[(i+1)%N],L=40+((i*7)%5)*6;tri+='<path d="M47 45L'+a[0].toFixed(1)+" "+a[1].toFixed(1)+"L"+b[0].toFixed(1)+" "+b[1].toFixed(1)+'Z" fill="hsl(168 52% '+L+'%)"/>'}
+    bg='<rect width="96" height="72" fill="#fdf3e3"/><path d="M0 60L20 46L38 58L58 44L78 56L96 48V72H0z" fill="#f2cfb6"/>';
+    body='<path d="M30 34L27 13L36 24Z" fill="hsl(168 52% 46%)"/><path d="M36 24L44 27L30 34Z" fill="hsl(168 52% 36%)"/><path d="M66 34L69 13L60 24Z" fill="hsl(168 52% 52%)"/><path d="M60 24L52 27L66 34Z" fill="hsl(168 52% 40%)"/>'+tri+
+      '<path d="M37 39L43 40L40 44Z" fill="#14332d"/><path d="M53 40L59 39L56 44Z" fill="#14332d"/><path d="M46 47h4l-2 2.4z" fill="#0e2a24"/>';break}
+  case"an205toy":defs=rad(g("b"),"#ffffff","#d7dbe2",.5,.35,.8)+rad(g("h"),"#a6e8ff","#1f97cf",.38,.3,.8);
+    bg='<rect width="96" height="72" fill="url(#'+g("b")+')"/><ellipse cx="48" cy="65" rx="24" ry="4.5" fill="#c3c8d2"/><ellipse cx="48" cy="64" rx="24" ry="4" fill="#e9ecf1"/>';
+    body=base("url(#"+g("h")+")")+inEar("#7fd0f2")+'<ellipse cx="38" cy="31" rx="9" ry="3.5" fill="#fff" opacity=".55" transform="rotate(-12 38 31)"/><ellipse cx="40" cy="42" rx="3.2" ry="4.2" fill="#10202a"/><ellipse cx="56" cy="42" rx="3.2" ry="4.2" fill="#10202a"/><circle cx="39" cy="40.6" r="1.1" fill="#fff"/><circle cx="55" cy="40.6" r="1.1" fill="#fff"/>'+nose("#0a3a52");break;
+  case"an205retro":defs='<filter id="'+g("n")+'"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="1" seed="9"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .5 0"/></filter>';
+    bg='<rect width="96" height="72" fill="#ece0c6"/><rect x="2" y="2" width="92" height="68" rx="10" fill="none" stroke="#2a2016" stroke-width="2" opacity=".35"/>';
+    body=base("#141110")+'<ellipse cx="48" cy="47" rx="15" ry="10" fill="#f3e8d2"/><ellipse cx="41" cy="38" rx="4.6" ry="6.4" fill="#f3e8d2"/><ellipse cx="55" cy="38" rx="4.6" ry="6.4" fill="#f3e8d2"/>'+
+      '<ellipse cx="41" cy="39" rx="2.6" ry="4.2" fill="#141110"/><ellipse cx="55" cy="39" rx="2.6" ry="4.2" fill="#141110"/><path d="M41 39l2 -3.6a4 4 0 0 0-2 -.5zM55 39l2-3.6a4 4 0 0 0-2-.5z" fill="#f3e8d2"/>'+
+      '<ellipse cx="48" cy="45" rx="2.4" ry="1.7" fill="#141110"/><path d="M40 49q8 7 16 0" fill="none" stroke="#141110" stroke-width="1.5" stroke-linecap="round"/>';top='<rect width="96" height="72" filter="url(#'+g("n")+')" opacity=".55"/>';break;
+  case"an205cel":defs=lin(g("b"),"#9be7ff","#e9fbff")+clip(g("c"));bg='<rect width="96" height="72" fill="url(#'+g("b")+')"/><path d="M0 60h96v12H0z" fill="#7fd08a"/>';
+    body=base("#77d877")+'<g clip-path="url(#'+g("c")+')"><path d="M50 20Q74 30 70 62H96V0H50z" fill="#3f9a52"/></g>'+base("none","#0e2a17",3)+inEar("#c6f2b8")+
+      '<path d="M35 38l9 1-1 6-7-1z" fill="#fff" stroke="#0e2a17" stroke-width="1.4"/><path d="M61 38l-9 1 1 6 7-1z" fill="#fff" stroke="#0e2a17" stroke-width="1.4"/><circle cx="40.5" cy="41.5" r="1.8" fill="#0e2a17"/><circle cx="55.5" cy="41.5" r="1.8" fill="#0e2a17"/>'+nose("#0e2a17")+face("#0e2a17",1.6);break;
+  case"watercolor":defs=disp(g("f"),.03,6,3);bg='<rect width="96" height="72" fill="#f8f4ea"/><circle cx="20" cy="18" r="12" fill="#f7c9a8" opacity=".5" filter="url(#'+g("f")+')"/>';
+    body='<g filter="url(#'+g("f")+')"><g opacity=".78">'+base("#78b6e6")+'</g><ellipse cx="44" cy="40" rx="15" ry="11" fill="#a9d2f3" opacity=".6"/>'+base("none","#4a8cc2",1)+"</g>"+inEar("#f2b8c6",.7)+dots(2.4,"#24425e")+nose("#c56a7a")+face("#3d6f98",.8);break;
+  case"an205sketch":defs=clip(g("c"));bg='<rect width="96" height="72" fill="#f5f2ea"/><path d="M6 66h84" stroke="#9a968c" stroke-width=".8"/>';
+    {let hatch="";for(let i=0;i<14;i++)hatch+='<path d="M'+(52+i*3)+' 70L'+(70+i*3)+' 30"/>';
+    body='<g clip-path="url(#'+g("c")+')" stroke="#6e6e6e" stroke-width=".6" fill="none">'+hatch+"</g>"+base("none","#3a3a3a",1.1)+'<g transform="translate(.9 .6)" opacity=".55">'+base("none","#3a3a3a",.8)+"</g>"+
+      '<circle cx="40" cy="41" r="2.6" fill="none" stroke="#2a2a2a" stroke-width="1"/><circle cx="56" cy="41" r="2.6" fill="none" stroke="#2a2a2a" stroke-width="1"/><circle cx="40.4" cy="41.4" r="1" fill="#2a2a2a"/><circle cx="56.4" cy="41.4" r="1" fill="#2a2a2a"/>'+face("#3a3a3a",.9)}break;
+  case"an205neon":defs='<filter id="'+g("g")+'" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+    bg='<rect width="96" height="72" fill="#0a0a1a"/><path d="M0 62h96" stroke="#3df2ff" stroke-width=".8" opacity=".5"/>';
+    body='<g filter="url(#'+g("g")+')">'+base("none","#ff3df2",2)+'<g stroke="#3df2ff" stroke-width="1.6" fill="none"><circle cx="40" cy="41" r="3"/><circle cx="56" cy="41" r="3"/></g><g stroke="#3df2ff" stroke-width="1.1" stroke-linecap="round">'+MOUTH205+WHISK205+"</g></g>";break;
+  case"an205oil":defs=disp(g("f"),.06,4,3);
+    bg='<g filter="url(#'+g("f")+')"><rect width="96" height="72" fill="#2f4b7c"/><g stroke-linecap="round" stroke-width="9" fill="none" opacity=".85"><path d="M-4 10q30-8 104 4" stroke="#4f6fa8"/><path d="M-4 26q40 6 104-6" stroke="#3a5a92"/><path d="M-4 62q50-10 104 2" stroke="#e9c46a"/><path d="M-4 70q40-6 104 0" stroke="#d4a24e"/></g></g>';
+    body='<g filter="url(#'+g("f")+')">'+base("#e8a05a")+'<g stroke-linecap="round" fill="none"><path d="M32 40q8-10 20-10" stroke="#f6c389" stroke-width="3.5"/><path d="M50 56q10 0 16-8" stroke="#b86a2c" stroke-width="3.5"/></g>'+inEar("#f6b9a0")+"</g>"+dots(2.5,"#2a1a10")+nose("#7a2a1a")+face("#4a2a14",1);break;
+  default:// "from your words": no style is added
+    bg='<rect width="96" height="72" fill="var(--soft,#eef0f2)"/>';body='<g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" opacity=".55"><path d="M26 28h44M26 38h34M26 48h40"/></g><path d="M74 46l2 4 4 2-4 2-2 4-2-4-4-2 4-2z" fill="#a6d93a"/>'}
+  return'<svg viewBox="0 0 96 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><defs>'+defs+"</defs>"+bg+body+top+"</svg>"}
+// ---- on the Video and Images pages: the same looks join their Style choices, with the same drawings and words
+AN205.forEach(([k,en,ar,den,dar])=>{if(!VSTYLES.some(x=>x[0]===k))VSTYLES.push([k,en,ar]);if(!IMG_STYLES.some(x=>x[0]===k))IMG_STYLES.push([k,en,ar]);
+  if(typeof PKV84==="object"&&PKV84.style&&!PKV84.style[k])PKV84.style[k]=["","",den,dar];if(typeof ART86==="object"&&ART86.style)ART86.style[k]=()=>cat205(k)});
+// ---- the box: a button with the chosen look (a palette when none), a row in Settings, the sheet of looks
+const PAL205=svg('<path d="M12 3a9 9 0 1 0 0 18c1.2 0 1.8-.9 1.4-2l-.4-1a1.6 1.6 0 0 1 1.5-2.2H17a4 4 0 0 0 4-4C21 7 17 3 12 3z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="10.5" cy="7.2" r="1.2"/><circle cx="15" cy="7.6" r="1.2"/>');
+const an205name=k=>{const r=an205(k);return r?L(r[1],r[2]):L("From your words","من وصفك")};
+function an205Sheet(){const H=S.hf,cur=H.an205||"";
+  const tile=(k,n,d)=>'<button type="button" class="an205t" data-act="an205-pick" data-v="'+(k||"none")+'" aria-pressed="'+(cur===k)+'"><span class="an205a">'+cat205(k)+"</span>"+(cur===k?'<i class="an205ck">'+ic("check")+"</i>":"")+"<b>"+esc(n)+"</b><small>"+esc(d)+"</small></button>";
+  hfSheet(L("Animation style","أسلوب الأنيميشن"),'<p class="an205lede">'+L("Pick a look — every shot and picture is made in it, and the agents keep it.","اختر مظهراً — تُصنع به كل لقطة وصورة ويحافظ عليه الوكلاء.")+'</p><div class="an205g" role="group">'+
+    tile("",L("From your words","من وصفك"),L("No style added.","بلا أسلوب مضاف."))+AN205.map(r=>tile(r[0],L(r[1],r[2]),L(r[3],r[4]))).join("")+"</div>");
+  const s=document.querySelector("#modalRoot .hfsheet");if(s)s.classList.add("sh205")}
+hfBox=(o=>function(){let h=o.apply(this,arguments);const H=S.hf;if(H.tab!=="video"&&H.tab!=="image")return h;const k=H.an205||"",nm=an205name(k);
+  const b='<button type="button" class="an205b'+(k?" on":"")+'" data-act="an205-open" aria-haspopup="dialog" aria-label="'+esc(L("Animation style","أسلوب الأنيميشن")+": "+nm)+'" title="'+esc(L("Animation style","أسلوب الأنيميشن")+": "+nm)+'">'+(k?cat205(k):'<span class="an205p">'+PAL205+"</span>")+"</button>";
+  const r=h.replace(/(<button[^>]*data-act="hf187-set"[\s\S]*?<\/button>)/,"$1"+b);return r===h?h.replace('<button class="hfsend"',b+'<button class="hfsend"'):r})(hfBox);
+set187=(o=>function(){o.apply(this,arguments);const H=S.hf;if(H.tab!=="video"&&H.tab!=="image")return;const box=document.querySelector("#modalRoot .sh187 .set187");if(!box||box.querySelector(".r205"))return;
+  const d=document.createElement("div");d.className="r187 r205";d.innerHTML='<div class="rh187"><span class="n187">'+PAL205+"<b>"+esc(L("Animation style","أسلوب الأنيميشن"))+'</b></span><button type="button" class="btn sm ghost an205s" data-act="an205-open">'+(H.an205?'<span class="an205m">'+cat205(H.an205)+"</span>":"")+esc(an205name(H.an205||""))+"</button></div>";
+  const ref=box.querySelector(".slow187");ref?box.insertBefore(d,ref):box.appendChild(d)})(set187);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act^="an205-"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const H=S.hf,q=$("#hfq");if(q)H.prompt=q.value;
+  if(a.dataset.act==="an205-open"){an205Sheet();return}
+  if(a.dataset.act==="an205-pick"){const v=a.dataset.v;H.an205=v==="none"?"":(an205(v)?v:"");persist();closeSheet();renderView();
+    toast(H.an205?L("Animation style: "+an205name(H.an205),"أسلوب الأنيميشن: "+an205name(H.an205)):L("No animation style — the look comes from your words.","بلا أسلوب أنيميشن — المظهر من وصفك."),{type:"ok",ms:2200})}},true);
+// ---- the pick reaches the engine (the job's Style, marked as the customer's choice) and the agents (their brief)
+const HF205={on:false};
+hfSend=(o=>async function(){const H=S.hf,k=H.an205;HF205.on=!!(k&&AN205W[k]&&(H.tab==="video"||H.tab==="image"));try{return await o.apply(this,arguments)}finally{HF205.on=false}})(hfSend);
+addJob=(o=>function(j){if(HF205.on&&j&&(j.kind==="video"||j.kind==="image")){const k=S.hf.an205;j.meta=Object.assign({},j.meta,{style:k,styleChosen136:true,anim205:k})}return o.apply(this,arguments)})(addJob);
+API.req=(o=>function(p,opt){const k=S.hf&&S.hf.an205,u=String(p);
+  if(HF205.on&&k&&AN205W[k]&&opt&&opt.json&&typeof opt.json.prompt==="string"&&(/^\/v1\/agents\/(plan|storyboard)$/.test(u)||(u==="/v1/llm/json"&&/nooi studio plan/.test(opt.json.task||""))))
+    opt=Object.assign({},opt,{json:Object.assign({},opt.json,{prompt:opt.json.prompt+"\nAnimation style the client picked — keep it in every shot: "+AN205W[k]+"."})});
+  return o.call(this,p,opt)})(API.req);
+(()=>{const st=document.createElement("style");st.id="v205";st.textContent=`
+.an205b{flex:none;width:40px;height:40px;border-radius:12px;padding:0;display:inline-grid;place-items:center;overflow:hidden;border:1px solid var(--line);background:var(--card,transparent);color:inherit;cursor:pointer}
+.an205b svg{width:100%;height:100%;display:block}.an205b .an205p{display:grid;place-items:center}.an205b .an205p svg{width:20px;height:20px}.an205b.on{border:2px solid #c1ff72;box-shadow:0 0 0 2px rgba(193,255,114,.3)}
+.an205lede{margin:0 0 10px;font-size:13px;color:var(--mute)}
+.an205g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@media (min-width:640px){.an205g{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.an205t{position:relative;display:flex;flex-direction:column;gap:3px;padding:6px;border-radius:14px;border:1px solid var(--line);background:var(--card,transparent);color:inherit;font:inherit;text-align:start;cursor:pointer;min-width:0}
+.an205t b{font-size:12.5px;line-height:1.2}.an205t small{font-size:11px;line-height:1.25;color:var(--mute)}
+.an205a{display:block;aspect-ratio:4/3;border-radius:10px;overflow:hidden;color:var(--ink,#111)}.an205a svg{width:100%;height:100%;display:block}
+.an205t[aria-pressed="true"]{border:2px solid #c1ff72;padding:5px}
+.an205ck{position:absolute;top:10px;inset-inline-end:10px;width:22px;height:22px;border-radius:50%;background:#c1ff72;display:grid;place-items:center}.an205ck svg{width:14px;height:14px;stroke:#0b0b0b}
+.an205s{display:inline-flex;align-items:center;gap:6px}.an205m{width:28px;height:21px;border-radius:5px;overflow:hidden;display:inline-block}.an205m svg{width:100%;height:100%;display:block}
+.r205 .n187 svg{width:18px;height:18px}
+`;document.head.appendChild(st)})();
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
