@@ -155,7 +155,7 @@ async def desktop(b, lang):
     await E("()=>document.querySelector('.e-details [data-act=\"bg144-run\"]').click()")
     await pg.wait_for_function("bgReady144(S.ed.clips[0])", timeout=90000); await pg.wait_for_timeout(300)
     bg = await E("()=>({n:BG144[S.ed.clips[0].id].frames.length,calls:LAICALLS,on:S.ed.clips[0].bg144.on,mode:S.ed.clips[0].bg144.mode,ok:!!document.querySelector('.e-details .bg144st.ok'),modes:document.querySelectorAll('.e-details [data-act=\"bg144-mode\"]').length})")
-    chk(f"{tag}: the background is removed on the device, frame by frame (3 a second)", bg["n"] == 18 and bg["calls"] >= 18 and bg["on"] and bg["ok"] and bg["modes"] == 4, bg)
+    chk(f"{tag}: the background is removed on the device, frame by frame (3 a second)", bg["n"] == 18 and bg["calls"] >= 18 and bg["on"] and bg["ok"] and bg["modes"] >= 4, bg)   # (v209: + Moving · Studio · Video)
     await E("()=>document.querySelector('.e-details [data-act=\"bg144-col\"][data-v=\"#ff5a5f\"]').click()"); await pg.wait_for_timeout(200)
     corner = await E(PIX, [2, .03, .05, .05, .05]); centre = await E(PIX, [2, .47, .45, .06, .1])
     chk(f"{tag}: behind the subject: the colour", near(corner, [255, 90, 95], 30) and not near(centre, [255, 90, 95], 30), {"corner": corner, "centre": centre})

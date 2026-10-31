@@ -4821,7 +4821,7 @@ function ensureFont(name,preview){if(!name||fontLoaded.has(name+(preview?":p":""
   const f=FONTS.find(x=>x[0]===name);if(!f)return Promise.resolve();const key=preview?name+":p":name;if(!fontLink.has(key)){fontLink.add(key);const l=document.createElement("link");l.rel="stylesheet";
     l.href="https://fonts.googleapis.com/css2?family="+encodeURIComponent(name).replace(/%20/g,"+")+":wght@"+f[3].join(";")+(preview?"&text="+encodeURIComponent(FSAMPLE[f[1]]||FSAMPLE.lat):"")+"&display=swap";document.head.appendChild(l)}
   return document.fonts.load((f[3].includes(700)?"700 ":"400 ")+"32px \""+name+"\"",preview?FSAMPLE[f[1]]:undefined).then(()=>{fontLoaded.add(key)}).catch(()=>{})}
-const fontStack=name=>'"'+name+'","IBM Plex Sans Arabic","Noto Sans SC","Noto Sans JP",Geist,sans-serif';
+const fontStack=name=>'"'+name+'","IBM Plex Sans Arabic","Noto Sans SC","Noto Sans JP","Noto Sans","Heebo","Noto Sans Thai","Noto Sans Devanagari","Noto Sans Bengali","Noto Sans Tamil","Noto Sans Ethiopic","Noto Sans Armenian","Noto Sans Georgian","Noto Sans KR",Geist,sans-serif';   // (v209: every script has a font to fall back on)
 /* ---- font picker sheet ---- */
 let FP_TARGET=null;
 function openFontSheet(target){FP_TARGET=target;S.fq=S.fq||"";const cur=target.get();const txt=target.sample||"";const isAr=/[\u0600-\u06FF]/.test(txt);S.fcat=S.fcat||(isAr?"ar":"all");renderFontSheet(cur,txt)}
@@ -24239,6 +24239,549 @@ hfrCard=(o=>function(j){const h=o.apply(this,arguments);if(!j||!j.meta||!j.meta.
   .ed143.mob .e-bar.ctx>button{min-width:0!important;flex:0 0 auto;padding-inline:5px!important;font-size:10.5px!important;gap:2px}
   .ed143.mob .e-bar.ctx>button>span{white-space:nowrap}}
 @media (max-width:379px){.ed143.mob .e-player .transport{gap:2px!important}.ed143.mob .e-player .transport>.btn.sm{min-width:29px;width:29px}.ed143.mob .transport .tc{font-size:10px!important}.ed143.mob .e-bar.ctx>button{padding-inline:2px!important;font-size:9.5px!important}}`;document.head.appendChild(st)})();
+
+/* ================= v209: SEVERAL AT ONCE · STUDIO LOOKS (MOVING GRADIENTS, LIQUID GLASS, LIQUID METAL, 3D) · A STUDIO BEHIND YOU · PAUSES & STUTTERS · DJ & BEATS · VOICES · FONTS & LANGUAGES ================= */
+// What the owner asked (Nov 1): you can't pick more than one video, picture or sound at a time; better voices for dubbing with
+// the reactions (laughs, sighs) in every language; faces whose lips and eyes act; bodies that move with weight; fonts for every
+// script; more languages; pauses and stutters cut by themselves; the background swapped for a studio — still, moving, a picture
+// or a video of yours; DJ and funk sounds; a voice taken apart and a speaker (the interviewer, the commentator) replaced; and the
+// ideas of four open projects in the editor, each in its right place with its icon:
+//   · react-three-fiber (MIT) — a 3D scene as part of the picture → "3D objects": a real 3D object (three.js, already on the site)
+//     that turns in the video — chrome, glass, clay, gold or neon; your logo or picture on a coin or a card
+//   · shadergradient (MIT) — a moving 3D gradient → "Moving gradients": ten looks drawn by our own shader, as a background, behind a
+//     person whose background was removed, or as a scene of their own
+//   · liquid-glass-js (MIT) — glass that bends what is behind it → "Liquid glass": a pane that really refracts the video under it
+//     (edges that bend, a blurred, magnified middle, a bright rim, colour fringes at the edge)
+//   · liquid-logo (Paper, PolyForm Shield — not open for products like ours: only the idea was taken, none of its code was read)
+//     → "Liquid metal": your logo or a word turned into flowing chrome, by our own shader
+// Our own code throughout (docs/THIRD_PARTY.md). Preview = export: every look is drawn the same way in the export, frame by frame.
+
+// ---- 1. several at once ---------------------------------------------------------------------------------------------------------
+// (a) the editor's "Your videos & pictures": a Select button, then taps tick items in order, then "Add 3" puts them all on the
+//     timeline one after another; a long press on a tile starts the selection with it
+const MS209={on:false,ids:[]};
+media143=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string"||!h.includes('class="e-lib"'))return h;
+  const bar='<div class="ms209b"><button type="button" class="btn sm'+(MS209.on?" primary":" ghost")+'" data-act="ms209" aria-pressed="'+MS209.on+'">'+ic("ms209")+esc(MS209.on?L("Done selecting","إنهاء التحديد"):L("Select several","حدّد عدة"))+"</button>"+
+    (MS209.on?'<span class="small mute">'+esc(L("Tap in the order you want them.","المس بالترتيب الذي تريده."))+"</span>":"")+"</div>";
+  h=h.replace('<div class="e-lib">',bar+'<div class="e-lib'+(MS209.on?" ms209on":"")+'">');
+  if(MS209.on){h=h.replace(/<button type="button" class="e-libi" data-act="lib143" data-v="([^"]+)"/g,(m,id)=>{const k=MS209.ids.indexOf(id);return'<button type="button" class="e-libi'+(k>=0?" on":"")+'" data-act="ms209-pick" data-v="'+id+'" aria-pressed="'+(k>=0)+'"'+(k>=0?' data-n="'+(k+1)+'"':"")});
+    if(MS209.ids.length)h+='<div class="ms209go"><button type="button" class="btn primary" data-act="ms209-add">'+ic("plus143")+esc(L("Add "+MS209.ids.length+" to the timeline","أضف "+MS209.ids.length+" إلى الخط الزمني"))+'</button><button type="button" class="btn ghost" data-act="ms209-clear">'+esc(L("Clear","مسح"))+"</button></div>"}
+  return h})(media143);
+async function msAdd209(){const ids=MS209.ids.slice();if(!ids.length)return;MS209.on=false;MS209.ids=[];let n=0;uiPill("➕ "+L("Adding…","جارٍ الإضافة…"));
+  try{for(const id of ids){const j=S.jobs.find(x=>x.id===id);if(!j)continue;try{await edUseJob(j,{stay:true,quiet:true});n++}catch(e){}}}finally{uiPill("")}
+  persist();renderView();toast(L(n+" added to the timeline, in the order you picked.",n+" أُضيفت إلى الخط الزمني بالترتيب الذي اخترته."),{type:"ok"})}
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="ms209"],[data-act="ms209-pick"],[data-act="ms209-add"],[data-act="ms209-clear"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();
+  const act=a.dataset.act;if(act==="ms209"){MS209.on=!MS209.on;if(!MS209.on)MS209.ids=[];renderView();return}
+  if(act==="ms209-clear"){MS209.ids=[];renderView();return}if(act==="ms209-add"){msAdd209();return}
+  const id=a.dataset.v,k=MS209.ids.indexOf(id);if(k>=0)MS209.ids.splice(k,1);else MS209.ids.push(id);renderView()},true);
+const LP209={t:0,id:null,fired:false};
+window.addEventListener("pointerdown",e=>{const b=e.target.closest&&e.target.closest('.e-lib .e-libi[data-act="lib143"]');if(!b||S.view!=="edit")return;LP209.fired=false;clearTimeout(LP209.t);LP209.id=b.dataset.v;
+  LP209.t=setTimeout(()=>{LP209.fired=true;MS209.on=true;if(!MS209.ids.includes(LP209.id))MS209.ids.push(LP209.id);try{navigator.vibrate&&navigator.vibrate(12)}catch(err){}renderView()},500)},true);
+["pointerup","pointercancel","pointermove"].forEach(n=>window.addEventListener(n,e=>{if(n==="pointermove"&&!(e.movementX||e.movementY))return;if(n==="pointermove"&&Math.abs(e.movementX)+Math.abs(e.movementY)<4)return;clearTimeout(LP209.t)},true));
+window.addEventListener("click",e=>{if(LP209.fired&&e.target.closest&&e.target.closest(".e-lib")){LP209.fired=false;e.preventDefault();e.stopImmediatePropagation()}},true);
+// (b) every upload that can take several does: overlays (pictures/videos as layers), sound effects, motion-scene pictures — each
+//     file is added in turn, the way one file is
+const MULTI209='input[type=file][data-edxly],input[type=file][data-edxsfx],input[type=file][data-addclip]';
+const mark209=root=>{try{(root||document).querySelectorAll(MULTI209).forEach(i=>{if(!i.multiple&&!i.hasAttribute("capture"))i.multiple=true})}catch(e){}};
+renderView=(o=>function(){const r=o.apply(this,arguments);mark209(document);return r})(renderView);
+hfSheet=(o=>function(){const r=o.apply(this,arguments);mark209($("#modalRoot"));return r})(hfSheet);
+window.addEventListener("change",e=>{const t=e.target;if(!t||!t.files||t.files.length<2||t._m209||!t.matches||!t.matches('input[data-edxly],input[data-edxsfx]'))return;
+  e.stopImmediatePropagation();const fs=[...t.files],sfx=!!t.dataset.edxsfx,t0=ED.t;let n=0;
+  for(const f of fs){let ok=false;try{const dt=new DataTransfer();dt.items.add(f);t.files=dt.files;ok=true}catch(err){}if(!ok)break;
+    if(sfx)ED.t=+(t0+n*.6).toFixed(2);t._m209=1;try{t.dispatchEvent(new Event("change",{bubbles:true}))}finally{t._m209=0}n++}
+  ED.t=t0;try{t.value=""}catch(err){}if(n>1)toast(sfx?L(n+" sounds added from the playhead.",n+" أصوات أُضيفت من المؤشر."):L(n+" layers added.","أُضيفت "+n+" طبقات."),{type:"ok"})},true);
+
+// ---- 2. our small WebGL kit: one hidden canvas, programs and textures kept ------------------------------------------------------
+const GL209={c:null,gl:null,p:{},t:{},ok:null};
+function gl209(w,h){if(GL209.ok===false)return null;if(!GL209.gl){try{const c=document.createElement("canvas");const gl=c.getContext("webgl",{premultipliedAlpha:true,preserveDrawingBuffer:true,alpha:true,antialias:false});
+    if(!gl){GL209.ok=false;return null}const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);Object.assign(GL209,{c,gl,ok:true})}catch(e){GL209.ok=false;return null}}
+  const c=GL209.c;w=Math.max(2,Math.round(w));h=Math.max(2,Math.round(h));if(c.width!==w)c.width=w;if(c.height!==h)c.height=h;GL209.gl.viewport(0,0,w,h);return GL209}
+function prog209(key,frag){const G=GL209,gl=G.gl;if(G.p[key])return G.p[key];const sh=(type,src)=>{const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s};
+  const p=gl.createProgram();gl.attachShader(p,sh(gl.VERTEX_SHADER,"attribute vec2 p;varying vec2 v;void main(){v=p*.5+.5;gl_Position=vec4(p,0.,1.);}"));gl.attachShader(p,sh(gl.FRAGMENT_SHADER,"precision highp float;varying vec2 v;"+frag));gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p));const u={};G.p[key]={p,u};return G.p[key]}
+function tex209(name,src,unit){const gl=GL209.gl;let t=GL209.t[name];if(!t){t=GL209.t[name]=gl.createTexture()}gl.activeTexture(gl.TEXTURE0+(unit||0));gl.bindTexture(gl.TEXTURE_2D,t);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);try{gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,src)}catch(e){}
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);return t}
+function run209(key,frag,w,h,uni,texs){const G=gl209(w,h);if(!G)return null;try{const gl=G.gl,P=prog209(key,frag);gl.useProgram(P.p);const loc=n=>P.u[n]!==undefined?P.u[n]:(P.u[n]=gl.getUniformLocation(P.p,n));
+    const a=gl.getAttribLocation(P.p,"p");gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,2,gl.FLOAT,false,0,0);
+    (texs||[]).forEach((x,i)=>{tex209(x[0],x[1],i);gl.uniform1i(loc(x[2]),i)});
+    for(const k in uni){const v=uni[k],l=loc(k);if(l==null)continue;if(typeof v==="number")gl.uniform1f(l,v);else if(v.length===2)gl.uniform2f(l,v[0],v[1]);else if(v.length===3)gl.uniform3f(l,v[0],v[1],v[2]);else if(v.length===4)gl.uniform4f(l,v[0],v[1],v[2],v[3])}
+    gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);return G.c}catch(e){if(!run209.warned){run209.warned=1;console.warn("v209 gl",e)}return null}}
+const rgb209=hex=>{const m=String(hex||"#888").replace("#","");const n=parseInt(m.length===3?m.split("").map(c=>c+c).join(""):m.slice(0,6),16)||0;return[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255]};
+// the noise every look shares (value noise + fbm, our own)
+const NOISE209="float h1(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float vn(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.-2.*f);return mix(mix(h1(i),h1(i+vec2(1.,0.)),u.x),mix(h1(i+vec2(0.,1.)),h1(i+vec2(1.,1.)),u.x),u.y);}"+
+  "float fbm(vec2 p){float a=.5,s=0.;for(int i=0;i<5;i++){s+=a*vn(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return s;}";
+
+// ---- 3. moving gradients (the shadergradient idea: three colours that flow like a soft 3D surface) -----------------------------
+// [key, EN, AR, colours, shape (0 flat · 1 sphere · 2 water), speed, strength, frequency, density, grain]
+const SG209=[["aurora","Aurora","الشفق",["#16e0bd","#3d5afe","#0b1026"],0,.35,4,3,1.2,.05],["lava","Lava","حمم",["#ff5a1f","#ffb627","#2a0505"],2,.45,5,4,1.5,.06],
+  ["ocean","Ocean","محيط",["#00c2ff","#0047ab","#001018"],2,.3,3.5,3,1.1,.05],["candy","Candy","حلوى",["#ff7eb3","#ffd3e8","#7a5cff"],1,.4,4,3.5,1.3,.04],
+  ["mint","Mint","نعناع",["#b7ffd8","#2dd4a8","#0b3b33"],0,.3,3,2.5,1,.04],["dusk","Dusk","غسق",["#ff8a5c","#5b2a86","#120a24"],1,.35,4.5,3,1.2,.05],
+  ["nebula","Nebula","سديم",["#c38bff","#ff4fd8","#0a0418"],1,.5,5.5,4,1.6,.07],["gold","Gold","ذهبي",["#ffe08a","#c8902c","#2b1a05"],2,.3,3.5,3,1,.05],
+  ["ice","Ice","جليد",["#ffffff","#a8e6ff","#3a6ea5"],0,.25,3,2.5,1,.03],["lime","nooi Lime","ليموني nooi",["#D9F43B","#7CFF4F","#0b0d08"],0,.4,4,3,1.3,.05]];
+const SGF209="uniform float t,asp,sp,st,fr,den,gr,ty;uniform vec3 c1,c2,c3;"+NOISE209+
+  "void main(){vec2 p=(v-.5)*vec2(asp,1.);float T=t*sp;if(ty>.5&&ty<1.5){float r=length(p);p*=1.+.7*r*r;}if(ty>1.5){p.y+=.07*sin(p.x*5.+T*1.6);p.x+=.04*sin(p.y*7.-T);}"+
+  "vec2 q=vec2(fbm(p*fr*.35+vec2(0.,T*.18)),fbm(p*fr*.35+vec2(5.2,1.3)-T*.14));float w=fbm(p*fr*.22+st*.22*q+vec2(T*.05,-T*.03));"+
+  "float b=sin((p.x*den+p.y*den*.6)*1.4+w*st+T*.7)*.5+.5;vec3 col=mix(c3,c1,smoothstep(.15,.85,w));col=mix(col,c2,smoothstep(.35,1.,b)*.8);"+
+  "float wx=fbm(p*fr*.22+st*.22*q+vec2(T*.05+.02,-T*.03))-w;col+=wx*7.*vec3(.9,.95,1.);col*=.92+.16*smoothstep(-.6,.6,p.y);"+
+  "col+=(h1(v*vec2(913.,577.)+fract(t*7.))-.5)*gr;gl_FragColor=vec4(clamp(col,0.,1.),1.);}";
+// one frame of a gradient (a canvas), or null when the device has no WebGL — then a 2D gradient stands in
+function sgFrame209(key,t,w,h){const g=SG209.find(x=>x[0]===key)||SG209[0],k=Math.min(1,720/Math.max(w,h)),cw=Math.max(8,Math.round(w*k)),ch=Math.max(8,Math.round(h*k));
+  return run209("sg",SGF209,cw,ch,{t,asp:w/h,sp:g[5],st:g[6],fr:g[7],den:g[8],gr:g[9],ty:g[4],c1:rgb209(g[3][0]),c2:rgb209(g[3][1]),c3:rgb209(g[3][2])})}
+function sgDraw209(ctx,key,t,x,y,w,h){const g=SG209.find(z=>z[0]===key)||SG209[0],c=sgFrame209(key,t,w,h);
+  if(c){ctx.drawImage(c,x,y,w,h);return}const gr=ctx.createLinearGradient(x,y,x+w*.6,y+h);const s=(Math.sin(t*g[5]*2)+1)/2;gr.addColorStop(0,g[3][0]);gr.addColorStop(.45+.2*s,g[3][1]);gr.addColorStop(1,g[3][2]);ctx.fillStyle=gr;ctx.fillRect(x,y,w,h)}
+
+// ---- 4. liquid glass (the liquid-glass-js idea): a pane that bends the video under it -------------------------------------------
+// what is under the pane is copied, then each pixel of the pane reads it from a bent place: hardly bent in the middle (a small
+// magnification and a soft blur), strongly bent near the edge (the rim), with a colour fringe and a light catch along the top
+const LGF209="uniform sampler2D tx;uniform vec2 res;uniform vec4 box;uniform float rad,str,blur,ca,ta,tm;uniform vec3 tc;"+
+  "float sd(vec2 p){vec2 q=abs(p-box.xy)-box.zw+rad;return length(max(q,0.))+min(max(q.x,q.y),0.)-rad;}"+
+  "vec3 rd(vec2 q,float b){vec3 s=vec3(0.);for(int i=0;i<12;i++){float a=float(i)*2.3998;float r=sqrt(float(i)/12.)*b;vec2 o=vec2(cos(a),sin(a))*r;vec2 u=(q+o)/res;s+=texture2D(tx,vec2(u.x,1.-u.y)).rgb;}return s/12.;}"+
+  "void main(){vec2 P=vec2(v.x*res.x,(1.-v.y)*res.y);float d=sd(P);float aa=1.-smoothstep(-1.,1.,d);if(aa<=0.){gl_FragColor=vec4(0.);return;}"+
+  "vec2 n=normalize(vec2(sd(P+vec2(1.,0.))-sd(P-vec2(1.,0.)),sd(P+vec2(0.,1.))-sd(P-vec2(0.,1.)))+1e-5);float E=max(4.,min(box.z,box.w)*.42);float e=1.-smoothstep(0.,E,-d);"+
+  "vec2 Q=box.xy+(P-box.xy)*(.95)+n*str*pow(e,1.7)+vec2(sin(P.y*.05+tm*1.3),cos(P.x*.04-tm))*str*.03;float b=blur*(.55+.45*(1.-e));"+
+  "vec3 c=vec3(rd(Q+n*ca*e,b).r,rd(Q,b).g,rd(Q-n*ca*e,b).b);c=mix(c,tc,ta);"+
+  "float hi=pow(e,5.)*max(dot(n,normalize(vec2(-.55,-.85))),0.)*1.15+pow(e,9.)*.3;float lo=pow(e,3.)*max(dot(n,normalize(vec2(.55,.85))),0.)*.22;"+
+  "c=c*(1.-lo)+vec3(hi);gl_FragColor=vec4(c*aa,aa);}";
+const LGS209={card:["Card","بطاقة"],pill:["Pill","كبسولة"],circle:["Circle","دائرة"]};
+const LGT209={clear:["Clear","شفاف","#ffffff",0],frost:["Frosted","مُغبَّش","#ffffff",.14],dark:["Smoked","مدخّن","#000000",.28],tint:["Colour","ملوّن",null,.2]};
+function glass209(ctx,W,H,it,lt,len,a,ac){const U=Math.min(W,H),sh=it.lg||"card",sz=it.sz||1,fin=clamp(lt/.5,0,1),s=.9+.1*ezo(fin);
+  let w=sh==="circle"?U*.44:sh==="pill"?U*.74:U*.8,h=sh==="circle"?U*.44:sh==="pill"?U*.2:U*.48;w*=sz*s;h*=sz*s;const rad=sh==="card"?U*.06*sz:Math.min(w,h)/2;
+  const X=W*(it.x??.5),Y=H*(it.y??.5)+Math.sin(lt*1.2)*U*.008,tn=LGT209[it.lt209]||LGT209.frost,tc=rgb209(tn[2]||ac),blur=U*(it.lt209==="clear"?.006:.02),str=U*.05*(it.lgs??1);
+  // the shadow it casts (2D), then the pane (WebGL reading what is drawn so far)
+  ctx.save();ctx.globalAlpha*=a*.85;ctx.shadowColor="rgba(0,0,0,.35)";ctx.shadowBlur=U*.05;ctx.shadowOffsetY=U*.02;rr150(ctx,X-w/2,Y-h/2,w,h,rad);ctx.fillStyle="rgba(0,0,0,.18)";ctx.fill();ctx.restore();
+  const cv=ctx.canvas,k=cv&&cv.width?cv.width/W:1,m=str+blur+6,sx=Math.max(0,Math.floor((X-w/2-m)*k)),sy=Math.max(0,Math.floor((Y-h/2-m)*k)),sw=Math.min(cv.width-sx,Math.ceil((w+2*m)*k)),shh=Math.min(cv.height-sy,Math.ceil((h+2*m)*k));
+  let out=null;if(sw>4&&shh>4){const reg=edxCv("lg209r",sw,shh),rx=reg.getContext("2d");rx.clearRect(0,0,sw,shh);try{rx.drawImage(cv,sx,sy,sw,shh,0,0,sw,shh)}catch(e){}
+    out=run209("lg",LGF209,sw,shh,{res:[sw,shh],box:[(X*k-sx),(Y*k-sy),w*k/2,h*k/2],rad:rad*k,str:str*k,blur:blur*k,ca:U*.006*k,ta:tn[3],tc,tm:lt},[["lg209",reg,"tx"]])}
+  ctx.save();ctx.globalAlpha*=a;if(out){ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(out,sx,sy,sw,shh);ctx.restore();ctx.save();ctx.globalAlpha*=a}
+  else{rr150(ctx,X-w/2,Y-h/2,w,h,rad);ctx.save();ctx.clip();ctx.filter="blur("+Math.round(blur)+"px)";try{ctx.drawImage(cv,(X-w/2)/1,(Y-h/2)/1,w,h,X-w/2-w*.03,Y-h/2-h*.03,w*1.06,h*1.06)}catch(e){}ctx.filter="none";ctx.fillStyle="rgba(255,255,255,"+(tn[3]||.08)+")";ctx.fill();ctx.restore();
+    rr150(ctx,X-w/2,Y-h/2,w,h,rad);ctx.strokeStyle="rgba(255,255,255,.6)";ctx.lineWidth=U*.004;ctx.stroke()}
+  const dark=it.lt209==="dark";if(it.t1){const px=Math.min(h*.26,U*.075)*(sh==="pill"?1.3:1);T206(ctx,it.t1,X,it.t2&&sh!=="pill"?Y-px*.45:Y,px,dark?"#fff":"#fff",w*.84,800,"center","rgba(0,0,0,.35)")}
+  if(it.t2&&sh!=="pill"){const px=Math.min(h*.13,U*.042);ctx.globalAlpha*=.82;T206(ctx,it.t2,X,Y+px*1.3,px,"#fff",w*.84,600,"center","rgba(0,0,0,.3)")}
+  ctx.restore();return{w,h}}
+
+// ---- 5. liquid metal (the liquid-logo idea, our own shader): a logo or a word as flowing chrome ------------------------------------
+const LMF209="uniform sampler2D mk,hg;uniform vec2 px;uniform float t,rev,bump,flow;uniform vec3 tint;uniform float tamt;"+NOISE209+
+  "void main(){float m=texture2D(mk,v).a;if(m<.004){gl_FragColor=vec4(0.);return;}vec2 wob=vec2(sin(v.y*9.+t*1.3),cos(v.x*8.-t*1.1))*.004*flow;"+
+  "float hx=texture2D(hg,v+wob+vec2(px.x,0.)).a-texture2D(hg,v+wob-vec2(px.x,0.)).a,hy=texture2D(hg,v+wob+vec2(0.,px.y)).a-texture2D(hg,v+wob-vec2(0.,px.y)).a,h=texture2D(hg,v+wob).a;"+
+  "vec3 n=normalize(vec3(-hx*bump,-hy*bump,1.));vec3 r=reflect(vec3(0.,0.,-1.),n);float e=r.y*1.25+r.x*.55+fbm(v*3.+vec2(t*.08,0.))*.7+t*.18*flow;"+
+  "float c=.5+.5*sin(e*8.8);vec3 col=mix(vec3(.06,.07,.09),vec3(1.),smoothstep(.18,.96,c));col+=vec3(pow(c,28.))*.9;col=mix(col,col*tint*1.4,tamt);"+
+  "col+=vec3(pow(1.-n.z,2.))*.55;float th=1.-rev;float k=smoothstep(th-.06,th+.06,h*.75+.25*fbm(v*4.+3.));m*=k;gl_FragColor=vec4(clamp(col,0.,1.)*m,m);}";
+const MET209={};
+function metMask209(it){const pic=(it.pics||[])[0],txt=String(it.t1||"nooi").slice(0,24),key=(pic||"")+"|"+txt;let r=MET209[key];if(r&&r.ok)return r;
+  let src=null,sw=0,sh=0;if(pic){const p=img206(pic);if(!p||!p.ok){return null}src=p.im;sw=p.im.naturalWidth;sh=p.im.naturalHeight}
+  const S0=640,mk=document.createElement("canvas"),x=mk.getContext("2d");
+  if(src){const k=S0/Math.max(sw,sh);mk.width=Math.max(8,Math.round(sw*k));mk.height=Math.max(8,Math.round(sh*k));x.drawImage(src,0,0,mk.width,mk.height);
+    // a picture with no transparency: its dark-on-light (or light-on-dark) shape becomes the mask
+    const d=x.getImageData(0,0,mk.width,mk.height),D=d.data;let opaque=true;for(let i=3;i<D.length;i+=4*97)if(D[i]<250){opaque=false;break}
+    if(opaque){let lum=0,n=0;for(let i=0;i<D.length;i+=4*61){lum+=D[i]*.3+D[i+1]*.59+D[i+2]*.11;n++}const bgLight=lum/n>128;for(let i=0;i<D.length;i+=4){const l=D[i]*.3+D[i+1]*.59+D[i+2]*.11;D[i+3]=Math.round(clamp(bgLight?(255-l)*1.6-40:l*1.6-40,0,255))}x.putImageData(d,0,0)}}
+  else{x.font="900 200px 'Geist','IBM Plex Sans Arabic',sans-serif";const tw=Math.max(40,x.measureText(txt).width);mk.width=Math.round(tw+80);mk.height=280;x.font="900 200px 'Geist','IBM Plex Sans Arabic',sans-serif";x.textAlign="center";x.textBaseline="middle";x.direction=isRtl(txt)?"rtl":"ltr";x.fillStyle="#fff";x.fillText(txt,mk.width/2,mk.height/2+8)}
+  const hg=document.createElement("canvas");hg.width=mk.width;hg.height=mk.height;const y=hg.getContext("2d");y.filter="blur("+Math.max(4,Math.round(mk.width*.018))+"px)";y.drawImage(mk,0,0);y.filter="none";
+  r=MET209[key]={ok:true,mk,hg,w:mk.width,h:mk.height};return r}
+function metal209(ctx,W,H,it,lt,len,a,ac){const U=Math.min(W,H),M=metMask209(it);if(!M)return{w:U*.5,h:U*.3};const fin=clamp(lt/1.1,0,1),sz=it.sz||1;
+  let w=Math.min(W*.8,U*.78)*sz,h=w*M.h/M.w;if(h>H*.6){h=H*.6;w=h*M.w/M.h}const X=W*(it.x??.5),Y=H*(it.y??.5);
+  const tint=it.mt209==="gold"?"#ffcf6a":it.mt209==="rose"?"#ff9fb7":it.mt209==="accent"?ac:"#ffffff",tamt=it.mt209&&it.mt209!=="chrome"?.55:0;
+  const out=run209("lm",LMF209,M.w,M.h,{px:[2/M.w,2/M.h],t:lt,rev:ezo(fin),bump:7,flow:it.flow209??1,tint:rgb209(tint),tamt},[["lm209m",M.mk,"mk"],["lm209h",M.hg,"hg"]]);
+  ctx.save();ctx.globalAlpha*=a;if(out){ctx.shadowColor="rgba(0,0,0,.45)";ctx.shadowBlur=U*.03;ctx.shadowOffsetY=U*.012;ctx.drawImage(out,X-w/2,Y-h/2,w,h)}
+  else{ctx.globalAlpha*=ezo(fin);const g=ctx.createLinearGradient(0,Y-h/2,0,Y+h/2);g.addColorStop(0,"#fff");g.addColorStop(.5,"#6b7280");g.addColorStop(.52,"#1f2329");g.addColorStop(1,"#e5e7eb");
+    const tmp=edxCv("lm209f",M.w,M.h),tx=tmp.getContext("2d");tx.clearRect(0,0,M.w,M.h);tx.drawImage(M.mk,0,0);tx.globalCompositeOperation="source-in";tx.fillStyle=g;tx.fillRect(0,0,M.w,M.h);tx.globalCompositeOperation="source-over";ctx.drawImage(tmp,X-w/2,Y-h/2,w,h)}
+  if(it.t2){ctx.shadowBlur=0;T206(ctx,it.t2,X,Y+h/2+U*.07,U*.045,"#fff",W*.8,700,"center","rgba(0,0,0,.4)")}ctx.restore();return{w,h}}
+
+// ---- 6. 3D objects (the react-three-fiber idea: a real 3D scene inside the picture) — three.js, already on the site --------------
+const O3D209={r:null,scene:null,cam:null,obj:null,key:"",loading:null};
+const O3S209={knot:["Knot","عقدة"],gem:["Gem","جوهرة"],sphere:["Sphere","كرة"],ring:["Ring","حلقة"],cube:["Cube","مكعب"],coin:["Coin (your picture)","عملة (صورتك)"],card:["Card (your picture)","بطاقة (صورتك)"]};
+const O3M209={chrome:["Chrome","كروم"],glass:["Glass","زجاج"],gold:["Gold","ذهب"],clay:["Clay","صلصال"],neon:["Neon","نيون"]};
+function three209(){if(window.THREE&&THREE.WebGLRenderer)return Promise.resolve(true);if(!O3D209.loading)O3D209.loading=Promise.resolve(ensureThree()).then(ok=>{if(S.view==="edit")renderView();return!!ok}).catch(()=>false);return O3D209.loading}
+function o3dFrame209(it,lt,cw,ch,ac){const T=window.THREE;if(!T||!T.WebGLRenderer){three209();return null}const Q=O3D209;
+  try{if(!Q.r){Q.r=new T.WebGLRenderer({alpha:true,antialias:true,preserveDrawingBuffer:true});Q.r.setPixelRatio(1);if(T.sRGBEncoding)Q.r.outputEncoding=T.sRGBEncoding;Q.scene=new T.Scene();Q.cam=new T.PerspectiveCamera(30,1,.1,100);Q.cam.position.set(0,0,6.2);
+      Q.scene.add(new T.HemisphereLight(0xffffff,0x202330,.55));const d=new T.DirectionalLight(0xffffff,1.25);d.position.set(3,4,5);Q.scene.add(d);const d2=new T.DirectionalLight(0x9fb8ff,.55);d2.position.set(-4,-2,2);Q.scene.add(d2);
+      const ec=document.createElement("canvas");ec.width=512;ec.height=256;const x=ec.getContext("2d"),g=x.createLinearGradient(0,0,0,256);g.addColorStop(0,"#ffffff");g.addColorStop(.42,"#9aa3ae");g.addColorStop(.55,"#262a31");g.addColorStop(1,"#0a0b0d");x.fillStyle=g;x.fillRect(0,0,512,256);
+      x.fillStyle="#fff";x.fillRect(48,36,96,44);x.fillRect(320,26,130,34);x.fillRect(214,92,44,18);const et=new T.CanvasTexture(ec);et.mapping=T.EquirectangularReflectionMapping;
+      if(T.PMREMGenerator){const pm=new T.PMREMGenerator(Q.r);Q.scene.environment=pm.fromEquirectangular(et).texture;pm.dispose()}}
+    const shape=it.o3s||"knot",mat=it.o3m||"chrome",pic=(it.pics||[])[0]||"",col=it.o3c||ac,key=shape+"|"+mat+"|"+col+"|"+pic+"|"+(pic&&IMG206[pic]&&IMG206[pic].ok?1:0);
+    if(Q.key!==key){if(Q.obj){Q.scene.remove(Q.obj);Q.obj.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){[].concat(o.material).forEach(m=>{if(m.map)m.map.dispose();m.dispose()})}})}
+      const C=new T.Color(col),mk=()=>mat==="glass"&&T.MeshPhysicalMaterial?new T.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:.05,transmission:1,thickness:1.2,ior:1.45,transparent:true,opacity:1,envMapIntensity:1.4}):
+        mat==="gold"?new T.MeshStandardMaterial({color:0xffc35a,metalness:1,roughness:.18}):mat==="clay"?new T.MeshStandardMaterial({color:C,metalness:0,roughness:.9}):
+        mat==="neon"?new T.MeshStandardMaterial({color:C,emissive:C,emissiveIntensity:1.4,metalness:.2,roughness:.4}):new T.MeshStandardMaterial({color:0xffffff,metalness:1,roughness:.12});
+      let geo,obj;if(shape==="gem")geo=new T.IcosahedronGeometry(1.25,0);else if(shape==="sphere")geo=new T.SphereGeometry(1.2,64,48);else if(shape==="ring")geo=new T.TorusGeometry(1.05,.36,48,160);
+      else if(shape==="cube")geo=new T.BoxGeometry(1.6,1.6,1.6,1,1,1);else if(shape==="coin")geo=new T.CylinderGeometry(1.3,1.3,.22,96,1);else if(shape==="card")geo=new T.BoxGeometry(2.4,1.5,.06);else geo=new T.TorusKnotGeometry(.85,.3,220,32);
+      const m=mk();if(shape==="gem")m.flatShading=true;
+      if((shape==="coin"||shape==="card")&&pic&&IMG206[pic]&&IMG206[pic].ok){const tx=new T.Texture(IMG206[pic].im);tx.needsUpdate=true;if(T.sRGBEncoding)tx.encoding=T.sRGBEncoding;const face=new T.MeshStandardMaterial({map:tx,metalness:.1,roughness:.5});
+        obj=new T.Mesh(geo,shape==="coin"?[m,face,face]:[m,m,m,m,face,face]);if(shape==="coin")obj.rotation.x=Math.PI/2}else obj=new T.Mesh(geo,m);
+      const grp=new T.Group();grp.add(obj);Q.obj=grp;Q.scene.add(grp);Q.key=key;if(pic&&!(IMG206[pic]&&IMG206[pic].ok))img206(pic)}
+    const sp=it.o3sp??1,s=clamp(lt/.6,0,1);Q.obj.rotation.y=lt*.9*sp;Q.obj.rotation.x=.35*Math.sin(lt*.7)+(it.o3s==="coin"?0:.2);Q.obj.position.y=.12*Math.sin(lt*1.3);const sc=.25+.75*backOut131(s);Q.obj.scale.set(sc,sc,sc);
+    Q.r.setSize(cw,ch,false);Q.cam.aspect=cw/ch;Q.cam.updateProjectionMatrix();Q.r.setClearColor(0x000000,0);Q.r.render(Q.scene,Q.cam);return Q.r.domElement}catch(e){if(!o3dFrame209.w){o3dFrame209.w=1;console.warn("v209 3d",e)}return null}}
+function obj3d209(ctx,W,H,it,lt,len,a,ac){const U=Math.min(W,H),sz=(it.sz||1)*U*.8,cw=Math.min(900,Math.round(sz*(ctx.canvas&&W?ctx.canvas.width/W:1))),X=W*(it.x??.5),Y=H*(it.y??.5);
+  const c=o3dFrame209(it,lt,cw,cw,ac);ctx.save();ctx.globalAlpha*=a;
+  if(c){ctx.save();ctx.globalAlpha*=.35;const g=ctx.createRadialGradient(X,Y+sz*.42,0,X,Y+sz*.42,sz*.32);g.addColorStop(0,"rgba(0,0,0,.6)");g.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=g;ctx.fillRect(X-sz*.4,Y+sz*.3,sz*.8,sz*.24);ctx.restore();ctx.drawImage(c,X-sz/2,Y-sz/2,sz,sz)}
+  else{ctx.fillStyle="rgba(255,255,255,.08)";ctx.beginPath();ctx.arc(X,Y,sz*.3,0,7);ctx.fill();T206(ctx,L("3D loading…","جارٍ تحميل الثلاثي…"),X,Y,U*.035,"#fff",sz,600)}
+  if(it.t1)T206(ctx,it.t1,X,Y+sz*.5+U*.02,U*.06,"#fff",W*.86,900,"center","rgba(0,0,0,.45)");ctx.restore();return{w:sz,h:sz}}
+
+// ---- 7. the four looks are scenes on the timeline (Graphics track): drawn straight onto the picture, so glass sees the video ----
+const DIRECT209={sgrad209:1,lglass209:1,lmetal209:1,obj3d209:1};
+Object.assign(MGN150,{sgrad209:["Moving gradient","تدرّج متحرك"],lglass209:["Liquid glass","زجاج سائل"],lmetal209:["Liquid metal","معدن سائل"],obj3d209:["3D object","مجسّم ثلاثي"]});
+draw164=(o=>function(ctx,W,H,t,it,part){if(!it||!DIRECT209[it.sc])return o.apply(this,arguments);part=part||"all";const lt=t-it.start,len=Math.max(.2,it.end-it.start),ac=sceneAc164(it),U=Math.min(W,H);
+  const fin=clamp(lt/.45,0,1),fout=clamp((len-lt)/.35,0,1),a=Math.min(ezo(fin),fout);if(a<=0)return;let r={w:U*.6,h:U*.4};
+  ctx.save();try{if(it.sc==="sgrad209"){if(part!=="fg"){ctx.globalAlpha*=it.bg209==="blend"?.55*a:a;sgDraw209(ctx,it.sg||"aurora",t,0,0,W,H);r={w:W,h:H}}
+      if(part!=="bg"&&it.t1){ctx.globalAlpha=a;const s=.92+.08*ezo(clamp(lt/.6,0,1));ctx.translate(W/2,H/2);ctx.scale(s,s);lines162(ctx,it.t1,0,0,900,U*.11,"#fff",W*.84,"center","rgba(0,0,0,.35)",true);
+        if(it.t2){ctx.globalAlpha*=.85;T206(ctx,it.t2,0,U*.12,U*.045,"#fff",W*.8,600,"center","rgba(0,0,0,.3)")}}}
+    else if(part!=="bg"){if(it.sc==="lglass209")r=glass209(ctx,W,H,it,lt,len,a,ac);else if(it.sc==="lmetal209")r=metal209(ctx,W,H,it,lt,len,a,ac);else if(it.sc==="obj3d209")r=obj3d209(ctx,W,H,it,lt,len,a,ac)}}
+  catch(e){if(!draw164.w209){draw164.w209=1;console.warn("v209 look",e)}}finally{ctx.restore()}try{MG164.r[it.id]=r}catch(e){}})(draw164);
+// the export waits for the 3D engine and the scenes' pictures, as it does for v206's
+edExport=(o=>async function(){const E=S.ed;if((E.infos||[]).some(x=>x.type==="mg150"&&x.sc==="obj3d209"))try{await three209()}catch(e){}
+  for(const x of(E.infos||[]))if(x.type==="mg150"&&DIRECT209[x.sc])for(const u of(x.pics||[]))if(u){const p=img206(u);if(p&&p.p)try{await p.p}catch(e){}}return o.apply(this,arguments)})(edExport);
+
+// ---- 8. the Effects tab: "Studio looks" — every look a tile drawn by itself, one tap puts it at the playhead ------------------------
+Object.assign(ICONS,{studio209:'<path d="M4 18c3-6 6-9 8-9s5 3 8 9"/><circle cx="12" cy="6" r="2.4"/><path d="M3 21h18"/>',ms209:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M15 17.5l2 2 4-4"/>',
+  dj209:'<circle cx="8" cy="12" r="5"/><circle cx="8" cy="12" r="1.2"/><path d="M15 6h6M15 10h6M15 14h4M15 18h6"/>',voice209:'<path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/><path d="M19 4l2 2M21 4l-2 2"/>',
+  cut209:'<path d="M3 12h3l2-5 2 10 2-5h2"/><path d="M15 8l6 8M21 8l-6 8"/>',beat209:'<rect x="3" y="10" width="3" height="10" rx="1"/><rect x="8.5" y="5" width="3" height="15" rx="1"/><rect x="14" y="12" width="3" height="8" rx="1"/><rect x="19" y="7" width="2" height="13" rx="1"/>'});
+TABS143.forEach(T=>{if(T[0]==="effects"&&!T[4].includes("studio209"))T[4].push("studio209");if(T[0]==="audio"){if(!T[4].includes("dj209"))T[4].push("dj209");if(!T[4].includes("voice209"))T[4].push("voice209")}});
+Object.assign(N143,{studio209:["Studio looks","مظهر الاستوديو"],dj209:["DJ & beats","دي جي وإيقاعات"],voice209:["Voices","الأصوات"]});
+const ST209=()=>[["lglass209",L("Liquid glass","زجاج سائل"),L("A glass pane that bends the video behind it","لوح زجاجي يثني الفيديو خلفه"),{lg:"card",lt209:"frost",t1:L("Clear as glass","صافٍ كالزجاج"),t2:L("Design that flows","تصميم ينساب"),dur:4}],
+  ["lmetal209",L("Liquid metal","معدن سائل"),L("Your logo or a word as flowing chrome","شعارك أو كلمة كالكروم المنساب"),{t1:"nooi",mt209:"chrome",dur:4,bg:"none"}],
+  ["obj3d209",L("3D object","مجسّم ثلاثي الأبعاد"),L("A real 3D object turning in the video","مجسّم ثلاثي حقيقي يدور في الفيديو"),{o3s:"knot",o3m:"chrome",dur:5}],
+  ["sgrad209",L("Moving gradient","تدرّج متحرك"),L("A moving 3D gradient — a scene or a background","تدرّج ثلاثي متحرك — مشهد أو خلفية"),{sg:"aurora",t1:"",dur:5}]];
+function lookAdd209(sc,extra){const d=(ST209().find(x=>x[0]===sc)||[])[3]||{};const{dur,...rest}=Object.assign({},d,extra||{});const it=mgAdd150(sc,rest);
+  if(it){if(dur)it.end=+(it.start+dur).toFixed(2);if(sc==="obj3d209")three209();persist();renderView();toast(L("Added at the playhead — tap it to change its look.","أُضيف عند المؤشر — المسه لتغيير مظهره."),{type:"ok"})}return it}
+function studioPanel209(){const sec=(t)=>'<span class="lbl st209h">'+esc(t)+"</span>";
+  return'<p class="small mute e-hint">'+esc(L("Looks drawn live on the video, the same in the exported file. Tap one to add it at the playhead.","مظاهر تُرسم حيّة على الفيديو، وهي نفسها في الملف المُصدَّر. المس واحداً لإضافته عند المؤشر."))+"</p>"+
+    '<div class="st209g">'+ST209().map(x=>'<button type="button" class="st209t" data-act="st209-add" data-v="'+x[0]+'"><canvas class="st209c" data-sc="'+x[0]+'" width="240" height="135" aria-hidden="true"></canvas><b>'+esc(x[1])+"</b><small>"+esc(x[2])+"</small></button>").join("")+"</div>"+
+    sec(L("Moving gradients · 10","تدرّجات متحركة · 10"))+'<div class="st209s">'+SG209.map(g=>'<button type="button" class="st209gt" data-act="st209-grad" data-v="'+g[0]+'"><canvas class="st209c" data-sg="'+g[0]+'" width="160" height="90" aria-hidden="true"></canvas><span>'+esc(L(g[1],g[2]))+"</span></button>").join("")+"</div>"+
+    '<p class="small mute">'+esc(L("A gradient can also go behind a person: Clip → Background → Moving.","يمكن أن يوضع التدرّج خلف الشخص أيضاً: المقطع ← الخلفية ← متحرك."))+"</p>"}
+EDX_PANELS.studio209=studioPanel209;
+// (the tiles: each look drawn once at a good moment; gradients drawn by the shader)
+function paint209(){document.querySelectorAll("canvas.st209c:not([data-p])").forEach(c=>{c.dataset.p="1";const x=c.getContext("2d"),w=c.width,h=c.height;try{
+    if(c.dataset.sg){sgDraw209(x,c.dataset.sg,3.1,0,0,w,h);return}const sc=c.dataset.sc,d=(ST209().find(z=>z[0]===sc)||[])[3]||{},it=Object.assign({id:"t209_"+sc,type:"mg150",sc,start:0,end:4,pics:[]},d,{t2:""});
+    if(sc==="lglass209"||sc==="sgrad209"||sc==="lmetal209"){sgDraw209(x,sc==="lmetal209"?"ice":"nebula",2,0,0,w,h);if(sc==="lglass209"){x.fillStyle="#fff";x.font="900 34px Geist,sans-serif";x.textAlign="center";x.fillText("nooi",w*.3,h*.55);x.fillStyle="#D9F43B";x.beginPath();x.arc(w*.75,h*.4,22,0,7);x.fill()}}
+    else{x.fillStyle="#0b0d10";x.fillRect(0,0,w,h)}
+    if(sc!=="sgrad209")draw164(x,w,h,2.2,it,"all");if(sc==="obj3d209"&&!(window.THREE&&THREE.WebGLRenderer))delete c.dataset.p}catch(e){}})}
+renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="edit")requestAnimationFrame(()=>{try{paint209()}catch(e){}});return r})(renderView);
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="st209-add"],[data-act="st209-grad"],[data-act="st209-opt"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();
+  if(a.dataset.act==="st209-add"){lookAdd209(a.dataset.v);return}if(a.dataset.act==="st209-grad"){lookAdd209("sgrad209",{sg:a.dataset.v});return}
+  const it=edItem(edPick());if(!it||it.type!=="mg150")return;if(typeof histPush==="function")try{histPush()}catch(err){}const[k,v]=[a.dataset.k,a.dataset.v];it[k]=k==="sz"||k==="o3sp"||k==="lgs"||k==="flow209"?+v:v;
+  if(it.sc==="lmetal209")for(const key in MET209)if(!MET209[key].ok)delete MET209[key];persist();renderView()},true);
+// the selected look's own options (shape, finish, material, preset) in the Graphics panel, as chips with their names
+const OPT209={sgrad209:[["sg",L("Look","المظهر"),SG209.map(g=>[g[0],L(g[1],g[2])])],["bg209",L("Over the video","فوق الفيديو"),[["full",L("Full","كامل")],["blend",L("Blended","ممزوج")]]]],
+  lglass209:[["lg",L("Shape","الشكل"),Object.keys(LGS209).map(k=>[k,L(...LGS209[k])])],["lt209",L("Glass","الزجاج"),Object.keys(LGT209).map(k=>[k,L(LGT209[k][0],LGT209[k][1])])],["lgs",L("Bend","الانثناء"),[[".5",L("Soft","خفيف")],["1",L("Normal","عادي")],["1.8",L("Strong","قوي")]]],["sz",L("Size","الحجم"),[[".7","S"],["1","M"],["1.25","L"]]]],
+  lmetal209:[["mt209",L("Metal","المعدن"),[["chrome",L("Chrome","كروم")],["gold",L("Gold","ذهب")],["rose",L("Rose gold","ذهب وردي")],["accent",L("Your colour","لونك")]]],["flow209",L("Flow","الانسياب"),[["0",L("Still","ساكن")],["1",L("Flowing","منساب")],["2.2",L("Liquid","سائل")]]],["sz",L("Size","الحجم"),[[".7","S"],["1","M"],["1.25","L"]]]],
+  obj3d209:[["o3s",L("Object","المجسّم"),Object.keys(O3S209).map(k=>[k,L(...O3S209[k])])],["o3m",L("Material","الخامة"),Object.keys(O3M209).map(k=>[k,L(...O3M209[k])])],["o3sp",L("Spin","الدوران"),[["0",L("Still","ثابت")],[".5",L("Slow","بطيء")],["1",L("Normal","عادي")],["2",L("Fast","سريع")]]],["sz",L("Size","الحجم"),[[".7","S"],["1","M"],["1.3","L"]]]]};
+const DEFV209={sg:"aurora",bg209:"full",lg:"card",lt209:"frost",lgs:1,sz:1,mt209:"chrome",flow209:1,o3s:"knot",o3m:"chrome",o3sp:1};
+const same209=(a,b)=>{const x=String(a),y=String(b);return x===y||(x!==""&&y!==""&&!isNaN(+x)&&!isNaN(+y)&&+x===+y)};
+VIEWS.edit=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string")return h;const p=edPick(),si=p&&p.k==="info"&&edItem(p);if(!si||si.type!=="mg150"||!DIRECT209[si.sc])return h;
+  const rows=OPT209[si.sc].map(([k,lab,opts])=>'<span class="lbl">'+esc(lab)+'</span><div class="chips st209o">'+opts.map(x=>'<button type="button" class="chip" data-act="st209-opt" data-k="'+k+'" data-v="'+x[0]+'" aria-pressed="'+same209(si[k]??DEFV209[k],x[0])+'">'+esc(x[1])+"</button>").join("")+"</div>").join("");
+  const pics=(si.sc==="lmetal209"||si.sc==="obj3d209")?'<span class="lbl">'+esc(si.sc==="lmetal209"?L("Your logo (or the words above)","شعارك (أو الكلمات أعلاه)"):L("Your picture (on a coin or a card)","صورتك (على عملة أو بطاقة)"))+'</span><div class="pk206"><button type="button" class="pk206b" data-act="mg206-pic" data-i="0" aria-label="'+esc(L("Picture","الصورة"))+'">'+((si.pics||[])[0]?'<img src="'+esc(si.pics[0])+'" alt="">':"<b>+</b>")+"</button></div>":"";
+  return h.replace(/<div class="chips mg150c">[\s\S]*?<\/div>/,'<div class="st209box">'+rows+pics+"</div>")})(VIEWS.edit);
+
+// ---- 9. a studio behind you: the clip's background swapped for a moving gradient, a studio set, your video, or your pictures, with
+//         a studio finish (soft edges, light from the new background on the person's edges, a contact shadow, matching colour) ----
+const SET209=[["cyc",["White cyclorama","سايكلوراما بيضاء"]],["podcast",["Podcast studio","استوديو بودكاست"]],["news",["News desk","مكتب أخبار"]],["neon",["Neon room","غرفة نيون"]],["window",["Sunset window","نافذة الغروب"]],["stage",["Stage lights","أضواء المسرح"]]];
+function set209(x,key,w,h,t){x.save();if(key==="cyc"){const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,"#f4f5f7");g.addColorStop(.62,"#e3e5ea");g.addColorStop(1,"#c9ccd3");x.fillStyle=g;x.fillRect(0,0,w,h);const r=x.createRadialGradient(w/2,h*.45,0,w/2,h*.45,Math.max(w,h)*.7);r.addColorStop(0,"rgba(255,255,255,.7)");r.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=r;x.fillRect(0,0,w,h)}
+  else if(key==="podcast"){x.fillStyle="#141110";x.fillRect(0,0,w,h);for(let i=0;i<14;i++){const px=(i*137%100)/100*w,py=(i*61%100)/100*h*.7,rr=Math.max(w,h)*(.02+.03*((i*37)%10)/10),a=.25+.2*Math.sin(t*.8+i);const g=x.createRadialGradient(px,py,0,px,py,rr);g.addColorStop(0,"rgba(255,170,90,"+a.toFixed(3)+")");g.addColorStop(1,"rgba(255,170,90,0)");x.fillStyle=g;x.fillRect(px-rr,py-rr,rr*2,rr*2)}
+    x.fillStyle="rgba(60,40,30,.6)";x.fillRect(0,h*.78,w,h*.22)}
+  else if(key==="news"){const g=x.createLinearGradient(0,0,w,h);g.addColorStop(0,"#0a2a6b");g.addColorStop(1,"#02081c");x.fillStyle=g;x.fillRect(0,0,w,h);x.globalAlpha=.18;for(let i=0;i<8;i++){x.fillStyle=i%2?"#4dc3ff":"#ffffff";x.beginPath();const a=-.9+i*.25+Math.sin(t*.3)*.05;x.moveTo(w*.5,-h*.1);x.lineTo(w*.5+Math.cos(a)*w*1.5,Math.sin(a+1.6)*h*1.5);x.lineTo(w*.5+Math.cos(a+.08)*w*1.5,Math.sin(a+1.68)*h*1.5);x.fill()}x.globalAlpha=1;x.fillStyle="rgba(255,255,255,.08)";x.fillRect(0,h*.82,w,h*.18)}
+  else if(key==="neon"){x.fillStyle="#08060f";x.fillRect(0,0,w,h);[["#ff2fd6",.18],["#2fd8ff",.82]].forEach(([c,px],i)=>{x.shadowColor=c;x.shadowBlur=Math.max(w,h)*.04;x.strokeStyle=c;x.lineWidth=Math.max(w,h)*.008;x.beginPath();x.arc(w*px,h*.36,Math.min(w,h)*.16+Math.sin(t*1.5+i)*2,0,7);x.stroke()});x.shadowBlur=0;const g=x.createLinearGradient(0,h*.7,0,h);g.addColorStop(0,"rgba(120,60,255,0)");g.addColorStop(1,"rgba(120,60,255,.35)");x.fillStyle=g;x.fillRect(0,h*.7,w,h*.3)}
+  else if(key==="window"){const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,"#ff9a5a");g.addColorStop(.6,"#7a3a7a");g.addColorStop(1,"#1d1426");x.fillStyle=g;x.fillRect(0,0,w,h);x.fillStyle="rgba(20,12,20,.85)";const fw=w*.025;for(let i=1;i<4;i++)x.fillRect(w*i/4-fw/2,0,fw,h*.8);x.fillRect(0,h*.4-fw/2,w,fw);x.fillRect(0,h*.8,w,h*.2)}
+  else{x.fillStyle="#050508";x.fillRect(0,0,w,h);for(let i=0;i<5;i++){const cx=w*(.1+.2*i),sw=Math.sin(t*.7+i)*w*.06,g=x.createLinearGradient(cx,0,cx+sw,h);g.addColorStop(0,"rgba(255,240,200,.45)");g.addColorStop(1,"rgba(255,240,200,0)");x.fillStyle=g;x.beginPath();x.moveTo(cx-w*.01,0);x.lineTo(cx+w*.01,0);x.lineTo(cx+sw+w*.09,h);x.lineTo(cx+sw-w*.09,h);x.fill()}}
+  x.restore()}
+const avg209=(cv,w,h)=>{try{const s=edxCv("avg209",8,8),y=s.getContext("2d");y.drawImage(cv,0,0,w,h,0,0,8,8);const d=y.getImageData(0,0,8,8).data;let r=0,g=0,b=0;for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2]}const n=d.length/4;return[r/n,g/n,b/n]}catch(e){return null}};
+const NEWBG209={live:1,set:1,vid:1};
+edxSmooth=(o=>function(c,m,lt){const B=c&&c.bg144,fin=B&&(B.fe209||B.lw209||B.sh209||B.mc209);if(!B||!B.on||!m||!(NEWBG209[B.mode]||fin)||!bgReady144(c))return o.apply(this,arguments);
+  const was=B.on;B.on=false;let r;try{r=o.apply(this,arguments)}finally{B.on=was}
+  const src=r||m,el=src.el;if(!el)return r;const sw=el.videoWidth||el.naturalWidth||el.width,sh=el.videoHeight||el.naturalHeight||el.height;if(!sw||!sh)return r;
+  const fr=BG144[c.id].frames;let f=fr[0];for(const g of fr)if(Math.abs(g.t-lt)<Math.abs(f.t-lt))f=g;
+  const k=Math.min(1,1280/Math.max(sw,sh)),w=Math.round(sw*k),h=Math.round(sh*k),U=Math.min(w,h);
+  // the person / object, cut out (soft edges when asked)
+  const mk=edxCv("bg209m",w,h),mx=mk.getContext("2d");mx.clearRect(0,0,w,h);mx.filter=B.fe209?"blur("+Math.max(1,Math.round(U*.004*B.fe209))+"px)":"none";mx.drawImage(f.cut,0,0,w,h);mx.filter="none";
+  const sub=edxCv("bg144s",w,h),y=sub.getContext("2d");y.globalCompositeOperation="source-over";y.filter="none";y.clearRect(0,0,w,h);y.drawImage(el,0,0,w,h);y.globalCompositeOperation="destination-in";y.drawImage(mk,0,0);y.globalCompositeOperation="source-over";
+  if(Array.isArray(B.brush148)&&B.brush148.length)try{brush148(y,el,w,h,B)}catch(e){}
+  // the new background
+  const cv=edxCv("bg144",w,h),x=cv.getContext("2d");x.globalCompositeOperation="source-over";x.globalAlpha=1;x.filter="none";const T=ED.t;
+  if(B.mode==="live")sgDraw209(x,B.sg209||"aurora",T,0,0,w,h);
+  else if(B.mode==="set")set209(x,B.set209||"cyc",w,h,T);
+  else if(B.mode==="vid"&&M["bgv_"+c.id]&&srcReady(M["bgv_"+c.id])){const v=M["bgv_"+c.id],pw=srcW(v),ph=srcH(v),s2=Math.max(w/pw,h/ph);x.fillStyle="#000";x.fillRect(0,0,w,h);
+    try{if(v.el.paused&&ED.playing)v.el.play().catch(()=>{});if(!ED.playing||R139.on){const want=(lt%Math.max(.1,v.el.duration||1));if(Math.abs(v.el.currentTime-want)>.25)v.el.currentTime=want}}catch(e){}x.drawImage(v.el,(w-pw*s2)/2,(h-ph*s2)/2,pw*s2,ph*s2)}
+  else{const pic=M["bgp_"+c.id],gr=BGG144.find(g=>g[0]===B.grad);if(B.mode==="blur"){x.filter="blur("+Math.max(4,Math.round(w*.025))+"px) brightness(.85)";x.drawImage(el,-w*.05,-h*.05,w*1.1,h*1.1);x.filter="none"}
+    else if(B.mode==="pic"&&pic&&srcReady(pic)){const pw=srcW(pic),ph=srcH(pic),s2=Math.max(w/pw,h/ph);x.fillStyle="#000";x.fillRect(0,0,w,h);drawSrcAt(x,pic,(w-pw*s2)/2,(h-ph*s2)/2,pw*s2,ph*s2,lt)}
+    else if(B.mode==="grad"&&gr){const g=x.createLinearGradient(0,0,w*.4,h);g.addColorStop(0,gr[2][0]);g.addColorStop(1,gr[2][1]);x.fillStyle=g;x.fillRect(0,0,w,h)}else{x.fillStyle=B.col||"#00b140";x.fillRect(0,0,w,h)}}
+  const bgc=(B.lw209||B.mc209)?avg209(cv,w,h):null;
+  // a contact shadow under the person (an ellipse at the bottom of the cut-out)
+  if(B.sh209){const b=f.bb209||(f.bb209=(()=>{try{const s=edxCv("bb209",64,64),z=s.getContext("2d");z.clearRect(0,0,64,64);z.drawImage(f.cut,0,0,64,64);const d=z.getImageData(0,0,64,64).data;let x0=64,x1=-1,y1=-1;for(let yy=0;yy<64;yy++)for(let xx=0;xx<64;xx++)if(d[(yy*64+xx)*4+3]>128){if(xx<x0)x0=xx;if(xx>x1)x1=xx;if(yy>y1)y1=yy}return x1<0?null:[x0/64,x1/64,y1/64]}catch(e){return null}})());
+    if(b){const cx=(b[0]+b[1])/2*w,cy=Math.min(h*.995,b[2]*h),rw=(b[1]-b[0])*w*.55,g=x.createRadialGradient(cx,cy,0,cx,cy,rw);g.addColorStop(0,"rgba(0,0,0,"+(.45*B.sh209).toFixed(3)+")");g.addColorStop(1,"rgba(0,0,0,0)");x.save();x.translate(cx,cy);x.scale(1,.18);x.translate(-cx,-cy);x.fillStyle=g;x.fillRect(cx-rw,cy-rw,rw*2,rw*2);x.restore()}}
+  // colour match: the person takes a little of the new background's colour
+  if(B.mc209&&bgc){y.globalCompositeOperation="source-atop";y.globalAlpha=.12*B.mc209;y.fillStyle="rgb("+bgc.map(Math.round).join(",")+")";y.fillRect(0,0,w,h);y.globalAlpha=1;y.globalCompositeOperation="source-over"}
+  x.drawImage(sub,0,0);
+  // light wrap: the background's light spills over the person's edge
+  if(B.lw209&&bgc){const lw=edxCv("lw209",w,h),lx=lw.getContext("2d");lx.globalCompositeOperation="source-over";lx.clearRect(0,0,w,h);lx.filter="blur("+Math.max(2,Math.round(U*.012))+"px)";lx.drawImage(cv,0,0);lx.filter="none";
+    lx.globalCompositeOperation="destination-in";lx.drawImage(mk,0,0);lx.globalCompositeOperation="destination-out";lx.filter="blur("+Math.max(2,Math.round(U*.01))+"px)";lx.drawImage(mk,0,0);lx.filter="none";lx.globalCompositeOperation="source-over";
+    x.save();x.globalCompositeOperation="screen";x.globalAlpha=Math.min(1,.55*B.lw209);x.drawImage(lw,0,0);x.restore()}
+  cv.readyState=4;cv.videoWidth=w;cv.videoHeight=h;return{type:"video",el:cv,url:m.url,name:m.name}})(edxSmooth);
+slots139=(o=>function(){const k=o();S.ed.clips.forEach(c=>{if(c.bg144&&M["bgv_"+c.id])k.push("bgv_"+c.id)});return k})(slots139);
+EDX_PANELS.bg144=(o=>function(){let h=o.apply(this,arguments);const c=edxPick(),B=c&&c.bg144;if(!c||!B||!B.on||typeof h!=="string")return h;const mode=B.mode||"color";
+  h=h.replace(/(<div class="seg bg144m">[\s\S]*?)(<\/div>)/,(m,a,b)=>a+[["live",L("Moving","متحرك")],["set",L("Studio","استوديو")],["vid",L("Video","فيديو")]].map(x=>'<button type="button" data-act="bg144-mode" data-v="'+x[0]+'" aria-pressed="'+(mode===x[0])+'">'+x[1]+"</button>").join("")+b);
+  let add="";if(mode==="live")add+='<div class="st209s bg209g">'+SG209.map(g=>'<button type="button" class="st209gt" data-act="bg209-sg" data-v="'+g[0]+'" aria-pressed="'+((B.sg209||"aurora")===g[0])+'"><canvas class="st209c" data-sg="'+g[0]+'" width="160" height="90" aria-hidden="true"></canvas><span>'+esc(L(g[1],g[2]))+"</span></button>").join("")+"</div>";
+  if(mode==="set")add+='<div class="st209s bg209g">'+SET209.map(s=>'<button type="button" class="st209gt" data-act="bg209-set" data-v="'+s[0]+'" aria-pressed="'+((B.set209||"cyc")===s[0])+'"><canvas class="st209c" data-set="'+s[0]+'" width="160" height="90" aria-hidden="true"></canvas><span>'+esc(L(s[1][0],s[1][1]))+"</span></button>").join("")+"</div>";
+  if(mode==="vid")add+='<label class="btn sm" style="position:relative">'+ic("video")+esc(M["bgv_"+c.id]?L("Change the video","غيّر الفيديو"):L("Add a video behind","أضف فيديو خلفه"))+'<input type="file" accept="video/*" data-bg209vid="1" style="position:absolute;inset:0;opacity:0;cursor:pointer" aria-label="'+esc(L("Add a video","أضف فيديو"))+'"></label>';
+  if(mode==="pic"){const mine=S.jobs.filter(j=>j.kind==="image"&&j.status==="complete"&&j.resultUrl).slice(-12).reverse();if(mine.length)add+='<span class="lbl">'+esc(L("Your pictures","صورك"))+'</span><div class="pk206s">'+mine.map(j=>'<button type="button" class="pk206p" data-act="bg209-pic" data-u="'+esc(j.resultUrl)+'"><img src="'+esc(j.resultUrl)+'" alt="" loading="lazy"></button>').join("")+"</div>"}
+  const fin=(k,lab,cur)=>'<label class="ctrl"><span>'+esc(lab)+'</span><input type="range" min="0" max="3" step="1" value="'+(+cur||0)+'" data-bg209f="'+k+'"><output>'+["—","1","2","3"][+cur||0]+"</output></label>";
+  add+='<span class="lbl">'+esc(L("Studio finish","لمسة الاستوديو"))+"</span>"+fin("fe209",L("Soft edges","حواف ناعمة"),B.fe209)+fin("lw209",L("Light wrap","التفاف الضوء"),B.lw209)+fin("sh209",L("Floor shadow","ظل الأرض"),B.sh209)+fin("mc209",L("Match colour","مطابقة اللون"),B.mc209);
+  const i=h.indexOf('<div class="seg bg144m">'),j=i<0?-1:h.indexOf("</div>",i);return j<0?h+add:h.slice(0,j+6)+add+h.slice(j+6)})(EDX_PANELS.bg144);
+(()=>{const p=paint209;paint209=function(){p();document.querySelectorAll("canvas.st209c[data-set]:not([data-p])").forEach(c=>{c.dataset.p="1";try{set209(c.getContext("2d"),c.dataset.set,c.width,c.height,1)}catch(e){}})}})();
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="bg209-sg"],[data-act="bg209-set"],[data-act="bg209-pic"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();const c=edxPick();if(!c)return;const B=c.bg144=c.bg144||{};
+  if(a.dataset.act==="bg209-sg"){B.sg209=a.dataset.v;B.mode="live"}else if(a.dataset.act==="bg209-set"){B.set209=a.dataset.v;B.mode="set"}
+  else{fetch(a.dataset.u).then(r=>r.blob()).then(b=>{loadSlot("bgp_"+c.id,new File([b],"bg.jpg",{type:b.type||"image/jpeg"}));B.mode="pic";persist();renderView()}).catch(()=>toast(L("That picture couldn't be loaded.","تعذّر تحميل تلك الصورة."),{type:"warn"}));return}persist();renderView()},true);
+document.addEventListener("input",e=>{const t=e.target;if(!t.dataset||!t.dataset.bg209f||S.view!=="edit")return;const c=edxPick();if(!c||!c.bg144)return;c.bg144[t.dataset.bg209f]=+t.value;const o=t.parentElement&&t.parentElement.querySelector("output");if(o)o.textContent=["—","1","2","3"][+t.value];clearTimeout(PV._b209);PV._b209=setTimeout(persist,300)});
+document.addEventListener("change",e=>{const t=e.target;if(!t.dataset||!t.dataset.bg209vid||!t.files||!t.files[0]||S.view!=="edit")return;const c=edxPick();if(!c)return;loadSlot("bgv_"+c.id,t.files[0]);const v=M["bgv_"+c.id];if(v&&v.el){v.el.muted=true;v.el.loop=true}c.bg144=Object.assign(c.bg144||{},{mode:"vid"});persist();renderView()},true);
+
+// ---- 10. pauses, stutters and frozen frames cut by themselves ---------------------------------------------------------------------
+// from the captions' words (each word has its time): "um / uh / اه / امم" fillers, a word said twice ("I I think", "أنا أنا"), a
+// broken start ("wh- what"), a long pause between words; and from the picture: frames that stand still (a frozen camera, a
+// stuck screen recording). Every cut is a real cut of the clip (Undo puts it back); the captions and everything after move up.
+const FILL209=/^(?:u+m+|u+h+|uhm+|e+r+m+|h+m+|a+h+|e+h+|m{2,}|euh|ehm|äh+m?|اه+|آه+|ا?م{2,}|إمم+|ام+)$/i;
+const nw209=w=>String(w||"").toLowerCase().replace(/[^\p{L}\p{N}']/gu,"");
+function stutters209(words,o){const cuts=[];for(let i=0;i<words.length;i++){const w=words[i],n=nw209(w.w),nx=words[i+1],m=nx?nw209(nx.w):"";if(!n)continue;
+    if(o.fill&&FILL209.test(n)){cuts.push([w.s,nx&&nx.s-w.e<.5?nx.s:w.e,"fill"]);continue}
+    if(o.rep&&nx&&m){if(m===n&&n.length<=16&&nx.s-w.e<1.2){cuts.push([w.s,nx.s,"rep"]);continue}if(n.length<=3&&m.length>n.length&&m.startsWith(n)&&nx.s-w.e<.8){cuts.push([w.s,nx.s,"rep"]);continue}}
+    if(o.gap&&nx&&nx.s-w.e>o.gap)cuts.push([w.e+.12,nx.s-.12,"gap"])}
+  return cuts.filter(c=>c[1]-c[0]>=.06)}
+async function frozen209(){const E=S.ed,out=[];let s0=0;
+  for(const c of E.clips){const d=clipDur(c),m=clipMedia(c);if(m&&m.type==="video"&&srcReady(m)){let v=null;try{v=cloneVideo(m);await new Promise(r=>{if(v.el.readyState>=2)r();else{v.el.addEventListener("loadeddata",r,{once:true});setTimeout(r,4000)}})}catch(e){v=null}
+      if(v){const cv=edxCv("fz209",32,18),x=cv.getContext("2d",{willReadFrequently:true}),span=Math.min(c.out-c.in,90),n=Math.max(2,Math.round(span*5)),sp=c.speed||1;let prev=null,run=-1;
+        for(let i=0;i<=n;i++){const lt=c.in+span*i/n;await seek144(v.el,lt);x.drawImage(v.el,0,0,32,18);const D=x.getImageData(0,0,32,18).data,g=new Uint8Array(576);for(let k=0;k<576;k++)g[k]=(D[k*4]*.3+D[k*4+1]*.59+D[k*4+2]*.11)|0;
+          let diff=1e9;if(prev){diff=0;for(let k=0;k<576;k++)diff+=Math.abs(g[k]-prev[k]);diff/=576}
+          if(diff<1.1){if(run<0)run=i-1}else{if(run>=0){const a=c.in+span*run/n,b=c.in+span*(i-1)/n;if(b-a>=.6)out.push([s0+(a-c.in)/sp+.2,s0+(b-c.in)/sp,"freeze"])}run=-1}prev=g}
+        if(run>=0){const a=c.in+span*run/n,b=c.in+span;if(b-a>=.6)out.push([s0+(a-c.in)/sp+.2,s0+(b-c.in)/sp,"freeze"])}try{v.el.remove()}catch(e){}}}
+    s0+=d}return out}
+function cutRanges209(ranges){const E=S.ed;ranges=ranges.map(r=>[+r[0],+r[1]]).filter(r=>r[1]-r[0]>=.05).sort((a,b)=>a[0]-b[0]);const mg=[];for(const r of ranges){const l=mg[mg.length-1];if(l&&r[0]<=l[1]+.02)l[1]=Math.max(l[1],r[1]);else mg.push(r.slice())}
+  if(!mg.length)return 0;if(typeof histPush==="function")try{histPush()}catch(e){}
+  const starts=[];let s=0;E.clips.forEach(c=>{starts.push(s);s+=clipDur(c)});const per=new Map();
+  for(const[a,b]of mg)E.clips.forEach((c,i)=>{const c0=starts[i],c1=c0+clipDur(c),x0=Math.max(a,c0),x1=Math.min(b,c1);if(x1-x0<.05)return;const sp=c.speed||1;if(!per.has(c))per.set(c,[]);per.get(c).push([c.in+(x0-c0)*sp,c.in+(x1-c0)*sp])});
+  for(let i=E.clips.length-1;i>=0;i--){const c=E.clips[i],cut=per.get(c);if(!cut)continue;const keep=[];let p=c.in;for(const[a,b]of cut){if(a>p+.05)keep.push([p,a]);p=Math.max(p,b)}if(c.out>p+.05)keep.push([p,c.out]);
+    if(!keep.length){E.clips.splice(i,1);continue}const tr=c.trans,ao=c.aout,parts=keep.map((k,j)=>{const q=j?JSON.parse(JSON.stringify(c)):c;if(j){q.id=uid();edCopyMedia91(c,q);delete q.ain}q.in=+k[0].toFixed(3);q.out=+k[1].toFixed(3);q.trans="cut";if(j<keep.length-1)delete q.aout;return q});
+    parts[parts.length-1].trans=tr;if(ao)parts[parts.length-1].aout=ao;E.clips.splice(i,1,...parts)}
+  const gone=t=>mg.reduce((acc,[a,b])=>acc+(t>=b?b-a:t>a?t-a:0),0),mv=t=>+(t-gone(t)).toFixed(3),inside=(s0,e0)=>mg.some(([a,b])=>s0>=a-.01&&e0<=b+.01);
+  if(E.caps&&Array.isArray(E.caps.words))E.caps.words=E.caps.words.filter(w=>!inside(w.s,w.e)).map(w=>Object.assign({},w,{s:mv(w.s),e:mv(w.e)}));
+  (E.texts||[]).concat(E.infos||[],E.layers||[]).forEach(x=>{if(x.start!=null){const a=mv(x.start),b=x.end?mv(x.end):0;x.start=a;if(x.end)x.end=Math.max(a+.2,b)}});(E.sfx||[]).forEach(x=>{if(x.t!=null)x.t=mv(x.t)});
+  if(E.sel&&!E.clips.some(c=>c.id===E.sel))E.sel=E.clips[0]&&E.clips[0].id;ED.t=Math.min(ED.t,Math.max(0,edTotal()-.01));persist();renderView();return mg.reduce((a,[x,y])=>a+y-x,0)}
+const CUT209={busy:false};
+async function cut209(){const E=S.ed,o=Object.assign({fill:true,rep:true,gap:0,freeze:false},E.cut209||{});if(CUT209.busy)return;if(!E.clips.length){toast(L("Add a clip first.","أضف مقطعاً أولاً."));return}
+  CUT209.busy=true;renderView();try{let words=(E.caps&&E.caps.words)||[];
+    if((o.fill||o.rep||o.gap)&&!words.length){if(laiOn()){toast(L("Listening to the words first (on your device)…","الاستماع إلى الكلمات أولاً (على جهازك)…"),{type:"info"});await edxAutoCaps();words=(E.caps&&E.caps.words)||[]}
+      else if(!o.freeze){toast(L("Make the captions first (Captions → Auto) — the cuts follow the words.","اصنع الترجمة أولاً (الترجمة ← تلقائي) — القصّ يتبع الكلمات."),{type:"warn"});return}}
+    let r=stutters209(words,{fill:o.fill,rep:o.rep,gap:o.gap?+o.gap:0});if(o.freeze){uiPill("🎞 "+L("Looking for frozen frames…","البحث عن الإطارات المتجمّدة…"));try{r=r.concat(await frozen209())}finally{uiPill("")}}
+    if(!r.length){toast(L("Nothing to cut — no fillers, repeats or frozen frames found.","لا شيء يُقص — لا حشو ولا تكرار ولا إطارات متجمّدة."),{type:"info"});return}
+    const n={fill:0,rep:0,gap:0,freeze:0};r.forEach(x=>n[x[2]]++);const sec=cutRanges209(r);
+    toast(L("Cut "+[n.fill&&n.fill+" filler(s)",n.rep&&n.rep+" repeat(s)",n.gap&&n.gap+" pause(s)",n.freeze&&n.freeze+" frozen part(s)"].filter(Boolean).join(", ")+" · "+sec.toFixed(1)+" s shorter. Undo puts them back.",
+      "قُصّ "+[n.fill&&n.fill+" حشو",n.rep&&n.rep+" تكرار",n.gap&&n.gap+" توقف",n.freeze&&n.freeze+" جزء متجمّد"].filter(Boolean).join("، ")+" · أقصر بـ "+sec.toFixed(1)+" ث. التراجع يعيدها."),{type:"ok",ms:6000})}
+  finally{CUT209.busy=false;renderView()}}
+EDX_PANELS.ai140=(o=>function(){const h=o.apply(this,arguments),E=S.ed,o2=Object.assign({fill:true,rep:true,gap:0,freeze:false},E.cut209||{});
+  const ch=(k,lab,on)=>'<button type="button" class="chip" data-act="cut209-o" data-v="'+k+'" aria-pressed="'+!!on+'">'+esc(lab)+"</button>";
+  const card=card140("cut209",L("Cut pauses & stutters","قصّ التوقفات والتلعثم"),L("Cuts the fillers (um, uh, اه), words said twice, broken starts, long pauses and frozen frames — by the words of the captions and the picture. Free, on your device. Undo puts them back.","يقص الحشو (أم، آه)، والكلمات المكررة، والبدايات المتقطعة، والتوقفات الطويلة، والإطارات المتجمّدة — حسب كلمات الترجمة والصورة. مجاناً على جهازك. التراجع يعيدها."),0,
+    '<div class="chips cut209o">'+ch("fill",L("Fillers","الحشو"),o2.fill)+ch("rep",L("Repeats & stutters","التكرار والتلعثم"),o2.rep)+ch("gap",L("Pauses over 0.8 s","توقفات فوق 0.8 ث"),o2.gap)+ch("freeze",L("Frozen frames","إطارات متجمّدة"),o2.freeze)+"</div>"+
+    '<button type="button" class="btn sm" data-act="cut209"'+(CUT209.busy||!E.clips.length?" disabled":"")+">"+ic("cut209")+esc(CUT209.busy?L("Working…","جارٍ العمل…"):L("Find & cut","ابحث واقصص"))+"</button>");
+  const k=h.indexOf('<div class="ai140c"><div class="ai140h">'+ic("sil147"));return k<0?h+card:h.slice(0,k)+card+h.slice(k)})(EDX_PANELS.ai140);
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="cut209"],[data-act="cut209-o"]');if(!a||S.view!=="edit"||a.disabled)return;e.preventDefault();e.stopImmediatePropagation();
+  if(a.dataset.act==="cut209"){cut209();return}const E=S.ed,o=E.cut209=Object.assign({fill:true,rep:true,gap:0,freeze:false},E.cut209||{}),k=a.dataset.v;o[k]=k==="gap"?(o.gap?0:.8):!o[k];persist();renderView()},true);
+
+// ---- 11. DJ effects on a track (preview + export) and beats made on the device -------------------------------------------------------
+const DJ209=[["filter",["Filter sweep","فلتر متحرك"]],["wobble",["Wobble","تذبذب"]],["echo",["Echo","صدى"]],["flanger",["Flanger","فلانجر"]],["phaser",["Phaser","فيزر"]],["crush",["Lo-fi crush","تكسير لو-فاي"]],["phone",["Telephone","صوت الهاتف"]],["repeat",["Beat repeat","تكرار الإيقاع"]],["tapestop",["Tape stop","توقف الشريط"]]];
+const DJOFF209={repeat:1,tapestop:1};   // (made on the rendered track: heard in the export and in "Listen")
+const djOf209=k=>{const f=(S.ed.fx194||{})[k];return f&&f.dj&&f.dj.fx&&f.dj.fx!=="none"?f.dj:null};
+const djAny209=()=>FXK194.some(k=>djOf209(k));
+const bpm209=d=>clamp(+(d&&d.bpm)||+S.ed.bpm209||120,60,180);
+function djChain209(ac,inp,d){const mix=clamp((d.mix==null?60:+d.mix)/100,0,1),beat=60/bpm209(d),dry=ac.createGain(),wet=ac.createGain(),out=ac.createGain();dry.gain.value=1-mix*.85;wet.gain.value=mix;inp.connect(dry);dry.connect(out);
+  const lfo=(hz,depth,param,type)=>{const o=ac.createOscillator(),g=ac.createGain();o.type=type||"sine";o.frequency.value=hz;g.gain.value=depth;o.connect(g);g.connect(param);o.start(0);return o};let n=inp;
+  const bq=(type,f,q)=>{const b=ac.createBiquadFilter();b.type=type;b.frequency.value=f;if(q!=null)b.Q.value=q;n.connect(b);n=b;return b};
+  if(d.fx==="filter"){const b=bq("lowpass",2400,6);lfo(1/(beat*8),2100,b.frequency)}
+  else if(d.fx==="wobble"){const b=bq("lowpass",900,10);lfo(2/beat,780,b.frequency,"triangle")}
+  else if(d.fx==="echo"){const dl=ac.createDelay(2),fb=ac.createGain();dl.delayTime.value=beat*.75;fb.gain.value=.45;n.connect(dl);dl.connect(fb);fb.connect(dl);n=dl}
+  else if(d.fx==="flanger"){const dl=ac.createDelay(.05),fb=ac.createGain();dl.delayTime.value=.004;fb.gain.value=.55;n.connect(dl);dl.connect(fb);fb.connect(dl);lfo(.25,.0028,dl.delayTime);const s=ac.createGain();n.connect(s);dl.connect(s);n=s}
+  else if(d.fx==="phaser"){const sum=ac.createGain();let x=n;for(let i=0;i<4;i++){const a=ac.createBiquadFilter();a.type="allpass";a.frequency.value=700+i*500;a.Q.value=.8;x.connect(a);lfo(.35,400+i*200,a.frequency);x=a}n.connect(sum);x.connect(sum);n=sum}
+  else if(d.fx==="crush"){const ws=ac.createWaveShaper(),N=2048,cv=new Float32Array(N),st=10;for(let i=0;i<N;i++){const x=i/(N-1)*2-1;cv[i]=Math.round(x*st)/st}ws.curve=cv;n.connect(ws);n=ws;bq("lowpass",5200,.7)}
+  else if(d.fx==="phone"){bq("highpass",450,.7);bq("lowpass",3200,.9);const ws=ac.createWaveShaper(),N=1024,cv=new Float32Array(N);for(let i=0;i<N;i++){const x=i/(N-1)*2-1;cv[i]=Math.tanh(x*2.2)}ws.curve=cv;n.connect(ws);n=ws}
+  if(n!==inp)n.connect(wet);else inp.connect(wet);wet.connect(out);return out}
+// beat repeat (the last beat of every bar as four quick repeats) and tape stop (the last 1.2 s slow to a stop)
+function djOffline209(buf,d){const SR=buf.sampleRate,beat=60/bpm209(d),mix=clamp((d.mix==null?60:+d.mix)/100,0,1);
+  for(let c=0;c<buf.numberOfChannels;c++){const x=buf.getChannelData(c);
+    if(d.fx==="repeat"){const bar=Math.round(beat*4*SR),b=Math.round(beat*SR),sl=Math.round(b/4);for(let s=bar-b;s+b<=x.length;s+=bar){const src=x.slice(s,s+sl);for(let r=0;r<4;r++)for(let i=0;i<sl;i++){const k=s+r*sl+i;if(k<x.length)x[k]=x[k]*(1-mix)+src[i]*mix*(1-.12*r)}}}
+    else if(d.fx==="tapestop"){const L2=Math.min(x.length,Math.round(1.2*SR)),s0=x.length-L2,src=x.slice(s0);let pos=0;for(let i=0;i<L2;i++){const rate=Math.max(0,1-i/L2);pos+=rate;const j=Math.floor(pos),f=pos-j,v=j+1<L2?src[j]*(1-f)+src[j+1]*f:0;x[s0+i]=x[s0+i]*(1-mix)+v*mix*(1-i/L2*.3)}}}return buf}
+async function djApply209(buf,d){if(!buf)return buf;let out=buf;if(!DJOFF209[d.fx]){const oc=new OfflineAudioContext(buf.numberOfChannels,buf.length,buf.sampleRate),src=oc.createBufferSource();src.buffer=buf;const o=djChain209(oc,src,d);o.connect(oc.destination);src.start(0);out=await oc.startRendering()}
+  else{out=new AudioBuffer({numberOfChannels:buf.numberOfChannels,length:buf.length,sampleRate:buf.sampleRate});for(let c=0;c<buf.numberOfChannels;c++)out.getChannelData(c).set(buf.getChannelData(c));djOffline209(out,d)}return out}
+// the export: each track with a DJ effect (or a replaced speaker's lines to duck under) is rendered alone, processed, summed
+const DUCK209=()=>(S.ed.rep209&&S.ed.rep209.on&&Array.isArray(S.ed.rep209.lines)?S.ed.rep209.lines.filter(l=>l.done):[]);
+mix139=(o=>async function(total){const dk=DUCK209();if(!djAny209()&&!dk.length)return o.apply(this,arguments);const bufs={};for(const k of FXK194)bufs[k]=await busRender194(o,this,arguments,k);
+  const SR=48000,len=Math.max(1,Math.ceil(total*SR));let out=new AudioBuffer({numberOfChannels:2,length:len,sampleRate:SR});
+  for(const k of FXK194){let b=bufs[k];if(!b)continue;const d=djOf209(k);if(d)try{b=await djApply209(b,d)}catch(e){console.warn("v209 dj",k,e)}
+    if(k==="clips"&&dk.length){const sr=b.sampleRate;for(let c=0;c<b.numberOfChannels;c++){const x=b.getChannelData(c);for(const l of dk){const a=Math.max(0,Math.round((l.s-.08)*sr)),z=Math.min(x.length,Math.round((l.e+.12)*sr)),r=Math.round(.06*sr);for(let i=a;i<z;i++){const e1=Math.min(1,(i-a)/r),e2=Math.min(1,(z-i)/r),g=1-.88*Math.min(e1,e2);x[i]*=g}}}}
+    for(let c=0;c<2;c++){const D=out.getChannelData(c),s=b.getChannelData(Math.min(c,b.numberOfChannels-1));for(let i=0;i<D.length&&i<s.length;i++)D[i]+=s[i]}}
+  return out})(mix139);
+// the preview: a DJ effect plays live on the music, the clips and the voice-over (beat repeat / tape stop: in the export)
+const PDJ209=new WeakMap();
+function djRoute209(el,k){if(!el||typeof safe140!=="function"||!safe140(el))return;const f=fxOf194(k);if(fxLive194(f))return;const d=djOf209(k),want=d&&!DJOFF209[d.fx]?JSON.stringify([d.fx,d.mix,bpm209(d)]):"",cur=PDJ209.get(el);if((cur?cur.key:"")===want)return;
+  if(typeof VR145!=="undefined"&&VR145.get(el))return;if(typeof VC140!=="undefined"&&VC140.on&&VC140.on.has(el))return;
+  try{const n=audioNode(el);n.disconnect();if(cur&&cur.out)try{cur.out.disconnect()}catch(e){}if(want){const out=djChain209(audioCtx,n,d);out.connect(audioCtx.destination);PDJ209.set(el,{key:want,out})}else{n.connect(audioCtx.destination);PDJ209.delete(el)}if(audioCtx.state==="suspended")audioCtx.resume().catch(()=>{})}catch(e){}}
+edTick=(o=>function(now){const r=o.apply(this,arguments);if(S.view!=="edit")return r;const E=S.ed;
+  try{if(E.fx194){if(M.edMusic&&M.edMusic.el)djRoute209(M.edMusic.el,"music");if(M.edVoice&&M.edVoice.el)djRoute209(M.edVoice.el,"voice");if(E.clips.length){const c=E.clips[edAt(Math.min(ED.t,Math.max(0,edTotal()-.001))).i],m=c&&M["c_"+c.id];if(m&&m.type==="video"&&m.el)djRoute209(m.el,"clips")}}
+    // (a replaced speaker: the clip's own voice is lowered under the new lines)
+    const dk=DUCK209();if(dk.length&&E.clips.length){const c=E.clips[edAt(Math.min(ED.t,Math.max(0,edTotal()-.001))).i],m=c&&M["c_"+c.id];if(m&&m.el&&m.type==="video"){const inL=dk.some(l=>ED.t>=l.s-.05&&ED.t<=l.e+.1);if(inL){if(m.el._v209==null)m.el._v209=m.el.volume;if(m.el.volume>.13)m.el.volume=.12}else if(m.el._v209!=null){m.el.volume=m.el._v209;m.el._v209=null}}}}catch(e){}return r})(edTick);
+// beats made here (free): funk, disco funk, DJ house, hip-hop, lo-fi, afrobeat — drums, bass and chords synthesised, as long as the video
+const BEAT209=[["funk",["Funk","فانك"],104],["disco",["Disco funk","ديسكو فانك"],118],["house",["DJ house","دي جي هاوس"],124],["hiphop",["Hip-hop","هيب هوب"],90],["lofi",["Lo-fi","لو-فاي"],80],["afro",["Afrobeat","أفروبيت"],108]];
+async function beat209(g,bpm,secs){const SR=44100,len=Math.ceil(secs*SR),oc=new OfflineAudioContext(2,len,SR),M2=oc.createDynamicsCompressor();M2.threshold.value=-14;M2.ratio.value=3;const mg=oc.createGain();mg.gain.value=.8;M2.connect(mg);mg.connect(oc.destination);
+  const nb=oc.createBuffer(1,SR,SR),nd=nb.getChannelData(0);let seed=7;for(let i=0;i<SR;i++){seed=(seed*16807)%2147483647;nd[i]=seed/1073741823.5-1}
+  const st=60/bpm/4,steps=Math.floor(secs/st),pat=(s,i)=>s[i%s.length]==="x",env=(g0,t,a,d,peak)=>{g0.gain.setValueAtTime(0,t);g0.gain.linearRampToValueAtTime(peak,t+a);g0.gain.exponentialRampToValueAtTime(.0008,t+a+d)};
+  const kick=t=>{const o=oc.createOscillator(),gg=oc.createGain();o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(42,t+.12);env(gg,t,.002,.32,1);o.connect(gg);gg.connect(M2);o.start(t);o.stop(t+.4)};
+  const noise=(t,type,f,q,dur,peak)=>{const s=oc.createBufferSource();s.buffer=nb;const b=oc.createBiquadFilter();b.type=type;b.frequency.value=f;b.Q.value=q;const gg=oc.createGain();env(gg,t,.001,dur,peak);s.connect(b);b.connect(gg);gg.connect(M2);s.start(t,Math.random()*.5);s.stop(t+dur+.05)};
+  const snare=(t,p)=>{noise(t,"bandpass",1900,.8,.16,.55*(p||1));const o=oc.createOscillator(),gg=oc.createGain();o.frequency.value=190;env(gg,t,.001,.08,.3*(p||1));o.connect(gg);gg.connect(M2);o.start(t);o.stop(t+.12)};
+  const clap=t=>{for(let i=0;i<3;i++)noise(t+i*.011,"bandpass",1400,1.2,.09,.4)};const hat=(t,open,p)=>noise(t,"highpass",7600,.7,open?.2:.035,(open?.22:.16)*(p||1));
+  const note=(t,f,dur,type,cut,peak,dest)=>{const o=oc.createOscillator(),b=oc.createBiquadFilter(),gg=oc.createGain();o.type=type;o.frequency.value=f;b.type="lowpass";b.frequency.setValueAtTime(cut*2.2,t);b.frequency.exponentialRampToValueAtTime(cut*.6,t+dur);b.Q.value=4;env(gg,t,.004,dur,peak);o.connect(b);b.connect(gg);gg.connect(dest||M2);o.start(t);o.stop(t+dur+.05)};
+  const A=55,mi=[0,3,5,7,10,12],hz=s=>A*Math.pow(2,s/12),chordAt=(t,root,dur,type,peak,cut)=>[0,3,7,10].forEach(iv=>note(t,hz(root+24+iv),dur,type,cut||1800,peak));
+  const P={funk:{k:"x..x..x...x.x...",s:"....x..x....x...",h:"xxxxxxxxxxxxxxxx",bass:[[0,0],[3,0],[6,12],[10,7],[12,10],[14,3]],ch:[4,12],bt:"sawtooth",ct:"square"},
+    disco:{k:"x...x...x...x...",s:"....x.......x...",h:"..x...x...x...x.",open:1,bass:[[0,0],[2,12],[4,0],[6,12],[8,5],[10,17],[12,7],[14,19]],ch:[2,6,10,14],bt:"sawtooth",ct:"sawtooth"},
+    house:{k:"x...x...x...x...",c:"....x.......x...",h:"..x...x...x...x.",open:1,bass:[[2,0],[6,0],[10,3],[14,5]],ch:[2,10],bt:"square",ct:"sawtooth"},
+    hiphop:{k:"x.....x.x.......",s:"....x.......x...",h:"x.x.x.x.x.x.x.x.",bass:[[0,0],[6,0],[8,-2]],ch:[0],bt:"sine",ct:"triangle",sw:.12},
+    lofi:{k:"x......xx.......",s:"....x.......x...",h:"x.x.x.x.x.x.x.x.",bass:[[0,0],[7,-2],[10,3]],ch:[0,8],bt:"sine",ct:"triangle",sw:.16,vinyl:1},
+    afro:{k:"x..x..x.x..x....",s:"...x......x..x..",h:"xxxxxxxxxxxxxxxx",bass:[[0,0],[3,7],[6,10],[9,12],[12,7]],ch:[3,11],bt:"triangle",ct:"triangle"}}[g]||{};
+  const prog=[0,5,3,7];for(let i=0;i<steps;i++){const sw=P.sw&&i%2?st*P.sw:0,t=i*st+sw,s16=i%16,bar=Math.floor(i/16),root=prog[bar%prog.length];
+    if(P.k&&pat(P.k,s16))kick(t);if(P.s&&pat(P.s,s16))snare(t,g==="funk"&&!(s16===4||s16===12)?.35:1);if(P.c&&pat(P.c,s16))clap(t);if(P.h&&pat(P.h,s16))hat(t,P.open&&s16%4===2,s16%4===0?1:.6);
+    for(const[bs,iv]of P.bass||[])if(bs===s16)note(t,hz(root+iv-(g==="funk"?0:0)),st*(g==="funk"?.9:1.8),P.bt,g==="funk"?900:500,.5);
+    if((P.ch||[]).includes(s16))chordAt(t,root,g==="lofi"||g==="hiphop"?st*12:st*1.2,P.ct,g==="lofi"?.07:.06,g==="lofi"?900:2200)}
+  if(P.vinyl)for(let t=0;t<secs;t+=.07)if(Math.sin(t*97.3)>.7)noise(t,"highpass",3000,.5,.01,.06);
+  const r=await oc.startRendering();return r}
+async function beatAdd209(g){const E=S.ed,B=BEAT209.find(x=>x[0]===g)||BEAT209[0],bpm=+E.bpm209||B[2],secs=Math.max(8,Math.min(300,edTotal()||16));uiPill("🥁 "+L("Making the beat…","صنع الإيقاع…"));
+  try{const b=await beat209(g,bpm,secs),f=new File([wav145(b)],"nooi-"+g+"-"+bpm+".wav",{type:"audio/wav"});loadSlot("edMusic",f);E.bpm209=bpm;persist();renderView();toast(L(B[1][0]+" beat at "+bpm+" BPM added as the music — "+Math.round(secs)+" s, free.","إيقاع "+B[1][1]+" بسرعة "+bpm+" أُضيف كموسيقى — "+Math.round(secs)+" ث، مجاناً."),{type:"ok"})}
+  catch(e){toast(L("The beat couldn't be made: ","تعذّر صنع الإيقاع: ")+(e.message||e),{type:"warn"})}finally{uiPill("")}}
+
+// (the Audio tab: "DJ & beats" — a track, an effect, how much, the beat; and a beat made for the whole video)
+EDX_PANELS.dj209=function(){const E=S.ed,k=E.dj209k||"music",d=djOf209(k)||{},fx=d.fx||"none",mix=d.mix==null?60:+d.mix,bpm=+E.bpm209||120;
+  const trk=[["music",L("Music","الموسيقى")],["clips",L("Clips","المقاطع")],["voice",L("Voice-over","التعليق")],["sfx",L("Effects","المؤثرات")]];
+  return'<p class="small mute e-hint">'+esc(L("DJ effects on a whole track — heard live while it plays (beat repeat and tape stop: in the export), and kept in the exported video.","مؤثرات دي جي على مسار كامل — تُسمع حيّة أثناء التشغيل (تكرار الإيقاع وتوقف الشريط: في التصدير)، وتبقى في الفيديو المُصدَّر."))+"</p>"+
+    '<div class="seg dj209t">'+trk.map(x=>'<button type="button" data-act="dj209-k" data-v="'+x[0]+'" aria-pressed="'+(k===x[0])+'">'+esc(x[1])+(djOf209(x[0])?" •":"")+"</button>").join("")+"</div>"+
+    '<div class="dj209g"><button type="button" class="dj209x" data-act="dj209-fx" data-v="none" aria-pressed="'+(fx==="none")+'">'+ic("x")+"<span>"+esc(L("Off","إيقاف"))+"</span></button>"+DJ209.map(x=>'<button type="button" class="dj209x" data-act="dj209-fx" data-v="'+x[0]+'" aria-pressed="'+(fx===x[0])+'">'+ic("dj209")+"<span>"+esc(L(x[1][0],x[1][1]))+"</span></button>").join("")+"</div>"+
+    '<label class="ctrl"><span>'+esc(L("Amount","المقدار"))+'</span><input type="range" min="0" max="100" step="5" value="'+mix+'" data-dj209mix="1"><output>'+mix+"%</output></label>"+
+    '<span class="lbl">'+esc(L("Beat (BPM)","الإيقاع (نبضة/دقيقة)"))+'</span><div class="chips dj209b">'+[80,90,100,110,120,124,128].map(b=>'<button type="button" class="chip" data-act="dj209-bpm" data-v="'+b+'" aria-pressed="'+(bpm===b)+'">'+b+"</button>").join("")+"</div>"+
+    '<span class="lbl">'+esc(L("Make a beat for this video (free)","اصنع إيقاعاً لهذا الفيديو (مجاناً)"))+'</span><div class="dj209g">'+BEAT209.map(x=>'<button type="button" class="dj209x" data-act="beat209" data-v="'+x[0]+'">'+ic("beat209")+"<span>"+esc(L(x[1][0],x[1][1]))+"</span><small>"+(+E.bpm209||x[2])+" BPM</small></button>").join("")+"</div>"+
+    '<p class="small mute">'+esc(L("The beat becomes the music track (it replaces the music there). For a song with words, use AI music in AI tools.","يصبح الإيقاع مسار الموسيقى (ويستبدل الموسيقى الموجودة). لأغنية بكلمات استخدم موسيقى الذكاء في أدوات الذكاء."))+"</p>"};
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act^="dj209-"],[data-act="beat209"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();const E=S.ed,act=a.dataset.act,v=a.dataset.v;
+  if(act==="beat209"){beatAdd209(v);return}if(act==="dj209-k"){E.dj209k=v;persist();renderView();return}if(act==="dj209-bpm"){E.bpm209=+v;persist();renderView();return}
+  const k=E.dj209k||"music";E.fx194=E.fx194||{};const f=E.fx194[k]=E.fx194[k]||{};if(v==="none")delete f.dj;else f.dj=Object.assign({mix:60},f.dj||{},{fx:v});persist();renderView();
+  if(v!=="none")toast(DJOFF209[v]?L("Added — heard in the exported video.","أُضيف — يُسمع في الفيديو المُصدَّر."):L("Added — press play to hear it.","أُضيف — اضغط تشغيل لتسمعه."),{type:"ok",ms:2200})},true);
+document.addEventListener("input",e=>{const t=e.target;if(!t.dataset||!t.dataset.dj209mix||S.view!=="edit")return;const E=S.ed,k=E.dj209k||"music",f=((E.fx194||{})[k]||{});if(!f.dj)return;f.dj.mix=+t.value;const o=t.parentElement&&t.parentElement.querySelector("output");if(o)o.textContent=t.value+"%";clearTimeout(PV._dj209);PV._dj209=setTimeout(persist,300)});
+
+// ---- 12. voices: take a voice apart from the rest, and replace a speaker (the interviewer, the commentator) with another voice -------
+// the lines come from the captions' words; who says each line is guessed from the pitch of the voice (two speakers: lower · higher),
+// and you can change it; the chosen lines are said again by a nooi voice (priced first), laid on the sound effects track at their
+// time, and the clip's own sound is lowered under them (preview and export)
+function lines209(words){const out=[];let cur=null;for(const w of words){if(!cur||w.s-cur.e>.55||cur.e-cur.s>12||/[.!?؟。]$/.test(cur.w[cur.w.length-1]||"")){cur={s:w.s,e:w.e,w:[w.w]};out.push(cur)}else{cur.e=w.e;cur.w.push(w.w)}}
+  return out.map((l,i)=>({i,s:+l.s.toFixed(2),e:+l.e.toFixed(2),text:l.w.join(" ").replace(/\s+([,.!?؟،])/g,"$1"),spk:"A",on:false,done:false}))}
+function f0209(a,SR,s,e){const i0=Math.max(0,Math.floor(s*SR)),i1=Math.min(a.length,Math.floor(e*SR)),W=Math.round(SR*.04),fs=[];
+  for(let p=i0;p+W*2<i1;p+=W){let en=0;for(let i=p;i<p+W;i++)en+=a[i]*a[i];if(en/W<1e-4)continue;const l0=Math.round(SR/400),l1=Math.round(SR/70),cs=new Float32Array(l1+2);let best=0;for(let lag=l0;lag<=l1+1;lag++){let c=0,e2=0;for(let i=p;i<p+W;i++){c+=a[i]*a[i+lag];e2+=a[i+lag]*a[i+lag]}cs[lag]=c/Math.sqrt(en*W*e2/W+1e-9);if(cs[lag]>best)best=cs[lag]}let bl=0;for(let lag=l0+1;lag<=l1;lag++)if(cs[lag]>=.9*best&&cs[lag]>=cs[lag-1]&&cs[lag]>=cs[lag+1]){bl=lag;break}if(bl&&best>.5)fs.push(SR/bl)}
+  fs.sort((x,y)=>x-y);return fs.length?fs[fs.length>>1]:0}
+async function speakers209(L2){let a=null;try{a=await edxTimelineAudio()}catch(e){}if(!a)return L2;const SR=16000,f=L2.map(l=>f0209(a,SR,l.s,l.e)),ok=f.filter(Boolean);if(ok.length<2)return L2;
+  const lg=ok.map(Math.log);let c1=Math.min(...lg),c2=Math.max(...lg);if(c2-c1<Math.log(1.15))return L2;for(let it=0;it<8;it++){const A=[],B=[];lg.forEach(x=>(Math.abs(x-c1)<=Math.abs(x-c2)?A:B).push(x));if(A.length)c1=A.reduce((p,q)=>p+q,0)/A.length;if(B.length)c2=B.reduce((p,q)=>p+q,0)/B.length}
+  L2.forEach((l,i)=>{if(f[i]){const x=Math.log(f[i]);l.spk=Math.abs(x-c1)<=Math.abs(x-c2)?"A":"B";l.hz=Math.round(f[i])}});return L2}
+const REP209={busy:false};
+async function repScan209(){const E=S.ed,words=(E.caps&&E.caps.words)||[];if(!words.length){if(laiOn()){await edxAutoCaps()}else{toast(L("Make the captions first (Captions → Auto) — the lines come from the words.","اصنع الترجمة أولاً (الترجمة ← تلقائي) — الأسطر تأتي من الكلمات."),{type:"warn"});return}}
+  const w=(E.caps&&E.caps.words)||[];if(!w.length)return;REP209.busy=true;renderView();uiPill("🎙️ "+L("Who says what…","من يقول ماذا…"));
+  try{const L2=await speakers209(lines209(w));E.rep209={on:true,lines:L2,voice:(E.rep209&&E.rep209.voice)||""};const nb=L2.filter(l=>l.spk==="B").length;
+    toast(nb?L("Two voices found — the higher one is B. Tick the lines to say again.","وُجد صوتان — الأعلى هو B. علّم الأسطر التي تُقال من جديد."):L("One voice found — tick the lines to say again.","وُجد صوت واحد — علّم الأسطر التي تُقال من جديد."),{type:"info"})}
+  finally{REP209.busy=false;uiPill("");persist();renderView()}}
+const repCost209=()=>{const R=S.ed.rep209;if(!R)return 0;const ch=R.lines.filter(l=>l.on&&!l.done).reduce((a,l)=>a+String(l.text).length,0),per=(typeof ND!=="undefined"&&ND.info&&+ND.info.per900)||1;return ch?Math.max(1,Math.ceil(ch/900*per)):0};
+async function repRun209(){const E=S.ed,R=E.rep209;if(!R||REP209.busy)return;const todo=R.lines.filter(l=>l.on&&!l.done&&String(l.text).trim());if(!todo.length){toast(L("Tick at least one line.","علّم سطراً واحداً على الأقل."));return}
+  if(API.mode!=="server"){toast(L("New voices are made on the live site.","تُصنع الأصوات الجديدة في الموقع."),{type:"info"});return}
+  REP209.busy=true;renderView();let n=0;try{for(const l of todo){uiPill("🎙️ "+L("Saying line ","نطق السطر ")+(n+1)+"/"+todo.length);
+      const lang=/[؀-ۿ]/.test(l.text)?"ar":undefined,r=await API.req("/v1/voice/natural",{json:{lines:[{text:l.text,speaker:0}],lang,ear:false,tags:true,room:true,voices:R.voice?{"0":R.voice}:{},context:"replacing a speaker in an edited video"}});
+      const b=await(await fetch(r.url)).blob(),it={id:uid(),n:"file",name:L("Voice · ","صوت · ")+String(l.text).slice(0,24),t:+l.s.toFixed(2),vol:100,voice:true,rep209:l.i};E.sfx=E.sfx||[];
+      loadSlot("sx_"+it.id,new File([b],"line-"+(l.i+1)+".mp3",{type:b.type||"audio/mpeg"}));E.sfx.push(it);try{edxBuffer(it)}catch(e){}l.done=true;n++;persist()}
+    toast(L(n+" line(s) said by the new voice — the old voice is lowered under them.",n+" سطر بالصوت الجديد — وخُفض الصوت القديم تحتها."),{type:"ok"})}
+  catch(e){toast(L("The new voice couldn't be made: ","تعذّر صنع الصوت الجديد: ")+(e.message||e),{type:"warn"})}finally{REP209.busy=false;uiPill("");persist();renderView()}}
+async function bgOnly209(c){if(!c){toast(L("Select a clip first.","اختر مقطعاً أولاً."));return}const m=clipMedia(c);if(!m||m.type!=="video"){toast(L("This works on a video clip with sound.","يعمل هذا على مقطع فيديو فيه صوت."));return}
+  const key=m.url||(m.el&&(m.el.currentSrc||m.el.src))||"";let b=null;uiPill("🎚 "+L("Taking the voice out…","إخراج الصوت…"));try{b=await decode141(key,m)}catch(e){}
+  try{if(!b||!b.length){toast(L("This clip has no sound.","لا صوت في هذا المقطع."));return}const SR=b.sampleRate,i0=Math.floor(c.in*SR),i1=Math.min(b.length,Math.ceil(c.out*SR)),n=Math.max(1,i1-i0),st=b.numberOfChannels>1;
+    const src=new AudioBuffer({numberOfChannels:2,length:n,sampleRate:SR});for(let ch=0;ch<2;ch++){const s=b.getChannelData(Math.min(ch,b.numberOfChannels-1)).subarray(i0,i1);src.getChannelData(ch).set(s)}
+    const oc=new OfflineAudioContext(2,n,SR),s=oc.createBufferSource();s.buffer=src;const sp=oc.createChannelSplitter(2),mg=oc.createChannelMerger(2);s.connect(sp);
+    // the voice sits in the middle and between ~250 Hz and 3.5 kHz: the sides keep everything, the middle keeps what is outside the voice band
+    const midL=oc.createGain(),midR=oc.createGain();midL.gain.value=.5;midR.gain.value=.5;sp.connect(midL,0);sp.connect(midR,1);const mid=oc.createGain();midL.connect(mid);midR.connect(mid);
+    const lo=oc.createBiquadFilter();lo.type="lowpass";lo.frequency.value=220;const hi=oc.createBiquadFilter();hi.type="highpass";hi.frequency.value=4200;mid.connect(lo);mid.connect(hi);
+    const keep=oc.createGain();keep.gain.value=st?1:1.4;lo.connect(keep);hi.connect(keep);const notch=oc.createBiquadFilter();notch.type="bandpass";notch.frequency.value=1000;notch.Q.value=.35;const dim=oc.createGain();dim.gain.value=st?.0:.18;mid.connect(notch);notch.connect(dim);dim.connect(keep);
+    if(st){const sL=oc.createGain(),sR=oc.createGain();sL.gain.value=.5;sR.gain.value=-.5;sp.connect(sL,0);sp.connect(sR,1);const side=oc.createGain();sL.connect(side);sR.connect(side);const inv=oc.createGain();inv.gain.value=-1;side.connect(mg,0,0);side.connect(inv);inv.connect(mg,0,1)}
+    keep.connect(mg,0,0);keep.connect(mg,0,1);mg.connect(oc.destination);s.start(0);const out=await oc.startRendering();
+    const E=S.ed,it={id:uid(),n:"file",name:L("Background · ","الخلفية · ")+clipName(c),t:+edClipStart209(c).toFixed(2),vol:100};E.sfx=E.sfx||[];loadSlot("sx_"+it.id,new File([wav145(out)],"background.wav",{type:"audio/wav"}));E.sfx.push(it);try{edxBuffer(it)}catch(e){}
+    if(typeof histPush==="function")try{histPush()}catch(e){}c.vol=0;persist();renderView();toast(L("The background sound is on its own track (the voice lowered, on your device); the clip's own sound is off.","صوت الخلفية في مسار خاص (والصوت مخفوض، على جهازك)؛ وصوت المقطع نفسه أُطفئ."),{type:"ok",ms:5000})}
+  finally{uiPill("")}}
+const edClipStart209=c=>{let s=0;for(const x of S.ed.clips){if(x===c)return s;s+=clipDur(x)}return 0};
+EDX_PANELS.voice209=function(){const E=S.ed,c=edxPick(),R=E.rep209,vs=(typeof ND!=="undefined"&&ND.info&&ND.info.voices)||[];if(typeof ndLoad==="function"&&!REP209.nd&&!(typeof ND!=="undefined"&&ND.info)){REP209.nd=1;Promise.resolve(ndLoad()).then(()=>{if(E.tab==="voice209"&&ND.info)renderView()}).catch(()=>{})}   // (asked once: a list still loading never re-asks)
+  let h='<p class="small mute e-hint">'+esc(L("Take a voice apart from the rest, or have someone else say a speaker's lines — the interviewer, the commentator, a narrator.","افصل الصوت عن الباقي، أو اجعل صوتاً آخر يقول أسطر متحدث — المحاور أو المعلّق أو الراوي."))+"</p>";
+  h+='<span class="lbl">'+esc(L("Separate","الفصل"))+'</span><div class="row v209r"><button type="button" class="btn sm" data-act="v209-iso"'+(!c?" disabled":"")+">"+ic("voice209")+esc(L("Voice only (AI engine)","الصوت فقط (محرك الذكاء)"))+'</button><button type="button" class="btn sm" data-act="v209-bg"'+(!c?" disabled":"")+">"+ic("music")+esc(L("Background only (on device)","الخلفية فقط (على الجهاز)"))+"</button></div>"+
+    (c?"":'<p class="small mute">'+esc(L("Select a clip on the timeline first.","اختر مقطعاً على الخط الزمني أولاً."))+"</p>");
+  h+='<span class="lbl">'+esc(L("Replace a speaker","استبدال متحدث"))+"</span>";
+  if(!R||!R.lines||!R.lines.length)return h+'<button type="button" class="btn sm primary" data-act="v209-scan"'+(REP209.busy?" disabled":"")+">"+ic("voice209")+esc(REP209.busy?L("Listening…","جارٍ الاستماع…"):L("Find who says what","اعرف من يقول ماذا"))+"</button>";
+  const cost=repCost209();h+='<div class="row v209q"><button type="button" class="chip" data-act="v209-pick" data-v="A">'+esc(L("Tick all A","علّم كل A"))+'</button><button type="button" class="chip" data-act="v209-pick" data-v="B">'+esc(L("Tick all B","علّم كل B"))+'</button><button type="button" class="chip" data-act="v209-pick" data-v="none">'+esc(L("None","لا شيء"))+"</button></div>";
+  h+='<div class="v209l">'+R.lines.map(l=>'<div class="v209i'+(l.done?" done":"")+'"><label class="v209c"><input type="checkbox" data-v209on="'+l.i+'"'+(l.on?" checked":"")+(l.done?" disabled":"")+'><span class="mono dim" dir="ltr">'+l.s.toFixed(1)+"s</span></label>"+
+    '<button type="button" class="v209s" data-act="v209-spk" data-v="'+l.i+'" aria-label="'+esc(L("Speaker","المتحدث"))+'">'+l.spk+'</button><input class="v209t" dir="auto" data-v209tx="'+l.i+'" value="'+esc(l.text)+'"'+(l.done?" disabled":"")+">"+(l.done?ic("check143"):"")+"</div>").join("")+"</div>";
+  h+='<label class="ctrl"><span>'+esc(L("New voice","الصوت الجديد"))+'</span><select data-v209voice="1"><option value="">'+esc(L("Chosen for the words","يُختار حسب الكلام"))+"</option>"+vs.slice(0,60).map(v=>'<option value="'+esc(v.id||v.name)+'"'+(R.voice===(v.id||v.name)?" selected":"")+">"+esc(v.name||v.id)+(v.gender?" · "+esc(v.gender):"")+"</option>").join("")+"</select></label>";
+  h+='<div class="row v209r"><button type="button" class="btn sm primary" data-act="v209-run" data-paid="1"'+(REP209.busy||!cost?" disabled":"")+">"+ic("voice209")+esc(L("Say the ticked lines","انطق الأسطر المعلّمة"))+(cost?'<span class="cost">'+cost+" cr</span>":"")+'</button><button type="button" class="btn sm ghost" data-act="v209-scan">'+ic("refresh")+esc(L("Listen again","استمع مجدداً"))+"</button></div>";
+  return h};
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act^="v209-"]');if(!a||S.view!=="edit"||a.disabled)return;e.preventDefault();e.stopImmediatePropagation();const E=S.ed,R=E.rep209,act=a.dataset.act,v=a.dataset.v;
+  if(act==="v209-iso"){const c=edxPick();if(typeof iso144Run==="function")iso144Run(c);return}if(act==="v209-bg"){bgOnly209(edxPick());return}if(act==="v209-scan"){repScan209();return}if(act==="v209-run"){repRun209();return}
+  if(!R)return;if(act==="v209-pick"){R.lines.forEach(l=>{if(!l.done)l.on=v!=="none"&&l.spk===v});persist();renderView();return}
+  if(act==="v209-spk"){const l=R.lines[+v];if(l){l.spk=l.spk==="A"?"B":"A";persist();renderView()}return}},true);
+document.addEventListener("change",e=>{const t=e.target,R=S.ed&&S.ed.rep209;if(!t.dataset||!R||S.view!=="edit")return;if(t.dataset.v209on!=null){const l=R.lines[+t.dataset.v209on];if(l){l.on=t.checked;persist();renderView()}}
+  else if(t.dataset.v209voice){R.voice=t.value;persist()}else if(t.dataset.v209tx!=null){const l=R.lines[+t.dataset.v209tx];if(l){l.text=t.value;persist()}}});
+
+// ---- 13. fonts for every script, picked by themselves for the words they show; more languages ------------------------------------
+[["Amiri","ar","serif",[400,700]],["Noto Naskh Arabic","ar","serif",[400,700]],["Readex Pro","ar","sans",[400,700]],["Alexandria","ar","sans",[400,700,900]],["Lemonada","ar","display",[400,700]],["Aref Ruqaa","ar","hand",[400,700]],["Markazi Text","ar","serif",[400,700]],["Marhey","ar","display",[400,700]],["Kufam","ar","display",[400,700,900]],["Vazirmatn","fa","sans",[400,700,900]],["Noto Nastaliq Urdu","fa","serif",[400,700]],
+ ["Sora","lat","sans",[400,700]],["Outfit","lat","sans",[400,700,900]],["Plus Jakarta Sans","lat","sans",[400,700]],["Manrope","lat","sans",[400,700]],["Unbounded","lat","display",[400,700,900]],["Syne","lat","display",[400,700]],["Righteous","lat","display",[400]],["Lobster","lat","hand",[400]],["Fraunces","lat","serif",[400,700,900]],["EB Garamond","lat","serif",[400,700]],["Be Vietnam Pro","lat","sans",[400,700]],
+ ["Noto Sans","cyr","sans",[400,700]],["PT Sans","cyr","sans",[400,700]],["Russo One","cyr","display",[400]],["Ruslan Display","cyr","display",[400]],["Noto Serif","cyr","serif",[400,700]],
+ ["Heebo","he","sans",[400,700,900]],["Frank Ruhl Libre","he","serif",[400,700]],["Secular One","he","display",[400]],["Noto Sans Thai","th","sans",[400,700]],["Kanit","th","sans",[400,700]],["Prompt","th","sans",[400,700]],
+ ["Noto Sans Bengali","bn","sans",[400,700]],["Hind Siliguri","bn","sans",[400,700]],["Noto Sans Tamil","ta","sans",[400,700]],["Noto Sans Telugu","ta","sans",[400,700]],["Noto Sans Gujarati","hi","sans",[400,700]],["Noto Sans Gurmukhi","hi","sans",[400,700]],
+ ["Noto Sans Ethiopic","am","sans",[400,700]],["Noto Sans Armenian","hy","sans",[400,700]],["Noto Sans Georgian","hy","sans",[400,700]],["Noto Sans Khmer","th","sans",[400,700]],["Noto Sans Myanmar","th","sans",[400,700]],["Noto Sans Sinhala","ta","sans",[400,700]]
+].forEach(f=>{if(!FONTS.some(x=>x[0]===f[0]))FONTS.push(f)});
+[["fa","Persian / Urdu","فارسي / أردو"],["cyr","Cyrillic","سيريلي"],["he","Hebrew","عبري"],["th","Thai & SE Asia","تايلندي وجنوب شرق آسيا"],["bn","Bengali","بنغالي"],["ta","Tamil & S. India","تاميلي وجنوب الهند"],["am","Ethiopic","حبشي"],["hy","Armenian & Georgian","أرمني وجورجي"]].forEach(c=>{const i=FCATS.findIndex(x=>x[0]==="mine");if(!FCATS.some(x=>x[0]===c[0]))FCATS.splice(i<0?FCATS.length:i,0,c)});
+Object.assign(FSAMPLE,{fa:"سلام دنیا",cyr:"Привет мир",he:"שלום עולם",th:"สวัสดีชาวโลก",bn:"হ্যালো বিশ্ব",ta:"வணக்கம் உலகம்",am:"ሰላም ልዑል",hy:"Բարեւ աշխարհ"});
+// the script of the words → the font that has its letters (loaded by itself, so no square boxes in the preview or the export)
+const SCR209=[[/[֐-׿]/,"Heebo"],[/[฀-๿]/,"Noto Sans Thai"],[/[ঀ-৿]/,"Noto Sans Bengali"],[/[஀-௿]/,"Noto Sans Tamil"],[/[ఀ-౿]/,"Noto Sans Telugu"],[/[઀-૿]/,"Noto Sans Gujarati"],[/[਀-੿]/,"Noto Sans Gurmukhi"],
+  [/[ऀ-ॿ]/,"Noto Sans Devanagari"],[/[ሀ-፿]/,"Noto Sans Ethiopic"],[/[԰-֏]/,"Noto Sans Armenian"],[/[Ⴀ-ჿ]/,"Noto Sans Georgian"],[/[ក-៿]/,"Noto Sans Khmer"],[/[က-႟]/,"Noto Sans Myanmar"],[/[඀-෿]/,"Noto Sans Sinhala"],
+  [/[Ѐ-ӿ]/,"Noto Sans"],[/[가-힯]/,"Noto Sans KR"],[/[぀-ヿ]/,"Noto Sans JP"],[/[一-鿿]/,"Noto Sans SC"]];
+const scriptFonts209=t=>SCR209.filter(([re])=>re.test(String(t||""))).map(x=>x[1]);
+// (the fallback fonts of every script are in fontStack itself — see its definition)
+const FL209=new Set();function fonts209(){const E=S.ed;if(!E)return;const txt=[].concat((E.texts||[]).map(x=>x.text),(E.infos||[]).map(x=>[x.t1,x.t2,Array.isArray(x.items)?x.items.join(" "):x.items].join(" ")),((E.caps&&E.caps.words)||[]).slice(0,400).map(w=>w.w)).join(" ");
+  for(const f of scriptFonts209(txt))if(!FL209.has(f)){FL209.add(f);try{ensureFont(f)}catch(e){}}}
+renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="edit")try{fonts209()}catch(e){}return r})(renderView);
+// more languages for captions, translation and dubbing (each with its name in English and Arabic)
+[["he","Hebrew","العبرية","עב","he-IL"],["el","Greek","اليونانية","ΕΛ","el-GR"],["pl","Polish","البولندية","PL","pl-PL"],["uk","Ukrainian","الأوكرانية","УК","uk-UA"],["ro","Romanian","الرومانية","RO","ro-RO"],["cs","Czech","التشيكية","CS","cs-CZ"],
+ ["hu","Hungarian","المجرية","HU","hu-HU"],["sv","Swedish","السويدية","SV","sv-SE"],["da","Danish","الدنماركية","DA","da-DK"],["nb","Norwegian","النرويجية","NO","nb-NO"],["fi","Finnish","الفنلندية","FI","fi-FI"],["vi","Vietnamese","الفيتنامية","VI","vi-VN"],
+ ["bn","Bengali","البنغالية","বা","bn-BD"],["pa","Punjabi","البنجابية","ਪੰ","pa-IN"],["gu","Gujarati","الغوجاراتية","ગુ","gu-IN"],["mr","Marathi","الماراثية","मरा","mr-IN"],["te","Telugu","التيلوغوية","తె","te-IN"],["kn","Kannada","الكنادية","ಕ","kn-IN"],["ml","Malayalam","المالايالامية","മ","ml-IN"],
+ ["si","Sinhala","السنهالية","සි","si-LK"],["ne","Nepali","النيبالية","ने","ne-NP"],["km","Khmer","الخميرية","ខ្មែ","km-KH"],["lo","Lao","اللاوية","ລາວ","lo-LA"],["my","Burmese","البورمية","မြ","my-MM"],["ka","Georgian","الجورجية","ქა","ka-GE"],["hy","Armenian","الأرمنية","ՀԱ","hy-AM"],
+ ["az","Azerbaijani","الأذربيجانية","AZ","az-AZ"],["kk","Kazakh","الكازاخية","ҚА","kk-KZ"],["uz","Uzbek","الأوزبكية","UZ","uz-UZ"],["mn","Mongolian","المنغولية","МН","mn-MN"],["ps","Pashto","البشتو","پښ","ps-AF"],["sq","Albanian","الألبانية","SQ","sq-AL"],
+ ["bg","Bulgarian","البلغارية","БГ","bg-BG"],["sk","Slovak","السلوفاكية","SK","sk-SK"],["sl","Slovenian","السلوفينية","SL","sl-SI"],["lt","Lithuanian","الليتوانية","LT","lt-LT"],["lv","Latvian","اللاتفية","LV","lv-LV"],["et","Estonian","الإستونية","ET","et-EE"],
+ ["is","Icelandic","الآيسلندية","IS","is-IS"],["ga","Irish","الأيرلندية","GA","ga-IE"],["cy","Welsh","الويلزية","CY","cy-GB"],["eu","Basque","الباسكية","EU","eu-ES"],["ca","Catalan","الكتالونية","CA","ca-ES"],["gl","Galician","الجاليكية","GL","gl-ES"],
+ ["mt","Maltese","المالطية","MT","mt-MT"],["mk","Macedonian","المقدونية","МК","mk-MK"],["jv","Javanese","الجاوية","JV","jv-ID"],["su","Sundanese","السوندانية","SU","su-ID"],["ceb","Cebuano","السيبوانية","CEB","ceb-PH"],["ht","Haitian Creole","الكريولية الهايتية","HT","ht-HT"],
+ ["yi","Yiddish","اليديشية","ייִ","yi"],["dv","Dhivehi","الديفيهية","ދި","dv-MV"],["tg","Tajik","الطاجيكية","ТҶ","tg-TJ"],["ky","Kyrgyz","القيرغيزية","КЫ","ky-KG"],["tk","Turkmen","التركمانية","TK","tk-TM"],["mi","Māori","الماورية","MI","mi-NZ"],["sm","Samoan","الساموية","SM","sm-WS"]
+].forEach(l=>{if(!LANGS.some(x=>x[0]===l[0]))LANGS.push([l[0],l[1],l[2],l[3],l[4],"main"])});
+["he","ps","yi","dv"].forEach(c=>{if(!RTL_LANGS.includes(c))RTL_LANGS.push(c);if(typeof RTL_LANGS_EDX!=="undefined"&&!RTL_LANGS_EDX.includes(c))RTL_LANGS_EDX.push(c)});
+
+// ---- 14. (found while testing) the avatar box's "Acting" chip (v165: how the face and the voice perform) had gone with v187's new
+//         prompt box — its old row no longer exists; it is back in the box's row, before Create
+hfBox=(o=>function(){let h=o.apply(this,arguments);if(S.hf.tab!=="avatar"||typeof h!=="string"||h.includes('data-act="act165h"')||typeof act165!=="function")return h;const k=act165(),r=ACT165.find(x=>x[0]===k)||ACT165[0];
+  const chip='<button class="hfchip'+(k!=="auto"?" on163":"")+'" data-act="act165h" aria-haspopup="dialog">'+svg(ACTIC165[k])+"<span>"+esc(k==="auto"?L("Acting","الأداء"):L(r[1],r[2]))+"</span></button>";
+  const m=h.match(/<button[^>]*class="hfsend[^"]*"/);return m?h.replace(m[0],chip+m[0]):h})(hfBox);
+(()=>{const st=document.createElement("style");st.id="v209";st.textContent=`
+.ms209b{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 8px}.ms209b .btn svg{width:14px;height:14px}
+.e-lib.ms209on .e-libi{position:relative}.e-lib.ms209on .e-libi.on{outline:2px solid var(--acc,#D9F43B);outline-offset:-2px;border-radius:12px}
+.e-lib.ms209on .e-libi.on::after{content:attr(data-n);position:absolute;top:6px;inset-inline-start:6px;min-width:22px;height:22px;border-radius:11px;background:var(--acc,#D9F43B);color:#0b0d08;font:700 12px/22px Geist,sans-serif;text-align:center;padding:0 5px}
+.ms209go{position:sticky;bottom:0;display:flex;gap:8px;padding:10px 0 4px;background:linear-gradient(transparent,var(--bg,#0b0d10) 30%);z-index:2}.ms209go .btn{flex:1 1 auto;justify-content:center}
+.st209g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.st209t{display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:6px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg);text-align:start;cursor:pointer;min-width:0}
+.st209t canvas{width:100%;height:auto;aspect-ratio:16/9;border-radius:8px;display:block;background:#050a07}.st209t b{font-size:13px;line-height:1.25}.st209t small{font-size:11px;line-height:1.3;color:var(--mute,#8a8f98)}
+.st209h{margin-top:14px!important}.st209s{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.st209gt{display:flex;flex-direction:column;gap:3px;padding:0;border:0;background:none;color:var(--fg);font-size:11px;line-height:1.2;text-align:center;cursor:pointer;min-width:0}
+.st209gt canvas{width:100%;height:auto;aspect-ratio:16/9;border-radius:8px;display:block;border:2px solid transparent}.st209gt[aria-pressed="true"] canvas{border-color:var(--acc,#D9F43B)}.st209gt span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bg209g{margin:6px 0 10px}.st209box .chips{flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.dj209t{margin:0 0 8px;flex-wrap:wrap}.dj209g{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-bottom:8px}.dj209x{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg);font-size:11px;line-height:1.2;cursor:pointer;min-width:0;text-align:center}
+.dj209x svg{width:20px;height:20px}.dj209x small{font-size:10px;color:var(--mute,#8a8f98)}.dj209x[aria-pressed="true"]{border-color:var(--acc,#D9F43B);background:color-mix(in srgb,var(--acc,#D9F43B) 14%,var(--card))}.dj209x span{overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.dj209b{flex-wrap:wrap;gap:6px;margin-bottom:8px}.cut209o{flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.v209r{gap:8px;flex-wrap:wrap;margin:0 0 10px}.v209r .btn svg{width:14px;height:14px}.v209q{gap:6px;flex-wrap:wrap;margin:0 0 8px}
+.v209l{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow:auto;margin-bottom:10px}.v209i{display:flex;align-items:center;gap:6px;min-width:0}.v209i.done{opacity:.7}
+.v209c{display:flex;align-items:center;gap:4px;flex:0 0 auto;font-size:11px}.v209s{flex:0 0 auto;width:28px;height:28px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:700 12px Geist,sans-serif;cursor:pointer}
+.v209t{flex:1 1 auto;min-width:0;font-size:13px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg)}.v209i svg{width:16px;height:16px;flex:0 0 auto}
+@media (max-width:420px){.st209s,.dj209g{grid-template-columns:repeat(4,minmax(0,1fr))}}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

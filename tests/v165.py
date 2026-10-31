@@ -164,7 +164,7 @@ async def page_checks():
             await pg.evaluate("(l)=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.lang=l;S.user={name:'T',method:'google'};AU.showAuth=false}", lang); return pg
         pg = await page()
         r = await pg.evaluate("""async()=>{const R={};S.view='home';S.hf.tab='avatar';S.hf.act165='auto';renderView();await new Promise(r=>setTimeout(r,500));
-          const chip=document.querySelector('.hfchips [data-act="act165h"]');R.chip=chip&&chip.innerText.trim();chip.click();await new Promise(r=>setTimeout(r,300));
+          const chip=document.querySelector('.hfbox [data-act="act165h"]');R.chip=chip&&chip.innerText.trim();chip.click();await new Promise(r=>setTimeout(r,300));
           R.tiles=[...document.querySelectorAll('.hfsheet .act165 .tile')].map(x=>x.dataset.v);R.note=/Living face: natural blinks/.test((document.querySelector('.hfsheet')||{}).innerText||'');
           document.querySelector('.hfsheet [data-v="funny"]').click();await new Promise(r=>setTimeout(r,300));R.after=[S.hf.act165,document.querySelector('[data-act="act165h"]').innerText.trim(),!!document.querySelector('.hfsheet')];
           const ad=addJob,sp=spend;let got=null;spend=()=>false;addJob=function(j){const r=ad.apply(this,arguments);got=j.meta||{};return r};
