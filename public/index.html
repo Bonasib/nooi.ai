@@ -24931,6 +24931,18 @@ document.addEventListener("input",e=>{const t=e.target;if(!t||!t.matches||!t.mat
 .pw210n{font:600 12px var(--mono,monospace);color:var(--mute);flex:none}.pw210n.over{color:var(--red,#ff5c5c)}.pw210g .chip{display:inline-flex;align-items:center;gap:4px}.pw210g .chip svg{width:12px;height:12px}
 .pw210g .chip[aria-pressed="false"]{opacity:.55}`;document.head.appendChild(st)})();
 
+/* ================= v211: THE 3D WORLD — A GARAGE IS A GARAGE, AN OLD CAR LOOKS OLD, AND WHAT WASN'T READ IS SAID =================
+   public/world/plan.js knows garage / workshop (EN+AR) and old / classic / rusty vehicles (era, rust); a lone building or car
+   stands on flat ground; "a garage with a car" parks the car inside, nose out. assets.js: a real garage (open front, rolled
+   door, workbench, shelf, tyres, a light inside) and a classic car (long bonnet, fenders, chrome, round lights, whitewalls;
+   rust freckles when asked); parked-car colours are sober (the purple default is gone). Below the world, the plan made without
+   AI says which words it could not use, so a missing thing is never silent. */
+nwUI=(o=>function(){let h=o();try{const p=S.world&&S.world.plan,miss=p&&p.missed;
+  if(miss&&miss.length&&h.includes('<div class="nw-actions">'))h=h.replace('<div class="nw-actions">','<p class="small mute nw211">'+esc(L("Words the instant reader couldn't use: ","كلمات لم يستطع القارئ الفوري استخدامها: ")+miss.join(", ")+L(" — with the AI set up in Admin, the plan reads every word."," — مع تفعيل الذكاء من الإدارة تُقرأ كل الكلمات."))+"</p><div class=\"nw-actions\">")}catch(e){}return h})(nwUI);
+// the free reader's missed words survive the build (createWorld cleans the plan, which drops extras)
+nwBuild=(o=>async function(plan,opts){const miss=plan&&plan.missed;const r=await o.apply(this,arguments);if(miss&&miss.length&&S.world.plan&&S.world.plan.seed===plan.seed){S.world.plan.missed=miss.slice(0,4);persist();nwRefresh()}return r})(nwBuild);
+(function(){const st=document.createElement("style");st.id="v211";st.textContent=".nw211{margin:6px 0 2px}";document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

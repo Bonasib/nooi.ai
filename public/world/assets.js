@@ -54,7 +54,7 @@ const pickc = (rnd, list) => list[Math.floor(rnd() * list.length) % list.length]
 export const PALETTE = {
   leaf: ["#4f8a3b", "#5b9a44", "#447c35", "#679f4b"], pine: ["#2f6b3c", "#2a5e37", "#367443"], palm: ["#5f9440", "#6aa046", "#55873a"], dry: ["#8d8d58", "#9a9460", "#7f8452"],
   trunk: ["#6b4a2f", "#5e4029", "#7a5636"], rock: ["#8b8780", "#7d7a74", "#96918a", "#857f76"], red: ["#9c4a32", "#8a3f2c", "#a85a3c"], wall: ["#ece6da", "#e3dccd", "#f2eee6", "#d9d2c3"],
-  car: ["#d63a32", "#f4f4f0", "#1d1f22", "#2f6fd6", "#8a9097", "#3e7a52", "#c9a54a", "#5a2f80"], cloth: ["#c0392b", "#2980b9", "#27ae60", "#f39c12", "#8e44ad", "#16a085", "#d35400"],
+  car: ["#f4f4f0", "#1d1f22", "#8a9097", "#c7332b", "#2f5f8f", "#2c2f33", "#d9d4c8", "#4a5a6a"], classic: ["#8a3a2e", "#3e6b55", "#c9c0a8", "#355e7e", "#6d6a60", "#b0532e"], cloth: ["#c0392b", "#2980b9", "#27ae60", "#f39c12", "#8e44ad", "#16a085", "#d35400"],
   flower: ["#e74c5b", "#f6c945", "#f4f1ea", "#a66fd6", "#ff8fb4", "#ff9d3a"], coral: ["#ff7f6e", "#ff9fc4", "#ffb347", "#b98cff", "#ff6f91"], mud: ["#c69c6d", "#bf9465", "#cfa776", "#b98c5d"]
 };
 
@@ -183,6 +183,19 @@ export function buildModel(T, K, type, v = 0, opt = {}) {
       m.box(w, 5, d, red, M(0, 2.5, 0)); m.shape([[-w / 2 - 0.4, 0], [w / 2 + 0.4, 0], [w / 2 - 1.2, 2.2], [0, 3.3], [-w / 2 + 1.2, 2.2]], d + 0.6, "#5c3a2a", M(0, 5, 0));
       m.box(3.4, 3.6, 0.15, "#f4f1ea", M(0, 1.8, d / 2 + 0.05)); m.box(3.0, 3.2, 0.12, shade(red, 0.8), M(0, 1.7, d / 2 + 0.1)); m.box(0.12, 3.2, 0.16, "#f4f1ea", M(0, 1.7, d / 2 + 0.14, 0, 0, 0.75));
       return m.done([w + 0.8, 8.3, d + 0.6], box(w, 6, d), { foundation: 1 }); }
+    case "garage": { const w = 7.2, d = 7.6, h = 3.1, wall = c1 || pickc(rnd, ["#d9d4c8", "#cfc9ba", "#c4beae", "#b8b2a4"]), acc = c2 || "#5a5f66";
+      m.box(w + 0.6, 0.5, d + 0.8, "#9a958c", M(0, -0.15, 0)); m.cyl(0.6, 0.6, 0.03, 12, "#2a2c2e", M(0.5, 0.12, 0.6));
+      for (const sd of [-1, 1]) m.box(0.28, h, d, wall, M(sd * (w / 2 - 0.14), h / 2, 0));
+      m.box(w, h, 0.28, wall, M(0, h / 2, -(d / 2 - 0.14)));
+      m.box(w + 0.7, 0.34, d + 0.7, shade(wall, 0.78), M(0, h + 0.17, 0)); m.box(w + 0.7, 0.42, 0.2, acc, M(0, h + 0.45, d / 2 + 0.25));
+      m.box(w - 0.3, 0.6, 0.3, shade(wall, 0.9), M(0, h - 0.3, d / 2 - 0.2));
+      m.cyl(0.23, 0.23, w - 1.4, 10, "#8f949a", M(0, h - 0.72, d / 2 - 0.5, 0, 0, Math.PI / 2), "shiny");
+      for (const sd of [-1, 1]) m.box(0.14, h - 0.3, 0.14, acc, M(sd * (w / 2 - 0.5), (h - 0.3) / 2, d / 2 - 0.35));
+      m.box(0.08, 1.0, 1.7, "#c8d4dc", M(w / 2 + 0.01, 2.0, 1.4), "win");
+      m.box(2.6, 0.82, 0.7, "#7a5432", M(-1.5, 0.52, -(d / 2 - 0.65))); m.box(2.7, 0.08, 0.78, "#9a9488", M(-1.5, 0.97, -(d / 2 - 0.65)), "shiny");
+      m.box(0.4, 2.3, 1.9, "#878c94", M(w / 2 - 0.6, 1.15, 1.0)); for (let i = 0; i < 3; i++) m.box(0.34, 0.3, 0.42, pickc(rnd, ["#b0532e", "#355e7e", "#c9c0a8"]), M(w / 2 - 0.6, 0.6 + i * 0.75, 0.5 + (i % 2) * 0.7));
+      for (let i = 0; i < 3; i++) m.torus(0.3, 0.12, 6, 12, "#1b1c1e", M(-w / 2 + 1.0, 0.14 + i * 0.24, d / 2 - 1.3, Math.PI / 2, 0, 0));
+      return m.done([w + 0.7, h + 0.6, d + 0.8], { shape: "box", hx: (w + 0.6) / 2, hy: 0.06, hz: (d + 0.8) / 2, y: 0.06 }, { foundation: 1, light: { color: "#ffe9b8", power: 0.45, y: h - 0.5 } }); }
     case "windmill": { const c = c1 || "#e9e2d2"; m.cyl(1.4, 2.6, 10, 8, c, M(0, 5, 0)); m.cone(2.0, 2.4, 8, "#5c3a2a", M(0, 11.2, 0)); m.box(0.9, 1.8, 0.1, "#3e2a18", M(0, 0.9, 2.45));
       return m.done([6, 14, 6], cyl(2.4, 10), { sails: { y: 9.6, z: 2.2, len: 5.6, color: "#d8cfbf" } }); }
     case "dome": { const c = c1 || "#e8e4da"; m.cyl(6, 6.2, 3, 20, c, M(0, 1.5, 0)); m.sphere(6, 20, 10, c2 || "#d8d2c4", M(0, 3, 0), "opaque", Math.PI * 2, Math.PI / 2); m.shape([[-1.2, 0], [1.2, 0], [1.2, 2.2], [0, 3], [-1.2, 2.2]], 0.3, "#3a3a3a", M(0, 0, 6.05));
@@ -230,7 +243,19 @@ export function buildModel(T, K, type, v = 0, opt = {}) {
       m.cyl(0.08, 0.08, 0.24, 6, "#ffd88a", M(0, 0.21, 0), "glow"); m.cone(0.16, 0.14, 4, c, M(0, 0.49, 0, 0, Math.PI / 4, 0), "shiny"); m.torus(0.05, 0.012, 3, 8, c, M(0, 0.6, 0), "shiny");
       return m.done([0.3, 0.65, 0.3], { shape: "box", hx: 0.13, hy: 0.32, hz: 0.13, y: 0.32 }, { light: { color: "#ffcf7a", power: 0.7, y: 0.25, flicker: 1 } }); }
     // ----- vehicles -----
-    case "car": case "suv": { const suv = type === "suv", body = c1 || pickc(rnd, PALETTE.car), L = suv ? 4.9 : 4.5, H = suv ? 1.9 : 1.45, W = suv ? 2.0 : 1.86;
+    case "car": case "suv": { const suv = type === "suv", old = opt.era === "classic" || opt.rust, L = suv ? 4.9 : old ? 4.6 : 4.5, H = suv ? 1.9 : old ? 1.68 : 1.45, W = suv ? 2.0 : old ? 1.8 : 1.86;
+      let body = c1 || pickc(rnd, old ? PALETTE.classic : PALETTE.car); if (opt.rust && !c1) body = shade(body, 0.86);
+      if (old && !suv) {   // (v211) an old classic: long bonnet, upright cabin, fenders, chrome, round lights — rust freckles when asked
+        const F = {}, skin = (f) => F[f] ?? (F[f] = opt.rust && rnd() < 0.16 ? "#6b4226" : opt.rust && rnd() < 0.2 ? shade(body, 0.74) : body);
+        m.shape([[-2.25, 0.45], [2.3, 0.45], [2.3, 0.98], [1.1, 1.04], [0.68, 1.04], [0.42, 1.6], [-1.2, 1.6], [-1.68, 1.02], [-2.25, 0.96]], W - 0.12, skin, M(0, 0, 0, 0, -Math.PI / 2, 0), opt.rust ? "opaque" : "shiny", 0.07);
+        m.shape([[0.52, 1.1], [0.32, 1.52], [-1.08, 1.52], [-1.42, 1.08]], W - 0.06, "#243640", M(0, 0, 0, 0, -Math.PI / 2, 0), "glass");
+        for (const fx of [1.55, -1.5]) for (const sd of [-1, 1]) m.torus(0.5, 0.1, 5, 10, skin, M(sd * (W / 2 - 0.1), 0.44, fx, 0, Math.PI / 2, 0), opt.rust ? "opaque" : "shiny", Math.PI);
+        for (const sd of [-1, 1]) { m.box(0.26, 0.26, 0.1, "#fff3cf", M(sd * 0.56, 0.98, L / 2 - 0.03), "glow"); m.cyl(0.07, 0.07, 0.22, 6, "#c9ced4", M(sd * 0.56, 0.98, L / 2 - 0.12, Math.PI / 2, 0, 0), "shiny"); }
+        for (const e of [1, -1]) m.box(W + 0.14, 0.15, 0.24, opt.rust ? "#8a8f8f" : "#cdd3d8", M(0, 0.44, e * (L / 2 - 0.02)), "shiny");
+        m.box(0.74, 0.34, 0.08, opt.rust ? "#9a9f9f" : "#cdd3d8", M(0, 0.78, L / 2 + 0.02), "shiny");
+        m.cyl(0.33, 0.33, 0.2, 10, "#23262a", M(0, 0.95, -L / 2 - 0.1, Math.PI / 2, 0, 0)); m.cyl(0.18, 0.18, 0.21, 8, "#b8bec4", M(0, 0.95, -L / 2 - 0.1, Math.PI / 2, 0, 0), "shiny");
+        for (const [x, z] of [[1.55, 0.8], [-1.5, 0.8], [1.55, -0.8], [-1.5, -0.8]]) { m.cyl(0.37, 0.37, 0.24, 12, "#23262a", M(z, 0.4, x, 0, 0, Math.PI / 2)); m.cyl(0.26, 0.26, 0.25, 10, "#ddd8c8", M(z, 0.4, x, 0, 0, Math.PI / 2)); m.cyl(0.12, 0.12, 0.26, 8, "#c9ced4", M(z, 0.4, x, 0, 0, Math.PI / 2), "shiny"); }
+        return m.done([W, 1.68, L], { shape: "box", hx: W / 2, hy: 0.75, hz: L / 2, y: 0.8 }, { mass: 1500 }); }
       const prof = suv ? [[-2.45, 0.35], [2.45, 0.35], [2.45, 0.95], [2.15, 1.1], [1.25, 1.15], [0.95, 1.85], [-2.2, 1.9], [-2.45, 1.75]] : [[-2.25, 0.3], [2.25, 0.3], [2.25, 0.75], [1.9, 0.92], [0.85, 1.0], [0.35, 1.45], [-1.15, 1.45], [-1.85, 1.0], [-2.25, 0.92]];
       m.shape(prof, W - 0.08, body, M(0, 0, 0, 0, -Math.PI / 2, 0), "shiny", 0.04);
       const win = suv ? [[1.12, 1.18], [0.88, 1.8], [-2.1, 1.82], [-2.3, 1.2]] : [[0.75, 1.03], [0.32, 1.4], [-1.1, 1.4], [-1.72, 1.02]];

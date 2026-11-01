@@ -77,9 +77,9 @@ export async function createWorld(engine, planIn, opts = {}) {
   const okLand = (x, z, type) => { const T0 = TYPES[type]; if (type === "boat" || type === "pier") return true; if (terrain.isWater(x, z)) return false; const sl = terrain.slopeAt(x, z); return sl < (T0.c === "building" ? 0.35 : T0.c === "plant" || T0.c === "nature" ? 0.9 : 0.5); };
   // ---- the things ----
   const statics = new Map(), dynamics = [], lights = [], cloths = [], sails = [], fires = [], avoid = [], info = [], tmpl = new Map();
-  const tpl = (type, v, color, color2, mat) => { const key = type + "|" + v + "|" + (color || "") + "|" + (color2 || ""); if (!tmpl.has(key)) tmpl.set(key, buildModel(T, K, type, v, { rnd: rng(plan.seed + key.length * 131 + v), color, color2, place: plan.place, snow: plan.terrain.ground === "snow" || plan.weather.kind === "snow", low, mat })); return tmpl.get(key); };
+  const tpl = (type, v, color, color2, mat, era, rust) => { const key = type + "|" + v + "|" + (color || "") + "|" + (color2 || "") + "|" + (era || "") + (rust ? "~r" : ""); if (!tmpl.has(key)) tmpl.set(key, buildModel(T, K, type, v, { rnd: rng(plan.seed + key.length * 131 + v), color, color2, place: plan.place, snow: plan.terrain.ground === "snow" || plan.weather.kind === "snow", low, mat, era, rust })); return tmpl.get(key); };
   const place = (o, x, z, ry, s, v, idx) => {
-    const md = tpl(o.type, v, o.color, o.color2, o.mat), T0 = TYPES[o.type] || TYPES.box, ss = (o.scale || 1) * s;
+    const md = tpl(o.type, v, o.color, o.color2, o.mat, o.era, o.rust), T0 = TYPES[o.type] || TYPES.box, ss = (o.scale || 1) * s;
     let y = terrain.heightAt(x, z);
     if (md.foundation) { y = terrain.flatten(x, z, md.size[0] * ss / 2 + 1, md.size[2] * ss / 2 + 1, 3); }
     if (o.type === "boat" && terrain.water.level > -900 && terrain.isWater(x, z)) y = terrain.water.level - 0.3;

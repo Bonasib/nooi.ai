@@ -44,6 +44,7 @@ export const TYPES = {
   tower: { c: "building", s: [16, 60, 16], m: "glass" }, shop: { c: "building", s: [8, 5, 7], m: "stone" }, tent: { c: "building", s: [7, 3, 5], m: "wood" }, mosque: { c: "building", s: [18, 12, 18], m: "stone" },
   castle: { c: "building", s: [24, 14, 24], m: "stone" }, lighthouse: { c: "building", s: [5, 20, 5], m: "stone" }, barn: { c: "building", s: [12, 8, 9], m: "wood" }, windmill: { c: "building", s: [6, 14, 6], m: "wood" },
   dome: { c: "building", s: [12, 9, 12], m: "stone" }, ruins: { c: "building", s: [10, 5, 10], m: "stone" }, pyramid: { c: "building", s: [24, 16, 24], m: "stone" },
+  garage: { c: "building", s: [7.6, 4.6, 8], m: "stone" },
   // structures & street
   bridge: { c: "structure", s: [14, 2, 4], m: "wood" }, wall: { c: "structure", s: [10, 2.5, 0.6], m: "stone" }, gate: { c: "structure", s: [6, 6, 1.5], m: "stone" }, fence: { c: "structure", s: [6, 1.1, 0.2], m: "wood" },
   well: { c: "structure", s: [1.8, 1.8, 1.8], m: "stone" }, fountain: { c: "structure", s: [5, 2.4, 5], m: "stone" }, pier: { c: "structure", s: [3, 1, 16], m: "wood" }, statue: { c: "structure", s: [1.6, 4, 1.6], m: "stone" },
@@ -93,6 +94,7 @@ export function cleanPlan(j) {
     return { type, ...(TYPES[o.type] ? {} : { label: txt(o.label || o.type, 40) }), at: xz(o.at, lim), count, spread: num(o.spread, 0, lim, count > 1 ? Math.min(lim, 6 + count * 2) : 0), scale,
       color: hex(o.color), color2: hex(o.color2), mat: pick(o.mat || o.material, ["wood", "metal", "rubber", "glass", "stone", "foam", "plastic", "ice"], T.m), rot: num(o.rot, -360, 360, 0),
       dyn: o.dyn === undefined ? !!T.dyn : !!o.dyn, hero: !!o.hero, name: txt(o.name, 40) || undefined,
+      era: o.era === "classic" ? "classic" : undefined, rust: o.rust ? true : undefined,   // (v211: an old / rusty vehicle keeps its look)
       box: Array.isArray(o.box) && o.box.length === 4 && o.box.every((v) => Number.isFinite(+v)) ? o.box.map((v) => num(v, 0, 1, 0)) : undefined };   // where it is in the picture (for its 3D model)
   }).filter(Boolean);
   let life = (Array.isArray(j.life) ? j.life : []).slice(0, 12).map((l) => (l && LIFE[l.type] ? { type: l.type, count: Math.round(num(l.count, 1, 30, 3)), at: xz(l.at, lim), spread: num(l.spread, 0, lim, lim * 0.6) } : null)).filter(Boolean);
@@ -173,6 +175,7 @@ const THING_WORDS = [
   ["najdi", W("mud houses?|mud-brick|najdi|adobe", "بيت طين|بيوت طين|طيني|نجدي|بيوت تراثيه")], ["villa", W("villas?|mansion", "فيلا|فلل|قصر حديث")], ["cabin", W("cabins?|huts?|cottage", "كوخ|اكواخ|شاليه")],
   ["tower", W("towers?|skyscrapers?|high-rise", "برج|ابراج|ناطحه|ناطحات")], ["mosque", W("mosques?|minaret", "مسجد|مساجد|جامع|منارة مسجد|مئذنه")], ["castle", W("castles?|fort|fortress|citadel", "قلعه|قلاع|حصن")],
   ["lighthouse", W("lighthouse", "منارة بحريه|فنار")], ["barn", W("barns?", "حظيره|اسطبل")], ["windmill", W("windmills?", "طاحونه")], ["tent", W("tents?|bedouin tent|camp", "خيمه|خيام|بيت شعر|مخيم")],
+  ["garage", W("garages?|car ?ports?|workshops?|repair shop|auto shop|mechanics?", "كراج|جراج|قراج|مرآب|ورشه|ورش")],
   ["shop", W("shops?|stores?|cafes?|restaurants?", "محل|محلات|دكان|مطعم|متجر")], ["house", W("houses?|homes?|buildings?", "بيت|بيوت|منزل|منازل|مبني|مباني")], ["pyramid", W("pyramids?", "هرم|اهرام")],
   ["ruins", W("ruins|columns|ancient", "اطلال|اثار|اعمده")], ["dome", W("domes?", "قبه|قباب")],
   ["bridge", W("bridges?", "جسر|جسور|كوبري")], ["wall", W("walls?", "سور|جدار|اسوار")], ["gate", W("gates?|arch(es)?", "بوابه|قوس|باب كبير")], ["fence", W("fences?", "سياج|اسوار خشبيه")],
@@ -234,23 +237,48 @@ export function localPlan(prompt, opts = {}) {
   const objects = [], life = [], seen = new Set();
   for (const [type, re] of THING_WORDS) {
     const m = re.exec(t); if (!m || seen.has(type)) continue; seen.add(type);
-    if (type === "house" && (seen.has("najdi") || seen.has("villa") || seen.has("cabin") || seen.has("tower"))) continue;
+    if (type === "house" && (seen.has("najdi") || seen.has("villa") || seen.has("cabin") || seen.has("tower") || seen.has("garage"))) continue;
+    if (type === "shop" && seen.has("garage")) continue;
     if (type === "tree" && (seen.has("palm") || seen.has("pine") || seen.has("ghaf")) && !/\btrees?\b|اشجار/.test(t.replace(/palm trees?|pine trees?/g, ""))) continue;
     const T = TYPES[type], pl = plural(m), n = countNear(t, m.index) || (T.c === "plant" ? (pl ? 8 : 1) : T.c === "building" ? (place === "city" || place === "village" ? 6 : pl ? 4 : 1) : pl ? 4 : 1);
-    objects.push({ type, count: n, color: near(t, m, COLORS), mat: near(t, m, MATS) || undefined, scale: /\b(huge|giant|enormous)\b|ضخم|عملاق/.test(t.slice(Math.max(0, m.index - 14), m.index + 4)) ? 2.2 : /\b(big|large|tall)\b|كبير|طويل/.test(t.slice(Math.max(0, m.index - 14), m.index + 4)) ? 1.5 : /\b(small|little|tiny)\b|صغير/.test(t.slice(Math.max(0, m.index - 14), m.index + 4)) ? 0.6 : 1, hero: objects.length === 0 && T.c !== "plant" });
+    const look = TYPES[type].c === "vehicle" ? t.slice(Math.max(0, m.index - 22), m.index + m[0].length + 22) : "";
+    const era = look && /\b(old|classic|vintage|antique|retro|1\d{3}s?)\b|قديم|كلاسيكي|عتيق|اثري/.test(look) ? "classic" : undefined;
+    const rust = look && /\b(rusty|rusted|wreck(ed)?|abandoned|junk)\b|صدئ|صديه|مهجور|خرده/.test(look) ? true : undefined;
+    objects.push({ type, era, rust, count: n, color: near(t, m, COLORS), mat: near(t, m, MATS) || undefined, scale: /\b(huge|giant|enormous)\b|ضخم|عملاق/.test(t.slice(Math.max(0, m.index - 14), m.index + 4)) ? 2.2 : /\b(big|large|tall)\b|كبير|طويل/.test(t.slice(Math.max(0, m.index - 14), m.index + 4)) ? 1.5 : /\b(small|little|tiny)\b|صغير/.test(t.slice(Math.max(0, m.index - 14), m.index + 4)) ? 0.6 : 1, hero: objects.length === 0 && T.c !== "plant" });
   }
   for (const [type, re] of LIFE_WORDS) { const m = re.exec(t); if (!m || life.some((l) => l.type === type)) continue; if (type === "car" && seen.has("car")) continue; if (type === "person" || type === "child") continue; life.push({ type, count: countNear(t, m.index) || (type === "fish" ? 20 : plural(m) ? 4 : 1) }); }
   const people = localPeople(raw);
   // a car "driving" / "on the road" moves; a parked one stays
   if (seen.has("car") && /\b(driving|traffic|moving|racing)\b|تسير|تمشي|زحمه|سباق|مسرعه/.test(t)) { const i = objects.findIndex((o) => o.type === "car"); if (i >= 0) { life.push({ type: "car", count: objects[i].count }); objects.splice(i, 1); } }
   let room; if (P.indoor) { room = "living"; for (const [r, re] of ROOM_WORDS) if (re.test(t)) { room = r; break; } }
+  // (v211) a building or a vehicle named with no place around it stands on open flat ground, not on hills
+  if (!hits.length && objects.length && ["building", "vehicle"].includes((TYPES[objects[0].type] || {}).c) && !shape) shape = "flat";
+  // (v211) "a garage with a car": the garage faces you and the car is parked inside it, nose out
+  const gar = objects.find((o) => o.type === "garage"), veh = objects.find((o) => TYPES[o.type].c === "vehicle" && ["car", "suv", "bike"].includes(o.type));
+  if (gar && !gar.at) { gar.at = [0, -6]; gar.rot = 0; gar.hero = true; if (veh && !veh.at && veh.count === 1) { veh.at = [0, -4.5]; veh.rot = 6; } }   // nose out of the open door, turned a touch
   if (ground === "snow" && kind === "clear" && !opts.weather) kind = "snow";
   if (water === "sea" && !shape) shape = "coast";
   // a village or houses named next to another place ("a snowy mountain village")
   if (place !== "village" && place !== "city" && hits.includes("village") && !objects.some((o) => TYPES[o.type].c === "building")) objects.push({ type: ground === "snow" || place === "snow" || place === "mountain" || place === "forest" ? "cabin" : place === "desert" || place === "oasis" ? "najdi" : "house", count: 5 });
   const p = cleanPlan({ prompt: raw, place, room, time, weather: { kind, wind }, terrain: { ground, shape }, water: { kind: water }, objects, life, people, title: raw.slice(0, 60) || P.en, label: raw.slice(0, 60) });
   p.describe = describePlan(p);
+  const miss = missedWords(t); if (miss.length) p.missed = miss;   // (v211) said honestly under the world
   return p;
+}
+
+// (v211) the words of the prompt the free reader could not use — shown under the world, so a missing thing is never silent
+const STOP_PLAN = new Set(("the a an and or of in on at with by for to from into over under near next beside behind inside outside full empty new nice beautiful big small huge tiny old classic vintage antique retro rusty rusted abandoned little lovely my our your his her their this that some any very really where there here is are was it its front back side left right middle center centre parked parking lands landing driving moving stands"
+  + " في من علي الي عن مع فوق تحت بجانب خلف امام داخل خارج قرب جنب ذو ذات فيه فيها بها به هذا هذه ذلك جميل جميله كبير كبيره صغير صغيره قديم قديمه جديد جديده جدا وسط يمين يسار جانب موقف مواقف واقفه").split(" ").map((w) => norm(w)));
+export function missedWords(t) {
+  const all = [PLACE_WORDS, TIME_WORDS, WEATHER_WORDS, THING_WORDS, LIFE_WORDS, COLORS, MATS, WHO, ACT_WORDS, DRESS, ROOM_WORDS].flat().map((x) => x[1]).concat([WIND, EDIT]);
+  const out = [];
+  for (const w of String(t || "").split(/[^\p{L}\p{N}]+/u)) {
+    if (w.length < 3 || /^\p{N}+$/u.test(w) || STOP_PLAN.has(w) || NUMS[w] != null || out.includes(w)) continue;
+    const probe = " " + w + " ";
+    if (!all.some((re) => re.test(probe))) out.push(w);
+    if (out.length >= 4) break;
+  }
+  return out;
 }
 
 // ---- people in the words: who (a man in a thobe, two girls, a family…), how many, what they do (walk, sit, wave, talk, dance,
@@ -298,7 +326,8 @@ export function describePlan(p) {
   const tod = h < 5 || h >= 21 ? "at night under the stars" : h < 7.2 ? "at dawn" : h < 11 ? "in the morning light" : h < 15 ? "at midday" : h < 17.6 ? "in the afternoon" : h < 19.3 ? "at golden-hour sunset" : "at dusk";
   const wx = { clear: "", cloudy: ", under a cloudy sky", rain: ", in the rain", storm: ", in a thunderstorm", snow: ", with snow falling", fog: ", in soft fog", sandstorm: ", in a sandstorm" }[p.weather.kind] || "";
   const nm = (k, n) => { const one = NAMES[k] || k, many = PLURALS[k] || (/(s|sh|ch|x)$/.test(one) ? one + "es" : /[^aeiou]y$/.test(one) ? one.slice(0, -1) + "ies" : one + "s"); return n > 1 ? many : one; };
-  const things = p.objects.slice(0, 6).map((o) => (o.count > 1 ? o.count + " " + nm(o.label || o.type, 2) : (/^[aeiou]/.test(nm(o.label || o.type, 1)) ? "an " : "a ") + nm(o.label || o.type, 1))).join(", ");
+  const things = p.objects.slice(0, 6).map((o) => { const base = (o.rust ? "rusty old " : o.era === "classic" ? "classic " : "") + nm(o.label || o.type, o.count > 1 ? 2 : 1);
+    return o.count > 1 ? o.count + " " + base : (/^[aeiou]/.test(base) ? "an " : "a ") + base; }).join(", ");
   const alive = p.life.slice(0, 4).map((l) => nm(l.type, l.count)).join(" and ");
   const where = P.indoor ? "a " + ({ living: "living room", majlis: "majlis (Arabic sitting room)", cafe: "café" }[p.room] || p.room || "room") : P.en;
   return ("A walkable 3D world: " + where + " " + tod + wx + (things ? ", with " + things : "") + (alive ? "; " + alive + (p.life.length === 1 && p.life[0].count === 1 ? " moves" : " move") + " about" : "") + ".").replace(/\s+/g, " ");
