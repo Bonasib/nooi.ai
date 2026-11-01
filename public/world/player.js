@@ -61,7 +61,7 @@ export function createPlayer(T, engine, { host: host0, physics, terrain, water, 
       cam.rotation.set(-0.62 * (1 - e) + st.pitch * e, st.yaw, 0, "YXZ"); if (k >= 1 || st.touched) setMode("walk"); return;
     }
     if (st.mode === "tour") { const tr = st.tour; tr.t = Math.min(1, tr.t + dt / tr.len); const p = tr.curve.getPointAt(tr.t); cam.position.copy(p); const h = tr.hero; cam.lookAt(h[0], terrain.heightAt(h[0], h[1]) + 2, h[1]); if (tr.t >= 1) setMode("walk"); return; }
-    if (st.mode === "orbit") { const o = st.orbit, c = plan._hero || [0, 0], cy = terrain.heightAt(c[0], c[1]) + 2; if (!st.touched) o.az += dt * 0.08;
+    if (st.mode === "orbit") { const o = st.orbit, c = plan._hero || [0, 0], cy = terrain.heightAt(c[0], c[1]) + (o.h ?? 2); if (!st.touched) o.az += dt * 0.08;
       cam.position.set(c[0] + Math.sin(o.az) * Math.cos(o.el) * o.dist, cy + Math.sin(o.el) * o.dist, c[1] + Math.cos(o.az) * Math.cos(o.el) * o.dist); cam.lookAt(c[0], cy, c[1]); return; }
     if (st.mode === "fly") {
       const sp = (run ? 26 : 11) * dt; tmp.set(-Math.sin(st.yaw) * Math.cos(st.pitch), Math.sin(st.pitch), -Math.cos(st.yaw) * Math.cos(st.pitch));
@@ -83,6 +83,8 @@ export function createPlayer(T, engine, { host: host0, physics, terrain, water, 
   }
   return {
     camera: cam, update, setMode, get mode() { return st.mode; },
+    // (v215) a framed shot around the main thing: a camera preset (wide, close up, top, side) or the cinematic tour
+    shot(o = {}) { if (o.tour) { setMode("tour"); return; } setMode("orbit"); Object.assign(st.orbit, { az: o.az ?? st.orbit.az, el: Math.max(0.04, Math.min(1.45, o.el ?? st.orbit.el)), dist: Math.max(1.2, o.dist ?? st.orbit.dist), h: o.h ?? 2 }); st.touched = true; },
     get pos() { return { x: st.x, y: st.y, z: st.z, yaw: st.yaw, running: st.run || st.keys.has("ShiftLeft") }; },
     eyeRay() { const o = cam.position, d = cam.getWorldDirection(new T.Vector3()); return { origin: { x: o.x, y: o.y, z: o.z }, dir: { x: d.x, y: d.y, z: d.z } }; },
     press(name, on = true) { if (name === "jump") st.jump = on; if (name === "up") st.up = on; if (name === "down") st.down = on; wake(); },

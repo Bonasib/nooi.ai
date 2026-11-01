@@ -11357,7 +11357,7 @@ const nwPhone=()=>matchMedia("(pointer:coarse)").matches;
 async function nwCaps(){if(NW.caps)return NW.caps;if(API.mode!=="server")return NW.caps={ai:false,vision:false,worldlabs:false,objects3d:false,pano:true,cost:{plan:1}};try{NW.caps=await API.req("/v1/world/caps")}catch(e){NW.caps={ai:false,vision:false,worldlabs:false,objects3d:false,pano:true,cost:{plan:1}}}return NW.caps}
 const nwPanoCost=()=>((IMG_MODELS[bestImg72()]||{cr:4}).cr||4);
 const nwObjCost=()=>(typeof S3D_COST==="object"&&S3D_COST.objects)||12;
-function nwRealCost(){const c=NW.caps||{};if(c.worldlabs)return c.cost&&c.cost.worldlabs||36;const objs=(S.world.plan&&S.world.plan.objects||[]).filter(o=>nwHeroish(o)).slice(0,4).length,room=!!(S.world.plan&&S.world.plan.place==="room");return(room?0:nwPanoCost())+(c.objects3d?objs*nwObjCost():0)}
+function nwRealCost(){const c=NW.caps||{};if(c.worldlabs)return c.cost&&c.cost.worldlabs||36;const objs=(S.world.plan&&S.world.plan.objects||[]).filter(o=>nwHeroish(o)).slice(0,4).length,room=nwIn215(S.world.plan);return(room?0:nwPanoCost())+(c.objects3d?objs*nwHeroCost215():0)}
 function nwHeroish(o){const t=o&&o.type;return!!t&&!["tree","pine","palm","bush","shrub","flowers","fern","reeds","grass","rock","crops","mushroom","coral","seaweed","lamp","fence","wall","rug","leak"].includes(t)}
 TOOLDESC.world=["Write what you want — or add a picture — and walk around inside it: a living world with people, animals, water, weather and real physics. Light enough for any phone.","اكتب ما تريد — أو أضف صورة — وتجوّل بداخله: عالم حي فيه ناس وحيوانات وماء وطقس وفيزياء حقيقية، خفيف على أي جوال."];
 
@@ -11376,14 +11376,14 @@ function nwUI(){const W=S.world,has=!!NW.W,busy=NW.busy,c=NW.caps||{};
     '<div class="nw-opts"><div class="nw-grp" role="group" aria-label="'+esc(L("Time of day","وقت اليوم"))+'"><span class="nw-lbl">'+esc(L("Time","الوقت"))+"</span>"+nwChip("time","auto","","Auto","تلقائي")+nwChip("time","day","sun","Day","نهار")+nwChip("time","golden","dusk","Sunset","غروب")+nwChip("time","night","moon","Night","ليل")+"</div>"+
     '<div class="nw-grp" role="group" aria-label="'+esc(L("Weather","الطقس"))+'"><span class="nw-lbl">'+esc(L("Weather","الطقس"))+"</span>"+nwChip("weather","auto","","Auto","تلقائي")+nwChip("weather","clear","sun","Clear","صافٍ")+nwChip("weather","rain","rain","Rain","مطر")+nwChip("weather","snow","snow","Snow","ثلج")+nwChip("weather","fog","fog","Fog","ضباب")+nwChip("weather","storm","bolt","Storm","عاصفة")+"</div>"+
     '<div class="nw-grp" role="group" aria-label="'+esc(L("Look","المظهر"))+'"><span class="nw-lbl">'+esc(L("Look","المظهر"))+"</span>"+nwChip("look","fast","bolt","Fast · free","سريع · مجاني")+nwChip("look","real","spark","Realistic · AI","واقعي · ذكاء",' <span class="mono nw-cr">'+rc+"</span>")+"</div></div>"+
-    (real?'<p class="small mute nw-note">'+esc(c.worldlabs?L("Realistic: World Labs turns your words or picture into a photoreal world you can walk in; people, animals, weather and physics are added on top.","واقعي: يحوّل World Labs كلماتك أو صورتك إلى عالم واقعي تمشي فيه، وتضاف فوقه الناس والحيوانات والطقس والفيزياء."):L("Realistic: the AI paints the surroundings all around you (a 360° picture)"+(c.objects3d?" and makes the main things as real 3D objects":"")+". The world is ready at once; the realistic parts appear when they're made. They are made by the cloud AI engines (NVIDIA · Google · the image engine) — no graphics card is needed on your device or your server. For a FULLY real world — one photo you can walk through, not layers — add the World Labs (Marble) key in Admin → AI providers.","واقعي: يرسم الذكاء المحيط من حولك (صورة 360°)"+(c.objects3d?" ويصنع العناصر الرئيسية كمجسّمات ثلاثية حقيقية":"")+". العالم جاهز فوراً، والأجزاء الواقعية تظهر عند اكتمالها. تُصنع على محركات الذكاء السحابية (NVIDIA · Google · محرك الصور) — لا حاجة لبطاقة رسومات على جهازك أو خادمك. ولعالم واقعي بالكامل — صورة واحدة تمشي بداخلها لا طبقات — أضف مفتاح World Labs (Marble) من الإدارة ← مزوّدو الذكاء."))+"</p>":"")+
+    (real?'<p class="small mute nw-note">'+esc(c.worldlabs?L("Realistic: World Labs turns your words or picture into a photoreal world you can walk in; people, animals, weather and physics are added on top.","واقعي: يحوّل World Labs كلماتك أو صورتك إلى عالم واقعي تمشي فيه، وتضاف فوقه الناس والحيوانات والطقس والفيزياء."):L("Realistic: the AI paints the surroundings all around you (a 360° picture)"+(c.objects3d?" and makes the main things as real 3D objects":"")+". The world is ready at once; the realistic parts appear when they're made. They are made by the cloud AI engines (NVIDIA · Google · the image engine) — no graphics card is needed on your device or your server.","واقعي: يرسم الذكاء المحيط من حولك (صورة 360°)"+(c.objects3d?" ويصنع العناصر الرئيسية كمجسّمات ثلاثية حقيقية":"")+". العالم جاهز فوراً، والأجزاء الواقعية تظهر عند اكتمالها. تُصنع على محركات الذكاء السحابية (NVIDIA · Google · محرك الصور) — لا حاجة لبطاقة رسومات على جهازك أو خادمك."))+"</p>":"")+
     (!has&&!W.prompt&&!W.pic?'<div class="nw-ex">'+NW_EX.map((x,i)=>'<button class="nw-exb" data-act="nw-ex" data-i="'+i+'">'+esc(L(x[0],x[1]))+"</button>").join("")+"</div>":"")+"</div>"+
   (has?'<div class="nw-actions">'+[["nw-photo","cam3d","Photo","صورة"],["nw-video","rec","Video tour","جولة فيديو"],["nw-use","video","Use in Create video","استخدمه في إنشاء فيديو"],["nw-real","spark","Make it a real photo","اجعله صورة حقيقية"],["nw-save","library","Save","حفظ"],["nw-glb","download","Download .glb","تنزيل ‎.glb"],["nw-new","plus","New world","عالم جديد"]].map(a=>'<button class="btn sm'+(a[0]==="nw-real"?" ai":"")+'" data-act="'+a[0]+'">'+ic(a[1])+"<span>"+esc(L(a[2],a[3]))+"</span>"+(a[0]==="nw-real"?' <span class="mono dim">'+nwPanoCost()+"</span>":"")+"</button>").join("")+"</div>":"")+
   (W.saved.length?'<h2 class="sec">'+esc(L("My worlds","عوالمي"))+'</h2><div class="nw-saved">'+W.saved.map(w=>'<div class="nw-card"><button class="nw-open" data-act="nw-open" data-id="'+w.id+'">'+(w.thumb?'<img src="'+w.thumb+'" alt="">':'<span class="nw-ph">'+ic("world")+"</span>")+"<b>"+esc(w.title||L("World","عالم"))+'</b></button><button class="nw-del" data-act="nw-del" data-id="'+w.id+'" aria-label="'+esc(L("Delete","حذف"))+'">'+ic("trash")+"</button></div>").join("")+"</div>":"")}
 
 // the stage keeps its canvas across the app's re-renders; only the panel under it is redrawn
 renderView=(o=>function(){
-  if(S.user&&S.view==="world"&&nwStage()&&!NW.force&&NW.lang===S.lang){renderShell();const u=document.getElementById("nwui");if(u&&!u.contains(document.activeElement))u.innerHTML=nwUI();nwHud();return}
+  if(S.user&&S.view==="world"&&nwStage()&&!NW.force&&NW.lang===S.lang){renderShell();const u=document.getElementById("nwui"),a=document.activeElement;if(u&&!(u.contains(a)&&/^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName)))u.innerHTML=nwUI();nwHud();return}
   NW.force=false;const r=o.apply(this,arguments);if(S.view==="world")requestAnimationFrame(nwMount);else nwLeave();return r})(renderView);
 function nwLeave(){if(!NW.E||NW.leaving)return;NW.leaving=1;NW.E.stop();if(NW.rec)nwStopRec(true);
   // phones give the memory back as soon as you leave (the plan is kept, the world is rebuilt in a moment when you come back)
@@ -11402,7 +11402,7 @@ async function nwBuild(plan,o){o=o||{};const M=await nwMods(),st=nwStage();if(!s
     const p=Object.assign({},NW.W.plan);delete p._hero;S.world.plan=p;persist();nwSay("")}
   catch(e){console.error(e);nwSay(L("The world couldn't be built — try other words.","تعذّر بناء العالم — جرّب كلمات أخرى."))}
   NW.busy=false;nwRefresh();nwHud()}
-function nwRefresh(){const u=document.getElementById("nwui");if(u&&!u.contains(document.activeElement))u.innerHTML=nwUI()}
+function nwRefresh(){const u=document.getElementById("nwui"),a=document.activeElement;if(u&&!(u.contains(a)&&/^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName)))u.innerHTML=nwUI()}   // (v215: only typing keeps the panel as it is — a tapped button no longer freezes it)
 // what happened in the world, in words (weights and speeds come from the physics)
 const NW_WHAT={ball:["the ball","الكرة"],crate:["the wooden crate","الصندوق الخشبي"],barrel:["the barrel","البرميل"],cone:["the cone","المخروط"],chair:["the chair","الكرسي"],table:["the table","الطاولة"],vase:["the vase","المزهرية"],bottle:["the bottle","الزجاجة"],lantern:["the lantern","الفانوس"],plant:["the plant","النبتة"],car:["the car","السيارة"],boat:["the boat","القارب"],log:["the log","الجذع"],box:["the box","الصندوق"],bike:["the bike","الدراجة"]};
 const nwW=k=>{const w=NW_WHAT[k];return w?L(w[0],w[1]):k};
@@ -11425,10 +11425,12 @@ const NW_TIME={day:11.5,golden:18.3,night:22.5};
 async function nwRealistic(pic){const W=NW.W;if(!W)return;const c=await nwCaps(),plan=W.plan,seed=plan.seed,desc=plan.describe||plan.prompt||"";
   const file=pic?await (await fetch(pic)).blob().then(b=>new File([b],"place.jpg",{type:b.type||"image/jpeg"})):null;const made=[];
   if(c.worldlabs){const j=withRef72("wRef",file,()=>addJob({kind:"world",prompt:desc,title:L("3D world · ","عالم 3D · ")+String(plan.title||"").slice(0,30),cost:c.cost&&c.cost.worldlabs||36,secs:90,art:"scene",aspect:"16:9",meta:{engine:"worldlabs",nw:{seed,role:"splat"}}}));if(j)made.push(j)}
-  else{const pj=plan.place==="room"?null:withRef72("iRef",file,()=>addJob({kind:"image",model:bestImg72(),aspect:"21:9",prompt:"A seamless 360-degree equirectangular panorama"+(file?" that continues the place in the reference photo in every direction":"")+". The place: "+desc+" Eye-level camera in the middle of the space, the horizon straight across the middle, photorealistic, consistent light, no text, no frame; the left and right edges join seamlessly.",title:L("360° surroundings · ","المحيط 360° · ")+String(plan.title||"").slice(0,24),cost:nwPanoCost(),secs:40,art:"scene",meta:{nw:{seed,role:"pano"}}}));if(pj)made.push(pj);
+  else{const pj=nwIn215(plan)?null:withRef72("iRef",file,()=>addJob({kind:"image",model:bestImg72(),aspect:"21:9",prompt:"A seamless 360-degree equirectangular panorama"+(file?" that continues the place in the reference photo in every direction":"")+". The place: "+desc+" Eye-level camera in the middle of the space, the horizon straight across the middle, photorealistic, consistent light, no text, no frame; the left and right edges join seamlessly.",title:L("360° surroundings · ","المحيط 360° · ")+String(plan.title||"").slice(0,24),cost:nwPanoCost(),secs:40,art:"scene",meta:{nw:{seed,role:"pano"}}}));if(pj)made.push(pj);
     if(c.objects3d){const heroes=plan.objects.map((o,i)=>({o,i})).filter(x=>nwHeroish(x.o)).slice(0,4);   /* (v214) up to four real 3D things */
-      for(const h of heroes){let crop=null;if(file&&h.o.box)crop=await nwCrop(pic,h.o.box);const j=withRef72("s3dImg",crop,()=>addJob({kind:"3d",prompt:(h.o.name||h.o.type)+(desc?" — from: "+desc:""),title:(h.o.name||h.o.type)+" · 3D",cost:nwObjCost(),secs:60,art:"scene",aspect:"1:1",meta:{mode:"objects",engine:"auto",nw:{seed,role:"model",i:h.i,name:h.o.name||h.o.type}}}));if(j)made.push(j)}}}
-  if(!made.length){toast(S.world.plan&&S.world.plan.place==="room"?L("A room gets real 3D objects only (no outdoor panorama) — set up a 3D engine in Admin → AI providers.","الغرفة تأخذ مجسمات حقيقية فقط (بلا محيط خارجي) — فعّل محرك 3D من الإدارة ← مزوّدو الذكاء."):L("Not enough credits for the realistic parts — the world stays as it is.","الرصيد لا يكفي للأجزاء الواقعية — يبقى العالم كما هو."));return}
+      for(const h of heroes){let crop=null;if(file&&h.o.box)crop=await nwCrop(pic,h.o.box);   /* (v215) no picture of it → the image engine draws it first, then the 3D engine shapes the model from that picture */
+      if(!crop){const r=nwRefJob215(h,seed,desc);if(r){made.push(r);continue}}
+      const j=withRef72("s3dImg",crop,()=>addJob({kind:"3d",prompt:(h.o.name||h.o.type)+(desc?" — from: "+desc:""),title:(h.o.name||h.o.type)+" · 3D",cost:nwObjCost(),secs:60,art:"scene",aspect:"1:1",meta:{mode:"objects",engine:"auto",nw:{seed,role:"model",i:h.i,name:h.o.name||h.o.type}}}));if(j)made.push(j)}}}
+  if(!made.length){toast(nwIn215(S.world.plan)?(staff82()?L("A room or a stage gets real 3D objects only (no outdoor panorama) — set up a 3D engine in Admin → AI providers.","الغرفة أو المنصة تأخذ مجسمات حقيقية فقط (بلا محيط خارجي) — فعّل محرك 3D من الإدارة ← مزوّدو الذكاء."):L("A room or a stage gets real 3D objects only — they aren't available on this site yet.","الغرفة أو المنصة تأخذ مجسمات حقيقية فقط — وهي غير متاحة في هذا الموقع بعد.")):L("Not enough credits for the realistic parts — the world stays as it is.","الرصيد لا يكفي للأجزاء الواقعية — يبقى العالم كما هو."));return}
   S.world.track=S.world.track.concat(made.map(j=>j.id));persist();renderShell();toast(L("Making it realistic — keep walking, it appears when ready.","يتم جعله واقعياً — واصل التجول، سيظهر عند جاهزيته."))}
 async function nwCrop(src,box){const im=await new Promise((ok,bad)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=bad;i.src=src});const [x0,y0,x1,y1]=box,pad=.04,X=Math.max(0,x0-pad)*im.width,Y=Math.max(0,y0-pad)*im.height,Wd=Math.min(1,x1+pad)*im.width-X,H=Math.min(1,y1+pad)*im.height-Y;if(Wd<16||H<16)return null;
   const c=document.createElement("canvas"),s=Math.min(1,1024/Math.max(Wd,H));c.width=Math.round(Wd*s);c.height=Math.round(H*s);c.getContext("2d").drawImage(im,X,Y,Wd,H,0,0,c.width,c.height);const b=await new Promise(r=>c.toBlob(r,"image/png"));return b?new File([b],"object.png",{type:"image/png"}):null}
@@ -11438,6 +11440,7 @@ setInterval(async()=>{const W=S.world;if(!W.track.length)return;const left=[];
     const here=NW.W&&NW.W.plan.seed===n.seed,P=W.plan&&W.plan.seed===n.seed?W.plan:null;
     try{if(n.role==="pano"){if(P)P.pano=mediaUrl(j);if(here)await NW.W.setPanorama(mediaUrl(j));if(here)toast(L("The realistic surroundings are here.","وصل المحيط الواقعي."))}
       else if(n.role==="model"){if(P)P.models=(P.models||[]).filter(m=>m.i!==n.i).concat([{url:mediaUrl(j),i:n.i,name:n.name}]);if(here){await NW.W.addModel(mediaUrl(j),{i:n.i,name:n.name});toast(L("A real 3D "+n.name+" has joined the world.","انضم "+n.name+" ثلاثي الأبعاد حقيقي إلى العالم."))}}
+      else if(n.role==="ref3d"){await nwRef3d215(j,n,left)}
       else if(n.role==="splat"){const sg=j.segments||[];if(P){P.splat={lo:sg[0]||mediaUrl(j),hi:sg[1]||undefined,collider:sg[2]||undefined};if(sg[3])P.pano=sg[3]}if(here)await nwBuild(P||NW.W.plan,{keepPos:true})}}catch(e){console.warn("world part",e)}}
   W.track=left;persist()},2500);
 
@@ -13112,14 +13115,14 @@ const PLANT91={tree:"a full-grown leafy tree",pine:"a tall pine tree",palm:"a da
 const nwBbN91=()=>{const n=NW.W&&NW.W.plantTypes?NW.W.plantTypes().filter(t=>PLANT91[t[0]]).length:3;return Math.min(3,n)};
 // the ground and the plants are simple pictures: the lowest-cost good picture model makes them (the 360° sky keeps the best one)
 const nwPartModel91=()=>typeof agImgModel==="function"?agImgModel():bestImg72(),nwPartCost91=()=>(IMG_MODELS[nwPartModel91()]||{cr:4}).cr||4;
-nwRealCost=(o=>function(){const c=NW.caps||{};if(c.worldlabs)return o();const objs=(S.world.plan&&S.world.plan.objects||[]).filter(x=>nwHeroish(x)).slice(0,4).length;if(S.world.plan&&S.world.plan.place==="room")return c.objects3d?objs*nwObjCost():0;   /* (v213) a room: real 3D things only — no outdoor panorama pasted indoors */
-  return nwPanoCost()+nwPartCost91()*(1+nwBbN91())+(c.objects3d?objs*nwObjCost():0)})(nwRealCost);
+nwRealCost=(o=>function(){const c=NW.caps||{};if(c.worldlabs)return o();const objs=(S.world.plan&&S.world.plan.objects||[]).filter(x=>nwHeroish(x)).slice(0,4).length;if(nwIn215(S.world.plan))return c.objects3d?objs*nwHeroCost215():0;   /* (v213) a room: real 3D things only — no outdoor panorama pasted indoors (v215: a stage too) */
+  return nwPanoCost()+nwPartCost91()*(1+nwBbN91())+(c.objects3d?objs*nwHeroCost215():0)})(nwRealCost);
 // a realistic world is the default once the picture engine is there (the price is on the Create button); your own choice is kept
 nwCaps=(o=>async function(){const c=await o();const W=S.world;if(c&&c.images&&!W.opts.look91){W.opts.look91=1;W.opts.look="real";persist();nwRefresh()}return c})(nwCaps);
 window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="nw-opt"][data-k="look"]');if(a)S.world.opts.look91=1},true);
 nwUI=(o=>function(){let h=o();const W=S.world,c=NW.caps||{},has=!!NW.W;
   if(W.opts.look==="real"&&!(has&&!W.pic))h=h.replace(/(<button class="btn primary nw-go"[^>]*>[\s\S]*?<span>[^<]*<\/span>)(<\/button>)/,"$1"+'<span class="cost">'+nwRealCost()+" cr</span>$2");
-  if(W.opts.look==="real"&&!c.worldlabs)h=h.replace(/<p class="small mute nw-note">[\s\S]*?<\/p>/,'<p class="small mute nw-note">'+esc(L("Realistic: the AI makes a 360° picture of the surroundings that also lights the world, a real photo of the ground, and real-looking trees and plants"+(c.objects3d?", plus the main things as real 3D objects":"")+". The world is ready at once; the realistic parts appear as they're made. They are made by the cloud AI engines (NVIDIA · Google · the image engine) — no graphics card is needed on your device or your server. For a FULLY real world — one photo you can walk through, not layers — add the World Labs (Marble) key in Admin → AI providers.","واقعي: يصنع الذكاء صورة 360° للمحيط تُضيء العالم أيضاً، وصورة حقيقية للأرض، وأشجاراً ونباتات حقيقية المظهر"+(c.objects3d?"، والعناصر الرئيسية كمجسّمات ثلاثية حقيقية":"")+". العالم جاهز فوراً، والأجزاء الواقعية تظهر عند صنعها. تُصنع على محركات الذكاء السحابية (NVIDIA · Google · محرك الصور) — لا حاجة لبطاقة رسومات على جهازك أو خادمك. ولعالم واقعي بالكامل — صورة واحدة تمشي بداخلها لا طبقات — أضف مفتاح World Labs (Marble) من الإدارة ← مزوّدو الذكاء."))+"</p>");
+  if(W.opts.look==="real"&&!c.worldlabs)h=h.replace(/<p class="small mute nw-note">[\s\S]*?<\/p>/,'<p class="small mute nw-note">'+esc(L("Realistic: the AI makes a 360° picture of the surroundings that also lights the world, a real photo of the ground, and real-looking trees and plants"+(c.objects3d?", plus the main things as real 3D objects":"")+". The world is ready at once; the realistic parts appear as they're made. They are made by the cloud AI engines (NVIDIA · Google · the image engine) — no graphics card is needed on your device or your server.","واقعي: يصنع الذكاء صورة 360° للمحيط تُضيء العالم أيضاً، وصورة حقيقية للأرض، وأشجاراً ونباتات حقيقية المظهر"+(c.objects3d?"، والعناصر الرئيسية كمجسّمات ثلاثية حقيقية":"")+". العالم جاهز فوراً، والأجزاء الواقعية تظهر عند صنعها. تُصنع على محركات الذكاء السحابية (NVIDIA · Google · محرك الصور) — لا حاجة لبطاقة رسومات على جهازك أو خادمك."))+"</p>");
   return h})(nwUI);
 nwRealistic=(o=>async function(pic){await o(pic);const W=NW.W,c=NW.caps||{};if(!W||c.worldlabs)return;const plan=W.plan,seed=plan.seed,desc=plan.describe||plan.prompt||"",m=nwPartModel91(),cr=nwPartCost91(),made=[];
   const gk=plan.terrain&&plan.terrain.ground;if(GROUND91[gk]&&gk!=="floor"&&!plan.splat){const j=addJob({kind:"image",model:m,aspect:"1:1",prompt:"A seamless tileable ground texture photographed straight down from above: "+GROUND91[gk]+". Even soft daylight, no shadows of objects, no horizon, no objects, the pattern fills the whole frame and its edges continue seamlessly. Photorealistic, high detail. For a place like: "+desc.slice(0,200),title:L("Ground · ","الأرض · ")+String(plan.title||"").slice(0,24),cost:cr,secs:30,art:"scene",meta:{nw:{seed,role:"ground"}}});if(j)made.push(j)}
@@ -24939,10 +24942,185 @@ document.addEventListener("input",e=>{const t=e.target;if(!t||!t.matches||!t.mat
    rust freckles when asked); parked-car colours are sober (the purple default is gone). Below the world, the plan made without
    AI says which words it could not use, so a missing thing is never silent. */
 nwUI=(o=>function(){let h=o();try{const p=S.world&&S.world.plan,miss=p&&p.missed;
-  if(miss&&miss.length&&h.includes('<div class="nw-actions">'))h=h.replace('<div class="nw-actions">','<p class="small mute nw211">'+esc(L("Words the instant reader couldn't use: ","كلمات لم يستطع القارئ الفوري استخدامها: ")+miss.join(", ")+L(" — with the AI set up in Admin, the plan reads every word."," — مع تفعيل الذكاء من الإدارة تُقرأ كل الكلمات."))+"</p><div class=\"nw-actions\">")}catch(e){}return h})(nwUI);
+  if(miss&&miss.length&&h.includes('<div class="nw-actions">'))h=h.replace('<div class="nw-actions">','<p class="small mute nw211">'+esc(L("Words the instant reader couldn't use: ","كلمات لم يستطع القارئ الفوري استخدامها: ")+miss.join(", ")+(staff82()?L(" — with the AI set up in Admin, the plan reads every word."," — مع تفعيل الذكاء من الإدارة تُقرأ كل الكلمات."):L(" — they stand as a glass stand-in; Realistic makes it a real 3D model."," — تظهر كمجسم زجاجي مؤقت؛ والمظهر الواقعي يصنعه مجسماً حقيقياً.")))+"</p><div class=\"nw-actions\">")}catch(e){}return h})(nwUI);
 // the free reader's missed words survive the build (createWorld cleans the plan, which drops extras)
 nwBuild=(o=>async function(plan,opts){const miss=plan&&plan.missed;const r=await o.apply(this,arguments);if(miss&&miss.length&&S.world.plan&&S.world.plan.seed===plan.seed){S.world.plan.missed=miss.slice(0,4);persist();nwRefresh()}return r})(nwBuild);
 (function(){const st=document.createElement("style");st.id="v211";st.textContent=".nw211{margin:6px 0 2px}";document.head.appendChild(st)})();
+
+/* ================= v215: SUBJECT FIRST · PICTURE → 3D MODEL · THE WORLD VIEWPORT (the owner's designs) =================
+   The owner: "a vast world always arises with weeds instead of what I told it" ("Fish aquarium 3meter*3meter space" → a meadow
+   with a fish painted in the sky). public/world/plan.js now builds ONLY what the words ask for: no place named → a clean
+   studio stage with the subject in the middle (never a field); an aquarium is sized from the words with fish swimming inside
+   it; a thing the free reader can't build stands as a named glass stand-in. The Realistic look draws a picture of each main
+   thing first (the image engine), then the 3D engine shapes the real model FROM that picture — the cloud engines (NVIDIA ·
+   Google · the image engine · Tripo / Meshy / Qwen 3D), no GPU anywhere. A stage, like a room, never gets an outdoor panorama.
+   The page follows the owner's three designs: on a computer the stage on the left (title, Walk · Fly · Orbit, full screen, the
+   empty stage "Your next world starts here", Start with an idea cards) and "Build your world" on the right (words with a count,
+   Add image, Characters, Time, Weather, Look as cards, Create world); on a phone the Director — Scene · Camera · Characters
+   tabs over the stage, the lens and frame chip on the stage, camera presets (Wide · Close up · Top view · Side view ·
+   Cinematic) drawn from the world itself. */
+Object.assign(ICONS,{chev215:'<path d="M9 6l6 6-6 6"/>',tree215:'<path d="M12 21v-6"/><path d="M12 3c3 2.5 5 5.4 5 8.2A5 5 0 0 1 7 11.2C7 8.4 9 5.5 12 3z"/>'});
+function nwIn215(p){return!!p&&(p.place==="room"||p.place==="stage")}
+function nwHeroCost215(){return nwObjCost()+(S.world.pic?0:nwPanoCost())}
+// what the image engine is asked to draw, so the 3D engine gets the true shape
+function nwHeroName215(o){const n=o.name||o.label||o.type,old=o.rust?"rusty old ":o.era==="classic"?"classic old ":"";
+  if(o.type==="aquarium"&&o.dims)return"an aquarium "+o.dims[0]+" m wide, "+o.dims[1]+" m tall and "+o.dims[2]+" m deep, clear glass walls, sand, rocks, green plants and colourful fish";
+  return old+n}
+function nwRefJob215(h,seed,desc){const name=nwHeroName215(h.o);
+  return addJob({kind:"image",model:bestImg72(),aspect:"1:1",prompt:"One single "+name+", the whole of it in view and centred, true proportions, on a plain white background, soft even studio light, photoreal, sharp detail, no text, no frame, nothing else in the picture.",
+    title:L("Picture for 3D · ","صورة للمجسم · ")+String(h.o.name||h.o.type).slice(0,24),cost:nwPanoCost(),secs:30,art:"scene",meta:{nw:{seed,role:"ref3d",i:h.i,name:h.o.name||h.o.type,desc:String(desc||"").slice(0,300)}}})}
+// the picture is ready → the 3D engine makes the model from it (its job joins the ones the world waits for)
+async function nwRef3d215(j,n,left){let f=null;try{const b=await (await fetch(mediaUrl(j))).blob();f=new File([b],"subject.png",{type:b.type||"image/png"})}catch(e){}
+  const j2=withRef72("s3dImg",f,()=>addJob({kind:"3d",prompt:n.name+(n.desc?" — from: "+n.desc:""),title:n.name+" · 3D",cost:nwObjCost(),secs:60,art:"scene",aspect:"1:1",meta:{mode:"objects",engine:"auto",nw:{seed:n.seed,role:"model",i:n.i,name:n.name}}}));
+  if(j2)left.push(j2.id)}
+
+// ---- the idea cards: drawn here (no pictures to load), each one a world the reader really builds
+const IDEAS215=[["oasis","Desert oasis","واحة صحراوية","A serene oasis at sunset with palm trees","واحة هادئة وقت الغروب فيها نخيل","A desert oasis at sunset with palm trees and camels","واحة في الصحراء وقت الغروب فيها نخيل وجمال","tree215"],
+  ["snow","Snowy mountain","جبل مثلج","A snow village at night with a campfire","قرية ثلجية ليلاً فيها نار مخيم","A snowy mountain village at night with a campfire","قرية جبلية مثلجة في الليل فيها نار مخيم","snow"],
+  ["cabin","Forest cabin","كوخ في الغابة","A rainy forest with a lake and a wooden cabin","غابة ممطرة فيها بحيرة وكوخ خشبي","A rainy forest with a lake and a wooden cabin","غابة ممطرة فيها بحيرة وكوخ خشبي","home"],
+  ["reef","Coral reef","شعاب مرجانية","An underwater coral reef with fish","شعاب مرجانية تحت الماء فيها أسماك","An underwater coral reef with colourful fish","شعاب مرجانية تحت الماء فيها أسماك ملونة","wave"],
+  ["aqua","Fish aquarium","حوض أسماك","A 3 m × 3 m tank with fish swimming","حوض ٣×٣ م تسبح فيه الأسماك","Fish aquarium 3 m x 3 m","حوض سمك ٣ متر في ٣ متر","wave"],
+  ["garage","Old car garage","كراج سيارة قديمة","An old car with tools around it","سيارة قديمة حولها العدة","A garage with an old car and some tools","كراج فيه سيارة قديمة وعدة","car"]];
+function art215(k){const g=(id,a,b,v)=>'<linearGradient id="'+id+'" x1="0" y1="0" x2="'+(v?0:1)+'" y2="'+(v?1:0)+'"><stop offset="0" stop-color="'+a+'"/><stop offset="1" stop-color="'+b+'"/></linearGradient>';
+  const palm=(x,y,s)=>'<path d="M'+x+" "+y+"q"+(2*s)+" "+(-14*s)+" "+(1*s)+" "+(-28*s)+'" stroke="#2b1a10" stroke-width="'+(1.6*s)+'" fill="none"/>'+[[-10,-2],[10,-3],[-7,4],[8,5],[0,-6]].map(([a,b])=>'<path d="M'+(x+s)+" "+(y-28*s)+"q"+(a*s*0.6)+" "+(b*s-4*s)+" "+(a*s)+" "+(b*s+3*s)+'" stroke="#1d2a14" stroke-width="'+(2.2*s)+'" fill="none" stroke-linecap="round"/>').join("");
+  const pine=(x,y,s,c)=>'<path d="M'+x+" "+(y-30*s)+"l"+(9*s)+" "+(14*s)+"h"+(-4*s)+"l"+(7*s)+" "+(12*s)+"h"+(-24*s)+"l"+(7*s)+" "+(-12*s)+"h"+(-4*s)+'z" fill="'+c+'"/>';
+  const A={oasis:'<defs>'+g("o1","#f7b267","#e2584a",1)+g("o2","#e8a25a","#b8643a",1)+'</defs><rect width="160" height="90" fill="url(#o1)"/><circle cx="104" cy="50" r="13" fill="#ffd27a"/><path d="M0 62q40-14 80-4t80-6v38H0z" fill="url(#o2)"/><ellipse cx="78" cy="70" rx="34" ry="5" fill="#f6b46c" opacity=".85"/><path d="M0 76q50-8 160 2v12H0z" fill="#9c5634"/>'+palm(34,72,1)+palm(52,74,.8)+palm(122,72,1.1)+palm(138,74,.75),
+    snow:'<defs>'+g("s1","#25355a","#5d7fae",1)+'</defs><rect width="160" height="90" fill="url(#s1)"/>'+[[20,14],[60,9],[110,16],[140,8],[86,20]].map(([x,y])=>'<circle cx="'+x+'" cy="'+y+'" r=".9" fill="#fff"/>').join("")+'<path d="M0 62l30-34 18 18 26-34 30 38 20-16 36 28v38H0z" fill="#dfe8f4"/><path d="M30 28l7 8-7-2-6 4zM74 12l9 11-9-3-8 4z" fill="#fff"/><path d="M0 72q80-10 160 0v18H0z" fill="#f4f7fb"/><rect x="66" y="60" width="26" height="14" fill="#5a3b26"/><path d="M62 61l17-11 17 11z" fill="#f4f7fb"/><rect x="72" y="65" width="5" height="5" fill="#ffc35c"/><rect x="82" y="65" width="5" height="5" fill="#ffc35c"/>'+pine(30,78,.7,"#1f3b33")+pine(128,80,.8,"#1f3b33"),
+    cabin:'<defs>'+g("c1","#7d8f97","#c9c2a8",1)+g("c2","#4f6a72","#2c3d42",1)+'</defs><rect width="160" height="90" fill="url(#c1)"/><path d="M0 50l40-26 30 18 34-30 56 38v40H0z" fill="#6c7c80"/><rect y="62" width="160" height="28" fill="url(#c2)"/><rect x="70" y="50" width="28" height="15" fill="#6b4630"/><path d="M66 51l18-11 18 11z" fill="#3f2a1d"/><rect x="76" y="55" width="6" height="5" fill="#ffbf55"/><path d="M60 72h48" stroke="#ffbf55" stroke-width="1.4" opacity=".55"/>'+pine(18,66,1.1,"#24392f")+pine(40,64,.9,"#2c4636")+pine(122,66,1,"#24392f")+pine(146,64,1.2,"#2c4636"),
+    reef:'<defs>'+g("r1","#1d8fc2","#0b3d66",1)+'</defs><rect width="160" height="90" fill="url(#r1)"/><path d="M50 0l12 70M80 0l4 70M110 0l-10 70" stroke="#bfefff" stroke-width="8" opacity=".12"/><path d="M0 80q40-8 80 0t80-4v14H0z" fill="#d6c08f"/><path d="M20 80c-4-14 6-18 2-28M26 80c4-12 12-12 8-24" stroke="#ff7f6e" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M120 82c0-14 10-14 6-26M130 82c6-10 10-8 12-20" stroke="#b98cff" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="70" cy="74" r="7" fill="#ffb347"/><circle cx="96" cy="76" r="5" fill="#ff9fc4"/>'+[[60,34,"#ffb347"],[92,46,"#f6e05e"],[40,52,"#5ee0f2"],[112,30,"#ff7f6e"]].map(([x,y,c])=>'<path d="M'+x+" "+y+"q6-5 12 0q-6 5-12 0zm12 0l5-4v8z\" fill=\""+c+'"/>').join(""),
+    aqua:'<defs>'+g("a1","#e9eef3","#d3dae1",1)+g("a2","#64c0e2","#2c7fb0",1)+'</defs><rect width="160" height="90" fill="url(#a1)"/><rect x="30" y="68" width="100" height="14" fill="#2a2d31"/><rect x="32" y="22" width="96" height="46" fill="url(#a2)" stroke="#1a1d20" stroke-width="2"/><path d="M33 62q25-6 47 0t47-2v6H33z" fill="#d9c49c"/><path d="M44 62c-2-10 4-14 0-22M50 62c3-8 8-10 5-18M112 62c-2-9 4-12 1-20" stroke="#3f8f4a" stroke-width="2.4" fill="none" stroke-linecap="round"/>'+[[62,38,"#ff8a3a"],[88,48,"#f2d16b"],[98,32,"#e74c5b"],[72,52,"#9b7bff"]].map(([x,y,c])=>'<path d="M'+x+" "+y+"q5-4 10 0q-5 4-10 0zm10 0l4-3v6z\" fill=\""+c+'"/>').join("")+'<rect x="30" y="20" width="100" height="4" fill="#1a1d20"/>',
+    garage:'<defs>'+g("g1","#dcdad4","#b9b6ae",1)+'</defs><rect width="160" height="90" fill="url(#g1)"/><rect x="38" y="14" width="84" height="40" fill="#9ba0a6"/>'+[20,26,32,38,44].map(y=>'<rect x="38" y="'+y+'" width="84" height="1.2" fill="#7e838a"/>').join("")+'<rect y="62" width="160" height="28" fill="#9b988f"/><path d="M44 66h70l-6-10H58z" fill="#3e6b55"/><path d="M40 72h80v-6l-8-3H48l-8 3z" fill="#3e6b55"/><circle cx="54" cy="73" r="6" fill="#23262a"/><circle cx="54" cy="73" r="3" fill="#ddd8c8"/><circle cx="106" cy="73" r="6" fill="#23262a"/><circle cx="106" cy="73" r="3" fill="#ddd8c8"/><rect x="128" y="46" width="16" height="20" fill="#c7332b"/><rect x="129" y="50" width="14" height="1.5" fill="#e3e3e3"/><rect x="129" y="56" width="14" height="1.5" fill="#e3e3e3"/><ellipse cx="18" cy="70" rx="9" ry="3" fill="#1b1c1e"/><ellipse cx="18" cy="65" rx="9" ry="3" fill="#232528"/>'};
+  return'<svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice" aria-hidden="true">'+(A[k]||"")+"</svg>"}
+function ideas215(){const n=NW.more215?IDEAS215.length:4;return'<section class="nw215ideas"><div class="nw215sh"><h2>'+esc(L("Start with an idea","ابدأ بفكرة"))+'</h2><span class="small mute">'+esc(L("Try one, or change it to make it your own.","جرّب واحدة، أو غيّرها لتصبح لك."))+'</span><button class="nw215more" data-act="nw215-more">'+esc(NW.more215?L("Show less","عرض أقل"):L("View more","عرض المزيد"))+ic("chev215")+"</button></div>"+
+  '<div class="nw215cards">'+IDEAS215.slice(0,n).map(x=>'<button class="nw215card" data-act="nw215-idea" data-k="'+x[0]+'"><span class="nw215art">'+art215(x[0])+'</span><span class="nw215ct"><b>'+ic(x[7])+esc(L(x[1],x[2]))+"</b><small>"+esc(L(x[3],x[4]))+"</small></span>"+ic("chev215")+"</button>").join("")+"</div></section>"}
+
+// ---- the camera: presets drawn from the world itself, the lens and the frame
+const SHOTS215=[["wide","Wide","واسعة"],["close","Close up","قريبة"],["top","Top view","من الأعلى"],["side","Side view","جانبية"],["cine","Cinematic","سينمائية"]];
+const LENS215=[0,14,18,24,35,50,85],ASP215=["16:9","4:5","1:1","9:16"];
+function hero215(){const W=NW.W;if(!W)return{R:2,H:2};const r=(W.info||[]).find(x=>x.idx===0)||(W.info||[]).find(x=>x.idx>=0);if(!r||!r.md||!r.md.size)return{R:2,H:2};return{R:Math.max(.6,Math.max(r.md.size[0],r.md.size[2])*r.s/2),H:Math.max(.5,r.md.size[1]*r.s)}}
+function shotOf215(k){const{R,H}=hero215();return{wide:{az:.62,el:.3,dist:R*3.4+3,h:H*.45},close:{az:.25,el:.1,dist:R*1.55+1.1,h:H*.55},top:{az:.01,el:1.38,dist:R*3+4,h:0},side:{az:Math.PI/2,el:.06,dist:R*2.6+2,h:H*.45},cine:{tour:1}}[k]}
+function shoot215(k){if(!NW.W)return;NW.shot215=k;try{NW.W.player.shot(shotOf215(k))}catch(e){}nwHud();nwRefresh()}
+async function thumbs215(){const W=NW.W;if(!W||!NW.E||NW.thumbing215)return;const seed=W.plan.seed;if(NW.thumbs215&&NW.thumbs215.seed===seed)return;NW.thumbing215=1;const prev=W.player.mode,out={seed,u:{}};
+  try{for(const[k]of SHOTS215){const sh=shotOf215(k==="cine"?"wide":k);W.player.shot(k==="cine"?Object.assign({},sh,{el:.14,az:-.5}):sh);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+      const b=await NW.E.snapshot(320,"image/jpeg",.8).catch(()=>null);if(b)out.u[k]=URL.createObjectURL(b);if(NW.W!==W)return}
+    NW.thumbs215=out}finally{NW.thumbing215=0;try{if(NW.W===W)W.player.setMode(prev==="orbit"?"orbit":prev||"walk")}catch(e){}if(NW.W===W)nwRefresh()}}
+function camera215(){const has=!!NW.W,T=NW.thumbs215&&NW.W&&NW.thumbs215.seed===NW.W.plan.seed?NW.thumbs215.u:{};
+  return'<section class="nw215cam"><div class="nw215sh"><h2>'+esc(L("Camera presets","زوايا الكاميرا"))+'</h2><span class="small mute">'+esc(has?L("Drawn from your world — tap one to frame it.","مرسومة من عالمك — اضغط واحدة لتأطيره."):L("Create a world first.","أنشئ عالماً أولاً."))+"</span></div>"+
+    '<div class="nw215shots">'+SHOTS215.map(([k,en,ar])=>'<button class="nw215shot'+(k==="cine"?" cine":"")+'" data-act="nw215-shot" data-k="'+k+'" aria-pressed="'+(NW.shot215===k)+'" '+(has?"":"disabled")+'><span class="nw215th">'+(T[k]?'<img src="'+T[k]+'" alt="">':ic(k==="cine"?"rec":"cam3d"))+"</span><b>"+esc(L(en,ar))+"</b></button>").join("")+"</div>"+
+    '<div class="nw215camrow"><span class="nw-lbl">'+esc(L("Lens","العدسة"))+"</span>"+LENS215.map(f=>'<button class="nw-chip'+((S.world.lens215||0)===f?" on":"")+'" data-act="nw215-lens" data-v="'+f+'" aria-pressed="'+((S.world.lens215||0)===f)+'">'+(f?f+"mm":esc(L("Auto","تلقائي")))+"</button>").join("")+"</div>"+
+    '<div class="nw215camrow"><span class="nw-lbl">'+esc(L("Frame","الإطار"))+"</span>"+ASP215.map(a=>'<button class="nw-chip'+(asp215()===a?" on":"")+'" data-act="nw215-aspect" data-v="'+a+'" aria-pressed="'+(asp215()===a)+'">'+a+"</button>").join("")+"</div></section>"}
+const asp215=()=>S.world.aspect215||(nwPhone()?"4:5":"16:9");
+function applyCam215(){const st=nwStage();if(st){const a=asp215().split(":");st.style.aspectRatio=a[0]+" / "+a[1];st.dataset.asp215=asp215()}
+  const cam=NW.W&&NW.W.player&&NW.W.player.camera,f=S.world.lens215||0;if(cam){if(!cam.userData.fov0)cam.userData.fov0=cam.fov;cam.fov=f?2*Math.atan(18/f/Math.max(.3,cam.aspect||1.6))*180/Math.PI:cam.userData.fov0;cam.updateProjectionMatrix()}
+  const ch=st&&st.querySelector(".nw215lens"),lb=ch&&ch.querySelector("[data-act=nw215-lenscyc] b"),ab=ch&&ch.querySelector("[data-act=nw215-aspect]");if(lb)lb.textContent=f?f+"mm":L("Auto","تلقائي");if(ab)ab.textContent=asp215()}
+// ---- characters: the faces you made, one tap puts @name in the words
+function chars215(){const cs=(S.chars||[]).filter(c=>typeof hasFace87==="function"?hasFace87(c):true).slice(-6);
+  return'<section class="nw215chars"><span class="nw-lbl">'+esc(L("Characters","الشخصيات"))+' <small class="mute">'+esc(L("(optional)","(اختياري)"))+'</small></span><div class="nw215av"><button class="nw215add" data-act="ch87-open" data-for="nwprompt" aria-label="'+esc(L("Add a character","أضف شخصية"))+'">'+ic("plus")+"</button>"+
+    cs.map(c=>{const u=avatar106(c);return'<button class="nw215face" data-act="ch87-put" data-for="nwprompt" data-id="'+c.id+'" title="'+esc(c.name)+'">'+(u?'<img src="'+esc(u)+'" alt="">':"<b>"+esc(String(c.name||"?").slice(0,1))+"</b>")+"</button>"}).join("")+"</div></section>"}
+
+// ---- the page: the title, the Director tabs (phone), the panel
+VIEWS.world=(o=>function(){let h=o.apply(this,arguments);const t=S.world.tab215||"scene";
+  h=h.replace('<div class="view nw-view">','<div class="view nw-view nw215 nw215t-'+t+'">')
+   .replace(/<h1>([^<]*)<\/h1><p class="small mute nw-sub">[\s\S]*?<\/p>/,(m,a)=>'<h1>'+a+'</h1><p class="small mute nw-sub">'+esc(L("Imagine a place. Step inside.","تخيّل مكاناً. وادخل إليه."))+"</p>")
+   .replace('<div class="nw-stage"','<div class="nw215tabs" role="tablist">'+[["scene","Scene","المشهد","image"],["camera","Camera","الكاميرا","cam3d"],["chars","Characters","الشخصيات","char"]].map(x=>'<button role="tab" data-act="nw215-tab" data-v="'+x[0]+'" aria-selected="'+(t===x[0])+'">'+ic(x[3])+"<span>"+esc(L(x[1],x[2]))+"</span></button>").join("")+'</div><div class="nw-stage"');
+  return h})(VIEWS.world);
+nwUI=(o=>function(){let h=o.apply(this,arguments);
+  h=h.replace('<div class="nw-bar panel">','<div class="nw-bar panel"><div class="nw215bh"><h2>'+esc(L("Build your world","ابنِ عالمك"))+'</h2><p class="small mute">'+esc(L("Describe your idea, set the details, and create a living 3D world.","صف فكرتك واضبط التفاصيل وأنشئ عالماً حياً ثلاثي الأبعاد."))+"</p></div>")
+   .replace(/(<textarea id="nwprompt"[\s\S]*?<\/textarea>)/,'$1<span class="nw215cnt mono" aria-hidden="true">'+String(S.world.prompt||"").length+"/600</span>")
+   .replace(/(<label class="nw-add"[^>]*>)/,'<span class="nw-lbl nw215il">'+esc(L("Add image","أضف صورة"))+' <small class="mute">'+esc(L("(optional)","(اختياري)"))+"</small></span>$1")
+   .replace(/(<label class="nw-add"[^>]*>)(<svg[\s\S]*?<\/svg>)/,'$1$2<span class="nw215dz"><b>'+esc(L("Upload image","ارفع صورة"))+"</b><small>"+esc(L("JPG, PNG or drag & drop","JPG أو PNG أو اسحب وأفلت"))+"</small></span>")
+   .replace('<div class="nw-opts">',chars215()+'<div class="nw-opts">');
+  // the owner (staff only) is told where a fully real world comes from; customers never see admin directions
+  if(staff82()&&S.world.opts.look==="real"&&!(NW.caps||{}).worldlabs)h=h.replace(/(<p class="small mute nw-note">[\s\S]*?<\/p>)/,'$1<p class="small mute nw-note nw215own">'+esc(L("Owner: for a FULLY real world — one photo you can walk through, not layers — add the World Labs (Marble) key in Admin → AI providers.","للمالك: لعالم واقعي بالكامل — صورة واحدة تمشي بداخلها لا طبقات — أضف مفتاح World Labs (Marble) من الإدارة ← مزوّدو الذكاء."))+"</p>");
+  // under the stage: the camera once a world is there, the ideas before
+  return h+(NW.W?camera215():"")+(!NW.W||nwPhone()?ideas215():"")})(nwUI);
+// the stage: Walk · Fly · Orbit with their names, the lens and frame chip, the empty stage
+nwOverlay=(o=>function(st){o.apply(this,arguments);try{const top=st.querySelector(".nw-top");
+  if(top&&!top.querySelector(".nw215seg")){const seg=document.createElement("div");seg.className="nw215seg";const lab={walk:L("Walk","مشي"),fly:L("Fly","طيران"),orbit:L("Orbit","مدار")};
+    top.querySelectorAll('[data-act="nw-mode"]').forEach(b=>{b.insertAdjacentHTML("beforeend",'<span class="nw215l">'+esc(lab[b.dataset.v]||"")+"</span>");seg.appendChild(b)});top.prepend(seg)}
+  if(!st.querySelector(".nw215lens"))st.insertAdjacentHTML("beforeend",'<div class="nw215lens"><button data-act="nw215-lenscyc" aria-label="'+esc(L("Lens","العدسة"))+'">'+ic("cam3d")+"<b>"+esc(S.world.lens215?S.world.lens215+"mm":L("Auto","تلقائي"))+'</b></button><i></i><button data-act="nw215-aspect" data-v="next" aria-label="'+esc(L("Frame","الإطار"))+'">'+esc(asp215())+"</button></div>");
+  if(!st.querySelector(".nw215empty"))st.insertAdjacentHTML("beforeend",'<div class="nw215empty" aria-hidden="true"><h3>'+esc(L("Your next world starts here","عالمك القادم يبدأ هنا"))+"</h3><p>"+esc(L("Describe a place or upload an image to begin","صف مكاناً أو ارفع صورة للبدء"))+'</p><div class="nw215cube"><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="nw215drag">'+ic("hand")+esc(L("Drag to look around","اسحب للنظر حولك"))+"</span></div>");
+  applyCam215()}catch(e){console.warn("v215 overlay",e)}})(nwOverlay);
+nwBuild=(o=>async function(){const r=await o.apply(this,arguments);NW.shot215=null;applyCam215();if(NW.W&&(S.world.tab215==="camera"||!nwPhone()))setTimeout(thumbs215,900);return r})(nwBuild);
+// the count under the words
+document.addEventListener("input",e=>{const t=e.target;if(t&&t.id==="nwprompt"){const c=t.parentElement&&t.parentElement.querySelector(".nw215cnt");if(c)c.textContent=t.value.length+"/600"}},true);
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act^="nw215-"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const W=S.world,act=a.dataset.act,v=a.dataset.v;
+  if(act==="nw215-tab"){W.tab215=v;persist();const vw=document.querySelector(".nw-view.nw215");if(vw)vw.className=vw.className.replace(/nw215t-\w+/,"nw215t-"+v);vw&&vw.querySelectorAll('[data-act="nw215-tab"]').forEach(b=>b.setAttribute("aria-selected",String(b.dataset.v===v)));
+    if(v==="camera")thumbs215();nwRefresh();return}
+  if(act==="nw215-more"){NW.more215=!NW.more215;nwRefresh();return}
+  if(act==="nw215-idea"){const x=IDEAS215.find(i=>i[0]===a.dataset.k);if(!x)return;W.prompt=L(x[5],x[6]);if(W.tab215&&W.tab215!=="scene")W.tab215="scene";nwRefresh();return nwGo()}
+  if(act==="nw215-shot"){shoot215(a.dataset.k);return}
+  if(act==="nw215-lens"){W.lens215=+v||0;persist();applyCam215();nwRefresh();return}
+  if(act==="nw215-lenscyc"){const i=LENS215.indexOf(W.lens215||0);W.lens215=LENS215[(i+1)%LENS215.length];persist();applyCam215();nwRefresh();return}
+  if(act==="nw215-aspect"){W.aspect215=v==="next"?ASP215[(ASP215.indexOf(asp215())+1)%ASP215.length]:v;persist();applyCam215();nwRefresh();return}},true);
+(function(){const st=document.createElement("style");st.id="v215";st.textContent=`
+.nw-view.nw215 .nw-head h1{display:flex;align-items:center;gap:10px}.nw215ico{display:inline-grid;place-items:center;width:34px;height:34px;color:#36c2d4}.nw215ico svg{width:30px;height:30px}
+.nw215tabs{display:none}
+.nw-stage .nw-top{display:flex;gap:8px;align-items:center}
+.nw215seg{display:flex;gap:2px;padding:4px;border-radius:12px;background:rgba(18,20,24,.5);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.nw215seg .nw-ib{width:auto!important;min-width:40px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;border-radius:8px}.nw215seg .nw-ib.on{background:var(--lime);color:#0b0c0e}
+.nw215l{font-size:13px;font-weight:600}
+.nw215lens{position:absolute;top:12px;inset-inline-start:12px;z-index:6;display:flex;align-items:center;gap:0;border-radius:12px;background:rgba(18,20,24,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff}
+.nw215lens button{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;background:none;border:0;color:inherit;font:600 13px var(--mono,monospace);cursor:pointer}.nw215lens svg{width:16px;height:16px}.nw215lens i{width:1px;height:18px;background:rgba(255,255,255,.3)}
+.nw215empty{display:none;position:absolute;inset:0;z-index:4;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;padding:0 16px}
+.nw-stage.nw-empty87 .nw215empty{display:flex}.nw-stage.nw-empty87::after{display:none!important}
+.nw215empty h3{margin:0;font-size:clamp(20px,2.6vw,30px);font-weight:600;color:#1d2025}.nw215empty p{margin:6px 0 26px;color:#5d636b;font-size:clamp(13px,1.4vw,16px)}.nw-stage.nw-empty87 .nw-hint{display:none}
+.nw215cube{width:70px;height:70px;position:relative;transform-style:preserve-3d;transform:rotateX(-24deg) rotateY(38deg);animation:nw215spin 14s linear infinite;margin-bottom:34px}
+.nw215cube i{position:absolute;inset:0;border:1.5px solid rgba(160,175,190,.75);background:rgba(220,232,244,.12)}
+.nw215cube i:nth-child(1){transform:translateZ(35px)}.nw215cube i:nth-child(2){transform:rotateY(180deg) translateZ(35px)}.nw215cube i:nth-child(3){transform:rotateY(90deg) translateZ(35px)}.nw215cube i:nth-child(4){transform:rotateY(-90deg) translateZ(35px)}.nw215cube i:nth-child(5){transform:rotateX(90deg) translateZ(35px)}.nw215cube i:nth-child(6){transform:rotateX(-90deg) translateZ(35px)}
+@keyframes nw215spin{to{transform:rotateX(-24deg) rotateY(398deg)}}@media (prefers-reduced-motion:reduce){.nw215cube{animation:none}}
+.nw215drag{position:absolute;bottom:16px;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-size:13px;color:var(--text)}.nw215drag svg{width:16px;height:16px}
+.nw215sh{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:18px 0 10px}.nw215sh h2{margin:0;font-size:16px;font-weight:600}.nw215more{margin-inline-start:auto;display:inline-flex;align-items:center;gap:4px;background:none;border:0;color:var(--text);font-size:13px;cursor:pointer}.nw215more svg{width:14px;height:14px}
+.nw215cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.nw215card{display:flex;flex-direction:column;text-align:start;padding:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel);color:var(--text);cursor:pointer;position:relative}
+.nw215card:hover{border-color:var(--lime)}.nw215art{display:block;aspect-ratio:16/9;overflow:hidden}.nw215art svg{width:100%;height:100%;display:block}
+.nw215ct{display:block;padding:9px 30px 11px 12px}[dir=rtl] .nw215ct{padding:9px 12px 11px 30px}.nw215ct b{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600}.nw215ct b svg{width:14px;height:14px;flex:none}.nw215ct small{display:block;color:var(--mute);font-size:12px;margin-top:2px}
+.nw215card>svg{position:absolute;bottom:14px;inset-inline-end:10px;width:14px;height:14px;color:var(--mute)}[dir=rtl] .nw215card>svg{transform:scaleX(-1)}
+.nw215shots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.nw215shot{display:flex;flex-direction:column;align-items:center;gap:6px;padding:0;border:0;background:none;color:var(--mute);font-size:13px;cursor:pointer}.nw215shot b{font-weight:500}
+.nw215th{width:100%;aspect-ratio:4/3;border-radius:12px;overflow:hidden;display:grid;place-items:center;background:var(--panel2);border:2px solid transparent}.nw215th img{width:100%;height:100%;object-fit:cover}.nw215th svg{width:20px;height:20px;opacity:.5}
+.nw215shot.cine .nw215th img{clip-path:inset(12% 0)}.nw215shot[aria-pressed="true"] .nw215th{border-color:var(--lime)}.nw215shot[aria-pressed="true"] b{color:var(--text);font-weight:600}.nw215shot:disabled{opacity:.5;cursor:default}
+.nw215camrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px}
+.nw215chars .nw215av{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.nw215add,.nw215face{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--panel2);display:grid;place-items:center;padding:0;overflow:hidden;cursor:pointer;color:var(--text)}
+.nw215face img{width:100%;height:100%;object-fit:cover}.nw215add svg{width:16px;height:16px}
+.nw215bh h2{margin:0;font-size:16px;font-weight:600}.nw215bh p{margin:4px 0 0}
+.nw215cnt{display:none}.nw215il,.nw215dz{display:none}
+@media (min-width:1080px){
+ .nw-view.nw215{display:grid;grid-template-columns:minmax(0,1fr) 380px;column-gap:22px;align-items:start;max-width:1520px}
+ .nw-view.nw215>*{grid-column:1}.nw-view.nw215>#nwui{display:contents}.nw-view.nw215 #nwui>*{grid-column:1}
+ .nw-view.nw215 .nw-stage{height:auto;max-height:calc(100vh - 210px);min-height:380px}
+ .nw-view.nw215 #nwui>.nw-bar{grid-column:2;grid-row:1 / span 9;position:sticky;top:76px;display:flex;flex-direction:column;gap:14px;padding:22px;border-radius:18px;margin:0}
+ .nw-view.nw215 .nw-bar .nw-row{display:contents}
+ .nw-view.nw215 .nw-bar>*,.nw-view.nw215 .nw-bar .nw-row>*{order:20}
+ .nw-view.nw215 .nw-bar .nw215bh{order:0}.nw-view.nw215 .nw-bar #nwprompt{order:1;width:100%;min-height:110px;box-sizing:border-box;border-radius:12px}
+ .nw-view.nw215 .nw-bar .nw215cnt{order:2;display:block;align-self:flex-end;margin-top:-36px;margin-inline-end:12px;font-size:11px;color:var(--mute);pointer-events:none}
+ .nw-view.nw215 .nw-bar .ch87b{display:none}
+ .nw-view.nw215 .nw-bar .nw215il{order:3;display:block;margin-bottom:-6px}.nw-view.nw215 .nw-bar .nw-add,.nw-view.nw215 .nw-bar .nw-pic{order:4}
+ .nw-view.nw215 .nw-add{width:200px;height:auto;min-height:104px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:1.5px dashed var(--line2,var(--line));border-radius:12px;padding:12px}
+ .nw-view.nw215 .nw215dz{display:flex;flex-direction:column;align-items:center;text-align:center}.nw215dz b{font-size:13px;font-weight:600}.nw215dz small{font-size:11px;color:var(--mute)}
+ .nw-view.nw215 .nw-bar .nw-pick{order:5}.nw-view.nw215 .nw-bar .nw215chars{order:6}.nw-view.nw215 .nw-bar .nw87cards{order:7}.nw-view.nw215 .nw-bar .nw-opts{order:8;display:flex;flex-direction:column;gap:14px}
+ .nw-view.nw215 .nw-bar .nw-note{order:9}.nw-view.nw215 .nw-bar .nw-ex{display:none}.nw-view.nw215 .nw-bar .nw-go{order:10;width:100%;min-height:54px;font-size:16px;border-radius:12px;justify-content:center}
+ .nw-view.nw215 .nw-grp{display:flex;flex-wrap:wrap;gap:6px}.nw-view.nw215 .nw-grp .nw-lbl{flex-basis:100%;font-weight:600;color:var(--text)}
+ .nw-view.nw215 .nw-grp:last-child .nw-chip{flex:1 1 40%;min-height:64px;justify-content:flex-start;padding:10px 14px;border-radius:12px;font-size:14px}
+ .nw-view.nw215 .nw-actions{margin-top:14px}
+ .nw-view.nw215>.nw-head{order:0}.nw-view.nw215>.nw-stage{order:1}.nw-view.nw215 .nw215cam,.nw-view.nw215 .nw215ideas{order:2}.nw-view.nw215 .nw-actions,.nw-view.nw215 .nw211{order:3}.nw-view.nw215 #nwui>.sec,.nw-view.nw215 .nw-saved{order:4}
+}
+@media (max-width:1079px){.nw215cards{grid-template-columns:repeat(2,minmax(0,1fr))}.nw-view.nw215 #nwui{display:flex;flex-direction:column}.nw-view.nw215 #nwui>*{order:5}.nw-view.nw215 #nwui>.nw-bar{order:1}.nw-view.nw215 #nwui>.nw215cam{order:2}.nw-view.nw215 #nwui>.nw215ideas{order:3}.nw-view.nw215 #nwui>.nw-actions{order:4}}
+@media (max-width:767px){
+ .nw215tabs{display:flex;gap:4px;padding:4px;margin:0 0 10px;border-radius:16px;background:var(--panel2);border:1px solid var(--line)}
+ .nw215tabs button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;border:0;border-radius:12px;background:none;color:var(--text);font-size:14px;font-weight:500;cursor:pointer}
+ .nw215tabs button svg{width:16px;height:16px}.nw215tabs button[aria-selected="true"]{background:color-mix(in srgb,var(--lime) 30%,var(--panel));font-weight:600}
+ .nw-view.nw215 .nw-stage{height:auto;max-height:68vh;min-height:280px}
+ .nw215l{display:none}.nw215seg{padding:3px}.nw215seg .nw-ib{padding:0;min-width:40px;justify-content:center}
+ .nw215shots{gap:6px}.nw215shot{font-size:12px;line-height:1.2;text-align:center}.nw215th{border-radius:8px}
+ .nw215cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.nw215ct{padding:8px 26px 10px 10px}[dir=rtl] .nw215ct{padding:8px 10px 10px 26px}
+ .nw-view.nw215 .nw215chars{display:none}
+ .nw-view.nw215t-scene .nw215cam{display:none}
+ .nw-view.nw215t-camera .nw-bar,.nw-view.nw215t-camera .nw215ideas,.nw-view.nw215t-camera .nw87cards{display:none}
+ .nw-view.nw215t-chars .nw-bar>*:not(.nw215chars):not(.nw87cards){display:none}.nw-view.nw215t-chars .nw-bar .nw215chars{display:block}.nw-view.nw215t-chars .nw215cam,.nw-view.nw215t-chars .nw215ideas{display:none}
+ .nw-view.nw215t-chars .nw215face,.nw-view.nw215t-chars .nw215add{width:56px;height:56px}
+}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

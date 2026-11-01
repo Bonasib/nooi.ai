@@ -78,9 +78,9 @@ export async function createWorld(engine, planIn, opts = {}) {
   const okLand = (x, z, type) => { const T0 = TYPES[type]; if (type === "boat" || type === "pier") return true; if (terrain.isWater(x, z)) return false; const sl = terrain.slopeAt(x, z); return sl < (T0.c === "building" ? 0.35 : T0.c === "plant" || T0.c === "nature" ? 0.9 : 0.5); };
   // ---- the things ----
   const statics = new Map(), dynamics = [], lights = [], cloths = [], sails = [], fires = [], avoid = [], info = [], tmpl = new Map();
-  const tpl = (type, v, color, color2, mat, era, rust) => { const key = type + "|" + v + "|" + (color || "") + "|" + (color2 || "") + "|" + (era || "") + (rust ? "~r" : ""); if (!tmpl.has(key)) tmpl.set(key, buildModel(T, K, type, v, { rnd: rng(plan.seed + key.length * 131 + v), color, color2, place: plan.place, snow: plan.terrain.ground === "snow" || plan.weather.kind === "snow", low, mat, era, rust })); return tmpl.get(key); };
+  const tpl = (type, v, color, color2, mat, era, rust, dims) => { const key = type + "|" + v + "|" + (color || "") + "|" + (color2 || "") + "|" + (era || "") + (rust ? "~r" : "") + (dims ? "|" + dims.join("x") : ""); if (!tmpl.has(key)) tmpl.set(key, buildModel(T, K, type, v, { rnd: rng(plan.seed + key.length * 131 + v), color, color2, place: plan.place, snow: plan.terrain.ground === "snow" || plan.weather.kind === "snow", low, mat, era, rust, dims })); return tmpl.get(key); };
   const place = (o, x, z, ry, s, v, idx) => {
-    const md = tpl(o.type, v, o.color, o.color2, o.mat, o.era, o.rust), T0 = TYPES[o.type] || TYPES.box, ss = (o.scale || 1) * s;
+    const md = tpl(o.type, v, o.color, o.color2, o.mat, o.era, o.rust, o.dims), T0 = TYPES[o.type] || TYPES.box, ss = (o.scale || 1) * s;
     let y = terrain.heightAt(x, z);
     if (md.foundation) { y = terrain.flatten(x, z, md.size[0] * ss / 2 + 1, md.size[2] * ss / 2 + 1, 3); }
     if (o.type === "boat" && terrain.water.level > -900 && terrain.isWater(x, z)) y = terrain.water.level - 0.3;
@@ -135,7 +135,7 @@ export async function createWorld(engine, planIn, opts = {}) {
     else if (T0.c === "building" && lots.length) { spots = []; for (let i = 0; i < o.count; i++) { const l = takeLot(o.type, o.scale); if (l) spots.push(l); } }
     else if (T0.c === "building") spots = scatter(o, o.count, 0, 0, Math.min(lim * 0.8, 14 + o.count * 9), o.count > 1 ? "ring" : null);
     else spots = scatter(o, o.count, 0, 0, o.spread || Math.min(lim * 0.85, 10 + o.count * 4));
-    spots.forEach(([x, z], i) => place(o, x, z, o.rot ? (o.rot * Math.PI) / 180 : buildingYaw(x, z, T0), 0.9 + rnd() * 0.2 * (T0.c === "plant" ? 2 : 0.5), (i + idx) % 2, idx));
+    spots.forEach(([x, z], i) => place(o, x, z, o.rot ? (o.rot * Math.PI) / 180 : buildingYaw(x, z, T0), o.dims ? 1 : 0.9 + rnd() * 0.2 * (T0.c === "plant" ? 2 : 0.5), (i + idx) % 2, idx));   // (v215: a size the words gave is kept exactly)
     if (idx === 0 || o.hero) plan._hero = spots[0] || plan._hero;
   });
   function buildingYaw(x, z, T0) { if (T0.c !== "building" && T0.c !== "street" && T0.c !== "vehicle") return rnd() * 6.283; let best = null, bd = 1e9; for (const r of roads) { const d = segDist(x, z, r); if (d < bd) { bd = d; best = r; } } if (best && bd < 40) { const dx = best.to[0] - best.from[0], dz = best.to[1] - best.from[1]; const nx = -dz, nz = dx, s = (best.from[0] - x) * nx + (best.from[1] - z) * nz > 0 ? 1 : -1; return Math.atan2(nx * s, nz * s); } return Math.atan2(-x, -z); }
@@ -244,6 +244,9 @@ export async function createWorld(engine, planIn, opts = {}) {
     for (let i = splashes.length - 1; i >= 0; i--) if (splashes[i].done) splashes.splice(i, 1);
     if (Math.abs(cam.position.x) > S * 2) player.teleport(plan.spawn.at[0], plan.spawn.at[1]);
   });
+  // (v215) fish with no water of their own swim inside the tank that was asked for
+  { const tk = info.find((r) => r.type === "aquarium" && r.md && r.md.tank); if (tk) { const k = tk.md.tank, s = tk.s;
+    for (const l of plan.life) if (l.type === "fish" && !l.box) l.box = { x: tk.x, z: tk.z, hx: Math.max(0.12, (k.w / 2 - 0.22) * s), hz: Math.max(0.1, (k.d / 2 - 0.2) * s), y0: tk.y + (k.sh + 0.32) * s, y1: tk.y + (k.sh + k.h - 0.3) * s }; } }
   const life = buildLife(T, K, mats, plan, terrain, water, tier, rnd, { roads, blocked: (x, z) => { const k = ci(x, z); return k >= 0 && occ[k] === 2; }, avoid });
   scene.add(life.group);
   // the people (real-looking 3D people the page adds as their models arrive: see human.js) and what they can walk to

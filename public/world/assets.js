@@ -289,6 +289,26 @@ export function buildModel(T, K, type, v = 0, opt = {}) {
       return m.done([0.64, 0.9, 0.64], cyl(0.31, 0.9)); }
     case "cone": { m.cone(0.2, 0.68, 10, "#ff6a1a", M(0, 0.38, 0)); m.cyl(0.13, 0.155, 0.12, 10, "#f4f4f0", M(0, 0.38, 0)); m.box(0.42, 0.04, 0.42, "#ff6a1a", M(0, 0.02, 0));
       return m.done([0.42, 0.72, 0.42], { shape: "cone", r: 0.2, hy: 0.36, y: 0.36 }); }
+    case "aquarium": {   // (v215) a fish tank at the size the words gave: stand, sand, rocks, plants, driftwood, water, glass, hood light, bubbles
+      const [w, h, d] = opt.dims || [2.4, 1.2, 1.2], sh = h < 1.2 ? 0.75 : 0.4, y0 = sh + 0.06, k = Math.min(w, d);
+      m.box(w + 0.1, sh, d + 0.1, "#24272b", M(0, sh / 2, 0)); m.box(w + 0.12, 0.06, d + 0.12, "#15171a", M(0, sh + 0.03, 0));
+      m.box(w - 0.06, 0.16, d - 0.06, (i) => (i % 3 ? "#d9c49c" : "#cbb48a"), M(0, y0 + 0.08, 0));
+      for (let i = 0; i < Math.round(5 + w * d); i++) { const r = k * (0.05 + rnd() * 0.07); m.ico(r, 1, pickc(rnd, ["#6f6a64", "#7d776f", "#5d5853", "#8a847b"]), M((rnd() - 0.5) * (w - 0.5), y0 + 0.16 + r * 0.4, (rnd() - 0.5) * (d - 0.5), 0, rnd() * 3, 0, 1.3, 0.8, 1), "opaque", 0.3, rnd, 1); }
+      for (let i = 0; i < Math.round(10 + w * d * 3); i++) { const ph = Math.min(h - 0.4, 0.25 + rnd() * h * 0.6), x = (rnd() - 0.5) * (w - 0.3), z = -d / 2 + 0.15 + rnd() * (d * 0.55);
+        m.cone(0.025 + rnd() * 0.035, ph, 5, pickc(rnd, ["#3f8f4a", "#4fa35a", "#2f7a3c", "#6fb04b", "#8c3b3b"]), M(x, y0 + 0.16 + ph / 2, z, (rnd() - 0.5) * 0.25, 0, (rnd() - 0.5) * 0.25)); }
+      m.cyl(0.05 * k + 0.03, 0.03 * k + 0.02, Math.min(w, 1.6) * 0.7, 6, "#6b4a2f", M(w * 0.18, y0 + 0.24, d * 0.08, 0, 0.6, Math.PI / 2 - 0.25));
+      m.box(w - 0.08, h - 0.24, d - 0.08, "#5aaed3", M(0, y0 + (h - 0.24) / 2, 0), "glass");
+      for (const s2 of [-1, 1]) { m.box(w, h, 0.03, "#d6ecf4", M(0, y0 + h / 2 - 0.03, s2 * (d / 2)), "glass"); m.box(0.03, h, d, "#d6ecf4", M(s2 * (w / 2), y0 + h / 2 - 0.03, 0), "glass"); }
+      for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) m.box(0.05, h, 0.05, "#15171a", M(x * (w / 2), y0 + h / 2 - 0.03, z * (d / 2)), "shiny");
+      for (const s2 of [-1, 1]) { m.box(w + 0.06, 0.06, 0.07, "#15171a", M(0, y0 + h, s2 * (d / 2)), "shiny"); m.box(0.07, 0.06, d + 0.06, "#15171a", M(s2 * (w / 2), y0 + h, 0), "shiny"); }
+      m.box(w - 0.1, 0.05, 0.12, "#15171a", M(0, y0 + h + 0.02, -d * 0.18)); m.box(w * 0.9, 0.02, 0.08, "#eaf7ff", M(0, y0 + h - 0.01, -d * 0.18), "glow");   // a light bar across the open top
+      for (let i = 0; i < 9; i++) m.sphere(0.012 + rnd() * 0.012, 6, 4, "#eefaff", M(w / 2 - 0.2 + (rnd() - 0.5) * 0.04, y0 + 0.3 + i * (h - 0.6) / 9, -d / 2 + 0.2), "glass");
+      return m.done([w + 0.12, y0 + h + 0.1, d + 0.12], { shape: "box", hx: w / 2 + 0.06, hy: (y0 + h) / 2, hz: d / 2 + 0.06, y: (y0 + h) / 2 }, { tank: { w, h, d, sh: y0 }, light: { color: "#bfe8ff", power: 0.5, y: y0 + h - 0.1 } }); }
+    case "subject": {   // (v215) the glass stand-in for a thing the free reader can't build (the Realistic look turns it into a real 3D model)
+      m.box(1.2, 1.2, 1.2, "#dde8f2", M(0, 0.9, 0), "glass");
+      for (const [x, y, z, a, b, c] of [[0, 0.3, 0.6, 1.24, 0.03, 0.03], [0, 0.3, -0.6, 1.24, 0.03, 0.03], [0, 1.5, 0.6, 1.24, 0.03, 0.03], [0, 1.5, -0.6, 1.24, 0.03, 0.03], [0.6, 0.3, 0, 0.03, 0.03, 1.24], [-0.6, 0.3, 0, 0.03, 0.03, 1.24], [0.6, 1.5, 0, 0.03, 0.03, 1.24], [-0.6, 1.5, 0, 0.03, 0.03, 1.24], [0.6, 0.9, 0.6, 0.03, 1.24, 0.03], [-0.6, 0.9, 0.6, 0.03, 1.24, 0.03], [0.6, 0.9, -0.6, 0.03, 1.24, 0.03], [-0.6, 0.9, -0.6, 0.03, 1.24, 0.03]]) m.box(a, b, c, "#ffffff", M(x, y, z), "shiny");
+      for (const r of [1.3, 1.8, 2.3]) m.torus(r, 0.012, 3, 48, "#c4ced8", M(0, 0.01, 0, Math.PI / 2, 0, 0));
+      return m.done([1.6, 1.6, 1.6], box(1.24, 1.6, 1.24)); }
     case "leak": {   // (v213) a small water leak: a damp patch on the ceiling, a line of falling drops, the puddle, the bucket someone put there
       const h = 2.95;
       m.cyl(0.4, 0.46, 0.04, 12, "#8d8579", M(0, h, 0)); m.cyl(0.22, 0.26, 0.045, 10, "#7c7466", M(0.08, h - 0.004, 0.05));

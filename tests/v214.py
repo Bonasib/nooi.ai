@@ -14,7 +14,7 @@ def chk(name, ok, info=None):
 
 src = open(ROOT + "/public/index.html", encoding="utf-8").read()
 chk("up to four real 3D objects (both prices and the maker)", src.count("slice(0,4)") >= 3 and "nwHeroish(x.o)).slice(0,4)" in src)
-chk("the fully-real path (World Labs / Marble) is named, EN+AR, both notes", src.count("World Labs (Marble) key in Admin") == 2 and src.count("أضف مفتاح World Labs (Marble)") == 2)
+chk("the fully-real path (World Labs / Marble) is named to the owner only (customers see no admin directions — v82)", src.count("World Labs (Marble) key in Admin") == 1 and src.count("أضف مفتاح World Labs (Marble)") == 1 and 'if(staff82()&&S.world.opts.look==="real"' in src)
 ter = open(ROOT + "/public/world/terrain.js", encoding="utf-8").read()
 chk("the ground shades smooth on every tier", 'flatShading: tier.name === "low"' not in ter)
 chk("leaf masses are welded smooth", "smooth = 0" in open(ROOT + "/public/world/assets.js", encoding="utf-8").read())
@@ -34,8 +34,8 @@ async def main():
           const outdoor=nwRealCost(),one=nwObjCost(),pano=nwPanoCost(),part=nwPartCost91(),bb=nwBbN91();
           S.world.plan={place:'room',room:'living',objects:[{type:'car'},{type:'statue'},{type:'leak'}]};
           const room=nwRealCost();return{outdoor,room,one,pano,part,bb}}""")
-        chk("the outdoor price counts four real objects", r["outdoor"] == r["pano"] + r["part"] * (1 + r["bb"]) + 4 * r["one"], r)
-        chk("a room pays for its real objects only — no panorama", r["room"] == 2 * r["one"], r)
+        chk("the outdoor price counts four real objects (each a picture + its model since v215)", r["outdoor"] == r["pano"] + r["part"] * (1 + r["bb"]) + 4 * (r["one"] + r["pano"]), r)
+        chk("a room pays for its real objects only — no panorama", r["room"] == 2 * (r["one"] + r["pano"]), r)
         chk("no page errors", not errs, errs)
         await b.close()
 try:

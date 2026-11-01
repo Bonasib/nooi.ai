@@ -39,12 +39,12 @@ if plan:
     chk("a small leak inside a house = a living room with one whole leak", plan.get("room with the leak") == '["room","living",[["leak",1]]]', plan)
     chk("Arabic: the leak room, every word used", plan.get("Arabic leak room") == '["room","living",["leak"],[]]', plan)
     chk("the named room wins (kitchen)", plan.get("the named room wins") == '["room","kitchen",["leak"]]', plan)
-    chk("a house outdoors stays a house", plan.get("a house outdoors stays a house") == '["meadow",["house"]]', plan)
+    chk("a house outdoors stays a house (on the stage since v215: no place named)", plan.get("a house outdoors stays a house") == '["stage",["house"]]', plan)
     chk("leak is a ceiling-height prop type", plan.get("leak is a type") is True, plan)
 chk("assets: the leak is modelled", 'case "leak"' in open(ROOT + "/public/world/assets.js", encoding="utf-8").read())
 chk("the AI plans learn the same rules", '"leak"' in open(ROOT + "/lib/world.js", encoding="utf-8").read())
 src = open(ROOT + "/public/index.html", encoding="utf-8").read()
-chk("no panorama is ordered for a room", 'plan.place==="room"?null:withRef72("iRef"' in src and src.count('S.world.plan.place==="room"') >= 3)
+chk("no panorama is ordered for a room", 'nwIn215(plan)?null:withRef72("iRef"' in src and src.count('nwIn215(S.world.plan)') >= 3 and 'p.place==="room"||p.place==="stage"' in src)
 
 async def main():
     for _ in range(80):

@@ -20,7 +20,7 @@ export function noise2(seed) {
 
 const GROUND = {
   grass: ["#5d8a3a", "#6c9a44", "#4f7d33"], sand: ["#dcc38c", "#e6cf9a", "#ceb27b"], snow: ["#eef3f7", "#e2eaf0", "#f6f9fb"], dirt: ["#a98b63", "#9b7d58", "#b39770"],
-  asphalt: ["#9b978f", "#a39f97", "#928e86"], stone: ["#8e8a83", "#84807a", "#99958e"], redrock: ["#b8673d", "#a65a35", "#c77a4c"], floor: ["#b98a58", "#a87b4b", "#c69a66"], moon: ["#a09e9a", "#8e8c88", "#b0aeaa"]
+  asphalt: ["#9b978f", "#a39f97", "#928e86"], stone: ["#8e8a83", "#84807a", "#99958e"], redrock: ["#b8673d", "#a65a35", "#c77a4c"], floor: ["#b98a58", "#a87b4b", "#c69a66"], studio: ["#dfe2e5", "#dadde0", "#e5e7e9"], moon: ["#a09e9a", "#8e8c88", "#b0aeaa"]
 };
 const ROCK = "#7f7b74", WET = "#b9a273", SNOWCAP = "#f0f4f7";
 
