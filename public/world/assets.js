@@ -285,6 +285,13 @@ export function buildModel(T, K, type, v = 0, opt = {}) {
       return m.done([0.64, 0.9, 0.64], cyl(0.31, 0.9)); }
     case "cone": { m.cone(0.2, 0.68, 10, "#ff6a1a", M(0, 0.38, 0)); m.cyl(0.13, 0.155, 0.12, 10, "#f4f4f0", M(0, 0.38, 0)); m.box(0.42, 0.04, 0.42, "#ff6a1a", M(0, 0.02, 0));
       return m.done([0.42, 0.72, 0.42], { shape: "cone", r: 0.2, hy: 0.36, y: 0.36 }); }
+    case "toolbox": { const c = c1 || "#c7332b";   // a rolling tool chest: drawers, silver handles, a tray of tools on top
+      m.box(0.72, 0.62, 0.44, c, M(0, 0.48, 0), "shiny"); for (let i = 0; i < 3; i++) { m.box(0.66, 0.145, 0.02, shade(c, 1.12), M(0, 0.28 + i * 0.19, 0.225)); m.box(0.3, 0.03, 0.03, "#c9ced4", M(0, 0.3 + i * 0.19, 0.24), "shiny"); }
+      m.box(0.76, 0.07, 0.48, "#3b3e42", M(0, 0.825, 0)); m.box(0.5, 0.06, 0.3, "#8f949a", M(-0.05, 0.89, 0), "shiny"); m.cyl(0.03, 0.03, 0.26, 6, "#8f949a", M(0.2, 0.9, 0.05, 0, 0, 1.2), "shiny");
+      for (const [x, z] of [[-0.3, 0.17], [0.3, 0.17], [-0.3, -0.17], [0.3, -0.17]]) m.cyl(0.055, 0.055, 0.05, 8, "#1b1c1e", M(x, 0.055, z, Math.PI / 2, 0, 0));
+      return m.done([0.78, 0.92, 0.46], box(0.76, 0.9, 0.46)); }
+    case "tyres": { for (let i = 0; i < 3; i++) { m.torus(0.3, 0.125, 6, 14, i % 2 ? "#232528" : "#1b1c1e", M((rnd() - 0.5) * 0.06, 0.135 + i * 0.25, (rnd() - 0.5) * 0.06, Math.PI / 2, 0, 0)); m.cyl(0.16, 0.16, 0.04, 10, "#8f949a", M(0, 0.135 + i * 0.25, 0, 0, 0, 0), "shiny"); }
+      return m.done([0.85, 0.78, 0.85], cyl(0.42, 0.78), { mass: 25 }); }
     case "chair": { const c = c1 || "#9a6a3c"; m.box(0.46, 0.05, 0.46, c, M(0, 0.46, 0)); m.box(0.46, 0.5, 0.05, c, M(0, 0.72, -0.21)); for (const s of [-1, 1]) for (const t of [-1, 1]) m.box(0.05, 0.46, 0.05, shade(c, 0.85), M(s * 0.2, 0.23, t * 0.2));
       return m.done([0.5, 0.97, 0.5], box(0.46, 0.95, 0.46)); }
     case "table": { const c = c1 || "#9a6a3c"; m.box(1.4, 0.06, 0.9, c, M(0, 0.73, 0)); for (const s of [-1, 1]) for (const t of [-1, 1]) m.box(0.07, 0.7, 0.07, shade(c, 0.85), M(s * 0.62, 0.35, t * 0.38));

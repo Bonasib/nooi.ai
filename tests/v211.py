@@ -21,20 +21,20 @@ def chk(name, ok, info=None):
 NODE = """
 import { localPlan, cleanPlan, editPlan, describePlan, TYPES, missedWords } from "%s/public/world/plan.js";
 const o = [];
-const g = localPlan("garage with old car");
+const g = localPlan("a garage with an old car in a meadow");
 o.push(["garage is a building", TYPES.garage && TYPES.garage.c === "building"]);
 o.push(["garage + classic car", JSON.stringify(g.objects.map(x => [x.type, x.era || "", x.rust || false]))]);
 o.push(["parked inside, nose out", JSON.stringify([g.objects[0].at, g.objects[1].at, g.objects[1].rot])]);
-o.push(["flat ground for a lone building", g.terrain.shape]);
+o.push(["flat ground for a lone castle", localPlan("a huge castle").terrain.shape]);
 o.push(["nothing missed", (g.missed || []).length === 0]);
 o.push(["describe says classic", g.describe]);
-const a = localPlan("\\u0643\\u0631\\u0627\\u062c \\u0641\\u064a\\u0647 \\u0633\\u064a\\u0627\\u0631\\u0629 \\u0642\\u062f\\u064a\\u0645\\u0629");
-o.push(["Arabic garage + old car", JSON.stringify(a.objects.map(x => [x.type, x.era || ""]))]);
+const a = localPlan("\\u0642\\u0631\\u064a\\u0629 \\u0641\\u064a\\u0647\\u0627 \\u0643\\u0631\\u0627\\u062c \\u0648\\u0633\\u064a\\u0627\\u0631\\u0629 \\u0642\\u062f\\u064a\\u0645\\u0629");
+o.push(["Arabic garage + old car", JSON.stringify(a.objects.filter(x=>["garage","car"].includes(x.type)).map(x => [x.type, x.era || ""]))]);
 const r = localPlan("a rusty abandoned truck in the desert");
 o.push(["rusty truck in the desert", JSON.stringify([r.place, r.objects.map(x => [x.type, x.rust || false])])]);
 const m = localPlan("a flying dragon lands near the castle");
 o.push(["dragon reported, castle kept", JSON.stringify([m.missed, m.objects.map(x => x.type)])]);
-const w = localPlan("car workshop at sunset");
+const w = localPlan("car workshop by the beach at sunset");
 o.push(["workshop = garage, no shop double", JSON.stringify([w.objects.map(x => x.type), Math.round(w.time)])]);
 const c = cleanPlan({ objects: [{ type: "car", era: "classic", rust: 1 }, { type: "car", era: "evil" }] });
 o.push(["cleanPlan keeps classic, drops junk", JSON.stringify(c.objects.map(x => [x.era || "", x.rust || false]))]);
@@ -50,7 +50,7 @@ if plan:
     chk("garage is a building type", plan.get("garage is a building") is True)
     chk("garage + classic car found", plan.get("garage + classic car") == '[["garage","",false],["car","classic",false]]', plan)
     chk("the car parks inside the garage, nose out", plan.get("parked inside, nose out") == "[[0,-6],[0,-4.5],6]", plan)
-    chk("a lone building stands on flat ground", plan.get("flat ground for a lone building") == "flat", plan)
+    chk("a lone building stands on flat ground", plan.get("flat ground for a lone castle") == "flat", plan)
     chk("every word of the garage prompt is used", plan.get("nothing missed") is True, plan)
     chk("the description says a classic car", "classic car" in str(plan.get("describe says classic")), plan)
     chk("Arabic: a workshop with an old car", plan.get("Arabic garage + old car") == '[["garage",""],["car","classic"]]', plan)
@@ -76,7 +76,7 @@ async def main():
         await pg.goto(B + "/"); await pg.wait_for_function("typeof API!=='undefined'&&API.mode==='server'", timeout=20000)
         await pg.evaluate("()=>{S.langAsked=true;S.user={name:'T',method:'google'};AU.showAuth=false;setUILang('en');document.getElementById('modalRoot').innerHTML='';go('world');renderAll()}")
         await pg.wait_for_timeout(600)
-        r = await pg.evaluate("""async()=>{const M=await nwMods();await nwBuild(M.localPlan('garage with old car'));const W=NW.W;
+        r = await pg.evaluate("""async()=>{const M=await nwMods();await nwBuild(M.localPlan('a garage with an old car in a meadow'));const W=NW.W;
           return{built:!!W,garage:(W.info||[]).filter(x=>x.type==='garage').map(x=>[Math.round(x.x),Math.round(x.z)]),movers:W.stats().movers,note:!!document.querySelector('.nw211')}}""")
         chk("the world builds with the garage at its spot", r["built"] and r["garage"] == [[0, -6]] and r["movers"] >= 1, r)
         chk("no missing-words note when every word is read", not r["note"], r)

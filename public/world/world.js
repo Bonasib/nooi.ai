@@ -22,6 +22,7 @@ const ROOMSET = {
   cafe: [["kitchen", [0, -4.3], 0], ["table", [-2.6, 0.6], 0], ["table", [2.6, 0.6], 0], ["table", [0, 3.2], 0], ["chair", [-2.6, -0.2], 0], ["chair", [-2.6, 1.4], Math.PI], ["chair", [2.6, -0.2], 0], ["chair", [2.6, 1.4], Math.PI], ["chair", [0, 2.4], 0], ["chair", [0, 4], Math.PI], ["plant", [4.3, 4.3], 0], ["lantern", [-4.2, 4.2], 0], ["bottle", [-2.6, 0.6], 0]],
   gallery: [["painting", [-2.5, -4.85], 0], ["painting", [2.5, -4.85], 0], ["statue", [0, 0], 0], ["painting", [-4.85, 1], Math.PI / 2], ["painting", [4.85, 1], -Math.PI / 2], ["plant", [4.3, 4.3], 0], ["bench", [0, 2.6], 0], ["vase", [-3.8, 3.8], 0]],
   showroom: [["car", [0, -1], 0.5], ["suv", [-6, 4], 2.3], ["plant", [7.5, -7.5], 0], ["sofa", [6.5, 5.5], -2.3], ["sign", [0, -7.4], 0], ["rug", [6.5, 4.5], 0]],
+  garage: [["desk", [-2.2, -4.4], 0], ["toolbox", [-3.8, -4.3], 0], ["crate", [-4.9, -2.6], 0], ["crate", [-4.9, -1.5], 0], ["crate", [-4.9, -2.05], 0.4], ["barrel", [-4.85, 0.2], 0], ["tyres", [4.4, -4.2], 0], ["tyres", [4.4, -3.0], 0], ["barrel", [4.5, -1.4], 0], ["crate", [4.3, 3.9], 0], ["cone", [3.2, 4.5], 0], ["toolbox", [-4.4, 2.2], Math.PI / 2]],
   classroom: [["desk", [-2.2, -0.5], Math.PI], ["desk", [0, -0.5], Math.PI], ["desk", [2.2, -0.5], Math.PI], ["desk", [-2.2, 2], Math.PI], ["desk", [0, 2], Math.PI], ["desk", [2.2, 2], Math.PI], ["chair", [-2.2, 0.3], 0], ["chair", [0, 0.3], 0], ["chair", [2.2, 0.3], 0], ["chair", [-2.2, 2.8], 0], ["chair", [0, 2.8], 0], ["chair", [2.2, 2.8], 0], ["painting", [0, -4.85], 0], ["shelf", [-5, 3], Math.PI / 2]]
 };
 
@@ -292,13 +293,20 @@ export async function createWorld(engine, planIn, opts = {}) {
   }
   // ---- inside: a room with walls, windows, a door, a ceiling light ----
   function buildRoom() {
-    const w = S, h = 3.2, t = 0.2, wallC = plan.terrain.color || (plan.room === "majlis" ? "#efe4cf" : "#eeebe4"), floorC = plan.terrain.color2 || (plan.room === "majlis" ? "#b98a58" : "#c49a6c");
+    const w = S, h = 3.2, t = 0.2, gar = plan.room === "garage", wallC = plan.terrain.color || (plan.room === "majlis" ? "#efe4cf" : gar ? "#d9d7d1" : "#eeebe4"), floorC = plan.terrain.color2 || (plan.room === "majlis" ? "#b98a58" : gar ? "#9b988f" : "#c49a6c");
     const fm = new T.Mesh(new T.BoxGeometry(w, 0.1, w), new T.MeshStandardMaterial({ color: floorC, roughness: 0.7 })); fm.position.y = -0.05; fm.receiveShadow = tier.shadows > 0; root.add(fm);
     const wm = new T.MeshStandardMaterial({ color: wallC, roughness: 0.95 }), ceil = new T.Mesh(new T.BoxGeometry(w, 0.1, w), wm); ceil.position.y = h + 0.05; root.add(ceil);
     for (const [x, z, hx, hz] of [[0, -w / 2, w / 2, t], [0, w / 2, w / 2, t], [-w / 2, 0, t, w / 2], [w / 2, 0, t, w / 2]]) { const m = new T.Mesh(new T.BoxGeometry(hx * 2, h, hz * 2), wm); m.position.set(x, h / 2, z); m.receiveShadow = tier.shadows > 0; root.add(m); roomWalls.push({ x, y: h / 2, z, hx, hy: h / 2, hz }); }
     const add = (type, x, z, ry, o = {}) => place({ type, scale: 1, color: o.color || null, color2: o.color2 || null, dyn: (TYPES[type] || {}).dyn }, x, z, ry, 1, 0, -1);
     const k = w / 12; for (const [type, [x, z], ry] of ROOMSET[plan.room] || ROOMSET.living) { if (!(plan.exclude || []).includes(type)) add(type, x * k, z * k, ry, plan.room === "majlis" && type === "cushions" ? { color: "#8e2f2a", color2: "#d4a63a" } : {}); }
-    for (const x of [-w * 0.28, w * 0.28]) add("window", x, -w / 2 + 0.25, 0); add("window", w / 2 - 0.25, 0, -Math.PI / 2); add("door", -w / 2 + 0.25, w * 0.25, Math.PI / 2);
+    if (gar) {   // (v212) the front wall is the roller door; one side window; a person door; an oil stain on the concrete
+      const dw = Math.min(w * 0.55, 5.4), dm = new T.MeshStandardMaterial({ color: "#9ba0a6", roughness: 0.5, metalness: 0.4 });
+      const dp = new T.Mesh(new T.BoxGeometry(dw, 2.5, 0.12), dm); dp.position.set(0, 1.25, -w / 2 + 0.26); root.add(dp);
+      for (let i = 1; i < 5; i++) { const sl = new T.Mesh(new T.BoxGeometry(dw, 0.045, 0.14), new T.MeshStandardMaterial({ color: "#7e838a" })); sl.position.set(0, i * 0.5, -w / 2 + 0.26); root.add(sl); }
+      const hd = new T.Mesh(new T.CylinderGeometry(0.2, 0.2, dw, 10), dm); hd.rotation.z = Math.PI / 2; hd.position.set(0, 2.72, -w / 2 + 0.34); root.add(hd);
+      const st = new T.Mesh(new T.CircleGeometry(0.55, 14), new T.MeshStandardMaterial({ color: "#36383b", roughness: 0.4 })); st.rotation.x = -Math.PI / 2; st.position.set(0.4, 0.012, 0.6); root.add(st);
+      add("window", w / 2 - 0.25, 0, -Math.PI / 2); add("door", -w / 2 + 0.25, w * 0.25, Math.PI / 2);
+    } else { for (const x of [-w * 0.28, w * 0.28]) add("window", x, -w / 2 + 0.25, 0); add("window", w / 2 - 0.25, 0, -Math.PI / 2); add("door", -w / 2 + 0.25, w * 0.25, Math.PI / 2); }
     const lamp = new T.Mesh(new T.CylinderGeometry(0.55, 0.7, 0.18, 16), new T.MeshBasicMaterial({ color: 0xfff3dc })); lamp.position.set(0, h - 0.12, 0); root.add(lamp);
     lights.push({ color: "#fff1d6", power: 1.3, x: 0, y: h - 0.9, z: 0 }); lights.push({ color: "#ffe2b0", power: 0.8, x: w * 0.3, y: h - 1.0, z: w * 0.3 });
   }

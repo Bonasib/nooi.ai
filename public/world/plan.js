@@ -29,7 +29,7 @@ export const SHAPES = ["flat", "hills", "mountains", "dunes", "coast", "island",
 export const GROUNDS = ["grass", "sand", "snow", "dirt", "asphalt", "stone", "redrock", "floor", "moon"];
 export const WATERS = ["none", "pond", "lake", "river", "sea", "oasis", "pool", "deep"];
 export const WEATHERS = ["clear", "cloudy", "rain", "storm", "snow", "fog", "sandstorm"];
-export const ROOMS = ["living", "majlis", "bedroom", "kitchen", "office", "cafe", "gallery", "showroom", "classroom"];
+export const ROOMS = ["living", "majlis", "bedroom", "kitchen", "office", "cafe", "gallery", "showroom", "classroom", "garage"];
 
 // every thing a world can hold: category, real size (m) and what it is made of (the physics table); dyn = it can be pushed
 export const TYPES = {
@@ -56,7 +56,7 @@ export const TYPES = {
   bus: { c: "vehicle", s: [11, 3.2, 2.6], m: "metal" }, boat: { c: "vehicle", s: [5, 1.4, 2], m: "wood", dyn: 1 }, bike: { c: "vehicle", s: [1.8, 1.1, 0.5], m: "metal", dyn: 1 },
   // things to push, kick and throw
   ball: { c: "prop", s: [0.22, 0.22, 0.22], m: "rubber", dyn: 1 }, crate: { c: "prop", s: [0.8, 0.8, 0.8], m: "wood", dyn: 1 }, barrel: { c: "prop", s: [0.6, 0.9, 0.6], m: "wood", dyn: 1 },
-  cone: { c: "prop", s: [0.4, 0.7, 0.4], m: "plastic", dyn: 1 }, chair: { c: "prop", s: [0.5, 0.9, 0.5], m: "wood", dyn: 1 }, table: { c: "prop", s: [1.4, 0.75, 0.9], m: "wood", dyn: 1 },
+  cone: { c: "prop", s: [0.4, 0.7, 0.4], m: "plastic", dyn: 1 }, toolbox: { c: "prop", s: [0.78, 0.92, 0.46], m: "metal" }, tyres: { c: "prop", s: [0.78, 0.78, 0.78], m: "rubber", dyn: 1 }, chair: { c: "prop", s: [0.5, 0.9, 0.5], m: "wood", dyn: 1 }, table: { c: "prop", s: [1.4, 0.75, 0.9], m: "wood", dyn: 1 },
   vase: { c: "prop", s: [0.3, 0.5, 0.3], m: "glass", dyn: 1 }, bottle: { c: "prop", s: [0.09, 0.3, 0.09], m: "glass", dyn: 1 }, cart: { c: "prop", s: [1.6, 1.1, 1], m: "wood", dyn: 1 },
   // inside
   sofa: { c: "furniture", s: [2.2, 0.85, 0.9], m: "wood" }, bed: { c: "furniture", s: [2, 0.6, 2.1], m: "wood" }, desk: { c: "furniture", s: [1.6, 0.76, 0.8], m: "wood" }, shelf: { c: "furniture", s: [1.2, 2, 0.4], m: "wood" },
@@ -185,6 +185,7 @@ const THING_WORDS = [
   ["campfire", W("campfire|bonfire|fire pit|fire", "نار المخيم|شبه نار|موقد نار|نار")], ["torch", W("torch(es)?", "مشعل|مشاعل")], ["lantern", W("lanterns?", "فانوس|فوانيس")],
   ["suv", W("suvs?|jeeps?|4x4|land ?cruiser", "جيب|دفع رباعي|لاندكروزر")], ["truck", W("trucks?|pickup", "شاحنه|ونيت|تريله")], ["bus", W("bus(es)?", "باص|حافله")],
   ["car", W("cars?|vehicles?|sedan|taxi", "سياره|سيارات|مركبه|تاكسي")], ["boat", W("boats?|ships?|yacht|dhow", "قارب|قوارب|مركب|سفينه|يخت|طراد")], ["bike", W("bikes?|bicycles?", "دراجه|دراجات|سيكل")],
+  ["toolbox", W("tool ?box(es)?|tools?|spanners?|wrench(es)?", "عده|ادوات|صندوق عده|مفاتيح ربط")], ["tyres", W("tyres?|tires?|spare wheels?", "اطارات|كفرات|تواير")],
   ["ball", W("balls?|football|soccer ball", "كوره|كره|طابه")], ["crate", W("crates?|boxes", "صندوق|صناديق|كرتون")], ["barrel", W("barrels?", "برميل|براميل")], ["cone", W("traffic cones?|cones?", "قمع|اقماع")],
   ["sofa", W("sofas?|couch(es)?", "كنبه|كنب|اريكه")], ["bed", W("beds?", "سرير|اسره")], ["desk", W("desks?", "مكتب خشبي|طاوله مكتب")], ["shelf", W("shel(f|ves)|bookcase", "رف|رفوف|مكتبه كتب")],
   ["rug", W("rugs?|carpets?", "سجاده|سجاد|زوليه")], ["tv", W("tv|television|screen", "تلفزيون|شاشه")], ["plant", W("pot plants?|potted plants?|houseplants?", "نبته|اصيص|زرعه")],
@@ -205,7 +206,7 @@ const COLORS = [["#d63a32", W("red", "احمر|حمراء")], ["#2f6fd6", W("blu
 const MATS = [["wood", W("wooden|wood", "خشب|خشبي")], ["metal", W("metal|steel|iron", "معدن|معدني|حديد|فولاذ")], ["glass", W("glass", "زجاج|زجاجي")], ["stone", W("stone|marble", "حجر|حجري|رخام")], ["rubber", W("rubber", "مطاط")], ["plastic", W("plastic", "بلاستيك")], ["ice", W("ice|frozen", "جليد|مثلج")]];
 const NUMS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, twelve: 12, twenty: 20, a: 1, an: 1, few: 3, several: 4, many: 9, lots: 12, some: 4,
   [norm("واحد")]: 1, [norm("واحده")]: 1, [norm("اثنين")]: 2, [norm("اثنان")]: 2, [norm("ثلاث")]: 3, [norm("ثلاثه")]: 3, [norm("اربع")]: 4, [norm("اربعه")]: 4, [norm("خمس")]: 5, [norm("خمسه")]: 5, [norm("ست")]: 6, [norm("سته")]: 6, [norm("سبع")]: 7, [norm("ثمان")]: 8, [norm("تسع")]: 9, [norm("عشر")]: 10, [norm("عشره")]: 10, [norm("عده")]: 4, [norm("بعض")]: 3, [norm("كثير")]: 9, [norm("كثيره")]: 9 };
-const ROOM_WORDS = [["majlis", W("majlis|diwan", "مجلس|ديوانيه")], ["bedroom", W("bedroom", "غرفه نوم")], ["kitchen", W("kitchen", "مطبخ")], ["office", W("office|workspace", "مكتب")], ["cafe", W("cafe|coffee shop|restaurant", "مقهي|كافيه|مطعم|كوفي")],
+const ROOM_WORDS = [["garage", W("garage|workshop", "كراج|جراج|قراج|مرآب|ورشه")], ["majlis", W("majlis|diwan", "مجلس|ديوانيه")], ["bedroom", W("bedroom", "غرفه نوم")], ["kitchen", W("kitchen", "مطبخ")], ["office", W("office|workspace", "مكتب")], ["cafe", W("cafe|coffee shop|restaurant", "مقهي|كافيه|مطعم|كوفي")],
   ["gallery", W("gallery|museum|exhibition", "معرض|متحف")], ["showroom", W("showroom|car showroom", "معرض سيارات|صاله عرض")], ["classroom", W("classroom|school", "فصل دراسي|مدرسه")], ["living", W("living room|lounge|salon", "صاله|غرفه جلوس|صالون")]];
 
 function countNear(t, idx) { // a number written just before the word ("3 palms", "ثلاث نخلات")
@@ -251,16 +252,20 @@ export function localPlan(prompt, opts = {}) {
   // a car "driving" / "on the road" moves; a parked one stays
   if (seen.has("car") && /\b(driving|traffic|moving|racing)\b|تسير|تمشي|زحمه|سباق|مسرعه/.test(t)) { const i = objects.findIndex((o) => o.type === "car"); if (i >= 0) { life.push({ type: "car", count: objects[i].count }); objects.splice(i, 1); } }
   let room; if (P.indoor) { room = "living"; for (const [r, re] of ROOM_WORDS) if (re.test(t)) { room = r; break; } }
-  // (v211) a building or a vehicle named with no place around it stands on open flat ground, not on hills
-  if (!hits.length && objects.length && ["building", "vehicle"].includes((TYPES[objects[0].type] || {}).c) && !shape) shape = "flat";
-  // (v211) "a garage with a car": the garage faces you and the car is parked inside it, nose out
+  // (v211) a building or a vehicle named with no place around it stands on open flat ground — and the subject stays the
+  // subject: a few plants at most, never a forest around a garage (v212)
+  let dress; if (!hits.length && objects.length && ["building", "vehicle"].includes((TYPES[objects[0].type] || {}).c)) { if (!shape) shape = "flat"; dress = 0.25; }
   const gar = objects.find((o) => o.type === "garage"), veh = objects.find((o) => TYPES[o.type].c === "vehicle" && ["car", "suv", "bike"].includes(o.type));
-  if (gar && !gar.at) { gar.at = [0, -6]; gar.rot = 0; gar.hero = true; if (veh && !veh.at && veh.count === 1) { veh.at = [0, -4.5]; veh.rot = 6; } }   // nose out of the open door, turned a touch
+  // (v212) a garage or workshop with no place around it IS the room: concrete walls, the vehicle inside, tools at the walls
+  if (gar && !hits.length && !objects.some((o) => o !== gar && TYPES[o.type].c === "building")) {
+    place = "room"; room = "garage"; objects.splice(objects.indexOf(gar), 1);
+    if (veh && !veh.at && veh.count === 1) { veh.at = [0, -0.4]; veh.rot = 14; }
+  } else if (gar && !gar.at) { gar.at = [0, -6]; gar.rot = 0; gar.hero = true; if (veh && !veh.at && veh.count === 1) { veh.at = [0, -4.5]; veh.rot = 6; } }   // outdoors: parked inside the garage building, nose out
   if (ground === "snow" && kind === "clear" && !opts.weather) kind = "snow";
   if (water === "sea" && !shape) shape = "coast";
   // a village or houses named next to another place ("a snowy mountain village")
   if (place !== "village" && place !== "city" && hits.includes("village") && !objects.some((o) => TYPES[o.type].c === "building")) objects.push({ type: ground === "snow" || place === "snow" || place === "mountain" || place === "forest" ? "cabin" : place === "desert" || place === "oasis" ? "najdi" : "house", count: 5 });
-  const p = cleanPlan({ prompt: raw, place, room, time, weather: { kind, wind }, terrain: { ground, shape }, water: { kind: water }, objects, life, people, title: raw.slice(0, 60) || P.en, label: raw.slice(0, 60) });
+  const p = cleanPlan({ prompt: raw, place, room, time, dress, weather: { kind, wind }, terrain: { ground, shape }, water: { kind: water }, objects, life, people, title: raw.slice(0, 60) || P.en, label: raw.slice(0, 60) });
   p.describe = describePlan(p);
   const miss = missedWords(t); if (miss.length) p.missed = miss;   // (v211) said honestly under the world
   return p;
