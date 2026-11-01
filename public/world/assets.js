@@ -285,6 +285,14 @@ export function buildModel(T, K, type, v = 0, opt = {}) {
       return m.done([0.64, 0.9, 0.64], cyl(0.31, 0.9)); }
     case "cone": { m.cone(0.2, 0.68, 10, "#ff6a1a", M(0, 0.38, 0)); m.cyl(0.13, 0.155, 0.12, 10, "#f4f4f0", M(0, 0.38, 0)); m.box(0.42, 0.04, 0.42, "#ff6a1a", M(0, 0.02, 0));
       return m.done([0.42, 0.72, 0.42], { shape: "cone", r: 0.2, hy: 0.36, y: 0.36 }); }
+    case "leak": {   // (v213) a small water leak: a damp patch on the ceiling, a line of falling drops, the puddle, the bucket someone put there
+      const h = 2.95;
+      m.cyl(0.4, 0.46, 0.04, 12, "#8d8579", M(0, h, 0)); m.cyl(0.22, 0.26, 0.045, 10, "#7c7466", M(0.08, h - 0.004, 0.05));
+      for (let i = 0; i < 7; i++) m.sphere(0.028, 6, 4, "#bfe4f5", M((rnd() - 0.5) * 0.05, h - 0.3 - i * 0.37, (rnd() - 0.5) * 0.05, 0, 0, 0, 1, 1.9, 1), "glass");
+      m.cyl(0.52, 0.52, 0.016, 16, "#7fb6d6", M(0, 0.012, 0), "glass"); m.cyl(0.3, 0.3, 0.012, 12, "#9ccbe4", M(0.1, 0.02, 0.08), "glass");
+      m.cyl(0.26, 0.2, 0.32, 10, "#8f949a", M(0.5, 0.16, 0.22), "shiny"); m.cyl(0.24, 0.24, 0.02, 10, "#6fa9c9", M(0.5, 0.3, 0.22), "glass");
+      m.torus(0.02, 0.012, 4, 10, "#6a6f75", M(0.5, 0.33, 0.22, 0.5, 0, 0), "shiny");
+      return m.done([1.1, 3, 1.1], { shape: "cyl", r: 0.3, hy: 0.16, y: 0.16 }); }
     case "toolbox": { const c = c1 || "#c7332b";   // a rolling tool chest: drawers, silver handles, a tray of tools on top
       m.box(0.72, 0.62, 0.44, c, M(0, 0.48, 0), "shiny"); for (let i = 0; i < 3; i++) { m.box(0.66, 0.145, 0.02, shade(c, 1.12), M(0, 0.28 + i * 0.19, 0.225)); m.box(0.3, 0.03, 0.03, "#c9ced4", M(0, 0.3 + i * 0.19, 0.24), "shiny"); }
       m.box(0.76, 0.07, 0.48, "#3b3e42", M(0, 0.825, 0)); m.box(0.5, 0.06, 0.3, "#8f949a", M(-0.05, 0.89, 0), "shiny"); m.cyl(0.03, 0.03, 0.26, 6, "#8f949a", M(0.2, 0.9, 0.05, 0, 0, 1.2), "shiny");

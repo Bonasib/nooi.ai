@@ -56,7 +56,7 @@ export const TYPES = {
   bus: { c: "vehicle", s: [11, 3.2, 2.6], m: "metal" }, boat: { c: "vehicle", s: [5, 1.4, 2], m: "wood", dyn: 1 }, bike: { c: "vehicle", s: [1.8, 1.1, 0.5], m: "metal", dyn: 1 },
   // things to push, kick and throw
   ball: { c: "prop", s: [0.22, 0.22, 0.22], m: "rubber", dyn: 1 }, crate: { c: "prop", s: [0.8, 0.8, 0.8], m: "wood", dyn: 1 }, barrel: { c: "prop", s: [0.6, 0.9, 0.6], m: "wood", dyn: 1 },
-  cone: { c: "prop", s: [0.4, 0.7, 0.4], m: "plastic", dyn: 1 }, toolbox: { c: "prop", s: [0.78, 0.92, 0.46], m: "metal" }, tyres: { c: "prop", s: [0.78, 0.78, 0.78], m: "rubber", dyn: 1 }, chair: { c: "prop", s: [0.5, 0.9, 0.5], m: "wood", dyn: 1 }, table: { c: "prop", s: [1.4, 0.75, 0.9], m: "wood", dyn: 1 },
+  cone: { c: "prop", s: [0.4, 0.7, 0.4], m: "plastic", dyn: 1 }, leak: { c: "prop", s: [1.1, 3, 1.1], m: "plastic" }, toolbox: { c: "prop", s: [0.78, 0.92, 0.46], m: "metal" }, tyres: { c: "prop", s: [0.78, 0.78, 0.78], m: "rubber", dyn: 1 }, chair: { c: "prop", s: [0.5, 0.9, 0.5], m: "wood", dyn: 1 }, table: { c: "prop", s: [1.4, 0.75, 0.9], m: "wood", dyn: 1 },
   vase: { c: "prop", s: [0.3, 0.5, 0.3], m: "glass", dyn: 1 }, bottle: { c: "prop", s: [0.09, 0.3, 0.09], m: "glass", dyn: 1 }, cart: { c: "prop", s: [1.6, 1.1, 1], m: "wood", dyn: 1 },
   // inside
   sofa: { c: "furniture", s: [2.2, 0.85, 0.9], m: "wood" }, bed: { c: "furniture", s: [2, 0.6, 2.1], m: "wood" }, desk: { c: "furniture", s: [1.6, 0.76, 0.8], m: "wood" }, shelf: { c: "furniture", s: [1.2, 2, 0.4], m: "wood" },
@@ -165,6 +165,7 @@ const WEATHER_WORDS = [
   ["fog", W("fog|foggy|mist|misty|haze", "ضباب|ضبابي|شبوره")], ["cloudy", W("cloudy|overcast|clouds", "غائم|غيوم|سحب|غيم")], ["clear", W("clear sky|clear|sunny", "صافي|صافيه|مشمس")]
 ];
 const WIND = W("wind|windy|breeze|gusts?", "رياح|ريح|عاصف|نسيم|هواء قوي");
+const INSIDE = W("inside|indoors|interior", "داخل|بداخل");
 // thing words → types (and life)
 const THING_WORDS = [
   ["palm", W("palm trees?|date palms?|palms?", "نخل|نخله|نخيل|نخلات")], ["pine", W("pine trees?|pines?|firs?|conifers?", "صنوبر")], ["ghaf", W("ghaf|acacias?|sidr|samr", "غاف|سدر|سمر|طلح|اكاسيا")],
@@ -185,6 +186,7 @@ const THING_WORDS = [
   ["campfire", W("campfire|bonfire|fire pit|fire", "نار المخيم|شبه نار|موقد نار|نار")], ["torch", W("torch(es)?", "مشعل|مشاعل")], ["lantern", W("lanterns?", "فانوس|فوانيس")],
   ["suv", W("suvs?|jeeps?|4x4|land ?cruiser", "جيب|دفع رباعي|لاندكروزر")], ["truck", W("trucks?|pickup", "شاحنه|ونيت|تريله")], ["bus", W("bus(es)?", "باص|حافله")],
   ["car", W("cars?|vehicles?|sedan|taxi", "سياره|سيارات|مركبه|تاكسي")], ["boat", W("boats?|ships?|yacht|dhow", "قارب|قوارب|مركب|سفينه|يخت|طراد")], ["bike", W("bikes?|bicycles?", "دراجه|دراجات|سيكل")],
+  ["leak", W("leaks?|leaking|drips?|dripping|seepage", "تسريب|تسرب|دلف|نشع|رشح")],
   ["toolbox", W("tool ?box(es)?|tools?|spanners?|wrench(es)?", "عده|ادوات|صندوق عده|مفاتيح ربط")], ["tyres", W("tyres?|tires?|spare wheels?", "اطارات|كفرات|تواير")],
   ["ball", W("balls?|football|soccer ball", "كوره|كره|طابه")], ["crate", W("crates?|boxes", "صندوق|صناديق|كرتون")], ["barrel", W("barrels?", "برميل|براميل")], ["cone", W("traffic cones?|cones?", "قمع|اقماع")],
   ["sofa", W("sofas?|couch(es)?", "كنبه|كنب|اريكه")], ["bed", W("beds?", "سرير|اسره")], ["desk", W("desks?", "مكتب خشبي|طاوله مكتب")], ["shelf", W("shel(f|ves)|bookcase", "رف|رفوف|مكتبه كتب")],
@@ -261,6 +263,13 @@ export function localPlan(prompt, opts = {}) {
     place = "room"; room = "garage"; objects.splice(objects.indexOf(gar), 1);
     if (veh && !veh.at && veh.count === 1) { veh.at = [0, -0.4]; veh.rot = 14; }
   } else if (gar && !gar.at) { gar.at = [0, -6]; gar.rot = 0; gar.hero = true; if (veh && !veh.at && veh.count === 1) { veh.at = [0, -4.5]; veh.rot = 6; } }   // outdoors: parked inside the garage building, nose out
+  // (v213) "inside a house / home / apartment" is the room itself, not a field with a house in it
+  if (place !== "room" && INSIDE.test(t) && (seen.has("house") || seen.has("villa") || seen.has("cabin") || /\b(home|apartment|flat)\b|منزل|شقه/.test(t))) {
+    place = "room"; room = "living"; for (const [r2, re2] of ROOM_WORDS) if (re2.test(t)) { room = r2; break; }
+  }
+  // the room IS the house: however the prompt got indoors, the building itself is not an object standing in the room
+  if (place === "room") for (const k of ["house", "villa", "cabin", "najdi", "tower"]) { const i2 = objects.findIndex((o2) => o2.type === k); if (i2 >= 0) objects.splice(i2, 1); }
+  { const lk = objects.find((o2) => o2.type === "leak"); if (lk) lk.scale = 1; }   // a "small leak" is still a whole leak (ceiling to floor)
   if (ground === "snow" && kind === "clear" && !opts.weather) kind = "snow";
   if (water === "sea" && !shape) shape = "coast";
   // a village or houses named next to another place ("a snowy mountain village")
@@ -272,8 +281,8 @@ export function localPlan(prompt, opts = {}) {
 }
 
 // (v211) the words of the prompt the free reader could not use — shown under the world, so a missing thing is never silent
-const STOP_PLAN = new Set(("the a an and or of in on at with by for to from into over under near next beside behind inside outside full empty new nice beautiful big small huge tiny old classic vintage antique retro rusty rusted abandoned little lovely my our your his her their this that some any very really where there here is are was it its front back side left right middle center centre parked parking lands landing driving moving stands"
-  + " في من علي الي عن مع فوق تحت بجانب خلف امام داخل خارج قرب جنب ذو ذات فيه فيها بها به هذا هذه ذلك جميل جميله كبير كبيره صغير صغيره قديم قديمه جديد جديده جدا وسط يمين يسار جانب موقف مواقف واقفه").split(" ").map((w) => norm(w)));
+const STOP_PLAN = new Set(("the a an and or of in on at with by for to from into over under near next beside behind inside outside full empty new nice beautiful big small huge tiny old classic vintage antique retro rusty rusted abandoned little lovely my our your his her their this that some any very really where there here is are was it its water front back side left right middle center centre parked parking lands landing driving moving stands"
+  + " في من علي الي عن مع فوق تحت بجانب خلف امام داخل خارج قرب جنب ذو ذات فيه فيها بها به هذا هذه ذلك جميل جميله كبير كبيره صغير صغيره قديم قديمه جديد جديده جدا وسط يمين يسار جانب موقف مواقف واقفه ماء مياه").split(" ").map((w) => norm(w)));
 export function missedWords(t) {
   const all = [PLACE_WORDS, TIME_WORDS, WEATHER_WORDS, THING_WORDS, LIFE_WORDS, COLORS, MATS, WHO, ACT_WORDS, DRESS, ROOM_WORDS].flat().map((x) => x[1]).concat([WIND, EDIT]);
   const out = [];
