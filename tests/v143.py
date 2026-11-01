@@ -19,8 +19,8 @@ SETUP = """async(l)=>{S.langAsked=true;document.getElementById('langsug')?.remov
  await edUseJob(S.jobs.find(j=>j.id==='va'),{stay:true,quiet:true,t:1});await edUseJob(S.jobs.find(j=>j.id==='va'),{stay:true,quiet:true,t:1});
  S.ed.texts=[{id:'t1',text:l==='ar'?'مرحبا':'HELLO',start:0,end:3,pos:'center',style:'clean',anim:'none',size:6}];S.ed.sfx=[{id:'s1',n:'pop',t:1,vol:100}];
  const b=await (await fetch('/media/m.mp3')).blob();loadSlot('edMusic',new File([b],'m.mp3',{type:'audio/mpeg'}));S.ed.tab='media';S.ed.sel=S.ed.clips[0].id;edSetPick('clip',S.ed.clips[0].id);go('edit');renderAll()}"""
-RAIL = ["media", "audio", "text", "stickers", "effects", "trans", "captions", "filters", "ai"]
-FIRST = {"media": "media", "audio": "audio", "text": "text", "stickers": "info", "effects": "vfx", "trans": "trans143", "captions": "words", "filters": "color", "ai": "chat143"}
+RAIL = ["media", "audio", "text", "captions", "effects", "filters", "ai"]   # (v216: the boards' seven — stickers in Text, transitions in Effects, Filters named Color)
+FIRST = {"media": "media", "audio": "audio", "text": "text", "effects": "vfx", "captions": "words", "filters": "color", "ai": "chat143"}
 SCAN = r"""()=>{const vis=e=>{const r=e.getBoundingClientRect();if(r.width<4||r.height<4)return false;const s=getComputedStyle(e);return s.visibility!=='hidden'&&s.display!=='none'&&+s.opacity>0.05};
  const fixed=[...document.querySelectorAll('*')].filter(e=>{const p=getComputedStyle(e).position;return(p==='fixed'||p==='sticky')&&vis(e)}).map(e=>e.getBoundingClientRect());
  let top=0,bot=innerHeight;for(const r of fixed){if(r.top<=innerHeight*0.5&&r.bottom>top&&r.bottom<innerHeight*0.7&&r.width>innerWidth*0.5)top=Math.max(top,r.bottom);if(r.bottom>=innerHeight*0.6&&r.top>innerHeight*0.4&&r.width>innerWidth*0.5)bot=Math.min(bot,r.top)}
@@ -66,7 +66,7 @@ async def desktop(b, lang):
         old:document.querySelectorAll('#main .edgrid,#main .cat140,#main .edtools72,#main .ne142').length,det:q('.e-details .e-body').dataset.tab,dsub:[...document.querySelectorAll('.e-details .e-sub button')].map(b=>b.dataset.v)}}""")
     out[tag + "_page"] = r
     chk(f"{tag}: one preview, timeline, tool row, prompt bar, rail, add panel, details, format, export, project name", r["one"] == [1] * 10, r["one"])
-    chk(f"{tag}: the nine add tools in order", r["rail"] == RAIL, r["rail"])
+    chk(f"{tag}: the seven add tools in order (v216)", r["rail"] == RAIL, r["rail"])
     chk(f"{tag}: none of the old layouts left", r["old"] == 0, r["old"])
     x = r["R"]; rtl = r["dir"] == "rtl"
     order = (x["rail"][0] >= x["assets"][2] - 2 and x["assets"][0] >= x["player"][2] - 2 and x["player"][0] >= x["details"][2] - 2) if rtl else (x["rail"][2] <= x["assets"][0] + 2 and x["assets"][2] <= x["player"][0] + 2 and x["player"][2] <= x["details"][0] + 2)
@@ -98,7 +98,7 @@ async def desktop(b, lang):
     n0 = await E("()=>S.ed.clips.length"); tiles = await E("()=>document.querySelectorAll('.e-assets [data-act=\"lib143\"]').length")
     await E("()=>document.querySelector('.e-assets [data-act=\"lib143\"][data-v=\"vb\"]').click()"); await pg.wait_for_function(f"S.ed.clips.length==={n0 + 1}", timeout=8000)
     chk(f"{tag}: your videos in the Media panel; one tap adds one to the timeline", tiles == 2 and await E("()=>S.ed.clips.some(c=>c.src&&c.src.job==='vb')"), tiles)
-    await E("()=>{edSetPick('clip',S.ed.clips[0].id);document.querySelector('.e-rail [data-v=\"trans\"]').click()}"); await pg.wait_for_timeout(200)
+    await E("()=>{edSetPick('clip',S.ed.clips[0].id);S.ed.lt143='effects';S.ed.tab='trans143';S.ed.pclosed143=null;renderView()}"); await pg.wait_for_timeout(200)   # (v216: transitions live in Effects)
     tr = await E("()=>{const t=[...document.querySelectorAll('.e-assets [data-set=\"edclip.trans\"]')];const f=t.find(b=>b.dataset.val==='fade');if(f)f.click();return{n:t.length,set:S.ed.clips[0].trans}}")
     await pg.wait_for_timeout(150); tr["set"] = await E("()=>S.ed.clips[0].trans")
     chk(f"{tag}: Transitions: the tiles for the selected clip; one tap sets it", tr["n"] >= 7 and tr["set"] == "fade", tr)

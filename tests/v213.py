@@ -44,7 +44,7 @@ if plan:
 chk("assets: the leak is modelled", 'case "leak"' in open(ROOT + "/public/world/assets.js", encoding="utf-8").read())
 chk("the AI plans learn the same rules", '"leak"' in open(ROOT + "/lib/world.js", encoding="utf-8").read())
 src = open(ROOT + "/public/index.html", encoding="utf-8").read()
-chk("no panorama is ordered for a room", 'nwIn215(plan)?null:withRef72("iRef"' in src and src.count('nwIn215(S.world.plan)') >= 3 and 'p.place==="room"||p.place==="stage"' in src)
+chk("no panorama is ordered for a room (v216: a stage with a reference photo still gets the sky that continues the photo)", '(nwIn215(plan)&&!(file&&plan.place==="stage"))?null:withRef72("iRef"' in src and src.count('nwIn215(S.world.plan)') >= 3 and 'p.place==="room"||p.place==="stage"' in src)
 
 async def main():
     for _ in range(80):

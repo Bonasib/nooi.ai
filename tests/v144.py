@@ -112,7 +112,8 @@ TDRAG = """async([sel,b,hold])=>{let e=document.querySelector(sel);if(!e)return 
 
 async def desktop(b, lang):
     tag = f"desktop {lang}"; ar = lang == "ar"; ctx, pg, errs = await open_page(b, 1280, 900, lang, False); E = pg.evaluate
-    rail = lambda v: E(f"()=>document.querySelector('.e-rail [data-v=\"{v}\"]').click()")
+    MOVED216 = {"stickers": ("text", "info"), "trans": ("effects", "trans143"), "effects": ("effects", "vfx"), "text": ("text", "text")}   # (v216: stickers live in Text, transitions in Effects — the Effects button remembers its last sub-panel, so pick the effects one)
+    rail = lambda v: E(f"()=>{{S.ed.lt143='{MOVED216[v][0]}';S.ed.tab='{MOVED216[v][1]}';S.ed.pclosed143=null;renderView()}}") if v in MOVED216 else E(f"()=>document.querySelector('.e-rail [data-v=\"{v}\"]').click()")
     # ---- 3. text styles: a tap adds a text in that style; in the details it restyles the selected text
     await rail("text"); await pg.wait_for_timeout(250)
     n = await E("()=>document.querySelectorAll('.e-assets [data-act=\"ts144\"]').length"); chk(f"{tag}: the Text panel has the text styles", n == 14, n)

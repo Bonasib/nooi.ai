@@ -146,7 +146,7 @@ const PLACE_WORDS = [
   ["rainforest", W("rain ?forest|jungle|tropical", "غابه مطيره|الغابات المطيره|ادغال|استوائي")],
   ["oasis", W("oasis", "واحه")],
   ["island", W("island", "جزيره")],
-  ["beach", W("beach|shore|coast|seaside|ocean|sea", "شاطي|ساحل|بحر|محيط|كورنيش")],
+  ["beach", W("beach|shore|coast|seaside|ocean|sea|harbou?r|marina|pier|quay|docks?", "شاطي|ساحل|بحر|محيط|كورنيش|ميناء|مينا|مرفا|مرسي")],
   ["canyon", W("canyon|wadi|valley of rocks|gorge|alula|al ?ula", "وادي|اخدود|العلا|مضيق")],
   ["snow", W("snow|snowy|winter|arctic|ice land|glacier", "ثلج|ثلوج|شتاء|جليد|قطبي")],
   ["mountain", W("mountains?|peaks?|alps|summit|cliffs?", "جبل|جبال|قمه|قمم|منحدر")],
@@ -305,7 +305,7 @@ export function localPlan(prompt, opts = {}) {
 }
 
 // (v211) the words of the prompt the free reader could not use — shown under the world, so a missing thing is never silent
-const STOP_PLAN = new Set(("the a an and or of in on at with by for to from into over under near next beside behind inside outside full empty new nice beautiful big small huge tiny old classic vintage antique retro rusty rusted abandoned little lovely my our your his her their this that some any very really where there here is are was it its water space area size meter meters metre metres cm square front back side tank tanks left right middle center centre parked parking lands landing driving moving stands"
+const STOP_PLAN = new Set(("the a an and or of in on at with by for to from into over under near next beside behind inside outside full empty new nice beautiful quiet calm peaceful serene busy big small huge tiny old classic vintage antique retro rusty rusted abandoned little lovely my our your his her their this that some any very really where there here is are was it its water space area size meter meters metre metres cm square front back side tank tanks left right middle center centre parked parking lands landing driving moving stands"
   + " في من علي الي عن مع فوق تحت بجانب خلف امام داخل خارج قرب جنب ذو ذات فيه فيها بها به هذا هذه ذلك جميل جميله كبير كبيره صغير صغيره قديم قديمه جديد جديده جدا وسط يمين يسار جانب موقف مواقف واقفه ماء مياه مساحه متر امتار مربع حوض").split(" ").map((w) => norm(w)));
 export function missedWords(t) {
   const all = [PLACE_WORDS, TIME_WORDS, WEATHER_WORDS, THING_WORDS, LIFE_WORDS, COLORS, MATS, WHO, ACT_WORDS, DRESS, ROOM_WORDS].flat().map((x) => x[1]).concat([WIND, EDIT]);

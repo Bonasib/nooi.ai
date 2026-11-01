@@ -42,7 +42,7 @@ async def editor(p):
     g = await E("""()=>{edSetPick('clip',S.ed.clips[0].id);S.ed.tab='clip';renderView();const sub=s=>[...document.querySelectorAll(s+' .e-sub button')].map(b=>b.dataset.v);
       return{cats:[...document.querySelectorAll('.e-rail button')].map(b=>b.dataset.v),det:sub('.e-details'),dtab:document.querySelector('.e-details .e-body')?.dataset.tab,pressed:document.querySelector('.e-details .e-sub [aria-pressed="true"]')?.dataset.v}}""")
     out["groups"] = g
-    chk("the add tools on the rail (Media · Audio · Text · Stickers · Effects · Transitions · Captions · Filters · AI) and the clip's details (Edit · Speed · Animation · Audio · Motion · Background · Tracking)", g["cats"] == ["media", "audio", "text", "stickers", "effects", "trans", "captions", "filters", "ai"] and g["det"] == ["clip", "speed145", "anim145", "audio145", "motion", "bg144", "track"] and g["dtab"] == "clip" and g["pressed"] == "clip", g)
+    chk("the add tools on the rail (v216: Media · Audio · Text (+ stickers) · Captions · Effects (+ transitions) · Color · AI) and the clip's details (Edit · Speed · Animation · Audio · Motion · Background · Tracking)", g["cats"] == ["media", "audio", "text", "captions", "effects", "filters", "ai"] and g["det"] == ["clip", "speed145", "anim145", "audio145", "motion", "bg144", "track"] and g["dtab"] == "clip" and g["pressed"] == "clip", g)
     seq = []
     for v in ("filters", "audio", "ai", "effects"):
         await pg.click(f'.e-rail [data-v="{v}"]'); await pg.wait_for_timeout(80)
@@ -163,7 +163,7 @@ async def phone(p):
     await E(SETUP); await pg.wait_for_timeout(800)
     await E("()=>{edSetPick(null);S.ed.tab='media';renderView()}"); await pg.wait_for_timeout(200)
     r = []
-    for v in ("ai", "media", "filters", "text", "audio", "effects", "captions", "trans", "stickers"):
+    for v in ("ai", "media", "filters", "text", "audio", "effects", "captions"):   # (v216: stickers sit in Text, transitions in Effects)
         await E(f"()=>{{const b=document.querySelector('.e-bar [data-act=\"lt143\"][data-v=\"{v}\"]');b.scrollIntoView({{inline:'center',block:'nearest'}});b.click()}}"); await pg.wait_for_timeout(120)
         r.append(await E("()=>{const c=document.querySelector('.e-bar'),cr=c.getBoundingClientRect();return{tab:S.ed.tab,sticky:getComputedStyle(c).position,foot:Math.abs(cr.bottom-innerHeight)<=1,over:document.documentElement.scrollWidth-innerWidth,h:Math.round(cr.height),sheet:!!document.querySelector('.e-sheet .e-body')}}"))
     out["phone"] = r

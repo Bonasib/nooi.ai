@@ -50,7 +50,7 @@ async def scan(pg, tag, states):
 # a word cut in two: one of its letters on another line than the rest
 CUT = """()=>{const bad=[];document.querySelectorAll('#main .ed143 .seg button').forEach(b=>{const r0=b.getBoundingClientRect();if(!r0.width)return;const w=document.createTreeWalker(b,NodeFilter.SHOW_TEXT);let n;
   while((n=w.nextNode())){const re=/\\S+/g;let m;while((m=re.exec(n.data))){const r=document.createRange();r.setStart(n,m.index);r.setEnd(n,m.index+m[0].length);const tops=new Set([...r.getClientRects()].filter(x=>x.width>0).map(x=>Math.round(x.top)));if(tops.size>1)bad.push(m[0])}}});return bad}"""
-STATES = lambda: [(v, f"()=>{{edSetPick(null);S.ed.selText=null;S.ed.lt143='{v}';const T=TABS143.find(x=>x[0]==='{v}');S.ed.tab=T[4][0];S.ed.pclosed143=null;renderView()}}") for v in ["media", "audio", "text", "stickers", "effects", "trans", "captions", "filters", "ai"]] + \
+STATES = lambda: [(v, f"()=>{{edSetPick(null);S.ed.selText=null;S.ed.lt143='{v}';const T=TABS143.find(x=>x[0]==='{v}');S.ed.tab=T[4][0];S.ed.pclosed143=null;renderView()}}") for v in ["media", "audio", "text", "captions", "effects", "filters", "ai"]] + \
     [("sounds", "()=>{S.ed.lt143='audio';S.ed.tab='sfx';S.ed.pclosed143=null;renderView()}"), ("project", "()=>{edSetPick(null);S.ed.tab='export';S.ed.pclosed143=null;renderView()}"),
      ("clip", "()=>{edSetPick('clip',S.ed.clips[0].id);S.ed.tab='clip';S.ed.pclosed143=null;renderView()}"), ("closed", "()=>{edSetPick(null);S.ed.pclosed143=S.ed.tab;renderView()}")]
 
@@ -140,7 +140,8 @@ async def desktop(b):
     await E("()=>{S.ed.lt143='filters';S.ed.tab='color';S.ed.sel=S.ed.clips[0].id;edSetPick('clip',S.ed.clips[0].id);renderView()}"); await pg.wait_for_timeout(400)
     r = await E("""()=>({studio:document.documentElement.classList.contains('studio151'),head:getComputedStyle(document.querySelector('#main>.topm')).display,looks:document.querySelectorAll('.ed143 [data-act="edx-look"] canvas.lk151').length,
       chips:document.querySelectorAll('#main .ed143 .pk84c').length,lanes:document.querySelectorAll('#tlin .tn[data-ln151] svg').length,back:!!document.querySelector('.e-home151')})""")
-    chk("computer: the site as before (its header, no studio frame); the same picture tiles and lane icons; no chips", not r["studio"] and r["head"] != "none" and r["looks"] >= 11 and r["chips"] == 0 and r["lanes"] >= 3 and not r["back"], r)
+    r["logo"] = await E("()=>!!document.querySelector('.ed143.ws216 .ws216logo[data-go=home]')")
+    chk("computer: the editor's own workspace since v216 (the site bar steps aside, the logo leads home); the same picture tiles and lane icons; no chips", not r["studio"] and r["head"] == "none" and r["logo"] and r["looks"] >= 11 and r["chips"] == 0 and r["lanes"] >= 3, r)
     await E("()=>{edSetPick(null);S.ed.lt143='audio';S.ed.tab='sfx';renderView()}"); await pg.wait_for_timeout(250)
     n = await E("()=>document.querySelectorAll('.e-assets [data-act=\"edx-sfx-add\"] .ic151 svg').length")
     chk("computer: the sound tiles with their own icons", n == 30, n)

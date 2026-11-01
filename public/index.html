@@ -11425,7 +11425,7 @@ const NW_TIME={day:11.5,golden:18.3,night:22.5};
 async function nwRealistic(pic){const W=NW.W;if(!W)return;const c=await nwCaps(),plan=W.plan,seed=plan.seed,desc=plan.describe||plan.prompt||"";
   const file=pic?await (await fetch(pic)).blob().then(b=>new File([b],"place.jpg",{type:b.type||"image/jpeg"})):null;const made=[];
   if(c.worldlabs){const j=withRef72("wRef",file,()=>addJob({kind:"world",prompt:desc,title:L("3D world · ","عالم 3D · ")+String(plan.title||"").slice(0,30),cost:c.cost&&c.cost.worldlabs||36,secs:90,art:"scene",aspect:"16:9",meta:{engine:"worldlabs",nw:{seed,role:"splat"}}}));if(j)made.push(j)}
-  else{const pj=nwIn215(plan)?null:withRef72("iRef",file,()=>addJob({kind:"image",model:bestImg72(),aspect:"21:9",prompt:"A seamless 360-degree equirectangular panorama"+(file?" that continues the place in the reference photo in every direction":"")+". The place: "+desc+" Eye-level camera in the middle of the space, the horizon straight across the middle, photorealistic, consistent light, no text, no frame; the left and right edges join seamlessly.",title:L("360° surroundings · ","المحيط 360° · ")+String(plan.title||"").slice(0,24),cost:nwPanoCost(),secs:40,art:"scene",meta:{nw:{seed,role:"pano"}}}));if(pj)made.push(pj);
+  else{const pj=(nwIn215(plan)&&!(file&&plan.place==="stage"))?null:withRef72("iRef",file,()=>addJob({kind:"image",model:bestImg72(),aspect:"21:9",prompt:"A seamless 360-degree equirectangular panorama"+(file?" that continues the place in the reference photo in every direction":"")+". The place: "+desc+" Eye-level camera in the middle of the space, the horizon straight across the middle, photorealistic, consistent light, no text, no frame; the left and right edges join seamlessly.",title:L("360° surroundings · ","المحيط 360° · ")+String(plan.title||"").slice(0,24),cost:nwPanoCost(),secs:40,art:"scene",meta:{nw:{seed,role:"pano"}}}));if(pj)made.push(pj);
     if(c.objects3d){const heroes=plan.objects.map((o,i)=>({o,i})).filter(x=>nwHeroish(x.o)).slice(0,4);   /* (v214) up to four real 3D things */
       for(const h of heroes){let crop=null;if(file&&h.o.box)crop=await nwCrop(pic,h.o.box);   /* (v215) no picture of it → the image engine draws it first, then the 3D engine shapes the model from that picture */
       if(!crop){const r=nwRefJob215(h,seed,desc);if(r){made.push(r);continue}}
@@ -25121,6 +25121,182 @@ window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('
  .nw-view.nw215t-chars .nw-bar>*:not(.nw215chars):not(.nw87cards){display:none}.nw-view.nw215t-chars .nw-bar .nw215chars{display:block}.nw-view.nw215t-chars .nw215cam,.nw-view.nw215t-chars .nw215ideas{display:none}
  .nw-view.nw215t-chars .nw215face,.nw-view.nw215t-chars .nw215add{width:56px;height:56px}
 }`;document.head.appendChild(st)})();
+
+/* ================= v216: THE EDITOR IN THE OWNER'S ARRANGEMENT · PRO EDIT TOOLS · TRACK HEADERS · ⌘K COMMANDS · FASTER =================
+   The owner's ten editor boards ("the editor in this arrangement and strong performance"). On a computer and an iPad in landscape
+   the editor is its own full-screen workspace (01.01): the site's bar and the hub tabs step aside; the editor's own top bar holds
+   the logo (home), the project name, Autosaved, undo · redo, the timeline zoom, ⌘K search, the nine agents of the crew (they open
+   Team), the format and Export. The rail is the boards' seven: Media · Audio · Text · Captions · Effects · Color · AI (stickers and
+   logo live in Text, transitions in Effects). The timeline gets track headers (03.03) — V1 · TXT · A1 Music · A2 Voice · SFX ·
+   overlays · captions — each with lock, hide (where the preview can hide it), and M / S for the sound lanes (the v150 mixer's own
+   buses, so preview and export agree). The edit tools of 03.02: Select (V), Ripple (B), Roll (N), Slip (Y), Slide (U), Rate stretch
+   (R), with ripple for clips only or all tracks. ⌘K finds editor commands and panels too (01.06). Faster: the site's bar is no
+   longer redrawn (and measured) on every change while you edit — it is hidden — and a drag redraws at most once a frame. */
+// ---- 1. the rail: the boards' seven
+(function(){const by=k=>TABS143.find(t=>t[0]===k);const txt=by("text"),st=by("stickers"),fx=by("effects"),tr=by("trans"),fl=by("filters");
+  if(st&&txt)st[4].forEach(s=>{if(!txt[4].includes(s))txt[4].push(s)});
+  if(tr&&fx){const i=Math.max(0,fx[4].indexOf("vfx"));fx[4].splice(i+1,0,...tr[4].filter(s=>!fx[4].includes(s)))}
+  if(fl){fl[1]="Color";fl[2]="اللون"}
+  const order=["media","audio","text","captions","effects","filters","ai"],keep=TABS143.filter(t=>order.includes(t[0])).sort((a,b)=>order.indexOf(a[0])-order.indexOf(b[0]));
+  TABS143.length=0;keep.forEach(t=>TABS143.push(t))})();
+const DR216={raf:0,lk:null};const ws216=()=>S.view==="edit"&&typeof desk143==="function"&&desk143();
+// ---- 2. the workspace top bar
+const CREW216=[["PR","Producer","المنتج","#4fbf6b"],["WR","Writer","الكاتب","#4f8fe0"],["DR","Director","المخرج","#e0a24f"],["CI","Cinematographer","مدير التصوير","#d6c84a"],["AD","Art director","المدير الفني","#a46be0"],
+  ["ED","Editor","المونتير","#e05f8f"],["SD","Sound designer","مصمم الصوت","#4fc4c9"],["CL","Colorist","الملوّن","#9cd245"],["RV","Reviewer","المراجع","#8f8fe0"]];
+VIEWS.edit=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string"||!ws216())return h;const E=S.ed,zp=Math.round((E.zoom||40)/40*100);
+  const nb=document.querySelector(".topm .nbrand,#side .nbrand"),brand=nb?nb.outerHTML:LOGO;
+  h=h.replace('class="view ed143',(tool216()!=="select"?'data-tool216="'+tool216()+'" ':"")+'class="view ed143 ws216');
+  h=h.replace('<div class="e-top">','<div class="e-top"><button type="button" class="ws216logo" data-go="home" aria-label="'+esc(L("Leave the editor (your edit is kept)","الخروج من المحرر (يبقى مونتاجك محفوظاً)"))+'">'+brand+"</button>");
+  h=h.replace('<div class="e-act">','<div class="ws216g"><span class="ws216sv" title="'+esc(L("Every change is saved on this device and to your account","كل تغيير يُحفظ على هذا الجهاز وفي حسابك"))+'">'+ic("cloud216")+esc(L("Autosaved","حفظ تلقائي"))+"</span>"+
+    '<button type="button" class="ws216b" data-act="ed-undo" aria-label="'+esc(L("Undo","تراجع"))+'">'+ic("undo216")+'</button><button type="button" class="ws216b" data-act="ed-redo" aria-label="'+esc(L("Redo","إعادة"))+'">'+ic("redo216")+"</button>"+
+    '<span class="ws216z"><button type="button" class="ws216b" data-act="ed-zoom" data-z="-1" aria-label="'+esc(L("Zoom the timeline out","تصغير الخط الزمني"))+'">−</button><b class="mono">'+zp+'%</b><button type="button" class="ws216b" data-act="ed-zoom" data-z="1" aria-label="'+esc(L("Zoom the timeline in","تكبير الخط الزمني"))+'">+</button></span>'+
+    '<button type="button" class="ws216k" data-act="palette" aria-label="'+esc(L("Search commands","ابحث في الأوامر"))+'">'+ic("search")+"<span>"+esc(L("Search","بحث"))+'</span><kbd>⌘K</kbd></button>'+
+    '<button type="button" class="ws216crew" data-act="tm196" aria-label="'+esc(L("The crew: nine agents","الطاقم: تسعة وكلاء"))+'">'+CREW216.map(c=>'<i style="background:'+c[3]+'" title="'+esc(L(c[1],c[2]))+'">'+c[0]+"</i>").join("")+'<b>9</b></button></div><div class="e-act">');
+  return h})(VIEWS.edit);
+Object.assign(ICONS,{cloud216:'<path d="M7 18h10a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.1 9.2 4.5 4.5 0 0 0 7 18z"/><path d="M9.5 13.5l1.8 1.8 3.4-3.6"/>',undo216:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',redo216:'<path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>',
+  lock216:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',unlock216:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.8-1.2"/>',eye216:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  eyeoff216:'<path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 4.4-1"/>',
+  sel216:'<path d="M5 3l14 8-6 1.6L10 19z"/>',rip216:'<path d="M4 5v14M20 5v14"/><path d="M8 12h8M12 9l-3 3 3 3"/>',roll216:'<path d="M12 4v16"/><path d="M8 9l-3 3 3 3M16 9l3 3-3 3"/>',
+  slip216:'<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M2 12h4M18 12h4M9 12h6"/>',slide216:'<path d="M3 6v12M21 6v12"/><rect x="8" y="8" width="8" height="8" rx="1.5"/><path d="M5 12h3M16 12h3"/>',rate216:'<path d="M4 6h10l6 6-6 6H4z"/><path d="M8 10l2 2-2 2"/>'});
+// ---- 3. track headers: one per lane, beside the timeline (the lanes keep their exact place: nothing under them moves)
+const LANE216={v:["V1","V1","clips"],t:["TXT","نص",null],a:["A1 Music","A1 موسيقى","music"],vo:["A2 Voice","A2 تعليق","voice"],fx:["SFX","مؤثرات","sfx"],ly:["V2 Overlay","V2 طبقة",null],rg:["Mask","قناع",null],cc:["CC","ترجمة",null],ix:["GFX","رسوم",null]};
+const HIDE216=new Set(["t","cc"]);
+function laneOf216(r){return r.dataset.trk==="t"?"t":r.dataset.trk==="a"?"a":r.querySelector(".blk.v")?"v":r.querySelector(".blk.ly")?"ly":r.querySelector(".blk.rg")?"rg":r.querySelector(".blk.cc")?"cc":r.querySelector(".blk.sx")?"fx":r.querySelector(".blk.a")?"vo":"ix"}
+const lk216=k=>!!((S.ed.lock216||{})[k]),hid216=k=>k==="cc"?!(S.ed.caps&&S.ed.caps.on):!!((S.ed.hide216||{})[k]);
+// (measured in the next frame, when the page is laid out anyway — a redraw never waits for an extra layout)
+function heads216(){cancelAnimationFrame(DR216.hraf||0);DR216.hraf=requestAnimationFrame(()=>{DR216.hraf=0;try{headsNow216()}catch(e){console.warn("v216",e)}})}
+function headsNow216(){const ed=document.querySelector(".ed143.ws216"),wrap=ed&&ed.querySelector(".e-tl .tlwrap"),tin=wrap&&wrap.querySelector(".tlin");if(!tin)return;
+  // (the timeline's scroll box is never moved — moving it would reset its scroll in the middle of a drag)
+  const host=wrap.parentElement;let col=host.querySelector(":scope>.tlh216");if(!col){col=document.createElement("div");col.className="tlh216";col.setAttribute("role","group");col.setAttribute("aria-label",L("Tracks","المسارات"));host.appendChild(col)}
+  Object.assign(col.style,{top:wrap.offsetTop+"px",height:wrap.offsetHeight+"px",left:Math.max(0,wrap.offsetLeft-156)+"px"});
+  const m=mixOf150(),mute=m.mute||{},solo=S.ed.solo216,seen={},top0=tin.getBoundingClientRect().top;let html="";
+  wrap.querySelectorAll(".tlin>.trk").forEach(r=>{const k=laneOf216(r),n=(seen[k]=(seen[k]||0)+1),D=LANE216[k]||LANE216.ix,bus=D[2],y=r.getBoundingClientRect().top-top0;
+    const b=(act,on,icon,lab,txt)=>'<button type="button" class="h216b" data-act="'+act+'" data-k="'+k+'" aria-pressed="'+on+'" aria-label="'+esc(lab)+'" title="'+esc(lab)+'">'+(icon?ic(icon):txt)+"</button>";
+    html+='<div class="h216" data-k="'+k+'" style="top:'+y.toFixed(1)+"px;height:"+r.offsetHeight+'px"><span class="h216n">'+esc(L(D[0],D[1]))+(n>1?" "+n:"")+"</span>"+
+      (n>1?"":b("h216-lock",lk216(k),lk216(k)?"lock216":"unlock216",L("Lock this track","اقفل المسار"))+(HIDE216.has(k)?b("h216-hide",hid216(k),hid216(k)?"eyeoff216":"eye216",L("Hide this track in the video","أخفِ المسار من الفيديو")):"")+
+        (bus?b("h216-mute",!!mute[bus],"",L("Mute","كتم"),"M")+b("h216-solo",solo===bus,"",L("Solo","منفرد"),"S"):""))+"</div>"});
+  col.innerHTML='<div class="tlh216in" style="height:'+tin.scrollHeight+'px">'+html+"</div>";const sync=()=>{const i=col.firstChild;if(i)i.style.transform="translateY("+(-wrap.scrollTop)+"px)"};sync();
+  if(!wrap._h216){wrap._h216=1;wrap.addEventListener("scroll",sync,{passive:true})}}
+// hidden text never reaches the picture (the preview and the export draw the same way)
+drawTextLayer=(o=>function(ctx,tx){if(S.ed&&S.ed.hide216&&S.ed.hide216.t)return;return o.apply(this,arguments)})(drawTextLayer);
+// a locked lane can't be picked, dragged or deleted
+const kindLane216={clip:"v",text:"t",layer:"ly",region:"rg",sfx:"fx"};
+// the clip under the finger or the pointer (the timeline has a layer over its clips, so the target alone isn't enough)
+function blkAt216(e,sel){const p=e.touches&&e.touches[0]||e.changedTouches&&e.changedTouches[0]||e;if(p.clientX==null||!document.elementsFromPoint)return null;
+  const t=e.target&&e.target.closest&&e.target.closest(sel);if(t)return t;return document.elementsFromPoint(p.clientX,p.clientY).find(el=>el.matches&&el.matches(sel))||null}
+function lockedHit216(e){if(!ws216())return null;const b=blkAt216(e,".ed143.ws216 .tlin>.trk .blk");const r=b&&b.closest(".trk");if(!r)return null;const k=laneOf216(r);return lk216(k)?k:null}
+// (the timeline's own press handlers come first: its drag is dropped, and a pick it made is put back as it was)
+["pointerdown","pointerup","mousedown","mouseup","touchstart","touchend","click","dblclick","contextmenu"].forEach(ev=>window.addEventListener(ev,e=>{const k=lockedHit216(e);if(!k)return;e.preventDefault();e.stopImmediatePropagation();
+  try{TLX.blk=null}catch(_){}const E=S.ed;
+  if(ev==="pointerdown"||ev==="touchstart"){if(!DR216.lk){const p=edPick();DR216.lk={sel:E.sel,pk:p?[p.k,p.id]:null,st:E.selText};toast(L("This track is locked — unlock it in its header to edit.","هذا المسار مقفل — افتحه من رأسه لتعدّله."))}}
+  else if((ev==="click"||ev==="touchend")&&DR216.lk){const o=DR216.lk;DR216.lk=null;E.sel=o.sel;E.selText=o.st;if(o.pk)edSetPick(o.pk[0],o.pk[1]);else edSetPick(null);persist();renderView()}},true));
+window.addEventListener("keydown",e=>{if(S.view!=="edit"||!/^(Delete|Backspace)$/.test(e.key))return;const tg=e.target;if(tg&&/INPUT|TEXTAREA|SELECT/.test(tg.tagName))return;const p=typeof edPick==="function"&&edPick(),k=p&&kindLane216[p.k];
+  if(k&&lk216(k)){e.preventDefault();e.stopImmediatePropagation();toast(L("This track is locked.","هذا المسار مقفل."))}},true);
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act^="h216-"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const E=S.ed,k=a.dataset.k,act=a.dataset.act,bus=(LANE216[k]||[])[2];
+  if(act==="h216-lock"){E.lock216=Object.assign({},E.lock216);E.lock216[k]=!E.lock216[k]}
+  else if(act==="h216-hide"){if(k==="cc"){E.caps=E.caps||{};E.caps.on=!E.caps.on}else{E.hide216=Object.assign({},E.hide216);E.hide216[k]=!E.hide216[k]}}
+  else if(act==="h216-mute"&&bus){E.mix150=mixOf150();E.mix150.mute=Object.assign({},E.mix150.mute);E.mix150.mute[bus]=!E.mix150.mute[bus];if(E.solo216&&E.solo216!==bus)E.solo216=null}
+  else if(act==="h216-solo"&&bus){E.mix150=mixOf150();if(E.solo216===bus){E.mix150.mute=Object.assign({},E.pre216||{});E.solo216=null}else{if(!E.solo216)E.pre216=Object.assign({},E.mix150.mute);E.solo216=bus;E.mix150.mute={};["clips","music","voice","sfx"].forEach(x=>{if(x!==bus)E.mix150.mute[x]=true})}}
+  persist();renderView()},true);
+// ---- 4. the edit tools
+const TOOLS216=[["select","Select","تحديد","sel216","V"],["ripple","Ripple trim","قص متتابع","rip216","B"],["roll","Roll","لفّ القطع","roll216","N"],["slip","Slip","انزلاق المحتوى","slip216","Y"],["slide","Slide","انزلاق المقطع","slide216","U"],["rate","Rate stretch","مطّ السرعة","rate216","R"]];
+const tool216=()=>S.ed.tool216||"select";
+function tools216(){const bar=document.querySelector(".ed143.ws216 .e-tl .edbar");if(!bar||bar.querySelector(".tool216"))return;const t=tool216(),all=!!S.ed.rippleAll216;
+  bar.querySelectorAll(":scope>button").forEach(b=>{if(b.classList.contains("seq148b"))return;const s=b.querySelector(":scope>span"),x=s&&s.textContent.trim();if(!x)return;if(!b.title)b.title=x;if(!b.getAttribute("aria-label"))b.setAttribute("aria-label",x)});   // icon-only in the workspace: the name stays as the tooltip and for screen readers
+  bar.insertAdjacentHTML("beforeend",'<div class="tool216" role="toolbar" aria-label="'+esc(L("Edit tools","أدوات التحرير"))+'">'+TOOLS216.map(x=>'<button type="button" class="tb216" data-act="tool216" data-v="'+x[0]+'" aria-pressed="'+(t===x[0])+'" title="'+esc(L(x[1],x[2])+" ("+x[4]+")")+'" aria-label="'+esc(L(x[1],x[2]))+'">'+ic(x[3])+"<kbd>"+x[4]+"</kbd></button>").join("")+
+    '<button type="button" class="tb216 rm216" data-act="ripall216" aria-pressed="'+all+'" title="'+esc(L("Ripple: what follows an edit moves with it","التتابع: ما بعد التعديل يتحرك معه"))+'">'+esc(all?L("All tracks","كل المسارات"):L("Clips only","المقاطع فقط"))+"</button></div>")}
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="tool216"],[data-act="ripall216"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
+  if(a.dataset.act==="tool216")setTool216(a.dataset.v);else{S.ed.rippleAll216=!S.ed.rippleAll216;persist();renderView()}},true);
+function setTool216(v){S.ed.tool216=v;persist();renderView();const x=TOOLS216.find(t=>t[0]===v);if(x&&v!=="select")toast(L(x[1]+" — drag a clip on the timeline.",x[2]+" — اسحب مقطعاً على الخط الزمني."))}
+window.addEventListener("keydown",e=>{if(!ws216()||e.metaKey||e.ctrlKey||e.altKey||e.repeat||$("#modalRoot").innerHTML)return;const tg=e.target;if(tg&&(/INPUT|TEXTAREA|SELECT/.test(tg.tagName)&&tg.type!=="range"||tg.isContentEditable))return;
+  const x=TOOLS216.find(t=>t[4].toLowerCase()===String(e.key).toLowerCase());if(!x)return;e.preventDefault();e.stopImmediatePropagation();setTool216(x[0])},true);
+const max216=c=>{const m=M["c_"+c.id],d=m&&typeof srcDur==="function"?srcDur(m):0;return d>0?d:Infinity};
+// what follows an edit point moves with it (all tracks)
+function shift216(t0,d){if(Math.abs(d)<1e-4)return;const E=S.ed,mv=(o,a,b)=>{if(o[a]>=t0-1e-3){o[a]=+Math.max(0,o[a]+d).toFixed(3);if(b&&o[b]!=null)o[b]=+Math.max(o[a]+.05,o[b]+d).toFixed(3)}};
+  (E.texts||[]).forEach(x=>mv(x,"start","end"));(E.infos||[]).forEach(x=>mv(x,"start","end"));(E.layers||[]).forEach(x=>mv(x,"start","end"));(E.regions||[]).forEach(x=>mv(x,"start","end"));
+  (E.sfx||[]).forEach(x=>mv(x,"t"));if(E.caps&&E.caps.words)E.caps.words.forEach(w=>mv(w,"s","e"))}
+const redraw216=()=>{if(!DR216.raf)DR216.raf=requestAnimationFrame(()=>{DR216.raf=0;renderView()})};
+window.addEventListener("pointerdown",e=>{const t=tool216();if(t==="select"||!ws216()||e.button>0)return;const b=blkAt216(e,".tlin .blk.v[data-clip]");if(!b)return;
+  const E=S.ed,i=E.clips.findIndex(c=>c.id===b.dataset.clip);if(i<0)return;const r=b.getBoundingClientRect(),zone=e.clientX-r.left<12?"L":r.right-e.clientX<12?"R":"B",n=E.clips.length;
+  let op=t,a=i,c2=i;if(t==="ripple"||t==="rate"){if(zone==="B")return}else if(t==="roll"){const left=zone==="L"||(zone==="B"&&e.clientX-r.left<r.width/2);a=left?i-1:i;c2=a+1;if(a<0||c2>=n){toast(L("Roll moves a cut between two clips — drag near a cut.","اللف يحرك القطع بين مقطعين — اسحب قرب القطع."));return}}
+  else if(t==="slide"){if(i===0||i===n-1){toast(L("Slide needs a clip on each side.","الانزلاق يحتاج مقطعاً على كل جانب."));return}}
+  e.preventDefault();e.stopImmediatePropagation();try{TLX.blk=null}catch(_){}if(typeof histPush==="function")try{histPush()}catch(err){}
+  const z=E.zoom||40,x0=e.clientX,snap=E.clips.map(c=>({in:c.in,out:c.out,sp:c.speed||1})),st0=edStarts(),end0=st0[i]+clipDur(E.clips[i]);let delta=0;
+  const span=(k,d)=>{const s=snap[k],c=E.clips[k],mx=max216(c);return[ (s.in+.1*s.sp-s.out)/s.sp, (mx-s.out)/s.sp ]},inR=(k)=>{const s=snap[k];return[-s.in/s.sp,(s.out-.1*s.sp-s.in)/s.sp]};
+  const mv=ev=>{const dt=(ev.clientX-x0)/z,c=E.clips[i],s=snap[i];
+    if(op==="ripple"){if(zone==="R"){c.out=+clamp(s.out+dt*s.sp,s.in+.1*s.sp,max216(c)).toFixed(3);delta=(c.out-s.out)/s.sp}else{c.in=+clamp(s.in+dt*s.sp,0,s.out-.1*s.sp).toFixed(3);delta=-(c.in-s.in)/s.sp}}
+    else if(op==="rate"){const d0=(s.out-s.in)/s.sp,nd=Math.max(.1,zone==="R"?d0+dt:d0-dt);c.speed=+clamp((s.out-s.in)/nd,.1,16).toFixed(4);delta=(s.out-s.in)/c.speed-d0}
+    else if(op==="slip"){const mx=max216(c),d=clamp(-dt*s.sp,-s.in,mx-s.out);c.in=+(s.in+d).toFixed(3);c.out=+(s.out+d).toFixed(3)}
+    else{const A=op==="roll"?a:i-1,B=op==="roll"?c2:i+1,sa=snap[A],sb=snap[B],ra=span(A),rb=inR(B),d=clamp(dt,Math.max(ra[0],rb[0]),Math.min(ra[1],rb[1]));
+      E.clips[A].out=+(sa.out+d*sa.sp).toFixed(3);E.clips[B].in=+(sb.in+d*sb.sp).toFixed(3)}
+    redraw216()};
+  const up=()=>{removeEventListener("pointermove",mv);removeEventListener("pointerup",up);removeEventListener("pointercancel",up);if(E.rippleAll216&&(op==="ripple"||op==="rate"))shift216(end0,delta);persist();renderView()};
+  addEventListener("pointermove",mv);addEventListener("pointerup",up);addEventListener("pointercancel",up)},true);
+// while a tool is active, the timeline's own press-and-drag on a clip stands aside (the tool does the edit)
+["mousedown","mouseup","touchstart","touchend","click","dblclick"].forEach(ev=>window.addEventListener(ev,e=>{if(tool216()==="select"||!ws216())return;const b=blkAt216(e,".tlin .blk.v[data-clip]");if(!b)return;
+  if(ev!=="click"&&ev!=="dblclick"&&ev!=="mouseup")e.preventDefault();e.stopImmediatePropagation()},{capture:true,passive:false}));
+// ---- 5. ⌘K: the editor's commands and panels
+const click216=s=>{const b=document.querySelector(s);if(b)b.click();return!!b};
+function cmds216(){const C=[["split","Split at playhead","قص عند المؤشر","S",()=>click216('[data-act="ed-split"]')],["del","Delete","حذف","Del",()=>click216('[data-act="ed-del"]')],["dup","Duplicate","تكرار","",()=>click216('[data-act="ed-dup"]')],
+    ["undo","Undo","تراجع","⌘Z",()=>histGo(-1)],["redo","Redo","إعادة","⇧⌘Z",()=>histGo(1)],["play","Play / pause","تشغيل / إيقاف","Space",()=>click216('[data-act="ed-play"]')],["mark","Add a marker","أضف علامة","M",()=>typeof mkAdd146==="function"&&mkAdd146()],
+    ["snap","Snapping on / off","الالتقاط تشغيل / إيقاف","",()=>click216('[data-act="snap141"]')],["export","Export video","تصدير الفيديو","",()=>click216(".edout")]].map(x=>({icon:"spark",title:L(x[1],x[2]),sub:L("Command","أمر")+(x[3]?" · "+x[3]:""),act:{ed216:x[4]}}));
+  TOOLS216.forEach(x=>C.push({icon:x[3],title:L(x[1]+" tool",x[2]),sub:L("Tool","أداة")+" · "+x[4],act:{ed216:()=>setTool216(x[0])}}));
+  C.push({icon:"rip216",title:L("Ripple all tracks on / off","التتابع لكل المسارات"),sub:L("Setting","إعداد"),act:{ed216:()=>{S.ed.rippleAll216=!S.ed.rippleAll216;persist();renderView()}}});
+  TABS143.forEach(T=>T[4].forEach(k=>{const nm=N143[k];if(nm)C.push({icon:T[3],title:L(nm[0],nm[1]),sub:L("Panel · ","لوحة · ")+L(T[1],T[2]),act:{ed216:()=>{const E=S.ed;E.tab=k;E.lt143=T[0];E.pclosed143=null;renderView()}}})}));
+  return C}
+palItems=(o=>function(q){const base=o.apply(this,arguments);if(S.view!=="edit")return base;const s=String(q||"").trim().toLowerCase(),mine=cmds216().filter(x=>!s||(x.title+" "+x.sub).toLowerCase().includes(s));return mine.slice(0,s?24:10).concat(base).slice(0,s?40:20)})(palItems);
+palGo=(o=>function(i){const x=PAL.items[i];if(x&&x.act&&typeof x.act.ed216==="function"){$("#modalRoot").innerHTML="";x.act.ed216();return}return o.apply(this,arguments)})(palGo);
+// ---- 5b. a note in the workspace shows on the picture, just under the top bar (wherever that bar ends) — never over its buttons or the timeline
+toast=(o=>function(){const r=o.apply(this,arguments);try{const el=document.getElementById("toast");if(el){if(document.body.classList.contains("ws216")){const t=document.querySelector(".ed143.ws216>.e-top"),b=t&&t.getBoundingClientRect().bottom;el.style.setProperty("top",Math.round((b>0?b:76)+10)+"px","important")}else el.style.removeProperty("top")}}catch(e){}return r})(toast);
+// ---- 6. faster: while you edit, the site's bar (hidden) isn't redrawn and measured on every change
+const SH216={k:""};
+renderShell=(o=>function(){const k=[S.view,S.lang,S.user&&S.user.name,S.credits,S.myPlan,document.documentElement.dataset.theme,(S.jobs||[]).length,(S.jobs||[]).filter(j=>j.status==="queued"||j.status==="rendering").length].join("|");
+  if(ws216()&&document.body.classList.contains("ws216")&&k===SH216.k)return;SH216.k=k;return o.apply(this,arguments)})(renderShell);
+renderView=(o=>function(){const r=o.apply(this,arguments);try{document.body.classList.toggle("ws216",ws216());if(ws216()){tools216();heads216()}}catch(e){console.warn("v216",e)}return r})(renderView);
+addEventListener("resize",()=>{if(S.view==="edit"&&document.body.classList.contains("ws216")!==ws216())renderView()});
+(function(){const st=document.createElement("style");st.id="v216";st.textContent=`
+body.ws216 #main>.topm,body.ws216 #main>.appfoot,body.ws216 .ed143 .hubtabs,body.ws216 #bottomnav{display:none!important}
+/* a note never covers the timeline or the top bar's buttons: in the workspace it shows on the picture, under the top bar */
+body.ws216 .toast{top:84px!important;bottom:auto!important}
+/* the workspace is the screen: the page never scrolls, the panels and the timeline scroll inside themselves */
+body.ws216 #main{overflow:hidden!important}
+.ed143.ws216{flex:none!important;height:calc(100dvh - 18px)!important;min-height:0!important;padding-top:0!important;padding-bottom:0!important;margin:0!important;display:flex!important;flex-direction:column;overflow:hidden}
+.ed143.ws216>.e-top{flex:none}.ed143.ws216>.e-app{flex:1 1 auto;min-height:0!important;height:auto!important}
+body.ws216 #main{margin:0!important;padding:8px 10px 10px!important;max-width:none!important;width:100%!important}
+.ed143.ws216 .e-top{display:flex;align-items:center;gap:10px;padding:4px 4px 10px;margin:0;flex-wrap:nowrap;min-width:0}
+.ed143.ws216 .e-home151,.ed143.ws216 .trk>.tn{display:none!important}
+/* the page's title stays for screen readers; on screen the project's name is the title (the boards' top bar) */
+.ed143.ws216 .e-h{position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;border:0!important}
+.ed143.ws216 .e-act .tm196b,.ed143.ws216 .e-act .pj139b{font-size:0;gap:0;padding:0 9px}.ed143.ws216 .e-act .tm196b svg,.ed143.ws216 .e-act .pj139b svg{margin:0}
+.ws216logo{display:inline-flex;align-items:center;height:34px;padding:0 6px;border:0;background:none;cursor:pointer;flex:none}.ws216logo svg{height:28px;width:auto}
+.ed143.ws216 .e-name{flex:0 1 220px;min-width:90px;font-weight:600}
+.ws216g{display:flex;align-items:center;gap:6px;margin-inline-start:auto;flex:0 0 auto}
+.ws216sv{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--mute);white-space:nowrap}.ws216sv svg{width:16px;height:16px}
+.ws216b{display:inline-grid;place-items:center;min-width:32px;height:32px;padding:0 6px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--text);cursor:pointer;font-size:16px}.ws216b svg{width:16px;height:16px}
+.ws216z{display:inline-flex;align-items:center;gap:4px}.ws216z b{min-width:44px;text-align:center;font-size:12px}
+.ws216k{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--mute);cursor:pointer;font-size:12px}.ws216k svg{width:14px;height:14px}.ws216k kbd{font:600 11px var(--mono,monospace);opacity:.8}
+.ws216crew{display:inline-flex;align-items:center;padding:0 4px;border:0;background:none;cursor:pointer}
+.ws216crew i{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;margin-inline-start:-6px;border:2px solid var(--bg);font:700 9px var(--mono,monospace);font-style:normal;color:#0b0c0e}.ws216crew i:first-child{margin-inline-start:0}
+.ws216crew b{display:inline-grid;place-items:center;min-width:26px;height:26px;border-radius:50%;margin-inline-start:-6px;background:var(--panel3,var(--panel2));border:2px solid var(--bg);font-size:11px;color:var(--text)}
+.ed143.ws216 .e-act{flex:none;display:flex;gap:6px}
+@media (max-width:1499px){.ws216k span,.ws216crew i:nth-child(n+5){display:none}.ws216sv{font-size:0;gap:0}.ed143.ws216 .e-name{flex-basis:170px}}
+@media (max-width:1279px){.ws216crew i:nth-child(n+2){display:none}.ed143.ws216 .e-name{flex-basis:120px;min-width:70px}.ws216z b{min-width:38px}}
+.ed143.ws216 .e-tl{position:relative}.ed143.ws216 .e-tl>.tlwrap{margin-left:156px!important}
+.tlh216{position:absolute;width:150px;box-sizing:border-box;overflow:hidden;border:1px solid var(--line);border-radius:12px;background:var(--panel2);z-index:2}
+.tlh216in{position:relative;will-change:transform}
+.h216{position:absolute;inset-inline:0;display:flex;align-items:center;gap:3px;padding:0 6px;box-sizing:border-box;border-bottom:1px solid color-mix(in srgb,var(--line) 50%,transparent)}
+.h216n{flex:1;min-width:0;font:600 11px var(--mono,monospace);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.h216b{display:inline-grid;place-items:center;width:22px;height:22px;padding:0;border:0;border-radius:8px;background:none;color:var(--mute);cursor:pointer;font:700 11px var(--mono,monospace)}.h216b svg{width:14px;height:14px}
+.h216b[aria-pressed="true"]{background:var(--lime);color:#0b0c0e}.h216b[data-act="h216-mute"][aria-pressed="true"]{background:#f5a524}
+.tool216{display:inline-flex;align-items:center;gap:2px;margin-inline-start:8px;padding:3px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
+.tb216{position:relative;display:inline-grid;place-items:center;min-width:34px;height:32px;padding:0 6px;border:0;border-radius:8px;background:none;color:var(--text);cursor:pointer;font-size:12px}.tb216 svg{width:16px;height:16px}
+.tb216 kbd{position:absolute;bottom:1px;inset-inline-end:2px;font:600 8px var(--mono,monospace);opacity:.55}
+.tb216[aria-pressed="true"]{background:var(--lime);color:#0b0c0e}.rm216{padding:0 10px;white-space:nowrap;font-weight:600}
+.ed143.ws216[data-tool216] .tlin .blk.v{cursor:ew-resize}
+/* the timeline tool row: icons (names as tooltips), nothing squeezed — the boards' compact bar; Autosaved is in the top bar */
+.ed143.ws216 .e-tl .edbar>*{flex-shrink:0}.ed143.ws216 .e-tl .edbar>button:not(.seq148b):not(.tb216){width:auto!important;min-width:34px!important;height:32px!important;padding:0 8px!important;flex-direction:row!important}
+.ed143.ws216 .e-tl .edbar>button:not(.seq148b)>span{display:none!important}.ed143.ws216 .e-tl .edbar>.savedot{display:none!important}
+.ed143.ws216 .e-tl .seq148b span{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;
