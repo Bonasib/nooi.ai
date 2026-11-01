@@ -103,7 +103,7 @@ export function buildTerrain(T, plan, tier, rnd) {
       col[k * 3] = c.r; col[k * 3 + 1] = c.g; col[k * 3 + 2] = c.b;
     }
     g.setAttribute("color", new T.BufferAttribute(col, 3)); g.computeVertexNormals(); g.computeBoundingSphere();
-    const m = new T.Mesh(g, new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.96, metalness: 0, flatShading: tier.name === "low" }));
+    const m = new T.Mesh(g, new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.96, metalness: 0 }));   // (v214) smooth normals everywhere — the faceted ground read as "shapeless" on phones
     m.receiveShadow = tier.shadows > 0; m.name = "nooi_ground"; return m;
   }
   // the land past the edge: low hills or dunes in the fog, so the world never ends at a cliff

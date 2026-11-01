@@ -34,7 +34,11 @@ export function makeKit(T) {
       box: (w, h, d, c, m, k = "opaque") => add(k, new T.BoxGeometry(w, h, d), c, m),
       cyl: (rt, rb, h, seg, c, m, k = "opaque") => add(k, new T.CylinderGeometry(rt, rb, h, seg, 1), c, m),
       cone: (r, h, seg, c, m, k = "opaque") => add(k, new T.ConeGeometry(r, h, seg, 1), c, m),
-      ico: (r, det, c, m, k = "opaque", jit = 0, rnd = Math.random) => { const geo = new T.IcosahedronGeometry(r, det); if (jit) { const p = geo.attributes.position, key = new Map(); for (let i = 0; i < p.count; i++) { const id = p.getX(i).toFixed(3) + "," + p.getY(i).toFixed(3) + "," + p.getZ(i).toFixed(3); if (!key.has(id)) key.set(id, 1 + (rnd() - 0.5) * jit); const f = key.get(id); p.setXYZ(i, p.getX(i) * f, p.getY(i) * f, p.getZ(i) * f); } geo.computeVertexNormals(); } return add(k, geo, c, m); },
+      ico: (r, det, c, m, k = "opaque", jit = 0, rnd = Math.random, smooth = 0) => { const geo = new T.IcosahedronGeometry(r, det); if (jit) { const p = geo.attributes.position, key = new Map(); for (let i = 0; i < p.count; i++) { const id = p.getX(i).toFixed(3) + "," + p.getY(i).toFixed(3) + "," + p.getZ(i).toFixed(3); if (!key.has(id)) key.set(id, 1 + (rnd() - 0.5) * jit); const f = key.get(id); p.setXYZ(i, p.getX(i) * f, p.getY(i) * f, p.getZ(i) * f); } geo.computeVertexNormals(); }
+        const baked = bake(geo, c, m); if (smooth) { const p = baked.attributes.position, nn = baked.attributes.normal, acc = new Map(), id = (i) => p.getX(i).toFixed(2) + "," + p.getY(i).toFixed(2) + "," + p.getZ(i).toFixed(2);
+          for (let i = 0; i < p.count; i++) { const a = acc.get(id(i)) || [0, 0, 0]; a[0] += nn.getX(i); a[1] += nn.getY(i); a[2] += nn.getZ(i); acc.set(id(i), a); }
+          for (let i = 0; i < p.count; i++) { const a = acc.get(id(i)), l = Math.hypot(a[0], a[1], a[2]) || 1; nn.setXYZ(i, a[0] / l, a[1] / l, a[2] / l); } }   // (v214) soft leaf masses, not crumpled facets
+        g[k].push(baked); return api; },
       sphere: (r, ws, hs, c, m, k = "opaque", phiL = Math.PI * 2, thetaL = Math.PI) => add(k, new T.SphereGeometry(r, ws, hs, 0, phiL, 0, thetaL), c, m),
       torus: (r, t, rs, ts, c, m, k = "opaque", arc = Math.PI * 2) => add(k, new T.TorusGeometry(r, t, rs, ts, arc), c, m),
       lathe: (pts, seg, c, m, k = "opaque") => add(k, new T.LatheGeometry(pts.map(([x, y]) => new T.Vector2(x, y)), seg), c, m),
@@ -70,7 +74,7 @@ export function buildModel(T, K, type, v = 0, opt = {}) {
       m.cyl(0.16, 0.3, h, 7, tr, M(0, h / 2, 0, (rnd() - 0.5) * 0.08, 0, (rnd() - 0.5) * 0.08));
       m.cyl(0.07, 0.12, 1.4, 5, tr, M(0.45, h - 0.2, 0, 0, 0, -0.7)); m.cyl(0.06, 0.11, 1.2, 5, tr, M(-0.4, h - 0.1, 0.2, 0.3, 0, 0.75));
       const leaf = c1 || pickc(rnd, PALETTE.leaf), n = 4 + (v % 2);
-      for (let i = 0; i < n; i++) { const a = (i / n) * 6.28 + rnd(), r = i === 0 ? 0 : 0.9 + rnd() * 0.5, s = i === 0 ? 1.9 : 1.2 + rnd() * 0.5; m.ico(s, det, i % 2 ? leaf : shade(leaf, 0.88), M(Math.cos(a) * r, h + 1.2 + (i === 0 ? 0.5 : rnd() * 0.8), Math.sin(a) * r), "opaque", 0.22, rnd); }
+      for (let i = 0; i < n; i++) { const a = (i / n) * 6.28 + rnd(), r = i === 0 ? 0 : 0.9 + rnd() * 0.5, s = i === 0 ? 1.9 : 1.2 + rnd() * 0.5; m.ico(s, det, i % 2 ? leaf : shade(leaf, 0.88), M(Math.cos(a) * r, h + 1.2 + (i === 0 ? 0.5 : rnd() * 0.8), Math.sin(a) * r), "opaque", 0.22, rnd, 1); }
       return m.done([5, h + 3.6, 5], { ...cyl(0.3, h + 1), trunk: 1 }, { sway: 1 }); }
     case "pine": { const tr = pickc(rnd, PALETTE.trunk), g = c1 || pickc(rnd, PALETTE.pine), snow = opt.snow;
       m.cyl(0.18, 0.28, 2.6, 6, tr, M(0, 1.3, 0)); const tiers = 4 + (v % 2);
@@ -89,11 +93,11 @@ export function buildModel(T, K, type, v = 0, opt = {}) {
       return m.done([4.5, y + 1.2, 4.5], { ...cyl(0.26, y), trunk: 1 }, { sway: 0.9 }); }
     case "ghaf": { const tr = "#6e5236", g = c1 || "#71894a";
       m.cyl(0.22, 0.32, 1.8, 7, tr, M(0, 0.9, 0)); m.cyl(0.1, 0.18, 2, 6, tr, M(0.55, 2.2, 0, 0, 0, -0.55)); m.cyl(0.1, 0.18, 2, 6, tr, M(-0.5, 2.2, 0.2, 0.25, 0, 0.6));
-      for (let i = 0; i < 5; i++) { const a = i * 1.25 + rnd(); m.ico(1.6 + rnd() * 0.6, det, i % 2 ? g : shade(g, 0.9), M(Math.cos(a) * 1.4, 3.6 + rnd() * 0.4, Math.sin(a) * 1.4, 0, 0, 0, 1.25, 0.42, 1.25), "opaque", 0.2, rnd); }
+      for (let i = 0; i < 5; i++) { const a = i * 1.25 + rnd(); m.ico(1.6 + rnd() * 0.6, det, i % 2 ? g : shade(g, 0.9), M(Math.cos(a) * 1.4, 3.6 + rnd() * 0.4, Math.sin(a) * 1.4, 0, 0, 0, 1.25, 0.42, 1.25), "opaque", 0.2, rnd, 1); }
       return m.done([6.4, 4.6, 6.4], { ...cyl(0.32, 3), trunk: 1 }, { sway: 0.5 }); }
-    case "bush": { const g = c1 || pickc(rnd, PALETTE.leaf); for (let i = 0; i < 3; i++) m.ico(0.65 + rnd() * 0.3, det, i % 2 ? g : shade(g, 0.85), M((rnd() - 0.5) * 0.9, 0.55, (rnd() - 0.5) * 0.9), "opaque", 0.25, rnd);
+    case "bush": { const g = c1 || pickc(rnd, PALETTE.leaf); for (let i = 0; i < 3; i++) m.ico(0.65 + rnd() * 0.3, det, i % 2 ? g : shade(g, 0.85), M((rnd() - 0.5) * 0.9, 0.55, (rnd() - 0.5) * 0.9), "opaque", 0.25, rnd, 1);
       return m.done([1.8, 1.2, 1.8], null, { sway: 0.4 }); }
-    case "shrub": { const g = c1 || pickc(rnd, PALETTE.dry); for (let i = 0; i < 3; i++) m.ico(0.35 + rnd() * 0.2, 0, i % 2 ? g : shade(g, 0.8), M((rnd() - 0.5) * 0.6, 0.25, (rnd() - 0.5) * 0.6, 0, 0, 0, 1, 0.7, 1), "opaque", 0.35, rnd);
+    case "shrub": { const g = c1 || pickc(rnd, PALETTE.dry); for (let i = 0; i < 3; i++) m.ico(0.35 + rnd() * 0.2, 0, i % 2 ? g : shade(g, 0.8), M((rnd() - 0.5) * 0.6, 0.25, (rnd() - 0.5) * 0.6, 0, 0, 0, 1, 0.7, 1), "opaque", 0.35, rnd, 1);
       return m.done([1, 0.6, 1], null); }
     case "flowers": { for (let i = 0; i < 7; i++) { const x = (rnd() - 0.5) * 0.9, z = (rnd() - 0.5) * 0.9, h = 0.22 + rnd() * 0.2; m.cyl(0.012, 0.015, h, 3, "#4f8a3b", M(x, h / 2, z)); m.ico(0.06, 0, c1 || pickc(rnd, PALETTE.flower), M(x, h + 0.03, z)); }
       return m.done([1, 0.4, 1], null); }
@@ -112,7 +116,7 @@ export function buildModel(T, K, type, v = 0, opt = {}) {
     case "log": { m.cyl(0.3, 0.3, 4, 8, "#6b4a2f", M(0, 0.3, 0, 0, 0, Math.PI / 2)); m.cyl(0.29, 0.29, 0.02, 8, "#c79a63", M(2.0, 0.3, 0, 0, 0, Math.PI / 2)); m.cyl(0.29, 0.29, 0.02, 8, "#c79a63", M(-2.0, 0.3, 0, 0, 0, Math.PI / 2));
       return m.done([4, 0.6, 0.6], { shape: "cyl", r: 0.3, hy: 2, y: 0.3, rz: Math.PI / 2 }); }
     case "rock": case "boulder": { const big = type === "boulder", r = big ? 1.7 : 0.62, c = c1 || pickc(rnd, PALETTE.rock);
-      m.ico(r, big ? det : 0, c, M(0, r * 0.55, 0, rnd(), rnd(), rnd(), 1.1, 0.75, 1), "opaque", 0.38, rnd); if (big) m.ico(r * 0.55, 0, shade(c, 0.9), M(r * 0.8, r * 0.3, r * 0.2, rnd(), rnd(), 0), "opaque", 0.4, rnd);
+      m.ico(r, big ? det : 0, c, M(0, r * 0.55, 0, rnd(), rnd(), rnd(), 1.1, 0.75, 1), "opaque", 0.38, rnd, 1); if (big) m.ico(r * 0.55, 0, shade(c, 0.9), M(r * 0.8, r * 0.3, r * 0.2, rnd(), rnd(), 0), "opaque", 0.4, rnd, 1);
       return m.done(big ? [4, 2.6, 3.6] : [1.4, 0.95, 1.2], { shape: "ball", r: r * 0.85, y: r * 0.5 }); }
     case "crystal": { const c = c1 || (v % 2 ? "#9b7bff" : "#6fe0f2"); for (let i = 0; i < 5; i++) { const a = i * 1.3, h = 1.2 + rnd() * 1.4; m.cone(0.22, h, 4, c, M(Math.cos(a) * 0.25, h / 2, Math.sin(a) * 0.25, Math.cos(a) * 0.3, 0, Math.sin(a) * 0.3), "glass"); m.cone(0.08, h * 0.6, 4, shade(c, 1.4), M(Math.cos(a) * 0.25, h * 0.35, Math.sin(a) * 0.25, Math.cos(a) * 0.3, 0, Math.sin(a) * 0.3), "glow"); }
       return m.done([1.2, 2.6, 1.2], cyl(0.5, 2.4), { light: { color: c, power: 0.6, y: 1.2 } }); }
