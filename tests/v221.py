@@ -1,11 +1,13 @@
 # v221 — nooi Studio on phones, tablets and computers: one editor, three arrangements of the same parts.
-#  · computer (1100+ wide and 600+ high): rail · library · preview · clip settings over the timeline
-#  · compact (tablets, small laptops, phones held sideways): rail · full-width preview over the timeline; library and clip settings
-#    slide in as drawers (from the other side in Arabic)
+#  · computer — computers AND tablets, the same panels and look: rail · library · preview · clip settings over the timeline; a tablet
+#    held upright stacks the same four panels (preview across the top, library and clip settings side by side, timeline below)
+#  · compact (phones held sideways, screens under 600 px high): rail · full-width preview over the timeline; library and clip
+#    settings slide in as drawers
 #  · phone held upright: preview / timeline / tool bar; a tool or the clip settings sit between a smaller preview and the timeline
 #  At 11 sizes: no sideways or up-down page scroll, no control off the screen, Export reachable, the export button in view, a file
-#  goes to the library and onto the timeline; on touch screens few controls under 24 px. Tapping a clip opens its settings with
-#  the timeline still in view; adding from the library keeps the library open; the settings' own ✕ closes them.
+#  goes to the library and onto the timeline, the video frame fits inside the preview; on touch screens few controls under 24 px.
+#  On a tablet, all four panels are on screen together and a clip tap fills the Clip panel (the library stays). On a phone, tapping
+#  a clip opens its settings with the timeline still in view; adding from the library keeps the library open; ✕ closes them.
 # Run: python3 tests/v221.py
 import asyncio, os, subprocess, sys, tempfile, time, urllib.request, json
 from playwright.async_api import async_playwright
@@ -18,7 +20,7 @@ fails, out = [], {}
 def chk(name, ok, info=None):
     if not ok: fails.append(name + ("" if info is None else " · " + json.dumps(info, ensure_ascii=False, default=str)[:600]))
 VP = [("phone 360", 360, 740, True, "phone"), ("phone 390", 390, 844, True, "phone"), ("phone 430", 430, 932, True, "phone"), ("phone sideways 844", 844, 390, True, "compact"),
-      ("tablet 768", 768, 1024, True, "compact"), ("tablet 820", 820, 1180, True, "compact"), ("tablet sideways 1024", 1024, 768, True, "compact"), ("tablet sideways 1180", 1180, 820, True, "full"),
+      ("tablet 768", 768, 1024, True, "full"), ("tablet 820", 820, 1180, True, "full"), ("tablet sideways 1024", 1024, 768, True, "full"), ("tablet sideways 1180", 1180, 820, True, "full"),
       ("laptop 1280", 1280, 800, False, "full"), ("desktop 1440", 1440, 900, False, "full"), ("desktop 1920", 1920, 1080, False, "full")]
 AUDIT="""()=>{const W=innerWidth,H=innerHeight,out=[],small=[];
 for(const e of document.querySelectorAll('button,a,input,select,[role=slider]')){const r=e.getBoundingClientRect();const cs=getComputedStyle(e);if(!r.width||!r.height||cs.visibility==='hidden')continue;
@@ -41,6 +43,11 @@ async def size(b, name, w, h, touch, mode):
     r = await pg.evaluate(AUDIT); r["clips"] = await pg.evaluate("()=>window.__studio.editor.project.tracks.reduce((s,t)=>s+t.clips.length,0)")
     chk(f"{name}: no page scroll, nothing off the screen, the file on the timeline", r["scrollX"] <= 0 and r["scrollY"] <= 0 and r["nOff"] == 0 and r["clips"] == 1, {k: r[k] for k in ("scrollX", "scrollY", "off", "clips")})
     if touch: chk(f"{name}: touch-size controls (at most 3 under 24 px)", r["nSmall"] <= 3, r["small"])
+    pv, pl = r["areas"].get("[data-testid=preview]"), r["areas"].get(".player")
+    chk(f"{name}: the video frame fits inside the preview", pv and pl and pv[0] >= pl[0] and pv[0] + pv[2] <= pl[0] + pl[2] + 1 and pv[1] >= pl[1] and pv[1] + pv[3] <= pl[1] + pl[3] + 1 and pv[2] >= 120, [pv, pl])
+    if mode == "full":
+        vis = all(k in r["areas"] and r["areas"][k][2] >= 200 and r["areas"][k][3] >= 150 for k in (".panel", ".inspector", ".player", ".timeline"))
+        chk(f"{name}: library, preview, clip settings and timeline all on screen at once (the computer look)", vis, {k: r["areas"].get(k) for k in (".panel", ".player", ".inspector", ".timeline")})
     await pg.click('[data-testid="export"]'); await pg.wait_for_timeout(400)
     g = await pg.evaluate("()=>{const g=document.querySelector('[data-testid=export-go]').getBoundingClientRect();return g.bottom<=innerHeight&&g.top>=0&&g.right<=innerWidth}")
     chk(f"{name}: the export button is in view", g)
@@ -53,6 +60,13 @@ async def flow(b, name, w, h, lang):
     await pg.click('[data-testid="rail-media"]'); await pg.wait_for_timeout(300)
     await pg.set_input_files('[data-testid="file-input"]', [D + "/a.webm"]); await pg.wait_for_function("Object.keys(window.__studio.editor.project.assets).length===1", timeout=20000); await pg.wait_for_timeout(400)
     await pg.locator('[data-testid="asset"] .libp').first.click(); await pg.wait_for_timeout(400)
+    full = await pg.evaluate("()=>document.querySelector('.app').classList.contains('full')")
+    if full:
+        await pg.evaluate("()=>window.__studio.editor.select([])"); await pg.wait_for_timeout(200)
+        await pg.locator('.clip').first.tap(); await pg.wait_for_timeout(500)
+        r = await pg.evaluate("()=>({lib:!!document.querySelector('.workspace > .panel .lib'),clip:(document.querySelector('.workspace > .inspector .ihead h2')||{}).textContent,tl:document.querySelector('.timeline').getBoundingClientRect().height>150,drawer:!!document.querySelector('.drawer,.msheet')})")
+        chk(f"{name}: a clip tap fills the Clip panel, the library stays beside it, no drawers (the computer look)", r["lib"] and r["clip"] in ("Clip", "المقطع") and r["tl"] and not r["drawer"], r)
+        chk(f"{name}: no page errors", not errs, errs); await ctx.close(); return
     s1 = await pg.evaluate("()=>({lib:!!document.querySelector('.drawer.start,.msheet:not(.insp)'),insp:!!document.querySelector('.drawer.end,.msheet.insp')})")
     chk(f"{name}: adding from the library keeps the library open", s1 == {"lib": True, "insp": False}, s1)
     c = pg.locator('[data-testid=drawer-close],[data-testid=sheet-close]')

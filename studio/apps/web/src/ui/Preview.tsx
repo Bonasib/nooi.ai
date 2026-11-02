@@ -34,7 +34,7 @@ export function Preview() {
   useEffect(() => { const pl = playerRef.current; if (pl) pl.loop = loop; }, [loop]);
   useEffect(() => { playerRef.current?.resize(); }, [p.width, p.height]);
   useEffect(() => {
-    const el = box.current!; const fit = () => { const r = el.getBoundingClientRect(); const k = Math.min(r.width / p.width, r.height / p.height); setSize({ w: Math.max(40, Math.floor(p.width * k)), h: Math.max(40, Math.floor(p.height * k)) }); };
+    const el = box.current!; const fit = () => { const r = el.getBoundingClientRect(), cs = getComputedStyle(el), padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight), padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom); const k = Math.min((r.width - padX) / p.width, (r.height - padY) / p.height); setSize({ w: Math.max(40, Math.floor(p.width * k)), h: Math.max(40, Math.floor(p.height * k)) }); };
     fit(); const ro = new ResizeObserver(fit); ro.observe(el); return () => ro.disconnect();
   }, [p.width, p.height]);
   const pl = playerRef.current; const clock = pl?.clock || { t: 0, playing: false, buffering: false }; const d = duration(p);

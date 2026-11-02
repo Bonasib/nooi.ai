@@ -1754,3 +1754,10 @@ The owner sent the target card (two columns; media with play · sound · length;
   - 11 sizes (360…1920, phones sideways, tablets both ways): the arrangement, no page scroll, no control off the screen (the timeline toolbar scrolls), the file onto the timeline, touch targets, the export button in view;
   - flows in English and Arabic on a tablet and a phone, and on a phone sideways: the library stays open while adding, tapping a clip opens its settings with the timeline in view (drawer from the right, from the left in Arabic), the settings' own ✕ closes them.
   - v219 / v220 still pass.
+
+- v221 follow-up (the owner: desktop and tablets must be the same as the desktop):
+  - Tablets get the full computer layout, with all four panels on screen and no drawers. `compactQ` is now `(max-height: 600px)` only, so the compact drawer mode is just for phones held sideways.
+  - Under 1100 px in landscape: the same columns, with side panels 200–240 / 220–260 px.
+  - Held upright: the same four panels via grid areas — `"rail player player" / "rail panel inspector" / "rail timeline timeline"`, rows `1fr / 0.9fr / minmax(250px, 34%)`.
+  - Preview fit now subtracts the stage box's padding. The frame had stuck out about 20 px at every size; it now fits at all 11 sizes.
+  - `tests/v221.py`: tablets expect `full`; all four panels at least 200×150; a clip tap fills the Clip panel with the library beside it and no drawers; the frame inside the preview at every size.

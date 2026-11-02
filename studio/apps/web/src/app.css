@@ -37,6 +37,15 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
 /* workspace */
 .workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: 72px minmax(240px, 300px) minmax(0, 1fr) minmax(260px, 320px); grid-template-rows: minmax(0, 1fr) minmax(220px, 36%); gap: 8px; padding: 8px; }
 .workspace > .rail { grid-row: 1 / 3; } .workspace > .timeline { grid-column: 2 / 5; }
+/* tablets get the same computer layout: landscape keeps the four columns with narrower side panels; held upright, the same four
+   panels are stacked — the preview across the top, library and clip settings side by side, the timeline below */
+@media (max-width: 1099px) and (orientation: landscape) { .workspace:not(.compact) { grid-template-columns: 64px minmax(200px, 240px) minmax(0, 1fr) minmax(220px, 260px); } }
+@media (max-width: 1099px) and (orientation: portrait) {
+  .workspace:not(.compact) { grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) minmax(0, 0.9fr) minmax(250px, 34%);
+    grid-template-areas: "rail player player" "rail panel inspector" "rail timeline timeline"; }
+  .workspace:not(.compact) > .rail { grid-area: rail; } .workspace:not(.compact) > .player { grid-area: player; }
+  .workspace:not(.compact) > .panel { grid-area: panel; } .workspace:not(.compact) > .inspector { grid-area: inspector; } .workspace:not(.compact) > .timeline { grid-area: timeline; }
+}
 .rail { display: flex; flex-direction: column; gap: 4px; }
 .rail button, .mrail button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; border: 1px solid transparent; border-radius: var(--r2); background: none; color: var(--mute); cursor: pointer; font-size: 11px; font-weight: 600; }
 .rail button:hover { color: var(--text); background: var(--panel2); }

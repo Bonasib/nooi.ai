@@ -65,8 +65,8 @@ Which arrangement each screen gets:
 
 | Screen | Arrangement |
 |---|---|
-| computers, tablets in landscape 1100+ wide | rail · library · preview · clip settings over the timeline |
-| tablets, small laptops, phones held sideways | rail · full-width preview over the timeline; the library and the clip settings slide in as drawers |
+| computers and tablets (the same panels, features and look) | rail · library · preview · clip settings over the timeline; a tablet held upright stacks the same four panels: the preview across the top, library and clip settings side by side, the timeline below |
+| phones held sideways (screens under 600 px high) | rail · full-width preview over the timeline; the library and the clip settings slide in as drawers |
 | phones held upright | preview / timeline / tool bar; a tool or the clip settings sit between a smaller preview and the timeline |
 
 ## 1. VPS setup (Hostinger, Docker Compose)
