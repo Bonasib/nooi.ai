@@ -25298,6 +25298,77 @@ body.ws216 #main{margin:0!important;padding:8px 10px 10px!important;max-width:no
 .ed143.ws216 .e-tl .edbar>button:not(.seq148b)>span{display:none!important}.ed143.ws216 .e-tl .edbar>.savedot{display:none!important}
 .ed143.ws216 .e-tl .seq148b span{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}`;document.head.appendChild(st)})();
 
+/* ================= v217: the editor's own library — what you upload waits there first (videos, pictures, sounds); a tap or a drag
+   puts it on the timeline (the owner: "the videos should be in the library not in the timeline, then I select and drag what I want") ================= */
+const BIN217={mem:{}};
+const binList217=()=>{const E=S.ed;if(!Array.isArray(E.bin217))E.bin217=[];return E.bin217};
+const binKey217=id=>"bn217_"+id;
+const binTy217=f=>{const t=String(f&&f.type||""),n=String(f&&f.name||"");return/^video\//.test(t)||/\.(mp4|mov|webm|m4v|mkv)$/i.test(n)?"v":/^image\//.test(t)||/\.(png|jpe?g|webp|gif|avif)$/i.test(n)?"i":/^audio\//.test(t)||/\.(mp3|wav|m4a|aac|ogg|opus|flac)$/i.test(n)?"a":null};
+// a small picture and the length, read once on this device (nothing is uploaded, nothing is charged)
+function binProbe217(f,ty){return new Promise(res=>{const url=URL.createObjectURL(f);let over=false;const done=(poster,dur)=>{if(over)return;over=true;clearTimeout(to);try{URL.revokeObjectURL(url)}catch(e){}res({poster:poster||"",dur:+(+dur||0).toFixed(2)})};
+  const shot=(el,w0,h0)=>{try{if(!w0||!h0)return"";const W=160,H=90,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");x.fillStyle="#111";x.fillRect(0,0,W,H);const s=Math.max(W/w0,H/h0);x.drawImage(el,(W-w0*s)/2,(H-h0*s)/2,w0*s,h0*s);return c.toDataURL("image/jpeg",.7)}catch(e){return""}};
+  const to=setTimeout(()=>done("",0),8000);
+  if(ty==="i"){const im=new Image();im.onload=()=>done(shot(im,im.naturalWidth,im.naturalHeight),0);im.onerror=()=>done("",0);im.src=url;return}
+  if(ty==="a"){const a=new Audio();a.preload="metadata";a.onloadedmetadata=()=>done("",isFinite(a.duration)?a.duration:0);a.onerror=()=>done("",0);a.src=url;return}
+  const v=document.createElement("video");v.muted=true;v.playsInline=true;v.preload="auto";
+  v.onloadedmetadata=()=>{const d=isFinite(v.duration)?v.duration:0;try{v.currentTime=Math.min(1,d/3)}catch(e){done("",d)}};
+  v.onseeked=()=>done(shot(v,v.videoWidth,v.videoHeight),isFinite(v.duration)?v.duration:0);v.onerror=()=>done("",0);v.src=url})}
+// into the library (this device keeps the file; the project keeps its name, picture and length)
+async function binAdd217(files){const fs=[...(files||[])].filter(f=>binTy217(f));if(!fs.length){toast(L("Those files can't go in the editor — videos, pictures or sounds only.","هذه الملفات لا تدخل المحرر — فيديوهات أو صور أو أصوات فقط."),{type:"warn"});return 0}
+  const B=binList217();let n=0;const its=[];
+  for(const f of fs){const id=uid(),it={id,ty:binTy217(f),name:String(f.name||"").replace(/\.\w+$/,"").slice(0,60)||L("Upload","ملف"),dur:0,poster:"",at:Date.now()};
+    BIN217.mem[id]=f;IDB.put(binKey217(id),f);B.unshift(it);its.push([it,f]);n++}
+  if(B.length>200)B.splice(200).forEach(x=>{IDB.del(binKey217(x.id));delete BIN217.mem[x.id]});
+  S.ed.lt143="media";S.ed.tab="media";S.ed.pclosed143=null;persist();if(S.view==="edit")renderView();
+  toast((n===1?L("Added to your library","أُضيف إلى مكتبتك"):L(n+" files added to your library",n+" ملفات أُضيفت إلى مكتبتك"))+" — "+L("drag onto the timeline, or tap +.","اسحبها إلى الخط الزمني أو اضغط +."),{type:"ok"});
+  for(const[it,f]of its){const p=await binProbe217(f,it.ty);it.poster=p.poster;it.dur=p.dur}persist();if(S.view==="edit"&&!(DND144.s&&DND144.s.on))renderView();return n}
+async function binFile217(it){let f=BIN217.mem[it.id];if(!f){const b=await IDB.get(binKey217(it.id));if(b)f=b instanceof File?b:new File([b],it.name,{type:b.type||""})}if(f)BIN217.mem[it.id]=f;return f||null}
+function binDel217(id){const B=binList217(),i=B.findIndex(x=>x.id===id);if(i<0)return;const it=B[i];B.splice(i,1);IDB.del(binKey217(id));delete BIN217.mem[id];persist();renderView();
+  toast(L("Removed from the library — what is on the timeline stays.","حُذف من المكتبة — ما على الخط الزمني يبقى."),{type:"info"})}
+// onto the timeline: a video or a picture becomes a clip (where it was dropped, or at the end); a sound sits on the sound lane at that moment
+async function binUse217(id,T){const E=S.ed,it=binList217().find(x=>x.id===id);if(!it)return;const f=await binFile217(it);
+  if(!f){toast(L("This file isn't on this device any more — upload it again.","هذا الملف لم يعد على هذا الجهاز — ارفعه مجدداً."),{type:"warn"});return}
+  ED.playing=false;
+  if(it.ty==="a"){const t0=T&&T.where==="tl"?T.t:ED.t,s={id:uid(),n:"file",name:it.name,t:+Math.max(0,t0||0).toFixed(2),vol:100};
+    loadSlot("sx_"+s.id,f);E.sfx=E.sfx||[];E.sfx.push(s);E.selSfx=s.id;edSetPick("sfx",s.id);persist();renderView();toast(L("Sound added at ","أُضيف الصوت عند ")+mmss(s.t),{type:"ok"});
+    edxBuffer(s).then(()=>{if(S.view==="edit")renderView()}).catch(()=>{});return}
+  const at=T?dndIndex144(T):E.clips.length;edAddFiles([f]);const c=E.clips[E.clips.length-1];
+  if(c){if(at<E.clips.length-1){E.clips.splice(E.clips.length-1,1);E.clips.splice(at,0,c)}E.sel=c.id;edSetPick("clip",c.id)}
+  E.lt143="media";E.tab="media";persist();renderView();toast(L("Added to the timeline","أُضيف إلى الخط الزمني"),{type:"ok"})}
+function binHtml217(){const B=binList217(),head='<span class="lbl">'+L("Uploads","ملفاتك المرفوعة")+(B.length?" · "+B.length:"")+"</span>";
+  if(!B.length)return head+'<p class="small mute bn217e">'+L("What you upload waits here — videos, pictures and sounds. Drag one onto the timeline, or tap +.","ما ترفعه ينتظر هنا — فيديوهات وصور وأصوات. اسحب واحداً إلى الخط الزمني أو اضغط +.")+"</p>";
+  return head+'<div class="e-lib bn217l">'+B.map(it=>{const pic=it.poster?'<img src="'+it.poster+'" alt="" loading="lazy" draggable="false">':'<span class="bn217a">'+ic(it.ty==="a"?"music":it.ty==="v"?"video":"image")+"</span>";
+    return'<div class="bn217"><button type="button" class="e-libi" data-act="bin217" data-ty="'+(it.ty==="a"?"a":"v")+'" data-v="'+esc(it.id)+'" aria-label="'+esc((it.ty==="a"?L("Add the sound to the timeline: ","أضف الصوت إلى الخط الزمني: "):L("Add to the timeline: ","أضف إلى الخط الزمني: "))+it.name)+'">'+
+      '<span class="bn217p">'+pic+(it.dur?'<i class="mono" dir="ltr">'+mmss(it.dur)+"</i>":"")+'</span><span class="e-libn" dir="auto">'+esc(it.name)+'</span><span class="e-libp" aria-hidden="true">'+ic("plus143")+"</span></button>"+
+      '<button type="button" class="bn217x" data-act="bin217-del" data-v="'+esc(it.id)+'" aria-label="'+esc(L("Remove from the library: ","احذف من المكتبة: ")+it.name)+'" title="'+esc(L("Remove from the library","احذف من المكتبة"))+'">'+ic("x")+"</button></div>"}).join("")+"</div>"}
+// the Media panel: the library first (right under Upload · Camera · Library), sounds accepted too
+media143=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string")return h;
+  h=h.replace('accept="video/*,image/*" multiple data-addclip="1"','accept="video/*,image/*,audio/*" multiple data-addclip="1"')
+    .replace(L("Add videos and pictures — from this device, the camera, or what you made on nooi.","أضف فيديوهات وصوراً — من هذا الجهاز أو الكاميرا أو مما صنعته على nooi."),L("Add videos, pictures and sounds — they wait in Uploads, then you drag what you want onto the timeline.","أضف فيديوهات وصوراً وأصواتاً — تنتظر في ملفاتك المرفوعة، ثم تسحب ما تريد إلى الخط الزمني."));
+  const ab=h.indexOf('<div class="hbar"'),i=ab<0?-1:h.indexOf('<span class="lbl">',ab),sec=binHtml217();return i<0?h+sec:h.slice(0,i)+sec+h.slice(i)})(media143);
+// Upload / Camera in the editor, and files dropped on the editor, go to the library — never straight onto the timeline
+window.addEventListener("change",e=>{const el=e.target;if(S.view!=="edit"||!el||!el.dataset||!el.dataset.addclip||!el.files||!el.files.length)return;e.stopImmediatePropagation();const fs=[...el.files];try{el.value=""}catch(err){}binAdd217(fs)},true);
+routeFiles=(o=>function(files){const f=[...(files||[])];if(S.view==="edit"&&f.some(x=>binTy217(x))&&!document.querySelector("#modalRoot .fontsheet")){binAdd217(f);return}return o.apply(this,arguments)})(routeFiles);
+// a tap adds it; the × removes it from the library
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="bin217"],[data-act="bin217-del"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();
+  if(a.dataset.act==="bin217-del")binDel217(a.dataset.v);else binUse217(a.dataset.v,null)},true);
+// a drag (mouse at once, a finger after a short hold) — the v144 drag: the line shows where it lands
+DK144.push(["media",'[data-act="bin217"][data-ty="v"]'],["time",'[data-act="bin217"][data-ty="a"]']);
+window.addEventListener("pointerdown",e=>{if(S.view!=="edit"||e.button>0||!e.isPrimary||DND144.s)return;const el=e.target.closest&&e.target.closest('[data-act="bin217"]');if(!el||!el.closest(".ed143"))return;
+  const s=DND144.s={el,x0:e.clientX,y0:e.clientY,x:e.clientX,y:e.clientY,id:e.pointerId,touch:e.pointerType!=="mouse",on:false};if(s.touch)s.timer=setTimeout(()=>{if(DND144.s===s)dndStart144(s)},320)},true);
+dndDrop144=(o=>function(s){if(s&&s.el&&s.el.dataset&&s.el.dataset.act==="bin217"){const T=s.T||dndAt144(s.x,s.y);if(!T){toast(L("Drop it on the timeline or on the picture.","أفلته على الخط الزمني أو على الصورة."),{type:"info"});return}binUse217(s.el.dataset.v,T);return}return o.apply(this,arguments)})(dndDrop144);
+(()=>{const st=document.createElement("style");st.textContent=`
+.ed143 .bn217{position:relative;min-width:0}.ed143 .bn217e{margin:0 0 12px}
+.ed143 .bn217 .e-libi{width:100%;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}.ed143.desk .bn217 .e-libi{cursor:grab}
+.ed143 .bn217p{position:relative;display:grid;place-items:center;width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:var(--panel2);border:1px solid var(--line)}
+.ed143 .bn217p img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.ed143 .bn217a svg{width:20px;height:20px;color:var(--mute)}
+.ed143 .bn217p i{position:absolute;bottom:4px;inset-inline-start:4px;padding:1px 6px;border-radius:8px;background:rgba(0,0,0,.62);color:#fff;font-size:10px;font-style:normal}
+.ed143 .bn217 .e-libi:hover .bn217p,.ed143 .bn217 .e-libi:focus-visible .bn217p{outline:2px solid var(--lime);outline-offset:1px}
+.ed143 .bn217x{position:absolute;top:6px;inset-inline-start:6px;display:grid;place-items:center;width:24px;height:24px;padding:0;border:0;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;opacity:0;transition:opacity .15s}
+.ed143 .bn217:hover .bn217x,.ed143 .bn217x:focus-visible{opacity:1}.ed143 .bn217x svg{width:14px;height:14px}
+@media (hover:none){.ed143 .bn217x{opacity:1}}`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
