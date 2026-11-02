@@ -120,9 +120,9 @@ async def desktop(b, lang):
     await E("()=>document.querySelector('.e-assets [data-act=\"ts144\"][data-v=\"neon\"]').click()"); await pg.wait_for_timeout(250)
     t1 = await E("()=>{const t=S.ed.texts[S.ed.texts.length-1];return{n:S.ed.texts.length,efx:t&&t.efx,font:t&&t.font,color:t&&t.color,sel:S.ed.selText===(t&&t.id),kind:kind143()}}")
     chk(f"{tag}: a text style tap adds a text in that style (Arabic text gets an Arabic font)", t1["n"] == 1 and t1["efx"] == "neon" and t1["font"] == ("Lalezar" if ar else "Bebas Neue") and t1["sel"] and t1["kind"] == "text", t1)
-    await E("()=>document.querySelector('.e-details [data-act=\"ts144\"][data-v=\"retro\"]').click()"); await pg.wait_for_timeout(250)
+    await E("()=>document.querySelector('.e-assets [data-act=\"ts144\"][data-v=\"retro\"]').click()"); await pg.wait_for_timeout(250)   # (v218: on a computer the styles are not repeated in the details — the left panel's tile restyles the picked text)
     t2 = await E("()=>({n:S.ed.texts.length,efx:S.ed.texts[0].efx,hl:S.ed.texts[0].hl})")
-    chk(f"{tag}: a style in the details restyles the selected text", t2["n"] == 1 and t2["efx"] == "extrude" and t2["hl"] == "#ff3b30", t2)
+    chk(f"{tag}: a style tile restyles the selected text", t2["n"] == 1 and t2["efx"] == "extrude" and t2["hl"] == "#ff3b30", t2)
     await E("()=>{document.querySelector('[data-act=\"desel143\"]').click()}"); await pg.wait_for_timeout(200)
     # ---- 2. news tickers
     await rail("stickers"); await pg.wait_for_timeout(250)

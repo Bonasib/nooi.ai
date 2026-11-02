@@ -25369,6 +25369,77 @@ dndDrop144=(o=>function(s){if(s&&s.el&&s.el.dataset&&s.el.dataset.act==="bin217"
 .ed143 .bn217:hover .bn217x,.ed143 .bn217x:focus-visible{opacity:1}.ed143 .bn217x svg{width:14px;height:14px}
 @media (hover:none){.ed143 .bn217x{opacity:1}}`;document.head.appendChild(st)})();
 
+/* ================= v218: the owner — "there is no fonts + I want to see the effects before I select it + lots of spaces and gaps + large icons"
+   · a picked text's panel starts with its words, then its font: the words drawn in nine fonts of their own script (one tap), and All fonts
+     (the add-text tiles the left panel already shows are not repeated on the right)
+   · effects: every Weather & light tile shows the picture with that effect on it; pointing at one plays it on the preview (a drag
+     shows it too on a phone) — nothing is added until you tap or drop it
+   · the workspace tighter: a smaller logo and top bar, smaller icon boxes, less padding and fewer gaps ================= */
+// ---- 1. fonts first
+const QF218={lat:["Montserrat","Poppins","Anton","Bebas Neue","Oswald","Archivo Black","Playfair Display","Pacifico","Permanent Marker"],ar:["Cairo","Tajawal","Almarai","Changa","El Messiri","Reem Kufi","Lalezar","Rakkas","Noto Kufi Arabic"]};
+function qfHtml218(t){const ar=/[؀-ۿ]/.test(t.text||"")||(!t.text&&S.lang==="ar"),list=QF218[ar?"ar":"lat"].filter(n=>FONTS.some(f=>f[0]===n)),cur=t.font||"",
+  smp=String(t.text||"").trim().slice(0,14)||(ar?"أبجد":"Aa");list.forEach(n=>{try{ensureFont(n)}catch(e){}});
+  return'<div class="qf218" role="group" aria-label="'+esc(L("Fonts","الخطوط"))+'">'+list.map(n=>'<button type="button" class="qf218b" data-act="qf218" data-v="'+esc(n)+'" aria-pressed="'+(cur===n)+'" title="'+esc(n)+'"><b dir="auto" style="font-family:'+esc(fontStack(n))+'">'+esc(smp)+"</b><span>"+esc(n)+"</span></button>").join("")+
+    '</div><button type="button" class="btn sm qf218all" data-act="f-open" data-t="edtext">'+ic("font")+L("All fonts","كل الخطوط")+" · "+FONTS.length+"</button>"}
+function txt218(){if(!(typeof desk143==="function"&&desk143()))return;const body=document.querySelector('.ed143 .e-details .e-body[data-tab="text"]');if(!body||body.dataset.t218)return;
+  const inp=body.querySelector(':scope>input[data-bind="edtext.text"]'),lab=inp&&inp.previousElementSibling,t=selText();if(!inp||!lab||!t)return;body.dataset.t218="1";
+  // what comes before the words (Add text · a hook · the style tiles): gone when the left panel already shows it, otherwise at the end
+  const head=[];for(let n=body.firstElementChild;n&&n!==lab;n=n.nextElementSibling)head.push(n);
+  const left=!!document.querySelector('.ed143 .e-assets .e-body[data-tab="text"]');head.forEach(n=>left?n.remove():body.appendChild(n));
+  // the font (and its colour) right under the words, with the nine samples
+  const grab=word=>{const l=[...body.querySelectorAll(":scope>.lbl")].find(x=>x.textContent.trim()===word);return l?[l,l.nextElementSibling].filter(Boolean):[]};
+  const font=grab(L("Font","الخط")),col=grab(L("Colour","اللون"));let at=inp;
+  const put=n=>{at.after(n);at=n};const wrap=document.createElement("div");wrap.className="qf218w";wrap.innerHTML=qfHtml218(t);
+  if(font.length){put(font[0]);put(wrap);font.slice(1).forEach(put)}else{const l=document.createElement("span");l.className="lbl";l.textContent=L("Font","الخط");put(l);put(wrap)}
+  col.forEach(put)}
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="qf218"]');if(!a||S.view!=="edit")return;e.preventDefault();e.stopImmediatePropagation();const t=selText();if(!t)return;
+  try{histPush()}catch(err){}const v=a.dataset.v;t.font=v;Promise.resolve(ensureFont(v)).then(()=>{if(S.view==="edit")renderView()});persist();renderView()},true);
+// the style tiles now live only in the left panel: with a text picked they restyle it (as their hint says) instead of adding another
+window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('.ed143 .e-assets [data-act="ts144"]');if(!a||S.view!=="edit"||!(typeof desk143==="function"&&desk143()))return;const tx=selText();
+  if(!tx||!document.querySelector('.ed143 .e-details .e-body[data-t218]'))return;e.preventDefault();e.stopImmediatePropagation();try{histPush()}catch(err){}tsSet144(tx,a.dataset.v);persist();renderView();toast(L("Text style changed","تغيّر نمط النص"),{type:"ok"})},true);
+// ---- 2. see an effect before it is added
+const PV218={kind:null,key:"",cache:{},base:null};
+const vfxBase218=edVfxDraw;
+const pvKind218=()=>PV218.kind||(DND144.s&&DND144.s.on&&DND144.s.el&&DND144.s.el.dataset&&DND144.s.el.dataset.act==="edv-add"?DND144.s.el.dataset.v:null);
+edVfxDraw=(o=>function(ctx,W,H,t){const r=o.apply(this,arguments);const k=S.view==="edit"&&ctx&&ctx.canvas&&ctx.canvas.id==="wk"?pvKind218():null;
+  if(k){const keep=S.ed.vfx;try{const ph=(performance.now()/1000)%30;S.ed.vfx=[{id:"pv218",kind:k,start:t-ph-.4,end:t+60,amt:70}];o.call(this,ctx,W,H,t)}catch(e){}finally{S.ed.vfx=keep}}return r})(edVfxDraw);
+function pvSet218(b){const k=b?b.dataset.v:null;if(k===PV218.kind)return;PV218.kind=k;const pl=document.querySelector(".ed143 .e-player");let tag=pl&&pl.querySelector(".pv218b");
+  if(!k){if(tag)tag.remove();return}if(!pl)return;if(!tag){tag=document.createElement("div");tag.className="pv218b";tag.setAttribute("aria-live","polite");pl.appendChild(tag)}
+  tag.textContent=L("Preview · ","معاينة · ")+(b.textContent||"").trim()+" — "+L("tap to add","اضغط للإضافة")}
+document.addEventListener("pointerover",e=>{if(S.view!=="edit"||e.pointerType==="touch")return;pvSet218(e.target.closest&&e.target.closest('.ed143 [data-act="edv-add"]'))},true);
+document.addEventListener("mouseleave",()=>pvSet218(null));document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest('[data-act="edv-add"]'))pvSet218(null)},true);
+// each tile: the picture as it is now, with that effect on it (drawn once per moment, kept while nothing moves)
+function thumbs218(){const tiles=[...document.querySelectorAll('.ed143 [data-act="edv-add"]:not(.pv218t)')];if(!tiles.length)return;const wk=document.getElementById("wk");if(!wk||!wk.width||!wk.height)return;
+  const key=[S.ed.clips.map(c=>c.id).join(","),Math.round(ED.t*2),S.ed.format,wk.width,wk.height].join("|");if(key!==PV218.key){PV218.key=key;PV218.cache={};PV218.base=null}
+  const W=160,H=90;if(!PV218.base){const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");x.fillStyle="#0b0c0e";x.fillRect(0,0,W,H);const s=Math.max(W/wk.width,H/wk.height);try{x.drawImage(wk,(W-wk.width*s)/2,(H-wk.height*s)/2,wk.width*s,wk.height*s)}catch(e){}PV218.base=c}
+  for(const b of tiles){const k=b.dataset.v;let c=PV218.cache[k];
+    if(!c){c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");x.drawImage(PV218.base,0,0);const keep=S.ed.vfx;try{S.ed.vfx=[{id:"t218",kind:k,start:0,end:9,amt:100}];vfxBase218(x,W,H,1.4)}catch(e){}finally{S.ed.vfx=keep}PV218.cache[k]=c}
+    const v=document.createElement("canvas");v.width=W;v.height=H;v.className="pv218i";v.setAttribute("aria-hidden","true");v.getContext("2d").drawImage(c,0,0);b.classList.add("pv218t");b.prepend(v)}}
+// ---- 3. after every editor redraw
+renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="edit"){try{txt218()}catch(e){console.warn("v218",e)}requestAnimationFrame(()=>{try{thumbs218()}catch(e){}});if(PV218.kind&&!document.querySelector('.ed143 [data-act="edv-add"][data-v="'+PV218.kind+'"]'))pvSet218(null)}return r})(renderView);
+(()=>{const st=document.createElement("style");st.textContent=`
+.qf218w{margin:4px 0 8px}.qf218{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 6px}
+.qf218b{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;min-height:52px;padding:6px 4px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--text);cursor:pointer}
+.qf218b b{font-size:15px;font-weight:700;line-height:1.15;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.qf218b span{font-size:10px;color:var(--mute);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qf218b[aria-pressed="true"]{border-color:var(--lime);background:color-mix(in srgb,var(--lime) 14%,var(--panel2))}.qf218b:hover{border-color:var(--line2)}
+.qf218all{width:100%;justify-content:center}.qf218all svg{width:14px;height:14px}
+.ed143 .vfxt.pv218t{padding:4px 4px 6px!important;gap:4px!important;min-height:0!important}.ed143 .vfxt.pv218t .ic151{display:none}
+.ed143 .pv218i{display:block;width:100%;height:auto;aspect-ratio:16/9;border-radius:8px;background:#0b0c0e;pointer-events:none}
+.ed143 .vfxt.pv218t:hover .pv218i{outline:2px solid var(--lime);outline-offset:1px}
+.ed143 .e-player{position:relative}.pv218b{position:absolute;top:10px;inset-inline-start:10px;z-index:5;padding:4px 10px;border-radius:8px;background:rgba(10,11,13,.78);color:#fff;font-size:12px;font-weight:600;pointer-events:none}
+/* tighter workspace: smaller logo and top bar, smaller icon boxes, less padding */
+.ed143.ws216 .ws216logo{height:30px}.ed143.ws216 .ws216logo svg{height:22px!important;width:auto!important;max-width:64px}
+.ed143.ws216>.e-top{padding:2px 4px 6px!important;gap:8px}.ed143.ws216 .e-top .fmtbtn{min-height:40px!important;padding:3px 10px!important}.ed143.ws216 .e-top .edout{min-height:36px!important;padding:6px 14px!important}
+.ed143.ws216 .e-rail button{padding:6px 2px!important;gap:3px}.ed143.ws216 .e-rail button svg{width:16px!important;height:16px!important}
+.ed143.ws216 .e-assets .e-body,.ed143.ws216 .e-details .e-body{padding:8px 10px 10px!important}.ed143.ws216 .e-sub{padding:8px 10px 0!important}
+.ed143.ws216 .e-hint{margin:0 0 8px!important;line-height:1.35}
+.ed143.ws216 .vfxt.t151{min-height:56px!important;padding:6px 4px!important;gap:4px!important}
+.ed143.ws216 .ic151{width:26px!important;height:26px!important;border-radius:8px!important}.ed143.ws216 .ic151 svg{width:16px!important;height:16px!important}
+.ed143.ws216 .ts144g{gap:6px}.ed143.ws216 .ts144t{padding:6px 4px!important}
+.ed143.ws216 .e-body .lbl{margin-top:10px!important;margin-bottom:6px!important}
+.ed143 .e-body[data-t218] .fontbtn{display:none!important}
+.ed143.ws216 .e-details .ftiles{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}.ed143.ws216 .e-details .ftile{min-height:0!important;padding:6px 4px!important;gap:4px!important}.ed143.ws216 .e-details .ftile .rb{zoom:.6}.ed143.ws216 .e-details .ftile .lb{font-size:10.5px}`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
