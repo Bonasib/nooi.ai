@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.tsbuildinfo
+apps/desktop/src-tauri/target/
+apps/mobile/android/
+apps/mobile/ios/
+services/render-api/.data/
+.env
