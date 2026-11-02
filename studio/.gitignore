@@ -7,3 +7,9 @@ apps/mobile/ios/
 services/render-api/.data/
 .env
 services/render-api/src/generated/
+apps/desktop/dist/
+apps/desktop/src-tauri/binaries/
+apps/desktop/src-tauri/gen/
+apps/desktop/src-tauri/icons/android/
+apps/desktop/src-tauri/icons/ios/
+apps/mobile/dist/

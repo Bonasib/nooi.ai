@@ -7,12 +7,21 @@
     "dev": "vite",
     "build": "tsc --noEmit -p . && vite build",
     "typecheck": "tsc --noEmit -p .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build:desktop": "tsc --noEmit -p . && vite build --mode desktop",
+    "build:mobile": "tsc --noEmit -p . && vite build --mode mobile"
   },
   "dependencies": {
+    "@capacitor/core": "8.6.0",
+    "@capacitor/filesystem": "8.1.5",
+    "@capacitor/share": "8.0.3",
     "@mediabunny/mp3-encoder": "1.65.0",
     "@nooi/editor-core": "workspace:*",
     "@nooi/ui": "workspace:*",
+    "@tauri-apps/api": "2.12.4",
+    "@tauri-apps/plugin-dialog": "2.8.4",
+    "@tauri-apps/plugin-fs": "2.7.1",
+    "@tauri-apps/plugin-shell": "2.6.0",
     "i18next": "26.7.1",
     "mediabunny": "1.65.0",
     "react": "19.2.0",

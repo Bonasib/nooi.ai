@@ -9,6 +9,8 @@ import { exportOnServer } from "../engine/server";
 import { api } from "../api";
 import { getJSON } from "../media/idb";
 import * as A from "../actions";
+import { NATIVE, TAURI, at } from "../site";
+import { exportDesktop, saveFile } from "../engine/native";
 
 function Modal({ title, onClose, children, wide }: { title: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) {
   const ref = useRef<HTMLDivElement>(null); const close = useRef(onClose); close.current = onClose;
@@ -24,7 +26,7 @@ export function ExportDialog() {
   const [res, setRes] = useState<{ url: string; name: string; blob: Blob; size: number } | null>(null); const [err, setErr] = useState(""); const ab = useRef<AbortController | null>(null);
   const close = () => { ab.current?.abort(); ui.set({ exportOpen: false }); };
   // where it is made: this device (no upload) or the nooi server (FFmpeg on the VPS — for long or 4K videos and weak devices)
-  const [srvOn, setSrvOn] = useState(false); const [where, setWhere] = useState<"device" | "server">("device"); const [srv, setSrv] = useState<{ url: string; name: string } | null>(null);
+  const [srvOn, setSrvOn] = useState(false); const [where, setWhere] = useState<"device" | "server" | "ffmpeg">(TAURI ? "ffmpeg" : "device"); const [srv, setSrv] = useState<{ url: string; name: string } | null>(null);
   useEffect(() => { let live = true; void api.renderOn().then((x) => live && setSrvOn(x && api.me.signedIn)); return () => { live = false; }; }, []);
   const preset = PRESETS.find((x) => x.id === o.preset); const { w, h } = frameSize(aspectOf(p.width, p.height), o.res); const d = duration(p);
   const est = Math.round(((preset?.bitrate || 8e6) * (o.quality === "low" ? 0.4 : o.quality === "medium" ? 0.7 : 1) * (o.res === "4k" ? 3 : o.res === "720p" ? 0.5 : 1) * d) / 8 / 1e6);
@@ -48,7 +50,8 @@ export function ExportDialog() {
       return;
     }
     try {
-      const r = await exportProject(editor.project, { ...o, signal: ab.current.signal, onProgress: (k, note) => setProg({ k, note }) });
+      const r = where === "ffmpeg" ? await exportDesktop(editor.project, { ...o, signal: ab.current.signal, onProgress: (k, note) => setProg({ k, note }) })
+        : await exportProject(editor.project, { ...o, signal: ab.current.signal, onProgress: (k, note) => setProg({ k, note }) });
       setRes({ url: URL.createObjectURL(r.blob), name: r.name, blob: r.blob, size: r.blob.size }); setProg(null);
       if (preset?.maxSec && d > preset.maxSec) toast(t("exp.tooLong", { name: preset.name, s: preset.maxSec }), "warn");
     } catch (e) { setProg(null); if ((e as Error).name !== "AbortError") setErr((e as { code?: string }).code === "NO_ENCODER" ? t("exp.noEncoder") : String((e as Error).message || e)); }
@@ -68,15 +71,15 @@ export function ExportDialog() {
             <span className="ns-lbl">{t("exp.fps")}</span><Seg label={t("exp.fps")} value={String(o.fps)} onChange={(v) => setO({ ...o, fps: +v })} options={["24", "25", "30", "60"].map((v) => ({ v, label: v }))} />
             <span className="ns-lbl">{t("exp.quality")}</span><Seg label={t("exp.quality")} value={o.quality} onChange={(v) => setO({ ...o, quality: v })} options={[{ v: "high", label: t("exp.high") }, { v: "medium", label: t("exp.medium") }, { v: "low", label: t("exp.low") }]} /></>}
           <p className="hint" dir="ltr">{!["mp3", "wav"].includes(o.format) ? `${w}×${h} · ` : ""}{d.toFixed(1)}s · ~{Math.max(1, est)} MB</p>
-          {srvOn && <><span className="ns-lbl">{t("exp.where")}</span><Seg label={t("exp.where")} value={where} onChange={(v) => setWhere(v)} options={[{ v: "device", label: t("exp.device") }, { v: "server", label: t("exp.server") }]} /></>}
-          <p className="hint">{where === "server" ? t("exp.serverHint") : t("exp.local")}</p>
+          {(srvOn || TAURI) && <><span className="ns-lbl">{t("exp.where")}</span><Seg label={t("exp.where")} value={where} onChange={(v) => setWhere(v)} options={[...(TAURI ? [{ v: "ffmpeg" as const, label: t("exp.computer") }] : []), { v: "device" as const, label: TAURI ? t("exp.browser") : t("exp.device") }, ...(srvOn ? [{ v: "server" as const, label: t("exp.server") }] : [])]} /></>}
+          <p className="hint">{where === "server" ? t("exp.serverHint") : where === "ffmpeg" ? t("exp.ffmpegHint") : t("exp.local")}</p>
           {prog && <div className="aibusy" role="status"><span>{t("exp.step." + prog.note)} · {Math.round(prog.k * 100)}%</span><i style={{ width: Math.round(prog.k * 100) + "%" }} /></div>}
           {err && <p className="err" role="alert">{err}</p>}
           {res && <div className="expdone"><Icon name="check" size={20} /><span>{res.name} · {(res.size / 1e6).toFixed(1)} MB</span>
-            <a className="ns-btn primary" href={res.url} download={res.name} data-testid="download">{t("exp.download")}</a>
+            {NATIVE ? <Btn icon="export" primary onClick={() => void saveFile(res.blob, res.name)} testid="download">{t("exp.save")}</Btn> : <a className="ns-btn primary" href={res.url} download={res.name} data-testid="download">{t("exp.download")}</a>}
             {api.me.signedIn && <Btn icon="cloud" onClick={save}>{t("exp.toAccount")}</Btn>}</div>}
           {srv && <div className="expdone"><Icon name="check" size={20} /><span>{srv.name} · {t("exp.kept")}</span>
-            <a className="ns-btn primary" href={srv.url + "?download=1"} download={srv.name} data-testid="download">{t("exp.download")}</a></div>}
+            {NATIVE ? <Btn icon="export" primary onClick={() => void fetch(at(srv.url)).then((r) => r.blob()).then((b) => saveFile(b, srv.name))} testid="download">{t("exp.save")}</Btn> : <a className="ns-btn primary" href={at(srv.url) + "?download=1"} download={srv.name} data-testid="download">{t("exp.download")}</a>}</div>}
           <div className="row end">{prog ? <Btn icon="close" onClick={() => ab.current?.abort()}>{t("exp.cancel")}</Btn> : <Btn icon="export" primary onClick={go} testid="export-go">{t("exp.go")}</Btn>}</div>
         </div>
       </div>
@@ -125,7 +128,7 @@ export function Projects() {
       {local.length ? <ul className="plist">{local.map((x) => <li key={x.id}><button type="button" onClick={() => openLocal(x.id)} aria-current={x.id === editor.project.id}><b dir="auto">{x.name}</b><small>{fmt(x.updated)}</small></button></li>)}</ul> : <p className="hint">{t("proj.none")}</p>}
       <span className="ns-lbl">{t("proj.account")}</span>
       {cloud == null ? <p className="hint">…</p> : !api.me.signedIn ? <p className="hint">{t("proj.signIn")}</p> : cloud.length ? <ul className="plist">{cloud.map((x) => <li key={x.id}><button type="button" onClick={() => openCloud(x.id)} aria-current={x.id === cloudId(editor.project.id)}><b dir="auto">{x.name}</b><small>{fmt(x.updated)}</small></button></li>)}</ul> : <p className="hint">{t("proj.none")}</p>}
-      <p className="hint classic">{t("proj.classicHint")} <a href="/?classic=1" data-testid="classic">{t("proj.classic")}</a></p>
+      {!NATIVE && <p className="hint classic">{t("proj.classicHint")} <a href="/?classic=1" data-testid="classic">{t("proj.classic")}</a></p>}
     </Modal>
   );
 }

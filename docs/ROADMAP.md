@@ -265,7 +265,7 @@ and feature names only). Nothing of theirs is copied — no icons, pictures, tem
 | Image (models, edit with a brush, upscale) | Create image · Sketch to life · Coloring book | **Edit picture** (brush + words) and **Expand picture**, in Image |
 | Video (many models, camera-move presets) | Create video · Cinema Studio · Motion Control | a short looping preview for every camera move and effect, made from nooi's own renders |
 | Audio | Audio (v90) | — |
-| Edit (video edit, upscale, background, grade) | Edit: editor · effects · Enhance · Video intelligence | — |
+| Edit (video edit, upscale, background, grade) | Edit: **nooi Studio Editor** (v219–v220: timeline editor on the web at /studio, Windows/macOS/Linux app with FFmpeg inside, Android/iOS app, server exports on the VPS) · effects · Enhance · Video intelligence | Phase 2: AI inside the editor (speech captions, background removal, smart cut, voices); Phase 3: teams, templates — see docs/STUDIO.md |
 | Character identity from photos | Characters (looks, voices, 3D); scene lock + vision check | **Identity from photos**: 3–20 photos of a person who agreed → one identity in every shot, each shot checked |
 | Product ads from a link | UGC ads (from photos) · Content plan (from a website) | **Product link → ad**: name, photos and price read from the product page |
 | Apps (one-tap tools) | All tools (v90): 25 tools | one-tap tools in the same page template: lip-sync studio, new angle of a picture, outfit change, product placement, portrait pack from selfies |

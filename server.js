@@ -115,7 +115,10 @@ app.use((req, res, next) => {
   next();
 });
 app.use(secMiddleware200);   // (v200: 401/403/429/5xx counted per hour for Admin → Security)
-app.use(cors({ origin: process.env.PUBLIC_BASE_URL || true }));
+// v220: the studio's desktop (Tauri) and phone (Capacitor) apps run from their own origins and call this site — those origins are
+// allowed too (APP_ORIGINS to change the list). Sign-in stays a bearer token (no cookies), so this opens nothing for other sites.
+const APP_ORIGINS220 = (process.env.APP_ORIGINS || "tauri://localhost,http://tauri.localhost,https://tauri.localhost,https://app.nooi.ai,capacitor://app.nooi.ai").split(",").map((x) => x.trim()).filter(Boolean);
+app.use(cors({ origin: process.env.PUBLIC_BASE_URL ? [process.env.PUBLIC_BASE_URL.replace(/\/$/, ""), ...APP_ORIGINS220] : true, exposedHeaders: ["Location", "Upload-Offset", "Upload-Length", "Upload-Url", "Upload-Id", "Tus-Resumable"] }));
 proxyRender219(app);   // v219 S4: /render-api/* → the studio render service (raw bodies: before the JSON reader)
 app.use(express.json({ limit: "12mb", verify: (req, _res, buf) => { if (req.url.startsWith("/v1/billing/webhook/")) req.rawBody = buf; } }));   // (v191: payment notices keep their exact bytes for the signature check)
 // The browser never sees which AI provider runs the models: every JSON answer says "engine" instead

@@ -6,7 +6,7 @@ export const CFG = {
   port: +(env.RENDER_PORT || 8790),
   host: env.RENDER_HOST || "127.0.0.1",
   // the nooi.ai server: who the user is, their plan and role (the token the browser already has is passed on)
-  appUrl: (env.NOOI_APP_URL || "http://127.0.0.1:8787").replace(/\/$/, ""),
+  appUrl: (env.NOOI_APP_URL || "http://127.0.0.1:8080").replace(/\/$/, ""),
   databaseUrl: env.DATABASE_URL || "",           // empty → kept in memory (development and tests)
   redisUrl: env.REDIS_URL || "",                 // empty → an in-process queue
   mediaDir: path.resolve(env.MEDIA_DIR || "media"),            // the nooi.ai server's /media (shared on the VPS)

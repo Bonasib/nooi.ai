@@ -1,4 +1,5 @@
 import "@nooi/ui/src/tokens.css";
+import { NATIVE } from "./site";
 import "./app.css";
 import "./i18n";
 import { createRoot } from "react-dom/client";
@@ -34,7 +35,7 @@ async function boot() {
 installShortcuts();
 createRoot(document.getElementById("root")!).render(<App />);
 boot();
-if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("/studio/sw.js", { scope: "/studio/" }).catch(() => undefined);
+if ("serviceWorker" in navigator && location.protocol === "https:" && !NATIVE && location.pathname.startsWith("/studio/")) navigator.serviceWorker.register("/studio/sw.js", { scope: "/studio/" }).catch(() => undefined);
 window.addEventListener("beforeunload", (e) => { if (editor.dirty) { autosave(); e.preventDefault(); } });
 // for tests and the agents (the same named commands the AI prompt edit will use)
 (window as unknown as Record<string, unknown>).__studio = { editor, api };

@@ -86,6 +86,13 @@ const fails = day.filter((j) => j.status === "failed").slice(-8).map((j) => kind
 if (fails.length) console.log("last failures:\n  " + fails.join("\n  "));
 ' 2>&1 | mask
 
+# v220: the studio's render service (Docker Compose, deploy/render.sh) — optional; without it Studio exports on the device
+sec "Studio render service (server exports)"
+if grep -qE "^RENDER_API_URL=." "$APP/.env" 2>/dev/null; then
+  curl -fsS --max-time 5 "http://127.0.0.1:$PORT/render-api/health" 2>/dev/null | cut -c1-200 || echo "⚠ RENDER_API_URL is set but /render-api/health doesn't answer — run: bash $APP/deploy/render.sh"
+  command -v docker >/dev/null && docker ps --filter "name=nooi-render" --format '{{.Names}}: {{.Status}}' 2>/dev/null
+else echo "off (Studio exports on the device) — to turn on: bash $APP/deploy/render.sh"; fi
+
 sec "Warnings in the last 6 hours (last 40)"
 journalctl -u nooi --since '6 hours ago' --no-pager -o cat 2>/dev/null | grep -iE 'warn|error|fail|timed out|poll|mirror|save|restart|ENOSPC|heap' | tail -40 | cut -c1-240 | mask
 

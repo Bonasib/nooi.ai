@@ -13,6 +13,7 @@ import type { Job } from "../api";
 import { editor, toast, useEditorVersion, autosave, playerRef } from "../state";
 import { uploadAsset, serverPath } from "../media/library";
 import * as A from "../actions";
+import { at } from "../site";
 
 const serverSrc = (a?: Asset) => { const s = a ? serverPath(a.src) : null; return s && s.startsWith("/media/") ? s : null; };
 async function ensureOnServer(a: Asset): Promise<{ job?: string; src?: string } | null> {
@@ -86,7 +87,7 @@ export function AIPanel() {
     } catch (e) { fail(key, e); }
   };
   if (!api.online) return <p className="hint">{t("ai.offline")}</p>;
-  if (!me.signedIn) return <div className="empty"><Icon name="ai" size={20} /><p>{t("ai.signIn")}</p><a className="ns-btn primary" href="/?signin=1">{t("ai.signInBtn")}</a></div>;
+  if (!me.signedIn) return <div className="empty"><Icon name="ai" size={20} /><p>{t("ai.signIn")}</p><a className="ns-btn primary" href={at("/?signin=1")}>{t("ai.signInBtn")}</a></div>;
   const price = (k: string) => (cost[k] == null ? "…" : cost[k] === 0 ? t("ai.free") : t("ai.credits", { n: cost[k] }));
   return (<>
     <p className="hint">{t("ai.hint")} {me.credits != null && <b>{t("ai.balance", { n: me.credits })}</b>}</p>

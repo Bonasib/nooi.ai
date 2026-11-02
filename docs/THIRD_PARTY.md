@@ -74,3 +74,18 @@ No code was copied. These three open editors were read for ideas only, and each 
 | A logo or a word as liquid metal (v209) | liquid-logo (paper-design/liquid-logo) | PolyForm Shield 1.0.0 — not licensed for products that compete with it, so none of its code or shader was read or used; only the general idea "a logo as liquid chrome" | `LMF209`, `metMask209`, `metal209` (our own: a blurred alpha as height, a reflected striped studio, a melt-in reveal) |
 | DJ effects (filter sweep, wobble, echo, flanger, phaser, lo-fi crush, telephone, beat repeat, tape stop) and beats (funk, disco, house, hip-hop, lo-fi, afrobeat) made on the device (v209) | Common audio-engineering practice; the Web Audio API | Public — our own code | `djChain209`, `djOffline209`, `beat209` |
 
+
+## nooi Studio Editor (v219–v220, `studio/`)
+
+| What | From | Licence | In nooi |
+|---|---|---|---|
+| Video/audio decoding and encoding in the browser | [mediabunny](https://github.com/Vanilagy/mediabunny) 1.65.0 + @mediabunny/mp3-encoder | MPL-2.0 (used unmodified as a library) | `apps/web/src/engine/export.ts` |
+| UI | React 19, i18next / react-i18next | MIT | `apps/web` |
+| Render service | Fastify 5 (+ rate-limit, websocket), @tus/server + @tus/file-store 2, BullMQ 6, ioredis, Prisma 7 + @prisma/adapter-pg, pg, tsx | MIT / Apache-2.0 | `services/render-api` |
+| Server renders | FFmpeg (Debian package in the Docker image) | LGPL/GPL, run as a separate program | `services/render-api/Dockerfile` |
+| Virus scan (optional) | ClamAV (`clamav/clamav` image) | GPL-2.0, its own container, talked to over the network | `infra/docker-compose.yml` |
+| Desktop app | Tauri 2 + plugins shell / fs / dialog | MIT / Apache-2.0 | `apps/desktop` |
+| FFmpeg inside the desktop app | [ffmpeg-static](https://github.com/eugeneware/ffmpeg-static) builds b6.1.1 (FFmpeg 6.1.1) | GPL-3.0 (libx264) — shipped as a separate program with its licence (`FFMPEG-LICENSE.txt`); source at ffmpeg.org | `apps/desktop/scripts/get-ffmpeg.mjs` |
+| Phone apps | Capacitor 8 + @capacitor/filesystem, @capacitor/share | MIT | `apps/mobile` |
+
+The editor's design, icons, words and code are nooi's own. Other editors were looked at for ideas of layout only.

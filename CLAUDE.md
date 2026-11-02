@@ -1657,3 +1657,76 @@ The owner sent the target card (two columns; media with play · sound · length;
   - **Effects before they are added**: `thumbs218()` gives every Weather & light tile (`edv-add`) a 160×90 canvas — the current picture with that effect (`vfxBase218` = the effect drawing before this wrapper, a stand-in item at 1.4 s, amount 100), cached per moment. Pointing at a tile (`pointerover`, not touch) sets `PV218.kind`; the `edVfxDraw` wrapper draws it on the live preview only (`#wk`, never the export), moving in real time, with a "Preview · Snow — tap to add" tag. Dragging such a tile previews it too (phones). Nothing is added until a tap or a drop.
   - **Tighter** (`.ed143.ws216`): logo 22 px tall, top bar ≤ 56 px, rail icons 16 px (v90 tokens 14/16/20), icon boxes 26 px, tile padding and label gaps smaller, the Project panel's platform tiles three a row (`.rb` zoom .6).
 - Tests: `tests/v218.py` (port 8693): the text panel's order and the nine samples, a tap + undo, Arabic fonts, the add part moved to the end when the left shows Media; every effect tile drawn (snow ≠ fog), pointing plays it with the tag and adds nothing, leaving clears, a tap adds; the sizes. `tests/v144.py`: the restyle tap is now on the left panel's tile. Suite line 205 (i18n now 206).
+
+## v219 nooi Studio Editor (Phase 1) — the new timeline editor at /studio, replacing the site's editor
+
+- `studio/` = a pnpm workspace (see `docs/STUDIO.md`). `packages/editor-core` is pure TypeScript with Vitest (22 tests):
+  - the project schema (`SCHEMA_VERSION` 1, `migrate()`), and every edit as `Editor.run(label, fn)` (structuredClone, 300 steps, `prune()` of the selection);
+  - drags as `begin` / `live` / `commit` / `cancel` transactions;
+  - timeline operations: add (free / insert), move, trim and ripple, split, ripple delete, close gap, slip, roll, slide, speed, freeze, detach audio, duplicate, transitions centred on the cut, markers, tracks, snapping;
+  - `layersAt` / `soundsAt`, presets, the catalogue (34 transitions, 16 effects), keyframes with easing, audio peaks / beats / ducking.
+- `apps/web` (React 19, Vite 7, i18next EN / AR with RTL, mediabunny MPL-2.0) is built into `public/studio` and committed (base `/studio/`), so the VPS needs no build.
+  - Preview: a WebGL2 compositor (12 blend modes, colour + 8-band HSL, LUT, effects, transitions). Text is drawn with Canvas 2D (correct Arabic).
+  - Player: a rAF clock and Web Audio.
+  - Export on the device: MP4 / WebM / MOV through mediabunny, plus its own GIF / WAV / MP3.
+  - Saving: autosave to IndexedDB, and to the account through `/v1/projects` (doc.studio, id `st…`).
+  - AI: Extend / Merge / Regenerate through `/v1/jobs`, with the price shown first (`POST /v1/jobs/quote`).
+- `lib/studio219.js`:
+  - `/studio` → 301 to `/studio/` (no-cache page; `/studio/assets` cached for a year);
+  - the quote route.
+- The site: the v219 block in `public/index.html` sends `go("edit")` to `/studio/` (with `?job=` when a nooi result is being opened).
+  - `?classic=1` keeps the old editor.
+  - The legacy edit (`dotai-studio-v2` + IDB `dotai-media`) is imported once.
+  - `navigator.webdriver` keeps the classic editor for the old suites unless `window.__studio219` is set.
+- Tests: `tests/v219.py` (port 8697). Suite line 206.
+
+## v220 The studio's render service · desktop app (Tauri 2) · phone apps (Capacitor 8) · CI · Docker Compose
+
+- `studio/services/render-api` (Fastify 5.12, Prisma 7 prisma-client + PrismaPg, BullMQ 6 / ioredis, @tus/server 2):
+  - `config.ts`: settings from env only.
+  - `auth.ts`: who the user is, from the site (`/v1/me` + `/v1/billing`, 60 s cache).
+  - `scan.ts`: magic-byte sniffing and clamd INSTREAM.
+  - `uploads.ts`: tus. On finish the file is sniffed and scanned, moved to `UPLOAD_DIR` as `u<hex>.<ext>`, and given a MediaFile row.
+  - `files.ts`: `resolveSrc` accepts only `/media/…` (the site's folder) or the owner's own `/render-api/uploads/…`; never an outside URL. `sendFile` supports Range.
+  - `render.ts`: editor-core `compile()` → `ffmpeg -progress`. It handles progress, a time limit, cancel (in-process, and a store poll for other processes), the usage log, and removes the text PNGs.
+  - `queue.ts`: memory or BullMQ, by priority.
+  - `server.ts`: health, limits, uploads, `POST /renders` (plan limit → 429 `busy`; size, fps and length checks; texts as full-frame PNG data URLs), get / list / delete, SSE `/renders/:id/events` (`?token=` works too), WS `/ws/renders/:id`, `/files/:name` (the random id is the key, until it expires), `/proxies` (540p), and admin queue / usage / cancel.
+  - `cleanup.ts`: runs hourly.
+  - `boot.ts` / `index.ts` / `worker.ts`: `RENDER_WORKER=0` on the API when a separate worker runs.
+  - Migrations: `prisma/migrations/0001_init`.
+  - Vitest (8 tests): real FFmpeg renders (MP4 with sound + text + transition + colour, GIF, MP3, WAV over SSE), refusals, plan limit + cancel, admin rights, the tus upload in two pieces (a text file renamed → 415), cleanup. They pass on memory and on real PostgreSQL + Redis (`DATABASE_URL` / `REDIS_URL`), and with the desktop's static FFmpeg (`FFMPEG_PATH`).
+- `editor-core/src/ffmpeg.ts` `compile()` builds the filter graph:
+  - background, overlays with `enable`, trim / speed / reverse / freeze, crop / flip / fit, eq / colortemperature / lut3d, effects, alpha fades, rotate, opacity, texts from PNGs;
+  - sound: atempo, volume + ducking, fades, adelay, amix;
+  - outputs: mp4 (x264) / webm (vp9 + opus) / mov (prores) / gif (palette) / mp3 / wav.
+  - Animated keyframes are taken at the clip's start.
+- The site, `lib/studio219.js`:
+  - `proxyRender219` (before `express.json`) streams `/render-api/*` to `RENDER_API_URL`. It drops the service's own `access-control-*` headers so the site's CORS applies. Not set → 503 `{code:"off"}`.
+  - `proxyRenderUpgrade219(server)` passes WebSocket `/render-api/ws/…`.
+  - `server.js` CORS: `PUBLIC_BASE_URL` plus `APP_ORIGINS` (default `tauri://localhost`, `http(s)://tauri.localhost`, `https://app.nooi.ai`, `capacitor://app.nooi.ai`). It exposes Location / Upload-Offset / Upload-Url.
+- The studio:
+  - `site.ts`: `SITE` (`VITE_SITE`; empty on the site), `at()`, `TAURI` / `CAPACITOR` / `NATIVE`. Every site call goes through `at()` (api.ts, library `urlOf` / `fileOf` / `serverPath`, links).
+  - `api.ts`: `tus()` (8 MB pieces, HEAD to resume, 5 tries), `startRender` / `cancelRender` / `watchRender` (EventSource with a token, else polling).
+  - `engine/server.ts` `exportOnServer`: local-only files go up by tus, once per session; `serverPath()` keeps `/media` files where they are (also full same-site URLs — also used by AIPanel's Extend). Texts become PNGs.
+  - `engine/native.ts`: `saveFile` (Tauri save dialog + fs; Capacitor Filesystem + Share) and `exportDesktop` (files to the app cache → `compile()` → `Command.sidecar("binaries/ffmpeg")`).
+  - ExportDialog: "Made on" = This computer (FFmpeg, Tauri only) · This device / In the app's browser · nooi server (when `/render-api/health` answers and the user is signed in). In the apps, Save replaces Download.
+  - `vite.config.ts` modes: `desktop` → `apps/desktop/dist`, `mobile` → `apps/mobile/dist`, base `./`, `VITE_SITE` defaulting to `https://nooi.ai`. `index.html` uses `%BASE_URL%`; the service worker is registered on the site only.
+- `apps/desktop`:
+  - Tauri 2: Cargo.toml (tauri, plus the shell / fs / dialog plugins);
+  - `tauri.conf.json`: identifier `ai.nooi.studio`, CSP, `externalBin binaries/ffmpeg`;
+  - capabilities: only save, fs in `$APPCACHE`, the ffmpeg sidecar;
+  - icons from `apps/web/public/icon.svg`.
+  - `scripts/get-ffmpeg.mjs` fetches ffmpeg-static b6.1.1 per Rust target triple (GPL, with its licence). The binaries are not committed. It can't be built in this sandbox (no WebKitGTK); CI builds it.
+- `apps/mobile`: Capacitor 8 (`capacitor.config.json`: appId `ai.nooi.studio`, hostname `app.nooi.ai`, https on Android). The `android/` and `ios/` folders are generated and not committed.
+- `.github/workflows/studio.yml`:
+  - check: typecheck + tests + web build, with a warning if `public/studio` is stale;
+  - on Run workflow or a `studio-v*` tag: desktop (ubuntu-22.04 / windows / macos), Android (debug APK) and iOS (unsigned simulator build), as artifacts.
+- `studio/infra/docker-compose.yml`:
+  - services: postgres 16, redis 7 (noeviction), render-api (127.0.0.1:8790, `RENDER_WORKER=0`, runs migrations), render-worker, clamav (profile `scan`);
+  - mounts: `/opt/nooi/media:/media:ro` and `/opt/nooi-render/data:/data`;
+  - the site is reached as `host.docker.internal`.
+  - Also `services/render-api/Dockerfile` (node 22 bookworm-slim + ffmpeg + pnpm, prisma generate) and `infra/.env.example`.
+- Deploy: `deploy/render.sh` (Docker install, `/opt/nooi-render/.env` with a random PG password, compose up, `RENDER_API_URL`, restart, check; `--scan`, `--off`). `deploy/doctor.sh` has a "Studio render service" section.
+- Tests: `tests/v220.py` (ports 8699 / 8798 / 8700), suite line 207:
+  - through the site: who the user is, Export → nooi server, a tus upload of the device-only file (the background `/v1/uploads` blocked), a `/media` result used in place, a real MP4 (H.264 1280×720 + AAC, 5 s), the WebSocket status, privacy;
+  - the app build (`--mode desktop`, `VITE_SITE` = the test site) served from another origin: CORS (an app origin yes, another site no), a server export across origins, and with `__TAURI_INTERNALS__` "This computer (FFmpeg)" first.

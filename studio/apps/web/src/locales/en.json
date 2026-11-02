@@ -385,7 +385,11 @@
   "srvFail": "The server couldn't make this video.",
   "srvBusy": "Your plan makes one server video at a time — wait for the one running.",
   "srvMissing": "{{name}} isn't on this device anymore — add it again.",
-  "kept": "kept 7 days"
+  "kept": "kept 7 days",
+  "computer": "This computer (FFmpeg)",
+  "browser": "In the app's browser",
+  "ffmpegHint": "Made on this computer with FFmpeg — every format at full speed, nothing uploaded, no credits.",
+  "save": "Save"
  },
  "proj": {
   "new": "New project",

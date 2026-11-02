@@ -1,0 +1,28 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "nooi Studio",
+  "version": "0.1.0",
+  "identifier": "ai.nooi.studio",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5199/studio/",
+    "beforeDevCommand": "pnpm --filter @nooi/studio-web dev",
+    "beforeBuildCommand": "pnpm --filter @nooi/studio-web build:desktop"
+  },
+  "app": {
+    "windows": [{ "label": "main", "title": "nooi Studio", "width": 1440, "height": 900, "minWidth": 960, "minHeight": 600, "center": true }],
+    "security": {
+      "csp": "default-src 'self' ipc: http://ipc.localhost; img-src 'self' blob: data: https:; media-src 'self' blob: data: https:; connect-src 'self' ipc: http://ipc.localhost https: wss:; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; worker-src 'self' blob:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Video",
+    "shortDescription": "nooi Studio — video editor",
+    "longDescription": "The nooi.ai timeline video editor: cut, layers, text in every script, transitions, effects, colour and sound, with FFmpeg inside for fast exports.",
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "externalBin": ["binaries/ffmpeg"],
+    "resources": { "binaries/FFMPEG-LICENSE.txt": "FFMPEG-LICENSE.txt" }
+  }
+}

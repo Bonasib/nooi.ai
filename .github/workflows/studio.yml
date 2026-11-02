@@ -1,0 +1,122 @@
+# nooi Studio (studio/): checks on every change; the desktop installers (Windows, macOS, Linux) and the phone apps (Android APK,
+# iOS simulator build) when started by hand (Actions → Studio → Run workflow) or on a tag studio-v*. The builds are attached to the
+# run as artifacts. Signing for the stores is a later step (it needs the owner's certificates as repository secrets).
+name: Studio
+on:
+  workflow_dispatch:
+    inputs:
+      apps: { description: "Build the desktop and phone apps too", type: boolean, default: true }
+  push:
+    branches: [claude/festive-brahmagupta-08tfzr, main]
+    paths: ["studio/**", "lib/studio219.js", ".github/workflows/studio.yml"]
+    tags: ["studio-v*"]
+  pull_request:
+    paths: ["studio/**"]
+permissions:
+  contents: read
+concurrency:
+  group: studio-${{ github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    working-directory: studio
+jobs:
+  check:
+    name: Typecheck, tests, web build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { package_json_file: studio/package.json }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm, cache-dependency-path: studio/pnpm-lock.yaml }
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @nooi/render-api exec prisma generate
+      - run: pnpm -r typecheck
+      - run: pnpm -r test
+      - name: Web build (served from public/studio — committed, so the VPS needs no build)
+        run: |
+          pnpm --filter @nooi/studio-web build
+          git status --porcelain ../public/studio | grep -q . && echo "::warning::public/studio differs from a fresh build — rebuild and commit it" || echo "public/studio is up to date"
+
+  desktop:
+    name: Desktop · ${{ matrix.os }}
+    needs: check
+    if: github.event_name == 'workflow_dispatch' && inputs.apps || startsWith(github.ref, 'refs/tags/studio-v')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { package_json_file: studio/package.json }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm, cache-dependency-path: studio/pnpm-lock.yaml }
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: "studio/apps/desktop/src-tauri -> target" }
+      - name: Linux libraries for the window (WebKitGTK)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - run: pnpm install --frozen-lockfile
+      - name: Build the installer (FFmpeg inside)
+        run: pnpm --filter @nooi/studio-desktop build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nooi-studio-desktop-${{ runner.os }}
+          path: |
+            studio/apps/desktop/src-tauri/target/release/bundle/**/*.msi
+            studio/apps/desktop/src-tauri/target/release/bundle/**/*.exe
+            studio/apps/desktop/src-tauri/target/release/bundle/**/*.dmg
+            studio/apps/desktop/src-tauri/target/release/bundle/**/*.deb
+            studio/apps/desktop/src-tauri/target/release/bundle/**/*.rpm
+            studio/apps/desktop/src-tauri/target/release/bundle/**/*.AppImage
+          if-no-files-found: error
+
+  android:
+    name: Android (debug APK)
+    needs: check
+    if: github.event_name == 'workflow_dispatch' && inputs.apps || startsWith(github.ref, 'refs/tags/studio-v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { package_json_file: studio/package.json }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm, cache-dependency-path: studio/pnpm-lock.yaml }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - uses: android-actions/setup-android@v3
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @nooi/studio-mobile android
+      - name: Gradle build
+        working-directory: studio/apps/mobile/android
+        run: ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with: { name: nooi-studio-android-debug, path: studio/apps/mobile/android/app/build/outputs/apk/debug/*.apk, if-no-files-found: error }
+
+  ios:
+    name: iOS (simulator build)
+    needs: check
+    if: github.event_name == 'workflow_dispatch' && inputs.apps || startsWith(github.ref, 'refs/tags/studio-v')
+    runs-on: macos-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { package_json_file: studio/package.json }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm, cache-dependency-path: studio/pnpm-lock.yaml }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @nooi/studio-mobile ios
+      - name: Xcode build (unsigned, simulator)
+        working-directory: studio/apps/mobile/ios/App
+        run: xcodebuild -project App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+      - uses: actions/upload-artifact@v4
+        with: { name: nooi-studio-ios-simulator, path: studio/apps/mobile/ios/App/build/Build/Products/Debug-iphonesimulator/*.app, if-no-files-found: error }
