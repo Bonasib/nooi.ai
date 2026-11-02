@@ -69,3 +69,8 @@ export const cloudId = (id: string) => ("st" + id.replace(/[^a-z0-9]/gi, "").toL
 export async function openProject(p: Project | unknown) { cloudBase = 0; editor.load(migrate(p)); playerRef.current?.resize(); playerRef.current?.seek(0); }
 let i18nText: (k: string) => string = (k) => k;
 export function setI18nText(f: (k: string) => string) { i18nText = f; }
+
+// when the person picked a clip themselves (a tap on the timeline, a new title): on a phone or tablet its settings open then
+let pickedAt = 0;
+export const markPick = () => { pickedAt = Date.now(); };
+export const pickedNow = () => Date.now() - pickedAt < 800;

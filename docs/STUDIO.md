@@ -37,6 +37,38 @@ How the parts talk:
 Keys: there are none in the studio or the render service. The site's AI keys stay in the site's `.env` / Admin. The render
 service's only secret is its database password, which `deploy/render.sh` generates and never prints.
 
+## 0. Install only the editor (hPanel → VPS → Browser terminal)
+
+For a site that runs nooi.ai v216 (the version before the new editor), this changes the editor and nothing else. Data, media,
+`.env`, packages, settings and the other pages all stay as they are. Paste as root:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Bonasib/nooi.ai/claude/festive-brahmagupta-08tfzr/deploy/editor-update.sh | bash
+```
+
+or upload `nooi-editor-update.zip` (built with `bash deploy/editor-package.sh`) to `/root` and run
+`bash editor-update.sh /root/nooi-editor-update.zip`.
+
+What it does:
+1. Checks that every file it replaces is still exactly the v216 version (or this update). If one was changed, it stops
+   without touching anything.
+2. Backs up to `/var/backups/nooi/editor-<time>.tgz`.
+3. Copies only the editor's files: `public/studio/`, `studio/`, `lib/studio219.js` and the small hooks in `server.js`,
+   `public/index.html`, `lib/static124.js`, `lib/projects139.js`, `lib/collab196.js` and `lib/edit148.js`.
+4. Restarts the site (a few seconds) and checks the home page, the API and `/studio/`. If any check fails, it puts
+   everything back by itself.
+
+Undo: `bash /opt/nooi/deploy/editor-update.sh --rollback`. After it: `/studio/` is the new editor, and the site's Edit
+buttons open it (`?classic=1` keeps the old one for a while).
+
+Which arrangement each screen gets:
+
+| Screen | Arrangement |
+|---|---|
+| computers, tablets in landscape 1100+ wide | rail · library · preview · clip settings over the timeline |
+| tablets, small laptops, phones held sideways | rail · full-width preview over the timeline; the library and the clip settings slide in as drawers |
+| phones held upright | preview / timeline / tool bar; a tool or the clip settings sit between a smaller preview and the timeline |
+
 ## 1. VPS setup (Hostinger, Docker Compose)
 
 The site keeps running as before (systemd service `nooi`, `/opt/nooi`). The render service runs beside it in Docker.

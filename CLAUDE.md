@@ -1730,3 +1730,27 @@ The owner sent the target card (two columns; media with play · sound · length;
 - Tests: `tests/v220.py` (ports 8699 / 8798 / 8700), suite line 207:
   - through the site: who the user is, Export → nooi server, a tus upload of the device-only file (the background `/v1/uploads` blocked), a `/media` result used in place, a real MP4 (H.264 1280×720 + AAC, 5 s), the WebSocket status, privacy;
   - the app build (`--mode desktop`, `VITE_SITE` = the test site) served from another origin: CORS (an app origin yes, another site no), a server export across origins, and with `__TAURI_INTERNALS__` "This computer (FFmpeg)" first.
+
+## v221 nooi Studio on phones, tablets and computers · an editor-only update for the live site
+
+- `studio/apps/web/src/App.tsx`: three arrangements of the same parts, chosen by media queries.
+  - `phone`: `(max-width: 767px) and (min-height: 501px)`. Preview / timeline / bottom rail. When a tool or the clip settings are open (`.app.sheeted`), the sheet sits in the grid between a smaller preview (24 %) and the timeline (30 %). The old version laid it over the timeline.
+  - `compact`: `(max-width: 1099px), (max-height: 600px)`. Rail + a full-width preview over the timeline. The library is `.drawer.start` and the clip settings `.drawer.end`, both full height (`inset-inline-*`, so mirrored in Arabic). On short screens the rail shows icons only.
+  - `full`: the computer grid as before.
+- Clip settings open by themselves only when a clip is picked on the timeline or a title is added (`markPick()` / `pickedNow()` in state.ts), or when no tool panel is open. So adding several files from the library keeps the library open. In the phone and compact modes, `RailBar toggle` opens and closes the panel on a tap.
+- CSS:
+  - The phone top bar no longer scrolls: logo, undo/redo, format (narrow), language, projects, Export (icon only under 420 px).
+  - The inspector tabs wrap.
+  - The export button row is sticky at the bottom of the dialog.
+  - The player's buttons keep their size (the time readout gives way; the total is hidden under 400 px).
+  - `(pointer: coarse)` sizes: buttons 36, ranges / select / library ✕ 28.
+- `deploy/editor-update.sh` installs only the editor on a running nooi.ai v216 (hPanel → VPS → Browser terminal; GitHub or a zip).
+  - Safety: every replaced file must still match the v216 SHA-256 (or the new one), otherwise it stops untouched.
+  - Then: backup to `/var/backups/nooi/editor-*.tgz`, copy the files, `node --check`, restart, and check `/v1/health`, `/` and `/studio/`. It rolls back by itself on failure. `--rollback` undoes the last run; it re-runs from a copy of itself.
+  - `deploy/editor-package.sh` builds `nooi-editor-update.zip` (2.6 MB) from the last commit, or from the working tree with `--worktree`.
+  - Rehearsed on a git worktree of 17de42c with a systemd stand-in: install, home page + Edit → /studio/ in a browser (1440 and 390, no errors), a second install, undo of the last run, undo to v216, refusal when a file was changed.
+- The live site was v216 (its index.html matches 17de42c byte for byte). The automatic Deploy workflow only checks the code there (no VPS secrets).
+- Tests: `tests/v221.py` (port 8717), suite line 208:
+  - 11 sizes (360…1920, phones sideways, tablets both ways): the arrangement, no page scroll, no control off the screen (the timeline toolbar scrolls), the file onto the timeline, touch targets, the export button in view;
+  - flows in English and Arabic on a tablet and a phone, and on a phone sideways: the library stays open while adding, tapping a clip opens its settings with the timeline in view (drawer from the right, from the left in Arabic), the settings' own ✕ closes them.
+  - v219 / v220 still pass.

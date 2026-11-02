@@ -4,7 +4,7 @@ import type { DragEvent, PointerEvent as RPE } from "react";
 import { Btn, Icon, Seg } from "@nooi/ui";
 import * as C from "@nooi/editor-core";
 import type { Clip, MediaClip, Project, Track } from "@nooi/editor-core";
-import { editor, playerRef, toast, ui, useProject, useUI, autosave } from "../state";
+import { editor, playerRef, toast, ui, useProject, useUI, autosave, markPick } from "../state";
 import type { Tool } from "../state";
 import * as A from "../actions";
 
@@ -22,7 +22,7 @@ export function Timeline() {
     const f = C.findClip(editor.project, c.id); if (!f) return;
     if (f.track.locked) { toast(t("tl.locked"), "info"); return; }
     if (e.shiftKey || e.metaKey || e.ctrlKey) { editor.select(editor.selection.includes(c.id) ? editor.selection.filter((x) => x !== c.id) : [...editor.selection, c.id]); return; }
-    if (!editor.selection.includes(c.id)) editor.select([c.id]);
+    markPick(); if (!editor.selection.includes(c.id)) editor.select([c.id]);
     const x0 = e.clientX, s0 = c.start, e0 = C.clipEnd(c); let moved = false; const skip = new Set([c.id]); const tl = tool as Tool;
     const target = e.currentTarget as HTMLElement; target.setPointerCapture?.(e.pointerId);
     const mode = part === "body" ? (tl === "slip" ? "slip" : tl === "slide" ? "slide" : "move") : tl === "roll" ? "roll" : "trim";

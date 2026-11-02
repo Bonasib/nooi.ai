@@ -110,6 +110,8 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
 .pvtag.buf { inset-inline-start: auto; inset-inline-end: 8px; }
 .transport { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-top: 1px solid var(--line); }
 .tc { font: 600 12px var(--mono); padding: 0 8px; white-space: nowrap; }
+.transport > .ns-btn { flex: none; } .transport > .tc { min-width: 0; overflow: hidden; text-overflow: ellipsis; }   /* narrow: the time gives way, the buttons keep their size */
+@media (max-width: 400px) { .transport { gap: 4px; padding: 6px; } .tc { padding: 0 4px; } .tc .dim { display: none; } }
 
 /* inspector */
 .prop { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: end; }
@@ -176,15 +178,48 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
 .toast.warn { background: #3a1416; color: #ffd7d9; } .toast.ok { background: var(--lime); color: var(--on-lime); }
 .ns-btn.wide { width: 100%; justify-content: flex-start; margin: 0 0 6px; }
 
-/* phone */
-.app.phone .topbar { padding: 4px 8px; gap: 6px; min-height: 46px; flex-wrap: nowrap; overflow-x: auto; }
-.app.phone .tgroup .zoomgrp, .app.phone .kbtn, .app.phone .crew, .app.phone .saved span, .app.phone .credits, .app.phone .fmt small { display: none; }
-.app.phone .pname { width: 110px; } .app.phone .tright [data-testid="lang"], .app.phone .tright .ns-btn.icon:not([data-testid]) { display: none; }
+/* phone (held upright): preview / timeline / tool bar; a tool or the clip settings sit between a smaller preview and the timeline */
+.app.phone .topbar { padding: 4px 8px; gap: 6px; min-height: 46px; flex-wrap: nowrap; overflow: hidden; }
+.app.phone .tgroup { margin-inline: 0; }
+.app.phone .tgroup .zoomgrp, .app.phone .kbtn, .app.phone .crew, .app.phone .saved, .app.phone .credits, .app.phone .fmt small, .app.phone .pname { display: none; }
+.app.phone .tright { margin-inline-start: auto; gap: 4px; }
+.app.phone .tright .ns-btn.icon:not([data-testid]) { display: none; }
+.app.phone .fmt { padding: 2px 6px; } .app.phone .fmt select { max-width: 74px; }
+@media (max-width: 419px) { .app.phone .tright [data-testid="export"] { width: 36px; padding: 0; font-size: 0; gap: 0; } }
 .mmain { flex: 1; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) minmax(200px, 44%); gap: 6px; padding: 6px; }
+.app.sheeted .mmain { grid-template-rows: minmax(96px, 24%) minmax(0, 1fr) minmax(150px, 30%); }
 .mrail { display: flex; justify-content: space-around; border-top: 1px solid var(--line); background: var(--panel); padding: 4px 4px calc(4px + env(safe-area-inset-bottom)); }
 .mrail button { flex: 1; min-width: 0; font-size: 10px; }
-.msheet { position: fixed; left: 0; right: 0; bottom: calc(58px + env(safe-area-inset-bottom)); z-index: 30; max-height: 56vh; display: flex; flex-direction: column; border-top: 1px solid var(--line2); border-radius: var(--r3) var(--r3) 0 0; background: var(--panel); box-shadow: var(--shadow); }
-.msheet > .panel, .msheet > .inspector { border: 0; border-radius: 0; flex: 1; min-height: 0; }
-.mgrab { display: flex; justify-content: flex-end; padding: 4px 6px 0; }
+.msheet { min-height: 0; display: flex; flex-direction: column; border: 1px solid var(--line2); border-radius: var(--r3); background: var(--panel); overflow: hidden; }
+.msheet > .panel, .msheet > .inspector, .drawer > .panel, .drawer > .inspector { border: 0; border-radius: 0; flex: 1; min-height: 0; }
+.mgrab { display: flex; justify-content: flex-end; padding: 2px 4px 0; flex: none; }
+.msheet .mgrab { position: absolute; inset-inline-end: 4px; z-index: 2; } .msheet { position: relative; }
 .app.phone .tlbar .ns-seg { display: none; }
 .app.phone .theads { width: 64px !important; } .app.phone .thead b { display: none; }
+.app.phone .modal { padding: 8px; } .app.phone .sheet { max-height: 94dvh; }
+
+/* compact (tablets, small laptops, phones held sideways): rail · full-width preview over the timeline; drawers for the rest */
+.workspace.compact { position: relative; grid-template-columns: 64px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) minmax(190px, 42%); }
+.workspace.compact > .rail { grid-row: 1 / 3; overflow-y: auto; scrollbar-width: none; } .workspace.compact > .timeline { grid-column: 2; }
+.drawer { position: absolute; z-index: 20; top: 8px; bottom: 8px; width: min(360px, calc(100% - 96px)); display: flex; flex-direction: column; border: 1px solid var(--line2); border-radius: var(--r3); background: var(--panel); box-shadow: var(--shadow); overflow: hidden; }
+.drawer.start { inset-inline-start: 80px; } .drawer.end { inset-inline-end: 8px; }
+.drawer .mgrab { position: absolute; inset-inline-end: 4px; top: 4px; z-index: 2; }
+.drawer.end > .mgrab, .msheet.insp > .mgrab { display: none; }   /* the clip settings have their own close */
+@media (max-height: 600px) {
+  .app.compact .topbar { min-height: 44px; padding: 3px 10px; } .app.compact .pname, .app.compact .saved { display: none; }
+  .workspace.compact { gap: 6px; padding: 6px; grid-template-rows: minmax(0, 1fr) minmax(170px, 48%); }
+  .workspace.compact > .rail button span { display: none; } .workspace.compact > .rail button { padding: 7px 2px; }
+}
+
+/* every arrangement: the clip settings' tabs wrap instead of running off the edge; the export button stays in view */
+.inspector .subtabs { flex-wrap: wrap; overflow: visible; }
+.sheet .row.end { position: sticky; bottom: -14px; margin: 12px -14px -14px; padding: 10px 14px; background: var(--panel); border-top: 1px solid var(--line); }
+
+/* touch screens: bigger targets (fingers, not a mouse pointer) */
+@media (pointer: coarse) {
+  .ns-btn { min-height: 36px; } .ns-btn.icon { width: 36px; }
+  .subtabs button, .chip { padding: 7px 12px; }
+  .thead .ns-btn, .thead button { min-width: 28px; min-height: 28px; }
+  input[type="range"] { min-height: 28px; }
+  .fmt select { min-height: 28px; } .libx { min-width: 28px; min-height: 28px; }
+}

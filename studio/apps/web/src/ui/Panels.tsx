@@ -14,12 +14,12 @@ import { AIPanel } from "./AIPanel";
 import { CaptionsPanel } from "./Captions";
 
 export const RAILS: [Rail, string][] = [["media", "media"], ["audio", "audio"], ["text", "text"], ["captions", "captions"], ["effects", "effects"], ["color", "color"], ["ai", "ai"]];
-export function RailBar({ mobile }: { mobile?: boolean }) {
+export function RailBar({ mobile, toggle }: { mobile?: boolean; toggle?: boolean }) {
   const { t } = useTranslation(); const rail = useUI((s) => s.rail); const open = useUI((s) => s.panelOpen);
   return (
     <nav className={mobile ? "mrail" : "rail"} aria-label={t("rail.label")}>
       {RAILS.map(([k, ic]) => (
-        <button key={k} type="button" aria-pressed={rail === k && (!mobile || open)} onClick={() => ui.set({ rail: k, panelOpen: mobile ? !(rail === k && open) : true })} data-testid={"rail-" + k}>
+        <button key={k} type="button" aria-pressed={rail === k && (!(mobile || toggle) || open)} onClick={() => ui.set({ rail: k, panelOpen: mobile || toggle ? !(rail === k && open) : true })} data-testid={"rail-" + k}>
           <Icon name={ic} size={20} /><span>{t("rail." + k)}</span>
         </button>
       ))}

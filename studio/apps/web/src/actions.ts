@@ -2,7 +2,7 @@
 import * as C from "@nooi/editor-core";
 import type { Asset, Clip, MediaClip, Project, TextClip } from "@nooi/editor-core";
 import i18n from "./i18n";
-import { autosave, editor, playerRef, toast, ui } from "./state";
+import { autosave, editor, playerRef, toast, ui, markPick } from "./state";
 
 const t = (k: string, o?: Record<string, unknown>) => i18n.t(k, o) as string;
 export const now = () => playerRef.current?.clock.t ?? editor.playhead;
@@ -21,7 +21,7 @@ export function addAssets(list: Asset[]) { run("import", (p) => { for (const a o
 export function addText(templateId = "title", text?: string) {
   const tpl = C.TEXT_TEMPLATES.find((x) => x.id === templateId) || C.TEXT_TEMPLATES[0];
   const c = run("text", (p) => C.addClip(p, C.textClip(text || t("text.default"), now(), { style: C.textStyle0(tpl.style as Partial<C.TextStyle>), animIn: { type: tpl.animIn, dur: 0.4 }, animOut: { type: tpl.animOut, dur: 0.3 }, template: tpl.id })));
-  editor.select([c.id]); ui.set({ inspector: "text" }); return c;
+  markPick(); editor.select([c.id]); ui.set({ inspector: "text" }); return c;
 }
 export function split() {
   editor.prune(); const ids = editor.selection.filter((id) => { const f = C.findClip(editor.project, id); return f && now() > f.clip.start && now() < C.clipEnd(f.clip); });   // selected clips under the playhead; none → every track
