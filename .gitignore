@@ -5,3 +5,5 @@ media/
 *.log
 __pycache__/
 tests/_world.glb
+# the studio's source folder named media (not the site's uploads)
+!studio/apps/web/src/media/
