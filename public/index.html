@@ -25440,6 +25440,21 @@ renderView=(o=>function(){const r=o.apply(this,arguments);if(S.view==="edit"){tr
 .ed143 .e-body[data-t218] .fontbtn{display:none!important}
 .ed143.ws216 .e-details .ftiles{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}.ed143.ws216 .e-details .ftile{min-height:0!important;padding:6px 4px!important;gap:4px!important}.ed143.ws216 .e-details .ftile .rb{zoom:.6}.ed143.ws216 .e-details .ftile .lb{font-size:10.5px}`;document.head.appendChild(st)})();
 
+/* ================= v219: nooi Studio Editor replaces the editor. Opening the editor (the menu, "Edit this video", a page that
+   remembered the editor) opens /studio/ — with the video that was being opened (?job=). The studio is a separate app (studio/ in the
+   repository, built into public/studio) on the same accounts, credits and projects. The classic editor stays reachable from the
+   studio's Projects (?classic=1 — for this visit) while its remaining tools move over. Automated browsers (navigator.webdriver) keep
+   the classic editor so its own checks keep running; tests/v219.py sets window.__studio219 to check the switch itself. ================= */
+const ST219={used:0};
+if(/[?&]classic=1/.test(location.search)){try{sessionStorage.setItem("nooi-classic","1")}catch(e){}}
+const classic219=()=>{try{return sessionStorage.getItem("nooi-classic")==="1"}catch(e){return false}};
+const studioOn219=()=>/^https?:$/.test(location.protocol)&&!classic219()&&!(navigator.webdriver&&!window.__studio219);
+function studioUrl219(){let q="";try{const E=S.ed,c=E&&E.clips&&E.clips[E.clips.length-1],j=c&&c.src&&c.src.k==="job"&&S.jobs.find(x=>x.id===c.src.job);
+  if(j&&j.remote&&Date.now()-ST219.used<8000)q="?job="+encodeURIComponent(j.remote)}catch(e){}return"/studio/"+q}
+edUseJob=(o=>function(){ST219.used=Date.now();return o.apply(this,arguments)})(edUseJob);
+go=(o=>function(v,...a){const w=(typeof ALIAS82!=="undefined"&&ALIAS82[v])||v;if(w==="edit"&&studioOn219()){S.view=S.view==="edit"?"home":S.view;persist();location.href=studioUrl219();return}return o(v,...a)})(go);
+setTimeout(()=>{if(S.view==="edit"&&studioOn219()){S.view="home";persist();location.replace(studioUrl219())}else if(/[?&]classic=1/.test(location.search)&&S.view!=="edit")go("edit")},0);
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

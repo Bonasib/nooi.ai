@@ -59,7 +59,9 @@ const kindFits = (k: TrackKind, c: Clip, p: Project) => c.type === "text" ? k ==
 export function trackForClip(p: Project, c: Clip): Track {
   const a = c.type === "media" ? p.assets[c.asset] : null;
   const want: TrackKind = c.type === "text" ? "text" : a?.kind === "audio" ? "audio" : "video";
-  let t = p.tracks.find((x) => x.kind === want && !x.locked && !overlaps(x, c.start, c.start + c.dur));
+  // the main track first: the lowest video track (V1), the first audio track, the top text track
+  const order = want === "video" ? [...p.tracks].reverse() : p.tracks;
+  let t = order.find((x) => x.kind === want && !x.locked && !overlaps(x, c.start, c.start + c.dur));
   if (!t) { t = mkTrack(want, (want === "audio" ? "A" : want === "text" ? "T" : "V") + (p.tracks.filter((x) => x.kind === want).length + 1)); if (want === "audio") p.tracks.push(t); else p.tracks.unshift(t); }
   return t;
 }
@@ -77,6 +79,11 @@ export function addClip(p: Project, c: Clip, trackId?: Id | null, mode: "free" |
 }
 export function addAssetClip(p: Project, a: Asset, at: number, trackId?: Id | null, mode: "free" | "insert" = "free"): Clip {
   return addClip(p, mediaClip(a, at), trackId, mode);
+}
+// where a tapped (not dropped) file goes: pictures and videos after the last clip on the main video track, sounds at the playhead
+export function mainTrackEnd(p: Project, kind: "video" | "audio" | "text"): number {
+  const t = (kind === "video" ? [...p.tracks].reverse() : p.tracks).find((x) => x.kind === kind && !x.locked);
+  return t ? t.clips.reduce((m, c) => Math.max(m, clipEnd(c)), 0) : 0;
 }
 
 // ---- moving

@@ -45,6 +45,7 @@ import { handleMcp } from "./lib/mcp.js";
 import { verify, canSendSignInLinks, signInLink, customTokenForEmail } from "./lib/auth.js";
 import { newCode, checkCode } from "./lib/otp.js";
 import { isStaff, requireAdmin, audit } from "./lib/admin.js";
+import { registerStudio219 } from "./lib/studio219.js";
 import { registerShowcase } from "./lib/showcase.js";
 import { registerScenes } from "./lib/scenes.js";
 import { registerLearn } from "./lib/learn.js";
@@ -134,6 +135,7 @@ app.set("trust proxy", 1);   // behind Nginx on the VPS
 const DOC195 = /\.(x?html?|shtml|xml|xsl|xslt|svgz?|mathml|js|mjs|cjs|css)$/i, TEXT195 = /\.(x?html?|shtml|xml|xsl|xslt|mathml|js|mjs|cjs|css)$/i;
 app.use("/media", express.static(MEDIA_DIR, { maxAge: "7d", setHeaders: (res, f) => { if (DOC195.test(f)) { res.setHeader("Content-Security-Policy", "default-src 'none'; sandbox"); if (TEXT195.test(f)) res.setHeader("Content-Type", "text/plain; charset=utf-8"); } } }));
 app.use(fastFiles("public")); warm("public", ["index.html"]);
+registerStudio219(app, { requireUser, isStaff });   // v219: nooi Studio Editor at /studio (before the static files: its own caching)
 app.use(express.static(path.resolve("public")));
 // On-device AI: ONNX Runtime's WebAssembly/WebGPU files come from our own server (npm onnxruntime-web), and an
 // optional local model mirror (MODELS_DIR, same layout as Hugging Face: <org>/<model>/resolve/main/…).

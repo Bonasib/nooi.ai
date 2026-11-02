@@ -28,7 +28,7 @@ export class Editor {
     const draft = clone(this.project); const r = fn(draft);
     draft.updatedAt = Date.now();
     this.past.push({ p: this.project, label }); if (this.past.length > this.limit) this.past.shift();
-    this.future = []; this.project = draft; this.dirty = true; this.emit(); return r;
+    this.future = []; this.project = draft; this.dirty = true; this.prune(); this.emit(); return r;
   }
   begin(label: string) { if (this.tx) this.commit(); this.tx = { base: this.project, label }; }
   live<T>(fn: (draft: Project) => T): T | undefined {
@@ -45,8 +45,10 @@ export class Editor {
   get inTx() { return !!this.tx; }
   get canUndo() { return this.past.length > 0; }
   get canRedo() { return this.future.length > 0; }
-  undo() { if (this.tx) this.cancel(); const s = this.past.pop(); if (!s) return null; this.future.push({ p: this.project, label: s.label }); this.project = s.p; this.dirty = true; this.emit(); return s.label; }
-  redo() { const s = this.future.pop(); if (!s) return null; this.past.push({ p: this.project, label: s.label }); this.project = s.p; this.dirty = true; this.emit(); return s.label; }
+  undo() { if (this.tx) this.cancel(); const s = this.past.pop(); if (!s) return null; this.future.push({ p: this.project, label: s.label }); this.project = s.p; this.dirty = true; this.prune(); this.emit(); return s.label; }
+  redo() { const s = this.future.pop(); if (!s) return null; this.past.push({ p: this.project, label: s.label }); this.project = s.p; this.dirty = true; this.prune(); this.emit(); return s.label; }
+  /** the selection keeps only clips that still exist (after undo, delete…) */
+  prune() { const ids = new Set(this.project.tracks.flatMap((t) => t.clips.map((c) => c.id))); if (this.selection.some((id) => !ids.has(id))) this.selection = this.selection.filter((id) => ids.has(id)); }
   /** replace everything (open a project) — no undo step */
   load(p: Project) { this.tx = null; this.project = p; this.past = []; this.future = []; this.selection = []; this.playhead = 0; this.dirty = false; this.emit(); }
   select(ids: Id[]) { this.selection = ids; this.emit(); }

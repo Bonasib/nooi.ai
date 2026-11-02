@@ -14,7 +14,9 @@ export const TRANSITIONS: Item[] = [
   ["circleClose", "Circle close", "إغلاق دائري", "shape"], ["diamond", "Diamond", "معيّن", "shape"], ["pixelate", "Pixelate", "بكسلة", "stylized"], ["glitch", "Glitch", "تشويش", "stylized"],
 ].map(([id, en, ar, group]) => ({ id, en, ar, group }));
 
-// effects on a clip (params: amount 0..1 unless named)
+// effects on a clip (params: amount 0..1 unless named); the amount a new one starts with
+export const EFFECT_AMOUNT: Record<string, number> = { mono: 1, sepia: 1, invert: 1, mirror: 1, blur: 0.4, vignette: 0.6, grain: 0.5 };
+export const effectAmount = (type: string) => EFFECT_AMOUNT[type] ?? 0.5;
 export const EFFECTS: Item[] = [
   ["blur", "Blur", "تمويه"], ["sharpen", "Sharpen", "حدة"], ["vignette", "Vignette", "تظليل الأطراف"], ["grain", "Film grain", "حبيبات الفيلم"],
   ["glitch", "Glitch", "تشويش رقمي"], ["rgbSplit", "RGB split", "انفصال الألوان"], ["pixelate", "Pixelate", "بكسلة"], ["mono", "Black & white", "أبيض وأسود"],

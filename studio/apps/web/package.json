@@ -1,0 +1,30 @@
+{
+  "name": "@nooi/studio-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit -p . && vite build",
+    "typecheck": "tsc --noEmit -p .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@mediabunny/mp3-encoder": "1.65.0",
+    "@nooi/editor-core": "workspace:*",
+    "@nooi/ui": "workspace:*",
+    "i18next": "26.7.1",
+    "mediabunny": "1.65.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-i18next": "17.1.11"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "@vitejs/plugin-react": "5.1.0",
+    "typescript": "5.9.3",
+    "vite": "7.3.7",
+    "vitest": "3.2.4"
+  }
+}
