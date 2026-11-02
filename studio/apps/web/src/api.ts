@@ -5,6 +5,7 @@ interface FirebaseCompat { initializeApp(c: unknown): void; apps: unknown[]; aut
 
 export interface Me { signedIn: boolean; name: string; uid?: string; credits: number | null; plan?: string }
 export interface Job { id: string; kind: string; status: string; prompt?: string; title?: string; resultUrl?: string; aspect?: string; dur?: number; created?: number; cost?: number; error?: string; progress?: number }
+export interface RenderJob { id: string; status: "queued" | "running" | "done" | "failed" | "cancelled"; progress: number; url: string | null; error: string | null; format: string; seconds: number; expiresAt?: string }
 type Listener = () => void;
 
 class Api {
@@ -65,6 +66,53 @@ class Api {
       x.onload = () => { try { const d = JSON.parse(x.responseText); if (x.status < 300 && d.url) res(d.url); else rej(new Error(d.error || "Upload failed")); } catch { rej(new Error("Upload failed")); } };
       x.onerror = () => rej(new Error("Upload failed")); x.send(fd);
     });
+  }
+  // ---- the render service (/render-api on the same site): resumable uploads, server renders, live status
+  async authHeaders(): Promise<Record<string, string>> { const h: Record<string, string> = {}; const tk = await this.token(); if (tk) h.Authorization = "Bearer " + tk; if (window.__nooiDevUser) h["X-Dev-User"] = window.__nooiDevUser; return h; }
+  renderOn() { return fetch("/render-api/health").then((r) => r.ok).catch(() => false); }
+  // the tus protocol: the file goes in 8 MB pieces; after a dropped connection it asks where it stopped and goes on from there
+  async tus(b: Blob, name: string, onProgress?: (k: number) => void, signal?: AbortSignal): Promise<string> {
+    const base = { "Tus-Resumable": "1.0.0" };
+    const meta = "filename " + btoa(unescape(encodeURIComponent(name))) + ",filetype " + btoa(b.type || "application/octet-stream");
+    const c = await fetch("/render-api/uploads/files", { method: "POST", signal, headers: { ...(await this.authHeaders()), ...base, "Upload-Length": String(b.size), "Upload-Metadata": meta } });
+    if (c.status !== 201) throw new Error(((await c.json().catch(() => ({}))) as { error?: string }).error || "Upload failed");
+    const loc = new URL(c.headers.get("Location") || "", location.href).pathname;
+    let off = 0, tries = 0; const PIECE = 8 * 1024 * 1024;
+    for (;;) {
+      try {
+        const r = await fetch(loc, { method: "PATCH", signal, headers: { ...(await this.authHeaders()), ...base, "Upload-Offset": String(off), "Content-Type": "application/offset+octet-stream" }, body: b.slice(off, Math.min(b.size, off + PIECE)) });
+        if (r.status !== 204) { const e = ((await r.json().catch(() => ({}))) as { error?: string }).error; throw Object.assign(new Error(e || "Upload failed"), { final: r.status >= 400 && r.status < 500 && r.status !== 409 }); }
+        off = +(r.headers.get("Upload-Offset") || off); tries = 0; onProgress?.(b.size ? off / b.size : 1);
+        if (off >= b.size) { const url = r.headers.get("Upload-Url"); if (!url) throw new Error("Upload failed"); return url; }
+      } catch (e) {
+        if (signal?.aborted || (e as { final?: boolean }).final || ++tries > 5) throw e;
+        await new Promise((ok) => setTimeout(ok, 1000 * 2 ** tries));
+        const h = await fetch(loc, { method: "HEAD", signal, headers: { ...(await this.authHeaders()), ...base } }).catch(() => null);
+        if (h && h.ok) off = +(h.headers.get("Upload-Offset") || off);
+      }
+    }
+  }
+  startRender(body: Record<string, unknown>) { return this.req<RenderJob>("/render-api/renders", { json: body }); }
+  cancelRender(id: string) { return this.req("/render-api/renders/" + id, { method: "DELETE" }).catch(() => null); }
+  // live status: Server-Sent Events when signed in with a token, else a check every 1.5 s
+  async watchRender(id: string, on: (r: RenderJob) => void, signal?: AbortSignal): Promise<RenderJob> {
+    const end = (r: RenderJob) => ["done", "failed", "cancelled"].includes(r.status);
+    const tk = await this.token();
+    if (tk && typeof EventSource !== "undefined") {
+      const r = await new Promise<RenderJob | null>((ok) => {
+        const es = new EventSource(`/render-api/renders/${id}/events?token=${encodeURIComponent(tk)}`); let last: RenderJob | null = null;
+        const stop = () => { es.close(); ok(last && end(last) ? last : null); };
+        es.onmessage = (m) => { try { last = JSON.parse(m.data); on(last!); if (end(last!)) stop(); } catch { /* */ } };
+        es.onerror = () => stop(); signal?.addEventListener("abort", stop);
+      });
+      if (r) return r;
+    }
+    for (;;) {
+      if (signal?.aborted) throw Object.assign(new Error("aborted"), { name: "AbortError" });
+      const r = await this.req<RenderJob>("/render-api/renders/" + id).catch(() => null);
+      if (r) { on(r); if (end(r)) return r; }
+      await new Promise((ok) => setTimeout(ok, 1500));
+    }
   }
   // ---- projects (the same list as the account's other editor projects)
   listProjects() { return this.req<{ projects: { id: string; name: string; updated: number; kind?: string }[] }>("/v1/projects").then((r) => r.projects).catch(() => []); }

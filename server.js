@@ -45,7 +45,7 @@ import { handleMcp } from "./lib/mcp.js";
 import { verify, canSendSignInLinks, signInLink, customTokenForEmail } from "./lib/auth.js";
 import { newCode, checkCode } from "./lib/otp.js";
 import { isStaff, requireAdmin, audit } from "./lib/admin.js";
-import { registerStudio219 } from "./lib/studio219.js";
+import { registerStudio219, proxyRender219, proxyRenderUpgrade219 } from "./lib/studio219.js";
 import { registerShowcase } from "./lib/showcase.js";
 import { registerScenes } from "./lib/scenes.js";
 import { registerLearn } from "./lib/learn.js";
@@ -116,6 +116,7 @@ app.use((req, res, next) => {
 });
 app.use(secMiddleware200);   // (v200: 401/403/429/5xx counted per hour for Admin → Security)
 app.use(cors({ origin: process.env.PUBLIC_BASE_URL || true }));
+proxyRender219(app);   // v219 S4: /render-api/* → the studio render service (raw bodies: before the JSON reader)
 app.use(express.json({ limit: "12mb", verify: (req, _res, buf) => { if (req.url.startsWith("/v1/billing/webhook/")) req.rawBody = buf; } }));   // (v191: payment notices keep their exact bytes for the signature check)
 // The browser never sees which AI provider runs the models: every JSON answer says "engine" instead
 // (keys kie/kieModel/kieRoutes → engine/engineModel/engineRoutes, "kie@model" → "engine@model"), and the admin
@@ -508,7 +509,7 @@ app.delete("/v1/oauth/:p", requireUser, (req, res) => { delete user(req.user.uid
 
 const port = process.env.PORT || 8080;
 setInterval(refillPlans, 6 * 3600e3); refillPlans();
-app.listen(port, () => console.log(`nooi.ai Studio server → http://localhost:${port}`));
+proxyRenderUpgrade219(app.listen(port, () => console.log(`nooi.ai Studio server → http://localhost:${port}`)));
 // v177: the free NVIDIA check (empty requests — nothing made or spent) 10 minutes after start and every 6 hours, so an engine
 // NVIDIA closed to the key is known before a customer picks it
 if (process.env.NV_AUTOCHECK !== "false") { const nvAuto = () => { if (nvReady()) nvCheck176().catch((e) => console.warn("NVIDIA check:", e.message)); };

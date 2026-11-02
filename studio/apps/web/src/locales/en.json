@@ -367,14 +367,25 @@
   "saved": "Saved to your account.",
   "saveFail": "Couldn't save it to your account — download it instead.",
   "empty": "The timeline is empty.",
-  "noEncoder": "This browser can't encode video. Use Chrome, Edge or Safari — or the server export (coming with the render service).",
+  "noEncoder": "This browser can't encode video. Use Chrome, Edge or Safari — or choose “nooi server” above.",
   "tooLong": "Longer than {{name}} allows ({{s}} s) — trim it before posting.",
   "step": {
    "media": "Reading media",
    "frames": "Drawing frames",
    "sound": "Mixing sound",
-   "done": "Done"
-  }
+   "done": "Done",
+   "upload": "Uploading files",
+   "queued": "Waiting in line",
+   "running": "Rendering on the server"
+  },
+  "where": "Made on",
+  "device": "This device",
+  "server": "nooi server",
+  "serverHint": "Made on the nooi server — best for long or 4K videos. Files only on this device are uploaded first (it resumes after a dropped connection). No credits are used.",
+  "srvFail": "The server couldn't make this video.",
+  "srvBusy": "Your plan makes one server video at a time — wait for the one running.",
+  "srvMissing": "{{name}} isn't on this device anymore — add it again.",
+  "kept": "kept 7 days"
  },
  "proj": {
   "new": "New project",

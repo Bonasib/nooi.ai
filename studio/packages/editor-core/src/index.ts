@@ -8,3 +8,4 @@ export * from "./catalog";
 export * from "./migrate";
 export * from "./commands";
 export * from "./audio";
+export * from "./ffmpeg";

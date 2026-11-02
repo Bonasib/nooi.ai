@@ -11,10 +11,10 @@ import type { Asset, MediaClip } from "@nooi/editor-core";
 import { api } from "../api";
 import type { Job } from "../api";
 import { editor, toast, useEditorVersion, autosave, playerRef } from "../state";
-import { uploadAsset } from "../media/library";
+import { uploadAsset, serverPath } from "../media/library";
 import * as A from "../actions";
 
-const serverSrc = (a?: Asset) => (a && /^\/media\/[A-Za-z0-9._-]+$/.test(a.src) ? a.src : null);
+const serverSrc = (a?: Asset) => { const s = a ? serverPath(a.src) : null; return s && s.startsWith("/media/") ? s : null; };
 async function ensureOnServer(a: Asset): Promise<{ job?: string; src?: string } | null> {
   if (a.job) return { job: a.job };
   const s = serverSrc(a); if (s) return { src: s };

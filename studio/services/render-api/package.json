@@ -1,0 +1,38 @@
+{
+  "name": "@nooi/render-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "nooi Studio render service: resumable uploads (tus), proxies, server renders with FFmpeg on the CPU through a job queue, status by WebSocket/SSE",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "worker": "tsx src/worker.ts",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p .",
+    "build": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@fastify/rate-limit": "11.2.1",
+    "@fastify/websocket": "11.3.6",
+    "@nooi/editor-core": "workspace:*",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "@tus/file-store": "2.1.1",
+    "@tus/server": "2.4.6",
+    "bullmq": "6.5.3",
+    "fastify": "5.12.7",
+    "ioredis": "5.8.2",
+    "pg": "8.23.1",
+    "tsx": "4.23.15"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.1",
+    "@types/pg": "8.15.6",
+    "prisma": "7.10.1",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}
