@@ -6,6 +6,8 @@ import type { Clip, KfProp, MediaClip, TextClip } from "@nooi/editor-core";
 import { editor, ui, useProject, useUI, playerRef, autosave } from "../state";
 import * as A from "../actions";
 import { loadFont } from "../engine/text";
+import { useEffect, useRef } from "react";
+import { MotionTiles } from "./Extras";
 
 const KF: Partial<Record<string, KfProp>> = { "transform.x": "x", "transform.y": "y", "transform.scale": "scale", "transform.rotation": "rotation", opacity: "opacity", volume: "volume" };
 function Prop({ c, path, label, min, max, step, unit, fmt }: { c: Clip; path: string; label: string; min: number; max: number; step?: number; unit?: string; fmt?: (v: number) => string }) {
@@ -27,8 +29,9 @@ export function Inspector() {
   const { t } = useTranslation(); const p = useProject(); const tab = useUI((s) => s.inspector); const lang = useUI((s) => s.lang);
   const clips = editor.selection.map((id) => findClip(p, id)?.clip).filter(Boolean) as Clip[]; const c = clips[0];
   if (!c) return <ProjectProps />;
-  const tabs = c.type === "text" ? ["text", "video"] : p.assets[c.asset]?.kind === "audio" ? ["audio", "speed"] : ["video", "speed", "audio", "color", "effects"];
-  const cur = tabs.includes(tab) ? tab : tabs[0];
+  // the spec's four tabs (§4.4): Video (basic, effects, animation) · Color · Audio · Speed — and Text for titles
+  const tabs = c.type === "text" ? ["text", "video"] : p.assets[c.asset]?.kind === "audio" ? ["audio", "speed"] : ["video", "color", "audio", "speed"];
+  const want = tab === "effects" || tab === "motion" ? "video" : tab; const cur = tabs.includes(want) ? want : tabs[0];
   return (
     <section className="inspector" aria-label={t("insp.label")}>
       <div className="ihead"><h2 className="ns-h2">{c.type === "text" ? t("insp.text") : t("insp.clip")}</h2><span className="iname" dir="auto">{c.name || (c.type === "media" ? p.assets[c.asset]?.name : (c as TextClip).text)}</span>
@@ -51,6 +54,9 @@ export function Inspector() {
             <label className="ns-field"><span>{t("insp.blend")}</span><select className="ns-input" value={(c as MediaClip).blend} onChange={(e) => A.setProp("blend", e.target.value)}>{BLEND_MODES.map((b) => <option key={b} value={b}>{t("blend." + b)}</option>)}</select></label>
           </>}
           <KfList c={c} />
+          {c.type === "media" && <EffectsSection c={c} focus={tab === "effects"} />}
+          <span className="ns-lbl" id="isec-motion">{t("insp.animation")}</span>
+          <MotionTiles />
         </>}
         {cur === "speed" && c.type === "media" && <>
           <Slider label={t("insp.speed")} value={c.speed} min={0.1} max={10} step={0.05} fmt={(v) => v.toFixed(2) + "×"} onChange={(v) => { if (!editor.inTx) editor.begin("speed"); editor.live((q) => { const f = findClip(q, c.id); if (f && f.clip.type === "media") { const src = f.clip.dur * f.clip.speed; f.clip.speed = v; f.clip.dur = Math.max(0.1, src / v); } }); }} onCommit={A.live.end} testid="speed" />
@@ -68,7 +74,16 @@ export function Inspector() {
           {c.denoise && <p className="hint">{t("insp.denoiseHint")}</p>}
         </>}
         {cur === "color" && c.type === "media" && <ColorProps c={c} />}
-        {cur === "effects" && c.type === "media" && <>
+        {cur === "text" && c.type === "text" && <TextProps c={c} />}
+      </div>
+    </section>
+  );
+}
+function EffectsSection({ c, focus }: { c: MediaClip; focus: boolean }) {
+  const { t } = useTranslation(); const lang = useUI((s) => s.lang); const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => { if (focus) ref.current?.scrollIntoView({ block: "start", behavior: "smooth" }); }, [focus, c.effects.length]);
+  return (<>
+    <span className="ns-lbl" ref={ref} id="isec-fx">{t("insp.effects")}</span>
           {!c.effects.length && <p className="hint">{t("insp.noEffects")}</p>}
           {c.effects.map((e, i) => <div key={e.id} className="fxrow">
             <label className="row"><input type="checkbox" checked={e.enabled} onChange={(ev) => A.run("effect", (q) => { const f = findClip(q, c.id); if (f && f.clip.type === "media") f.clip.effects[i].enabled = ev.target.checked; })} /> {lang === "ar" ? EFFECTS.find((x) => x.id === e.type)?.ar : EFFECTS.find((x) => x.id === e.type)?.en}</label>
@@ -77,11 +92,7 @@ export function Inspector() {
             <Btn icon="trash" ghost danger label={t("insp.removeFx")} onClick={() => A.run("effect", (q) => { const f = findClip(q, c.id); if (f && f.clip.type === "media") f.clip.effects.splice(i, 1); })} />
           </div>)}
           <Btn icon="plus" onClick={() => ui.set({ rail: "effects", panelOpen: true })}>{t("insp.addFx")}</Btn>
-        </>}
-        {cur === "text" && c.type === "text" && <TextProps c={c} />}
-      </div>
-    </section>
-  );
+          </>);
 }
 function KfList({ c }: { c: Clip }) {
   const { t } = useTranslation(); const props = Object.entries(c.keyframes).filter(([, l]) => l && l.length);

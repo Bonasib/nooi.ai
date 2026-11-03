@@ -63,7 +63,7 @@ async def desktop(p):
     r = await E("""()=>({rail:[...document.querySelectorAll('.rail button')].map(b=>b.dataset.testid),logo:!!document.querySelector('.topbar .logo svg'),name:!!document.querySelector('.pname'),undo:!!document.querySelector('[data-testid=undo]'),
       k:!!document.querySelector('.kbtn'),crew:document.querySelectorAll('.crew i').length,fmt:!!document.querySelector('.fmt select'),exp:!!document.querySelector('[data-testid=export]'),
       areas:['.panel','.player','.inspector','.timeline'].map(s=>!!document.querySelector(s)),over:document.documentElement.scrollWidth-innerWidth,dir:document.documentElement.dir})""")
-    chk(f"{tag}: the workspace — top bar, seven rail tools, library · preview · inspector · timeline", r["rail"] == ["rail-media", "rail-audio", "rail-text", "rail-captions", "rail-effects", "rail-color", "rail-ai"] and r["logo"] and r["name"] and r["undo"] and r["k"] and r["crew"] == 4 and r["fmt"] and r["exp"] and all(r["areas"]) and r["over"] <= 1, r)
+    chk(f"{tag}: the workspace — top bar, the eight rail categories, library · preview · inspector · timeline", r["rail"] == ["rail-media", "rail-stock", "rail-audio", "rail-titles", "rail-transitions", "rail-effects", "rail-stickers", "rail-templates"] and r["logo"] and r["name"] and r["undo"] and r["k"] and r["crew"] == 4 and r["fmt"] and r["exp"] and all(r["areas"]) and r["over"] <= 1, r)
     # ---- media
     await pg.set_input_files('[data-testid="file-input"]', [D + "/a.webm", D + "/b.webm", D + "/v.wav", D + "/warm.cube"])
     await pg.wait_for_function(P + "&&Object.keys(" + P + ".assets).length===4", timeout=30000); await pg.wait_for_timeout(500)
@@ -103,16 +103,16 @@ async def desktop(p):
     pk = await E(TR, "V1"); chk(f"{tag}: ⌘K finds and runs Split", len(pk) == 3, pk)
     await pg.click('[data-testid="undo"]'); await pg.wait_for_timeout(100)
     # ---- text with fonts (Arabic)
-    await pg.click('[data-testid="rail-text"]'); await pg.click('[data-testid="add-text"]'); await pg.wait_for_timeout(200)
+    await pg.click('[data-testid="rail-titles"]'); await pg.click('[data-testid="add-text"]'); await pg.wait_for_timeout(200)
     await pg.fill('[data-testid="text-words"]', "مرحبا بالعالم"); await pg.locator('[data-testid="text-words"]').blur(); await pg.wait_for_timeout(200)
     await pg.click('.fontpick .ns-tile >> nth=1'); await pg.wait_for_timeout(200)
     r = await E("()=>{const c=" + P + ".tracks.flatMap(t=>t.clips).find(c=>c.type==='text');return{text:c.text,font:c.style.font,track:" + P + ".tracks.find(t=>t.clips.includes(c)).kind}}")
     chk(f"{tag}: a text (Arabic) on the text track, with a font picked from samples of its own words", r["text"] == "مرحبا بالعالم" and r["font"] == "Tajawal" and r["track"] == "text", r)
     # ---- transition, effect preview, keyframes, speed, colour, LUT, detach
     await E("()=>{const e=window.__studio.editor;e.select([" + P + ".tracks.find(t=>t.name==='V1').clips[0].id])}")
-    await pg.click('[data-testid="rail-effects"]'); await pg.click('.panel .subtabs button:has-text("Transitions")'); await pg.click('[data-testid="tr-wipeL"]'); await pg.wait_for_timeout(200)
+    await pg.click('[data-testid="rail-transitions"]'); await pg.click('[data-testid="tr-wipeL"]'); await pg.wait_for_timeout(200)
     chk(f"{tag}: a transition sits on the cut", await E("()=>" + P + ".transitions.map(x=>x.type)") == ["wipeL"])
-    await pg.click('.subtabs button >> nth=0'); await E("()=>{window.__studio.editor.select([]);}")
+    await pg.click('[data-testid="rail-effects"]'); await pg.click('.panel .subtabs button >> nth=0'); await E("()=>{window.__studio.editor.select([]);}")
     await E("()=>{}"); await pg.click('[data-testid="ruler"]', position={"x": 60, "y": 10}); await pg.wait_for_timeout(400)
     before = await E(PIX, [0.3, 0.6]); await pg.hover('[data-testid="fx-mono"]'); await pg.wait_for_timeout(500); grey = await E(PIX, [0.3, 0.6])
     tag_shown = await E("()=>!!document.querySelector('.pvtag')"); nfx = await E("()=>" + P + ".tracks.flatMap(t=>t.clips).filter(c=>c.type==='media').reduce((s,c)=>s+c.effects.length,0)")
@@ -129,12 +129,12 @@ async def desktop(p):
     for _ in range(10): await pg.keyboard.press("ArrowRight")
     await pg.keyboard.press("Tab")
     ex = await E("()=>" + P + ".tracks.find(t=>t.name==='V1').clips[0].color.exposure")
-    await pg.click('[data-testid="rail-color"]'); await pg.click('.panel .ns-btn.wide:has-text("warm")'); lut = await E("()=>{const c=" + P + ".tracks.find(t=>t.name==='V1').clips[0];return c.lut&&" + P + ".assets[c.lut.asset].name}")
+    await pg.click('[data-testid="rail-effects"]'); await pg.click('.panel .subtabs button:has-text("Filters & color")'); await pg.click('.panel .ns-btn.wide:has-text("warm")'); lut = await E("()=>{const c=" + P + ".tracks.find(t=>t.name==='V1').clips[0];return c.lut&&" + P + ".assets[c.lut.asset].name}")
     await pg.click('[data-testid="insp-audio"]'); await pg.click('[data-testid="detach"]'); await pg.wait_for_timeout(200)
     det = await E("()=>({muted:" + P + ".tracks.find(t=>t.name==='V1').clips[0].muted,audio:" + P + ".tracks.filter(t=>t.kind==='audio').flatMap(t=>t.clips).filter(c=>c.link).length})")
     chk(f"{tag}: exposure, a .cube LUT, and detach audio (the sound on its own track, the video muted)", ex > 0 and lut == "warm" and det == {"muted": True, "audio": 1}, [ex, lut, det])
     # ---- captions
-    await pg.click('[data-testid="rail-captions"]'); await pg.fill('.panel textarea', "One\nTwo"); await pg.click('[data-testid="cap-add"]')
+    await pg.click('[data-testid="rail-titles"]'); await pg.click('.panel .subtabs button:has-text("Captions")'); await pg.fill('.panel textarea', "One\nTwo"); await pg.click('[data-testid="cap-add"]')
     await pg.set_input_files('[data-testid="srt-input"]', D + "/subs.srt"); await pg.wait_for_timeout(300)
     caps = await E("()=>" + P + ".tracks.filter(t=>t.kind==='text').flatMap(t=>t.clips).map(c=>c.text)")
     chk(f"{tag}: captions from lines and from an .srt (Arabic too)", "One" in caps and "Two" in caps and "مرحبا" in caps and "Hello" in caps, caps)

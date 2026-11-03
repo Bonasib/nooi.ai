@@ -1,15 +1,16 @@
 // Keyboard (computer): J K L, Space, S split, Delete / Shift+Delete, Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y, Ctrl+C/V/D, M marker,
-// ← → a frame, Shift+← → a second, Home / End, + / − zoom, V B N Y U tools, Ctrl+K commands, Ctrl+E export, Ctrl+S save.
+// ← → a frame, Shift+← → a second, Home / End, + / − zoom, V B N Y U tools, Ctrl+K commands, Ctrl+E export, Ctrl+S save, Ctrl+Shift+S a .nooi file.
 import { duration } from "@nooi/editor-core";
 import { editor, playerRef, saveCloud, toast, ui, autosave } from "./state";
 import * as A from "./actions";
 import i18n from "./i18n";
+import { saveNooi } from "./ui/Shell";
 
 let shuttle = 0;
 export function installShortcuts() {
   window.addEventListener("keydown", (e) => {
     const el = e.target as HTMLElement; if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) && !(e.key === "Escape")) return;
-    if (ui.get().exportOpen || ui.get().paletteOpen || ui.get().projectsOpen) { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); ui.set({ paletteOpen: false }); } return; }
+    if (ui.get().exportOpen || ui.get().paletteOpen || ui.get().projectsOpen || ui.get().settingsOpen || ui.get().reframeOpen) { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); ui.set({ paletteOpen: false }); } return; }
     const pl = playerRef.current, mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
     const fps = editor.project.fps;
     const done = () => e.preventDefault();
@@ -17,6 +18,7 @@ export function installShortcuts() {
     if (mod && k === "y") { done(); A.redo(); return; }
     if (mod && k === "k") { done(); ui.set({ paletteOpen: true }); return; }
     if (mod && k === "e") { done(); ui.set({ exportOpen: true }); return; }
+    if (mod && e.shiftKey && k === "s") { done(); saveNooi(); return; }
     if (mod && k === "s") { done(); autosave(); saveCloud().then((ok) => toast(i18n.t(ok ? "save.saved" : "save.local"), ok ? "ok" : "info")); return; }
     if (mod && k === "c") { A.copy(); return; }
     if (mod && k === "v") { done(); A.paste(); return; }

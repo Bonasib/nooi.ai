@@ -198,3 +198,26 @@ Apple developer accounts, plus a signed release build (`./gradlew bundleRelease`
   encoder.
 - **Phase 2** (AI in the editor: auto-captions with speech recognition, background removal, smart cut, voice tools) and
   **Phase 3** (teams, templates, marketplace) are next, per the plan.
+
+## The studio's frame (v223 — Step 1 of the owner's spec, see `docs/STUDIO_PLAN.md`)
+
+- **Look:** "Nooi Obsidian". Dark panels, an Electric Cyan accent (`#00F0FF`), the AI gradient on AI tools, a red playhead, and the Inter and JetBrains Mono fonts. The tokens live in `studio/packages/ui/src/tokens.css`.
+- **Header (40 px):**
+  - logo;
+  - **File** menu: new, open, project settings, save or open a `.nooi` file, ⌘K, Export;
+  - Cloud: the saved state and Save now;
+  - workspaces: Classic edit, Vertical short-form, Colorist, Audio;
+  - **Nooi Mate**: a 340 px drawer that turns words into steps you approve, in English or Arabic, on the device, with no credits;
+  - format, credits, theme, language, projects, Export.
+- **Dock (8):** Media · Stock & AI (make with AI, AI tools) · Audio · Titles (text, captions) · Transitions · Effects (effects, filters & color, weather & light, erase & blur, motion) · Stickers (+ logo) · Templates (split screen 2–9, instant montage).
+- **Timeline toolbar:**
+  - undo / redo and the history list;
+  - split, delete, ripple delete;
+  - crop & reframe (fit / fill, Ken Burns);
+  - the speed menu, color, the AI Hub (320 × 280);
+  - keyframe ◆, voice-over with 3-2-1;
+  - duplicate, freeze, detach, marker;
+  - tools;
+  - render status (plus a cache line over the ruler);
+  - add a track, snap, zoom.
+- **Clip settings:** Video (basic · effects · animation) · Color · Audio · Speed, plus Text for titles.

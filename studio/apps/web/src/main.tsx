@@ -7,7 +7,8 @@ import { emptyProject, migrate, mediaClip, addClip } from "@nooi/editor-core";
 import i18n from "./i18n";
 import { App } from "./App";
 import { api } from "./api";
-import { editor, openProject, toast, autosave } from "./state";
+import { editor, openProject, toast, autosave, playerRef } from "./state";
+import * as A from "./actions";
 import { getJSON } from "./media/idb";
 import { installShortcuts } from "./shortcuts";
 import { hasLegacy, importLegacy } from "./legacy";
@@ -53,4 +54,4 @@ boot();
 if ("serviceWorker" in navigator && location.protocol === "https:" && !NATIVE && location.pathname.startsWith("/studio/")) navigator.serviceWorker.register("/studio/sw.js", { scope: "/studio/" }).catch(() => undefined);
 window.addEventListener("beforeunload", (e) => { if (editor.dirty) { autosave(); e.preventDefault(); } });
 // for tests and the agents (the same named commands the AI prompt edit will use)
-(window as unknown as Record<string, unknown>).__studio = { editor, api };
+(window as unknown as Record<string, unknown>).__studio = { editor, api, actions: A, get player() { return playerRef.current; } };

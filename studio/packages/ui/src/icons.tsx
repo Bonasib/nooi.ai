@@ -2,6 +2,18 @@
 import type { CSSProperties } from "react";
 
 const P: Record<string, string> = {
+  settings: "M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M19.4 13.5l1.6 1.2-2 3.4-1.9-.7a7 7 0 0 1-1.8 1l-.3 2h-4l-.3-2a7 7 0 0 1-1.8-1l-1.9.7-2-3.4 1.6-1.2a7 7 0 0 1 0-3L3 9.3l2-3.4 1.9.7a7 7 0 0 1 1.8-1l.3-2h4l.3 2a7 7 0 0 1 1.8 1l1.9-.7 2 3.4-1.6 1.2a7 7 0 0 1 0 3z",
+  download: "M12 4v11 M7 10l5 5 5-5 M5 20h14",
+  phone: "M8 3h8a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M11 18h2",
+  cut: "M6 6a2.5 2.5 0 1 0 0 .01 M6 18a2.5 2.5 0 1 0 0 .01 M8 7.5L20 18 M8 16.5L20 6",
+  sticker: "M5 4h10l4 4v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M15 4v4h4 M8 13.5c1 1.4 2.3 2 4 2s3-.6 4-2 M9 10h.01 M15 10h.01",
+  template: "M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z",
+  chat: "M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z M8 10h8 M8 13h5",
+  history: "M4 12a8 8 0 1 0 2.3-5.6 M4 4v4h4 M12 8v4l3 2",
+  mic: "M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z M5 11a7 7 0 0 0 14 0 M12 18v3",
+  chevron: "M6 9l6 6 6-6",
+  layout: "M4 5h16v14H4z M4 10h16 M10 10v9",
+  stock: "M4 6h16v12H4z M4 9h16 M8 6v3 M16 6v3 M12 12l1 2 2 .3-1.5 1.4.4 2-1.9-1-1.9 1 .4-2L9 14.3l2-.3z",
   media: "M4 5h16v14H4z M4 15l4-4 4 4 3-3 5 5 M15 9.5a1.5 1.5 0 1 0 0-.01",
   audio: "M9 18V6l10-2v12 M9 18a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z M19 16a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z",
   text: "M5 6V4h14v2 M12 4v16 M9 20h6",
@@ -36,7 +48,7 @@ const P: Record<string, string> = {
   home: "M3 11l9-7 9 7 M5 10v10h14V10",
 };
 export type IconName = keyof typeof P | string;
-export function Icon({ name, size = 16, style, label }: { name: IconName; size?: 14 | 16 | 20; style?: CSSProperties; label?: string }) {
+export function Icon({ name, size = 16, style, label }: { name: IconName; size?: 14 | 16 | 18 | 20 | 22 | 24; style?: CSSProperties; label?: string }) {
   const d = P[name] || P.sparkle;
   return (
     <svg className={"ns-ic" + (size !== 16 ? " s" + size : "")} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"

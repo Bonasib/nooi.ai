@@ -1,32 +1,38 @@
-/* nooi Studio — design tokens (nooi.ai look: deep graphite, lime accent; corners 8/12/16; titles 22/16/14; icons 14/16/20) */
+/* nooi Studio — design tokens: "Nooi Obsidian" (the owner's master spec §2.1): canvas #0F1014, panels #181A20, tracks #14161B with
+   #252830 lines, Electric Cyan #00F0FF accent, the Nooi Intelligence gradient for AI, crimson playhead, render-cache line colours;
+   Inter for the interface, JetBrains Mono for timecode and values (Arabic: IBM Plex Sans Arabic). Corners 8/12/16.
+   (The variable names --lime / --on-lime are kept so every part follows the accent; their value is the cyan now.) */
 :root, :root[data-theme="dark"] {
-  --bg: #0b0c0f; --panel: #141519; --panel2: #1c1d22; --panel3: #26282e; --line: #24262c; --line2: #33363d;
-  --text: #f1f2f4; --mute: #a3a7b0; --dim: #6d727c; --lime: #d9f43b; --lime-ink: #cfe13e; --on-lime: #0b0c0e;
-  --red: #ff5a5f; --amber: #f5a524; --teal: #2dd4a8; --blue: #4dc3ff; --violet: #c38bff; --pink: #ff6b9a;
-  --v-track: #3a5bd9; --a-track: #1f8a70; --t-track: #a3792c;
-  --r1: 8px; --r2: 12px; --r3: 16px;
-  --f: "Geist", "IBM Plex Sans Arabic", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --bg: #0F1014; --panel: #181A20; --panel2: #1F2229; --panel3: #2A2E37; --line: #252830; --line2: #333742; --track: #14161B;
+  --text: #F3F4F6; --mute: #9CA3AF; --dim: #6B7280; --off: #4B5563;
+  --lime: #00F0FF; --lime-ink: #00F0FF; --on-lime: #0F1014; --accent: #00F0FF;
+  --ai: linear-gradient(135deg, #00F0FF 0%, #7B61FF 50%, #FF3D9A 100%);
+  --playhead: #FF3B30; --cache-red: #FF453A; --cache-amber: #FFD60A; --cache-green: #30D158;
+  --red: #FF453A; --amber: #FFD60A; --teal: #30D158; --blue: #4dc3ff; --violet: #7B61FF; --pink: #FF3D9A;
+  --v-track: #2f4fd0; --a-track: #157a62; --t-track: #8a5fd6;
+  --r1: 6px; --r2: 10px; --r3: 14px;
+  --f: "Inter", "IBM Plex Sans Arabic", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
   color-scheme: dark;
 }
 :root[data-theme="light"] {
   --bg: #f3f4f0; --panel: #ffffff; --panel2: #f1f3ee; --panel3: #e6e9e1; --line: #dcdfd7; --line2: #cbd0c4;
-  --text: #141713; --mute: #5d645b; --dim: #8a9187; --lime: #c5e02a; --lime-ink: #3e7b22; --on-lime: #10130a;
+  --text: #141713; --mute: #5d645b; --dim: #8a9187; --lime: #00B8C9; --lime-ink: #0E7C8A; --on-lime: #ffffff; --accent: #00B8C9; --track: #eef0f3; --off: #9aa1ab;
   --shadow: 0 12px 32px rgba(20, 30, 10, 0.14);
   color-scheme: light;
 }
 @media (prefers-color-scheme: light) { :root:not([data-theme]) { --bg: #f3f4f0; --panel: #ffffff; --panel2: #f1f3ee; --panel3: #e6e9e1; --line: #dcdfd7; --line2: #cbd0c4; --text: #141713; --mute: #5d645b; --dim: #8a9187; --lime-ink: #3e7b22; color-scheme: light; } }
 *, *::before, *::after { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }
-body { background: var(--bg); color: var(--text); font: 13px/1.4 var(--f); -webkit-font-smoothing: antialiased; overflow: hidden; }
+body { background: var(--bg); color: var(--text); font: 12.5px/1.4 var(--f); -webkit-font-smoothing: antialiased; overflow: hidden; }
 button, input, select, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
 .ns-h1 { font-size: 22px; font-weight: 700; margin: 0; }
 .ns-h2 { font-size: 16px; font-weight: 700; margin: 0; }
 .ns-h3 { font-size: 14px; font-weight: 600; margin: 0; }
 .ns-ic { width: 16px; height: 16px; flex: none; }
-.ns-ic.s14 { width: 14px; height: 14px; } .ns-ic.s20 { width: 20px; height: 20px; }
+.ns-ic.s14 { width: 14px; height: 14px; } .ns-ic.s18 { width: 18px; height: 18px; } .ns-ic.s20 { width: 20px; height: 20px; } .ns-ic.s22 { width: 22px; height: 22px; } .ns-ic.s24 { width: 24px; height: 24px; }
 .ns-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 32px; padding: 0 12px; border: 1px solid var(--line2); border-radius: var(--r1); background: var(--panel2); color: var(--text); cursor: pointer; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
 .ns-btn:hover:not(:disabled) { border-color: var(--dim); }
 .ns-btn:disabled { opacity: 0.45; cursor: default; }

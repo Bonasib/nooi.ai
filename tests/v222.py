@@ -46,7 +46,7 @@ async def desktop(p):
     # effects groups
     await pg.click('[data-testid="rail-effects"]'); await pg.wait_for_timeout(200)
     tabs = await E("()=>[...document.querySelectorAll('.panel .subtabs button')].map(b=>b.textContent)")
-    chk("Effects has Effects · Weather & light · Erase & blur · Motion · Transitions", tabs == ["Effects", "Weather & light", "Erase & blur", "Motion", "Transitions"], tabs)
+    chk("Effects has Effects · Filters & color · Weather & light · Erase & blur · Motion", tabs == ["Effects", "Filters & color", "Weather & light", "Erase & blur", "Motion"], tabs)
     await pg.click('.panel .subtabs button:has-text("Weather & light")'); n_w = await E("()=>document.querySelectorAll('.panel [data-testid^=fx-]').length")
     await pg.evaluate("()=>window.__studio.editor.select([])"); await pg.click('[data-testid="play"]'); await pg.wait_for_timeout(300); await pg.click('[data-testid="play"]'); await pg.wait_for_timeout(500)
     px0 = [await E(PIX, [x / 10, y / 10]) for x in (2, 5, 8) for y in (2, 5, 8)]
@@ -69,7 +69,7 @@ async def desktop(p):
     kf = await E("()=>" + P + ".tracks.flatMap(t=>t.clips)[0].keyframes.scale")
     chk("Motion presets: 13; Slow zoom in writes scale keyframes from 1 to 1.25", n_m == 13 and kf and len(kf) == 2 and kf[0]["v"] == 1 and abs(kf[1]["v"] - 1.25) < 1e-6, [n_m, kf])
     # stickers, logo, sound effects
-    await pg.click('[data-testid="rail-text"]'); await pg.click('.panel .subtabs button:has-text("Stickers")'); n_s = await E("()=>document.querySelectorAll('.panel [data-testid^=stk-]').length")
+    await pg.click('[data-testid="rail-stickers"]'); n_s = await E("()=>document.querySelectorAll('.panel [data-testid^=stk-]').length")
     await E("()=>window.__studio.editor.select([])"); await pg.click('[data-testid="stk-star"]'); await pg.wait_for_timeout(1500)
     r = await E(CLIPS); s = [c for c in r if c["tr"] == "V2" and c["a"] == "image"]
     await pg.click('[data-testid="ruler"]', position={"x": 60 * 1.2, "y": 10}); await pg.wait_for_timeout(700)

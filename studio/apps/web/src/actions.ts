@@ -131,3 +131,40 @@ export function placeCorner(corner: "tl" | "tr" | "bl" | "br") {
   const c = sel1(); if (c?.type !== "media") { toast(t("toast.pickClip"), "info"); return; }
   run("corner", (p) => { const f = C.findClip(p, c.id); if (!f || f.clip.type !== "media") return; const a = p.assets[f.clip.asset]; const s = f.clip.transform.scale < 0.6 ? f.clip.transform.scale : 0.18; Object.assign(f.clip.transform, { scale: s }, cornerOf(p, a || {}, corner, s)); });
 }
+
+// a split-screen collage: the picked video / picture clips (or the newest in the library) each fill a cell — cropped to the cell's
+// shape, never stretched — on tracks of their own, from the playhead, as long as the shortest
+export function splitScreen(cols: number, rows: number) {
+  const n = cols * rows, p0 = editor.project;
+  const picked = selected().filter((c) => c.type === "media" && ["video", "image"].includes(p0.assets[c.asset]?.kind || "")) as MediaClip[];
+  const assets = picked.length ? picked.map((c) => p0.assets[c.asset]) : Object.values(p0.assets).filter((a) => a.kind === "video" || a.kind === "image").sort((a, b) => b.createdAt - a.createdAt);
+  const use = assets.slice(0, n); if (!use.length) { toast(t("tpl.needClips"), "info"); return; }
+  const start = now(), dur = Math.max(1, Math.min(...use.map((a) => (a.kind === "image" ? 5 : a.duration || 5))));
+  const ids = run("split screen", (p) => {
+    if (picked.length) C.deleteClips(p, picked.map((c) => c.id), false);
+    const W = p.width, H = p.height, cwF = 1 / cols, chF = 1 / rows, A = (cwF * W) / (chF * H);
+    return use.map((a, i) => {
+      const tr = C.addTrack(p, "video", 0); const c = C.addAssetClip(p, p.assets[a.id] || a, start, tr.id) as MediaClip; c.dur = dur;
+      const w = a.w || 1920, h = a.h || 1080; let l = 0, tp = 0;
+      if (w / h > A) l = (1 - (h * A) / w) / 2; else tp = (1 - w / A / h) / 2;
+      const cw = w * (1 - 2 * l), ch = h * (1 - 2 * tp), k = Math.min(W / cw, H / ch);
+      const col = i % cols, row = Math.floor(i / cols);
+      c.transform = { ...c.transform, crop: [l, tp, l, tp], scale: (cwF * W) / (cw * k), x: (col + 0.5) * cwF - 0.5, y: (row + 0.5) * chF - 0.5 };
+      return c.id;
+    });
+  });
+  editor.select(ids); playerRef.current?.resize();
+  if (use.length < n) toast(t("tpl.more", { n: n - use.length }), "info");
+}
+// Instant mode: the library's videos and pictures one after another on V1 (3 s each) with cross dissolves
+export function instantMontage() {
+  const list = Object.values(editor.project.assets).filter((a) => a.kind === "video" || a.kind === "image").sort((a, b) => a.createdAt - b.createdAt).slice(0, 20);
+  if (list.length < 2) { toast(t("tpl.needClips"), "info"); return; }
+  const ids = run("instant montage", (p) => {
+    const at0 = C.mainTrackEnd(p, "video"); let at = at0; const out: string[] = [];
+    for (const a of list) { const c = C.addAssetClip(p, p.assets[a.id], at, null) as MediaClip; c.dur = Math.min(3, a.kind === "image" ? 3 : a.duration || 3); at = c.start + c.dur; out.push(c.id); }
+    for (let i = 0; i < out.length - 1; i++) C.addTransition(p, out[i], "fade", 0.5);
+    return out;
+  });
+  editor.select([]); toast(t("tpl.montaged", { n: ids.length }), "ok");
+}

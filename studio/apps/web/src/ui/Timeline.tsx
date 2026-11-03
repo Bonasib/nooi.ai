@@ -6,8 +6,16 @@ import * as C from "@nooi/editor-core";
 import type { Clip, MediaClip, Project, Track } from "@nooi/editor-core";
 import { editor, playerRef, toast, ui, useProject, useUI, autosave, markPick } from "../state";
 import type { Tool } from "../state";
+import i18n from "../i18n";
 import * as A from "../actions";
+import { AiHub, HistoryMenu, RenderStatus, SpeedMenu, VoiceButton } from "./Shell";
 
+// ◆ on the toolbar: a keyframe for position, size, turn and opacity at the playhead (one undo step); again on the same spot removes them
+function keyAll() {
+  const c = A.sel1(); if (!c) return; const local = A.now() - c.start; if (local < 0 || local > c.dur) { toast(i18n.t("toast.playheadOutside"), "info"); return; }
+  const props = ["x", "y", "scale", "rotation", "opacity"] as const; const has = props.every((k) => (c.keyframes[k] || []).some((x) => Math.abs(x.t - local) < 1e-3));
+  A.run("keyframe", (p) => { const f = C.findClip(p, c.id); if (!f) return; for (const k of props) f.clip.keyframes = has ? C.removeKeyframe(f.clip.keyframes, k, local) : C.setKeyframe(f.clip.keyframes, k, local, C.propAt(f.clip, k, local)); });
+}
 const HEAD = 150, RULER = 26, LANE: Record<Track["kind"], number> = { video: 56, audio: 44, text: 34 };
 export function Timeline() {
   const { t } = useTranslation(); const p = useProject(); const zoom = useUI((s) => s.zoom); const tool = useUI((s) => s.tool); const snapOn = useUI((s) => s.snap);
@@ -73,22 +81,34 @@ export function Timeline() {
   const tools: { v: Tool; label: string }[] = [{ v: "select", label: t("tool.select") }, { v: "ripple", label: t("tool.ripple") }, { v: "roll", label: t("tool.roll") }, { v: "slip", label: t("tool.slip") }, { v: "slide", label: t("tool.slide") }];
   return (
     <section className="timeline" aria-label={t("tl.label")}>
-      <div className="tlbar">
+      <div className="tlbar" role="toolbar" aria-label={t("tl.tools")}>
+        <Btn icon="undo" label={t("act.undo")} kbd="Ctrl+Z" onClick={A.undo} disabled={!editor.canUndo} testid="undo" />
+        <Btn icon="redo" label={t("act.redo")} kbd="Ctrl+Shift+Z" onClick={A.redo} disabled={!editor.canRedo} testid="redo" />
+        <HistoryMenu />
+        <span className="sep" />
         <Btn icon="split" label={t("act.split")} kbd="S" onClick={A.split} testid="split" />
         <Btn icon="trash" label={t("act.delete")} kbd="Del" onClick={() => A.del(false)} disabled={!editor.selection.length} testid="delete" />
         <Btn icon="ripple" label={t("act.rippleDelete")} kbd="Shift+Del" onClick={() => A.del(true)} disabled={!editor.selection.length} testid="ripple-delete" />
+        <Btn icon="crop" label={t("rf.title")} onClick={() => ui.set({ reframeOpen: true })} disabled={!editor.selection.length} testid="reframe-open" />
+        <SpeedMenu />
+        <Btn icon="color" label={t("insp.color")} onClick={() => ui.set({ inspector: "color" })} disabled={!editor.selection.length} testid="tb-color" />
+        <AiHub />
+        <Btn icon="keyframe" label={t("tb.keyframe")} onClick={keyAll} disabled={editor.selection.length !== 1} testid="tb-keyframe" />
+        <VoiceButton />
+        <span className="sep" />
         <Btn icon="copy" label={t("act.duplicate")} kbd="Ctrl+D" onClick={A.duplicate} disabled={!editor.selection.length} />
         <Btn icon="freeze" label={t("insp.freeze")} onClick={A.freeze} disabled={!editor.selection.length} />
         <Btn icon="detach" label={t("insp.detach")} onClick={A.detach} disabled={!editor.selection.length} />
         <Btn icon="marker" label={t("act.marker")} kbd="M" onClick={A.marker} testid="marker" />
         <span className="sep" />
         <Seg label={t("tool.label")} value={tool} onChange={(v) => ui.set({ tool: v })} options={tools} />
-        <Btn icon="magnet" label={t("tl.snap")} pressed={snapOn} onClick={() => ui.set({ snap: !snapOn })} testid="snap" />
         <span className="sp" />
+        <RenderStatus />
         <Btn icon="plus" label={t("tl.addVideo")} onClick={() => A.run("track", (q) => C.addTrack(q, "video"))}>V</Btn>
         <Btn icon="plus" label={t("tl.addAudio")} onClick={() => A.run("track", (q) => C.addTrack(q, "audio"))}>A</Btn>
         <Btn icon="plus" label={t("tl.addText")} onClick={() => A.run("track", (q) => C.addTrack(q, "text", 0))}>T</Btn>
-        <input className="zoomr" type="range" min={4} max={600} value={zoom} onChange={(e) => ui.set({ zoom: +e.target.value })} aria-label={t("tl.zoom")} />
+        <Btn icon="magnet" label={t("tl.snap")} pressed={snapOn} onClick={() => ui.set({ snap: !snapOn })} testid="snap" />
+        <span className="zoomgrp"><Btn icon="minus" label={t("tl.zoomOut")} onClick={() => A.zoom(1 / 1.25)} /><input className="zoomr" type="range" min={4} max={600} value={zoom} onChange={(e) => ui.set({ zoom: +e.target.value })} aria-label={t("tl.zoom")} /><Btn icon="plus" label={t("tl.zoomIn")} onClick={() => A.zoom(1.25)} /><b dir="ltr">{Math.round((zoom / 60) * 100)}%</b></span>
       </div>
       <div className="tlgrid" dir="ltr">
         <div className="theads" style={{ width: HEAD }}>
@@ -135,6 +155,8 @@ function Ruler({ p, zoom, width, onDown }: { p: Project; zoom: number; width: nu
   return (
     <div className="ruler" style={{ height: RULER }} onPointerDown={onDown} data-testid="ruler">
       {ticks.map((x) => <span key={x} style={{ left: x * zoom }}>{Number.isInteger(x) ? (x >= 60 ? Math.floor(x / 60) + ":" + String(x % 60).padStart(2, "0") : x + "s") : ""}</span>)}
+      {p.tracks.filter((x) => x.kind === "video").flatMap((x) => x.clips).map((c) => { const heavy = (c.type === "media" && (c.effects.length > 0 || !!c.lut)) || p.transitions.some((x) => x.a === c.id || x.b === c.id);
+        return <i key={"c" + c.id} className={"cache " + (heavy ? "r" : "g")} style={{ left: c.start * zoom, width: c.dur * zoom }} />; })}
       {p.beats.map((b, i) => <i key={"b" + i} className="beat" style={{ left: b * zoom }} />)}
       {p.markers.map((m) => <button key={m.id} type="button" className="mk" style={{ left: m.t * zoom, background: m.color }} title={m.name || C.uid("").slice(0, 0) + m.t.toFixed(2) + "s"}
         onPointerDown={(e) => { e.stopPropagation(); const x0 = e.clientX, t0 = m.t; let mv0 = false; editor.begin("marker");

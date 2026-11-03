@@ -9,6 +9,7 @@ import { ExportDialog, Palette, Projects, Toasts } from "./ui/Dialogs";
 import { ui, useUI, editor, pickedNow, useProject } from "./state";
 import { Btn } from "@nooi/ui";
 import { ClipBar } from "./ui/ClipBar";
+import { MateDrawer, RecOverlay, ReframeDialog, SettingsDialog } from "./ui/Shell";
 
 // One editor, three arrangements of the same parts:
 //  · full (computers and tablets): rail · library · preview · inspector over the timeline — on a tablet held upright the same
@@ -23,7 +24,7 @@ type Mode = "full" | "compact" | "phone";
 const modeNow = (): Mode => (matchMedia(phoneQ).matches ? "phone" : matchMedia(compactQ).matches ? "compact" : "full");
 
 export function App() {
-  const { t } = useTranslation(); const exp = useUI((s) => s.exportOpen); const pal = useUI((s) => s.paletteOpen); const prj = useUI((s) => s.projectsOpen); const open = useUI((s) => s.panelOpen);
+  const { t } = useTranslation(); const exp = useUI((s) => s.exportOpen); const pal = useUI((s) => s.paletteOpen); const prj = useUI((s) => s.projectsOpen); const open = useUI((s) => s.panelOpen); const ws = useUI((s) => s.workspace); const setOpen = useUI((s) => s.settingsOpen); const rf = useUI((s) => s.reframeOpen); const mate = useUI((s) => s.mate);
   const [mode, setMode] = useState<Mode>(modeNow);
   const [insp, setInsp] = useState(false);
   useEffect(() => {
@@ -39,7 +40,7 @@ export function App() {
   useProject();   // (re-render when the selection changes: the phone's bottom bar follows it)
   const phoneSel = mode === "phone" && editor.selection.length === 1;
   return (
-    <div className={"app " + mode + (mode === "phone" && sheet ? " sheeted" : "")} data-testid="studio">
+    <div className={"app " + mode + " ws-" + ws + (mate ? " mated" : "") + (mode === "phone" && sheet ? " sheeted" : "")} data-testid="studio">
       <TopBar />
       {mode === "phone" ? (<>
         <main className="mmain">
@@ -68,7 +69,8 @@ export function App() {
           <Timeline />
         </main>
       )}
-      {exp && <ExportDialog />}{pal && <Palette />}{prj && <Projects />}
+      {exp && <ExportDialog />}{pal && <Palette />}{prj && <Projects />}{setOpen && <SettingsDialog />}{rf && <ReframeDialog />}
+      <MateDrawer /><RecOverlay />
       <Toasts />
     </div>
   );

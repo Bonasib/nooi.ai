@@ -10,11 +10,12 @@ import type { Rail } from "../state";
 import { assetFromJob, decodeSound, fileOf, importFiles, monoOf, uploadAsset } from "../media/library";
 import { api } from "../api";
 import * as A from "../actions";
-import { StickersPanel, LogoPanel, SfxPanel, EffectTiles, MotionTiles } from "./Extras";
+import { StickersPanel, LogoPanel, SfxPanel, EffectTiles, MotionTiles, AiGenPanel, TemplatesPanel } from "./Extras";
 import { AIPanel } from "./AIPanel";
 import { CaptionsPanel } from "./Captions";
+import { voiceOver } from "./Shell";
 
-export const RAILS: [Rail, string][] = [["media", "media"], ["audio", "audio"], ["text", "text"], ["captions", "captions"], ["effects", "effects"], ["color", "color"], ["ai", "ai"]];
+export const RAILS: [Rail, string][] = [["media", "media"], ["stock", "stock"], ["audio", "audio"], ["titles", "text"], ["transitions", "transitions"], ["effects", "effects"], ["stickers", "sticker"], ["templates", "template"]];
 export function RailBar({ mobile, toggle }: { mobile?: boolean; toggle?: boolean }) {
   const { t } = useTranslation(); const rail = useUI((s) => s.rail); const open = useUI((s) => s.panelOpen);
   return (
@@ -33,8 +34,8 @@ export function Panel() {
     <section className="panel" aria-label={t("rail." + rail)}>
       <h2 className="ns-h2 phead">{t("rail." + rail)}</h2>
       <div className="pbody">
-        {rail === "media" && <MediaPanel />}{rail === "audio" && <AudioTabs />}{rail === "text" && <TextTabs />}
-        {rail === "captions" && <CaptionsPanel />}{rail === "effects" && <EffectsPanel />}{rail === "color" && <ColorPanel />}{rail === "ai" && <AIPanel />}
+        {rail === "media" && <MediaPanel />}{rail === "stock" && <StockTabs />}{rail === "audio" && <AudioTabs />}{rail === "titles" && <TitleTabs />}
+        {rail === "transitions" && <TransitionsPanel />}{rail === "effects" && <EffectsPanel />}{rail === "stickers" && <StickerTabs />}{rail === "templates" && <TemplatesPanel />}
       </div>
     </section>
   );
@@ -127,17 +128,8 @@ export const fmt = (s: number) => { const m = Math.floor(s / 60), x = Math.floor
 
 // ---------------- Audio: the sounds you added, a voice-over, ducking, beats
 function AudioPanel() {
-  const { t } = useTranslation(); const p = useProject(); const [rec, setRec] = useState<MediaRecorder | null>(null);
+  const { t } = useTranslation(); const p = useProject(); const rec = useUI((s) => s.rec);
   const sounds = Object.values(p.assets).filter((a) => a.kind === "audio");
-  const record = async () => {
-    if (rec) { rec.stop(); return; }
-    try {
-      const s = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); const mr = new MediaRecorder(s); const parts: Blob[] = []; const at = A.now();
-      mr.ondataavailable = (e) => parts.push(e.data); mr.onstop = async () => { s.getTracks().forEach((x) => x.stop()); setRec(null); const f = new File(parts, t("audio.voiceName") + ".webm", { type: mr.mimeType || "audio/webm" });
-        const r = await importFiles([f]); if (r.assets[0]) { A.addAssets(r.assets); A.addAsset(editor.project.assets[r.assets[0].id], at); } };
-      mr.start(); setRec(mr); playerRef.current?.play();
-    } catch { toast(t("audio.noMic"), "warn"); }
-  };
   const findBeats = async () => {
     const c = A.sel1(); const a = c?.type === "media" ? p.assets[c.asset] : sounds[0]; if (!a) { toast(t("audio.pickMusic"), "info"); return; }
     const b = await fileOf(a); const ab = b && await decodeSound(b); if (!ab) { toast(t("audio.cantRead"), "warn"); return; }
@@ -146,7 +138,7 @@ function AudioPanel() {
     toast(t("audio.beats", { n: raw.length }), "ok");
   };
   return (<>
-    <div className="addrow"><Btn icon={rec ? "pause" : "audio"} pressed={!!rec} onClick={record} testid="voiceover">{rec ? t("audio.stop") : t("audio.voiceover")}</Btn><Btn icon="beat" onClick={findBeats} testid="beats">{t("audio.findBeats")}</Btn></div>
+    <div className="addrow"><Btn icon={rec === "rec" ? "pause" : "mic"} pressed={rec !== "idle"} onClick={voiceOver} testid="voiceover">{rec === "rec" ? t("audio.stop") : t("audio.voiceover")}</Btn><Btn icon="beat" onClick={findBeats} testid="beats">{t("audio.findBeats")}</Btn></div>
     <span className="ns-lbl">{t("audio.ducking")}</span>
     <label className="row"><input type="checkbox" checked={p.ducking.enabled} onChange={(e) => A.run("ducking", (d) => { d.ducking.enabled = e.target.checked; if (!d.ducking.voiceTracks.length) { const v = d.tracks.filter((x) => x.kind === "audio")[1] || d.tracks.find((x) => x.kind === "audio"); if (v) d.ducking.voiceTracks = [v.id]; } })} /> {t("audio.duckOn")}</label>
     {p.ducking.enabled && <>
@@ -178,17 +170,22 @@ function TextPanel() {
 // ---------------- Effects (+ transitions): see one on the preview by pointing at it; tap to add
 // Audio: music & voice · sound effects;  Text: text · stickers & graphics · logo
 function AudioTabs() { const sub = useUI((s) => s.sub.audio) || "audio"; return (<><Sub rail="audio" tabs={["audio", "sfx"]} />{sub === "sfx" ? <SfxPanel /> : <AudioPanel />}</>); }
-function TextTabs() { const sub = useUI((s) => s.sub.text) || "text"; return (<><Sub rail="text" tabs={["text", "stickers", "logo"]} />{sub === "stickers" ? <StickersPanel /> : sub === "logo" ? <LogoPanel /> : <TextPanel />}</>); }
+function TitleTabs() { const sub = useUI((s) => s.sub.titles) || "text"; return (<><Sub rail="titles" tabs={["text", "captions"]} />{sub === "captions" ? <CaptionsPanel /> : <TextPanel />}</>); }
+function StickerTabs() { const sub = useUI((s) => s.sub.stickers) || "stickers"; return (<><Sub rail="stickers" tabs={["stickers", "logo"]} />{sub === "logo" ? <LogoPanel /> : <StickersPanel />}</>); }
+function StockTabs() { const sub = useUI((s) => s.sub.stock) || "aigen"; return (<><Sub rail="stock" tabs={["aigen", "aitools"]} />{sub === "aitools" ? <AIPanel /> : <AiGenPanel />}</>); }
 function EffectsPanel() {
   const { t } = useTranslation(); const sub = useUI((s) => s.sub.effects) || "effects"; const lang = useUI((s) => s.lang);
   const hover = (id: string | null) => ui.set({ preview: id });
-  if (sub !== "transitions") return (<>
-    <Sub rail="effects" tabs={["effects", "weather", "erase", "motion", "transitions"]} />
-    <p className="hint">{t("fx.hint." + sub)}</p>
-    {sub === "motion" ? <MotionTiles /> : <EffectTiles group={sub} />}
-  </>);
+  void hover; void lang;
   return (<>
-    <Sub rail="effects" tabs={["effects", "weather", "erase", "motion", "transitions"]} />
+    <Sub rail="effects" tabs={["effects", "filters", "weather", "erase", "motion"]} />
+    {sub === "filters" ? <ColorPanel /> : <><p className="hint">{t("fx.hint." + sub)}</p>{sub === "motion" ? <MotionTiles /> : <EffectTiles group={sub} />}</>}
+  </>);
+}
+function TransitionsPanel() {
+  const { t } = useTranslation(); const lang = useUI((s) => s.lang);
+  const hover = (id: string | null) => ui.set({ preview: id });
+  return (<>
     <p className="hint">{t("tr.hint")}</p>
     <div className="ns-grid fxg">
       {TRANSITIONS.map((x) => (

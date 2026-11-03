@@ -12,11 +12,11 @@ import * as A from "../actions";
 import { NATIVE, TAURI, at } from "../site";
 import { exportDesktop, saveFile } from "../engine/native";
 
-function Modal({ title, onClose, children, wide }: { title: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) {
+export function Modal({ title, onClose, children, wide, cls }: { title: string; onClose: () => void; children: React.ReactNode; wide?: boolean; cls?: string }) {
   const ref = useRef<HTMLDivElement>(null); const close = useRef(onClose); close.current = onClose;
   // focus moves in once, when the dialog opens (a field first) — never again while you type
   useEffect(() => { const k = (e: KeyboardEvent) => { if (e.key === "Escape") close.current(); }; window.addEventListener("keydown", k); const r = ref.current; (r?.querySelector<HTMLElement>("input,select,textarea") || r?.querySelector<HTMLElement>(".mhead ~ * button, button"))?.focus(); return () => window.removeEventListener("keydown", k); }, []);
-  return <div className="modal" onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}><div className={"sheet" + (wide ? " wide" : "")} role="dialog" aria-modal="true" aria-label={title} ref={ref}><div className="mhead"><h2 className="ns-h2">{title}</h2><Btn icon="close" ghost label="×" onClick={onClose} /></div>{children}</div></div>;
+  return <div className="modal" onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}><div className={"sheet" + (wide ? " wide" : "") + (cls ? " " + cls : "")} role="dialog" aria-modal="true" aria-label={title} ref={ref}><div className="mhead"><h2 className="ns-h2">{title}</h2><Btn icon="close" ghost label="×" onClick={onClose} /></div>{children}</div></div>;
 }
 
 // ---------------- Export
@@ -98,7 +98,7 @@ export function Palette() {
       { title: t("insp.freeze"), run: A.freeze }, { title: t("insp.detach"), run: A.detach }, { title: t("insp.reverse"), run: A.reverse }, { title: t("text.add"), run: () => A.addText("title"), kbd: "T" },
       { title: t("tl.snap"), run: () => ui.set({ snap: !ui.get().snap }), kbd: "N" }, { title: t("top.projects"), run: () => ui.set({ projectsOpen: true }) },
       ...(["select", "ripple", "roll", "slip", "slide"] as const).map((x) => ({ title: t("tool.label") + ": " + t("tool." + x), run: () => ui.set({ tool: x }) })),
-      ...(["media", "audio", "text", "captions", "effects", "color", "ai"] as const).map((x) => ({ title: t("palette.panel") + ": " + t("rail." + x), run: () => ui.set({ rail: x, panelOpen: true }) })),
+      ...(["media", "stock", "audio", "titles", "transitions", "effects", "stickers", "templates"] as const).map((x) => ({ title: t("palette.panel") + ": " + t("rail." + x), run: () => ui.set({ rail: x, panelOpen: true }) })),
       ...Object.entries(COMMANDS).slice(0, 0).map(([k]) => ({ title: k, run: () => undefined })),
     ];
     const s = q.trim().toLowerCase(); return s ? list.filter((x) => x.title.toLowerCase().includes(s)) : list;

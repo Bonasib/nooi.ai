@@ -10,13 +10,16 @@ export const editor = new Editor(emptyProject());
 export function useProject(): Project { useSyncExternalStore((f) => editor.subscribe(f), () => editor.version); return editor.project; }
 export function useEditorVersion() { return useSyncExternalStore((f) => editor.subscribe(f), () => editor.version); }
 
-export type Rail = "media" | "audio" | "text" | "captions" | "effects" | "color" | "ai";
+export type Rail = "media" | "stock" | "audio" | "titles" | "transitions" | "effects" | "stickers" | "templates";   // the spec's 8-category dock (§4.2)
+export type Workspace = "classic" | "vertical" | "color" | "audio";
 export type Tool = "select" | "ripple" | "roll" | "slip" | "slide";
 export interface UI {
   rail: Rail; sub: Partial<Record<Rail, string>>; tool: Tool; zoom: number; snap: boolean; scrollX: number;
   inspector: string; exportOpen: boolean; paletteOpen: boolean; projectsOpen: boolean; panelOpen: boolean;
   theme: "dark" | "light"; lang: "en" | "ar"; saved: "saved" | "saving" | "local" | "error"; folder: string | null; loop: boolean;
   safe: boolean; preview: string | null;      // an effect / transition shown on the preview before it is added
+  workspace: Workspace; mate: boolean; hub: boolean; cloudOpen: boolean; fileOpen: boolean; settingsOpen: boolean; reframeOpen: boolean; speedOpen: boolean; historyOpen: boolean;
+  rec: "idle" | "count" | "rec"; count: number;   // the voice-over: 3-2-1, then recording
 }
 function createStore<T extends object>(init: T) {
   let s = init; const ls = new Set<() => void>();
@@ -30,6 +33,7 @@ export const ui = createStore<UI>({
   rail: "media", sub: {}, tool: "select", zoom: 60, snap: true, scrollX: 0, inspector: "video", exportOpen: false, paletteOpen: false, projectsOpen: false, panelOpen: false,
   theme: saved.theme === "light" ? "light" : "dark", lang: saved.lang === "ar" || (!saved.lang && /^ar/.test(navigator.language)) ? "ar" : "en",
   saved: "saved", folder: null, loop: false, safe: false, preview: null,
+  workspace: "classic", mate: false, hub: false, cloudOpen: false, fileOpen: false, settingsOpen: false, reframeOpen: false, speedOpen: false, historyOpen: false, rec: "idle", count: 0,
 });
 ui.subscribe(() => { const s = ui.get(); try { localStorage.setItem("nooi-studio-ui", JSON.stringify({ theme: s.theme, lang: s.lang })); } catch { /* private mode */ } });
 export function useUI<K>(pick: (s: UI) => K): K { return useSyncExternalStore(ui.subscribe, () => pick(ui.get())); }

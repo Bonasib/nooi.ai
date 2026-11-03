@@ -1,0 +1,87 @@
+# Nooi Studio — the master spec, step by step
+
+> **بالعربية باختصار:** هذا الملف يرتّب مواصفات «Nooi Studio» (ملف المالك، 14 صفحة) في خطوات متتالية. لكل قسم:
+> الموجود الآن، وما سيُبنى، وما لا يمكن في نسخة المتصفح الآن (يُترك لخطوة لاحقة بصراحة). الخطوة 1 هي الشكل والترتيب
+> (الألوان، المقاسات، الشريط العلوي، الأقسام الثمانية، شريط الأدوات، لوحة الخصائص بأربعة تبويبات).
+
+The owner's master spec covers four things:
+- the design system;
+- the screens and the "what comes next" of every button;
+- the three editions (Desktop, Pad, Go) and the AI suite;
+- a native engine (Rust core, C++ media, NPU and cloud AI) with the `.nooi` format.
+
+It names a commercial editor as the bar for depth. We build our own UI under the nooi name only: no other product's names, icons, assets or copied screens.
+
+Status: ✅ in the studio · 🟡 partly · ⬜ next · ⛔ not possible in the web app now (said plainly, never faked).
+
+## Step 1 — Design system and the shell (spec §2, §4.1–4.4, §9.1–9.3) · v223 ✅
+
+Done in v223 (tests/v223.py). Each row below was built:
+
+| Spec | Before | Step 1 built |
+|---|---|---|
+| §2.1 "Nooi Obsidian" palette, Electric Cyan accent, the AI gradient, crimson playhead, cache line colours, Inter + JetBrains Mono | the studio's own lime theme | tokens: canvas `#0F1014`, panels `#181A20`, tracks `#14161B` / `#252830`, accent `#00F0FF`, AI gradient, playhead `#FF3B30`, text 100 / 70 / 40 %. The nooi logo keeps its own colour. |
+| §2.2 icon and hit-target matrix (Desktop / Pad / Go) | 14 / 16 / 20 icons; touch sizes since v221 | the matrix per zone: header, rail, toolbar, track headers, transport, inspector, AI badge, media thumbnails |
+| §4.1 header, 40 px | top bar | logo + File menu (Project settings modal; Save / Open `.nooi`) · Workspace switcher (Classic edit, Vertical short-form, Colorist, Audio) · Nooi Mate drawer (340 px) · Cloud popover (saved state, review link) · Export (cyan) |
+| §4.2 left dock, 8 categories | 7 rails (Media, Audio, Text, Captions, Effects, Color, AI) | Media · Stock & AI Gen · Audio · Titles (text, captions, lower thirds) · Transitions · Effects · Stickers (+ logo) · Templates (split-screen 2–9) |
+| §4.3 timeline toolbar | split, delete, tools, snap, zoom | Undo / Redo (+ history list) · Split · Delete / Ripple · Crop & Reframe (Ken Burns) · Speed menu · Color · AI Hub (sparkle grid) · Keyframe ◆ · Voice-over (3-2-1) · Render status, Snap, Zoom |
+| §4.4 inspector, 4 tabs | Video, Speed, Audio, Color, Effects, Text | Video (Basic, Effects, Animation) · Color · Audio · Speed — plus Text for titles |
+| AI sparkle badge on AI tools | — | the gradient badge |
+
+## Step 2 — Project data and the timeline engine (spec §8.5, §8.6)
+- ✅ Command undo / redo (300 steps), autosave, saving to the account.
+- 🟡 Ripple on V1.
+- 🟡 `.nooi` file save and open: v223 saves and opens the studio project as one file (File menu, Ctrl+Shift+S). ⬜ Next: the spec's JSON shape (frames, `isPrimarySpine`, clip transform with keyframes, speed ramp nodes, colour masks), converted to and from the studio project.
+- ⬜ Magnetic V1 spine with anchored B-roll and sound (`parentAnchorClipId`), so a ripple on V1 moves what is attached to it.
+- ⬜ `.nooipack` (project + proxies + waveforms).
+
+## Step 3 — Editing depth (spec §4.3, §4.4, §6.1)
+- ⬜ Speed ramping (curve presets: Montage, Hero moment, Bullet time, Jumper; a velocity curve).
+- ⬜ Keyframe curve editor.
+- ⬜ Masks: linear, mirror, circle, rectangle, pen; feather and invert.
+- ⬜ Chroma key, drop shadow, adjustment layers.
+- ⬜ Colour: 4-way wheels, RGB / luma curves, colour masks, scopes, before / after wipe. 🟡 exists: tone, white balance, 8-band HSL, LUTs.
+- ⬜ Audio: pitch, 10-band EQ, mixer with dB meters. 🟡 exists: fades, ducking.
+- ✅ Motion presets, weather & light, erase & blur (v222).
+
+## Step 4 — Content libraries (spec §4.2)
+- 🟡 Titles: 3D kinetic titles, lower thirds, end credits, word-by-word captions.
+- 🟡 Templates: split-screen layouts 2–9 and Instant montage (v223). ⬜ Numbered drop zones.
+- ⬜ Stock: needs a stock provider key from the owner — asked for only when this step starts.
+- 🟡 Audio: music library, AI music / SFX / TTS through the site's jobs (price first).
+
+## Step 5 — Nooi Intelligence (spec §6.2, §8.4)
+- 🟡 AI Hub + Nooi Mate (v223: the Hub grid and the Mate drawer; Mate understands everyday edits in English and Arabic on the device, including removing pauses):
+  - Port the classic editor's AI tools: edit with words, replace things, voices & sound, AI voice-over, SFX / music from words, clean up voices, auto captions, translate, dub, lip-sync.
+  - Add silence detection (v209 has it on the site), auto beat sync (beats exist), auto reframe / camera tracking, smart short clips, AI thumbnail, smart text correction.
+- Every AI call: price first, charge only on success, refund on failure, logged.
+- ⛔ On-device NPU models (SAM-2, Whisper, RIFE…) in the browser: later, through WebGPU / ONNX Runtime Web, or the desktop app.
+
+## Step 6 — Media intelligence and recording (spec §3, §6.1)
+- ⬜ Smart folders: people, scenes, best shots, camera motion.
+- ⬜ Semantic search.
+- ⬜ Multi-source recorder: screen + webcam + mic on separate tracks (`getDisplayMedia` / `getUserMedia`).
+- ⬜ Phone camera with teleprompter.
+
+## Step 7 — Export Studio and review (spec §4.1, §3 stage 7)
+- 🟡 Export:
+  - 920 × 640 dialog;
+  - batch queue for several sizes (16:9 + 9:16 with auto reframe);
+  - still frame PNG;
+  - SRT and audio stems;
+  - social scheduler (the site's publish).
+- ✅ Already there: device, server and desktop export.
+- ⬜ FrameLink: a review link with timestamped comments (the site's v196 sharing and comments).
+
+## Step 8 — The three editions (spec §5)
+- 🟡 Go (phone), portrait thumb-first: v221–v222 done. ⬜ Gestures: pinch zoom, two-finger tap undo, haptics.
+- 🟡 Pad (tablet), the desktop layout: v221. ⬜ Stylus brushes for masks.
+- 🟡 Desktop: ⬜ dockable panels, J-K-L, hotkey profiles, dual monitor.
+- ⬜ Cloud hand-off with `.nooipack`.
+
+## Step 9 — Engine and performance (spec §8.1–8.3)
+- ✅ WebGL2 compositor, Web Audio, server FFmpeg, desktop FFmpeg.
+- ⬜ WebGPU path.
+- ⬜ Frame cache: a GPU ring around the playhead, and render-preview segments.
+- ⬜ Waveform mip levels; work in background workers.
+- ⛔ The native Rust / C++ core, ACEScg 16-bit pipeline, 360° projection, 16-angle multicam, OpenFX plugins: not in the web app now. These belong to the desktop app later, if the owner wants them.
