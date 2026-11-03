@@ -20,6 +20,7 @@ export interface UI {
   safe: boolean; preview: string | null;      // an effect / transition shown on the preview before it is added
   workspace: Workspace; mate: boolean; hub: boolean; cloudOpen: boolean; fileOpen: boolean; settingsOpen: boolean; reframeOpen: boolean; speedOpen: boolean; historyOpen: boolean;
   rec: "idle" | "count" | "rec"; count: number;   // the voice-over: 3-2-1, then recording
+  saveErr: string;   // why the last save to the account did not go through
 }
 function createStore<T extends object>(init: T) {
   let s = init; const ls = new Set<() => void>();
@@ -33,7 +34,7 @@ export const ui = createStore<UI>({
   rail: "media", sub: {}, tool: "select", zoom: 60, snap: true, scrollX: 0, inspector: "video", exportOpen: false, paletteOpen: false, projectsOpen: false, panelOpen: false,
   theme: saved.theme === "light" ? "light" : "dark", lang: saved.lang === "ar" || (!saved.lang && /^ar/.test(navigator.language)) ? "ar" : "en",
   saved: "saved", folder: null, loop: false, safe: false, preview: null,
-  workspace: "classic", mate: false, hub: false, cloudOpen: false, fileOpen: false, settingsOpen: false, reframeOpen: false, speedOpen: false, historyOpen: false, rec: "idle", count: 0,
+  workspace: "classic", mate: false, hub: false, cloudOpen: false, fileOpen: false, settingsOpen: false, reframeOpen: false, speedOpen: false, historyOpen: false, rec: "idle", count: 0, saveErr: "",
 });
 ui.subscribe(() => { const s = ui.get(); try { localStorage.setItem("nooi-studio-ui", JSON.stringify({ theme: s.theme, lang: s.lang })); } catch { /* private mode */ } });
 export function useUI<K>(pick: (s: UI) => K): K { return useSyncExternalStore(ui.subscribe, () => pick(ui.get())); }
@@ -63,11 +64,24 @@ export function autosave() {
     cloudT = window.setTimeout(saveCloud, 3000);
   }, 700);
 }
+// (v225) the account copy leaves out the pictures this device makes again by itself (filmstrips, large thumbnails), so a project with
+// many clips stays well inside the account's limit; a save that fails says why and tries again on its own (not after a conflict)
+export function slimForCloud(p: Project): Project {
+  return { ...p, assets: Object.fromEntries(Object.entries(p.assets).map(([k, a]) => { const b = { ...a }; delete b.strip; if (b.thumb && b.thumb.length > 24000) delete b.thumb; return [k, b]; })) };
+}
+let retryT = 0, tries = 0;
 export async function saveCloud(): Promise<boolean> {
-  if (!api.online || !api.me.signedIn) { ui.set({ saved: "local" }); return false; }
+  clearTimeout(retryT);
+  if (!api.online || !api.me.signedIn) { ui.set({ saved: "local", saveErr: "" }); return false; }
   const p = editor.project; const id = cloudId(p.id);
-  try { const r = await api.saveProject(id, p.name, p, cloudBase || undefined); cloudBase = r.updated || Date.now(); ui.set({ saved: "saved" }); return true; }
-  catch (e) { const st = (e as { status?: number }).status; if (st === 409) { cloudBase = 0; toast(i18nText("save.conflict"), "warn"); } ui.set({ saved: "error" }); return false; }
+  try { const r = await api.saveProject(id, p.name, slimForCloud(p), cloudBase || undefined); cloudBase = r.updated || Date.now(); tries = 0; ui.set({ saved: "saved", saveErr: "" }); return true; }
+  catch (e) {
+    const er = e as { status?: number; message?: string; errorAr?: string }; const st = er.status;
+    const why = (ui.get().lang === "ar" && er.errorAr) || er.message || ""; ui.set({ saved: "error", saveErr: st == null ? i18nText("save.offline") : why });
+    if (st === 409) { cloudBase = 0; toast(i18nText("save.conflict"), "warn"); }
+    else if (st !== 413 && tries < 4) { tries++; retryT = window.setTimeout(() => void saveCloud(), 8000 * tries); }   // a dropped connection or a busy server: again in a little while
+    return false;
+  }
 }
 export const cloudId = (id: string) => ("st" + id.replace(/[^a-z0-9]/gi, "").toLowerCase()).slice(0, 24).padEnd(8, "0");
 export async function openProject(p: Project | unknown) { cloudBase = 0; editor.load(migrate(p)); playerRef.current?.resize(); playerRef.current?.seek(0); }

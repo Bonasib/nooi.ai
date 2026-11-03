@@ -11,3 +11,4 @@ export * from "./audio";
 export * from "./ffmpeg";
 export * from "./anchors";
 export * from "./nooi";
+export * from "./animate";

@@ -92,7 +92,7 @@ async def desktop(p):
         async with pg.expect_download() as dl: await pg.click('[data-testid="download"]')
         d = await dl.value; path = D + "/out.webm"; await d.save_as(path); pr = probe(path)
         out["export"] = {"types": sorted(s.get("codec_type") for s in pr.get("streams", [])), "dur": pr.get("format", {}).get("duration")}
-        chk("a WebM made on the device with rain, a sticker, a logo and a sound effect is a real video", out["export"]["types"] == ["audio", "video"] and 2.6 < float(out["export"]["dur"] or 0) < 3.4, out["export"])
+        chk("a WebM made on the device with rain, a sticker, a logo and a sound effect is a real video", out["export"]["types"] == ["audio", "video"] and 2.6 < float(out["export"]["dur"] or 0) < 3.8, out["export"])   # (the sticker starts at the playhead: up to ~0.6 s past the 3 s clip)
     except Exception as e: chk("device export", False, [str(e)[:200], await E("()=>(document.querySelector('.sheet .err')||{}).textContent")])
     chk("desktop: no page errors", not errs, errs); await b.close()
 
@@ -117,7 +117,7 @@ async def phone(p):
         await cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []}); await pg.wait_for_timeout(200)
     await touch([(h[0], h[1]), (h[0] + 10, h[1] + 20), (h[0] + 20, h[1] + 50), (h[0] + 25, h[1] + 70)])
     t1 = (await E(CLIPS))[0]
-    await touch([(h[0], h[1]), (h[0] + 10, h[1] + 10), (h[0] + 30, h[1] + 20)], hold=450)
+    await touch([(h[0], h[1]), (h[0] + 10, h[1] + 10), (h[0] + 30, h[1] + 20)], hold=700)
     t2 = (await E(CLIPS))[0]
     chk("phone: a quick swipe over the picture leaves the clip where it is; a short hold then a move moves it", t1["x"] == 0 and t1["y"] == 0 and (t2["x"] != 0 or t2["y"] != 0), [t1, t2])
     await pg.locator('[data-testid="ruler"]').tap(position={"x": 90, "y": 10}); await pg.wait_for_timeout(200)

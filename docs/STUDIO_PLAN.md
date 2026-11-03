@@ -55,9 +55,11 @@ Done in v223 (tests/v223.py). Each row below was built:
 - ⬜ Colour: 4-way wheels, RGB / luma curves, colour masks, scopes, before / after wipe. 🟡 exists: tone, white balance, 8-band HSL, LUTs.
 - ⬜ Audio: pitch, 10-band EQ, mixer with dB meters. 🟡 exists: fades, ducking.
 - ✅ Motion presets, weather & light, erase & blur (v222).
+- ✅ The classic editor's 20 motions (Animate.css, MIT), for any clip: they become keyframes with their own timing curves. Each tile plays its example before you choose it (v225).
 
 ## Step 4 — Content libraries (spec §4.2)
 - 🟡 Titles: 3D kinetic titles, lower thirds, end credits, word-by-word captions.
+- ✅ Stickers (v225): 36 icon stickers and 10 banners from the classic editor (Material Symbols, Apache-2.0). Each tile shows how it looks, and a banner's lines and colour can be set before it is added. They are added as pictures that come in with a motion.
 - 🟡 Templates: split-screen layouts 2–9 and Instant montage (v223). ⬜ Numbered drop zones.
 - ⬜ Stock: needs a stock provider key from the owner — asked for only when this step starts.
 - 🟡 Audio: music library, AI music / SFX / TTS through the site's jobs (price first).

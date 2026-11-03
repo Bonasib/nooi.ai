@@ -6,7 +6,7 @@ import type { Clip, KfProp, MediaClip, TextClip } from "@nooi/editor-core";
 import { editor, ui, useProject, useUI, playerRef, autosave } from "../state";
 import * as A from "../actions";
 import { loadFont } from "../engine/text";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MotionTiles } from "./Extras";
 
 const KF: Partial<Record<string, KfProp>> = { "transform.x": "x", "transform.y": "y", "transform.scale": "scale", "transform.rotation": "rotation", opacity: "opacity", volume: "volume" };
@@ -27,6 +27,8 @@ function Prop({ c, path, label, min, max, step, unit, fmt }: { c: Clip; path: st
 }
 export function Inspector() {
   const { t } = useTranslation(); const p = useProject(); const tab = useUI((s) => s.inspector); const lang = useUI((s) => s.lang);
+  // (v225) the values follow the playhead when it is moved by hand (keyframed values change with time); not while it plays
+  const [, tick] = useState(0); useEffect(() => playerRef.current?.onClock(() => { if (!playerRef.current?.clock.playing) tick((x) => x + 1); }), [playerRef.current]);
   const clips = editor.selection.map((id) => findClip(p, id)?.clip).filter(Boolean) as Clip[]; const c = clips[0];
   if (!c) return <ProjectProps />;
   // the spec's four tabs (§4.4): Video (basic, effects, animation) · Color · Audio · Speed — and Text for titles

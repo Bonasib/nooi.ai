@@ -24,7 +24,7 @@ function previewOf(id: string): ((p: Project) => Project) | null {
 export function Preview() {
   const { t } = useTranslation(); const p = useProject(); const ref = useRef<HTMLCanvasElement>(null); const box = useRef<HTMLDivElement>(null);
   const [, force] = useState(0); const pv = useUI((s) => s.preview); const safe = useUI((s) => s.safe); const loop = useUI((s) => s.loop);
-  const [size, setSize] = useState({ w: 320, h: 180 });
+  const [size, setSize] = useState({ w: 320, h: 180 }); const [held, setHeld] = useState(false);
   useEffect(() => {
     const pl = new Player(editor, ref.current!); playerRef.current = pl; force((x) => x + 1);
     const off = pl.onClock(() => force((x) => x + 1));
@@ -46,30 +46,39 @@ export function Preview() {
   const drag = (mode: "move" | "scale") => (e: React.PointerEvent) => {
     if (!sel) return; e.preventDefault(); e.stopPropagation(); const x0 = e.clientX, y0 = e.clientY; const T = { ...sel.transform }; const s0 = propAt(sel, "scale", local);
     const touch = e.pointerType !== "mouse"; let live = !touch, gone = false, moved = false;
-    const timer = touch ? setTimeout(() => { if (!gone) { live = true; editor.begin(mode); try { navigator.vibrate?.(8); } catch { /* */ } } }, 280) : 0;
+    // (v225: a deliberate hold — half a second, the finger still — before a touch moves the clip; it shows while it is held)
+    const timer = touch ? setTimeout(() => { if (!gone) { live = true; setHeld(true); editor.begin(mode); try { navigator.vibrate?.(12); } catch { /* */ } } }, 500) : 0;
     if (!touch) editor.begin(mode);
-    (e.target as Element).setPointerCapture(e.pointerId);
+    try { (e.target as Element).setPointerCapture(e.pointerId); } catch { /* (the pointer is already gone) */ }
     const snapC = (v: number) => (Math.abs(v) < 0.015 ? 0 : v);
     const mv = (ev: PointerEvent) => { const dx = (ev.clientX - x0) / size.w, dy = (ev.clientY - y0) / size.h;
-      if (!live) { if (Math.hypot(ev.clientX - x0, ev.clientY - y0) > 10) { gone = true; clearTimeout(timer); } return; }
+      if (!live) { if (Math.hypot(ev.clientX - x0, ev.clientY - y0) > 6) { gone = true; clearTimeout(timer); } return; }
       moved = true;
       editor.live((q) => { const f = findClip(q, sel.id); if (!f) return; if (mode === "move") { f.clip.transform.x = snapC(T.x + dx); f.clip.transform.y = snapC(T.y + dy); } else f.clip.transform.scale = Math.max(0.05, s0 * (1 + (dx + dy))); }); };
-    const up = () => { clearTimeout(timer); window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
+    const up = () => { clearTimeout(timer); setHeld(false); window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
       if (live) { if (moved) { editor.commit(); autosave(); } else editor.cancel(); } };
     window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
   };
-  const hx = sel ? 0.5 + propAt(sel, "x", local) : 0.5, hy = sel ? 0.5 + propAt(sel, "y", local) : 0.5, hs = sel ? propAt(sel, "scale", local) : 1;
+  // the picked clip's outline: where its picture really is (fitted, cropped, sized, moved and turned)
+  const bx = sel ? A.pictureBox(p, sel, Math.max(0, Math.min(sel.dur, local))) : null; const rot = sel ? propAt(sel, "rotation", Math.max(0, Math.min(sel.dur, local))) : 0;
+  // a clip whose picture sits mostly outside the frame (moved there by mistake): say so, with one tap to put it back
+  const lost = !clock.playing ? p.tracks.filter((tr) => tr.kind !== "audio" && !tr.hidden).flatMap((tr) => tr.clips).find((c) => {
+    if (clock.t < c.start || clock.t > c.start + c.dur || c.keyframes.x?.length || c.keyframes.y?.length || (c.type === "media" && p.assets[c.asset]?.kind === "audio")) return false;
+    const b = A.pictureBox(p, c, 0), ox = Math.max(0, Math.min(1, b.cx + b.w / 2) - Math.max(0, b.cx - b.w / 2)), oy = Math.max(0, Math.min(1, b.cy + b.h / 2) - Math.max(0, b.cy - b.h / 2));
+    return b.w * b.h > 1e-4 && (ox * oy) / (b.w * b.h) < 0.5; }) : undefined;
+  const putBack = (id: string) => A.run("put back", (q) => { const f = findClip(q, id); if (!f) return; f.clip.transform.x = 0; f.clip.transform.y = 0; if (f.clip.transform.scale < 0.1) f.clip.transform.scale = 1; });
   return (
     <section className="player" aria-label={t("preview.label")}>
       <div className="stagebox" ref={box} onClick={(e) => { if (e.target === box.current) editor.select([]); }}>
         <div className="stage" style={{ width: size.w, height: size.h }}>
           <canvas ref={ref} style={{ width: size.w, height: size.h }} aria-label={t("preview.canvas")} role="img" data-testid="preview" />
           {safe && <div className="safe" aria-hidden="true" />}
-          {on && sel && <div className="handle" style={{ left: hx * 100 + "%", top: hy * 100 + "%", width: Math.min(100, hs * 60) + "%", height: Math.min(100, hs * 60) + "%" }} onPointerDown={drag("move")} aria-label={t("preview.move")} role="button" tabIndex={-1}>
+          {on && sel && bx && <div className={"handle" + (held ? " held" : "")} style={{ left: bx.cx * 100 + "%", top: bx.cy * 100 + "%", width: Math.min(300, bx.w * 100) + "%", height: Math.min(300, bx.h * 100) + "%", transform: "translate(-50%, -50%) rotate(" + rot + "deg)" }} onPointerDown={drag("move")} aria-label={t("preview.move")} role="button" tabIndex={-1} data-testid="handle">
             <span className="corner" onPointerDown={drag("scale")} aria-label={t("preview.scale")} role="button" tabIndex={-1} />
           </div>}
           {pv && !pv.startsWith("tr:") && <div className="pvtag" role="status">{t("preview.previewing")}</div>}
           {clock.buffering && <div className="pvtag buf">{t("preview.loading")}</div>}
+          {lost && <div className="lost" role="status" data-testid="offframe"><span>{t("preview.outside", { name: lost.name || (lost.type === "text" ? lost.text : "") })}</span><Btn icon="fit" primary onClick={() => putBack(lost.id)} testid="put-back">{t("preview.putBack")}</Btn></div>}
         </div>
       </div>
       <div className="transport" dir="ltr">

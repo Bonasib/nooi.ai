@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Btn, Icon, Seg } from "@nooi/ui";
-import { EFFECTS, EFFECT_GROUPS, MOTIONS, aspectOf } from "@nooi/editor-core";
+import { EFFECTS, EFFECT_GROUPS, MOTIONS, ANIMATE, animateCss, aspectOf } from "@nooi/editor-core";
 import { api } from "../api";
 import { at } from "../site";
 import { assetFromJob } from "../media/library";
@@ -11,13 +11,27 @@ import { waitJob } from "./AIPanel";
 import { editor, toast, ui, useProject, useUI } from "../state";
 import * as A from "../actions";
 import { STICKERS, stickerFile, stickerUrl } from "../media/stickers";
+import { BANNERS, ICON_STICKERS, canvasFile, drawBanner, drawIconSticker, iconName, tileOf } from "../media/icons";
+import type { Banner } from "../media/icons";
 import { SFX, playSfx, sfxFile } from "../media/sfx";
 
 export function StickersPanel() {
-  const { t } = useTranslation(); const lang = useUI((s) => s.lang); const [busy, setBusy] = useState("");
+  const { t } = useTranslation(); const lang = useUI((s) => s.lang); const [busy, setBusy] = useState(""); const [ban, setBan] = useState<Banner | null>(null);
   const add = async (id: string) => { setBusy(id); try { const f = await stickerFile(id); if (f) await A.addMade(f, { kind: "overlay", dur: 3, scale: 0.32 }); } finally { setBusy(""); } };
+  const addIcon = async (n: string, col: string) => { setBusy(n); try { const f = await canvasFile(drawIconSticker(n, col), "sticker-" + n + ".png"); const c = f && await A.addMade(f, { kind: "overlay", dur: 3, scale: 0.28 }); if (c) A.applyMotion("ac:bounceIn", c.id); } finally { setBusy(""); } };
   return (<>
     <p className="hint">{t("stk.hint")}</p>
+    <span className="ns-lbl">{t("stk.banners")}</span>
+    <div className="bang">{BANNERS.map((b) => (
+      <button key={b.id} type="button" className="ban" aria-pressed={ban?.id === b.id} onClick={() => setBan(ban?.id === b.id ? null : b)} title={lang === "ar" ? b.ar : b.en} data-testid={"ban-" + b.id}>
+        <img src={tileOf("b:" + b.id + ":" + lang, () => drawBanner(b, b.l1[lang === "ar" ? 1 : 0], b.l2[lang === "ar" ? 1 : 0]))} alt="" draggable={false} /><span>{lang === "ar" ? b.ar : b.en}</span>
+      </button>))}</div>
+    {ban && <BannerForm key={ban.id + lang} b={ban} onDone={() => setBan(null)} />}
+    <span className="ns-lbl">{t("stk.icons")}</span>
+    <div className="stkg icons">{ICON_STICKERS.map(([n, col]) => (
+      <button key={n} type="button" className="stk" onClick={() => void addIcon(n, col)} disabled={!!busy} title={iconName(n)} aria-label={iconName(n)} data-testid={"ico-" + n}>
+        <img src={tileOf("i:" + n, () => drawIconSticker(n, col, 128))} alt="" draggable={false} />
+      </button>))}</div>
     {(["badges", "shapes", "faces", "marks"] as const).map((g) => <div key={g}>
       <span className="ns-lbl">{t("stk." + g)}</span>
       <div className="stkg">{STICKERS.filter((s) => s.group === g).map((s) => (
@@ -26,6 +40,31 @@ export function StickersPanel() {
         </button>))}</div>
     </div>)}
   </>);
+}
+// a banner's words and colour, with the picture as it will look, before it is added
+function BannerForm({ b, onDone }: { b: Banner; onDone: () => void }) {
+  const { t } = useTranslation(); const lang = useUI((s) => s.lang); const i = lang === "ar" ? 1 : 0;
+  const [l1, setL1] = useState(b.l1[i]); const [l2, setL2] = useState(b.l2[i]); const [col, setCol] = useState(b.color); const [busy, setBusy] = useState(false);
+  const url = drawBanner({ ...b, color: col }, l1, l2).toDataURL("image/png");
+  const add = async () => {
+    setBusy(true);
+    try {
+      const cv = drawBanner({ ...b, color: col }, l1, l2); const f = await canvasFile(cv, "banner-" + b.id + ".png"); if (!f) return;
+      const p = editor.project, wide = cv.width / cv.height > p.width / p.height;   // (the picture's share of the frame: about 60 % of the width)
+      const scale = wide ? 0.6 : Math.min(1, (0.6 * p.width) / p.height * (cv.height / cv.width));
+      const c = await A.addMade(f, { kind: "overlay", dur: 4, scale, y: b.style === "quote" ? 0 : b.style === "pin" ? -0.05 : 0.3 });
+      if (c) A.applyMotion(b.style === "button" || b.style === "badge" ? "ac:bounceIn" : "ac:fadeInUp", c.id); onDone();
+    } finally { setBusy(false); }
+  };
+  return (
+    <div className="banform" data-testid="banner-form">
+      <img src={url} alt="" />
+      <label className="ns-field"><span>{t("stk.line1")}</span><input className="ns-input" dir="auto" value={l1} maxLength={60} onChange={(e) => setL1(e.target.value)} data-testid="ban-l1" /></label>
+      {(b.l2[0] || b.style !== "button") && <label className="ns-field"><span>{t("stk.line2")}</span><input className="ns-input" dir="auto" value={l2} maxLength={80} onChange={(e) => setL2(e.target.value)} data-testid="ban-l2" /></label>}
+      <div className="row"><label className="ns-field row"><span>{t("text.color")}</span><input type="color" value={col} onChange={(e) => setCol(e.target.value)} /></label><span className="sp" />
+        <Btn onClick={onDone}>{t("exp.cancel")}</Btn><Btn icon="plus" primary disabled={busy || !l1.trim()} onClick={() => void add()} testid="ban-add">{t("stk.addBanner")}</Btn></div>
+    </div>
+  );
 }
 
 export function LogoPanel() {
@@ -77,13 +116,23 @@ export function EffectTiles({ group }: { group: string }) {
     </div>
   );
 }
+// the motions' examples: each tile plays its motion before you choose it (the same curves the clip gets)
+let acCss = false;
+function useAnimateCss() { useEffect(() => { if (acCss) return; acCss = true; const st = document.createElement("style"); st.id = "ac-css";
+  st.textContent = ANIMATE.map((a) => animateCss(a, "ac-" + a.id) + `.acx-${a.id} i{animation:ac-${a.id} ${(a.dur + 0.7).toFixed(2)}s infinite both}`).join("\n"); document.head.appendChild(st); }, []); }
 export function MotionTiles() {
-  const lang = useUI((s) => s.lang);
-  return (
+  const { t } = useTranslation(); const lang = useUI((s) => s.lang); useAnimateCss();
+  return (<>
+    <span className="ns-lbl">{t("mo.camera")}</span>
     <div className="ns-grid fxg">
       {MOTIONS.map((m) => <button key={m.id} type="button" className="ns-tile" onClick={() => A.applyMotion(m.id)} data-testid={"mo-" + m.id}><span className={"fxsw mo mo-" + m.id} aria-hidden="true" /><span>{lang === "ar" ? m.ar : m.en}</span></button>)}
     </div>
-  );
+    <span className="ns-lbl">{t("mo.animations")}</span>
+    <div className="ns-grid fxg">
+      {ANIMATE.map((m) => <button key={m.id} type="button" className="ns-tile" onClick={() => A.applyMotion("ac:" + m.id)} data-testid={"ac-" + m.id} title={lang === "ar" ? m.ar : m.en}>
+        <span className={"fxsw acx acx-" + m.id} aria-hidden="true"><i>Aa</i>{m.loop && <b className="loopb">∞</b>}</span><span>{lang === "ar" ? m.ar : m.en}</span></button>)}
+    </div>
+  </>);
 }
 
 // ---------------- Stock & AI Gen: a prompt → a new video or picture from nooi (price first; credits taken only when it is made)

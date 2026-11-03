@@ -233,3 +233,23 @@ Apple developer accounts, plus a signed release build (`./gradlew bundleRelease`
   - `.nooipack`: the project and all its media in one ZIP, to move it to another device;
   - Open takes either, and the v223 `.nooi` too.
 - **Site:** "Studio" is in the site header next to Explore, in the phone's top bar, and on the landing page.
+
+## v225 — the owner's phone video, fixed; the classic motions and stickers
+
+- **Moving clips on a phone:** a touch must rest still on the picture for half a second before it moves a clip, and the outline shows it is held. A quick swipe moves nothing. This fixes a clip pushed out of the frame by a resting finger.
+- **The outline on the preview** is the clip's real picture: fitted, cropped, sized, moved and turned.
+- **Out of the frame:** when a clip at the playhead is mostly outside the frame, the preview says so, with **Put it back**.
+- **The clip settings** follow the playhead when it is moved by hand.
+- **Saving to the account:**
+  - the account copy leaves out the filmstrips and large thumbnails, which each device makes again;
+  - a failed save shows why in the Cloud menu;
+  - a dropped connection tries again by itself.
+- **Scrolling bars:** the timeline toolbar and the phone's clip bar fade at their end edge, so it shows they scroll.
+- **Motion** (Effects → Motion, and Clip → Video → Animation):
+  - the 13 camera moves, and the classic editor's 20 animations;
+  - each tile plays its example;
+  - on a clip, an animation becomes keyframes.
+- **Stickers** (Stickers → Stickers):
+  - 10 banners, with their lines and colour set before adding;
+  - 36 icon stickers (Material Symbols, Apache-2.0; licence in `studio/apps/web/src/media/MATERIAL-ICONS-LICENSE.txt`);
+  - the studio's own drawings.

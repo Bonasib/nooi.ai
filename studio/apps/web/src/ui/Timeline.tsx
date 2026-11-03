@@ -111,6 +111,7 @@ export function Timeline() {
         <Btn icon="link" label={t("mag.label")} pressed={p.magnetic !== false} onClick={A.toggleMagnetic} testid="magnetic" />
         <Btn icon="magnet" label={t("tl.snap")} pressed={snapOn} onClick={() => ui.set({ snap: !snapOn })} testid="snap" />
         <span className="zoomgrp"><Btn icon="minus" label={t("tl.zoomOut")} onClick={() => A.zoom(1 / 1.25)} /><input className="zoomr" type="range" min={4} max={600} value={zoom} onChange={(e) => ui.set({ zoom: +e.target.value })} aria-label={t("tl.zoom")} /><Btn icon="plus" label={t("tl.zoomIn")} onClick={() => A.zoom(1.25)} /><b dir="ltr">{Math.round((zoom / 60) * 100)}%</b></span>
+        <i className="fadeend" aria-hidden="true" />
       </div>
       <div className="tlgrid" dir="ltr">
         <div className="theads" style={{ width: HEAD }}>

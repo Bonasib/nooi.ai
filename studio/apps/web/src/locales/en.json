@@ -34,7 +34,8 @@
   "saving": "Saving…",
   "local": "Saved on this device",
   "error": "Not saved to your account — kept on this device",
-  "conflict": "This project was changed on another device — your version is kept here; save again to replace it."
+  "conflict": "This project was changed on another device — your version is kept here; save again to replace it.",
+  "offline": "no connection — it tries again by itself"
  },
  "palette": {
   "open": "Commands",
@@ -252,7 +253,9 @@
   "scale": "Drag to resize",
   "previewing": "Preview — tap to add",
   "loading": "Loading…",
-  "empty": "The timeline is empty — add media first."
+  "empty": "The timeline is empty — add media first.",
+  "outside": "Most of “{{name}}” is outside the picture.",
+  "putBack": "Put it back"
  },
  "insp": {
   "label": "Properties",
@@ -440,7 +443,12 @@
   "badges": "Badges",
   "shapes": "Shapes",
   "faces": "Faces",
-  "marks": "Arrows & marks"
+  "marks": "Arrows & marks",
+  "banners": "Banners",
+  "icons": "Icons",
+  "line1": "First line",
+  "line2": "Second line",
+  "addBanner": "Add banner"
  },
  "logo": {
   "hint": "Your logo on the whole video, in a corner.",
@@ -604,7 +612,8 @@
   "fps": "Frame rate",
   "background": "Background",
   "magnetic": "Magnetic track",
-  "rippleDelete": "Ripple delete"
+  "rippleDelete": "Ripple delete",
+  "put_back": "Put back"
  },
  "rf": {
   "title": "Crop & reframe",
@@ -653,5 +662,9 @@
   "off": "Magnetic main track off — every clip stays where you put it.",
   "main": "Main",
   "spine": "The main track: delete closes its gaps, and what is attached to it moves with it"
+ },
+ "mo": {
+  "camera": "Camera & moves",
+  "animations": "Animations — the example plays before you choose"
  }
 }

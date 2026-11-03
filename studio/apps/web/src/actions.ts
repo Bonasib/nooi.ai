@@ -105,9 +105,19 @@ export function resetTransform() {
   run("reset position", (p) => { const f = C.findClip(p, c.id); if (!f) return; Object.assign(f.clip.transform, { x: 0, y: 0, scale: 1, rotation: 0 }); for (const k of ["x", "y", "scale", "rotation"] as const) delete f.clip.keyframes[k]; });
 }
 // a motion preset: ordinary keyframes on the picked clip (its x / y / scale / turn / opacity points are replaced)
-export function applyMotion(id: string) {
-  const c = sel1(); if (!c) { toast(t("toast.pickClip"), "info"); return; }
-  run("motion", (p) => { const f = C.findClip(p, c.id); if (!f) return; for (const k of ["x", "y", "scale", "rotation", "opacity"] as const) delete f.clip.keyframes[k]; Object.assign(f.clip.keyframes, C.motionKeyframes(id, f.clip)); });
+export function applyMotion(id: string, clipId?: string) {
+  const c = clipId ? C.findClip(editor.project, clipId)?.clip : sel1(); if (!c) { toast(t("toast.pickClip"), "info"); return; }
+  run("motion", (p) => { const f = C.findClip(p, c.id); if (!f) return; for (const k of ["x", "y", "scale", "rotation", "opacity"] as const) delete f.clip.keyframes[k];
+    Object.assign(f.clip.keyframes, id.startsWith("ac:") ? C.animateKeyframes(id.slice(3), f.clip, pictureBox(p, f.clip)) : C.motionKeyframes(id, f.clip)); });   // ("ac:" — the classic editor's motions)
+}
+// where a clip's picture sits in the frame (fractions of the frame, centre and size) — its source fitted into the frame, cropped,
+// scaled and moved as it is at `local` seconds (titles: about the size of their words)
+export function pictureBox(p: Project, c: Clip, local = 0): { cx: number; cy: number; w: number; h: number } {
+  const x = C.propAt(c, "x", local), y = C.propAt(c, "y", local), s = C.propAt(c, "scale", local);
+  if (c.type === "text") { const n = Math.max(1, ...c.text.split("\n").map((l) => l.length)), lines = c.text.split("\n").length; return { cx: 0.5 + x, cy: 0.5 + y, w: Math.min(1, c.style.size * 0.55 * n * (p.height / p.width)) * s, h: Math.min(1, c.style.size * 1.3 * lines) * s }; }
+  const a = p.assets[c.asset]; const aw = a?.w || p.width, ah = a?.h || p.height, cr = c.transform.crop;
+  const cw = aw * Math.max(0.05, 1 - cr[0] - cr[2]), ch = ah * Math.max(0.05, 1 - cr[1] - cr[3]), k = Math.min(p.width / cw, p.height / ch);
+  return { cx: 0.5 + x, cy: 0.5 + y, w: ((cw * k) / p.width) * s, h: ((ch * k) / p.height) * s };
 }
 
 // a file made in the studio (sticker, logo, sound effect) → the library, then onto the overlay video track (V2) or the second

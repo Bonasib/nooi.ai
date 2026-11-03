@@ -146,7 +146,7 @@ export function WorkspaceSwitch() {
 
 // ---------------- the cloud: is it saved, where, and the review link
 export function CloudButton() {
-  const { t } = useTranslation(); const saved = useUI((s) => s.saved); const open = useUI((s) => s.cloudOpen);
+  const { t } = useTranslation(); const saved = useUI((s) => s.saved); const open = useUI((s) => s.cloudOpen); const saveErr = useUI((s) => s.saveErr);
   const signed = api.online && api.me.signedIn;
   return (
     <span className="popwrap">
@@ -154,6 +154,7 @@ export function CloudButton() {
       <Pop open={open} onClose={() => ui.set({ cloudOpen: false })} label={t("cloud.title")} w={290}>
         <h3 className="ns-h3">{t("cloud.title")}</h3>
         <p className="hint">{signed ? t("cloud.account") : t("cloud.device")}</p>
+        {saved === "error" && <p className="err" data-testid="cloud-err">{t("save.error")}{saveErr ? " — " + saveErr : ""}</p>}
         <div className="row"><Btn icon="cloud" primary onClick={async () => { autosave(); if (signed) { const ok = await saveCloud(); toast(ok ? t("cloud.done") : t("save.error"), ok ? "ok" : "warn"); } }} testid="cloud-save">{t("cloud.saveNow")}</Btn>
           <Btn icon="download" onClick={() => { ui.set({ cloudOpen: false }); saveNooi(); }}>{t("file.save")}</Btn></div>
         {!signed && api.online && <a className="ns-btn" href={at("/?signin=1")}>{t("ai.signInBtn")}</a>}
