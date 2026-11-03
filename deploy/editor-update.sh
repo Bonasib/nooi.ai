@@ -1,5 +1,5 @@
 #!/bin/bash
-# v221: install ONLY the editor — nooi Studio at /studio, and the site's "Edit" opening it — on a running nooi.ai.
+# v221 (v224): install ONLY the editor — nooi Studio at /studio, and the site's "Edit" opening it — on a running nooi.ai.
 # Nothing else changes: no data, media, .env, packages, settings or other pages. Paste into hPanel → VPS → Browser terminal (root):
 #
 #   curl -fsSL https://raw.githubusercontent.com/Bonasib/nooi.ai/claude/festive-brahmagupta-08tfzr/deploy/editor-update.sh | bash
@@ -7,7 +7,7 @@
 #   or with the package:   bash editor-update.sh /root/nooi-editor-update.zip
 #   undo it:               bash /opt/nooi/deploy/editor-update.sh --rollback
 #
-# Safety: every file it replaces must still be the version it expects (nooi.ai v216, or this update already in place) — if one was
+# Safety: every file it replaces must still be the version it expects (nooi.ai v216, an earlier editor update, or this one) — if one was
 # changed since, it stops without touching anything (use the full update then). It keeps a backup, checks the code, restarts, checks
 # the home page, the API and /studio/, and puts everything back by itself if one of them fails.
 set -u
@@ -30,6 +30,8 @@ declare -A BASE=(
   [lib/collab196.js]=b88aa389f4836513002fbbdba29221cd81a69a56d9fce4edc4131feecdcb0bbe
   [lib/edit148.js]=bfe9f60af35a564c4408bb97bdecf9c8053348c8a910750c8c42133ffd435346
 )
+# the same files as earlier editor updates (v219–v223) left them — fine too
+PREV=" eb86ab59fbfb093ceb76dbf0108c4b4220423a9e077f290fdced05dcd1537229 723727ed405743dd2c29722b75c0b926bdc8beacb0eb1205fc84a88a7e7682fe c087ffeaf92121398cb1b30ce98aafad2d13d4be4a818e39b991b0fe3a797336 a70ebb1f5f691e5edc8a0fc21136ca823bc3032cb4ae1335c07395ad45d4a9d8 010f82d9f329bbb78199ae2e71e664a1f06de66faa26e7f6e33dd1f0d1ef5388 9ad22b8cebbc4a28e5d54fead1767e649baa509b8c0b854294b6374431bbad17 0b4903812a16421a8c587dd911cc79dd5053fa15ccfa00d9b8610d1aa432b242 5570bf7cdf4b58239de0d2caa3eecfabc48de63ba4652eed0dff371b52610d44 59aee63f25820646d3511de7c9763a4b60d494bcc2e645c739086636b2e5186f 53ef7b7c1de5312695e0b7b1944442a84ef3734369d1502e1e3875011b4cde51 "
 health() {   # the home page, the API and the editor answer
   local i; for i in $(seq 1 30); do curl -fsS --max-time 3 "http://127.0.0.1:$PORT/v1/health" >/dev/null 2>&1 && break; sleep 2; done
   curl -fsS --max-time 5 "http://127.0.0.1:$PORT/v1/health" | grep -q '"ok":true' || return 1
@@ -60,7 +62,7 @@ echo "▶ 2/5 is the server the version this update is for?"
 for f in "${!BASE[@]}"; do
   [ -f "$APP/$f" ] || die "$f is missing on the server — use the full update instead"
   have="$(sha256sum "$APP/$f" | cut -c1-64)"; new="$(sha256sum "$NEW/$f" | cut -c1-64)"
-  [ "$have" = "${BASE[$f]}" ] || [ "$have" = "$new" ] || die "$f on the server isn't nooi.ai v216 (it was changed) — nothing was touched. Use the full update instead."
+  [ "$have" = "${BASE[$f]}" ] || [ "$have" = "$new" ] || [[ "$PREV" == *" $have "* ]] || die "$f on the server isn't nooi.ai v216 or an editor update (it was changed) — nothing was touched. Use the full update instead."
 done
 ok "yes — only the editor's files will change"
 

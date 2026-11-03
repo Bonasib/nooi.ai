@@ -38,7 +38,10 @@ export interface Asset {
 }
 export interface Folder { id: Id; name: string; parent?: Id | null }
 
-export interface ClipBase { id: Id; start: number; dur: number; name?: string; keyframes: Keyframes; transform: Transform; opacity: number }
+// anchor: a clip on another track attached to a frame of a main-track (V1) clip — `at` is that clip's source second (its local
+// second for a title), so it stays on the same picture when V1 is trimmed, rippled or moved (spec §8.5 parentAnchorClipId)
+export interface Anchor { clip: Id; at: number }
+export interface ClipBase { id: Id; start: number; dur: number; name?: string; keyframes: Keyframes; transform: Transform; opacity: number; anchor?: Anchor | null }
 export interface MediaClip extends ClipBase {
   type: "media"; asset: Id;
   in: number;                  // source seconds at the clip's first frame (before reverse)
@@ -82,4 +85,5 @@ export interface Project {
   tracks: Track[];            // top to bottom as shown; the top video/text track is drawn over the ones under it
   transitions: Transition[]; markers: Marker[]; beats: number[];
   ducking: Ducking; export: ExportSettings;
+  magnetic?: boolean;         // the magnetic main track: V1 closes its gaps and what is attached to it moves with it (default on)
 }

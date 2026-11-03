@@ -12,6 +12,7 @@ import { api } from "../api";
 import * as A from "../actions";
 import i18n from "../i18n";
 import { importFiles } from "../media/library";
+import { isZip, makePack, openPack } from "../media/pack";
 import { saveFile } from "../engine/native";
 import { NATIVE, at } from "../site";
 import { Modal } from "./Dialogs";
@@ -43,18 +44,28 @@ function MenuItem({ icon, label, kbd, onClick, testid, disabled }: { icon: strin
   return <button type="button" className="mitem" role="menuitem" onClick={onClick} data-testid={testid} disabled={disabled}><Icon name={icon} size={16} /><span>{label}</span>{kbd && <kbd>{kbd}</kbd>}</button>;
 }
 
-// ---------------- .nooi files: the whole project as one file (the media stays where it is: the account or this device)
-export async function saveNooi() {
-  const p = editor.project; const doc = { nooiVersion: 1, app: "nooi Studio", saved: new Date().toISOString(), project: p };
-  const blob = new Blob([JSON.stringify(doc)], { type: "application/json" });
-  const name = ((p.name || "project").replace(/[\\/:*?"<>|]+/g, " ").trim().slice(0, 60) || "project") + ".nooi";
+// ---------------- .nooi files (spec §8.6: frames, V1 as the spine, anchors) and .nooipack (the project with its media)
+const fileName = (n: string, ext: string) => ((n || "project").replace(/[\\/:*?"<>|]+/g, " ").trim().slice(0, 60) || "project") + ext;
+async function download(blob: Blob, name: string) {
   try { if (await saveFile(blob, name)) return; } catch { /* the browser's download below */ }
-  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-  toast(tr("file.saved", { name }), "ok");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 8000);
+}
+export async function saveNooi() {
+  const p = editor.project; const name = fileName(p.name, ".nooi");
+  await download(new Blob([JSON.stringify(C.toNooi(p), null, 1)], { type: "application/json" }), name); toast(tr("file.saved", { name }), "ok");
+}
+export async function savePack() {
+  toast(tr("pack.making"), "info");
+  try {
+    const r = await makePack(editor.project); await download(r.blob, r.name);
+    toast(r.missing.length ? tr("pack.savedMissing", { name: r.name, n: r.files, m: r.missing.length }) : tr("pack.saved", { name: r.name, n: r.files }), r.missing.length ? "warn" : "ok");
+  } catch { toast(tr("pack.failed"), "warn"); }
 }
 export async function openNooi(f: File) {
   try {
-    const j = JSON.parse(await f.text()); const p = j && typeof j === "object" && j.project ? j.project : j;
+    if (await isZip(f)) { const r = await openPack(f); await openProject(r.project); autosave(); toast(tr("pack.opened", { name: editor.project.name, n: r.files }), "ok"); return; }
+    const j = JSON.parse(await f.text());
+    const p = C.isNooi(j) ? C.fromNooi(j) : j && typeof j === "object" && j.project ? j.project : j;   // (v223 files kept the studio project as it is)
     if (!p || !Array.isArray(p.tracks)) throw new Error("not a project");
     await openProject(p); autosave(); toast(tr("file.opened", { name: editor.project.name }), "ok");
   } catch { toast(tr("file.bad"), "warn"); }
@@ -75,13 +86,14 @@ export function FileMenu() {
           <MenuItem icon="settings" label={t("file.settings")} onClick={go(() => ui.set({ settingsOpen: true }))} testid="file-settings" />
           <hr />
           <MenuItem icon="download" label={t("file.save")} kbd="Ctrl+Shift+S" onClick={go(saveNooi)} testid="file-save" />
+          <MenuItem icon="download" label={t("pack.save")} onClick={go(savePack)} testid="file-pack" />
           <MenuItem icon="upload" label={t("file.load")} onClick={() => fileRef.current?.click()} testid="file-load" />
           <hr />
           <MenuItem icon="search" label={t("palette.open")} kbd="⌘K" onClick={go(() => ui.set({ paletteOpen: true }))} />
           <MenuItem icon="export" label={t("top.export")} kbd="Ctrl+E" onClick={go(() => ui.set({ exportOpen: true }))} />
           {!NATIVE && <a className="mitem" role="menuitem" href={at("/")}><Icon name="home" size={16} /><span>{t("top.home")}</span></a>}
         </div>
-        <input ref={fileRef} type="file" accept=".nooi,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; ui.set({ fileOpen: false }); if (f) openNooi(f); }} data-testid="nooi-input" />
+        <input ref={fileRef} type="file" accept=".nooi,.nooipack,application/json,application/zip" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; ui.set({ fileOpen: false }); if (f) openNooi(f); }} data-testid="nooi-input" />
       </Pop>
     </span>
   );

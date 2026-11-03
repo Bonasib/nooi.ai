@@ -347,3 +347,8 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
 .app.phone .filebtn, .app.phone .wsbtn, .app.phone .matebtn { padding: 0 6px; }
 .app.phone .cloudbtn.saved { display: inline-flex; padding: 0 4px; } .app.phone .cloudbtn span { display: none; }
 .app.phone .mate { top: 46px; width: 100vw; }
+
+/* ---- v224 · the magnetic main track */
+.thead .spine { margin-inline-start: 4px; padding: 1px 5px; border-radius: 4px; background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); font: 700 9px var(--mono); font-style: normal; text-transform: uppercase; letter-spacing: .04em; }
+.clip .anc { position: absolute; left: 0; bottom: -1px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--track); pointer-events: none; }
+.clip .anc::after { content: ""; position: absolute; left: 3px; top: 7px; width: 1px; height: 6px; background: var(--accent); opacity: .7; }

@@ -28,12 +28,24 @@ Done in v223 (tests/v223.py). Each row below was built:
 | §4.4 inspector, 4 tabs | Video, Speed, Audio, Color, Effects, Text | Video (Basic, Effects, Animation) · Color · Audio · Speed — plus Text for titles |
 | AI sparkle badge on AI tools | — | the gradient badge |
 
-## Step 2 — Project data and the timeline engine (spec §8.5, §8.6)
+## Step 2 — Project data and the timeline engine (spec §8.5–8.7) · v224 ✅
 - ✅ Command undo / redo (300 steps), autosave, saving to the account.
-- 🟡 Ripple on V1.
-- 🟡 `.nooi` file save and open: v223 saves and opens the studio project as one file (File menu, Ctrl+Shift+S). ⬜ Next: the spec's JSON shape (frames, `isPrimarySpine`, clip transform with keyframes, speed ramp nodes, colour masks), converted to and from the studio project.
-- ⬜ Magnetic V1 spine with anchored B-roll and sound (`parentAnchorClipId`), so a ripple on V1 moves what is attached to it.
-- ⬜ `.nooipack` (project + proxies + waveforms).
+- ✅ The magnetic main track (`studio/packages/editor-core/src/anchors.ts`):
+  - V1 is the primary spine. A clip on any other track is attached to the V1 clip under it, at that clip's picture (its source second), so a trim, ripple, split, speed change or move on V1 carries it along.
+  - A plain Delete on V1 closes the gap. Moving the attached clip yourself attaches it where you drop it.
+  - Deleting its V1 clip keeps it. A clip that would land on another one moves to a free track.
+  - The toolbar's link button turns it off and on. V1 shows **Main**, and an attached clip shows a mark.
+- ✅ `.nooi` (`src/nooi.ts`) has the spec's shape:
+  - frames at the project rate, `isPrimarySpine`, and source in/out frames;
+  - transform properties as default + keyframes, with interp and tangents;
+  - speed, color grading, audio with gain in dB, and `parentAnchorClipId` + `anchorOffsetFrames`.
+  - Off-frame times keep their exact second, and the rest sits under `ext`, so a round trip loses nothing (unit tested). Anchors given only in frames, from another app, are read too.
+- ✅ `.nooipack` (`apps/web/src/media/pack.ts`) is a standard ZIP:
+  - it holds `project.nooi`, every media file (stored as is), and `.nooipeaks` waveforms;
+  - opening one puts the media on the device and relinks it.
+  - Browsers have no Zstd, so it uses ZIP deflate. Files up to 4 GB.
+- ⬜ Next: speed-ramp nodes and colour masks get their real data in Steps 3 and 5 (the fields are written empty now). Upload `.nooipack` proxies for a cloud hand-off (Step 8).
+- ✅ The site: **Studio** sits in the header next to Explore on a computer (where Edit was), as a button in the phone's top bar, and as a link on the landing page.
 
 ## Step 3 — Editing depth (spec §4.3, §4.4, §6.1)
 - ⬜ Speed ramping (curve presets: Montage, Hero moment, Bullet time, Jumper; a velocity curve).

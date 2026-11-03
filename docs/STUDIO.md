@@ -221,3 +221,15 @@ Apple developer accounts, plus a signed release build (`./gradlew bundleRelease`
   - render status (plus a cache line over the ruler);
   - add a track, snap, zoom.
 - **Clip settings:** Video (basic · effects · animation) · Color · Audio · Speed, plus Text for titles.
+
+## The project engine (v224 — Step 2)
+
+- **Magnetic main track:**
+  - V1 is the spine. Clips on other tracks are attached to the V1 clip under them, and follow it through trims, ripples, splits, speed changes and moves.
+  - Delete on V1 closes the gap.
+  - The toolbar's link button turns it off or on.
+- **Files** (File menu):
+  - `.nooi`: the project in the spec's JSON shape;
+  - `.nooipack`: the project and all its media in one ZIP, to move it to another device;
+  - Open takes either, and the v223 `.nooi` too.
+- **Site:** "Studio" is in the site header next to Explore, in the phone's top bar, and on the landing page.

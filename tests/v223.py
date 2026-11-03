@@ -61,7 +61,7 @@ async def desktop(p):
     await pg.click('[data-testid="file-menu"]')
     async with pg.expect_download() as dl: await pg.click('[data-testid="file-save"]')
     d = await dl.value; path = D + "/" + d.suggested_filename; await d.save_as(path); doc = json.load(open(path))
-    chk("Save as .nooi: one JSON file with the project", d.suggested_filename == "Desert trip.nooi" and doc.get("nooiVersion") == 1 and doc["project"]["name"] == "Desert trip", {"f": d.suggested_filename, "keys": list(doc)})
+    chk("Save as .nooi: one JSON file with the project (the v224 shape)", d.suggested_filename == "Desert trip.nooi" and doc.get("nooiVersion") == "1.0.0" and doc["metadata"]["title"] == "Desert trip", {"f": d.suggested_filename, "keys": list(doc)})
     await E("()=>window.__studio.editor.run('rn',p=>{p.name='Other'})")
     await pg.click('[data-testid="file-menu"]'); await pg.set_input_files('[data-testid="nooi-input"]', path); await pg.wait_for_function(P + ".name==='Desert trip'", timeout=8000)
     # back to 1080p for the rest

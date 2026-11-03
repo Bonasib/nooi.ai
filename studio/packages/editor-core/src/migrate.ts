@@ -17,6 +17,7 @@ export function migrate(raw: unknown): Project {
     transitions: Array.isArray(r.transitions) ? r.transitions : [], markers: Array.isArray(r.markers) ? r.markers : [], beats: Array.isArray(r.beats) ? r.beats.filter((x) => typeof x === "number") : [],
     ducking: { ...base.ducking, ...(r.ducking || {}) }, export: { ...base.export, ...(r.export || {}) },
     tracks: Array.isArray(r.tracks) ? (r.tracks as Track[]).map(fixTrack) : base.tracks,
+    magnetic: r.magnetic !== false,
   };
   if (!p.tracks.length) p.tracks = base.tracks;
   const ids = new Set(p.tracks.flatMap((t) => t.clips.map((c) => c.id)));

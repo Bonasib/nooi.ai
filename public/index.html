@@ -25455,6 +25455,21 @@ edUseJob=(o=>function(){ST219.used=Date.now();return o.apply(this,arguments)})(e
 go=(o=>function(v,...a){const w=(typeof ALIAS82!=="undefined"&&ALIAS82[v])||v;if(w==="edit"&&studioOn219()){S.view=S.view==="edit"?"home":S.view;persist();location.href=studioUrl219();return}return o(v,...a)})(go);
 setTimeout(()=>{if(S.view==="edit"&&studioOn219()){S.view="home";persist();location.replace(studioUrl219())}else if(/[?&]classic=1/.test(location.search)&&S.view!=="edit")go("edit")},0);
 
+/* ================= v224: nooi Studio in the site's header. On a computer it sits next to Explore (in place of "Edit", which
+   opened the studio already); a phone's top bar gets a Studio button; the landing page links to it. Each one opens /studio/ (the
+   classic editor stays reachable from the studio's Projects with ?classic=1). ================= */
+hnav98=(o=>function(){const h=o.apply(this,arguments);const m=h.match(/<button type="button" data-go="edit"( aria-current="page")?>[^<]*<\/button>/);if(!m)return h;
+  const b='<button type="button" class="st224" data-go="edit"'+(m[1]||"")+' title="'+esc(L("nooi Studio — the video editor","استوديو nooi — محرر الفيديو"))+'">'+esc(L("Studio","الأستوديو"))+"<i>"+esc(L("New","جديد"))+"</i></button>";
+  const x=h.replace(m[0],""),ex=x.match(/<button type="button" data-go="explore"[^>]*>[^<]*<\/button>/);return ex?x.replace(ex[0],ex[0]+b):x.replace(/(<nav class="hnav98"[^>]*>)/,"$1"+b)})(hnav98);
+header98=(o=>function(){o.apply(this,arguments);const t=document.querySelector("#main>.topm"),row=t&&t.querySelector(".row");if(!row||row.querySelector(".st224m"))return;
+  row.insertAdjacentHTML("afterbegin",'<button type="button" class="btn ghost sm st224m" data-go="edit" aria-label="'+esc(L("nooi Studio","استوديو nooi"))+'">'+ic("video")+"<span>"+esc(L("Studio","الأستوديو"))+"</span></button>")})(header98);
+vLanding=(o=>function(){const h=o.apply(this,arguments);return typeof h==="string"?h.replace('<button data-act="lp-go" data-t="lp-show">','<a class="st224l" href="/studio/">'+esc(L("Studio","الأستوديو"))+'</a><button data-act="lp-go" data-t="lp-show">'):h})(vLanding);
+(()=>{const st=document.createElement("style");st.textContent=`.hnav98 .st224{display:inline-flex;align-items:center;gap:6px}
+.hnav98 .st224 i{font:700 9.5px/1 var(--mono,monospace);font-style:normal;letter-spacing:.03em;padding:3px 5px;border-radius:5px;background:linear-gradient(135deg,#00F0FF,#7B61FF 55%,#FF3D9A);color:#fff}
+.st224m{display:none}@media (max-width:767px){#main>.topm .st224m{display:inline-flex;align-items:center;gap:5px;padding-inline:8px}#main>.topm .st224m svg{width:15px;height:15px}}
+@media (max-width:419px){#main>.topm .st224m span{display:none}#main>.topm .st224m{padding-inline:6px;min-width:34px;justify-content:center;color:var(--lime,#c1ff72)}}
+.lplinks .st224l{display:inline-flex;align-items:center;color:var(--text);text-decoration:none;padding:8px 10px;border-radius:8px;font-size:13.5px;font-weight:600}.lplinks .st224l:hover{background:var(--panel2)}`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

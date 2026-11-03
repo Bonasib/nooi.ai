@@ -20,6 +20,7 @@ const HEAD = 150, RULER = 26, LANE: Record<Track["kind"], number> = { video: 56,
 export function Timeline() {
   const { t } = useTranslation(); const p = useProject(); const zoom = useUI((s) => s.zoom); const tool = useUI((s) => s.tool); const snapOn = useUI((s) => s.snap);
   const scroll = useRef<HTMLDivElement>(null); const [snapAt, setSnapAt] = useState<number | null>(null); const [dropX, setDropX] = useState<number | null>(null);
+  const spine = C.spineOf(p); const mag = p.magnetic !== false;
   const dur = C.duration(p), width = Math.max((dur + 30) * zoom, 800);
   const xToT = (clientX: number) => { const r = scroll.current!.getBoundingClientRect(); return Math.max(0, (clientX - r.left + scroll.current!.scrollLeft) / zoom); };
   const laneAt = (clientY: number): string | null => { const el = document.elementsFromPoint(scroll.current!.getBoundingClientRect().left + 4, clientY).find((e) => (e as HTMLElement).dataset?.lane) as HTMLElement | undefined; return el?.dataset.lane || null; };
@@ -107,13 +108,14 @@ export function Timeline() {
         <Btn icon="plus" label={t("tl.addVideo")} onClick={() => A.run("track", (q) => C.addTrack(q, "video"))}>V</Btn>
         <Btn icon="plus" label={t("tl.addAudio")} onClick={() => A.run("track", (q) => C.addTrack(q, "audio"))}>A</Btn>
         <Btn icon="plus" label={t("tl.addText")} onClick={() => A.run("track", (q) => C.addTrack(q, "text", 0))}>T</Btn>
+        <Btn icon="link" label={t("mag.label")} pressed={p.magnetic !== false} onClick={A.toggleMagnetic} testid="magnetic" />
         <Btn icon="magnet" label={t("tl.snap")} pressed={snapOn} onClick={() => ui.set({ snap: !snapOn })} testid="snap" />
         <span className="zoomgrp"><Btn icon="minus" label={t("tl.zoomOut")} onClick={() => A.zoom(1 / 1.25)} /><input className="zoomr" type="range" min={4} max={600} value={zoom} onChange={(e) => ui.set({ zoom: +e.target.value })} aria-label={t("tl.zoom")} /><Btn icon="plus" label={t("tl.zoomIn")} onClick={() => A.zoom(1.25)} /><b dir="ltr">{Math.round((zoom / 60) * 100)}%</b></span>
       </div>
       <div className="tlgrid" dir="ltr">
         <div className="theads" style={{ width: HEAD }}>
           <div style={{ height: RULER }} className="rulerpad" />
-          {p.tracks.map((tr) => <Head key={tr.id} tr={tr} p={p} />)}
+          {p.tracks.map((tr) => <Head key={tr.id} tr={tr} p={p} spine={tr === spine} />)}
         </div>
         <div className="tlscroll" ref={scroll} onDragOver={allow} onDragLeave={() => setDropX(null)} onDrop={(e) => onDrop(e, laneAt(e.clientY))}
           onPointerDown={(e) => { if ((e.target as HTMLElement).closest(".clip,.trb,.mk")) return; if ((e.target as HTMLElement).dataset.lane) { editor.select([]); playerRef.current?.seek(xToT(e.clientX)); } }}>
@@ -121,7 +123,7 @@ export function Timeline() {
             <Ruler p={p} zoom={zoom} width={width} onDown={scrub} />
             {p.tracks.map((tr) => (
               <div key={tr.id} className={"lane " + tr.kind + (tr.locked ? " locked" : "") + (tr.hidden ? " hidden" : "")} data-lane={tr.id} style={{ height: LANE[tr.kind] }}>
-                {tr.clips.map((c) => <ClipView key={c.id} c={c} p={p} zoom={zoom} sel={editor.selection.includes(c.id)} kind={tr.kind} onDown={startDrag} />)}
+                {tr.clips.map((c) => <ClipView key={c.id} c={c} p={p} zoom={zoom} sel={editor.selection.includes(c.id)} kind={tr.kind} onDown={startDrag} anchored={mag && !!c.anchor} />)}
                 {p.transitions.filter((x) => x.track === tr.id).map((x) => { const b = tr.clips.find((c) => c.id === x.b); return b ? <TransBadge key={x.id} id={x.id} at={b.start * zoom} w={x.dur * zoom} type={x.type} /> : null; })}
               </div>
             ))}
@@ -134,12 +136,12 @@ export function Timeline() {
     </section>
   );
 }
-function Head({ tr, p }: { tr: Track; p: Project }) {
+function Head({ tr, p, spine }: { tr: Track; p: Project; spine: boolean }) {
   const { t } = useTranslation(); const set = (k: string, v: boolean) => A.run("track", (q) => C.COMMANDS.track.run(q, { id: tr.id, [k]: v }));
   return (
     <div className={"thead " + tr.kind} style={{ height: LANE[tr.kind] }} data-head={tr.id}>
       <Icon name={tr.kind === "audio" ? "audio" : tr.kind === "text" ? "text" : "film"} size={14} />
-      <b title={tr.name}>{tr.name}</b>
+      <b title={tr.name}>{tr.name}</b>{spine && p.magnetic !== false && <i className="spine" title={t("mag.spine")} data-testid="spine">{t("mag.main")}</i>}
       <span className="hb">
         <button type="button" aria-pressed={tr.locked} onClick={() => set("locked", !tr.locked)} aria-label={t("tl.lock", { n: tr.name })} title={t("tl.lock", { n: tr.name })}><Icon name={tr.locked ? "lock" : "unlock"} size={14} /></button>
         {tr.kind !== "audio" && <button type="button" aria-pressed={tr.hidden} onClick={() => set("hidden", !tr.hidden)} aria-label={t("tl.hide", { n: tr.name })} title={t("tl.hide", { n: tr.name })}><Icon name={tr.hidden ? "eyeoff" : "eye"} size={14} /></button>}
@@ -168,7 +170,7 @@ function Ruler({ p, zoom, width, onDown }: { p: Project; zoom: number; width: nu
     </div>
   );
 }
-const ClipView = memo(function ClipView({ c, p, zoom, sel, kind, onDown }: { c: Clip; p: Project; zoom: number; sel: boolean; kind: Track["kind"]; onDown: (e: RPE, c: Clip, part: "body" | "l" | "r") => void }) {
+const ClipView = memo(function ClipView({ c, p, zoom, sel, kind, onDown, anchored }: { c: Clip; p: Project; zoom: number; sel: boolean; kind: Track["kind"]; onDown: (e: RPE, c: Clip, part: "body" | "l" | "r") => void; anchored?: boolean }) {
   const a = c.type === "media" ? p.assets[c.asset] : null; const w = Math.max(2, c.dur * zoom);
   const isAudio = kind === "audio" || a?.kind === "audio";
   const style: React.CSSProperties = { left: c.start * zoom, width: w };
@@ -178,6 +180,7 @@ const ClipView = memo(function ClipView({ c, p, zoom, sel, kind, onDown }: { c: 
     <div className={"clip " + (c.type === "text" ? "text" : isAudio ? "audio" : "video") + (sel ? " sel" : "")} style={style} onPointerDown={(e) => onDown(e, c, "body")} data-clip={c.id} title={c.name} role="button" aria-pressed={sel} aria-label={c.name || (c.type === "text" ? c.text : a?.name)}>
       {isAudio && a?.waveform && <ClipWave c={c as MediaClip} peaks={a.waveform} dur={a.duration || 1} />}
       <span className="cn" dir="auto">{c.type === "text" ? c.text : c.name || a?.name}</span>
+      {anchored && <i className="anc" aria-hidden="true" />}
       {c.type === "media" && c.speed !== 1 && <span className="badge">{c.speed.toFixed(2).replace(/\.?0+$/, "")}×</span>}
       {c.type === "media" && c.reverse && <span className="badge">↺</span>}
       {c.type === "media" && c.effects.length > 0 && <span className="badge">fx</span>}

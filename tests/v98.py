@@ -36,7 +36,7 @@ async def run(b, W, H, lang, tag):
     out[tag] = {"header": h}
     if W >= 768:
         ok(h["header"] and h["side"] == "none" and h["bottom"] == "none" and h["lib"], f"{tag}: one header, no side menu, no bottom bar {h}")
-        ok(h["nav"][:3] == ["explore", "image", "video"] and "apps" in h["nav"] + ["apps"] and h["cur"] == "video", f"{tag}: the sections in the header, Video marked {h['nav']} {h['cur']}")
+        ok([x for x in h["nav"] if x != "edit"][:3] == ["explore", "image", "video"] and h["nav"][1:2] == ["edit"] and "apps" in h["nav"] + ["apps"] and h["cur"] == "video", f"{tag}: the sections in the header, Video marked {h['nav']} {h['cur']}")
         ok(h["mainW"] >= W - 2, f"{tag}: the page uses the whole width ({h['mainW']} of {W})")
         await pg.click('#main .hnav98 [data-go="image"]'); await pg.wait_for_timeout(300)
         ok(await E("()=>S.view") == "image", f"{tag}: a section in the header opens its page")

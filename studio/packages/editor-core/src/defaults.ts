@@ -45,6 +45,7 @@ export function emptyProject(o: Partial<Project> = {}): Project {
     transitions: [], markers: [], beats: [],
     ducking: { enabled: false, amount: 0.7, voiceTracks: [] },
     export: { preset: "youtube", format: "mp4", res: "1080p", fps: 30, quality: "high" },
+    magnetic: true,
     ...o,
   };
 }

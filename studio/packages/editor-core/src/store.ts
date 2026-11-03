@@ -2,6 +2,7 @@
 // A command copies the project, changes the copy and keeps the old one for undo. A drag is one transaction:
 // begin() → live() on every move (always from the state at the start of the drag) → commit() makes one undo step.
 import type { Id, Project } from "./schema";
+import { follow } from "./anchors";
 
 export type Listener = () => void;
 const clone = <T>(x: T): T => (typeof structuredClone === "function" ? structuredClone(x) : JSON.parse(JSON.stringify(x)));
@@ -25,7 +26,7 @@ export class Editor {
   /** one undoable step */
   run<T>(label: string, fn: (draft: Project) => T): T {
     if (this.tx) this.commit();
-    const draft = clone(this.project); const r = fn(draft);
+    const draft = clone(this.project); const r = fn(draft); follow(this.project, draft);
     draft.updatedAt = Date.now();
     this.past.push({ p: this.project, label }); if (this.past.length > this.limit) this.past.shift();
     this.future = []; this.project = draft; this.dirty = true; this.prune(); this.emit(); return r;
@@ -33,7 +34,7 @@ export class Editor {
   begin(label: string) { if (this.tx) this.commit(); this.tx = { base: this.project, label }; }
   live<T>(fn: (draft: Project) => T): T | undefined {
     if (!this.tx) return undefined;
-    const draft = clone(this.tx.base); const r = fn(draft); this.project = draft; this.emit(); return r;
+    const draft = clone(this.tx.base); const r = fn(draft); follow(this.tx.base, draft); this.project = draft; this.emit(); return r;
   }
   commit() {
     if (!this.tx) return; const { base, label } = this.tx; this.tx = null;

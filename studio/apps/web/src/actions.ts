@@ -31,6 +31,8 @@ export function split() {
 }
 export function del(ripple = false) {
   const ids = editor.selection; if (!ids.length) return;
+  // the magnetic main track closes its gaps: a plain delete on V1 ripples (what is attached downstream moves with it)
+  const sp = C.spineOf(editor.project); if (!ripple && editor.project.magnetic !== false && sp && ids.every((id) => sp.clips.some((c) => c.id === id))) ripple = true;
   run(ripple ? "rippleDelete" : "delete", (p) => C.deleteClips(p, ids, ripple)); editor.select([]); playerRef.current?.prune();
 }
 export function duplicate() { const ids = editor.selection; if (!ids.length) return; const out = run("duplicate", (p) => C.duplicate(p, ids)); editor.select(out.map((c) => c.id)); }
@@ -90,6 +92,11 @@ export function textSet(path: string, value: unknown) { const c = sel1(); if (c?
 export const isText = (c: Clip | null): c is TextClip => !!c && c.type === "text";
 export function undo() { const l = editor.undo(); if (l) { autosave(); playerRef.current?.prune(); } }
 export function redo() { const l = editor.redo(); if (l) autosave(); }
+export function toggleMagnetic() {
+  const on = editor.project.magnetic === false;
+  run("magnetic", (p) => { p.magnetic = on; if (on) C.anchorAll(p); else for (const t of p.tracks) for (const c of t.clips) delete c.anchor; });
+  toast(t(on ? "mag.on" : "mag.off"), "info");
+}
 export function zoom(f: number) { ui.set((s) => ({ zoom: Math.max(4, Math.min(600, s.zoom * f)) })); }
 
 // back to the middle at full size, not turned (position, size and turn keyframes go too; crop and flips stay)

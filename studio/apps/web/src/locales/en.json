@@ -502,7 +502,7 @@
   "open": "Open a project…",
   "settings": "Project settings",
   "save": "Save as a .nooi file",
-  "load": "Open a .nooi file…",
+  "load": "Open a .nooi or .nooipack file…",
   "saved": "Saved {{name}}",
   "opened": "Opened “{{name}}”",
   "bad": "That file isn't a nooi project."
@@ -602,7 +602,9 @@
   "sound_effect": "Sound effect",
   "reset_position": "Reset position",
   "fps": "Frame rate",
-  "background": "Background"
+  "background": "Background",
+  "magnetic": "Magnetic track",
+  "rippleDelete": "Ripple delete"
  },
  "rf": {
   "title": "Crop & reframe",
@@ -636,5 +638,20 @@
   "green": "Plays smoothly",
   "amber": "Some effects — may play less smoothly",
   "red": "Heavy — export to see full smoothness"
+ },
+ "pack": {
+  "save": "Save as a .nooipack (with media)",
+  "making": "Packing the project and its media…",
+  "saved": "Saved {{name}} — the project and {{n}} files.",
+  "savedMissing": "Saved {{name}} with {{n}} files — {{m}} couldn't be read and were left out.",
+  "failed": "Couldn't make the pack — try again, or save a .nooi file.",
+  "opened": "Opened “{{name}}” — {{n}} media files are now on this device."
+ },
+ "mag": {
+  "label": "Magnetic main track: clips on other tracks stay attached to V1",
+  "on": "Magnetic main track on — clips on other tracks move with the V1 clip they sit on.",
+  "off": "Magnetic main track off — every clip stays where you put it.",
+  "main": "Main",
+  "spine": "The main track: delete closes its gaps, and what is attached to it moves with it"
  }
 }
