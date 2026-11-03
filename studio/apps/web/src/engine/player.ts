@@ -11,7 +11,7 @@ export interface ClockState { t: number; playing: boolean; buffering: boolean }
 
 export class Player {
   comp: Compositor; clock: ClockState = { t: 0, playing: false, buffering: false };
-  private els = new Map<string, { el: El; asset: string; node?: MediaElementAudioSourceNode; gain?: GainNode; url?: string }>();
+  private els = new Map<string, { el: El; asset: string; node?: MediaElementAudioSourceNode; gain?: GainNode; url?: string; fid?: number; cbAt?: number }>();
   private imgs = new Map<string, HTMLImageElement>();
   private luts = new Map<string, { tex: WebGLTexture; size: number } | "loading" | "bad">();
   private actx: AudioContext | null = null; private master: GainNode | null = null;
@@ -30,6 +30,8 @@ export class Player {
   private emitClock() { this.ls.forEach((f) => f()); }
   get project(): Project { return this.editor.project; }
   // the drawing size: the project's frame scaled to fit `maxW` (the preview is a smaller copy; the export uses the full size)
+  /** (v226) the size the preview is shown at (CSS px): the drawing is made at that size × the screen's density (at most ×2), never above 1280 */
+  fitTo(cssW: number, cssH: number) { const dpr = Math.min(2, typeof devicePixelRatio === "number" ? devicePixelRatio : 1), m = Math.max(320, Math.min(1280, Math.round(Math.max(cssW, cssH) * dpr / 16) * 16)); if (m !== this.maxW) { this.maxW = m; this.resize(); } }
   resize() { const p = this.project, k = Math.min(1, this.maxW / Math.max(p.width, p.height)); this.comp.resize(Math.round(p.width * k / 2) * 2, Math.round(p.height * k / 2) * 2); this.drawnV = -1; }
 
   async audio(): Promise<AudioContext | null> {
@@ -96,6 +98,9 @@ export class Player {
       const el = (a.kind === "audio" ? new Audio() : document.createElement("video")) as El;
       el.preload = "auto"; el.crossOrigin = "anonymous"; (el as HTMLVideoElement).playsInline = true; el.muted = false;
       e = { el, asset: a.id }; this.els.set(c.id, e); const rec = e;
+      // (v226) count the frames the video really shows, so an unchanged frame is not sent to the GPU again on the next draw
+      const vv = el as HTMLVideoElement & { requestVideoFrameCallback?: (cb: () => void) => number };
+      if (a.kind !== "audio" && typeof vv.requestVideoFrameCallback === "function") { rec.fid = 0; const cb = () => { rec.fid = (rec.fid || 0) + 1; rec.cbAt = performance.now(); this.drawnT = -1; vv.requestVideoFrameCallback!(cb); }; vv.requestVideoFrameCallback(cb); }
       urlOf(a).then((u) => { if (u) { el.src = u; rec.url = u; } });
       if (this.actx && this.master) { try { rec.node = this.actx.createMediaElementSource(el); rec.gain = this.actx.createGain(); rec.node.connect(rec.gain).connect(this.master); } catch { /* the element plays on its own */ } }
       el.addEventListener("seeked", () => { this.settle = performance.now() + 120; this.drawnT = -1; });
@@ -111,7 +116,7 @@ export class Player {
     }
     const e = this.els.get(c.id); const v = e?.el as HTMLVideoElement | undefined;
     if (!v || v.readyState < 2 || !v.videoWidth) { if (!e) this.element(c, a); return null; }
-    return { src: v, w: v.videoWidth, h: v.videoHeight, key: "v:" + c.id, dynamic: true };
+    return { src: v, w: v.videoWidth, h: v.videoHeight, key: "v:" + c.id, dynamic: true, fid: e!.cbAt && performance.now() - e!.cbAt < 400 ? e!.fid : undefined };   // (only while the browser reports frames)
   }
   private lut(id: string) {
     const L = this.luts.get(id); if (L && L !== "loading" && L !== "bad") return L; if (L) return null;

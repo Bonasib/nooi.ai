@@ -27,12 +27,14 @@ export function Preview() {
   const [size, setSize] = useState({ w: 320, h: 180 }); const [held, setHeld] = useState(false);
   useEffect(() => {
     const pl = new Player(editor, ref.current!); playerRef.current = pl; force((x) => x + 1);
-    const off = pl.onClock(() => force((x) => x + 1));
+    // (v226) while it plays, the time is drawn by <Timecode> on its own; the rest of the preview redraws when it stops, starts or seeks
+    let was = false; const off = pl.onClock(() => { const now = pl.clock.playing; if (!now || now !== was) force((x) => x + 1); was = now; });
     return () => { off(); pl.dispose(); playerRef.current = null; };
   }, []);
   useEffect(() => { playerRef.current?.setOverride(pv && !pv.startsWith("tr:") ? previewOf(pv) : null); }, [pv]);
   useEffect(() => { const pl = playerRef.current; if (pl) pl.loop = loop; }, [loop]);
   useEffect(() => { playerRef.current?.resize(); }, [p.width, p.height]);
+  useEffect(() => { playerRef.current?.fitTo(size.w, size.h); }, [size.w, size.h]);
   useEffect(() => {
     const el = box.current!; const fit = () => { const r = el.getBoundingClientRect(), cs = getComputedStyle(el), padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight), padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom); const k = Math.min((r.width - padX) / p.width, (r.height - padY) / p.height); setSize({ w: Math.max(40, Math.floor(p.width * k)), h: Math.max(40, Math.floor(p.height * k)) }); };
     fit(); const ro = new ResizeObserver(fit); ro.observe(el); return () => ro.disconnect();
@@ -85,7 +87,7 @@ export function Preview() {
         <Btn icon="prev" label={t("preview.back")} kbd="←" onClick={() => playerRef.current?.step(-1)} />
         <Btn icon={clock.playing ? "pause" : "play"} label={clock.playing ? t("preview.pause") : t("preview.play")} kbd="Space" onClick={() => { const q = playerRef.current; if (q) { q.toggle(); if (!editor.project.tracks.some((x) => x.clips.length)) toast(t("preview.empty"), "info"); } }} primary testid="play" />
         <Btn icon="next" label={t("preview.fwd")} kbd="→" onClick={() => playerRef.current?.step(1)} />
-        <span className="tc" data-testid="tc">{tc(clock.t, p.fps)} <span className="dim">/ {tc(d, p.fps)}</span></span>
+        <Timecode fps={p.fps} d={d} />
         <span className="sp" />
         <Btn icon="reverse" label={t("preview.loop")} pressed={loop} onClick={() => ui.set({ loop: !loop })} />
         <Btn icon="fit" label={t("preview.safe")} pressed={safe} onClick={() => ui.set({ safe: !safe })} />
@@ -95,4 +97,9 @@ export function Preview() {
   );
 }
 export const seekTo = (t: number) => { playerRef.current?.seek(t); };
+function Timecode({ fps, d }: { fps: number; d: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => { const pl = playerRef.current; if (!pl) return; const put = () => { if (ref.current) ref.current.firstChild!.textContent = tc(pl.clock.t, fps) + " "; }; put(); return pl.onClock(put); }, [playerRef.current, fps]);
+  return <span className="tc" data-testid="tc" ref={ref}>{tc(playerRef.current?.clock.t ?? 0, fps) + " "}<span className="dim">/ {tc(d, fps)}</span></span>;
+}
 export const _a = A;

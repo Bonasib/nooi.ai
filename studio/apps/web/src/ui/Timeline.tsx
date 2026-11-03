@@ -52,10 +52,10 @@ export function Timeline() {
   };
   // ---- the ruler: scrub
   const scrub = (e: RPE) => {
-    if (e.button > 0) return; const seek = (x: number) => playerRef.current?.seek(snapOn ? C.snap(xToT(x), C.snapPoints(editor.project, {}), 6 / zoom).t : xToT(x));
+    if (e.button > 0) return; e.stopPropagation(); e.preventDefault(); const seek = (x: number) => playerRef.current?.seek(snapOn ? C.snap(xToT(x), C.snapPoints(editor.project, {}), 6 / zoom).t : xToT(x));
     playerRef.current?.pause(); seek(e.clientX);
-    const mv = (ev: PointerEvent) => seek(ev.clientX); const up = () => { window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); };
-    window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up);
+    const mv = (ev: PointerEvent) => seek(ev.clientX); const up = () => { window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up); };
+    window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
   };
   // ---- drops from the panels: media, a text template, a transition
   const onDrop = (e: DragEvent, laneId: string | null) => {
@@ -128,7 +128,7 @@ export function Timeline() {
                 {p.transitions.filter((x) => x.track === tr.id).map((x) => { const b = tr.clips.find((c) => c.id === x.b); return b ? <TransBadge key={x.id} id={x.id} at={b.start * zoom} w={x.dur * zoom} type={x.type} /> : null; })}
               </div>
             ))}
-            <Playhead zoom={zoom} />
+            <Playhead zoom={zoom} onDown={scrub} />
             {snapAt != null && <div className="snapline" style={{ left: snapAt * zoom }} />}
             {dropX != null && <div className="dropline" style={{ left: dropX }} />}
           </div>
@@ -211,7 +211,11 @@ function TransBadge({ id, at, w, type }: { id: string; at: number; w: number; ty
     </div>}
   </>);
 }
-function Playhead({ zoom }: { zoom: number }) {
-  const [, f] = useState(0); useEffect(() => playerRef.current?.onClock(() => f((x) => x + 1)), [playerRef.current]);
-  const tt = playerRef.current?.clock.t ?? 0; return <div className="playhead" style={{ left: tt * zoom }} data-testid="playhead"><i /></div>;
+// the playhead: moved straight on the page as the time runs (no redraw of the timeline); its pin (the head and the line) can be
+// grabbed and dragged to scrub — with a finger too
+function Playhead({ zoom, onDown }: { zoom: number; onDown: (e: RPE) => void }) {
+  const ref = useRef<HTMLDivElement>(null); const z = useRef(zoom); z.current = zoom;
+  useEffect(() => { const pl = playerRef.current; if (!pl) return; const put = () => { if (ref.current) ref.current.style.left = pl.clock.t * z.current + "px"; }; put(); return pl.onClock(put); }, [playerRef.current]);
+  useEffect(() => { if (ref.current) ref.current.style.left = (playerRef.current?.clock.t ?? 0) * zoom + "px"; }, [zoom]);
+  return <div className="playhead" ref={ref} style={{ left: (playerRef.current?.clock.t ?? 0) * zoom }} data-testid="playhead"><i /><b className="pin" onPointerDown={onDown} data-testid="playhead-pin" aria-hidden="true" /></div>;
 }

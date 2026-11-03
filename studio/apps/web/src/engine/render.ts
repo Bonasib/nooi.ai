@@ -4,7 +4,7 @@ import type { Asset, MediaClip, Project } from "@nooi/editor-core";
 import type { Compositor, LayerDraw, Src } from "./compositor";
 import { textCanvas } from "./text";
 
-export interface Frame { src: Src; w: number; h: number; key: string; dynamic: boolean }
+export interface Frame { src: Src; w: number; h: number; key: string; dynamic: boolean; fid?: number }   // fid: the video frame shown (unchanged → not uploaded again)
 export type FrameFor = (clip: MediaClip, asset: Asset, srcT: number) => Frame | null;
 export type LutFor = (assetId: string) => { tex: WebGLTexture; size: number } | null;
 

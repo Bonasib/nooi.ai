@@ -48,6 +48,7 @@ Done in v223 (tests/v223.py). Each row below was built:
 - ✅ The site: **Studio** sits in the header next to Explore on a computer (where Edit was), as a button in the phone's top bar, and as a link on the landing page.
 
 ## Step 3 — Editing depth (spec §4.3, §4.4, §6.1)
+- ✅ Fonts by language (7 writing systems) and 24 text effects with gradient, 3D, glow and double outline (v226).
 - ⬜ Speed ramping (curve presets: Montage, Hero moment, Bullet time, Jumper; a velocity curve).
 - ⬜ Keyframe curve editor.
 - ⬜ Masks: linear, mirror, circle, rectangle, pen; feather and invert.
@@ -68,6 +69,7 @@ Done in v223 (tests/v223.py). Each row below was built:
 - 🟡 AI Hub + Nooi Mate (v223: the Hub grid and the Mate drawer; Mate understands everyday edits in English and Arabic on the device, including removing pauses):
   - Port the classic editor's AI tools: edit with words, replace things, voices & sound, AI voice-over, SFX / music from words, clean up voices, auto captions, translate, dub, lip-sync.
   - Add silence detection (v209 has it on the site), auto beat sync (beats exist), auto reframe / camera tracking, smart short clips, AI thumbnail, smart text correction.
+- ✅ v226: Restyle with AI (56 styles, the client's model), caption translation with AI, Extend merged into one clip.
 - Every AI call: price first, charge only on success, refund on failure, logged.
 - ⛔ On-device NPU models (SAM-2, Whisper, RIFE…) in the browser: later, through WebGPU / ONNX Runtime Web, or the desktop app.
 

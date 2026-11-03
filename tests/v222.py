@@ -58,11 +58,13 @@ async def desktop(p):
     await pg.click('.panel .subtabs button:has-text("Erase & blur")'); await pg.click('[data-testid="fx-pixelBox"]'); await pg.wait_for_timeout(400)
     for k, v in (("x", 0.3), ("y", 0.3), ("w", 0.4), ("h", 0.4)):
         await E("([k,v])=>window.__studio.editor.run('b',p=>{for(const t of p.tracks)for(const c of t.clips)if(c.effects&&c.effects[0])c.effects[0].params[k]=v})", [k, v])
-    await pg.wait_for_timeout(600)
+    await E("()=>window.__studio.player.seek(1.2)"); await pg.wait_for_timeout(900)   # (a fixed moment: the picture under the box has edges)
     inside = [await E(PIX, [0.33 + i * 0.065, 0.67 - j * 0.065]) for i in range(6) for j in range(6)]; outside = await E(PIX, [0.85, 0.2])
     sliders = await E("()=>['x','y','w','h'].every(k=>document.querySelector('[data-testid=box-'+k+']'))")
     await E("()=>window.__studio.editor.run('x',p=>{for(const t of p.tracks)for(const c of t.clips)if(c.effects)c.effects=[]})"); await pg.wait_for_timeout(500)
+    await E("()=>window.__studio.player.seek(1.2)"); await pg.wait_for_timeout(700)
     clean_in = [await E(PIX, [0.33 + i * 0.065, 0.67 - j * 0.065]) for i in range(6) for j in range(6)]; clean_out = await E(PIX, [0.85, 0.2])
+    await E("()=>window.__studio.player.seek(0)"); await pg.wait_for_timeout(200)
     chk("Erase & blur: the box changes its part of the picture only, and has its place sliders", sliders and sum(diff(a, b) for a, b in zip(inside, clean_in)) > 100 and diff(outside, clean_out) < 12, [sliders, inside[:3], clean_in[:3], outside, clean_out])
     await pg.click('.panel .subtabs button:has-text("Motion")'); n_m = await E("()=>document.querySelectorAll('.panel [data-testid^=mo-]').length")
     await pg.click('[data-testid="mo-zoomIn"]'); await pg.wait_for_timeout(200)
@@ -72,7 +74,7 @@ async def desktop(p):
     await pg.click('[data-testid="rail-stickers"]'); n_s = await E("()=>document.querySelectorAll('.panel [data-testid^=stk-]').length")
     await E("()=>window.__studio.editor.select([])"); await pg.click('[data-testid="stk-star"]'); await pg.wait_for_timeout(1500)
     r = await E(CLIPS); s = [c for c in r if c["tr"] == "V2" and c["a"] == "image"]
-    await pg.click('[data-testid="ruler"]', position={"x": 60 * 1.2, "y": 10}); await pg.wait_for_timeout(700)
+    await pg.click('[data-testid="ruler"]', position={"x": 60 * 1.2, "y": 10}, force=True); await pg.wait_for_timeout(700)
     centre = await E(PIX, [0.5, 0.5])
     chk("Stickers: 30 own drawings; the star goes over the video on V2 (3 s, a third of the height), drawn on the preview", n_s == 30 and s and s[0]["dur"] == 3 and abs(s[0]["sc"] - 0.32) < 1e-6 and centre[0] > 200 and centre[1] > 170 and centre[2] < 90, [n_s, s, centre])
     await pg.click('.panel .subtabs button:has-text("Logo")'); await pg.click('[data-testid="corner-tr"]')
@@ -120,7 +122,7 @@ async def phone(p):
     await touch([(h[0], h[1]), (h[0] + 10, h[1] + 10), (h[0] + 30, h[1] + 20)], hold=700)
     t2 = (await E(CLIPS))[0]
     chk("phone: a quick swipe over the picture leaves the clip where it is; a short hold then a move moves it", t1["x"] == 0 and t1["y"] == 0 and (t2["x"] != 0 or t2["y"] != 0), [t1, t2])
-    await pg.locator('[data-testid="ruler"]').tap(position={"x": 90, "y": 10}); await pg.wait_for_timeout(200)
+    await pg.locator('[data-testid="ruler"]').tap(position={"x": 90, "y": 10}, force=True); await pg.wait_for_timeout(200)
     if not await pg.locator('[data-testid="cb-split"]').count(): await pg.locator('.clip').first.tap(); await pg.wait_for_timeout(300)
     await pg.click('[data-testid="cb-split"]'); await pg.wait_for_timeout(300)
     n = await E("()=>" + P + ".tracks.flatMap(t=>t.clips).length")

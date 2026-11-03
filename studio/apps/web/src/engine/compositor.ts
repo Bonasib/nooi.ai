@@ -10,6 +10,7 @@ export interface LayerDraw {
   blend: string; color?: ColorAdjust | null; effects?: Effect[]; lut?: { tex: WebGLTexture; size: number; amount: number } | null;
   trans?: { type: string; k: number; role: "a" | "b" } | null; fit?: "contain" | "cover" | "frame";
   dynamic?: boolean;                              // re-upload every frame (video)
+  fid?: number;                                   // (v226) the frame it shows: the same frame is not uploaded again
 }
 
 function compile(gl: WebGL2RenderingContext, vs: string, fs: string): WebGLProgram {
@@ -22,7 +23,7 @@ export class Compositor {
   gl: WebGL2RenderingContext; canvas: HTMLCanvasElement | OffscreenCanvas; W = 2; H = 2;
   private layer: WebGLProgram; private copy: WebGLProgram; private vao: WebGLVertexArrayObject;
   private fbo: { fb: WebGLFramebuffer; tex: WebGLTexture }[] = []; private cur = 0;
-  private texs = new Map<string, { tex: WebGLTexture; w: number; h: number; stamp: number }>();
+  private texs = new Map<string, { tex: WebGLTexture; w: number; h: number; stamp: number; fid?: number }>();
   private U: Record<string, WebGLUniformLocation | null> = {};
   private emptyLut: WebGLTexture; time = 0; lost = false;
 
@@ -51,11 +52,12 @@ export class Compositor {
     for (const f of this.fbo) { gl.bindFramebuffer(gl.FRAMEBUFFER, f.fb); gl.viewport(0, 0, this.W, this.H); gl.clearColor(((c >> 16) & 255) / 255, ((c >> 8) & 255) / 255, (c & 255) / 255, 1); gl.clear(gl.COLOR_BUFFER_BIT); }
     this.cur = 0;
   }
-  texture(key: string, src: Src, w: number, h: number, dynamic: boolean): WebGLTexture {
+  texture(key: string, src: Src, w: number, h: number, dynamic: boolean, fid?: number): WebGLTexture {
     const gl = this.gl; let t = this.texs.get(key);
     if (!t) { t = { tex: gl.createTexture()!, w: 0, h: 0, stamp: -1 }; this.texs.set(key, t); }
     gl.bindTexture(gl.TEXTURE_2D, t.tex);
-    if (dynamic || t.w !== w || t.h !== h || t.stamp < 0) {
+    const same = dynamic && fid != null && t.fid === fid && t.w === w && t.h === h && t.stamp >= 0;
+    if (!same && (dynamic || t.w !== w || t.h !== h || t.stamp < 0)) { t.fid = fid;
       try { gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src); } catch { /* a frame not ready yet */ }
       this.params(); t.w = w; t.h = h; t.stamp = 1;
     }
@@ -65,7 +67,7 @@ export class Compositor {
   forgetAll(prefix: string) { for (const k of [...this.texs.keys()]) if (k.startsWith(prefix)) this.forget(k); }
   draw(L: LayerDraw) {
     const gl = this.gl; if (!this.fbo.length) this.resize(this.W, this.H);
-    const tex = this.texture(L.key, L.src, L.w, L.h, !!L.dynamic);
+    const tex = this.texture(L.key, L.src, L.w, L.h, !!L.dynamic, L.fid);
     const from = this.fbo[this.cur], to = this.fbo[1 - this.cur];
     gl.bindFramebuffer(gl.FRAMEBUFFER, to.fb); gl.viewport(0, 0, this.W, this.H); gl.useProgram(this.layer); gl.bindVertexArray(this.vao);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(this.U.uSrc, 0);

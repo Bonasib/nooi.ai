@@ -65,6 +65,11 @@ export interface TextStyle {
   shadow: { color: string; blur: number; x: number; y: number } | null;
   box: { color: string; opacity: number; pad: number; radius: number } | null;
   dir: "auto" | "rtl" | "ltr";
+  // (v226) text effects: a two-colour fill (top → bottom), a 3D extrusion, a glow, a second outline outside the first
+  gradient?: [string, string] | null;
+  extrude?: { color: string; depth: number } | null;     // depth: a share of the letter height
+  glow?: { color: string; blur: number } | null;         // blur: a share of the picture height
+  outline2?: { color: string; width: number } | null;
 }
 export interface TextAnim { type: string; dur: number }
 export interface TextClip extends ClipBase { type: "text"; text: string; style: TextStyle; animIn: TextAnim; animOut: TextAnim; template?: string }

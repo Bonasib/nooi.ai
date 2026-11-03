@@ -7,7 +7,7 @@ const a: Asset = { id: "im", kind: "image", name: "im", src: "/x", createdAt: 0 
 const clip = () => { const c = mediaClip(a, 0); c.dur = 4; c.transform.scale = 0.5; c.transform.x = 0.2; return c; };
 describe("motions (Animate.css)", () => {
   it("has the 20 motions, each with its own CSS example", () => {
-    expect(ANIMATE.length).toBe(20); for (const m of ANIMATE) expect(animateCss(m, "ac-" + m.id)).toMatch(new RegExp("^@keyframes ac-" + m.id + "\\{0%\\{"));
+    expect(ANIMATE.length).toBe(60); for (const m of ANIMATE) expect(animateCss(m, "ac-" + m.id)).toMatch(new RegExp("^@keyframes ac-" + m.id + "\\{0%\\{"));
   });
   it("an entrance starts away and comes to rest where the clip is", () => {
     const c = clip(), k = animateKeyframes("backInUp", c, { w: 0.3, h: 0.3 });
@@ -25,4 +25,13 @@ describe("motions (Animate.css)", () => {
     expect(k.opacity).toBeUndefined();
   });
   it("the older motion presets are unchanged", () => { expect(Object.keys(motionKeyframes("zoomIn", clip()))).toEqual(["scale"]); });
+});
+describe("v226: 60 motions", () => {
+  it("entrances, exits at the clip's end, and loops", async () => {
+    const { animateGroup } = await import("../src");
+    const g = { in: 0, out: 0, loop: 0 } as Record<string, number>; for (const m of ANIMATE) g[animateGroup(m)]++;
+    expect(g).toEqual({ in: 34, out: 12, loop: 14 });
+    const c = clip(), k = animateKeyframes("fadeOut", c); expect(k.opacity![0].t).toBeCloseTo(3.2); expect(valueAt(k.opacity, 1, 9)).toBe(1); expect(valueAt(k.opacity, 4, 9)).toBe(0);
+    const s = animateKeyframes("slideInLeft", c); expect(s.x![0].v).toBeCloseTo(0.2 - 1.2);
+  });
 });

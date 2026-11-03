@@ -44,7 +44,7 @@ async def desktop(p):
     # ---- motions with their examples
     await pg.click('[data-testid="rail-effects"]'); await pg.click('.panel .subtabs button:has-text("Motion")'); await pg.wait_for_timeout(400)
     r = await E("()=>{const t=[...document.querySelectorAll('.panel [data-testid^=ac-]')];return{n:t.length,playing:t.filter(b=>{const i=b.querySelector('.acx i');return i&&getComputedStyle(i).animationName.startsWith('ac-')&&i.getAnimations().length>0}).length,old:document.querySelectorAll('.panel [data-testid^=mo-]').length}}")
-    chk("Motion: the 20 classic motions, each playing its example, next to the camera moves", r == {"n": 20, "playing": 20, "old": 13}, r)
+    chk("Motion: the classic motions (60 since v226), each playing its example, next to the camera moves", r == {"n": 60, "playing": 60, "old": 13}, r)
     await pg.click('[data-testid="ac-tada"]'); await pg.wait_for_timeout(300); k = await E("()=>{const s=window.__studio.editor.selection[0],c=" + P + ".tracks.flatMap(t=>t.clips).find(x=>x.id===s);return{sc:(c.keyframes.scale||[]).length,rot:(c.keyframes.rotation||[]).length}}")
     chk("a motion on a clip becomes keyframes (tada repeats through the clip)", k["sc"] >= 20 and k["rot"] >= 20, k)
     # ---- the outline is the real picture; a clip out of the frame gets "Put it back"

@@ -92,7 +92,7 @@ async def desktop(p):
     chk("History: the steps by name; a tap goes back that far", rows[:2] == ["Reframe", "Keyframe"] and hl2 == hl - 2 and c["kf"] == [], {"rows": rows[:4], "len": [hl, hl2], "c": c})
     # AI Hub (320 × 280)
     await pg.click('[data-testid="hub"]'); hub = await E("()=>{const r=document.querySelector('.pop.hub').getBoundingClientRect();return{w:Math.round(r.width),h:Math.round(r.height),n:document.querySelectorAll('.hubgrid button').length,badge:!!document.querySelector('.hubgrid .aibadge')}}")
-    chk("AI Hub: a 320 × 280 grid of AI tools with the AI badge", hub == {"w": 320, "h": 280, "n": 9, "badge": True}, hub)
+    chk("AI Hub: a 320 × 280 grid of AI tools with the AI badge", hub == {"w": 320, "h": 280, "n": 10, "badge": True}, hub)
     await pg.click('[data-testid="hub-gen"]'); r = await E("()=>({rail:document.querySelector('.rail [aria-pressed=true]')?.dataset.testid,tab:document.querySelector('.panel .subtabs [aria-selected=true]')?.textContent})")
     chk("AI Hub → Make video or picture opens Stock & AI · Make with AI", r == {"rail": "rail-stock", "tab": "Make with AI"}, r)
     # render status + cache line (an effect makes the clip red)

@@ -65,9 +65,16 @@ export function textCanvas(c: TextClip, local: number, W: number, H: number): { 
       ctx.save(); ctx.globalAlpha = s.box.opacity; ctx.fillStyle = s.box.color; ctx.beginPath();
       const rr = Math.min(s.box.radius * px, lh / 2); (ctx as CanvasRenderingContext2D).roundRect ? ctx.roundRect(bx, y - lh / 2, w + pad * 2, lh, rr) : ctx.rect(bx, y - lh / 2, w + pad * 2, lh); ctx.fill(); ctx.restore();
     }
+    ctx.lineJoin = "round";
+    // (v226) a glow under everything, a 3D extrusion behind the letters, a second outline outside the first
+    if (s.glow && s.glow.blur > 0) { ctx.save(); ctx.shadowColor = s.glow.color; ctx.shadowBlur = s.glow.blur * H; ctx.fillStyle = s.glow.color; ctx.fillText(l, x, y); ctx.fillText(l, x, y); ctx.restore(); }
+    if (s.extrude && s.extrude.depth > 0) { const steps = Math.max(1, Math.min(24, Math.round(s.extrude.depth * 40))), d = (s.extrude.depth * px) / steps; ctx.save(); ctx.fillStyle = s.extrude.color; if (s.stroke) { ctx.strokeStyle = s.extrude.color; ctx.lineWidth = s.stroke.width * H * 2; }
+      for (let k = steps; k >= 1; k--) { if (s.stroke) ctx.strokeText(l, x + k * d, y + k * d); ctx.fillText(l, x + k * d, y + k * d); } ctx.restore(); }
     if (s.shadow) { ctx.shadowColor = s.shadow.color; ctx.shadowBlur = s.shadow.blur * H; ctx.shadowOffsetX = s.shadow.x * H; ctx.shadowOffsetY = s.shadow.y * H; }
-    if (s.stroke && s.stroke.width > 0) { ctx.lineJoin = "round"; ctx.strokeStyle = s.stroke.color; ctx.lineWidth = s.stroke.width * H * 2; ctx.strokeText(l, x, y); ctx.shadowColor = "transparent"; }
-    ctx.fillStyle = s.color; ctx.fillText(l, x, y); ctx.shadowColor = "transparent";
+    if (s.outline2 && s.outline2.width > 0) { ctx.strokeStyle = s.outline2.color; ctx.lineWidth = ((s.stroke?.width || 0) + s.outline2.width) * H * 2; ctx.strokeText(l, x, y); ctx.shadowColor = "transparent"; }
+    if (s.stroke && s.stroke.width > 0) { ctx.strokeStyle = s.stroke.color; ctx.lineWidth = s.stroke.width * H * 2; ctx.strokeText(l, x, y); ctx.shadowColor = "transparent"; }
+    if (s.gradient) { const g = ctx.createLinearGradient(0, y - px * 0.55, 0, y + px * 0.55); g.addColorStop(0, s.gradient[0]); g.addColorStop(1, s.gradient[1]); ctx.fillStyle = g; } else ctx.fillStyle = s.color;
+    ctx.fillText(l, x, y); ctx.shadowColor = "transparent";
   });
   ctx.filter = "none";
   return { cv: e.cv, look, changed: true };
@@ -79,7 +86,10 @@ const loaded = new Set<string>();
 export function loadFont(name: string): Promise<void> {
   if (loaded.has(name) || typeof document === "undefined") return Promise.resolve(); loaded.add(name);
   const l = document.createElement("link"); l.rel = "stylesheet";
-  l.href = "https://fonts.googleapis.com/css2?family=" + encodeURIComponent(name).replace(/%20/g, "+") + ":wght@400;700;900&display=swap";
+  const fam = encodeURIComponent(name).replace(/%20/g, "+");
+  l.href = "https://fonts.googleapis.com/css2?family=" + fam + ":wght@400;700;900&display=swap";
+  // (v226) Google refuses the whole request when a font lacks one of these weights (Pacifico, Lobster…): then it is asked for as it is
+  l.onerror = () => { const k = document.createElement("link"); k.rel = "stylesheet"; k.href = "https://fonts.googleapis.com/css2?family=" + fam + "&display=swap"; document.head.appendChild(k); };
   document.head.appendChild(l);
   return Promise.race([document.fonts.load(`700 32px "${name}"`).then(() => undefined), new Promise<void>((r) => setTimeout(r, 4000))]).catch(() => undefined);
 }

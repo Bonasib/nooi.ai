@@ -36,7 +36,7 @@ export function AIPanel() {
   const { t } = useTranslation(); useEditorVersion();
   const [me, setMe] = useState(api.me); const [busy, setBusy] = useState<Busy>({});
   const [extN, setExtN] = useState<"5" | "10" | "15">("5"); const [words, setWords] = useState(""); const [style, setStyle] = useState<"seamless" | "cut" | "soft">("seamless");
-  const [cost, setCost] = useState<Record<string, number | null>>({});
+  const [cost, setCost] = useState<Record<string, number | null>>({}); const [joinOn, setJoinOn] = useState(true);
   useEffect(() => { api.init().then(() => setMe({ ...api.me })); return api.on(() => setMe({ ...api.me })); }, []);
   const sel = A.selected().filter((c) => c.type === "media") as MediaClip[];
   const one = sel[0]; const asset = one ? editor.project.assets[one.asset] : undefined;
@@ -61,6 +61,20 @@ export function AIPanel() {
       const r = await waitJob(j.id, (x) => track(key, t("ai.extending"), x.progress || 0.1));
       if (r.status !== "done") throw new Error(r.error || t("ai.failed"));
       const a = resultAsset(r, asset.name + " +" + extN + "s");
+      // (v226) merged with the clip it continues: one clip on the timeline, joined so the join can't be seen (free); if the join
+      // can't be made, the new part goes right after the clip as before
+      if (joinOn) {
+        try {
+          track(key, t("ai.joining"), 0.9);
+          const items = [{ ...(where.job ? { job: where.job } : { src: where.src }), in: +one.in.toFixed(3), out: +(one.in + one.dur * one.speed).toFixed(3) }, { job: r.id, in: 0, out: +(r.dur || +extN).toFixed(3) }];
+          const mj = await api.startJob({ kind: "video", prompt: "", title: "Extended: " + asset.name, model: "auto", dur: one.dur + (r.dur || +extN), meta: { merge135: { items, style: "seamless" }, edCmd: "merge135", noPhysics: true } });
+          const mr = await waitJob(mj.id, (x) => track(key, t("ai.joining"), 0.9 + 0.1 * (x.progress || 0.1))); if (mr.status !== "done") throw new Error("join");
+          const m = resultAsset(mr, asset.name + " +" + extN + "s"); const add = (mr.dur || one.dur + +extN) - one.dur;
+          A.run("extend", (p) => { p.assets[a.id] = a; p.assets[m.id] = m; const f = findClip(p, one.id); if (!f || f.clip.type !== "media") return; const end0 = clipEnd(f.clip);
+            for (const x of f.track.clips) if (x.start >= end0 - 1e-4 && x.id !== f.clip.id) x.start += add; f.clip.asset = m.id; f.clip.in = 0; f.clip.speed = 1; f.clip.reverse = false; f.clip.dur = one.dur + add; f.clip.name = m.name; });
+          done(key); toast(t("ai.extendedJoined"), "ok"); api.refresh(); return;
+        } catch { toast(t("ai.joinFailed"), "info"); }
+      }
       A.run("extend", (p) => { p.assets[a.id] = a; const f = findClip(p, one.id); if (!f) return; const c = mediaClip(a, clipEnd(f.clip), { dur: +extN }); for (const x of f.track.clips) if (x.start >= clipEnd(f.clip) - 1e-4) x.start += c.dur; f.track.clips.push(c); f.track.clips.sort((x, y) => x.start - y.start); });
       done(key); toast(t("ai.extended"), "ok"); api.refresh();
     } catch (e) { fail(key, e); }
@@ -96,6 +110,7 @@ export function AIPanel() {
       <h3 className="ns-h3"><Icon name="next" size={16} />{t("ai.extend")}</h3><p className="hint">{t("ai.extendHint")}</p>
       <Seg label={t("ai.extend")} value={extN} onChange={setExtN} options={(["5", "10", "15"] as const).map((v) => ({ v, label: "+" + v + "s" }))} />
       <textarea className="ns-input" rows={2} dir="auto" value={words} onChange={(e) => setWords(e.target.value)} placeholder={t("ai.nextPlaceholder")} aria-label={t("ai.next")} />
+      <label className="row"><input type="checkbox" checked={joinOn} onChange={(e) => setJoinOn(e.target.checked)} data-testid="ai-join" /> {t("ai.join")}</label>
       <Btn icon="sparkle" primary disabled={!one || asset?.kind !== "video" || !!busy["ext:" + one?.id]} onClick={extend} testid="ai-extend">{t("ai.extend")} · {price("extend")}</Btn>
       {!one && <p className="hint">{t("ai.pickVideo")}</p>}
     </div>

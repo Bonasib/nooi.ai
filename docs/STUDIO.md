@@ -253,3 +253,33 @@ Apple developer accounts, plus a signed release build (`./gradlew bundleRelease`
   - 10 banners, with their lines and colour set before adding;
   - 36 icon stickers (Material Symbols, Apache-2.0; licence in `studio/apps/web/src/media/MATERIAL-ICONS-LICENSE.txt`);
   - the studio's own drawings.
+
+## v226 — smoother playback, the playhead pin, more motions, fonts and text effects, AI restyle and caption translation
+
+- **Smoother playback:**
+  - the preview is drawn at the size it is shown (at most twice the screen's density, never above 1280 px);
+  - a video frame is sent to the GPU only when it is a new one (the browser's frame callbacks);
+  - while playing, the time and the playhead move by themselves, without redrawing the editor.
+- **The playhead's pin** (its head and line) can be grabbed and dragged to scrub. It is finger-size on touch screens.
+- **The logo** is the green wave on its own, with no background.
+- **Motion:** 60 animations (34 entrances, 12 exits at the clip's end, 14 loops), plus the 13 camera moves. Each tile plays its example.
+- **Fonts by language:**
+  - about 130 free Google Fonts in 7 writing systems: Arabic; English, Spanish and French; Russian; Japanese, Korean and Chinese; Hindi; Hebrew; Thai;
+  - each tile shows the title's own words in that font;
+  - a font is loaded only when its tile comes into view;
+  - fonts that lack a weight now load too.
+- **Text effects (24):**
+  - gold, chrome, neon, fire, ice, 3D pop, comic, double outline, labels and more;
+  - the engine gained gradient fills, 3D extrusion, glow and a second outline;
+  - each tile is drawn by the same engine as the preview and the export.
+- **Captions → Translate with AI:**
+  - 20 languages, through the site's free text AI (`/v1/translate149`);
+  - added as a second-language track, or replacing the words;
+  - each line keeps its time.
+- **Stock & AI → Restyle with AI:**
+  - 56 styles, each with a drawn example;
+  - the client chooses the model: nooi Auto, MiniMax H3, Kling 3.0, Kling 4.0, WAN 3.0 or Seedance 2.5 (names from the site's model list);
+  - the clip's first frame is redrawn in the style by the picture AI, then the chosen video AI animates it with the scene's words;
+  - the price of both steps shows first, and each step is charged only when it succeeds;
+  - the result replaces the clip, or goes on a track above it.
+- **AI tools → Extend:** "Merge into one clip" (on by default). The new part is joined to the clip by the site's free seamless merge. If the join fails, the new part goes right after the clip as before.

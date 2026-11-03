@@ -371,3 +371,22 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
 /* (the toolbar's own menus open from it, so it gets a fade at its end rather than a mask) */
 .tlbar > .fadeend { position: sticky; inset-inline-end: -8px; flex: none; align-self: stretch; width: 28px; margin-inline-start: -28px; margin-block: -6px; pointer-events: none; background: linear-gradient(to right, transparent, var(--panel) 80%); }
 [dir="rtl"] .tlbar > .fadeend { background: linear-gradient(to left, transparent, var(--panel) 80%); }
+
+/* ---- v226 · the playhead's pin: a grab area over its head and line (scrub by dragging it, with a finger too) */
+.playhead .pin { position: absolute; top: 0; bottom: 0; left: -11px; width: 22px; pointer-events: auto; cursor: ew-resize; touch-action: none; }
+.playhead i { width: 14px; height: 14px; left: -6px; }
+@media (pointer: coarse) { .playhead .pin { left: -16px; width: 32px; } .playhead i { width: 18px; height: 18px; left: -8px; } }
+
+/* ---- v226 · restyle styles, fonts by language, text effects, the green logo */
+.logo { width: 46px; height: 20px; } [data-theme="light"] .logo path { stroke: #4f9a1c; } [data-theme="light"] .logo circle { fill: #4f9a1c; }
+.stylg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 8px 0 10px; }
+.styt { display: grid; gap: 4px; padding: 4px; border: 1px solid var(--line2); border-radius: var(--r2); background: var(--panel2); color: var(--text); font: 600 11px var(--f); cursor: pointer; text-align: center; }
+.styt img { width: 100%; aspect-ratio: 16 / 9; border-radius: 6px; display: block; background: #111; }
+.styt[aria-selected="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; } .styt:hover { border-color: var(--dim); }
+.warnline { color: var(--amber); }
+.chips.scripts { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; } .chips.scripts .chip { flex: none; }
+.fontpick { max-height: 300px; overflow: auto; }
+.fontt b { font-size: 17px; line-height: 1.3; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .35; transition: opacity .2s; } .fontt.ready b { opacity: 1; }
+.fxt .fxbg { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 6px; background: linear-gradient(135deg, #2a2f3a, #14161b); overflow: hidden; } .fxt img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.fxt .ld { display: block; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent); animation: ldx 1.2s infinite; } @keyframes ldx { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+@media (min-width: 1400px) { .stylg { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

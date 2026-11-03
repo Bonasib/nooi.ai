@@ -73,7 +73,8 @@
   "aigen": "Make with AI",
   "aitools": "AI tools",
   "captions": "Captions",
-  "filters": "Filters & color"
+  "filters": "Filters & color",
+  "restyle": "Restyle with AI"
  },
  "media": {
   "upload": "Upload",
@@ -136,7 +137,9 @@
   "boxOpacity": "Box opacity",
   "animIn": "Coming in",
   "animOut": "Going out",
-  "animDur": "Length"
+  "animDur": "Length",
+  "effects": "Text effects",
+  "fontsHint2": "{{n}} fonts for Arabic, English, Spanish, French, Russian, Japanese, Korean, Chinese, Hindi, Hebrew and Thai — in each title's settings (Font), each shown in its own letters."
  },
  "cap": {
   "hint": "Write one caption per line (or bring an .srt / .vtt file). Each line becomes a caption from the playhead.",
@@ -148,7 +151,18 @@
   "track": "Captions",
   "added": "{{n}} captions placed",
   "none": "No captions found in that.",
-  "auto": "Automatic captions from speech (Arabic and English) come with the AI tools in Phase 2."
+  "auto": "Automatic captions from speech (Arabic and English) come with the AI tools in Phase 2.",
+  "translate": "Translate with AI",
+  "trHint": "{{n}} caption lines — translated by AI, each keeping its time.",
+  "trNone": "Add captions first (above), then translate them here.",
+  "to": "Into",
+  "trMode": "How",
+  "trAdd": "Add as a second language",
+  "trReplace": "Replace the words",
+  "trGo": "Translate",
+  "translating": "Translating…",
+  "translated": "{{n}} lines translated into {{lang}}.",
+  "trFail": "The translation couldn't be made — try again."
  },
  "fx": {
   "hint": {
@@ -237,7 +251,11 @@
    "voice": "AI voice-over per character",
    "music": "AI music from a mood",
    "match": "Colour match from a picture"
-  }
+  },
+  "join": "Merge into one clip (the join can't be seen)",
+  "joining": "Joining it to the clip…",
+  "extendedJoined": "Extended — one clip on the timeline.",
+  "joinFailed": "Couldn't join them — the new part was added right after the clip."
  },
  "preview": {
   "label": "Preview",
@@ -577,7 +595,9 @@
   "clean": "Clean up voice",
   "beats": "Find beats",
   "sfx": "Sound effects",
-  "montage": "Instant montage"
+  "montage": "Instant montage",
+  "restyle": "Restyle with AI",
+  "translate": "Translate captions"
  },
  "hist": {
   "title": "History",
@@ -613,7 +633,10 @@
   "background": "Background",
   "magnetic": "Magnetic track",
   "rippleDelete": "Ripple delete",
-  "put_back": "Put back"
+  "put_back": "Put back",
+  "restyle": "Restyle",
+  "translate_captions": "Translate captions",
+  "text_effect": "Text effect"
  },
  "rf": {
   "title": "Crop & reframe",
@@ -665,6 +688,30 @@
  },
  "mo": {
   "camera": "Camera & moves",
-  "animations": "Animations — the example plays before you choose"
+  "animations": "Each example plays before you choose it. Entrances start the clip, exits end it, loops repeat through it.",
+  "in": "Entrances",
+  "out": "Exits",
+  "loop": "Loops & emphasis"
+ },
+ "rs2": {
+  "hint": "Make the picked video clip again in another style. You choose the style and the AI model; the price shows first and credits are taken only for what is made.",
+  "pick": "Pick a video clip on the timeline first.",
+  "search": "Search {{n}} styles",
+  "styles": "Styles",
+  "model": "AI model",
+  "words": "What happens in the scene (optional)",
+  "wordsPh": "e.g. a woman walks through the market and smiles",
+  "place": "Where it goes",
+  "replace": "Replace the clip",
+  "above": "On a track above",
+  "pricing": "Working out the price…",
+  "noPrice": "The price isn't available right now — try again in a moment.",
+  "price": "Style picture {{pic}} + video {{vid}} ({{s}} s) = {{total}} credits",
+  "go": "Restyle",
+  "short": "Not enough credits for this.",
+  "frame": "Taking the clip's first frame…",
+  "picture": "Drawing the frame as {{name}}…",
+  "video": "Making the video with {{model}}…",
+  "done": "Restyled as {{name}}."
  }
 }

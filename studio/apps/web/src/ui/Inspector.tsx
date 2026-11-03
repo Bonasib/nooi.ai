@@ -8,6 +8,7 @@ import * as A from "../actions";
 import { loadFont } from "../engine/text";
 import { useEffect, useRef, useState } from "react";
 import { MotionTiles } from "./Extras";
+import { FontPicker, TextFxGrid } from "./TextFx";
 
 const KF: Partial<Record<string, KfProp>> = { "transform.x": "x", "transform.y": "y", "transform.scale": "scale", "transform.rotation": "rotation", opacity: "opacity", volume: "volume" };
 function Prop({ c, path, label, min, max, step, unit, fmt }: { c: Clip; path: string; label: string; min: number; max: number; step?: number; unit?: string; fmt?: (v: number) => string }) {
@@ -127,9 +128,8 @@ function TextProps({ c }: { c: TextClip }) {
   const set = (path: string, v: unknown) => A.setProp(path, v, "text");
   return (<>
     <label className="ns-field"><span>{t("text.words")}</span><textarea className="ns-input" rows={3} dir="auto" value={c.text} onChange={(e) => { if (!editor.inTx) editor.begin("text"); editor.live((q) => { const f = findClip(q, c.id); if (f && f.clip.type === "text") { f.clip.text = e.target.value; f.clip.name = e.target.value.slice(0, 24); } }); }} onBlur={() => { editor.commit(); autosave(); }} data-testid="text-words" /></label>
-    <span className="ns-lbl">{t("text.font")}</span>
-    <div className="fontpick">{FONTS.filter((f) => f.ar === /[؀-ۿ]/.test(c.text) || !/[؀-ۿ]/.test(c.text)).slice(0, 12).map((f) => <button key={f.name} type="button" className="ns-tile" aria-pressed={s.font === f.name} onClick={() => { loadFont(f.name).then(() => playerRef.current && (playerRef.current as unknown as { drawnV: number }).drawnV--); set("style.font", f.name); }} style={{ fontFamily: `"${f.name}",var(--f)` }} onMouseEnter={() => loadFont(f.name)}>
-      <b dir="auto">{c.text.slice(0, 10) || "Aa"}</b><span>{f.name}</span></button>)}</div>
+    <FontPicker c={c} />
+    <TextFxGrid />
     <Slider label={t("text.size")} value={s.size} min={0.02} max={0.3} fmt={(v) => Math.round(v * 1000) / 10 + "%"} onChange={(v) => A.live.set("style.size", v)} onCommit={A.live.end} />
     <div className="row"><Seg label={t("text.weight")} value={String(s.weight)} onChange={(v) => set("style.weight", +v)} options={[{ v: "400", label: t("text.regular") }, { v: "700", label: t("text.bold") }, { v: "900", label: t("text.black") }]} />
       <Seg label={t("text.align")} value={s.align} onChange={(v) => set("style.align", v)} options={[{ v: "start", label: t("text.start") }, { v: "center", label: t("text.center") }, { v: "end", label: t("text.end") }]} /></div>

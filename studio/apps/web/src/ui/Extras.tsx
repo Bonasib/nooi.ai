@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Btn, Icon, Seg } from "@nooi/ui";
-import { EFFECTS, EFFECT_GROUPS, MOTIONS, ANIMATE, animateCss, aspectOf } from "@nooi/editor-core";
+import { EFFECTS, EFFECT_GROUPS, MOTIONS, ANIMATE, animateCss, animateGroup, aspectOf } from "@nooi/editor-core";
 import { api } from "../api";
 import { at } from "../site";
 import { assetFromJob } from "../media/library";
@@ -127,11 +127,12 @@ export function MotionTiles() {
     <div className="ns-grid fxg">
       {MOTIONS.map((m) => <button key={m.id} type="button" className="ns-tile" onClick={() => A.applyMotion(m.id)} data-testid={"mo-" + m.id}><span className={"fxsw mo mo-" + m.id} aria-hidden="true" /><span>{lang === "ar" ? m.ar : m.en}</span></button>)}
     </div>
-    <span className="ns-lbl">{t("mo.animations")}</span>
+    <p className="hint">{t("mo.animations")}</p>
+    {(["in", "out", "loop"] as const).map((g) => <div key={g}><span className="ns-lbl">{t("mo." + g)}</span>
     <div className="ns-grid fxg">
-      {ANIMATE.map((m) => <button key={m.id} type="button" className="ns-tile" onClick={() => A.applyMotion("ac:" + m.id)} data-testid={"ac-" + m.id} title={lang === "ar" ? m.ar : m.en}>
+      {ANIMATE.filter((m) => animateGroup(m) === g).map((m) => <button key={m.id} type="button" className="ns-tile" onClick={() => A.applyMotion("ac:" + m.id)} data-testid={"ac-" + m.id} title={lang === "ar" ? m.ar : m.en}>
         <span className={"fxsw acx acx-" + m.id} aria-hidden="true"><i>Aa</i>{m.loop && <b className="loopb">∞</b>}</span><span>{lang === "ar" ? m.ar : m.en}</span></button>)}
-    </div>
+    </div></div>)}
   </>);
 }
 

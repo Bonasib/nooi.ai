@@ -68,9 +68,56 @@ export const TEXT_TEMPLATES: (Item & { style: Record<string, unknown>; animIn: s
   { id: "quote", en: "Quote", ar: "اقتباس", style: { font: "El Messiri", weight: 700, italic: false, size: 0.07 }, animIn: "slideUp", animOut: "fade" },
 ];
 // fonts with Arabic and Latin shapes (loaded from Google Fonts by name)
-export const FONTS: { name: string; ar: boolean }[] = [
-  "Cairo", "Tajawal", "Almarai", "Changa", "El Messiri", "Reem Kufi", "Lalezar", "Rakkas", "IBM Plex Sans Arabic", "Noto Kufi Arabic", "Noto Naskh Arabic", "Amiri", "Harmattan", "Lemonada", "Marhey",
-].map((name) => ({ name, ar: true })).concat(["Inter", "Montserrat", "Poppins", "Anton", "Bebas Neue", "Oswald", "Playfair Display", "Pacifico", "Permanent Marker", "Archivo Black", "DM Serif Display", "Space Grotesk"].map((name) => ({ name, ar: false })));
+// (v226) fonts by writing system — all free Google Fonts (OFL / Apache); a font can serve several. `ar` is kept for older code.
+export type Script = "arabic" | "latin" | "cyrillic" | "cjk" | "devanagari" | "hebrew" | "thai";
+export const SCRIPTS: { id: Script; en: string; ar: string; sample: string }[] = [
+  { id: "arabic", en: "Arabic", ar: "العربية", sample: "مرحباً بالعالم" }, { id: "latin", en: "English · Español · Français", ar: "الإنجليزية والإسبانية والفرنسية", sample: "Hello · ¡Hola, señor!" },
+  { id: "cyrillic", en: "Русский", ar: "الروسية", sample: "Привет, мир" }, { id: "cjk", en: "日本語 · 한국어 · 中文", ar: "اليابانية والكورية والصينية", sample: "こんにちは · 안녕 · 你好" },
+  { id: "devanagari", en: "हिन्दी", ar: "الهندية", sample: "नमस्ते दुनिया" }, { id: "hebrew", en: "עברית", ar: "العبرية", sample: "שלום עולם" }, { id: "thai", en: "ไทย", ar: "التايلاندية", sample: "สวัสดีชาวโลก" },
+];
+const F = (list: string, scripts: Script[]) => list.split(",").map((n) => ({ name: n.trim(), scripts }));
+export const FONT_LIST: { name: string; scripts: Script[] }[] = [
+  ...F("Cairo,Tajawal,Almarai,Changa,El Messiri,Reem Kufi,Lalezar,Rakkas,IBM Plex Sans Arabic,Noto Kufi Arabic,Noto Naskh Arabic,Amiri,Harmattan,Lemonada,Marhey,Readex Pro,Mada,Markazi Text,Scheherazade New,Aref Ruqaa,Katibeh,Mirza,Jomhuria,Kufam,Baloo Bhaijaan 2,Alexandria,Noto Sans Arabic,Blaka,Gulzar,Vibes", ["arabic"]),
+  ...F("Inter,Montserrat,Poppins,Anton,Bebas Neue,Playfair Display,Pacifico,Permanent Marker,Archivo Black,DM Serif Display,Space Grotesk,Open Sans,Lato,Raleway,Nunito,Work Sans,Merriweather,Lora,Libre Baskerville,Cinzel,Abril Fatface,Dancing Script,Great Vibes,Satisfy,Caveat,Shadows Into Light,Bangers,Luckiest Guy,Righteous,Fredoka,Press Start 2P,Orbitron,Audiowide,Monoton,Bungee,Black Ops One,Barlow Condensed,Alfa Slab One,Ultra,Yeseva One,Sacramento,Creepster,Special Elite,Lilita One,Chewy", ["latin"]),
+  ...F("Roboto,Rubik,Oswald,PT Sans,PT Serif,Russo One,Comfortaa,Lobster,Amatic SC,Montserrat Alternates,Ubuntu,Exo 2,Jura,Neucha,Pangolin", ["latin", "cyrillic"]),
+  ...F("Noto Sans JP,Noto Serif JP,M PLUS Rounded 1c,Zen Maru Gothic,Kosugi Maru,Dela Gothic One,Noto Sans KR,Black Han Sans,Do Hyeon,Jua,Noto Sans SC,ZCOOL KuaiLe,Ma Shan Zheng,Noto Sans TC", ["cjk"]),
+  ...F("Hind,Mukta,Noto Sans Devanagari,Yatra One,Teko,Rozha One,Baloo 2,Kalam", ["devanagari", "latin"]),
+  ...F("Heebo,Assistant,Frank Ruhl Libre,Secular One,Suez One,Varela Round,Karantina", ["hebrew", "latin"]),
+  ...F("Kanit,Prompt,Sarabun,Mitr,Chakra Petch,Itim,Pattaya", ["thai", "latin"]),
+];
+export const FONTS: { name: string; ar: boolean }[] = FONT_LIST.map((f) => ({ name: f.name, ar: f.scripts.includes("arabic") }));
+export const scriptOf = (text: string): Script =>
+  /[\u0600-\u06ff\u0750-\u077f\u08a0-\u08ff]/.test(text) ? "arabic" : /[\u0590-\u05ff]/.test(text) ? "hebrew" : /[\u0e00-\u0e7f]/.test(text) ? "thai" : /[\u0900-\u097f]/.test(text) ? "devanagari"
+    : /[\u3040-\u30ff\u4e00-\u9fff\uac00-\ud7af]/.test(text) ? "cjk" : /[\u0400-\u04ff]/.test(text) ? "cyrillic" : "latin";
+
+// (v226) text effects: a whole look in one tap (fill, outline, glow, 3D, shadow, box); the example tile is drawn by the same text engine
+export const TEXT_FX: (Item & { style: Record<string, unknown>; font?: string })[] = [
+  { id: "neonBlue", en: "Neon blue", ar: "نيون أزرق", style: { color: "#e8fdff", glow: { color: "#00e5ff", blur: 0.035 }, stroke: null, shadow: null, box: null }, font: "Changa" },
+  { id: "neonPink", en: "Neon pink", ar: "نيون وردي", style: { color: "#fff0fa", glow: { color: "#ff2bd6", blur: 0.035 }, stroke: null, shadow: null, box: null }, font: "Monoton" },
+  { id: "gold", en: "Gold", ar: "ذهبي", style: { gradient: ["#fff3b0", "#c8901c"], stroke: { color: "#5a3a08", width: 0.002 }, shadow: { color: "rgba(0,0,0,0.6)", blur: 0.01, x: 0, y: 0.004 }, box: null }, font: "Cinzel" },
+  { id: "chrome", en: "Chrome", ar: "كروم", style: { gradient: ["#ffffff", "#7d8590"], stroke: { color: "#1f2328", width: 0.002 }, shadow: null, box: null }, font: "Orbitron" },
+  { id: "fire", en: "Fire", ar: "نار", style: { gradient: ["#ffe45c", "#ff3d00"], glow: { color: "#ff6a00", blur: 0.025 }, stroke: null, shadow: null, box: null }, font: "Bangers" },
+  { id: "ice", en: "Ice", ar: "جليد", style: { gradient: ["#ffffff", "#7fd3ff"], glow: { color: "#58c8ff", blur: 0.02 }, stroke: { color: "#1b4f72", width: 0.0015 }, shadow: null, box: null } },
+  { id: "pop3d", en: "3D pop", ar: "ثلاثي الأبعاد", style: { color: "#ffe600", stroke: { color: "#111111", width: 0.003 }, extrude: { color: "#111111", depth: 0.12 }, shadow: null, box: null }, font: "Lilita One" },
+  { id: "retro3d", en: "Retro 3D", ar: "ثلاثي كلاسيكي", style: { color: "#ff4fa3", extrude: { color: "#5b2a8e", depth: 0.16 }, stroke: { color: "#ffffff", width: 0.002 }, shadow: null, box: null }, font: "Righteous" },
+  { id: "comic", en: "Comic", ar: "كوميكس", style: { color: "#ffd400", stroke: { color: "#000000", width: 0.004 }, outline2: { color: "#ffffff", width: 0.003 }, extrude: { color: "#000000", depth: 0.06 }, shadow: null, box: null }, font: "Bangers" },
+  { id: "outline", en: "Outline", ar: "إطار فقط", style: { color: "rgba(0,0,0,0)", stroke: { color: "#ffffff", width: 0.003 }, shadow: null, box: null } },
+  { id: "double", en: "Double outline", ar: "إطار مزدوج", style: { color: "#ffffff", stroke: { color: "#111111", width: 0.003 }, outline2: { color: "#00f0ff", width: 0.003 }, shadow: null, box: null } },
+  { id: "candy", en: "Candy", ar: "حلوى", style: { color: "#ff7ab6", stroke: { color: "#ffffff", width: 0.004 }, outline2: { color: "#ff3d9a", width: 0.003 }, shadow: null, box: null }, font: "Fredoka" },
+  { id: "sunset", en: "Sunset", ar: "غروب", style: { gradient: ["#ffcf5a", "#ff3d9a"], stroke: null, shadow: { color: "rgba(0,0,0,0.45)", blur: 0.012, x: 0, y: 0.005 }, box: null }, font: "Poppins" },
+  { id: "ocean", en: "Ocean", ar: "محيط", style: { gradient: ["#7af0ff", "#1f5fff"], stroke: null, shadow: { color: "rgba(0,0,0,0.45)", blur: 0.012, x: 0, y: 0.005 }, box: null }, font: "Montserrat" },
+  { id: "hardShadow", en: "Hard shadow", ar: "ظل حاد", style: { color: "#ffffff", stroke: null, shadow: { color: "#000000", blur: 0, x: 0.006, y: 0.006 }, box: null }, font: "Archivo Black" },
+  { id: "soft", en: "Soft shadow", ar: "ظل ناعم", style: { color: "#ffffff", stroke: null, shadow: { color: "rgba(0,0,0,0.7)", blur: 0.025, x: 0, y: 0.006 }, box: null } },
+  { id: "label", en: "Black label", ar: "ملصق أسود", style: { color: "#ffffff", stroke: null, shadow: null, box: { color: "#000000", opacity: 0.85, pad: 0.3, radius: 0.15 } } },
+  { id: "tag", en: "Cyan tag", ar: "وسم سماوي", style: { color: "#0f1014", stroke: null, shadow: null, box: { color: "#00F0FF", opacity: 1, pad: 0.3, radius: 0.12 } } },
+  { id: "subtitle", en: "Subtitle", ar: "ترجمة", style: { color: "#ffffff", stroke: null, shadow: null, box: { color: "#000000", opacity: 0.55, pad: 0.25, radius: 0.2 } } },
+  { id: "cinema", en: "Cinematic", ar: "سينمائي", style: { color: "#f3efe6", letterSpacing: 0.25, weight: 400, stroke: null, shadow: { color: "rgba(0,0,0,0.5)", blur: 0.012, x: 0, y: 0 }, box: null }, font: "Cinzel" },
+  { id: "vintage", en: "Vintage", ar: "كلاسيكي", style: { color: "#f6e7c8", extrude: { color: "#7a4a1e", depth: 0.08 }, stroke: null, shadow: null, box: null }, font: "Abril Fatface" },
+  { id: "horror", en: "Horror", ar: "رعب", style: { color: "#d8141c", glow: { color: "#4a0000", blur: 0.03 }, stroke: null, shadow: null, box: null }, font: "Creepster" },
+  { id: "cyber", en: "Cyber", ar: "سايبر", style: { color: "#00f0ff", outline2: { color: "#ff2bd6", width: 0.002 }, glow: { color: "#00f0ff", blur: 0.015 }, stroke: null, shadow: null, box: null }, font: "Orbitron" },
+  { id: "kids", en: "Kids", ar: "أطفال", style: { color: "#ffffff", stroke: { color: "#ff7a1a", width: 0.005 }, outline2: { color: "#ffffff", width: 0.003 }, shadow: { color: "rgba(0,0,0,0.3)", blur: 0.008, x: 0, y: 0.006 }, box: null }, font: "Chewy" },
+];
+
 
 // motion presets: one tap writes ordinary keyframes on the clip (you can still change each point); `none` removes them
 export const MOTIONS: Item[] = [
