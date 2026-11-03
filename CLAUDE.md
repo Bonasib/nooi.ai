@@ -1798,3 +1798,7 @@ The owner sent the target card (two columns; media with play · sound · length;
   - `tests/v222.py` (port 8723), suite line 209: a nooi result's filmstrip; Reset; the five Effects tabs; rain changes the picture; a pixelate box changes only its part; zoom-in keyframes; 30 stickers (the star drawn at the centre); the logo top-right (red there); 16 sound effects (whoosh on A2 with a waveform); a WebM export with them all. On an Arabic phone: the clip bar replaces the rail, a quick touch swipe doesn't move the clip and a hold does, Split from the bar, Edit opens the settings.
   - Updated: v221 (phone clip tap → clip bar → Edit; the clip bar scrolls like the timeline toolbar) and v219 (Transitions is now the fifth Effects tab).
   - editor-core 23 tests.
+- v222 follow-up: `deploy/editor-update.sh` copied its two folders with rsync and didn't check the result. On a machine without rsync (this rebuilt sandbox) it kept the old editor while its health check passed — the old page also says "nooi Studio Editor".
+  - The folders now go to `<dir>.new` with plain `cp -a` and are swapped in. Any copy failure restores the backup.
+  - After copying, every replaced file and `public/studio/index.html` are compared with the package (`cmp`); a mismatch restores everything.
+  - Rehearsed from the live state (v221 editor, 7dc523c) to v222: the new bundle on disk and served, only the editor's files changed, and `--rollback` serves the previous bundle again.

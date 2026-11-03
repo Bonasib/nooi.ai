@@ -73,8 +73,14 @@ rm -f "$APP/.editor-new-files.done"   # a roll-back undoes the last run only (th
 ok "$B"
 
 echo "▶ 4/5 install the editor"
-for f in $FILES; do mkdir -p "$APP/$(dirname "$f")"; cp -f "$NEW/$f" "$APP/$f"; done
-for d in $DIRS; do mkdir -p "$APP/$d"; rsync -a --delete --exclude node_modules --exclude dist --exclude .data "$NEW/$d/" "$APP/$d/"; done
+for f in $FILES; do mkdir -p "$APP/$(dirname "$f")"; cp -f "$NEW/$f" "$APP/$f" || { restore "$B"; die "couldn't copy $f — put back as it was"; }; done
+# the folders: a fresh copy next to the old one, then swapped in (plain cp — no rsync needed); stop at the first failure
+for d in $DIRS; do rm -rf "$APP/$d.new"; mkdir -p "$(dirname "$APP/$d")"
+  if ! cp -a "$NEW/$d" "$APP/$d.new"; then rm -rf "$APP/$d.new"; restore "$B"; die "couldn't copy $d — put back as it was"; fi
+  rm -rf "$APP/$d.new/node_modules" "$APP/$d.new"/*/*/node_modules "$APP/$d.new/apps/desktop/src-tauri/binaries" 2>/dev/null
+  rm -rf "$APP/$d"; mv "$APP/$d.new" "$APP/$d"; done
+# what is on the disk now must be what the package holds (else everything goes back)
+for f in $FILES public/studio/index.html; do cmp -s "$NEW/$f" "$APP/$f" || { echo "  ✗ $f didn't arrive"; restore "$B"; die "put back as it was — nothing changed"; }; done
 cp "$TMP/newfiles" "$APP/.editor-new-files"; chmod +x "$APP/deploy/render.sh" "$APP/deploy/editor-update.sh" 2>/dev/null; chown -R nooi:nooi "$APP" 2>/dev/null
 if ! node --check "$APP/server.js" 2>"$TMP/err" || ! node --check "$APP/lib/studio219.js" 2>>"$TMP/err"; then
   echo "  ✗ the new code doesn't load: $(tail -3 "$TMP/err")"; restore "$B"; die "put back as it was — nothing changed"; fi
