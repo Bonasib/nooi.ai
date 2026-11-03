@@ -232,3 +232,50 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
   input[type="range"] { min-height: 28px; }
   .fmt select { min-height: 28px; } .libx { min-width: 28px; min-height: 28px; }
 }
+
+/* v222: weather & light, erase & blur, motion — their tiles move like the effect */
+[class*="fxsw fx-rain"], .fx-snow, .fx-fog, .fx-leak, .fx-sparkle, .fx-dust, .fx-blurBox, .fx-pixelBox, .fxsw.mo { position: relative; overflow: hidden; }
+.fx-rain { background-image: repeating-linear-gradient(100deg, rgba(220, 230, 255, 0.55) 0 1px, transparent 1px 9px), linear-gradient(160deg, #24314f, #4c6b8f) !important; background-size: 40px 40px, 100% 100% !important; animation: rain 0.5s linear infinite; }
+@keyframes rain { to { background-position: -6px 40px, 0 0; } }
+.fx-snow { background-image: radial-gradient(circle, #fff 1.5px, transparent 2px), radial-gradient(circle, rgba(255, 255, 255, 0.7) 1px, transparent 1.5px), linear-gradient(160deg, #6b86a8, #c9d6e6) !important; background-size: 22px 22px, 13px 13px, 100% 100% !important; animation: snow 3s linear infinite; }
+@keyframes snow { to { background-position: 6px 22px, -4px 26px, 0 0; } }
+.fx-fog::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 60%, rgba(230, 232, 236, 0.85), transparent 60%), radial-gradient(ellipse at 75% 40%, rgba(230, 232, 236, 0.7), transparent 55%); animation: fog 6s ease-in-out infinite alternate; }
+@keyframes fog { to { transform: translateX(12%); } }
+.fx-leak::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 15% 20%, rgba(255, 150, 50, 0.9), transparent 50%), radial-gradient(circle at 90% 80%, rgba(255, 70, 120, 0.7), transparent 45%); mix-blend-mode: screen; animation: leak 4s ease-in-out infinite alternate; }
+@keyframes leak { to { opacity: 0.45; transform: translateX(8%); } }
+.fx-sparkle::after { content: "✦ ✧ ✦"; position: absolute; inset: 0; display: grid; place-items: center; color: #fff6c8; font-size: 18px; letter-spacing: 6px; animation: twk 1.2s ease-in-out infinite alternate; }
+@keyframes twk { to { opacity: 0.25; } }
+.fx-dust { filter: sepia(0.6) contrast(1.1); } .fx-dust::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 47%, rgba(0, 0, 0, 0.55) 48%, transparent 49%), radial-gradient(circle at 30% 40%, #000 0.8px, transparent 1.2px), radial-gradient(circle at 70% 70%, #000 1px, transparent 1.4px); animation: dust 0.25s steps(2) infinite; }
+@keyframes dust { 50% { transform: translateX(14%); opacity: 0.6; } }
+.fx-blurBox::after, .fx-pixelBox::after { content: ""; position: absolute; left: 32%; top: 22%; width: 36%; height: 56%; border: 1.5px dashed #fff; border-radius: 6px; backdrop-filter: blur(4px); }
+.fx-pixelBox::after { backdrop-filter: none; background: conic-gradient(#3a5bd9 25%, #2dd4a8 0 50%, #3a5bd9 0 75%, #2dd4a8 0) 0 0 / 8px 8px; }
+.fxsw.mo::after { content: ""; position: absolute; left: 38%; top: 30%; width: 24%; height: 40%; border-radius: 4px; background: #fff; opacity: 0.9; }
+.mo-zoomIn::after { animation: moZ 1.6s ease-in-out infinite alternate; } .mo-zoomOut::after { animation: moZ 1.6s ease-in-out infinite alternate-reverse; } @keyframes moZ { to { transform: scale(1.7); } }
+.mo-panL::after { animation: moX 1.6s linear infinite alternate-reverse; } .mo-panR::after { animation: moX 1.6s linear infinite alternate; } @keyframes moX { from { transform: translateX(-60%); } to { transform: translateX(60%); } }
+.mo-panU::after { animation: moY 1.6s linear infinite alternate-reverse; } .mo-panD::after { animation: moY 1.6s linear infinite alternate; } @keyframes moY { from { transform: translateY(-50%); } to { transform: translateY(50%); } }
+.mo-popIn::after { animation: moP 1.4s ease-out infinite; } @keyframes moP { 0% { transform: scale(0.2); opacity: 0; } 40% { transform: scale(1.15); opacity: 1; } 60%, 100% { transform: scale(1); } }
+.mo-dropIn::after { animation: moD 1.4s ease-out infinite; } @keyframes moD { 0% { transform: translateY(-160%); opacity: 0; } 45%, 100% { transform: none; opacity: 1; } }
+.mo-spinIn::after { animation: moS 1.6s ease-out infinite; } @keyframes moS { 0% { transform: rotate(-180deg) scale(0.3); } 50%, 100% { transform: none; } }
+.mo-shake::after { animation: shk 0.2s infinite; } .mo-pulse::after { animation: moZ 0.5s ease-in-out infinite alternate; } .mo-fadeInOut::after { animation: twk 1s ease-in-out infinite alternate; } .mo-none::after { opacity: 0.4; }
+
+/* stickers, logo corners, sound effects */
+.stkg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-bottom: 10px; }
+.stk { aspect-ratio: 1; padding: 6px; border: 1px solid var(--line); border-radius: var(--r2); background: repeating-conic-gradient(var(--panel2) 0 25%, var(--panel) 0 50%) 0 0 / 14px 14px; cursor: pointer; }
+.stk:hover { border-color: var(--lime); } .stk img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; } .stk:disabled { opacity: 0.5; }
+.corners { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 160px; aspect-ratio: 16 / 9; padding: 6px; border: 1px solid var(--line2); border-radius: var(--r2); background: var(--panel2); margin: 4px 0 10px; }
+.cbox { border: 1px dashed var(--line2); border-radius: 6px; background: none; cursor: pointer; display: flex; padding: 4px; }
+.cbox i { width: 14px; height: 10px; border-radius: 2px; background: var(--dim); } .cbox.tr, .cbox.br { justify-content: flex-end; } .cbox.bl, .cbox.br { align-items: flex-end; }
+.cbox[aria-checked="true"] { border-color: var(--lime); } .cbox[aria-checked="true"] i { background: var(--lime); }
+.sfxl { display: grid; gap: 6px; } .sfxi { display: flex; align-items: center; gap: 8px; padding: 6px; border: 1px solid var(--line); border-radius: var(--r2); background: var(--panel2); }
+.sfxn { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; display: flex; gap: 6px; align-items: baseline; } .sfxn small { color: var(--dim); font: 500 10.5px var(--mono); }
+
+/* the phone's tool bar for a picked clip */
+.clipbar { display: flex; align-items: stretch; border-top: 1px solid var(--line); background: var(--panel); padding: 4px 4px calc(4px + env(safe-area-inset-bottom)); }
+.clipbar .cbx { flex: none; width: 44px; display: grid; place-items: center; border: 0; border-inline-end: 1px solid var(--line); background: none; color: var(--text); cursor: pointer; }
+.clipbar .cbs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; padding-inline-start: 4px; }
+.clipbar .cbs button { flex: none; min-width: 58px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 4px; border: 0; border-radius: var(--r2); background: none; color: var(--mute); font-size: 10.5px; font-weight: 600; cursor: pointer; }
+.clipbar .cbs button:active { background: var(--panel2); color: var(--text); } .clipbar [data-testid="cb-delete"] { color: var(--red); }
+
+/* the timeline: lanes coloured by kind, a filmstrip on video clips */
+.clip.video { background-size: auto 100%; background-repeat: repeat-x; }
+.clip.video::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0, 0, 0, 0.45), transparent 40%); pointer-events: none; }

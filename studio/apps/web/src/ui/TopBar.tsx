@@ -12,7 +12,7 @@ const CREW = [["PR", "#2dd4a8"], ["WR", "#4dc3ff"], ["DR", "#f5a524"], ["CI", "#
 export function TopBar() {
   const { t } = useTranslation(); const p = useProject(); const saved = useUI((s) => s.saved); const zoom = useUI((s) => s.zoom); const theme = useUI((s) => s.theme); const lang = useUI((s) => s.lang);
   const [me, setMe] = useState(api.me); useEffect(() => api.on(() => setMe({ ...api.me })), []);
-  const aspect = aspectOf(p.width, p.height);
+  const aspect = aspectOf(p.width, p.height); const narrow = typeof matchMedia !== "undefined" && matchMedia("(max-width: 767px)").matches;   // (a phone: just the ratio)
   return (
     <header className="topbar" role="banner">
       <a className="logo" href={at("/")} aria-label={t("top.home")} title={t("top.home")}><svg viewBox="384 522 732 456" aria-hidden="true"><rect x="384.3" y="522" width="731.4" height="456" rx="75" fill="#c1ff72" /><path d="M443.3 783.6V726A77.5 77.5 0 0 1 598.3 726V805.6A76.7 76.7 0 0 0 751.7 805.6V771.6A76.1 76.1 0 0 1 903.9 771.6V795.7A76.6 76.6 0 0 0 1057.1 795.7V706.3" fill="none" stroke="#000" strokeWidth="59.5" /><circle cx="1056.6" cy="663.9" r="29.5" fill="#000" /></svg></a>
@@ -29,7 +29,7 @@ export function TopBar() {
       <div className="tright">
         <label className="fmt" title={t("top.format")}>
           <span className="sr-only">{t("top.format")}</span>
-          <select value={aspect} onChange={(e) => A.format(e.target.value as Aspect)} aria-label={t("top.format")}>{ASPECTS.map((a) => <option key={a} value={a}>{a} · {t("aspect." + a.replace(":", "x"))}</option>)}</select>
+          <select value={aspect} onChange={(e) => A.format(e.target.value as Aspect)} aria-label={t("top.format")}>{ASPECTS.map((a) => <option key={a} value={a}>{narrow ? a : a + " · " + t("aspect." + a.replace(":", "x"))}</option>)}</select>
           <small dir="ltr">{p.width}×{p.height} · {duration(p).toFixed(1)}s</small>
         </label>
         {me.credits != null && <span className="credits" title={t("top.credits")}><Icon name="sparkle" size={14} />{me.credits}</span>}

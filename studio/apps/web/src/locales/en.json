@@ -55,7 +55,15 @@
   "files": "Your files",
   "nooi": "Made on nooi",
   "effects": "Effects",
-  "transitions": "Transitions"
+  "transitions": "Transitions",
+  "audio": "Music & voice",
+  "sfx": "Sound effects",
+  "text": "Text",
+  "stickers": "Stickers",
+  "logo": "Logo",
+  "weather": "Weather & light",
+  "erase": "Erase & blur",
+  "motion": "Motion"
  },
  "media": {
   "upload": "Upload",
@@ -133,7 +141,12 @@
   "auto": "Automatic captions from speech (Arabic and English) come with the AI tools in Phase 2."
  },
  "fx": {
-  "hint": "Point at an effect to see it on the preview; tap to add it to the selected clip."
+  "hint": {
+   "effects": "Point at an effect to see it on the preview; tap to add it to the selected clip.",
+   "weather": "Rain, snow, fog, light leaks, sparkles and old film — animated, on the selected clip.",
+   "erase": "Blur or pixelate one part of the picture (a face, a number plate, a logo). Place the box in the clip's Effects settings.",
+   "motion": "One tap moves the selected clip: zooms, pans, pops, shakes and fades. They are ordinary keyframes you can change."
+  }
  },
  "tr": {
   "hint": "Select the clip before a cut and tap a transition — or drag one onto the cut."
@@ -278,7 +291,14 @@
   "format": "Platform & size",
   "fps": "Frames per second",
   "background": "Background",
-  "pickHint": "Select a clip on the timeline to see its properties."
+  "pickHint": "Select a clip on the timeline to see its properties.",
+  "reset": "Reset position",
+  "box": {
+   "x": "Box left",
+   "y": "Box top",
+   "w": "Box width",
+   "h": "Box height"
+  }
  },
  "kf": {
   "x": "Position X",
@@ -403,5 +423,45 @@
   "jobMissing": "That nooi.ai result couldn't be opened.",
   "classic": "Classic editor",
   "classicHint": "Some tools of the previous editor (motion graphics, stickers, captions from speech, the AI agents' edits) are still there while they move over:"
+ },
+ "stk": {
+  "hint": "Tap a sticker to put it over the video at the playhead (3 s). Drag it on the preview, or change its size and time like any clip.",
+  "badges": "Badges",
+  "shapes": "Shapes",
+  "faces": "Faces",
+  "marks": "Arrows & marks"
+ },
+ "logo": {
+  "hint": "Your logo on the whole video, in a corner.",
+  "corner": "Corner",
+  "tl": "Top left",
+  "tr": "Top right",
+  "bl": "Bottom left",
+  "br": "Bottom right",
+  "add": "Add my logo",
+  "added": "Logo added for the whole video.",
+  "tip": "Pick a logo clip on the timeline and tap a corner to move it."
+ },
+ "sfx": {
+  "hint": "Made on this device — tap ▶ to listen, + to add at the playhead.",
+  "listen": "Listen",
+  "add": "Add"
+ },
+ "cb": {
+  "label": "Clip tools",
+  "edit": "Edit",
+  "split": "Split",
+  "speed": "Speed",
+  "volume": "Volume",
+  "color": "Color",
+  "effects": "Effects",
+  "motion": "Motion",
+  "transition": "Transition",
+  "freeze": "Freeze",
+  "mirror": "Mirror",
+  "reset": "Reset",
+  "duplicate": "Duplicate",
+  "ai": "AI",
+  "delete": "Delete"
  }
 }

@@ -41,13 +41,22 @@ export function Preview() {
   // drag the picked clip on the picture (move), its corner (size)
   const sel = editor.selection.length === 1 ? findClip(p, editor.selection[0])?.clip : null;
   const local = sel ? clock.t - sel.start : 0; const on = !!sel && local >= 0 && local <= sel.dur;
+  // a finger must rest on the clip for a moment before it moves it (a swipe across the picture changes nothing); a tap without a
+  // move leaves no undo step; the centre lines pull the clip in
   const drag = (mode: "move" | "scale") => (e: React.PointerEvent) => {
     if (!sel) return; e.preventDefault(); e.stopPropagation(); const x0 = e.clientX, y0 = e.clientY; const T = { ...sel.transform }; const s0 = propAt(sel, "scale", local);
-    editor.begin(mode); (e.target as Element).setPointerCapture(e.pointerId);
+    const touch = e.pointerType !== "mouse"; let live = !touch, gone = false, moved = false;
+    const timer = touch ? setTimeout(() => { if (!gone) { live = true; editor.begin(mode); try { navigator.vibrate?.(8); } catch { /* */ } } }, 280) : 0;
+    if (!touch) editor.begin(mode);
+    (e.target as Element).setPointerCapture(e.pointerId);
+    const snapC = (v: number) => (Math.abs(v) < 0.015 ? 0 : v);
     const mv = (ev: PointerEvent) => { const dx = (ev.clientX - x0) / size.w, dy = (ev.clientY - y0) / size.h;
-      editor.live((q) => { const f = findClip(q, sel.id); if (!f) return; if (mode === "move") { f.clip.transform.x = T.x + (document.documentElement.dir === "rtl" ? dx : dx); f.clip.transform.y = T.y + dy; } else f.clip.transform.scale = Math.max(0.05, s0 * (1 + (dx + dy))); }); };
-    const up = () => { window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); editor.commit(); autosave(); };
-    window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up);
+      if (!live) { if (Math.hypot(ev.clientX - x0, ev.clientY - y0) > 10) { gone = true; clearTimeout(timer); } return; }
+      moved = true;
+      editor.live((q) => { const f = findClip(q, sel.id); if (!f) return; if (mode === "move") { f.clip.transform.x = snapC(T.x + dx); f.clip.transform.y = snapC(T.y + dy); } else f.clip.transform.scale = Math.max(0.05, s0 * (1 + (dx + dy))); }); };
+    const up = () => { clearTimeout(timer); window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
+      if (live) { if (moved) { editor.commit(); autosave(); } else editor.cancel(); } };
+    window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
   };
   const hx = sel ? 0.5 + propAt(sel, "x", local) : 0.5, hy = sel ? 0.5 + propAt(sel, "y", local) : 0.5, hs = sel ? propAt(sel, "scale", local) : 1;
   return (

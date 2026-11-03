@@ -40,6 +40,28 @@ function probeVideo(url: string): Promise<{ w: number; h: number; duration: numb
     v.onerror = () => fin({ w: 0, h: 0, duration: 0, thumb: "" }); v.src = url;
   });
 }
+// a filmstrip: `n` frames across the video, side by side in one small JPEG (the timeline repeats it along a clip)
+export function filmStrip(url: string, duration: number, n = 6, fh = 54): Promise<string> {
+  return new Promise((res) => {
+    const v = document.createElement("video"); v.muted = true; v.playsInline = true; v.preload = "auto"; v.crossOrigin = "anonymous";
+    let i = 0, cv: HTMLCanvasElement | null = null, x: CanvasRenderingContext2D | null = null, fw = 96; const T = (k: number) => Math.max(0.05, (duration || 1) * (k + 0.5) / n);
+    const fin = (ok: boolean) => { clearTimeout(to); v.removeAttribute("src"); v.load(); res(ok && cv ? cv.toDataURL("image/jpeg", 0.7) : ""); };
+    const to = setTimeout(() => fin(i > 0), 15000);
+    v.onloadedmetadata = () => { fw = Math.round(fh * (v.videoWidth || 16) / (v.videoHeight || 9)); cv = Object.assign(document.createElement("canvas"), { width: fw * n, height: fh }); x = cv.getContext("2d"); try { v.currentTime = T(0); } catch { fin(false); } };
+    v.onseeked = () => { try { x!.drawImage(v, i * fw, 0, fw, fh); } catch { return fin(false); } i++; if (i >= n) fin(true); else v.currentTime = T(i); };
+    v.onerror = () => fin(false); v.src = url;
+  });
+}
+// what an asset still lacks for the library and the timeline (a nooi result or a file from an older project): picture, length,
+// filmstrip, waveform — made on this device, once, and kept in the project
+export async function visualsFor(a: Asset): Promise<Partial<Asset> | null> {
+  if (a.kind !== "video" && a.kind !== "audio") return null;
+  const out: Partial<Asset> = {}; const u = await urlOf(a, false); if (!u) return null;
+  if (a.kind === "video" && (!a.thumb || !a.duration || !a.w)) { const p = await probeVideo(u); if (p.w) Object.assign(out, { w: p.w, h: p.h, duration: a.duration || p.duration, thumb: a.thumb || p.thumb }); }
+  if (a.kind === "video" && !a.strip) { const sp = await filmStrip(u, out.duration || a.duration || 0); if (sp) out.strip = sp; }
+  if (!a.waveform && a.hasAudio !== false) { const b = await fileOf(a); if (b && b.size < 300 * 1024 * 1024) { const ab = await decodeSound(b); if (ab) { out.hasAudio = true; out.waveform = peaks(mono(ab), Math.min(2000, Math.max(100, Math.round(ab.duration * 25)))); if (a.kind === "audio" && !a.duration) out.duration = ab.duration; } else if (a.kind === "video") out.hasAudio = false; } }
+  return Object.keys(out).length ? out : null;
+}
 function probeImage(url: string): Promise<{ w: number; h: number; thumb: string }> {
   return new Promise((res) => { const im = new Image(); im.crossOrigin = "anonymous"; im.onload = () => res({ w: im.naturalWidth, h: im.naturalHeight, thumb: shot(im, im.naturalWidth, im.naturalHeight) }); im.onerror = () => res({ w: 0, h: 0, thumb: "" }); im.src = url; });
 }
@@ -63,7 +85,7 @@ export async function importFiles(files: File[] | FileList, folder: string | nul
     const id = uid("a"), key = "f_" + id; await putFile(key, f);
     const a: Asset = { id, kind, name: f.name.replace(/\.\w+$/, "").slice(0, 80), src: "local:" + key, size: f.size, mime: f.type, folder, createdAt: Date.now() };
     const u = (await urlOf(a))!;
-    if (kind === "video") { const p = await probeVideo(u); Object.assign(a, { w: p.w, h: p.h, duration: p.duration, thumb: p.thumb }); }
+    if (kind === "video") { const p = await probeVideo(u); Object.assign(a, { w: p.w, h: p.h, duration: p.duration, thumb: p.thumb }); const sp = await filmStrip(u, p.duration); if (sp) a.strip = sp; }
     if (kind === "image") { const p = await probeImage(u); Object.assign(a, { w: p.w, h: p.h, thumb: p.thumb }); }
     if (kind === "video" || kind === "audio") {
       const ab = await decodeSound(f);

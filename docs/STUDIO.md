@@ -191,6 +191,7 @@ Apple developer accounts, plus a signed release build (`./gradlew bundleRelease`
   effects, fades, transitions as cross-fades, speed, reverse, freeze frames, ducking and the text fades. Animated keyframes
   are taken at the clip's start, and text motions other than fade come out as fades. The device export draws all of them
   exactly.
+- **Weather & light and the erase / blur boxes (v222)** are drawn by the editor's own engine: in the preview and in exports made on the device. The server render and the desktop app's FFmpeg export leave them out for now.
 - **FFmpeg in the desktop app** is a GPL build: H.264 needs libx264. Its licence is shipped beside it
   (`FFMPEG-LICENSE.txt`).
 - **Speed.** This sandbox has no GPU, so exporting on the device is slow here. Real phones and computers use their video

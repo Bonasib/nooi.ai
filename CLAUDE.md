@@ -1761,3 +1761,40 @@ The owner sent the target card (two columns; media with play · sound · length;
   - Held upright: the same four panels via grid areas — `"rail player player" / "rail panel inspector" / "rail timeline timeline"`, rows `1fr / 0.9fr / minmax(250px, 34%)`.
   - Preview fit now subtracts the stage box's padding. The frame had stuck out about 20 px at every size; it now fits at all 11 sizes.
   - `tests/v221.py`: tablets expect `full`; all four panels at least 200×150; a clip tap fills the Clip panel with the library beside it and no drawers; the frame inside the preview at every size.
+
+## v222 nooi Studio gets the classic editor's tools (batch 1) — and the owner's phone findings are fixed
+
+- The owner's phone screenshots (live /studio/): the video sat low in the frame (Position Y 0.64 — a finger had moved it), a nooi result showed as a plain blue block, and many classic tools were missing.
+- Preview (`ui/Preview.tsx`):
+  - On touch, the clip moves only after a 280 ms hold; a quick swipe changes nothing.
+  - A tap without a move leaves no undo step (`editor.cancel`).
+  - x / y within 0.015 of the centre lines snap to 0.
+  - `A.resetTransform` (Video tab → Reset position) puts x, y, scale and turn back and removes their keyframes.
+  - Stage fit already subtracts the box padding (v221).
+- Filmstrips: `Asset.strip` (editor-core schema) is six frames in one JPEG. `filmStrip()` builds it on import.
+  - `visualsFor()` fills pictures, length, filmstrip and waveform for any asset that lacks them (a nooi result, an older project). It runs one at a time from `main.tsx` `fillVisuals()`, once per asset, with no undo step.
+  - `ClipView` repeats the strip along video clips.
+- Effects (editor-core `EFFECTS` + `EFFECT_GROUPS`; `FX` in `engine/shaders.ts`, `uFx[24]` + `uBox`):
+  - Weather & light, animated with `uTime` in frame space inside `grade()`: rain, snow, fog (fbm), light leak (screen blend), sparkles, old film.
+  - Erase & blur: `blurBox` / `pixelBox` are boxes on the clip's picture. Params x / y (from the top-left), w and h, each with Inspector sliders (`BOX_EFFECTS`, `boxOf`); the box raises the clip's own blur or pixelate inside it.
+  - CSS tile previews: `.fx-rain` … `.mo-*`.
+- Motion presets: editor-core `MOTIONS` + `motionKeyframes(id, clip)` give 13 presets (zooms, pans, pop, drop, spin, shake, pulse, fade in & out, none). They write ordinary keyframes and replace the clip's x / y / scale / turn / opacity points (`A.applyMotion`). Unit-tested.
+- Panels (`ui/Extras.tsx`):
+  - Effects = Effects · Weather & light · Erase & blur · Motion · Transitions.
+  - Text = Text · Stickers · Logo.
+  - Audio = Music & voice · Sound effects.
+  - Stickers (`media/stickers.ts`): 30 own SVG drawings in four groups (badges, shapes, faces, arrows & marks). A tap makes a 512 px PNG file, so it behaves like a picture in every export and on the server.
+  - Logo: upload once; it goes over the whole video in the chosen corner (`cornerOf` from the frame and the picture's shape). A corner tap moves a picked logo.
+  - Sound effects (`media/sfx.ts`): 16 made with OfflineAudioContext and saved as WAV — whoosh, swoosh, pop, click, ding, riser, impact, glitch, censor beep, shutter, typing, coin, success, error, heartbeat, applause. ▶ plays them before adding.
+  - `A.addMade(file, {kind, dur, scale, at})` imports a made file and puts it on a free track: V2 / A2 if free at that time, else another non-main track, else a new one. So a logo for the whole video starts at 0 even when a sticker is on V2.
+- Phone (`ui/ClipBar.tsx`):
+  - A picked clip swaps the bottom rail for its tools: Edit, Split, Speed, Volume, Color, Effects, Motion, Transition, Freeze, Mirror, Reset, Duplicate, AI, Delete. Audio and text clips show fewer.
+  - ✕ deselects.
+  - A tap no longer opens the settings sheet by itself (the preview stays big); Edit does.
+  - The format picker shows only the ratio on phones.
+- Server and desktop FFmpeg renders (editor-core `compile()`) leave out weather & light and the boxes for now. Motion keyframes are taken at the clip's start, as before. The device export draws all of it.
+- Not ported yet (v223): the classic AI tools — edit with words, replace things, voices & sound, AI voice-over, SFX and music from words, clean up voices, auto captions, translate, dub, lip-sync.
+- Tests:
+  - `tests/v222.py` (port 8723), suite line 209: a nooi result's filmstrip; Reset; the five Effects tabs; rain changes the picture; a pixelate box changes only its part; zoom-in keyframes; 30 stickers (the star drawn at the centre); the logo top-right (red there); 16 sound effects (whoosh on A2 with a waveform); a WebM export with them all. On an Arabic phone: the clip bar replaces the rail, a quick touch swipe doesn't move the clip and a hold does, Split from the bar, Edit opens the settings.
+  - Updated: v221 (phone clip tap → clip bar → Edit; the clip bar scrolls like the timeline toolbar) and v219 (Transitions is now the fifth Effects tab).
+  - editor-core 23 tests.

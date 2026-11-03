@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { TopBar } from "./ui/TopBar";
 import { Panel, RailBar } from "./ui/Panels";
@@ -6,8 +6,9 @@ import { Preview } from "./ui/Preview";
 import { Inspector } from "./ui/Inspector";
 import { Timeline } from "./ui/Timeline";
 import { ExportDialog, Palette, Projects, Toasts } from "./ui/Dialogs";
-import { ui, useUI, editor, pickedNow } from "./state";
+import { ui, useUI, editor, pickedNow, useProject } from "./state";
 import { Btn } from "@nooi/ui";
+import { ClipBar } from "./ui/ClipBar";
 
 // One editor, three arrangements of the same parts:
 //  · full (computers and tablets): rail · library · preview · inspector over the timeline — on a tablet held upright the same
@@ -30,9 +31,13 @@ export function App() {
     ms.forEach((m) => m.addEventListener("change", f)); return () => ms.forEach((m) => m.removeEventListener("change", f));
   }, []);
   // a newly picked clip opens its settings; nothing picked closes them (on a computer they are always there)
-  useEffect(() => { let last = editor.selection.join(); return editor.subscribe(() => { const now = editor.selection.join(); if (now !== last) { last = now; if (!now) setInsp(false); else if (pickedNow() || !ui.get().panelOpen) { setInsp(true); if (pickedNow()) ui.set({ panelOpen: false }); } } }); }, []);
+  // (on a phone the clip's tool bar shows instead; its Edit opens the settings — the preview stays big)
+  const modeRef = useRef(mode); modeRef.current = mode;
+  useEffect(() => { let last = editor.selection.join(); return editor.subscribe(() => { const now = editor.selection.join(); if (now !== last) { last = now; if (!now) setInsp(false); else if (modeRef.current === "phone") { if (pickedNow()) ui.set({ panelOpen: false }); } else if (pickedNow() || !ui.get().panelOpen) { setInsp(true); if (pickedNow()) ui.set({ panelOpen: false }); } } }); }, []);
   const closeAll = () => { ui.set({ panelOpen: false }); setInsp(false); };
   const sheet = open || (insp && editor.selection.length > 0);
+  useProject();   // (re-render when the selection changes: the phone's bottom bar follows it)
+  const phoneSel = mode === "phone" && editor.selection.length === 1;
   return (
     <div className={"app " + mode + (mode === "phone" && sheet ? " sheeted" : "")} data-testid="studio">
       <TopBar />
@@ -45,7 +50,7 @@ export function App() {
           </div>}
           <Timeline />
         </main>
-        <RailBar mobile />
+        {phoneSel ? <ClipBar openSettings={(tab) => { ui.set({ inspector: tab, panelOpen: false }); setInsp(true); }} /> : <RailBar mobile />}
       </>) : mode === "compact" ? (
         <main className="workspace compact">
           <RailBar toggle />

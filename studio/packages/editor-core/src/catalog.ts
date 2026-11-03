@@ -1,3 +1,4 @@
+import type { Clip, Keyframes } from "./schema";
 // What the editor offers by name (the drawing lives in the app's compositor). Names in English and Arabic.
 export interface Item { id: string; en: string; ar: string; group?: string }
 
@@ -15,14 +16,27 @@ export const TRANSITIONS: Item[] = [
 ].map(([id, en, ar, group]) => ({ id, en, ar, group }));
 
 // effects on a clip (params: amount 0..1 unless named); the amount a new one starts with
-export const EFFECT_AMOUNT: Record<string, number> = { mono: 1, sepia: 1, invert: 1, mirror: 1, blur: 0.4, vignette: 0.6, grain: 0.5 };
+export const EFFECT_AMOUNT: Record<string, number> = { mono: 1, sepia: 1, invert: 1, mirror: 1, blur: 0.4, vignette: 0.6, grain: 0.5, rain: 0.6, snow: 0.6, fog: 0.5, leak: 0.6, sparkle: 0.6, dust: 0.6, blurBox: 1, pixelBox: 1 };
 export const effectAmount = (type: string) => EFFECT_AMOUNT[type] ?? 0.5;
 export const EFFECTS: Item[] = [
   ["blur", "Blur", "تمويه"], ["sharpen", "Sharpen", "حدة"], ["vignette", "Vignette", "تظليل الأطراف"], ["grain", "Film grain", "حبيبات الفيلم"],
   ["glitch", "Glitch", "تشويش رقمي"], ["rgbSplit", "RGB split", "انفصال الألوان"], ["pixelate", "Pixelate", "بكسلة"], ["mono", "Black & white", "أبيض وأسود"],
   ["sepia", "Sepia", "بني قديم"], ["invert", "Invert", "عكس الألوان"], ["mirror", "Mirror", "مرآة"], ["vhs", "VHS", "شريط VHS"],
   ["glow", "Glow", "توهج"], ["posterize", "Posterize", "تبسيط الألوان"], ["scanlines", "Scan lines", "خطوط المسح"], ["shake", "Camera shake", "اهتزاز الكاميرا"],
+  // weather & light (animated, drawn on the clip's picture)
+  ["rain", "Rain", "مطر"], ["snow", "Snow", "ثلج"], ["fog", "Fog", "ضباب"], ["leak", "Light leak", "تسرّب ضوئي"], ["sparkle", "Sparkles", "بريق"], ["dust", "Old film", "فيلم قديم"],
+  // erase & blur one part of the picture (a box you place: x, y, w, h)
+  ["blurBox", "Blur a part", "تمويه جزء"], ["pixelBox", "Pixelate a part", "بكسلة جزء"],
 ].map(([id, en, ar]) => ({ id, en, ar }));
+// the Effects panel's groups (same order as the tiles)
+export const EFFECT_GROUPS: Record<string, string[]> = {
+  effects: ["blur", "sharpen", "vignette", "grain", "glitch", "rgbSplit", "pixelate", "mono", "sepia", "invert", "mirror", "vhs", "glow", "posterize", "scanlines", "shake"],
+  weather: ["rain", "snow", "fog", "leak", "sparkle", "dust"],
+  erase: ["blurBox", "pixelBox"],
+};
+// a box effect's place on the clip's picture (fractions from the top-left)
+export const BOX_EFFECTS = new Set(["blurBox", "pixelBox"]);
+export const boxOf = (e: { params: Record<string, number | string | boolean> }) => ({ x: +(e.params.x ?? 0.35), y: +(e.params.y ?? 0.35), w: +(e.params.w ?? 0.3), h: +(e.params.h ?? 0.3) });
 
 // looks: colour adjustments in one tap (they set ColorAdjust values)
 export const LOOKS: (Item & { set: Record<string, number> })[] = [
@@ -57,3 +71,29 @@ export const TEXT_TEMPLATES: (Item & { style: Record<string, unknown>; animIn: s
 export const FONTS: { name: string; ar: boolean }[] = [
   "Cairo", "Tajawal", "Almarai", "Changa", "El Messiri", "Reem Kufi", "Lalezar", "Rakkas", "IBM Plex Sans Arabic", "Noto Kufi Arabic", "Noto Naskh Arabic", "Amiri", "Harmattan", "Lemonada", "Marhey",
 ].map((name) => ({ name, ar: true })).concat(["Inter", "Montserrat", "Poppins", "Anton", "Bebas Neue", "Oswald", "Playfair Display", "Pacifico", "Permanent Marker", "Archivo Black", "DM Serif Display", "Space Grotesk"].map((name) => ({ name, ar: false })));
+
+// motion presets: one tap writes ordinary keyframes on the clip (you can still change each point); `none` removes them
+export const MOTIONS: Item[] = [
+  ["zoomIn", "Slow zoom in", "تقريب بطيء"], ["zoomOut", "Slow zoom out", "إبعاد بطيء"], ["panL", "Pan left", "تحريك لليسار"], ["panR", "Pan right", "تحريك لليمين"],
+  ["panU", "Pan up", "تحريك للأعلى"], ["panD", "Pan down", "تحريك للأسفل"], ["popIn", "Pop in", "ظهور بارز"], ["dropIn", "Drop in", "سقوط للداخل"],
+  ["spinIn", "Spin in", "دوران للداخل"], ["shake", "Shake", "اهتزاز"], ["pulse", "Pulse", "نبض"], ["fadeInOut", "Fade in & out", "ظهور واختفاء"], ["none", "No motion", "بدون حركة"],
+].map(([id, en, ar]) => ({ id, en, ar }));
+export function motionKeyframes(id: string, c: Pick<Clip, "dur" | "transform" | "opacity">): Keyframes {
+  const d = Math.max(0.2, c.dur), s = c.transform.scale || 1, x = c.transform.x || 0, y = c.transform.y || 0, r = c.transform.rotation || 0, o = c.opacity ?? 1, e = Math.min(0.5, d / 3);
+  const k = (pts: [number, number][], ease: "linear" | "easeOut" | "easeInOut" = "easeInOut") => pts.map(([t, v]) => ({ t: Math.min(d, Math.max(0, t)), v, ease }));
+  switch (id) {
+    case "zoomIn": return { scale: k([[0, s], [d, s * 1.25]], "linear") };
+    case "zoomOut": return { scale: k([[0, s * 1.25], [d, s]], "linear") };
+    case "panL": return { scale: k([[0, s * 1.2], [d, s * 1.2]]), x: k([[0, x + 0.08], [d, x - 0.08]], "linear") };
+    case "panR": return { scale: k([[0, s * 1.2], [d, s * 1.2]]), x: k([[0, x - 0.08], [d, x + 0.08]], "linear") };
+    case "panU": return { scale: k([[0, s * 1.2], [d, s * 1.2]]), y: k([[0, y + 0.08], [d, y - 0.08]], "linear") };
+    case "panD": return { scale: k([[0, s * 1.2], [d, s * 1.2]]), y: k([[0, y - 0.08], [d, y + 0.08]], "linear") };
+    case "popIn": return { scale: k([[0, s * 0.4], [e * 0.6, s * 1.08], [e, s]], "easeOut"), opacity: k([[0, 0], [e * 0.4, o]], "easeOut") };
+    case "dropIn": return { y: k([[0, y - 0.6], [e, y]], "easeOut"), opacity: k([[0, 0], [e * 0.5, o]], "easeOut") };
+    case "spinIn": return { rotation: k([[0, r - 180], [e * 1.4, r]], "easeOut"), scale: k([[0, s * 0.3], [e * 1.4, s]], "easeOut") };
+    case "shake": { const pts: [number, number][] = []; for (let t = 0, i = 0; t <= Math.min(d, 1.2); t += 0.06, i++) pts.push([t, x + (i % 2 ? 0.012 : -0.012) * (1 - t / 1.3)]); pts.push([Math.min(d, 1.26), x]); return { x: k(pts, "linear") }; }
+    case "pulse": { const pts: [number, number][] = []; for (let t = 0, i = 0; t <= d; t += 0.5, i++) pts.push([t, i % 2 ? s * 1.06 : s]); return { scale: k(pts) }; }
+    case "fadeInOut": return { opacity: k([[0, 0], [e, o], [d - e, o], [d, 0]]) };
+    default: return {};
+  }
+}

@@ -150,7 +150,7 @@ const ClipView = memo(function ClipView({ c, p, zoom, sel, kind, onDown }: { c: 
   const a = c.type === "media" ? p.assets[c.asset] : null; const w = Math.max(2, c.dur * zoom);
   const isAudio = kind === "audio" || a?.kind === "audio";
   const style: React.CSSProperties = { left: c.start * zoom, width: w };
-  if (a?.thumb && !isAudio) { style.backgroundImage = `url(${a.thumb})`; }
+  if (!isAudio && (a?.strip || a?.thumb)) { style.backgroundImage = `url(${a.strip || a.thumb})`; }
   const kfs = Object.values(c.keyframes).flatMap((l) => (l || []).map((k) => k.t));
   return (
     <div className={"clip " + (c.type === "text" ? "text" : isAudio ? "audio" : "video") + (sel ? " sel" : "")} style={style} onPointerDown={(e) => onDown(e, c, "body")} data-clip={c.id} title={c.name} role="button" aria-pressed={sel} aria-label={c.name || (c.type === "text" ? c.text : a?.name)}>

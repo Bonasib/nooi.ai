@@ -33,6 +33,7 @@ export interface Asset {
   proxy?: string;              // a small copy for smooth preview (4K sources)
   w?: number; h?: number; duration?: number; fps?: number; hasAudio?: boolean; size?: number; mime?: string;
   folder?: Id | null; waveform?: number[]; thumb?: string; createdAt: number;
+  strip?: string;              // a filmstrip picture (several frames side by side) for the timeline
   job?: string;                // the nooi.ai job that made it
 }
 export interface Folder { id: Id; name: string; parent?: Id | null }

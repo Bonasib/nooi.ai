@@ -11,7 +11,8 @@ void main(){ vec2 uv = uFlipY ? vec2(vUv.x, 1.0 - vUv.y) : vUv; o = texture(uTex
 export const BLENDS = ["normal", "multiply", "screen", "overlay", "darken", "lighten", "add", "difference", "softLight", "hardLight", "colorDodge", "colorBurn"];
 export const TRANS = ["fade", "black", "white", "flash", "blur", "luma", "wipeL", "wipeR", "wipeU", "wipeD", "diagTL", "diagBR", "clock", "radial", "barnV", "barnH", "blinds", "checker",
   "slideL", "slideR", "slideU", "slideD", "pushL", "pushR", "pushU", "pushD", "zoomIn", "zoomOut", "spin", "circleOpen", "circleClose", "diamond", "pixelate", "glitch"];
-export const FX = ["blur", "sharpen", "vignette", "grain", "glitch", "rgbSplit", "pixelate", "mono", "sepia", "invert", "mirror", "vhs", "glow", "posterize", "scanlines", "shake"];
+export const FX = ["blur", "sharpen", "vignette", "grain", "glitch", "rgbSplit", "pixelate", "mono", "sepia", "invert", "mirror", "vhs", "glow", "posterize", "scanlines", "shake",
+  "rain", "snow", "fog", "leak", "sparkle", "dust", "blurBox", "pixelBox"];
 
 export const FS_LAYER = `#version 300 es
 precision highp float; precision highp sampler3D;
@@ -26,7 +27,8 @@ uniform vec4 uC1;             // exposure contrast saturation temperature
 uniform vec4 uC2;             // tint highlights shadows vibrance
 uniform vec3 uHsl[8];
 uniform float uLutAmt; uniform float uLutSize;
-uniform float uFx[16];        // effect amounts (0 = off), order = FX
+uniform float uFx[24];        // effect amounts (0 = off), order = FX
+uniform vec4 uBox;            // the blur / pixelate box on the clip picture: x, y (from the top-left), w, h — fractions
 uniform int uTr; uniform float uTrK; uniform int uTrRole;   // transition type, progress, 0 = outgoing 1 = incoming (-1 none)
 uniform bool uSrcFlipY;
 
@@ -61,12 +63,16 @@ vec4 tap(vec2 suv){
 }
 vec4 sampleSrc(vec2 suv){
   if (uFx[10] > 0.0) suv.x = suv.x > 0.5 ? 1.0 - suv.x : suv.x;
-  if (uFx[6] > 0.0) { float b = mix(1.0, 64.0, uFx[6]) / uSrcSize.x; suv = floor(suv / b) * b + b * 0.5; }
+  // erase & blur a part: inside the box the picture is blurred or pixelated strongly (suv.y runs bottom → top)
+  bool inBox = (uFx[22] > 0.0 || uFx[23] > 0.0) && suv.x >= uBox.x && suv.x <= uBox.x + uBox.z && 1.0 - suv.y >= uBox.y && 1.0 - suv.y <= uBox.y + uBox.w;
+  float fxPix = uFx[6], fxBlur = uFx[0];
+  if (inBox) { fxPix = max(fxPix, uFx[23] * 0.5); fxBlur = max(fxBlur, uFx[22] * 2.4); }
+  if (fxPix > 0.0) { float b = mix(1.0, 64.0, fxPix) / uSrcSize.x; suv = floor(suv / b) * b + b * 0.5; }
   if (suv.x < 0.0 || suv.y < 0.0 || suv.x > 1.0 || suv.y > 1.0) return vec4(0.0);
   vec4 c = tap(suv);
   vec2 px1 = 1.0 / uSrcSize;
-  if (uFx[0] > 0.0 || uTr == 4 && uTrRole >= 0) {
-    float r = uFx[0] * 10.0 + (uTr == 4 && uTrRole >= 0 ? sin(uTrK * 3.14159) * 14.0 : 0.0);
+  if (fxBlur > 0.0 || uTr == 4 && uTrRole >= 0) {
+    float r = fxBlur * 10.0 + (uTr == 4 && uTrRole >= 0 ? sin(uTrK * 3.14159) * 14.0 : 0.0);
     vec4 acc = vec4(0.0); float w = 0.0;
     for (int i = -3; i <= 3; i++) for (int j = -3; j <= 3; j++) { vec2 d = vec2(float(i), float(j)) * r / 3.0 * px1; float ww = 1.0 / (1.0 + float(i*i + j*j)); acc += tap(clamp(suv + d, 0.0, 1.0)) * ww; w += ww; }
     c = acc / w;
@@ -80,6 +86,23 @@ vec4 sampleSrc(vec2 suv){
   if (uFx[12] > 0.0) { vec4 g = vec4(0.0); for (int i = -2; i <= 2; i++) for (int j = -2; j <= 2; j++) g += tap(clamp(suv + vec2(float(i), float(j)) * 4.0 * px1, 0.0, 1.0)); g /= 25.0; c.rgb += max(g.rgb - 0.55, 0.0) * uFx[12] * 2.0; }
   return c;
 }
+// weather & light: drawn in the frame (uv: 0..1, y up), animated by uTime
+float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y); }
+float fbm(vec2 p){ float v = 0.0, a = 0.5; for (int i = 0; i < 4; i++) { v += a * vnoise(p); p *= 2.03; a *= 0.5; } return v; }
+float rainF(vec2 uv){ float s = 0.0; float asp = uFrame.x / uFrame.y;
+  for (int i = 0; i < 3; i++) { float k = float(i) + 1.0; vec2 q = vec2(uv.x * asp * 70.0 * k + uv.y * 6.0, uv.y * 3.0 * k + uTime * (2.2 + k * 0.9));
+    vec2 id = floor(q); float r = hash(id + k * 13.0); float f = fract(q.y); float x = fract(q.x);
+    s += step(0.86, r) * smoothstep(0.5, 0.42, abs(x - 0.5)) * smoothstep(0.0, 0.15, f) * (1.0 - smoothstep(0.15, 0.9, f)) * (0.55 / k); }
+  return s; }
+float snowF(vec2 uv){ float s = 0.0; float asp = uFrame.x / uFrame.y;
+  for (int i = 0; i < 3; i++) { float k = float(i); float sc = 7.0 + k * 6.0; vec2 q = vec2(uv.x * asp, uv.y) * sc; q.y += uTime * (0.6 + k * 0.3); q.x += sin(uTime * 0.8 + q.y * 0.7 + k) * 0.35;
+    vec2 id = floor(q); vec2 f = fract(q) - 0.5; vec2 o = vec2(hash(id + 1.3 + k), hash(id + 2.7 + k)) - 0.5; float d = length(f - o * 0.6);
+    s += step(0.45, hash(id + k * 7.0)) * smoothstep(0.11 - k * 0.025, 0.0, d); }
+  return clamp(s, 0.0, 1.0); }
+float sparkF(vec2 uv){ vec2 q = vec2(uv.x * uFrame.x / uFrame.y, uv.y) * 12.0; vec2 id = floor(q), f = fract(q) - 0.5; float r = hash(id + 3.1);
+  if (r < 0.82) return 0.0; f -= (vec2(hash(id + 5.0), hash(id + 9.0)) - 0.5) * 0.5; float tw = pow(0.5 + 0.5 * sin(uTime * 3.5 + r * 60.0), 3.0);
+  vec2 a = abs(f); float star = max(0.0, 1.0 - length(f) * 9.0) + max(0.0, 1.0 - a.x * 60.0) * max(0.0, 1.0 - a.y * 4.0) + max(0.0, 1.0 - a.y * 60.0) * max(0.0, 1.0 - a.x * 4.0);
+  return star * tw; }
 vec3 grade(vec3 c, vec2 uv){
   c *= pow(2.0, uC1.x * 2.0);
   c = (c - 0.5) * (1.0 + uC1.y) + 0.5;
@@ -100,6 +123,16 @@ vec3 grade(vec3 c, vec2 uv){
   if (uFx[3] > 0.0) c += (hash(uv * uFrame + uTime * 31.0) - 0.5) * uFx[3] * 0.18;
   if (uFx[14] > 0.0 || uFx[11] > 0.0) c *= 1.0 - (uFx[14] * 0.25 + uFx[11] * 0.15) * step(0.5, fract(uv.y * uFrame.y / 3.0));
   if (uFx[11] > 0.0) c += (hash(vec2(uv.y * 400.0, uTime)) - 0.5) * 0.06 * uFx[11];
+  if (uFx[18] > 0.0) { float f = fbm(uv * vec2(3.0, 2.0) + vec2(uTime * 0.06, uTime * 0.01)); c = mix(c, vec3(0.83, 0.85, 0.88), clamp(f * 1.25 * uFx[18] * (0.55 + 0.45 * (1.0 - uv.y)), 0.0, 0.88)); }
+  if (uFx[16] > 0.0) { c *= 1.0 - 0.16 * uFx[16]; c = mix(c, vec3(0.8, 0.85, 0.95), clamp(rainF(uv) * uFx[16] * 1.4, 0.0, 0.9)); }
+  if (uFx[17] > 0.0) c = mix(c, vec3(1.0), snowF(uv) * clamp(uFx[17] * 1.3, 0.0, 1.0));
+  if (uFx[19] > 0.0) { vec2 p1 = vec2(0.1 + 0.12 * sin(uTime * 0.35), 0.85 + 0.08 * cos(uTime * 0.27)), p2 = vec2(0.95, 0.25 + 0.15 * sin(uTime * 0.22));
+    vec3 leak = vec3(1.0, 0.55, 0.18) * smoothstep(0.85, 0.0, distance(uv, p1)) + vec3(1.0, 0.25, 0.45) * smoothstep(0.6, 0.0, distance(uv, p2)) * 0.7;
+    c = 1.0 - (1.0 - c) * (1.0 - clamp(leak * uFx[19] * 0.85, 0.0, 1.0)); }
+  if (uFx[20] > 0.0) c += vec3(1.0, 0.95, 0.82) * sparkF(uv) * uFx[20] * 1.3;
+  if (uFx[21] > 0.0) { float t = floor(uTime * 12.0); float sp = step(0.9988, hash(floor(uv * uFrame / 3.0) + t * 1.7)); float lx = hash(vec2(t, 4.0));
+    float line = step(0.6, hash(vec2(t, 9.0))) * (1.0 - smoothstep(0.0, 1.5 / uFrame.x, abs(uv.x - lx)));
+    c = mix(c, vec3(0.08), clamp((sp + line * 0.6) * uFx[21], 0.0, 1.0)); c *= 1.0 - uFx[21] * 0.1 * hash(vec2(t, 3.0)); c = mix(c, vec3(luma(c)) * vec3(1.05, 0.98, 0.86), uFx[21] * 0.35); }
   return c;
 }
 float trMask(vec2 uv, vec4 src){

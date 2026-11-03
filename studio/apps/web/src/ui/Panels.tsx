@@ -10,6 +10,7 @@ import type { Rail } from "../state";
 import { assetFromJob, decodeSound, fileOf, importFiles, monoOf, uploadAsset } from "../media/library";
 import { api } from "../api";
 import * as A from "../actions";
+import { StickersPanel, LogoPanel, SfxPanel, EffectTiles, MotionTiles } from "./Extras";
 import { AIPanel } from "./AIPanel";
 import { CaptionsPanel } from "./Captions";
 
@@ -32,7 +33,7 @@ export function Panel() {
     <section className="panel" aria-label={t("rail." + rail)}>
       <h2 className="ns-h2 phead">{t("rail." + rail)}</h2>
       <div className="pbody">
-        {rail === "media" && <MediaPanel />}{rail === "audio" && <AudioPanel />}{rail === "text" && <TextPanel />}
+        {rail === "media" && <MediaPanel />}{rail === "audio" && <AudioTabs />}{rail === "text" && <TextTabs />}
         {rail === "captions" && <CaptionsPanel />}{rail === "effects" && <EffectsPanel />}{rail === "color" && <ColorPanel />}{rail === "ai" && <AIPanel />}
       </div>
     </section>
@@ -175,18 +176,26 @@ function TextPanel() {
 }
 
 // ---------------- Effects (+ transitions): see one on the preview by pointing at it; tap to add
+// Audio: music & voice · sound effects;  Text: text · stickers & graphics · logo
+function AudioTabs() { const sub = useUI((s) => s.sub.audio) || "audio"; return (<><Sub rail="audio" tabs={["audio", "sfx"]} />{sub === "sfx" ? <SfxPanel /> : <AudioPanel />}</>); }
+function TextTabs() { const sub = useUI((s) => s.sub.text) || "text"; return (<><Sub rail="text" tabs={["text", "stickers", "logo"]} />{sub === "stickers" ? <StickersPanel /> : sub === "logo" ? <LogoPanel /> : <TextPanel />}</>); }
 function EffectsPanel() {
   const { t } = useTranslation(); const sub = useUI((s) => s.sub.effects) || "effects"; const lang = useUI((s) => s.lang);
   const hover = (id: string | null) => ui.set({ preview: id });
+  if (sub !== "transitions") return (<>
+    <Sub rail="effects" tabs={["effects", "weather", "erase", "motion", "transitions"]} />
+    <p className="hint">{t("fx.hint." + sub)}</p>
+    {sub === "motion" ? <MotionTiles /> : <EffectTiles group={sub} />}
+  </>);
   return (<>
-    <Sub rail="effects" tabs={["effects", "transitions"]} />
-    <p className="hint">{sub === "effects" ? t("fx.hint") : t("tr.hint")}</p>
+    <Sub rail="effects" tabs={["effects", "weather", "erase", "motion", "transitions"]} />
+    <p className="hint">{t("tr.hint")}</p>
     <div className="ns-grid fxg">
-      {(sub === "effects" ? EFFECTS : TRANSITIONS).map((x) => (
-        <button key={x.id} type="button" className="ns-tile" onPointerEnter={(e) => { if (e.pointerType !== "touch") hover((sub === "effects" ? "fx:" : "tr:") + x.id); }} onPointerLeave={() => hover(null)}
-          onClick={() => { hover(null); sub === "effects" ? A.applyEffect(x.id) : A.applyTransition(x.id); }} draggable={sub === "transitions"}
-          onDragStart={(e) => e.dataTransfer.setData("application/x-nooi-transition", x.id)} data-testid={(sub === "effects" ? "fx-" : "tr-") + x.id}>
-          <span className={"fxsw " + (sub === "effects" ? "fx-" : "tr-") + x.id} aria-hidden="true" /><span>{lang === "ar" ? x.ar : x.en}</span>
+      {TRANSITIONS.map((x) => (
+        <button key={x.id} type="button" className="ns-tile" onPointerEnter={(e) => { if (e.pointerType !== "touch") hover("tr:" + x.id); }} onPointerLeave={() => hover(null)}
+          onClick={() => { hover(null); A.applyTransition(x.id); }} draggable
+          onDragStart={(e) => e.dataTransfer.setData("application/x-nooi-transition", x.id)} data-testid={"tr-" + x.id}>
+          <span className={"fxsw tr-" + x.id} aria-hidden="true" /><span>{lang === "ar" ? x.ar : x.en}</span>
         </button>
       ))}
     </div>

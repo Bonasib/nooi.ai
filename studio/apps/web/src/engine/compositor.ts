@@ -35,7 +35,7 @@ export class Compositor {
     this.vao = gl.createVertexArray()!; gl.bindVertexArray(this.vao);
     const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
     gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-    for (const n of ["uSrc", "uDst", "uLut", "uFrame", "uSrcSize", "uInv", "uCrop", "uOpacity", "uBlend", "uTime", "uC1", "uC2", "uHsl", "uLutAmt", "uLutSize", "uFx", "uTr", "uTrK", "uTrRole", "uSrcFlipY"]) this.U[n] = gl.getUniformLocation(this.layer, n);
+    for (const n of ["uSrc", "uDst", "uLut", "uFrame", "uSrcSize", "uInv", "uCrop", "uOpacity", "uBlend", "uTime", "uC1", "uC2", "uHsl", "uLutAmt", "uLutSize", "uFx", "uBox", "uTr", "uTrK", "uTrRole", "uSrcFlipY"]) this.U[n] = gl.getUniformLocation(this.layer, n);
     this.emptyLut = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_3D, this.emptyLut); gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, 2, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(32));
     if ("addEventListener" in canvas) (canvas as HTMLCanvasElement).addEventListener("webglcontextlost", (e) => { e.preventDefault(); this.lost = true; });
   }
@@ -82,7 +82,9 @@ export class Compositor {
     gl.uniform4f(this.U.uC2, c?.tint || 0, c?.highlights || 0, c?.shadows || 0, c?.vibrance || 0);
     const hsl = new Float32Array(24); if (c) HUE_BANDS.forEach((b, i) => { const v = c.hsl[b] || [0, 0, 0]; hsl.set(v, i * 3); }); gl.uniform3fv(this.U.uHsl, hsl);
     gl.uniform1f(this.U.uLutAmt, L.lut ? L.lut.amount : 0); gl.uniform1f(this.U.uLutSize, L.lut ? L.lut.size : 2);
-    const fx = new Float32Array(16); for (const e of L.effects || []) { const i = FX.indexOf(e.type); if (i >= 0 && e.enabled) fx[i] = Math.max(0.001, +(e.params.amount ?? 0.5)); } gl.uniform1fv(this.U.uFx, fx);
+    const fx = new Float32Array(24); let box = [0.35, 0.35, 0.3, 0.3];
+    for (const e of L.effects || []) { const i = FX.indexOf(e.type); if (i >= 0 && e.enabled) { fx[i] = Math.max(0.001, +(e.params.amount ?? 0.5)); if (i >= 22) box = [+(e.params.x ?? 0.35), +(e.params.y ?? 0.35), +(e.params.w ?? 0.3), +(e.params.h ?? 0.3)]; } }
+    gl.uniform1fv(this.U.uFx, fx); gl.uniform4f(this.U.uBox, box[0], box[1], box[2], box[3]);
     gl.uniform1i(this.U.uTr, L.trans ? Math.max(0, TRANS.indexOf(L.trans.type)) : 0); gl.uniform1f(this.U.uTrK, L.trans ? L.trans.k : 0); gl.uniform1i(this.U.uTrRole, L.trans ? (L.trans.role === "a" ? 0 : 1) : -1);
     gl.uniform1i(this.U.uSrcFlipY, 0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); this.cur = 1 - this.cur;

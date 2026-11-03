@@ -110,7 +110,7 @@ async def desktop(p):
     chk(f"{tag}: a text (Arabic) on the text track, with a font picked from samples of its own words", r["text"] == "مرحبا بالعالم" and r["font"] == "Tajawal" and r["track"] == "text", r)
     # ---- transition, effect preview, keyframes, speed, colour, LUT, detach
     await E("()=>{const e=window.__studio.editor;e.select([" + P + ".tracks.find(t=>t.name==='V1').clips[0].id])}")
-    await pg.click('[data-testid="rail-effects"]'); await pg.click('.subtabs button >> nth=1'); await pg.click('[data-testid="tr-wipeL"]'); await pg.wait_for_timeout(200)
+    await pg.click('[data-testid="rail-effects"]'); await pg.click('.panel .subtabs button:has-text("Transitions")'); await pg.click('[data-testid="tr-wipeL"]'); await pg.wait_for_timeout(200)
     chk(f"{tag}: a transition sits on the cut", await E("()=>" + P + ".transitions.map(x=>x.type)") == ["wipeL"])
     await pg.click('.subtabs button >> nth=0'); await E("()=>{window.__studio.editor.select([]);}")
     await E("()=>{}"); await pg.click('[data-testid="ruler"]', position={"x": 60, "y": 10}); await pg.wait_for_timeout(400)

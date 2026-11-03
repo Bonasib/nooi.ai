@@ -162,3 +162,15 @@ describe("store, commands, presets, migration, sound analysis", () => {
     expect(duckGain(sp, 1.5, 0.7)).toBeCloseTo(0.3, 5); expect(duckGain(sp, 2.8, 0.7)).toBe(1);
   });
 });
+
+describe("v222 motion presets and effect groups", () => {
+  it("writes keyframes per preset and none clears", async () => {
+    const { motionKeyframes, MOTIONS, EFFECT_GROUPS, EFFECTS, transform0 } = await import("../src");
+    const c = { dur: 4, transform: transform0(), opacity: 1 };
+    const z = motionKeyframes("zoomIn", c); expect(z.scale?.map((k) => k.v)).toEqual([1, 1.25]); expect(z.scale?.[1].t).toBe(4);
+    expect(motionKeyframes("popIn", c).opacity?.[0].v).toBe(0);
+    expect(Object.keys(motionKeyframes("none", c))).toEqual([]);
+    for (const m of MOTIONS) for (const list of Object.values(motionKeyframes(m.id, c))) for (const k of list || []) { expect(k.t).toBeGreaterThanOrEqual(0); expect(k.t).toBeLessThanOrEqual(4); }
+    const all = Object.values(EFFECT_GROUPS).flat(); expect(new Set(all).size).toBe(all.length); for (const id of all) expect(EFFECTS.some((e) => e.id === id)).toBe(true);
+  });
+});

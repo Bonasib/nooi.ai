@@ -3,6 +3,7 @@ import * as C from "@nooi/editor-core";
 import type { Asset, Clip, MediaClip, Project, TextClip } from "@nooi/editor-core";
 import i18n from "./i18n";
 import { autosave, editor, playerRef, toast, ui, markPick } from "./state";
+import { importFiles } from "./media/library";
 
 const t = (k: string, o?: Record<string, unknown>) => i18n.t(k, o) as string;
 export const now = () => playerRef.current?.clock.t ?? editor.playhead;
@@ -66,7 +67,7 @@ export function keyframe(prop: C.KfProp) {
 }
 export function applyEffect(type: string) {
   const c = sel1(); if (c?.type !== "media") { toast(t("toast.pickClip"), "info"); return; }
-  run("effect", (p) => { const m = C.findClip(p, c.id)!.clip as MediaClip; if (!m.effects.some((e) => e.type === type)) m.effects.push({ id: C.uid("e"), type, enabled: true, params: { amount: C.effectAmount(type) } }); });
+  run("effect", (p) => { const m = C.findClip(p, c.id)!.clip as MediaClip; if (!m.effects.some((e) => e.type === type)) m.effects.push({ id: C.uid("e"), type, enabled: true, params: C.BOX_EFFECTS.has(type) ? { amount: 1, x: 0.35, y: 0.35, w: 0.3, h: 0.3 } : { amount: C.effectAmount(type) } }); });
   ui.set({ inspector: "effects" });
 }
 export function applyLook(id: string) {
@@ -90,3 +91,43 @@ export const isText = (c: Clip | null): c is TextClip => !!c && c.type === "text
 export function undo() { const l = editor.undo(); if (l) { autosave(); playerRef.current?.prune(); } }
 export function redo() { const l = editor.redo(); if (l) autosave(); }
 export function zoom(f: number) { ui.set((s) => ({ zoom: Math.max(4, Math.min(600, s.zoom * f)) })); }
+
+// back to the middle at full size, not turned (position, size and turn keyframes go too; crop and flips stay)
+export function resetTransform() {
+  const c = sel1(); if (!c) return;
+  run("reset position", (p) => { const f = C.findClip(p, c.id); if (!f) return; Object.assign(f.clip.transform, { x: 0, y: 0, scale: 1, rotation: 0 }); for (const k of ["x", "y", "scale", "rotation"] as const) delete f.clip.keyframes[k]; });
+}
+// a motion preset: ordinary keyframes on the picked clip (its x / y / scale / turn / opacity points are replaced)
+export function applyMotion(id: string) {
+  const c = sel1(); if (!c) { toast(t("toast.pickClip"), "info"); return; }
+  run("motion", (p) => { const f = C.findClip(p, c.id); if (!f) return; for (const k of ["x", "y", "scale", "rotation", "opacity"] as const) delete f.clip.keyframes[k]; Object.assign(f.clip.keyframes, C.motionKeyframes(id, f.clip)); });
+}
+
+// a file made in the studio (sticker, logo, sound effect) → the library, then onto the overlay video track (V2) or the second
+// sound track (A2) at the playhead, with a size / place / length of its own
+export async function addMade(file: File, o: { kind: "overlay" | "sound"; dur?: number; scale?: number; x?: number; y?: number; at?: number }) {
+  const r = await importFiles([file]); const a = r.assets[0]; if (!a) return null;
+  const c = run(o.kind === "sound" ? "sound effect" : "sticker", (p) => {
+    p.assets[a.id] = a;
+    // the preferred track (V2 / A2) if it is free for that time, else another free one (never the main V1 for an overlay), else a
+    // new track on top — so a logo for the whole video starts at 0 even when a sticker is already there
+    const at = o.at ?? now(), len = o.dur || (a.kind === "image" ? 4 : a.duration || 1);
+    const vids = p.tracks.filter((t) => t.kind === "video"), auds = p.tracks.filter((t) => t.kind === "audio"), main = vids[vids.length - 1];
+    const pool = o.kind === "sound" ? [...auds.filter((t) => t.name === "A2"), ...auds.filter((t) => t.name !== "A2").reverse()] : [...vids.filter((t) => t.name === "V2"), ...vids.filter((t) => t.name !== "V2" && t !== main)];
+    const tr = pool.find((t) => !t.locked && !C.overlaps(t, at, at + len)) || (o.kind === "sound" ? C.addTrack(p, "audio") : C.addTrack(p, "video", 0));
+    const clip = C.addAssetClip(p, p.assets[a.id], at, tr.id);
+    if (o.dur) clip.dur = o.dur; if (o.scale != null) clip.transform.scale = o.scale; if (o.x != null) clip.transform.x = o.x; if (o.y != null) clip.transform.y = o.y;
+    return clip;
+  });
+  markPick(); editor.select([c.id]); playerRef.current?.resize(); return c;
+}
+// a logo / picture in a corner: its place worked out from the frame and the picture's own shape
+export function cornerOf(p: Project, a: { w?: number; h?: number }, corner: "tl" | "tr" | "bl" | "br", scale = 0.18, margin = 0.035) {
+  const W = p.width, H = p.height, w = a.w || 512, h = a.h || 512, k = Math.min(W / w, H / h), cw = (w * k * scale) / W, ch = (h * k * scale) / H;
+  const x = 0.5 - cw / 2 - margin * (H / W), y = 0.5 - ch / 2 - margin;
+  return { x: corner.endsWith("l") ? -x : x, y: corner.startsWith("t") ? -y : y };
+}
+export function placeCorner(corner: "tl" | "tr" | "bl" | "br") {
+  const c = sel1(); if (c?.type !== "media") { toast(t("toast.pickClip"), "info"); return; }
+  run("corner", (p) => { const f = C.findClip(p, c.id); if (!f || f.clip.type !== "media") return; const a = p.assets[f.clip.asset]; const s = f.clip.transform.scale < 0.6 ? f.clip.transform.scale : 0.18; Object.assign(f.clip.transform, { scale: s }, cornerOf(p, a || {}, corner, s)); });
+}

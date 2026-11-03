@@ -1,7 +1,7 @@
 // The properties of what is picked — each value with a ◆ to set a keyframe at the playhead; with nothing picked, the project's own.
 import { useTranslation } from "react-i18next";
 import { Btn, Icon, Seg, Slider } from "@nooi/ui";
-import { BLEND_MODES, EFFECTS, FONTS, HUE_BANDS, PRESETS, TEXT_ANIMS, findClip, propAt, frameSize } from "@nooi/editor-core";
+import { BLEND_MODES, EFFECTS, FONTS, HUE_BANDS, PRESETS, TEXT_ANIMS, findClip, propAt, frameSize, BOX_EFFECTS, boxOf } from "@nooi/editor-core";
 import type { Clip, KfProp, MediaClip, TextClip } from "@nooi/editor-core";
 import { editor, ui, useProject, useUI, playerRef, autosave } from "../state";
 import * as A from "../actions";
@@ -43,7 +43,8 @@ export function Inspector() {
           <Prop c={c} path="transform.rotation" label={t("insp.rotation")} min={-180} max={180} step={1} unit="°" />
           <Prop c={c} path="opacity" label={t("insp.opacity")} min={0} max={1} fmt={(v) => Math.round(v * 100) + "%"} />
           <div className="row"><Btn icon="flip" pressed={c.transform.flipH} onClick={() => A.setProp("transform.flipH", !c.transform.flipH)}>{t("insp.flipH")}</Btn><Btn icon="flip" pressed={c.transform.flipV} onClick={() => A.setProp("transform.flipV", !c.transform.flipV)}>{t("insp.flipV")}</Btn>
-            <Btn icon="rotate" onClick={() => A.setProp("transform.rotation", ((c.transform.rotation + 90 + 180) % 360) - 180)}>90°</Btn></div>
+            <Btn icon="rotate" onClick={() => A.setProp("transform.rotation", ((c.transform.rotation + 90 + 180) % 360) - 180)}>90°</Btn>
+            <Btn icon="undo" onClick={A.resetTransform} testid="reset-transform">{t("insp.reset")}</Btn></div>
           {c.type === "media" && <>
             <span className="ns-lbl">{t("insp.crop")}</span>
             {(["left", "top", "right", "bottom"] as const).map((k, i) => <Slider key={k} label={t("insp." + k)} value={c.transform.crop[i]} min={0} max={0.45} fmt={(v) => Math.round(v * 100) + "%"} onChange={(v) => { const cr = [...c.transform.crop] as [number, number, number, number]; cr[i] = v; A.live.set("transform.crop", cr); }} onCommit={A.live.end} />)}
@@ -72,6 +73,7 @@ export function Inspector() {
           {c.effects.map((e, i) => <div key={e.id} className="fxrow">
             <label className="row"><input type="checkbox" checked={e.enabled} onChange={(ev) => A.run("effect", (q) => { const f = findClip(q, c.id); if (f && f.clip.type === "media") f.clip.effects[i].enabled = ev.target.checked; })} /> {lang === "ar" ? EFFECTS.find((x) => x.id === e.type)?.ar : EFFECTS.find((x) => x.id === e.type)?.en}</label>
             <Slider label={t("insp.amount")} value={+e.params.amount} min={0.01} max={1} fmt={(v) => Math.round(v * 100) + "%"} onChange={(v) => A.live.set("effects." + i + ".params.amount", v)} onCommit={A.live.end} />
+            {BOX_EFFECTS.has(e.type) && (["x", "y", "w", "h"] as const).map((k) => <Slider key={k} label={t("insp.box." + k)} value={boxOf(e)[k]} min={k === "w" || k === "h" ? 0.03 : 0} max={1} fmt={(v) => Math.round(v * 100) + "%"} onChange={(v) => A.live.set("effects." + i + ".params." + k, v)} onCommit={A.live.end} testid={"box-" + k} />)}
             <Btn icon="trash" ghost danger label={t("insp.removeFx")} onClick={() => A.run("effect", (q) => { const f = findClip(q, c.id); if (f && f.clip.type === "media") f.clip.effects.splice(i, 1); })} />
           </div>)}
           <Btn icon="plus" onClick={() => ui.set({ rail: "effects", panelOpen: true })}>{t("insp.addFx")}</Btn>

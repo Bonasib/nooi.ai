@@ -11,7 +11,7 @@ import { editor, openProject, toast, autosave } from "./state";
 import { getJSON } from "./media/idb";
 import { installShortcuts } from "./shortcuts";
 import { hasLegacy, importLegacy } from "./legacy";
-import { assetFromJob } from "./media/library";
+import { assetFromJob, visualsFor } from "./media/library";
 
 async function boot() {
   const q = new URLSearchParams(location.search);
@@ -32,6 +32,21 @@ async function boot() {
   if (q.has("job") || q.has("project") || q.has("new")) history.replaceState(null, "", location.pathname);
   void migrate;
 }
+// pictures, length, filmstrip and waveform for assets that lack them (nooi results, older projects) — one at a time, once each;
+// kept in the project without an undo step
+const tried = new Set<string>(); let filling = false;
+async function fillVisuals() {
+  if (filling) return; filling = true;
+  try {
+    for (;;) {
+      const a = Object.values(editor.project.assets).find((x) => (x.kind === "video" && !x.strip) || ((x.kind === "video" || x.kind === "audio") && !x.waveform && x.hasAudio !== false) ? !tried.has(x.id) : false);
+      if (!a) break; tried.add(a.id);
+      const add = await visualsFor(a).catch(() => null);
+      if (add && editor.project.assets[a.id]) { editor.run("pictures", (d) => { if (d.assets[a.id]) Object.assign(d.assets[a.id], add); }); editor.past.pop(); autosave(); }
+    }
+  } finally { filling = false; }
+}
+editor.subscribe(() => { if (Object.values(editor.project.assets).some((x) => !tried.has(x.id) && (x.kind === "video" || x.kind === "audio"))) setTimeout(() => void fillVisuals(), 300); });
 installShortcuts();
 createRoot(document.getElementById("root")!).render(<App />);
 boot();

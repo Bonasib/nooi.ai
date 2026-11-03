@@ -25,7 +25,7 @@ VP = [("phone 360", 360, 740, True, "phone"), ("phone 390", 390, 844, True, "pho
 AUDIT="""()=>{const W=innerWidth,H=innerHeight,out=[],small=[];
 for(const e of document.querySelectorAll('button,a,input,select,[role=slider]')){const r=e.getBoundingClientRect();const cs=getComputedStyle(e);if(!r.width||!r.height||cs.visibility==='hidden')continue;
  let p=e,clip=false;while(p=p.parentElement){const s=getComputedStyle(p);if(/(auto|scroll|hidden)/.test(s.overflowX+s.overflowY)){const q=p.getBoundingClientRect();if(r.right<=q.left+1||r.left>=q.right-1||r.bottom<=q.top+1||r.top>=q.bottom-1){clip=true;break}}}
- if(clip||e.closest('.tlbar'))continue;
+ if(clip||e.closest('.tlbar,.cbs'))continue;
  if(r.right>W+1||r.left<-1||r.bottom>H+1)out.push((e.dataset.testid||e.getAttribute('aria-label')||e.title||e.textContent||e.tagName).trim().slice(0,24)+'@'+Math.round(r.left)+','+Math.round(r.top));
  if(Math.min(r.width,r.height)<24&&e.tagName!=='INPUT')small.push((e.dataset.testid||e.getAttribute('aria-label')||e.title||e.textContent||e.tagName).trim().slice(0,18)+':'+Math.round(r.width)+'x'+Math.round(r.height))}
 const areas={};for(const s of ['.topbar','.panel','.player','.inspector','.timeline','.rail','[data-testid=preview]']){const e=document.querySelector(s);if(e){const r=e.getBoundingClientRect();areas[s]=[Math.round(r.left),Math.round(r.top),Math.round(r.width),Math.round(r.height)]}}
@@ -73,6 +73,9 @@ async def flow(b, name, w, h, lang):
     if await c.count(): await c.first.click(); await pg.wait_for_timeout(300)
     await pg.evaluate("()=>window.__studio.editor.select([])"); await pg.wait_for_timeout(200)
     await pg.locator('.clip').first.tap(); await pg.wait_for_timeout(500)
+    if w < 768:   # a phone: the tap brings the clip's tool bar; its Edit opens the settings (v222)
+        chk(f"{name}: a clip tap swaps the bottom bar for the clip's tools", await pg.evaluate("()=>!!document.querySelector('[data-testid=clipbar]')&&!document.querySelector('.msheet')"))
+        await pg.click('[data-testid="cb-edit"]'); await pg.wait_for_timeout(400)
     s2 = await pg.evaluate("()=>{const d=document.querySelector('.drawer.end,.msheet.insp');const tl=document.querySelector('.timeline').getBoundingClientRect();const r=d&&d.getBoundingClientRect();return {insp:!!d,tl:tl.height>100&&tl.bottom<=innerHeight+1,side:d&&d.classList.contains('drawer')?(r.left+r.width/2>innerWidth/2?'right':'left'):'sheet'}}")
     want = "sheet" if w < 768 else ("left" if lang == "ar" else "right")
     chk(f"{name}: tapping a clip opens its settings, the timeline still in view" + ("" if want == "sheet" else f", from the {want}"), s2["insp"] and s2["tl"] and s2["side"] == want, s2)
