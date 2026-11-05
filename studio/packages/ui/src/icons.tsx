@@ -47,7 +47,7 @@ const P: Record<string, string> = {
   image: "M4 5h16v14H4z M4 16l5-5 4 4 2-2 5 5", wave: "M3 12h2 M7 8v8 M11 5v14 M15 9v6 M19 11v2 M21 12h0", gear: "M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M19 12l2-1-1-3-2 .3-1.4-1.4.3-2-3-1-1 2h-2l-1-2-3 1 .3 2L6.3 7.3 4 7l-1 3 2 1v2l-2 1 1 3 2.3-.3 1.4 1.4-.3 2 3 1 1-2h2l1 2 3-1-.3-2 1.4-1.4 2 .3 1-3-2-1z",
   wand: "M4 20L15 9 M14 4v3 M19 9h-3 M17.5 5.5l-2 2 M12 3l.5 1.5 M20 11l1.5.5", sparkle: "M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z", users: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M2 21a7 7 0 0 1 14 0 M17 3a4 4 0 0 1 0 8 M22 21a7 7 0 0 0-4-6.3",
   grip: "M9 6h.01 M15 6h.01 M9 12h.01 M15 12h.01 M9 18h.01 M15 18h.01", beat: "M3 12h3l2-6 3 12 3-9 2 3h5", denoise: "M3 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0 M5 18h14",
-  home: "M3 11l9-7 9 7 M5 10v10h14V10",
+  home: "M3 11l9-7 9 7 M5 10v10h14V10", menu: "M4 6h16 M4 12h16 M4 18h16",
 };
 export type IconName = keyof typeof P | string;
 export function Icon({ name, size = 16, style, label }: { name: IconName; size?: 14 | 16 | 18 | 20 | 22 | 24; style?: CSSProperties; label?: string }) {

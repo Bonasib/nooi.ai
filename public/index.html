@@ -1728,7 +1728,7 @@ const hasClaude=()=>!!(window.claude&&window.claude.use);
     const id=await user.id();if(!id)return;
     docRef=db.doc("data/users/"+id+"/state2");
     const snap=await docRef.get();
-    if(snap.exists){const d=snap.data();if(d&&d.state&&(d.savedAt||0)>(S.savedAt||0)){try{const n=JSON.parse(d.state);if(n.v===2){S=n;requeue();renderAll()}}catch(e){}}}
+    if(snap.exists){const d=snap.data();if(d&&d.state&&(d.savedAt||0)>(S.savedAt||0)){try{const n=JSON.parse(d.state);if(n.v===2){if(n.view==="edit"&&typeof studioOn219==="function"&&studioOn219())n.view="home";S=n;requeue();renderAll()}}catch(e){}}}
     else persist();
   }catch(e){}
 })();
@@ -25452,8 +25452,11 @@ const studioOn219=()=>/^https?:$/.test(location.protocol)&&!classic219()&&!(navi
 function studioUrl219(){let q="";try{const E=S.ed,c=E&&E.clips&&E.clips[E.clips.length-1],j=c&&c.src&&c.src.k==="job"&&S.jobs.find(x=>x.id===c.src.job);
   if(j&&j.remote&&Date.now()-ST219.used<8000)q="?job="+encodeURIComponent(j.remote)}catch(e){}return"/studio/"+q}
 edUseJob=(o=>function(){ST219.used=Date.now();return o.apply(this,arguments)})(edUseJob);
-go=(o=>function(v,...a){const w=(typeof ALIAS82!=="undefined"&&ALIAS82[v])||v;if(w==="edit"&&studioOn219()){S.view=S.view==="edit"?"home":S.view;persist();location.href=studioUrl219();return}return o(v,...a)})(go);
-setTimeout(()=>{if(S.view==="edit"&&studioOn219()){S.view="home";persist();location.replace(studioUrl219())}else if(/[?&]classic=1/.test(location.search)&&S.view!=="edit")go("edit")},0);
+// (v232) the page is saved at once before leaving for the studio (the usual save waits 0.7 s — a redirect left first, so the site
+// kept "editor" as its page and every visit to the home page bounced back to the studio); opening the site shows the site
+const saveNow232=()=>{clearTimeout(saveTimer);S.savedAt=Date.now();const s=JSON.stringify(S);try{localStorage.setItem(LSKEY,s)}catch(e){}try{if(docRef)docRef.set({state:s,savedAt:S.savedAt}).catch(()=>{})}catch(e){}};
+go=(o=>function(v,...a){const w=(typeof ALIAS82!=="undefined"&&ALIAS82[v])||v;if(w==="edit"&&studioOn219()){if(S.view==="edit")S.view="home";saveNow232();location.href=studioUrl219();return}return o(v,...a)})(go);
+setTimeout(()=>{if(S.view==="edit"&&studioOn219()){S.view="home";saveNow232();renderAll()}else if(/[?&]classic=1/.test(location.search)&&S.view!=="edit")go("edit")},0);
 
 /* ================= v224: nooi Studio in the site's header. On a computer it sits next to Explore (in place of "Edit", which
    opened the studio already); a phone's top bar gets a Studio button; the landing page links to it. Each one opens /studio/ (the

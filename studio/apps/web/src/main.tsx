@@ -21,7 +21,7 @@ async function boot() {
   const pid = q.get("project");
   if (pid) { const p = await getJSON("proj_" + pid); if (p) { await openProject(p); opened = true; } }
   if (!opened) { const last = localStorage.getItem("nooi-studio-last"); const p = last ? await getJSON("proj_" + last) : null; if (p && !q.has("new")) { await openProject(p); opened = true; } }
-  if (!opened && hasLegacy() && !localStorage.getItem("nooi-studio-legacy")) {
+  if (!opened && !q.has("job") && hasLegacy() && !localStorage.getItem("nooi-studio-legacy")) {   // (v232: a video named in the address wins; the old edit comes over on the next visit)
     const p = await importLegacy(i18n.t("proj.fromEditor")); localStorage.setItem("nooi-studio-legacy", "1");
     if (p) { await openProject(p); opened = true; autosave(); toast(i18n.t("proj.broughtOver"), "ok"); }
   }

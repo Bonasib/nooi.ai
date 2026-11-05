@@ -90,7 +90,7 @@ async def desktop(p):
     await pg.goto(B + "/studio/"); await pg.wait_for_function("window.__studio&&document.querySelector('[data-testid=preview]')", timeout=20000); await pg.wait_for_timeout(600)
     sb = await E("()=>({links:[...document.querySelectorAll('.sitebar .snav a')].map(a=>[a.textContent,a.getAttribute('href'),a.getAttribute('aria-current')]),free:(document.querySelector('[data-testid=site-free]')||{}).textContent})")
     hrefs = dict((x[0].replace("New", ""), x[1]) for x in sb["links"])
-    chk("the site's sections along the top: 11, Studio is this page, each opens its page of the site", len(sb["links"]) == 11 and hrefs.get("Explore") == "/?view=explore" and hrefs.get("Characters") == "/?view=chars" and hrefs.get("Plans") == "/?view=account" and hrefs.get("Home") == "/"
+    chk("the site's sections along the top: 11, Studio is this page, each opens its page of the site", len(sb["links"]) == 11 and hrefs.get("Explore") == "/?view=explore" and hrefs.get("Characters") == "/?view=chars" and hrefs.get("Plans") == "/?view=account" and hrefs.get("Home") == "/?view=home"
         and [x for x in sb["links"] if x[2] == "page"][0][1] == "/studio/" and sb["free"] == "Editor free in every plan", sb)
     h = await E(HDR); ov = boxes_overlap(h["boxes"])
     chk("desktop: nothing in the two top bars overlaps or spills", not ov and max(h["over"]) <= 0 and h["page"] <= 0, {"overlap": ov, "over": h["over"]})
@@ -175,13 +175,13 @@ async def tablets(p):
         r = await pg.evaluate("()=>({mode:document.querySelector('[data-testid=studio]').className.split(' ')[1],sitebar:!!document.querySelector('.sitebar'),menu:!!document.querySelector('[data-testid=site-menu]'),rail:!!document.querySelector('.workspace .rail'),timeline:!!document.querySelector('.timeline'),insp:!!document.querySelector('.inspector'),page:document.documentElement.scrollWidth-innerWidth})")
         h = await pg.evaluate(HDR); r["overlap"] = boxes_overlap(h["boxes"]); r["spill"] = max(h["over"]); r["errs"] = errs; res[name] = r; await b.close()
     out["tablets"] = res
-    chk("tablets get the full editor (the site's sections — a bar, or the logo's menu on a short screen — rail, preview, timeline, settings), nothing overlapping or wider than the screen", all(r["mode"] == "full" and (r["sitebar"] if n != "tablet sideways 1024" else (not r["sitebar"] and r["menu"])) and r["rail"] and r["timeline"] and r["insp"] and r["page"] <= 0 and not r["overlap"] and r["spill"] <= 0 and not r["errs"] for n, r in res.items()), res)
+    chk("tablets get the full editor (the site's sections — a bar, or the logo's menu on a short screen — rail, preview, timeline, settings), nothing overlapping or wider than the screen", all(r["mode"] == "full" and r["sitebar"] and r["rail"] and r["timeline"] and r["insp"] and r["page"] <= 0 and not r["overlap"] and r["spill"] <= 0 and not r["errs"] for n, r in res.items()), res)
 
 async def phone(p):
     b = await p.chromium.launch(); ctx = await b.new_context(**p.devices["iPhone 13"]); pg = await ctx.new_page(); errs = []; E = pg.evaluate; pg.on("pageerror", lambda e: errs.append(str(e)[:300]))
     await pg.goto(B + "/studio/?new=1"); await pg.wait_for_function("window.__studio&&document.querySelector('[data-testid=preview]')", timeout=20000); await pg.wait_for_timeout(600)
     await pg.click('[data-testid="lang"]'); await pg.wait_for_timeout(300); await pg.click('[data-testid="site-menu"]'); await pg.wait_for_timeout(200)
-    m = await E("()=>({n:document.querySelectorAll('.smenu-list a').length,first:document.querySelector('.smenu-list a').textContent,free:document.querySelector('.smenu-list .sfree').textContent,bar:!!document.querySelector('.sitebar'),page:document.documentElement.scrollWidth-innerWidth,inview:(()=>{const r=document.querySelector('.smenu-list').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth})()})")
+    m = await E("()=>({n:document.querySelectorAll('.smenu-list a').length,first:document.querySelector('.smenu-list a').textContent,free:document.querySelector('.smenu-list .sfree').textContent,bar:!!document.querySelector('.sitebar'),page:document.documentElement.scrollWidth-innerWidth,inview:(()=>{const r=document.querySelector('.smenu-list').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&[...document.querySelectorAll('.smenu-list a')].every(a=>{const q=a.getBoundingClientRect(),e=document.elementFromPoint(q.left+q.width/2,q.top+q.height/2);return e&&a.contains(e)})})()})")
     chk("phone (Arabic): the logo opens the site's sections (and the free-editor line), inside the screen", m["n"] == 12 and m["first"] == "الرئيسية" and m["free"] == "المحرر مجاني في كل الباقات" and not m["bar"] and m["page"] <= 0 and m["inview"], m)
     chk("phone: no page errors", not errs, errs); await b.close()
 

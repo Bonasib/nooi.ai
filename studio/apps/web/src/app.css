@@ -467,3 +467,14 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
 .panel .subtabs { flex-wrap: wrap; overflow: visible; row-gap: 6px; }
 .app.phone .panel .subtabs { flex-wrap: nowrap; overflow-x: auto; }
 .mgio-t { align-items: stretch; } .mgio-t .mgio-x { width: 100%; } .mgio-t > span:last-child { text-align: center; line-height: 1.2; }
+
+/* (v232) on a touch screen a finger on a clip scrolls the timeline; a press held 0.4 s lifts the clip (Timeline.tsx) */
+@media (pointer: coarse) { .clip, .clip .eh { touch-action: pan-x pan-y; } }
+
+/* (v232) the phone's Home icon and the site menu beside it */
+.smenu { display: flex; align-items: center; gap: 4px; }
+.smenu > .ns-btn { width: 36px; height: 36px; min-width: 36px; padding: 0; display: grid; place-items: center; }
+.app.phone .smenu > .ns-btn { width: 34px; height: 34px; min-width: 34px; }
+.smenu .shome { color: #c1ff72; text-decoration: none; }
+/* (v232) the site menu opens over the page (the phone's header clips what overflows it) */
+.smenu-list { position: fixed; top: 54px; inset-inline-start: 8px; inset-inline-end: auto; max-height: calc(100dvh - 70px); overflow-y: auto; z-index: 200; min-width: min(260px, calc(100vw - 16px)); }

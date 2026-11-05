@@ -380,3 +380,18 @@ Built on our own code. No code from Remotion or any other motion library is used
     - media files are public by link, under random names (sharing and collaboration rely on that);
     - the Motion-code sandbox (v227);
     - the render service's per-person uploads (v228).
+
+## v232 — the owner's phone notes
+
+- **Home went back to the editor.** When the site opened on a page that remembered the editor, it sent the person to the studio. It set its page to "home" first, but that save only happens 0.7 s later, so the redirect left first. The site kept "editor" as its page, and every visit to the home page bounced back to /studio/.
+  - Now the page is saved at once before leaving for the studio.
+  - Opening the site shows the site (a remembered "editor" page becomes Home), also when the account's cloud copy says "editor".
+  - The studio's Home and logo go to `/?view=home`.
+  - A studio opened with a video (`?job=`) takes that video; the classic editor's saved edit comes over on the next plain visit, so the video isn't added twice.
+- **The site's sections on top on every computer and tablet**, also 1024×768 sideways and 1280×720 laptops. Only phones, and phones held sideways, use the menu.
+- **A phone:** a Home icon, and beside it the menu of the site's sections. The menu opens over the page; the header clips what overflows it, so the list is pinned to the screen.
+- **A finger on the timeline scrolls it.**
+  - A swipe across a clip no longer picks it or moves it.
+  - A quick tap picks the clip.
+  - A press held still for 0.4 s (with a short vibration) lifts it to move or trim.
+- **Dragging the playhead's pin** to the timeline's edge scrolls the timeline along, so the playhead and the time stay in view.

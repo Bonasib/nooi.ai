@@ -24,9 +24,9 @@ VP = [("phone 360", 360, 740, True, "phone"), ("phone 390", 390, 844, True, "pho
       ("laptop 1280", 1280, 800, False, "full"), ("desktop 1440", 1440, 900, False, "full"), ("desktop 1920", 1920, 1080, False, "full")]
 AUDIT="""()=>{const W=innerWidth,H=innerHeight,out=[],small=[];
 for(const e of document.querySelectorAll('button,a,input,select,[role=slider]')){const r=e.getBoundingClientRect();const cs=getComputedStyle(e);if(!r.width||!r.height||cs.visibility==='hidden')continue;
- let p=e,clip=false;while(p=p.parentElement){const s=getComputedStyle(p);if(/(auto|scroll|hidden)/.test(s.overflowX+s.overflowY)){const q=p.getBoundingClientRect();if(r.right<=q.left+1||r.left>=q.right-1||r.bottom<=q.top+1||r.top>=q.bottom-1){clip=true;break}}}
+ let p=e,clip=false,v={l:r.left,t:r.top,r:r.right,b:r.bottom};while(p=p.parentElement){const s=getComputedStyle(p);if(/(auto|scroll|hidden)/.test(s.overflowX+s.overflowY)){const q=p.getBoundingClientRect();if(r.right<=q.left+1||r.left>=q.right-1||r.bottom<=q.top+1||r.top>=q.bottom-1){clip=true;break}v={l:Math.max(v.l,q.left),t:Math.max(v.t,q.top),r:Math.min(v.r,q.right),b:Math.min(v.b,q.bottom)}}}
  if(clip||e.closest('.tlbar,.cbs'))continue;
- if(r.right>W+1||r.left<-1||r.bottom>H+1)out.push((e.dataset.testid||e.getAttribute('aria-label')||e.title||e.textContent||e.tagName).trim().slice(0,24)+'@'+Math.round(r.left)+','+Math.round(r.top));
+ if(v.r>W+1||v.l<-1||v.b>H+1)out.push((e.dataset.testid||e.getAttribute('aria-label')||e.title||e.textContent||e.tagName).trim().slice(0,24)+'@'+Math.round(r.left)+','+Math.round(r.top));
  if(Math.min(r.width,r.height)<24&&e.tagName!=='INPUT')small.push((e.dataset.testid||e.getAttribute('aria-label')||e.title||e.textContent||e.tagName).trim().slice(0,18)+':'+Math.round(r.width)+'x'+Math.round(r.height))}
 const areas={};for(const s of ['.topbar','.panel','.player','.inspector','.timeline','.rail','[data-testid=preview]']){const e=document.querySelector(s);if(e){const r=e.getBoundingClientRect();areas[s]=[Math.round(r.left),Math.round(r.top),Math.round(r.width),Math.round(r.height)]}}
 return {W,H,scrollX:document.documentElement.scrollWidth-W,scrollY:document.documentElement.scrollHeight-H,off:out.slice(0,15),nOff:out.length,small:small.slice(0,12),nSmall:small.length,areas,phone:!!document.querySelector('.app.phone')}}"""

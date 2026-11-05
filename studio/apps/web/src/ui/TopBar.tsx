@@ -18,7 +18,7 @@ export function TopBar() {
   const aspect = aspectOf(p.width, p.height); const narrow = typeof matchMedia !== "undefined" && matchMedia("(max-width: 767px)").matches; const bar = useSiteBar();   // (a phone: just the ratio)
   return (
     <header className="topbar" role="banner">
-      {narrow || !bar ? <SiteMenu logo={LOGO} /> : <a className="logo" href={at("/")} aria-label={t("top.home")} title={t("top.home")}>{LOGO}</a>}
+      {narrow || !bar ? <SiteMenu /> : <a className="logo" href={at("/?view=home")} aria-label={t("top.home")} title={t("top.home")}>{LOGO}</a>}
       <h1 className="sr-only">{t("app.title")}</h1>
       <input className="pname" value={p.name} aria-label={t("top.name")} onChange={(e) => { editor.run("rename", (d) => { d.name = e.target.value.slice(0, 80); }); autosave(); }} />
       <FileMenu />

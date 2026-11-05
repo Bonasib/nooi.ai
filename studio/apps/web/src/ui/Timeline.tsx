@@ -28,6 +28,21 @@ export function Timeline() {
   // ---- dragging a clip (move / trim / ripple / roll / slip / slide)
   const startDrag = (e: RPE, c: Clip, part: "body" | "l" | "r") => {
     if (e.button > 0) return; e.stopPropagation();
+    // (v232) a finger: a quick tap picks the clip, a swipe scrolls the timeline (it never moves or picks a clip by accident),
+    // and a press held still for 0.4 s lifts the clip to move or trim it
+    if (e.pointerType === "touch" && !(e as RPE & { held232?: boolean }).held232) {
+      const x0 = e.clientX, y0 = e.clientY, t0 = performance.now(), pid = e.pointerId, tgt = e.currentTarget as HTMLElement; let done = false;
+      const stop = () => { done = true; clearTimeout(tm); window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", stop); };
+      const mv = (ev: PointerEvent) => { if (ev.pointerId === pid && Math.hypot(ev.clientX - x0, ev.clientY - y0) > 8) stop(); };   // a swipe: the browser scrolls
+      const up = (ev: PointerEvent) => { if (ev.pointerId !== pid) return; const tap = !done && performance.now() - t0 < 400; stop(); if (tap) { markPick(); editor.select([c.id]); } };
+      const tm = setTimeout(() => { if (done) return; stop(); try { navigator.vibrate?.(12); } catch { /* */ }
+        const block = (te: TouchEvent) => te.preventDefault(); window.addEventListener("touchmove", block, { passive: false });   // (held: the finger moves the clip, not the page)
+        const end = () => { window.removeEventListener("touchmove", block); window.removeEventListener("pointerup", end); window.removeEventListener("pointercancel", end); };
+        window.addEventListener("pointerup", end); window.addEventListener("pointercancel", end);
+        startDrag({ held232: true, currentTarget: tgt, clientX: x0, clientY: y0, pointerId: pid, button: 0, pointerType: "touch", stopPropagation() { /* */ }, preventDefault() { /* */ }, shiftKey: false, metaKey: false, ctrlKey: false } as unknown as RPE, c, part); }, 400);
+      window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", stop);
+      return;
+    }
     const f = C.findClip(editor.project, c.id); if (!f) return;
     if (f.track.locked) { toast(t("tl.locked"), "info"); return; }
     if (e.shiftKey || e.metaKey || e.ctrlKey) { editor.select(editor.selection.includes(c.id) ? editor.selection.filter((x) => x !== c.id) : [...editor.selection, c.id]); return; }
@@ -54,7 +69,11 @@ export function Timeline() {
   const scrub = (e: RPE) => {
     if (e.button > 0) return; e.stopPropagation(); e.preventDefault(); const seek = (x: number) => playerRef.current?.seek(snapOn ? C.snap(xToT(x), C.snapPoints(editor.project, {}), 6 / zoom).t : xToT(x));
     playerRef.current?.pause(); seek(e.clientX);
-    const mv = (ev: PointerEvent) => seek(ev.clientX); const up = () => { window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up); };
+    // (v232) near the timeline's edge it scrolls along, so the playhead stays in view while the pin is dragged
+    let lastX = e.clientX, raf = 0; const edge = () => { const el = scroll.current; if (el) { const r = el.getBoundingClientRect(), pad = Math.min(48, r.width * 0.12), lft = r.left;
+      const v = lastX > r.right - pad ? Math.min(24, (lastX - (r.right - pad)) / 2 + 4) : lastX < lft + pad ? -Math.min(24, (lft + pad - lastX) / 2 + 4) : 0;
+      if (v) { el.scrollLeft += v; seek(lastX); } } raf = requestAnimationFrame(edge); }; raf = requestAnimationFrame(edge);
+    const mv = (ev: PointerEvent) => { lastX = ev.clientX; seek(ev.clientX); }; const up = () => { cancelAnimationFrame(raf); window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up); };
     window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
   };
   // ---- drops from the panels: media, a text template, a transition
