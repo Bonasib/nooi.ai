@@ -16,7 +16,7 @@ import * as A from "../actions";
 import { at } from "../site";
 
 const serverSrc = (a?: Asset) => { const s = a ? serverPath(a.src) : null; return s && s.startsWith("/media/") ? s : null; };
-async function ensureOnServer(a: Asset): Promise<{ job?: string; src?: string } | null> {
+export async function ensureOnServer(a: Asset): Promise<{ job?: string; src?: string } | null> {
   if (a.job) return { job: a.job };
   const s = serverSrc(a); if (s) return { src: s };
   const url = await uploadAsset(a); if (!url) return null;

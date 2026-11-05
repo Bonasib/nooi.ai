@@ -5,8 +5,12 @@ import type { MediaClip, Project, TextClip } from "@nooi/editor-core";
 import { Motion as M } from "@nooi/editor-core";
 import { defaultsOf, templateOf, type MCtx, type Props } from "./templates";
 import { codeFrame } from "./code";
+import { textLook } from "../engine/text";
 
 export const STILL = { opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, chars: Infinity };
+// (v231) a motion graphic's own Enter / Exit (fade, pop, slide, zoom, bounce) on top of its program's animation
+export const MG_ANIMS = ["none", "fade", "pop", "slideUp", "slideDown", "slideL", "zoom", "bounce"];
+export const lookOf = (c: TextClip, local: number) => (c.animIn.type === "none" && c.animOut.type === "none") || (!(c.animIn.dur > 0) && !(c.animOut.dur > 0)) ? STILL : { ...textLook(c, local), blur: 0, chars: Infinity };
 const cache = new Map<string, { cv: HTMLCanvasElement | OffscreenCanvas; key: string }>();
 const mk = (w: number, h: number) => (typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(w, h) : Object.assign(document.createElement("canvas"), { width: w, height: h }));
 
@@ -53,13 +57,13 @@ export function motionCanvas(c: TextClip, local: number, W: number, H: number, p
   const ctx = e.cv.getContext("2d") as CanvasRenderingContext2D;
   if (id === "code") {
     const f = codeFrame(c, props, frame, fps, c.dur, W, H, levelAt(p, at) ?? 0, barsAt(p, at, 64));
-    const key = "code|" + (f ? f.key : "none") + "|" + W + "x" + H; if (e.key === key) return { cv: e.cv, look: STILL, changed: false };
-    e.key = key; ctx.clearRect(0, 0, W, H); if (f) ctx.drawImage(f.bmp, 0, 0, W, H); return { cv: e.cv, look: STILL, changed: true };
+    const key = "code|" + (f ? f.key : "none") + "|" + W + "x" + H; if (e.key === key) return { cv: e.cv, look: lookOf(c, local), changed: false };
+    e.key = key; ctx.clearRect(0, 0, W, H); if (f) ctx.drawImage(f.bmp, 0, 0, W, H); return { cv: e.cv, look: lookOf(c, local), changed: true };
   }
   const key = [id, JSON.stringify(props), W, H, frame, fps, c.dur, sound].join("|");
-  if (e.key === key) return { cv: e.cv, look: STILL, changed: false };
+  if (e.key === key) return { cv: e.cv, look: lookOf(c, local), changed: false };
   e.key = key; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
   drawTemplate(ctx, id, props, frame / fps, c.dur, W, H, p, at);
-  return { cv: e.cv, look: STILL, changed: true };
+  return { cv: e.cv, look: lookOf(c, local), changed: true };
 }
 export const forgetMotion = (id: string) => cache.delete(id);

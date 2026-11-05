@@ -7,7 +7,8 @@ import type { TextClip } from "@nooi/editor-core";
 import { useUI } from "../state";
 import * as A from "../actions";
 import { GROUPS, TEMPLATES, defaultsOf, templateOf, type Field } from "./templates";
-import { drawTemplate, propsOf } from "./render";
+import { drawTemplate, propsOf, MG_ANIMS } from "./render";
+import { TEXT_ANIMS } from "@nooi/editor-core";
 import { codeErrors, codePicture, onCode, tryCode } from "./code";
 
 const TW = 320, TH = 180;
@@ -60,12 +61,26 @@ function CodeField({ c, v }: { c: TextClip; v: string }) {
     {(err || live) && <p className="err" role="alert" dir="ltr" data-testid="mg-err">{err || live}</p>}
   </div>);
 }
+// (v231) its Enter and Exit: each choice plays its example; the length is a slider (one undo step)
+function InOut({ c, side }: { c: TextClip; side: "animIn" | "animOut" }) {
+  const { t } = useTranslation(); const lang = useUI((s) => s.lang); const cur = c[side];
+  return (<div className="mginout" data-testid={"mg-" + side}>
+    <span className="ns-lbl">{t(side === "animIn" ? "mg.enter" : "mg.exit")}</span>
+    <div className="mgio">{MG_ANIMS.map((id) => { const a = TEXT_ANIMS.find((x) => x.id === id)!; return <button key={id} type="button" className={"ns-tile mgio-t"} aria-pressed={cur.type === id}
+      onClick={() => A.run("motion " + side, (p) => { for (const tr of p.tracks) for (const k of tr.clips) if (k.id === c.id && k.type === "text") k[side] = { type: id as typeof cur.type, dur: id === "none" ? 0 : cur.dur > 0 ? cur.dur : 0.5 }; })}
+      data-testid={"mg-" + side + "-" + id}><span className={"mgio-x io-" + id + (side === "animOut" ? " out" : "")} aria-hidden="true"><i>Aa</i></span><span>{lang === "ar" ? a.ar : a.en}</span></button>; })}</div>
+    {cur.type !== "none" && <Slider label={t("mg.length")} value={cur.dur} min={0.1} max={2.5} step={0.05} fmt={(v) => v.toFixed(2) + "s"} onChange={(v) => A.live.set(side + ".dur", v)} onCommit={A.live.end} testid={"mg-" + side + "-dur"} />}
+  </div>);
+}
 export function MotionProps({ c }: { c: TextClip }) {
   const { t } = useTranslation(); const lang = useUI((s) => s.lang); const tpl = c.motion && templateOf(c.motion.tpl); if (!tpl) return <p className="hint">{t("mg.missing")}</p>;
   const props = propsOf(c);
   return (<div className="mgprops" data-testid="mg-props">
     <p className="hint">{lang === "ar" ? tpl.ar : tpl.en} · {t("mg.frames")}</p>
     {tpl.fields.map((f) => f.type === "code" ? <CodeField key={f.k} c={c} v={String(props.code || "")} /> : <FieldRow key={f.k} f={f} v={props[f.k]} lang={lang} />)}
+    <InOut c={c} side="animIn" />
+    <InOut c={c} side="animOut" />
+    <p className="hint">{t("mg.keys")}</p>
     <Btn icon="undo" onClick={() => A.setProp("motion.props", defaultsOf(tpl, lang), "motion graphic")} testid="mg-reset">{t("mg.reset")}</Btn>
   </div>);
 }

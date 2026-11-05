@@ -22,11 +22,13 @@ export async function bakeMotion(p: Project, c: TextClip, W: number, H: number, 
   for (let i = 0; i < n; i++) {
     if (o.signal?.aborted) { await out.cancel(); throw new DOMException("Cancelled", "AbortError"); }
     const local = i / fps; if (c.motion!.tpl === "code") await codeReady(c, p, local, w, h, sound);
-    const r = motionCanvas(c, local, w, h, p);
-    x.globalCompositeOperation = "source-over"; x.clearRect(0, 0, w, h * 2); x.drawImage(r.cv as CanvasImageSource, 0, h);
+    const r = motionCanvas(c, local, w, h, p), L = r.look;
+    // (v231) its Enter / Exit is drawn in here (the FFmpeg side places the layer as it is)
+    const put = (y: number) => { x.save(); x.beginPath(); x.rect(0, y, w, h); x.clip(); x.globalAlpha = Math.max(0, Math.min(1, L.opacity)); x.translate(w / 2 + L.dx * w, y + h / 2 + L.dy * h); x.scale(L.scale, L.scale); x.drawImage(r.cv as CanvasImageSource, -w / 2, -h / 2); x.restore(); };
+    x.globalCompositeOperation = "source-over"; x.clearRect(0, 0, w, h * 2); put(h);
     x.globalCompositeOperation = "source-in"; x.fillStyle = "#fff"; x.fillRect(0, h, w, h);            // below: the transparency as white
     x.globalCompositeOperation = "destination-over"; x.fillStyle = "#000"; x.fillRect(0, 0, w, h * 2); // …on black
-    x.globalCompositeOperation = "source-over"; x.drawImage(r.cv as CanvasImageSource, 0, 0);           // on top: the colour over black
+    x.globalCompositeOperation = "source-over"; put(0);                                                    // on top: the colour over black
     await src.add(i / fps, 1 / fps); o.onProgress?.((i + 1) / n);
   }
   await out.finalize();

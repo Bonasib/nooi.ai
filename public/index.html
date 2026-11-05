@@ -25470,6 +25470,14 @@ vLanding=(o=>function(){const h=o.apply(this,arguments);return typeof h==="strin
 @media (max-width:419px){#main>.topm .st224m span{display:none}#main>.topm .st224m{padding-inline:6px;min-width:34px;justify-content:center;color:var(--lime,#c1ff72)}}
 .lplinks .st224l{display:inline-flex;align-items:center;color:var(--text);text-decoration:none;padding:8px 10px;border-radius:8px;font-size:13.5px;font-weight:600}.lplinks .st224l:hover{background:var(--panel2)}`;document.head.appendChild(st)})();
 
+/* ================= v231: the nooi Studio editor is free in every plan — said on the plans (each card and a line under them) ================= */
+planCards=(o=>function(){let h=o.apply(this,arguments);if(typeof h!=="string"||h.includes("studio231"))return h;
+  const line='<div class="studio231 small">'+ic("video","width:14px;vertical-align:-2px")+" "+esc(L("nooi Studio editor — included free","محرر استوديو nooi — مجاني"))+"</div>";
+  h=h.split('<div class="pcr">').join(line+'<div class="pcr">');
+  return h+'<div class="studio231b panel"><b>'+esc(L("The nooi Studio video editor is free in every plan — including the free one.","محرر الفيديو استوديو nooi مجاني في كل الباقات — حتى الباقة المجانية."))+'</b><span class="small mute">'+esc(L("Timeline, effects, motion graphics, titles and export on your device cost nothing. Only the AI tools use credits, and their price is shown first.","الخط الزمني والمؤثرات والرسوم المتحركة والعناوين والتصدير على جهازك بلا تكلفة. أدوات الذكاء الاصطناعي وحدها تستخدم الرصيد، ويظهر سعرها أولاً."))+'</span><a class="btn sm" href="/studio/">'+esc(L("Open the Studio","افتح الأستوديو"))+"</a></div>"})(planCards);
+(()=>{const st=document.createElement("style");st.textContent=`.studio231{display:flex;align-items:center;gap:6px;margin:8px 0 2px;color:var(--lime,#c1ff72);font-weight:600}
+.studio231b{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px;padding:14px 16px;border:1px solid rgba(193,255,114,.3)}.studio231b b{flex:1 1 320px}.studio231b span{flex:1 1 320px}`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

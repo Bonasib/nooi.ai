@@ -220,7 +220,17 @@ app.get("/v1/config", (_, res) => res.json({
 const UP_EXT195 = new Set(".png .jpg .jpeg .webp .gif .avif .heic .heif .bmp .tif .tiff .svg .mp4 .webm .mov .m4v .mkv .avi .mpg .mpeg .3gp .ogv .mp3 .wav .m4a .aac .ogg .oga .opus .flac .weba .aif .aiff .wma .glb .gltf .obj .fbx .stl .ply .usdz .splat .spz .ksplat .json .srt .vtt .ass .ssa .txt .csv .tsv .md .pdf .zip .cube .3dl .lottie .ttf .otf .woff .woff2 .bin".split(" "));
 const upExt195 = (name) => { const e = path.extname(String(name || "")).toLowerCase(); return UP_EXT195.has(e) ? e : ".bin"; };
 const upload = multer({ storage: multer.diskStorage({ destination: MEDIA_DIR, filename: (_, f, cb) => cb(null, uid() + upExt195(f.originalname)) }), limits: { fileSize: 1024 * 1024 * 1024, files: 1 } });
-app.post("/v1/uploads", requireUser, upload.single("file"), (req, res) => { noteUpload(req.user.uid, req.file.filename); res.json({ url: publicUrl(req.file.filename) }); });   // (v125: noted on the account, so Delete my account removes it)
+// v231: uploads are counted per account (files an hour, bytes a day) so one account can't fill the disk; staff are not limited
+const UP231 = new Map(), UP_FILES231 = +process.env.UPLOAD_FILES_HOUR || 300, UP_BYTES231 = (+process.env.UPLOAD_GB_DAY || 20) * 1024 ** 3;
+const upKeep231 = (uidv) => { const now = Date.now(), r = (UP231.get(uidv) || []).filter((x) => now - x.t < 864e5); UP231.set(uidv, r); return r; };
+const upGate231 = (req, res, next) => { if (isStaff(req.user)) return next(); const r = upKeep231(req.user.uid), hour = r.filter((x) => Date.now() - x.t < 3600e3).length;
+  if (hour >= UP_FILES231) return res.status(429).json({ error: "Too many uploads in the last hour — try again a little later.", errorAr: "رفعت ملفات كثيرة في الساعة الأخيرة — حاول بعد قليل." }); next(); };
+app.post("/v1/uploads", requireUser, upGate231, upload.single("file"), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "No file was sent.", errorAr: "لم يُرسل أي ملف." });
+  if (!isStaff(req.user)) { const r = upKeep231(req.user.uid), bytes = r.reduce((s, x) => s + x.b, 0) + req.file.size;
+    if (bytes > UP_BYTES231) { try { fs.unlinkSync(req.file.path); } catch { /* */ } return res.status(429).json({ error: "You've uploaded a lot today — the daily limit is reached. It resets within 24 hours.", errorAr: "وصلت إلى حد الرفع اليومي — يتجدد خلال 24 ساعة." }); }
+    r.push({ t: Date.now(), b: req.file.size }); }
+  noteUpload(req.user.uid, req.file.filename); res.json({ url: publicUrl(req.file.filename) }); });   // (v125: noted on the account, so Delete my account removes it)
 // v125: Delete my account — the customer, by themselves, with a typed confirmation (lib/account125.js)
 app.post("/v1/me/delete", requireUser, wrap(async (req, res) => { if (req.user.viaToken) throw Object.assign(new Error("An account can only be deleted from the site, not through a connection."), { code: 403, errorAr: "لا يُحذف الحساب إلا من الموقع، لا عبر اتصال." }); res.json({ ok: true, ...(await deleteAccount(req.user.uid, req.body?.confirm)) }); }));
 
@@ -446,7 +456,13 @@ app.delete("/v1/tokens/:id", requireUser, (req, res) => { revokeToken(req.user.u
 // ---- Assets & jobs list (library sync, Blender/Unity)
 app.get("/v1/jobs", requireUser, (req, res) => res.json({ jobs: Object.values(user(req.user.uid).jobs).sort((a, b) => b.created - a.created).slice(0, 100).map((j) => publicJob(j, isStaff(req.user))) }));   // (v175: map(publicJob) passed the index as "staff" — every job after the first showed the engine's details to customers)
 app.get("/v1/assets", requireUser, (req, res) => { const k = req.query.kind; res.json({ assets: Object.values(user(req.user.uid).jobs).filter((j) => j.status === "done" && j.url && (!k || j.kind === k)).sort((a, b) => b.created - a.created).slice(0, 100).map((j) => ({ id: j.id, kind: j.kind, title: j.title, url: j.url })) }); });
-app.post("/v1/assets", requireUser, (req, res) => { const U = user(req.user.uid); const id = uid(); U.jobs[id] = { id, kind: req.body.kind || "3d", status: "done", progress: 1, url: req.body.url, title: req.body.title || "Imported", created: Date.now(), payload: {} }; save(); res.json({ id }); });
+// v231: only a 3D model the person uploaded themselves becomes a library item here (it was any address and any kind — a way to
+// pass another person's file, or an outside address, to the AI tools as one's own finished video)
+app.post("/v1/assets", requireUser, (req, res) => { const U = user(req.user.uid), b = req.body || {}, pub0 = (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "");
+  const url = String(b.url || "").replace(pub0, "").replace(/^https?:\/\/[^/]+(?=\/media\/)/, ""), name = path.basename(url);
+  if ((b.kind || "3d") !== "3d") return res.status(400).json({ error: "Only 3D models can be added here.", errorAr: "يمكن إضافة النماذج ثلاثية الأبعاد فقط هنا." });
+  if (!/^\/media\/[A-Za-z0-9._-]+$/.test(url) || !(U.uploads || []).includes(name) || !fs.existsSync(path.join(MEDIA_DIR, name))) return res.status(400).json({ error: "Only a file you uploaded can be added.", errorAr: "يمكن إضافة ملف رفعته أنت فقط." });
+  const id = uid(); U.jobs[id] = { id, kind: "3d", status: "done", progress: 1, url, title: String(b.title || "Imported").slice(0, 80), created: Date.now(), payload: {} }; save(); res.json({ id }); });
 // v140: a clip you uploaded to the editor becomes one of your videos (or pictures) on the server, so the AI tools — extend, edit with
 // words, replace things, voices & sound, dubbing — can work on it. Only a file you uploaded yourself; the same file gives the same one back.
 app.post("/v1/clips140", requireUser, (req, res) => {

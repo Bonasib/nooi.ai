@@ -71,6 +71,8 @@ Done in v223 (tests/v223.py). Each row below was built:
   - Port the classic editor's AI tools: edit with words, replace things, voices & sound, AI voice-over, SFX / music from words, clean up voices, auto captions, translate, dub, lip-sync.
   - Add silence detection (v209 has it on the site), auto beat sync (beats exist), auto reframe / camera tracking, smart short clips, AI thumbnail, smart text correction.
 - ✅ v226: Restyle with AI (56 styles, the client's model), caption translation with AI, Extend merged into one clip.
+- ✅ v231: Replace a person (→ @character) or a voice, Replace the background (12 examples, your own picture or video, light matched), #pictures and @characters in the AI words.
+- ⬜ Automatic tools in one place (auto-edit to the beat, remove silences, auto captions, auto reframe, auto colour) — next.
 - Every AI call: price first, charge only on success, refund on failure, logged.
 - ⛔ On-device NPU models (SAM-2, Whisper, RIFE…) in the browser: later, through WebGPU / ONNX Runtime Web, or the desktop app.
 

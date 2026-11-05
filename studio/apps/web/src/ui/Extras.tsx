@@ -8,6 +8,7 @@ import { api } from "../api";
 import { at } from "../site";
 import { assetFromJob } from "../media/library";
 import { waitJob } from "./AIPanel";
+import { MentionBox, withRefs } from "./Mentions";
 import { editor, toast, ui, useProject, useUI } from "../state";
 import * as A from "../actions";
 import { STICKERS, stickerFile, stickerUrl } from "../media/stickers";
@@ -148,7 +149,9 @@ export function AiGenPanel() {
   const go = async () => {
     setBusy(true);
     try {
-      const j = await api.startJob(body()); toast(t("gen.started"), "ok");
+      // (v231) the #pictures and @characters named in the words go with it as reference pictures
+      const R = await withRefs(words.trim(), editor.project, ui.get().lang), b = body();
+      const j = await api.startJob(kind === "video" ? { ...b, prompt: R.prompt, inputs: R.inputs, meta: R.meta } : { ...b, prompt: R.prompt, model: R.first ? "nano" : b.model, ...(R.first ? { inputs: { iRef: R.first } } : {}) }); toast(t("gen.started"), "ok");
       const r = await waitJob(j.id); if (r.status !== "done") throw new Error(r.error || t("ai.failed"));
       const a = assetFromJob({ ...r, resultUrl: (r as unknown as { url?: string }).url || r.resultUrl }); if (a) { A.addAssets([a]); toast(t("gen.done"), "ok"); }
       api.refresh();
@@ -159,7 +162,7 @@ export function AiGenPanel() {
   return (<>
     <p className="hint">{t("gen.hint")}</p>
     <Seg label={t("gen.kind")} value={kind} onChange={(v) => setKind(v)} options={[{ v: "video", label: t("gen.video") }, { v: "image", label: t("gen.image") }]} />
-    <textarea className="ns-in gen" rows={4} value={words} onChange={(e) => setWords(e.target.value)} placeholder={t("gen.placeholder")} dir="auto" data-testid="gen-words" />
+    <MentionBox value={words} onChange={setWords} placeholder={t("gen.placeholder")} p={p} />
     <div className="row">{kind === "video" && <Seg label={t("gen.length")} value={dur} onChange={(v) => setDur(v)} options={[{ v: "5", label: "5s" }, { v: "10", label: "10s" }]} />}<span className="hint" dir="ltr">{aspect}</span></div>
     <Btn icon="sparkle" primary className="aibtn" onClick={go} disabled={busy || words.trim().length < 3} testid="gen-go">{busy ? t("gen.making") : t("gen.make") + (cost == null ? "" : " · " + (cost === 0 ? t("ai.free") : t("ai.credits", { n: cost })))}</Btn>
     {me.credits != null && <p className="hint">{t("ai.balance", { n: me.credits })}</p>}

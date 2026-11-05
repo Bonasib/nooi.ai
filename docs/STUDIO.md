@@ -345,3 +345,38 @@ Built on our own code. No code from Remotion or any other motion library is used
 - **New group, Badges and offers (4):** sale burst, spinning badge, swinging price tag, corner ribbon.
 - **New group, Frames and overlays (3):** camera viewfinder (REC, timecode), VHS tape, glowing border. These are full-frame and go over the picture.
 - In `motion/templates3.ts`.
+
+## v231 — the studio as part of the site, AI replace, and security
+
+- **The site's sections along the top** (Home, Explore, Image, Video, Audio, Characters, 3D, Studio, Publish, Apps, Plans). Each opens that page of the site (`/?view=…`).
+  - "Editor free in every plan" links to the plans.
+  - On a phone, or on a screen under 820 px tall, the logo opens the same list as a menu, so the editor keeps its height.
+- **Plans:** every plan card says "nooi Studio editor — included free", with a line under the cards. The timeline, effects, motion graphics, titles and device export cost nothing; only the AI tools use credits, and their price shows first.
+- **Tablets** get the full editor. Checked: iPad upright 834×1194, sideways 1194×834, 768×1024 and 1024×768. Nothing overlaps and nothing is wider than the screen. On 768–900 px the long header labels give way.
+- **Motion graphics, Enter and Exit:** none, fade, pop, slide up, slide down, slide from the side, zoom and bounce.
+  - Each choice plays its example; the length is a slider.
+  - They are drawn in the preview, the device export, and the video the server and desktop exports place.
+  - Keyframes stay in the Video tab (◆).
+- **The AI words:**
+  - `#name` is one of the project's pictures, by the name it was uploaded with.
+  - `@name` is a character: the site's Characters (same browser), or one added in the studio with a name, a photo, a look and a voice.
+  - The names go to the job as reference pictures (`vRef1…`, `meta.refs130`). The server turns `#name` into that picture. A character's look and voice are written into the words.
+  - A popover lists the matches as you type. Unknown names are marked.
+- **Stock & AI → Replace person / voice** (the server's Replace-things engine, `scan136` + `replace136`):
+  - the clip is looked at first: people, things, and what is said with its time;
+  - a person, face or look → an @character (with its photo as reference) or words; a voice → another voice and, optionally, new words; or removed;
+  - the price shows first; the result replaces the clip or goes on a track above it.
+- **Stock & AI → Background:**
+  - 12 drawn examples: forest, beach, desert, mountains, white studio, dark studio, market, city at night, office, café, space, snowy village;
+  - or your own picture, or video (its first frame shows the place, and the new background is made to move gently like it), or words;
+  - "Match the light" relights the people to the new place;
+  - through the same engine, with the price first.
+- **Security:**
+  - `POST /v1/assets` added any address with any kind as a finished item of the account. It now takes only the person's own uploaded 3D file. This closes a way to pass an outside address to the AI tools as one's own video.
+  - `/v1/uploads` answers 400 when no file is sent (it was a server error).
+  - Uploads are limited per account: `UPLOAD_FILES_HOUR` (default 300 files an hour) and `UPLOAD_GB_DAY` (default 20 GB a day). Staff are not limited.
+  - Reviewed and left as they are:
+    - the AI tools take only files on this server's media folder (an outside address or a path out of it is refused);
+    - media files are public by link, under random names (sharing and collaboration rely on that);
+    - the Motion-code sandbox (v227);
+    - the render service's per-person uploads (v228).
