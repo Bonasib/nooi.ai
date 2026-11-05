@@ -430,7 +430,8 @@
    "done": "Done",
    "upload": "Uploading files",
    "queued": "Waiting in line",
-   "running": "Rendering on the server"
+   "running": "Rendering on the server",
+   "motion": "Drawing the motion graphics"
   },
   "where": "Made on",
   "device": "This device",
@@ -444,7 +445,7 @@
   "browser": "In the app's browser",
   "ffmpegHint": "Made on this computer with FFmpeg — every format at full speed, nothing uploaded, no credits.",
   "save": "Save",
-  "motionHere": "This video has nooi Motion graphics, which are drawn frame by frame, so it is made here on this device."
+  "motionFirst": "The motion graphics are drawn on this device first (frame by frame), then sent with the rest."
  },
  "proj": {
   "new": "New project",

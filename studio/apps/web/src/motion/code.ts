@@ -77,15 +77,16 @@ export function codeFrame(c: TextClip, props: Record<string, unknown>, frame: nu
   }
   return have || null;
 }
+/** one code clip drawn for the frame at `local` seconds (the export waits for it before that moment is put together) */
+export async function codeReady(c: TextClip, p: Project, local: number, W: number, H: number, sound: (t: number) => [number, number[]]) {
+  const props = { code: "", ...(c.motion!.props as Record<string, unknown>) }, frame = Math.floor(Math.max(0, Math.min(c.dur, local)) * p.fps + 1e-6);
+  const [audio, bars] = sound(c.start + frame / p.fps), code = String(props.code || ""), key = keyOf(code, props, frame, W, H, audio);
+  if (latest.get(c.id)?.key === key) return;
+  store(c.id, key, await ask({ code, p: props, W, H, frame, fps: p.fps, dur: c.dur, audio, bars }));
+}
 /** the export: every code clip showing at `t` drawn for that exact frame before the moment is put together */
 export async function prepareCode(p: Project, t: number, W: number, H: number, sound: (t: number) => [number, number[]]) {
-  for (const L of layersAt(p, t)) {
-    const c = L.clip; if (c.type !== "text" || c.motion?.tpl !== "code") continue;
-    const props = { code: "", ...(c.motion.props as Record<string, unknown>) }, frame = Math.floor(Math.max(0, Math.min(c.dur, L.local)) * p.fps + 1e-6);
-    const [audio, bars] = sound(c.start + frame / p.fps), code = String(props.code || ""), key = keyOf(code, props, frame, W, H, audio);
-    if (latest.get(c.id)?.key === key) continue;
-    store(c.id, key, await ask({ code, p: props, W, H, frame, fps: p.fps, dur: c.dur, audio, bars }));
-  }
+  for (const L of layersAt(p, t)) { const c = L.clip; if (c.type === "text" && c.motion?.tpl === "code") await codeReady(c, p, L.local, W, H, sound); }
 }
 /** run code once (the inspector's Run): resolves to an error message or "" */
 export async function tryCode(code: string, props: Record<string, unknown> = {}): Promise<string> {

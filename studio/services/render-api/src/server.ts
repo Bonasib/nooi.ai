@@ -48,7 +48,7 @@ export async function buildApp(o: { store: Store; queue: RenderQueue; logger?: b
   // ---- renders
   app.post("/renders", { config: { rateLimit: { max: 20, timeWindow: "1 minute" } } }, async (req, reply) => {
     const w = await who(req);
-    const b = (req.body || {}) as { project?: unknown; media?: Record<string, string>; texts?: Record<string, string>; format?: string; width?: number; height?: number; fps?: number; quality?: string; range?: [number, number] };
+    const b = (req.body || {}) as { project?: unknown; media?: Record<string, string>; texts?: Record<string, string>; motions?: Record<string, string>; format?: string; width?: number; height?: number; fps?: number; quality?: string; range?: [number, number] };
     const tier = w.staff ? "staff" : w.plan, limit = CFG.planLimit[tier] ?? 1;
     if ((await store.activeRenders(w.uid)) >= limit) return reply.code(429).send({ error: `Your plan renders ${limit} at a time — wait for the one running.`, code: "busy" });
     const format = (FORMATS as readonly string[]).includes(String(b.format)) ? (b.format as Fmt) : "mp4";
@@ -73,10 +73,17 @@ export async function buildApp(o: { store: Store; queue: RenderQueue; logger?: b
       const buf = Buffer.from(m[1], "base64"); if (buf.length > 16 * 1024 * 1024 || buf[0] !== 0x89 || buf.slice(1, 4).toString() !== "PNG") continue;
       fs.mkdirSync(tdir, { recursive: true }); const f = path.join(tdir, cid + ".png"); fs.writeFileSync(f, buf); texts[cid] = f;
     }
+    // (v228) nooi Motion graphics: drawn by the browser frame by frame into a video (colour over black on top, transparency as grey
+    // below) and uploaded first — each must be one of this person's uploads, for a motion clip of this project
+    const motions: Record<string, string> = {}, mids = new Set(project.tracks.flatMap((t) => t.clips.filter((c) => c.type === "text" && c.motion).map((c) => c.id)));
+    for (const [cid, src] of Object.entries(b.motions || {})) {
+      if (!mids.has(cid) || !/^[A-Za-z0-9_-]{1,64}$/.test(cid) || typeof src !== "string") continue;
+      const r = await resolveSrc(store, w, src); if ("error" in r) return reply.code(400).send({ error: `motion graphic: ${r.error}`, code: "media" }); motions[cid] = r.path;
+    }
     const quality = (["high", "medium", "low"].includes(String(b.quality)) ? b.quality : "high") as "high" | "medium" | "low";
     const priority = CFG.planPriority[tier] ?? 5, now = new Date();
     await store.addRender({ id, owner: w.uid, plan: tier, status: "queued", progress: 0, format, width, height, fps, seconds: secs, outputPath: null, url: null, error: null, priority, createdAt: now, startedAt: null, finishedAt: null, expiresAt: new Date(+now + CFG.keepDays * 864e5) });
-    await queue.add({ id, owner: w.uid, project, media, texts, luts, format, width, height, fps, quality }, priority);
+    await queue.add({ id, owner: w.uid, project, media, texts, luts, motions, format, width, height, fps, quality }, priority);
     return reply.code(202).send(pub((await store.getRender(id))!));
   });
   app.get("/renders", async (req) => { const w = await who(req); return { renders: (await store.listRenders({ owner: w.uid, limit: 30 })).map(pub) }; });

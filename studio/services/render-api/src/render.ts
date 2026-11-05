@@ -7,7 +7,7 @@ import type { RenderInput } from "@nooi/editor-core";
 import { CFG } from "./config";
 import type { Store } from "./store";
 
-export interface RenderJobData { id: string; owner: string; project: unknown; media: Record<string, string>; texts: Record<string, string>; luts: Record<string, string>; format: RenderInput["format"]; width: number; height: number; fps: number; quality: RenderInput["quality"] }
+export interface RenderJobData { id: string; owner: string; project: unknown; media: Record<string, string>; texts: Record<string, string>; luts: Record<string, string>; motions?: Record<string, string>; format: RenderInput["format"]; width: number; height: number; fps: number; quality: RenderInput["quality"] }
 const running = new Map<string, () => void>();
 export const cancelRender = (id: string) => { running.get(id)?.(); };
 const EXT: Record<string, string> = { mp4: ".mp4", webm: ".webm", mov: ".mov", gif: ".gif", mp3: ".mp3", wav: ".wav" };
@@ -19,7 +19,7 @@ export async function runRender(store: Store, d: RenderJobData): Promise<void> {
   await store.updateRender(d.id, { status: "running", startedAt: new Date(), progress: 0.01 });
   try {
     const project = migrate(d.project);
-    const c = compile({ project, media: d.media, texts: d.texts, luts: d.luts, out, format: d.format, width: d.width, height: d.height, fps: d.fps, quality: d.quality });
+    const c = compile({ project, media: d.media, texts: d.texts, luts: d.luts, motions: d.motions || {}, out, format: d.format, width: d.width, height: d.height, fps: d.fps, quality: d.quality });
     if (c.seconds > CFG.maxSeconds) throw new Error(`Longer than ${CFG.maxSeconds} s — split it into parts.`);
     await new Promise<void>((res, rej) => {
       const p = spawn(CFG.ffmpeg, ["-progress", "pipe:1", "-nostats", ...c.args], { stdio: ["ignore", "pipe", "pipe"] });

@@ -304,4 +304,13 @@ Built on our own code. No code from Remotion or any other motion library is used
   - it runs in a worker inside a sealed frame (`sandbox="allow-scripts"`, its own empty origin, and a policy that blocks every network request); network, storage and the page are taken away;
   - errors are shown; a frame that takes over 2 seconds is stopped and the sandbox starts again;
   - the preview shows the newest picture, and the export waits for every frame.
-- **Export:** a project with motion graphics is made on the device (frame by frame). The server and desktop FFmpeg routes draw titles as still pictures, so the dialog says so and uses the device.
+- **Export:** motion graphics are drawn frame by frame in the device export. (v228 adds the server and desktop routes, below.)
+
+## v228 — motion graphics in the server and desktop export
+
+- The device draws each motion graphic frame by frame (the same program as the preview) into a video: the colour over black on top, the transparency as grey below. Any codec carries that.
+- Server export: that video is uploaded (resumable) with the rest. The render service takes only the person's own uploads, and only for motion clips of that project.
+- Desktop export (the app's FFmpeg): the video is written to the work folder.
+- `compile()` (editor-core) takes `motions: { clipId: file }`. FFmpeg splits the two halves, joins them with `alphamerge`, then `unpremultiply`. The result is one see-through layer, placed like a title (position, size, turn, opacity) at the clip's time, starting inside it when the range begins later.
+- The Export dialog keeps the server / this computer and says the graphics are drawn here first. The progress shows "Drawing the motion graphics".
+- The render service runs in Docker: after the editor update, run `bash /opt/nooi/deploy/render.sh` once to rebuild it.

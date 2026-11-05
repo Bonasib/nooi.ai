@@ -1,13 +1,16 @@
 // A project → one FFmpeg command (CPU, no GPU): used by the render service on the VPS and by the desktop app's own FFmpeg.
 // What it draws: media clips (trim, speed, reverse, freeze, crop, flip, scale/position/rotation, opacity, fades, exposure/contrast/
 // saturation/temperature, .cube LUTs, mono/sepia/invert/blur/vignette), titles as pictures the editor drew (correct Arabic joining),
+// nooi Motion graphics as videos the editor drew frame by frame (v228),
 // transitions as cross-fades at the cut, and the sound (volume, fades, speed, mute/solo, ducking by a fixed amount under voices).
 // Keyframes are sampled at their values at the clip's start (animated keyframes, text animations and the other effects are drawn by
 // the editor's own export — the server is the fallback when a device can't encode).
 import { clipEnd, duration } from "./timeline";
 import type { MediaClip, Project, TextClip } from "./schema";
 
-export interface RenderInput { project: Project; media: Record<string, string>; texts?: Record<string, string>; luts?: Record<string, string>;
+// motions: a nooi Motion graphic drawn by the editor frame by frame into a video with its colour on top (over black) and its
+// transparency as grey below it (any codec carries it); here the two halves become one see-through layer again
+export interface RenderInput { project: Project; media: Record<string, string>; texts?: Record<string, string>; luts?: Record<string, string>; motions?: Record<string, string>;
   out: string; format: "mp4" | "webm" | "mov" | "gif" | "mp3" | "wav"; width: number; height: number; fps: number; quality?: "high" | "medium" | "low"; range?: [number, number] }
 export interface Compiled { args: string[]; seconds: number; inputs: string[] }
 
@@ -33,8 +36,15 @@ export function compile(R: RenderInput): Compiled {
       const opacity = c.keyframes.opacity?.[0]?.v ?? c.opacity, scale = c.keyframes.scale?.[0]?.v ?? c.transform.scale, rot = c.keyframes.rotation?.[0]?.v ?? c.transform.rotation;
       const x = c.keyframes.x?.[0]?.v ?? c.transform.x, y = c.keyframes.y?.[0]?.v ?? c.transform.y;
       const lbl = "v" + k++; const chain: string[] = [];
-      let src: number;
-      if (c.type === "text") {
+      let src: number, from = "";
+      if (c.type === "text" && (c as TextClip).motion) {
+        const mv = R.motions?.[c.id]; if (!mv) continue;
+        src = input(mv, ["-ss", n(Math.max(0, s0 - c.start)), "-t", n(s1 - s0 + 0.05)]); const mk = "m" + k;
+        fv.push(`[${src}:v]split[${mk}a][${mk}b]`, `[${mk}a]crop=iw:ih/2:0:0,format=gbrp[${mk}c]`, `[${mk}b]crop=iw:ih/2:0:ih/2,format=gray[${mk}m]`);
+        fv.push(`[${mk}c][${mk}m]alphamerge,unpremultiply=inplace=1[${mk}]`); from = `[${mk}]`;
+        chain.push("setpts=PTS-STARTPTS", `fps=${fps}`, `scale=${W}:${H}`, "format=rgba");
+        if (scale !== 1) chain.push(`scale=iw*${n(scale)}:ih*${n(scale)}`);
+      } else if (c.type === "text") {
         const png = R.texts?.[c.id]; if (!png) continue;
         src = input(png, ["-loop", "1", "-framerate", String(fps), "-t", n(s1 - s0)]);
         chain.push(`scale=${W}:${H}`, "format=rgba");
@@ -73,7 +83,7 @@ export function compile(R: RenderInput): Compiled {
       if (rot) chain.push(`rotate=${n((rot * Math.PI) / 180)}:c=none:ow=rotw(${n((rot * Math.PI) / 180)}):oh=roth(${n((rot * Math.PI) / 180)})`);
       if (opacity < 1) chain.push(`colorchannelmixer=aa=${n(opacity)}`);
       chain.push(`setpts=PTS-STARTPTS+${n(s0 - t0)}/TB`);
-      fv.push(`[${src}:v]${chain.join(",")}[${lbl}]`);
+      fv.push(`${from || `[${src}:v]`}${chain.join(",")}[${lbl}]`);
       const nb = "base" + k;
       fv.push(`[${base}][${lbl}]overlay=x=(W-w)/2+${n(x * W)}:y=(H-h)/2+${n(y * H)}:eof_action=pass:enable='between(t,${n(s0 - t0)},${n(s1 - t0)})'[${nb}]`);
       base = nb;

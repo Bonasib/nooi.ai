@@ -5,6 +5,7 @@ import { compile, duration, frameSize, aspectOf, type Project, type TextClip, ty
 import { TAURI, CAPACITOR, at } from "../site";
 import { fileOf } from "../media/library";
 import { textCanvas } from "./text";
+import { bakeMotion, motionClips } from "../motion/bake";
 
 const b64 = async (b: Blob) => { const s = await new Promise<string>((ok) => { const r = new FileReader(); r.onload = () => ok(String(r.result)); r.readAsDataURL(b); }); return s.slice(s.indexOf(",") + 1); };
 
@@ -47,8 +48,14 @@ export async function exportDesktop(p: Project, o: ExportSettings & { signal?: A
       const png = "convertToBlob" in cv ? await (cv as OffscreenCanvas).convertToBlob({ type: "image/png" }) : await new Promise<Blob>((ok) => (cv as HTMLCanvasElement).toBlob((b) => ok(b!), "image/png"));
       const f = await join(dir, c.id + ".png"); await writeFile(f, new Uint8Array(await png.arrayBuffer())); texts[c.id] = f;
     }
+    // (v228) nooi Motion graphics: drawn here frame by frame into a video each (colour on top, transparency below)
+    const motions: Record<string, string> = {}, mcs = motionClips(p);
+    for (let j = 0; j < mcs.length; j++) {
+      const { blob, ext } = await bakeMotion(p, mcs[j], w, h, o.fps, { signal: o.signal, onProgress: (k) => o.onProgress?.(0.15 * ((j + k) / mcs.length), "motion") });
+      const f = await join(dir, "motion-" + mcs[j].id + ext); await writeFile(f, new Uint8Array(await blob.arrayBuffer())); motions[mcs[j].id] = f;
+    }
     const out = await join(dir, "out." + o.format), secs = duration(p);
-    const c = compile({ project: p, media, texts, luts, out, format: o.format, width: w, height: h, fps: o.fps, quality: o.quality });
+    const c = compile({ project: p, media, texts, luts, motions, out, format: o.format, width: w, height: h, fps: o.fps, quality: o.quality });
     o.onProgress?.(0.15, "frames");
     const cmd = Command.sidecar("binaries/ffmpeg", ["-progress", "pipe:1", "-nostats", ...c.args]);
     let err = "";

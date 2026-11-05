@@ -28,8 +28,8 @@ export function ExportDialog() {
   // where it is made: this device (no upload) or the nooi server (FFmpeg on the VPS — for long or 4K videos and weak devices)
   const [srvOn, setSrvOn] = useState(false); const [where, setWhere] = useState<"device" | "server" | "ffmpeg">(TAURI ? "ffmpeg" : "device"); const [srv, setSrv] = useState<{ url: string; name: string } | null>(null);
   useEffect(() => { let live = true; void api.renderOn().then((x) => live && setSrvOn(x && api.me.signedIn)); return () => { live = false; }; }, []);
-  // (v227) nooi Motion graphics are drawn frame by frame, so a project with them is made here, on this device
-  const moving = p.tracks.some((tr) => !tr.hidden && tr.clips.some((c) => c.type === "text" && !!c.motion)); const placeOf = moving ? "device" : where;
+  // (v228) nooi Motion graphics are drawn here frame by frame first; the nooi server / this computer's FFmpeg then lays them in
+  const moving = p.tracks.some((tr) => !tr.hidden && tr.clips.some((c) => c.type === "text" && !!c.motion)); const placeOf = where;
   const preset = PRESETS.find((x) => x.id === o.preset); const { w, h } = frameSize(aspectOf(p.width, p.height), o.res); const d = duration(p);
   const est = Math.round(((preset?.bitrate || 8e6) * (o.quality === "low" ? 0.4 : o.quality === "medium" ? 0.7 : 1) * (o.res === "4k" ? 3 : o.res === "720p" ? 0.5 : 1) * d) / 8 / 1e6);
   const pick = (id: string) => { const x = PRESETS.find((y) => y.id === id)!; const fs = frameSize(x.aspect, "1080p");
@@ -75,7 +75,7 @@ export function ExportDialog() {
           <p className="hint" dir="ltr">{!["mp3", "wav"].includes(o.format) ? `${w}×${h} · ` : ""}{d.toFixed(1)}s · ~{Math.max(1, est)} MB</p>
           {(srvOn || TAURI) && <><span className="ns-lbl">{t("exp.where")}</span><Seg label={t("exp.where")} value={placeOf} onChange={(v) => setWhere(v)} options={[...(TAURI ? [{ v: "ffmpeg" as const, label: t("exp.computer") }] : []), { v: "device" as const, label: TAURI ? t("exp.browser") : t("exp.device") }, ...(srvOn ? [{ v: "server" as const, label: t("exp.server") }] : [])]} /></>}
           <p className="hint">{placeOf === "server" ? t("exp.serverHint") : placeOf === "ffmpeg" ? t("exp.ffmpegHint") : t("exp.local")}</p>
-          {moving && (srvOn || TAURI) && <p className="hint motionnote" data-testid="exp-motion">{t("exp.motionHere")}</p>}
+          {moving && placeOf !== "device" && <p className="hint motionnote" data-testid="exp-motion">{t("exp.motionFirst")}</p>}
           {prog && <div className="aibusy" role="status"><span>{t("exp.step." + prog.note)} · {Math.round(prog.k * 100)}%</span><i style={{ width: Math.round(prog.k * 100) + "%" }} /></div>}
           {err && <p className="err" role="alert">{err}</p>}
           {res && <div className="expdone"><Icon name="check" size={20} /><span>{res.name} · {(res.size / 1e6).toFixed(1)} MB</span>
