@@ -60,7 +60,7 @@ Done in v223 (tests/v223.py). Each row below was built:
 
 ## Step 4 — Content libraries (spec §4.2)
 - 🟡 Titles: 3D kinetic titles, lower thirds, end credits, word-by-word captions.
-- ✅ nooi Motion (v227): our own programmatic motion-graphics engine (springs, interpolation, easing, colour blends, noise, shapes and path drawing, sequences). 110 motion graphics since v230 in 13 groups (lower thirds, kinetic titles, social, charts and numbers, shapes and backgrounds, callouts, timers, sound-reactive, intros and outros, wipes and reveals, badges and offers, frames and overlays, Motion code), each drawn frame by frame from its props, with live tiles. Motion code runs in a sealed sandbox. ✅ Server and desktop export of motion graphics (v228).
+- ✅ nooi Motion (v227): our own programmatic motion-graphics engine (springs, interpolation, easing, colour blends, noise, shapes and path drawing, sequences). 126 motion graphics since v234 in 14 groups (lower thirds, kinetic titles, social, charts and numbers, shapes and backgrounds, callouts, timers, sound-reactive, intros and outros, wipes and reveals, badges and offers, frames and overlays, Motion code), each drawn frame by frame from its props, with live tiles. Motion code runs in a sealed sandbox. ✅ Server and desktop export of motion graphics (v228).
 - ✅ Stickers (v225): 36 icon stickers and 10 banners from the classic editor (Material Symbols, Apache-2.0). Each tile shows how it looks, and a banner's lines and colour can be set before it is added. They are added as pictures that come in with a motion.
 - 🟡 Templates: split-screen layouts 2–9 and Instant montage (v223). ⬜ Numbered drop zones.
 - ⬜ Stock: needs a stock provider key from the owner — asked for only when this step starts.
@@ -73,6 +73,7 @@ Done in v223 (tests/v223.py). Each row below was built:
 - ✅ v226: Restyle with AI (56 styles, the client's model), caption translation with AI, Extend merged into one clip.
 - ✅ v231: Replace a person (→ @character) or a voice, Replace the background (12 examples, your own picture or video, light matched), #pictures and @characters in the AI words.
 - ✅ v233 Automatic tools in one place: remove pauses, cut to the beat, auto captions, auto reframe, auto colour, even loudness, duck the music, soft cuts, and "do it all".
+- ✅ v234 Moving backgrounds and separating a person: a green / blue screen key (its colour found by itself; preview, device and server export alike), a cut-out of the person made on the device with no screen (MediaPipe, free), 16 moving scenes, drawn pictures, your own video (repeated) or picture, the light on the person matched; on V1 the background takes the clip's place and the person becomes a layer on it.
 - Every AI call: price first, charge only on success, refund on failure, logged.
 - ⛔ On-device NPU models (SAM-2, Whisper, RIFE…) in the browser: later, through WebGPU / ONNX Runtime Web, or the desktop app.
 

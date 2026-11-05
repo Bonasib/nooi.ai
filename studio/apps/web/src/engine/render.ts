@@ -20,7 +20,7 @@ export function drawMoment(comp: Compositor, p: Project, t: number, frameFor: Fr
       const a = p.assets[c.asset]; if (!a || a.kind === "audio") continue;
       const f = frameFor(c, a, sourceTime(c, local, srcLimit(p, c))); if (!f) continue;
       const lut = c.lut ? lutFor(c.lut.asset) : null;
-      const d: LayerDraw = { ...f, ...base, opacity, blend: c.blend, color: c.color, effects: c.effects, lut: lut ? { ...lut, amount: c.lut!.amount } : null, fit: "contain" };
+      const d: LayerDraw = { ...f, ...base, opacity, blend: c.blend, color: c.color, effects: c.effects, lut: lut ? { ...lut, amount: c.lut!.amount } : null, fit: "contain", stacked: a.alpha === "stacked" && a.kind === "video" };
       comp.draw(d); n++;
     } else {
       const r = c.motion ? motionCanvas(c, local, comp.W, comp.H, p) : textCanvas(c, local, comp.W, comp.H);

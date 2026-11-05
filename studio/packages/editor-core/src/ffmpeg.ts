@@ -1,12 +1,13 @@
 // A project → one FFmpeg command (CPU, no GPU): used by the render service on the VPS and by the desktop app's own FFmpeg.
 // What it draws: media clips (trim, speed, reverse, freeze, crop, flip, scale/position/rotation, opacity, fades, exposure/contrast/
 // saturation/temperature, .cube LUTs, mono/sepia/invert/blur/vignette), titles as pictures the editor drew (correct Arabic joining),
-// nooi Motion graphics as videos the editor drew frame by frame (v228),
+// nooi Motion graphics as videos the editor drew frame by frame (v228), colour keys and cut-outs see-through (v234),
 // transitions as cross-fades at the cut, and the sound (volume, fades, speed, mute/solo, ducking by a fixed amount under voices).
 // Keyframes are sampled at their values at the clip's start (animated keyframes, text animations and the other effects are drawn by
 // the editor's own export — the server is the fallback when a device can't encode).
 import { clipEnd, duration } from "./timeline";
 import type { MediaClip, Project, TextClip } from "./schema";
+import { keyOf, screenOf } from "./key";
 
 // motions: a nooi Motion graphic drawn by the editor frame by frame into a video with its colour on top (over black) and its
 // transparency as grey below it (any codec carries it); here the two halves become one see-through layer again
@@ -54,31 +55,42 @@ export function compile(R: RenderInput): Compiled {
         if (to0 > 0 && (c as TextClip).animOut.type !== "none") chain.push(`fade=t=out:st=${n(s1 - s0 - to0)}:d=${n(to0)}:alpha=1`);
       } else {
         const m = c as MediaClip, a = p.assets[m.asset], path = R.media[m.asset]; if (!a || !path || a.kind === "audio") continue;
-        const local0 = s0 - c.start;
+        const local0 = s0 - c.start, time: string[] = [], geom: string[] = [], colour: string[] = [];
         if (a.kind === "image" || m.freeze != null) {
           src = input(path, a.kind === "image" ? ["-loop", "1", "-framerate", String(fps), "-t", n(s1 - s0)] : ["-ss", n(m.freeze ?? 0), "-t", "0.1"]);
-          if (m.freeze != null) chain.push("trim=end_frame=1", `loop=loop=-1:size=1`, `trim=duration=${n(s1 - s0)}`, "setpts=N/" + fps + "/TB");
+          if (m.freeze != null) time.push("trim=end_frame=1", `loop=loop=-1:size=1`, `trim=duration=${n(s1 - s0)}`, "setpts=N/" + fps + "/TB");
         } else {
           const srcA = m.reverse ? m.in + (m.dur - (s1 - c.start)) * m.speed : m.in + local0 * m.speed, len = (s1 - s0) * m.speed;
           src = input(path, ["-ss", n(Math.max(0, srcA)), "-t", n(len + 0.05)]);
-          if (m.reverse) chain.push("reverse");
-          chain.push(`setpts=(PTS-STARTPTS)/${n(m.speed)}`, `fps=${fps}`);
+          if (m.reverse) time.push("reverse");
+          time.push(`setpts=(PTS-STARTPTS)/${n(m.speed)}`, `fps=${fps}`);
         }
-        const [cl, ct, cr, cb] = m.transform.crop; if (cl || ct || cr || cb) chain.push(`crop=iw*${n(1 - cl - cr)}:ih*${n(1 - ct - cb)}:iw*${n(cl)}:ih*${n(ct)}`);
-        if (m.transform.flipH) chain.push("hflip"); if (m.transform.flipV) chain.push("vflip");
-        chain.push(`scale=w='if(gt(iw/ih,${W}/${H}),${W},-2)':h='if(gt(iw/ih,${W}/${H}),-2,${H})'`);
-        if (scale !== 1) chain.push(`scale=iw*${n(scale)}:-2`);
+        const [cl, ct, cr, cb] = m.transform.crop; if (cl || ct || cr || cb) geom.push(`crop=iw*${n(1 - cl - cr)}:ih*${n(1 - ct - cb)}:iw*${n(cl)}:ih*${n(ct)}`);
+        if (m.transform.flipH) geom.push("hflip"); if (m.transform.flipV) geom.push("vflip");
+        geom.push(`scale=w='if(gt(iw/ih,${W}/${H}),${W},-2)':h='if(gt(iw/ih,${W}/${H}),-2,${H})'`);
+        if (scale !== 1) geom.push(`scale=iw*${n(scale)}:-2`);
         const cc = m.color;
-        if (cc.exposure || cc.contrast || cc.saturation) chain.push(`eq=brightness=${n(cc.exposure * 0.25)}:contrast=${n(1 + cc.contrast)}:saturation=${n(Math.max(0, 1 + cc.saturation))}`);
-        if (cc.temperature) chain.push(`colortemperature=temperature=${Math.round(6500 - cc.temperature * 3000)}`);
-        if (m.lut && R.luts?.[m.lut.asset]) chain.push(`lut3d=file='${R.luts[m.lut.asset].replace(/'/g, "")}'`);
+        if (cc.exposure || cc.contrast || cc.saturation) colour.push(`eq=brightness=${n(cc.exposure * 0.25)}:contrast=${n(1 + cc.contrast)}:saturation=${n(Math.max(0, 1 + cc.saturation))}`);
+        if (cc.temperature) colour.push(`colortemperature=temperature=${Math.round(6500 - cc.temperature * 3000)}`);
+        if (m.lut && R.luts?.[m.lut.asset]) colour.push(`lut3d=file='${R.luts[m.lut.asset].replace(/'/g, "")}'`);
         for (const e of m.effects) { if (!e.enabled) continue; const am = +(e.params.amount ?? 0.5);
-          if (e.type === "mono") chain.push(`hue=s=${n(1 - am)}`); else if (e.type === "sepia") chain.push("colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131");
-          else if (e.type === "invert") chain.push("negate"); else if (e.type === "blur") chain.push(`gblur=sigma=${n(am * 12)}`); else if (e.type === "vignette") chain.push(`vignette=angle=${n(0.3 + am * 0.6)}`); }
-        chain.push("format=rgba");
+          if (e.type === "mono") colour.push(`hue=s=${n(1 - am)}`); else if (e.type === "sepia") colour.push("colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131");
+          else if (e.type === "invert") colour.push("negate"); else if (e.type === "blur") colour.push(`gblur=sigma=${n(am * 12)}`); else if (e.type === "vignette") colour.push(`vignette=angle=${n(0.3 + am * 0.6)}`); }
+        // (v234) a see-through part: a cut-out's mask (the bottom half), a colour key, or a picture's own transparency — made on a
+        // copy of the picture beside the colour filters (which don't carry transparency), then joined back to it
+        const key = keyOf(m), cut = a.alpha === "stacked" && a.kind === "video", own = a.kind === "image" && colour.length > 0;
+        if (cut || key || own) {
+          const mk = "k" + k;
+          fv.push(`[${src}:v]${[...time, ...(own ? ["format=rgba"] : [])].join(",") || "null"},split[${mk}a][${mk}b]`);
+          const spill = key && key.spill > 0 && screenOf(key.color) ? [`despill=type=${screenOf(key.color) === 1 ? "green" : "blue"}:mix=0.5:${screenOf(key.color) === 1 ? "green" : "blue"}=${n(-key.spill)}`] : [];
+          fv.push(`[${mk}a]${[...(cut ? ["crop=iw:ih/2:0:0"] : []), ...geom, ...spill, ...colour, "format=rgba"].join(",")}[${mk}c]`);
+          const mask = cut ?   // (a cut-out uses its own mask; a key on top of it is drawn by the editor's own export)
+            ["crop=iw:ih/2:0:ih/2", ...geom, "format=gray"] : key ? [...geom, "format=yuva444p", `chromakey=0x${key.color.slice(1).toUpperCase()}:${n(key.sim)}:${n(key.soft)}`, "alphaextract"] : [...geom, "alphaextract"];
+          fv.push(`[${mk}b]${mask.join(",")}[${mk}m]`, `[${mk}c][${mk}m]alphamerge[${mk}]`); from = `[${mk}]`;
+        } else chain.push(...time, ...geom, ...colour, "format=rgba");
         const fi = trIn ? trIn.dur / 2 : m.fadeIn, fo = trOut ? trOut.dur / 2 : m.fadeOut;
-        if (fi > 0 && s0 === c.start) chain.push(`fade=t=in:st=0:d=${n(fi)}:alpha=${trIn ? 1 : 0}`);
-        if (fo > 0 && s1 === clipEnd(c)) chain.push(`fade=t=out:st=${n(s1 - s0 - fo)}:d=${n(fo)}:alpha=${trOut ? 1 : 0}`);
+        if (fi > 0 && s0 === c.start) chain.push(`fade=t=in:st=0:d=${n(fi)}:alpha=${trIn || from ? 1 : 0}`);
+        if (fo > 0 && s1 === clipEnd(c)) chain.push(`fade=t=out:st=${n(s1 - s0 - fo)}:d=${n(fo)}:alpha=${trOut || from ? 1 : 0}`);
       }
       if (rot) chain.push(`rotate=${n((rot * Math.PI) / 180)}:c=none:ow=rotw(${n((rot * Math.PI) / 180)}):oh=roth(${n((rot * Math.PI) / 180)})`);
       if (opacity < 1) chain.push(`colorchannelmixer=aa=${n(opacity)}`);

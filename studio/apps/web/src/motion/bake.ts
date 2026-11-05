@@ -7,7 +7,7 @@ import { motionCanvas, barsAt, levelAt } from "./render";
 import { codeReady } from "./code";
 
 const even = (x: number) => Math.max(2, Math.round(x / 2) * 2);
-export const motionClips = (p: Project) => p.tracks.filter((t) => t.kind === "text" && !t.hidden).flatMap((t) => t.clips.filter((c): c is TextClip => c.type === "text" && !!c.motion));
+export const motionClips = (p: Project) => p.tracks.filter((t) => t.kind !== "audio" && !t.hidden).flatMap((t) => t.clips.filter((c): c is TextClip => c.type === "text" && !!c.motion));
 
 export async function bakeMotion(p: Project, c: TextClip, W: number, H: number, fps: number, o: { signal?: AbortSignal; onProgress?: (k: number) => void } = {}): Promise<{ blob: Blob; ext: string }> {
   const k = Math.min(1, 1920 / W, 1080 / H), w = even(W * k), h = even(H * k);   // (at most 1080p: the server scales it to the frame)

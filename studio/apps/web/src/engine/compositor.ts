@@ -1,6 +1,6 @@
 // WebGL2 compositor: draws a moment of the timeline into a canvas, layer by layer (bottom to top), on the user's device.
 import { BLENDS, FS_COPY, FS_LAYER, FX, TRANS, VS } from "./shaders";
-import { HUE_BANDS } from "@nooi/editor-core";
+import { HUE_BANDS, keyOf, rgbOf, screenOf } from "@nooi/editor-core";
 import type { ColorAdjust, Effect, Transform } from "@nooi/editor-core";
 
 export type Src = TexImageSource;
@@ -11,6 +11,7 @@ export interface LayerDraw {
   trans?: { type: string; k: number; role: "a" | "b" } | null; fit?: "contain" | "cover" | "frame";
   dynamic?: boolean;                              // re-upload every frame (video)
   fid?: number;                                   // (v226) the frame it shows: the same frame is not uploaded again
+  stacked?: boolean;                              // (v234) a cut-out: the picture on the top half, its mask below (h is the whole frame)
 }
 
 function compile(gl: WebGL2RenderingContext, vs: string, fs: string): WebGLProgram {
@@ -36,7 +37,7 @@ export class Compositor {
     this.vao = gl.createVertexArray()!; gl.bindVertexArray(this.vao);
     const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
     gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-    for (const n of ["uSrc", "uDst", "uLut", "uFrame", "uSrcSize", "uInv", "uCrop", "uOpacity", "uBlend", "uTime", "uC1", "uC2", "uHsl", "uLutAmt", "uLutSize", "uFx", "uBox", "uTr", "uTrK", "uTrRole", "uSrcFlipY"]) this.U[n] = gl.getUniformLocation(this.layer, n);
+    for (const n of ["uSrc", "uDst", "uLut", "uFrame", "uSrcSize", "uInv", "uCrop", "uOpacity", "uBlend", "uTime", "uC1", "uC2", "uHsl", "uLutAmt", "uLutSize", "uFx", "uBox", "uTr", "uTrK", "uTrRole", "uSrcFlipY", "uKey", "uKeyP", "uStack", "uTexH"]) this.U[n] = gl.getUniformLocation(this.layer, n);
     this.emptyLut = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_3D, this.emptyLut); gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, 2, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(32));
     if ("addEventListener" in canvas) (canvas as HTMLCanvasElement).addEventListener("webglcontextlost", (e) => { e.preventDefault(); this.lost = true; });
   }
@@ -74,7 +75,7 @@ export class Compositor {
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, from.tex); gl.uniform1i(this.U.uDst, 1);
     gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_3D, L.lut ? L.lut.tex : this.emptyLut); gl.uniform1i(this.U.uLut, 2);
     gl.uniform2f(this.U.uFrame, this.W, this.H);
-    const cw = L.w * (1 - L.transform.crop[0] - L.transform.crop[2]), ch = L.h * (1 - L.transform.crop[1] - L.transform.crop[3]);
+    const fh = L.stacked ? L.h / 2 : L.h, cw = L.w * (1 - L.transform.crop[0] - L.transform.crop[2]), ch = fh * (1 - L.transform.crop[1] - L.transform.crop[3]);
     gl.uniform2f(this.U.uSrcSize, Math.max(1, cw), Math.max(1, ch));
     gl.uniformMatrix3fv(this.U.uInv, false, inverse(this.W, this.H, cw, ch, L));
     gl.uniform4fv(this.U.uCrop, L.transform.crop); gl.uniform1f(this.U.uOpacity, Math.max(0, Math.min(1, L.opacity)));
@@ -89,6 +90,9 @@ export class Compositor {
     gl.uniform1fv(this.U.uFx, fx); gl.uniform4f(this.U.uBox, box[0], box[1], box[2], box[3]);
     gl.uniform1i(this.U.uTr, L.trans ? Math.max(0, TRANS.indexOf(L.trans.type)) : 0); gl.uniform1f(this.U.uTrK, L.trans ? L.trans.k : 0); gl.uniform1i(this.U.uTrRole, L.trans ? (L.trans.role === "a" ? 0 : 1) : -1);
     gl.uniform1i(this.U.uSrcFlipY, 0);
+    const k = L.effects ? keyOf({ effects: L.effects }) : null; const kc = k ? rgbOf(k.color) : [0, 0, 0];
+    gl.uniform4f(this.U.uKey, kc[0], kc[1], kc[2], k ? 1 : 0); gl.uniform4f(this.U.uKeyP, k?.sim || 0, k?.soft || 0, k?.spill || 0, k ? screenOf(k.color) : 0);
+    gl.uniform1i(this.U.uStack, L.stacked ? 1 : 0); gl.uniform1f(this.U.uTexH, L.h);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); this.cur = 1 - this.cur;
   }
   /** show the result on the canvas */

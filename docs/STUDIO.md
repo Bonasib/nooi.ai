@@ -414,3 +414,26 @@ Built on our own code. No code from Remotion or any other motion library is used
   - Audio: Volume, Clean up. Speed. Colour: Basic, Light, HSL, Looks.
   - Text: Words, Font, Effects, Style, Animation.
 - **A phone:** the bottom rail scrolls sideways, so every item fits (Auto included). On a computer the side rail scrolls when the window is short.
+
+## v234 — moving backgrounds and separating a person
+
+- **Separate the person** (the clip settings' new "Background & cut-out" section, and step 1 of Stock & AI → Background):
+  - **Green screen key:** finds the screen's colour around the picture's edges by itself (any flat colour; a studio green or a strong chroma blue is keyed without asking). Controls: the colour (with "Find it"), strength, soft edge, and taking the screen's colour out of the edges.
+    - The key measures colour as FFmpeg's `chromakey` does, so the preview, the device export and the server export agree. The despill matches FFmpeg's `despill`.
+  - **Cut out the person** (no screen needed), on the device, free, with nothing uploaded.
+    - It uses MediaPipe's selfie segmenter (Apache-2.0), served by our own server from `/studio/vendor/mediapipe-0.10.21/`: about 10 MB, downloaded the first time only.
+    - A video becomes a cut-out asset (`alpha: "stacked"`): the picture on the top half and its mask (grey) below. The compositor reads both halves; FFmpeg splits them and joins them with `alphamerge`. The clip's sound stays on the original, detached.
+    - A picture becomes a PNG with real transparency (`alpha: "own"`).
+    - A blue sky or a coloured wall is not taken for a screen: picking a background first cuts the person out.
+- **New background** (step 2), one undo step each:
+  - **Moving:** 16 scenes drawn by nooi Motion, each tile playing — aurora, bokeh, clouds, ocean, studio light, stars, neon grid, rainy window, snowy night, sunset, particles, waves, embers, under water, city at night, forest light. They are also in the Motion gallery as the new group "Moving backgrounds".
+  - **Pictures:** the 12 drawn places.
+  - **Your own:** a video, repeated to cover the clip with its sound off, or a picture; it fills the frame.
+  - **AI:** the v231 server change, price first.
+  - **Match the light on the person:** shifts its warmth, brightness and tint toward the background's. The change is remembered, so another background replaces it rather than adding to it.
+- **Where it goes:**
+  - On V1, the background takes the clip's place, and the person moves up onto a track of its own, attached to it. The cut's transitions follow.
+  - On another track, it goes on a new track just below.
+  - Another pick replaces the background in the same place. "Remove the background" puts the person back on V1.
+  - These are `putUnder` / `removeBackdrop` in editor-core (`key.ts`).
+- **Server export:** a keyed clip, a cut-out, and a picture with transparency stay see-through through the colour filters. FFmpeg makes the mask on a copy of the picture and joins it back. This is tested with real FFmpeg in `test/v234.test.ts`. The render service needs `deploy/render.sh` to pick this up.

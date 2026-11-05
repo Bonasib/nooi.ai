@@ -31,6 +31,10 @@ uniform float uFx[24];        // effect amounts (0 = off), order = FX
 uniform vec4 uBox;            // the blur / pixelate box on the clip picture: x, y (from the top-left), w, h — fractions
 uniform int uTr; uniform float uTrK; uniform int uTrRole;   // transition type, progress, 0 = outgoing 1 = incoming (-1 none)
 uniform bool uSrcFlipY;
+uniform vec4 uKey;            // (v234) the colour key: rgb, on
+uniform vec4 uKeyP;           // similarity, softness, spill, screen (1 green, 2 blue, 0 other)
+uniform int uStack;           // (v234) a cut-out: the picture on the top half, its mask (grey) below
+uniform float uTexH;          // the whole source's height (px)
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 float luma(vec3 c){ return dot(c, vec3(0.2126, 0.7152, 0.0722)); }
@@ -59,7 +63,18 @@ vec4 tap(vec2 suv){
   vec2 q = vec2(suv.x, 1.0 - suv.y);
   vec2 c = vec2(uCrop.x + q.x * (1.0 - uCrop.x - uCrop.z), uCrop.y + q.y * (1.0 - uCrop.y - uCrop.w));
   if (uSrcFlipY) c.y = 1.0 - c.y;
+  if (uStack == 1) { float e = 0.5 / max(uTexH, 2.0); vec2 t = vec2(c.x, clamp(c.y * 0.5, e, 0.5 - e)); return vec4(texture(uSrc, t).rgb, texture(uSrc, t + vec2(0.0, 0.5)).r); }
   return texture(uSrc, c);
+}
+// (v234) the colour key, measured as FFmpeg's chromakey does (the colour part of YUV), then the screen's colour taken out of the edges
+vec2 uvOf(vec3 c){ return vec2(-0.168736 * c.r - 0.331264 * c.g + 0.5 * c.b, 0.5 * c.r - 0.418688 * c.g - 0.081312 * c.b); }
+vec4 keyed(vec4 c){
+  if (uKey.w <= 0.0) return c;
+  vec2 d = uvOf(c.rgb) - uvOf(uKey.rgb); float diff = sqrt(dot(d, d) / 2.0);
+  c.a *= uKeyP.y > 0.0001 ? clamp((diff - uKeyP.x) / uKeyP.y, 0.0, 1.0) : step(uKeyP.x, diff);
+  if (uKeyP.w == 1.0) c.g -= max(c.g - (c.r + c.b) * 0.5, 0.0) * uKeyP.z;
+  else if (uKeyP.w == 2.0) c.b -= max(c.b - (c.r + c.g) * 0.5, 0.0) * uKeyP.z;
+  return c;
 }
 vec4 sampleSrc(vec2 suv){
   if (uFx[10] > 0.0) suv.x = suv.x > 0.5 ? 1.0 - suv.x : suv.x;
@@ -179,7 +194,7 @@ vec3 blendOp(vec3 d, vec3 s){
 void main(){
   vec4 dst = texture(uDst, vUv);
   vec2 suv = place(vUv);
-  vec4 src = sampleSrc(suv);
+  vec4 src = keyed(sampleSrc(suv));
   src.rgb = grade(src.rgb, vUv);
   float a = src.a * uOpacity * trMask(vUv, src);
   if (uTrRole >= 0) {

@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import { MotionTiles } from "./Extras";
 import { FontPicker, TextFxGrid } from "./TextFx";
 import { MotionProps } from "../motion/Gallery";
+import { BackdropSection } from "./Backdrop";
 
 // (v233) the settings in sections, in the order pro editors use: each with its icon and a title; a tap folds or opens it (remembered)
 function Sec({ id, icon, title, children }: { id: string; icon: string; title: string; children: React.ReactNode }) {
@@ -71,6 +72,7 @@ export function Inspector() {
             {(["left", "top", "right", "bottom"] as const).map((k, i) => <Slider key={k} label={t("insp." + k)} value={c.transform.crop[i]} min={0} max={0.45} fmt={(v) => Math.round(v * 100) + "%"} onChange={(v) => { const cr = [...c.transform.crop] as [number, number, number, number]; cr[i] = v; A.live.set("transform.crop", cr); }} onCommit={A.live.end} />)}
           </Sec>}
           <Sec id="keys" icon="keyframe" title={t("insp.keyframes")}><KfList c={c} /></Sec>
+          {c.type === "media" && editor.project.assets[(c as MediaClip).asset]?.kind !== "audio" && <Sec id="bk" icon="cutout" title={t("bk.sec")}><BackdropSection c={c} /></Sec>}
           {c.type === "media" && <Sec id="fx" icon="effects" title={t("insp.effects")}><EffectsSection c={c} focus={tab === "effects"} /></Sec>}
           <Sec id="anim" icon="sparkle" title={t("insp.animation")}><span id="isec-motion" />
           <MotionTiles /></Sec>
@@ -105,8 +107,8 @@ function EffectsSection({ c, focus }: { c: MediaClip; focus: boolean }) {
   useEffect(() => { if (focus) ref.current?.scrollIntoView({ block: "start", behavior: "smooth" }); }, [focus, c.effects.length]);
   return (<>
     <span ref={ref} id="isec-fx" />
-          {!c.effects.length && <p className="hint">{t("insp.noEffects")}</p>}
-          {c.effects.map((e, i) => <div key={e.id} className="fxrow">
+          {!c.effects.some((e) => e.type !== "key") && <p className="hint">{t("insp.noEffects")}</p>}
+          {c.effects.map((e, i) => e.type === "key" ? null : <div key={e.id} className="fxrow">
             <label className="row"><input type="checkbox" checked={e.enabled} onChange={(ev) => A.run("effect", (q) => { const f = findClip(q, c.id); if (f && f.clip.type === "media") f.clip.effects[i].enabled = ev.target.checked; })} /> {lang === "ar" ? EFFECTS.find((x) => x.id === e.type)?.ar : EFFECTS.find((x) => x.id === e.type)?.en}</label>
             <Slider label={t("insp.amount")} value={+e.params.amount} min={0.01} max={1} fmt={(v) => Math.round(v * 100) + "%"} onChange={(v) => A.live.set("effects." + i + ".params.amount", v)} onCommit={A.live.end} />
             {BOX_EFFECTS.has(e.type) && (["x", "y", "w", "h"] as const).map((k) => <Slider key={k} label={t("insp.box." + k)} value={boxOf(e)[k]} min={k === "w" || k === "h" ? 0.03 : 0} max={1} fmt={(v) => Math.round(v * 100) + "%"} onChange={(v) => A.live.set("effects." + i + ".params." + k, v)} onCommit={A.live.end} testid={"box-" + k} />)}

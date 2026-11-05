@@ -13,3 +13,4 @@ export * from "./anchors";
 export * from "./nooi";
 export * from "./animate";
 export * as Motion from "./motion";
+export * from "./key";

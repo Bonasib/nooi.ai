@@ -88,7 +88,7 @@ async def desktop(p):
     await E("()=>{const s=window.__studio,c=s.editor.project.tracks.flatMap(t=>t.clips).find(c=>c.type==='media'&&s.editor.project.assets[c.asset].kind==='video');s.editor.select([c.id])}"); await pg.wait_for_timeout(300)
     await pg.click('[data-testid="insp-video"]'); await pg.wait_for_timeout(200)
     secs = await E("()=>[...document.querySelectorAll('.inspector .isec')].map(s=>({id:s.dataset.sec,icon:!!s.querySelector('.isic svg'),open:s.classList.contains('open')}))")
-    chk("the clip's settings in sections with icons, in order: position & size, opacity & blend, crop, keyframes, effects, animation", [s["id"] for s in secs] == ["transform", "compose", "crop", "keys", "fx", "anim"] and all(s["icon"] and s["open"] for s in secs), secs)
+    chk("the clip's settings in sections with icons, in order: position & size, opacity & blend, crop, keyframes, background & cut-out (v234), effects, animation", [s["id"] for s in secs] == ["transform", "compose", "crop", "keys", "bk", "fx", "anim"] and all(s["icon"] and s["open"] for s in secs), secs)
     await pg.click('[data-testid="sec-crop"]'); await pg.wait_for_timeout(200); folded = await E("()=>!document.querySelector('[data-sec=crop] .isecb')")
     await pg.reload(); await pg.wait_for_function("window.__studio&&document.querySelector('[data-testid=preview]')", timeout=20000); await pg.wait_for_timeout(800)
     await E("()=>{const s=window.__studio,c=s.editor.project.tracks.flatMap(t=>t.clips).find(c=>c.type==='media'&&s.editor.project.assets[c.asset].kind==='video');s.editor.select([c.id])}"); await pg.wait_for_timeout(300); await pg.click('[data-testid="insp-video"]'); await pg.wait_for_timeout(200)

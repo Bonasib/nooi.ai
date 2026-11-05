@@ -150,7 +150,8 @@ async def desktop(p):
     chk("Replace a voice: another voice for what is said", qv == {"id": "s1", "voice": "old_man"}, qv)
     # ---- the background
     SENT.pop("jobs", None); JOBS.clear(); n0 = len(SENT["quote"])
-    await pg.click('.panel .subtabs button:has-text("Background")'); await pg.wait_for_selector('[data-testid="bg-panel"]')
+    await pg.click('.panel .subtabs button:has-text("Background")'); await pg.wait_for_selector('[data-testid="bk-panel"]')
+    await pg.click('.bk .ns-seg button:has-text("AI")'); await pg.wait_for_selector('[data-testid="bg-panel"]')   # (v234: the AI background is the Background panel's "AI" choice)
     nb = await E("()=>document.querySelectorAll('[data-testid=bg-panel] .bgt').length")
     await pg.click('[data-testid="bg-market"]'); await pg.wait_for_function("()=>/42/.test((document.querySelector('[data-testid=bg-price]')||{}).textContent||'')", timeout=15000)
     qb = SENT["quote"][-1]["changes"][0]

@@ -35,13 +35,15 @@ export interface Asset {
   folder?: Id | null; waveform?: number[]; thumb?: string; createdAt: number;
   strip?: string;              // a filmstrip picture (several frames side by side) for the timeline
   job?: string;                // the nooi.ai job that made it
+  alpha?: "stacked" | "own";   // (v234) a cut-out: a video with the picture on the top half and its mask (grey) below; "own": a picture with its own transparency
 }
 export interface Folder { id: Id; name: string; parent?: Id | null }
 
 // anchor: a clip on another track attached to a frame of a main-track (V1) clip — `at` is that clip's source second (its local
 // second for a title), so it stays on the same picture when V1 is trimmed, rippled or moved (spec §8.5 parentAnchorClipId)
 export interface Anchor { clip: Id; at: number }
-export interface ClipBase { id: Id; start: number; dur: number; name?: string; keyframes: Keyframes; transform: Transform; opacity: number; anchor?: Anchor | null }
+export interface ClipBase { id: Id; start: number; dur: number; name?: string; keyframes: Keyframes; transform: Transform; opacity: number; anchor?: Anchor | null;
+  backdrop?: Id | null }        // (v234) a background placed under that clip (a picked new background replaces it)
 export interface MediaClip extends ClipBase {
   type: "media"; asset: Id;
   in: number;                  // source seconds at the clip's first frame (before reverse)
@@ -57,6 +59,7 @@ export interface MediaClip extends ClipBase {
   lut?: { asset: Id; amount: number } | null;
   denoise?: boolean;           // RNNoise on this clip's sound
   link?: Id | null;            // a detached sound remembers its video clip
+  light?: [number, number, number] | null;   // (v234) the colour change made to match a new background (temperature, exposure, tint)
 }
 export interface TextStyle {
   font: string; size: number; weight: number; italic: boolean;

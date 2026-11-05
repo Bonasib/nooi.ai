@@ -57,7 +57,7 @@ export function filmStrip(url: string, duration: number, n = 6, fh = 54): Promis
 export async function visualsFor(a: Asset): Promise<Partial<Asset> | null> {
   if (a.kind !== "video" && a.kind !== "audio") return null;
   const out: Partial<Asset> = {}; const u = await urlOf(a, false); if (!u) return null;
-  if (a.kind === "video" && (!a.thumb || !a.duration || !a.w)) { const p = await probeVideo(u); if (p.w) Object.assign(out, { w: p.w, h: p.h, duration: a.duration || p.duration, thumb: a.thumb || p.thumb }); }
+  if (a.kind === "video" && (!a.thumb || !a.duration || !a.w)) { const p = await probeVideo(u); if (p.w) Object.assign(out, { w: p.w, h: a.alpha === "stacked" ? Math.round(p.h / 2) : p.h, duration: a.duration || p.duration, thumb: a.thumb || p.thumb }); }
   if (a.kind === "video" && !a.strip) { const sp = await filmStrip(u, out.duration || a.duration || 0); if (sp) out.strip = sp; }
   if (!a.waveform && a.hasAudio !== false) { const b = await fileOf(a); if (b && b.size < 300 * 1024 * 1024) { const ab = await decodeSound(b); if (ab) { out.hasAudio = true; out.waveform = peaks(mono(ab), Math.min(2000, Math.max(100, Math.round(ab.duration * 25)))); if (a.kind === "audio" && !a.duration) out.duration = ab.duration; } else if (a.kind === "video") out.hasAudio = false; } }
   return Object.keys(out).length ? out : null;

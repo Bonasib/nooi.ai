@@ -17,7 +17,8 @@ import { voiceOver } from "./Shell";
 import { RestylePanel } from "./Restyle";
 import { TextFxGrid } from "./TextFx";
 import { MotionGallery } from "../motion/Gallery";
-import { BackgroundPanel, ReplacePanel } from "./Replace";
+import { ReplacePanel } from "./Replace";
+import { BackdropPanel } from "./Backdrop";
 import { AutoPanel } from "./Auto";
 
 export const RAILS: [Rail, string][] = [["media", "media"], ["stock", "stock"], ["auto", "wand"], ["audio", "audio"], ["titles", "text"], ["transitions", "transitions"], ["effects", "effects"], ["stickers", "sticker"], ["templates", "template"]];
@@ -176,7 +177,7 @@ function TextPanel() {
 function AudioTabs() { const sub = useUI((s) => s.sub.audio) || "audio"; return (<><Sub rail="audio" tabs={["audio", "sfx"]} />{sub === "sfx" ? <SfxPanel /> : <AudioPanel />}</>); }
 function TitleTabs() { const sub = useUI((s) => s.sub.titles) || "text"; return (<><Sub rail="titles" tabs={["text", "mgfx", "captions"]} />{sub === "captions" ? <CaptionsPanel /> : sub === "mgfx" ? <MotionGallery /> : <TextPanel />}</>); }
 function StickerTabs() { const sub = useUI((s) => s.sub.stickers) || "stickers"; return (<><Sub rail="stickers" tabs={["stickers", "logo"]} />{sub === "logo" ? <LogoPanel /> : <StickersPanel />}</>); }
-function StockTabs() { const sub = useUI((s) => s.sub.stock) || "aigen"; return (<><Sub rail="stock" tabs={["aigen", "restyle", "replace", "background", "aitools"]} />{sub === "aitools" ? <AIPanel /> : sub === "restyle" ? <RestylePanel /> : sub === "replace" ? <ReplacePanel /> : sub === "background" ? <BackgroundPanel /> : <AiGenPanel />}</>); }
+function StockTabs() { const sub = useUI((s) => s.sub.stock) || "aigen"; return (<><Sub rail="stock" tabs={["aigen", "restyle", "replace", "background", "aitools"]} />{sub === "aitools" ? <AIPanel /> : sub === "restyle" ? <RestylePanel /> : sub === "replace" ? <ReplacePanel /> : sub === "background" ? <BackdropPanel /> : <AiGenPanel />}</>); }
 function EffectsPanel() {
   const { t } = useTranslation(); const sub = useUI((s) => s.sub.effects) || "effects"; const lang = useUI((s) => s.lang);
   const hover = (id: string | null) => ui.set({ preview: id });
