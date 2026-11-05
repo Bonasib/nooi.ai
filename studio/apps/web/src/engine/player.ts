@@ -32,6 +32,8 @@ export class Player {
   // the drawing size: the project's frame scaled to fit `maxW` (the preview is a smaller copy; the export uses the full size)
   /** (v226) the size the preview is shown at (CSS px): the drawing is made at that size × the screen's density (at most ×2), never above 1280 */
   fitTo(cssW: number, cssH: number) { const dpr = Math.min(2, typeof devicePixelRatio === "number" ? devicePixelRatio : 1), m = Math.max(320, Math.min(1280, Math.round(Math.max(cssW, cssH) * dpr / 16) * 16)); if (m !== this.maxW) { this.maxW = m; this.resize(); } }
+  /** draw again on the next tick (something the picture depends on arrived) */
+  redraw() { this.drawnV = -1; }
   resize() { const p = this.project, k = Math.min(1, this.maxW / Math.max(p.width, p.height)); this.comp.resize(Math.round(p.width * k / 2) * 2, Math.round(p.height * k / 2) * 2); this.drawnV = -1; }
 
   async audio(): Promise<AudioContext | null> {

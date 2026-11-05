@@ -42,7 +42,7 @@ export async function exportDesktop(p: Project, o: ExportSettings & { signal?: A
       (a.kind === "lut" ? luts : media)[id] = f; o.onProgress?.((++i / Math.max(1, used.size)) * 0.15, "media");
     }
     const texts: Record<string, string> = {};
-    for (const t of p.tracks) if (t.kind === "text" && !t.hidden) for (const c of t.clips) if (c.type === "text" && c.text.trim()) {
+    for (const t of p.tracks) if (t.kind === "text" && !t.hidden) for (const c of t.clips) if (c.type === "text" && !(c as TextClip).motion && c.text.trim()) {
       const tc = c as TextClip; const { cv } = textCanvas({ ...tc, animIn: { ...tc.animIn, dur: 0 }, animOut: { ...tc.animOut, dur: 0 } }, tc.dur / 2, w, h);
       const png = "convertToBlob" in cv ? await (cv as OffscreenCanvas).convertToBlob({ type: "image/png" }) : await new Promise<Blob>((ok) => (cv as HTMLCanvasElement).toBlob((b) => ok(b!), "image/png"));
       const f = await join(dir, c.id + ".png"); await writeFile(f, new Uint8Array(await png.arrayBuffer())); texts[c.id] = f;

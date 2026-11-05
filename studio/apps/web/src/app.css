@@ -390,3 +390,16 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
 .fxt .fxbg { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 6px; background: linear-gradient(135deg, #2a2f3a, #14161b); overflow: hidden; } .fxt img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .fxt .ld { display: block; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent); animation: ldx 1.2s infinite; } @keyframes ldx { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
 @media (min-width: 1400px) { .stylg { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+/* (v227) nooi Motion: the gallery's live tiles, the props form and the code editor */
+.mgt .mgbg { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; background: radial-gradient(120% 90% at 30% 20%, #2b3242, #101217 70%); }
+.mgt canvas { width: 100%; height: 100%; display: block; }
+.mgt:hover .mgbg, .mgt:focus-visible .mgbg { box-shadow: 0 0 0 2px var(--acc, #00f0ff) inset; }
+.mgal .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
+.mgprops { display: grid; gap: 10px; } .mgprops .ns-field small { display: block; margin-top: 2px; }
+.mgcol input[type=color] { width: 44px; height: 28px; border: 1px solid var(--line, #333); border-radius: 6px; background: none; padding: 0; cursor: pointer; }
+.mgcode textarea.code { width: 100%; box-sizing: border-box; font: 12px/1.5 var(--mono, ui-monospace, monospace); tab-size: 2; white-space: pre; overflow: auto; min-height: 220px; resize: vertical; }
+.mgcode .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+.clip.text.mg { background: linear-gradient(90deg, #6d4cff, #00c2d9); }
+.clip.text.mg .cn::before { content: "✦ "; }
+.motionnote { color: var(--acc, #00f0ff); }
+@media (max-width: 720px) { .mgal .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; } .mgal .chips .chip { flex: none; } .mgal > .hint { display: none; } }

@@ -8,6 +8,8 @@ import { clipEnd, duckGain, duration, frameSize, gainAt, aspectOf, layersAt, src
 import type { Asset, ExportSettings, MediaClip, Project } from "@nooi/editor-core";
 import { Compositor, parseCube } from "./compositor";
 import { drawMoment, type Frame } from "./render";
+import { prepareCode } from "../motion/code";
+import { barsAt, levelAt } from "../motion/render";
 import { decodeSound, fileOf } from "../media/library";
 import { encodeGif } from "./gif";
 import { encodeWav } from "./wav";
@@ -56,6 +58,7 @@ export async function exportProject(p: Project, o: ExportOpts): Promise<ExportRe
   }
   for (const t of p.tracks) for (const c of t.clips) if (c.type === "media" && c.lut && !luts.has(c.lut.asset)) { const a = p.assets[c.lut.asset]; const b = a && await fileOf(a); if (b) { try { const { size, data } = parseCube(await b.text()); luts.set(c.lut.asset, { tex: comp.makeLut(data, size), size }); } catch { /* */ } } }
   const frames = Math.max(1, Math.round(secs * fps));
+  const hasCode = p.tracks.some((tr) => !tr.hidden && tr.clips.some((c) => c.type === "text" && c.motion?.tpl === "code"));
   const frameAt = async (t: number) => {
     const ready = new Map<string, Frame>();
     for (const L of layersAt(p, t)) {
@@ -66,6 +69,7 @@ export async function exportProject(p: Project, o: ExportOpts): Promise<ExportRe
       const cv = await cur.at(sourceTime(c as MediaClip, L.local, srcLimit(p, c)));
       if (cv) ready.set(c.id, { src: cv as unknown as TexImageSource, w: cv.width, h: cv.height, key: "v:" + c.id, dynamic: true });
     }
+    if (hasCode) await prepareCode(p, t, comp.W, comp.H, (at) => [levelAt(p, at) ?? 0, barsAt(p, at, 64)]);
     drawMoment(comp, p, t, (c) => ready.get(c.id) || null, (id) => luts.get(id) || null);
   };
   try {

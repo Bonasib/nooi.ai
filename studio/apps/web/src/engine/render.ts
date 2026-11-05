@@ -3,6 +3,7 @@ import { layersAt, propAt, sourceTime, srcLimit } from "@nooi/editor-core";
 import type { Asset, MediaClip, Project } from "@nooi/editor-core";
 import type { Compositor, LayerDraw, Src } from "./compositor";
 import { textCanvas } from "./text";
+import { motionCanvas } from "../motion/render";
 
 export interface Frame { src: Src; w: number; h: number; key: string; dynamic: boolean; fid?: number }   // fid: the video frame shown (unchanged → not uploaded again)
 export type FrameFor = (clip: MediaClip, asset: Asset, srcT: number) => Frame | null;
@@ -22,7 +23,7 @@ export function drawMoment(comp: Compositor, p: Project, t: number, frameFor: Fr
       const d: LayerDraw = { ...f, ...base, opacity, blend: c.blend, color: c.color, effects: c.effects, lut: lut ? { ...lut, amount: c.lut!.amount } : null, fit: "contain" };
       comp.draw(d); n++;
     } else {
-      const r = textCanvas(c, local, comp.W, comp.H);
+      const r = c.motion ? motionCanvas(c, local, comp.W, comp.H, p) : textCanvas(c, local, comp.W, comp.H);
       const d: LayerDraw = { src: r.cv as unknown as Src, w: comp.W, h: comp.H, key: "txt:" + c.id, dynamic: r.changed, ...base,
         x: base.x + r.look.dx, y: base.y + r.look.dy, scale: base.scale * r.look.scale, opacity: opacity * r.look.opacity, blend: "normal", fit: "frame" };
       comp.draw(d); n++;

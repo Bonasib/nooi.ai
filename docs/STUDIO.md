@@ -283,3 +283,25 @@ Apple developer accounts, plus a signed release build (`./gradlew bundleRelease`
   - the price of both steps shows first, and each step is charged only when it succeeds;
   - the result replaces the clip, or goes on a track above it.
 - **AI tools → Extend:** "Merge into one clip" (on by default). The new part is joined to the clip by the site's free seamless merge. If the join fails, the new part goes right after the clip as before.
+
+## v227 — nooi Motion: programmatic motion graphics (our own engine)
+
+Built on our own code. No code from Remotion or any other motion library is used; only the idea of "video as a program" is shared.
+
+- **Motion math** (`@nooi/editor-core` → `Motion`):
+  - `interpolate` (clamp, extend or identity at the ends), `spring` (a damped spring with mass, stiffness, damping, overshoot clamping, delay, from/to, a set length) and `springLength`;
+  - an easing set, colour parsing and `interpolateColors`, a seeded `random`, `noise2` / `noise3`;
+  - shapes (rectangle, circle, ellipse, polygon, star, heart, triangle) with `toPath`, `pathLength`, `evolve` (draw a path in) and `pointAt`;
+  - timing helpers `seq`, `loop`, `stagger`. Unit-tested.
+- **37 motion graphics** in 9 groups. Titles → Motion graphics. Each tile is the template itself, drawn live; pointing at a tile plays it.
+  - Lower thirds (6), kinetic titles (8), social (5), charts and numbers (5), shapes and backgrounds (5), callouts (3), timers (2), sound-reactive (2), Motion code (1).
+  - A motion graphic is a title clip with `motion: { tpl, props }`. It is drawn frame by frame at the project's frame rate, so the preview, the tile and the export match.
+  - Words are bilingual by default (English or Arabic, by the studio's language), and right-to-left text is drawn correctly.
+- **The props form** (inspector → Motion graphic): words, colours, numbers (sliders), choices, on/off and data lists. Each change is one undo step; "Back to the template" restores the defaults.
+- **Sound-reactive graphics** follow the edit's sound at each moment, from the waveforms of the clips playing then.
+- **Motion code:**
+  - write your own animation in JavaScript with `m` (frame, fps, t, dur, W, H, u, props, audio(), bars(n), ctx) and `M` (the motion math);
+  - it runs in a worker inside a sealed frame (`sandbox="allow-scripts"`, its own empty origin, and a policy that blocks every network request); network, storage and the page are taken away;
+  - errors are shown; a frame that takes over 2 seconds is stopped and the sandbox starts again;
+  - the preview shows the newest picture, and the export waits for every frame.
+- **Export:** a project with motion graphics is made on the device (frame by frame). The server and desktop FFmpeg routes draw titles as still pictures, so the dialog says so and uses the device.

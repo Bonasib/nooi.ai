@@ -28,6 +28,8 @@ export function ExportDialog() {
   // where it is made: this device (no upload) or the nooi server (FFmpeg on the VPS — for long or 4K videos and weak devices)
   const [srvOn, setSrvOn] = useState(false); const [where, setWhere] = useState<"device" | "server" | "ffmpeg">(TAURI ? "ffmpeg" : "device"); const [srv, setSrv] = useState<{ url: string; name: string } | null>(null);
   useEffect(() => { let live = true; void api.renderOn().then((x) => live && setSrvOn(x && api.me.signedIn)); return () => { live = false; }; }, []);
+  // (v227) nooi Motion graphics are drawn frame by frame, so a project with them is made here, on this device
+  const moving = p.tracks.some((tr) => !tr.hidden && tr.clips.some((c) => c.type === "text" && !!c.motion)); const placeOf = moving ? "device" : where;
   const preset = PRESETS.find((x) => x.id === o.preset); const { w, h } = frameSize(aspectOf(p.width, p.height), o.res); const d = duration(p);
   const est = Math.round(((preset?.bitrate || 8e6) * (o.quality === "low" ? 0.4 : o.quality === "medium" ? 0.7 : 1) * (o.res === "4k" ? 3 : o.res === "720p" ? 0.5 : 1) * d) / 8 / 1e6);
   const pick = (id: string) => { const x = PRESETS.find((y) => y.id === id)!; const fs = frameSize(x.aspect, "1080p");
@@ -35,9 +37,9 @@ export function ExportDialog() {
     setO({ ...o, preset: id, res: x.res, fps: x.fps, format: x.format }); };
   const go = async () => {
     if (!d) { setErr(t("exp.empty")); return; }
-    setErr(""); setRes(null); setSrv(null); setProg({ k: 0, note: where === "server" ? "upload" : "media" }); playerRef.current?.pause(); ab.current = new AbortController();
+    setErr(""); setRes(null); setSrv(null); setProg({ k: 0, note: placeOf === "server" ? "upload" : "media" }); playerRef.current?.pause(); ab.current = new AbortController();
     A.run("export settings", (q) => { q.export = { ...o }; });
-    if (where === "server") {
+    if (placeOf === "server") {
       try {
         const r = await exportOnServer(editor.project, { ...o, signal: ab.current.signal, onProgress: (k, note) => setProg({ k, note }) });
         setProg(null);
@@ -50,7 +52,7 @@ export function ExportDialog() {
       return;
     }
     try {
-      const r = where === "ffmpeg" ? await exportDesktop(editor.project, { ...o, signal: ab.current.signal, onProgress: (k, note) => setProg({ k, note }) })
+      const r = placeOf === "ffmpeg" ? await exportDesktop(editor.project, { ...o, signal: ab.current.signal, onProgress: (k, note) => setProg({ k, note }) })
         : await exportProject(editor.project, { ...o, signal: ab.current.signal, onProgress: (k, note) => setProg({ k, note }) });
       setRes({ url: URL.createObjectURL(r.blob), name: r.name, blob: r.blob, size: r.blob.size }); setProg(null);
       if (preset?.maxSec && d > preset.maxSec) toast(t("exp.tooLong", { name: preset.name, s: preset.maxSec }), "warn");
@@ -71,8 +73,9 @@ export function ExportDialog() {
             <span className="ns-lbl">{t("exp.fps")}</span><Seg label={t("exp.fps")} value={String(o.fps)} onChange={(v) => setO({ ...o, fps: +v })} options={["24", "25", "30", "60"].map((v) => ({ v, label: v }))} />
             <span className="ns-lbl">{t("exp.quality")}</span><Seg label={t("exp.quality")} value={o.quality} onChange={(v) => setO({ ...o, quality: v })} options={[{ v: "high", label: t("exp.high") }, { v: "medium", label: t("exp.medium") }, { v: "low", label: t("exp.low") }]} /></>}
           <p className="hint" dir="ltr">{!["mp3", "wav"].includes(o.format) ? `${w}×${h} · ` : ""}{d.toFixed(1)}s · ~{Math.max(1, est)} MB</p>
-          {(srvOn || TAURI) && <><span className="ns-lbl">{t("exp.where")}</span><Seg label={t("exp.where")} value={where} onChange={(v) => setWhere(v)} options={[...(TAURI ? [{ v: "ffmpeg" as const, label: t("exp.computer") }] : []), { v: "device" as const, label: TAURI ? t("exp.browser") : t("exp.device") }, ...(srvOn ? [{ v: "server" as const, label: t("exp.server") }] : [])]} /></>}
-          <p className="hint">{where === "server" ? t("exp.serverHint") : where === "ffmpeg" ? t("exp.ffmpegHint") : t("exp.local")}</p>
+          {(srvOn || TAURI) && <><span className="ns-lbl">{t("exp.where")}</span><Seg label={t("exp.where")} value={placeOf} onChange={(v) => setWhere(v)} options={[...(TAURI ? [{ v: "ffmpeg" as const, label: t("exp.computer") }] : []), { v: "device" as const, label: TAURI ? t("exp.browser") : t("exp.device") }, ...(srvOn ? [{ v: "server" as const, label: t("exp.server") }] : [])]} /></>}
+          <p className="hint">{placeOf === "server" ? t("exp.serverHint") : placeOf === "ffmpeg" ? t("exp.ffmpegHint") : t("exp.local")}</p>
+          {moving && (srvOn || TAURI) && <p className="hint motionnote" data-testid="exp-motion">{t("exp.motionHere")}</p>}
           {prog && <div className="aibusy" role="status"><span>{t("exp.step." + prog.note)} · {Math.round(prog.k * 100)}%</span><i style={{ width: Math.round(prog.k * 100) + "%" }} /></div>}
           {err && <p className="err" role="alert">{err}</p>}
           {res && <div className="expdone"><Icon name="check" size={20} /><span>{res.name} · {(res.size / 1e6).toFixed(1)} MB</span>

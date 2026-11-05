@@ -4,6 +4,7 @@ import type { Asset, Clip, MediaClip, Project, TextClip } from "@nooi/editor-cor
 import i18n from "./i18n";
 import { autosave, editor, playerRef, toast, ui, markPick } from "./state";
 import { importFiles } from "./media/library";
+import { defaultsOf, templateOf } from "./motion/templates";
 
 const t = (k: string, o?: Record<string, unknown>) => i18n.t(k, o) as string;
 export const now = () => playerRef.current?.clock.t ?? editor.playhead;
@@ -24,6 +25,14 @@ export function addText(templateId = "title", text?: string) {
   const c = run("text", (p) => C.addClip(p, C.textClip(text || t("text.default"), now(), { style: C.textStyle0(tpl.style as Partial<C.TextStyle>), animIn: { type: tpl.animIn, dur: 0.4 }, animOut: { type: tpl.animOut, dur: 0.3 }, template: tpl.id })));
   markPick(); editor.select([c.id]); ui.set({ inspector: "text" }); return c;
 }
+/** (v227) a nooi Motion graphic at the playhead: a title clip drawn frame by frame by its template, with the template's own props */
+export function addMotion(id: string, at = now()) {
+  const tpl = templateOf(id); if (!tpl) return null; const lang = ui.get().lang, name = lang === "ar" ? tpl.ar : tpl.en;
+  const c = run("motion graphic", (p) => C.addClip(p, C.textClip(name, at, { dur: tpl.dur, name, animIn: { type: "none", dur: 0 }, animOut: { type: "none", dur: 0 }, motion: { tpl: id, props: defaultsOf(tpl, lang) } })));
+  markPick(); editor.select([c.id]); ui.set({ inspector: "mg" }); return c;
+}
+/** one of the picked motion graphic's props (a slider drags as one undo step through `live`) */
+export function setMotionProp(k: string, v: unknown) { setProp("motion.props." + k, v, "motion graphic"); }
 export function split() {
   editor.prune(); const ids = editor.selection.filter((id) => { const f = C.findClip(editor.project, id); return f && now() > f.clip.start && now() < C.clipEnd(f.clip); });   // selected clips under the playhead; none → every track
   const out = run("split", (p) => C.splitAt(p, now(), new Set(ids)));
@@ -114,6 +123,7 @@ export function applyMotion(id: string, clipId?: string) {
 // scaled and moved as it is at `local` seconds (titles: about the size of their words)
 export function pictureBox(p: Project, c: Clip, local = 0): { cx: number; cy: number; w: number; h: number } {
   const x = C.propAt(c, "x", local), y = C.propAt(c, "y", local), s = C.propAt(c, "scale", local);
+  if (c.type === "text" && c.motion) return { cx: 0.5 + x, cy: 0.5 + y, w: s, h: s };   // (v227) a motion graphic is drawn on the whole frame
   if (c.type === "text") { const n = Math.max(1, ...c.text.split("\n").map((l) => l.length)), lines = c.text.split("\n").length; return { cx: 0.5 + x, cy: 0.5 + y, w: Math.min(1, c.style.size * 0.55 * n * (p.height / p.width)) * s, h: Math.min(1, c.style.size * 1.3 * lines) * s }; }
   const a = p.assets[c.asset]; const aw = a?.w || p.width, ah = a?.h || p.height, cr = c.transform.crop;
   const cw = aw * Math.max(0.05, 1 - cr[0] - cr[2]), ch = ah * Math.max(0.05, 1 - cr[1] - cr[3]), k = Math.min(p.width / cw, p.height / ch);

@@ -74,7 +74,8 @@
   "aitools": "AI tools",
   "captions": "Captions",
   "filters": "Filters & color",
-  "restyle": "Restyle with AI"
+  "restyle": "Restyle with AI",
+  "mgfx": "Motion graphics"
  },
  "media": {
   "upload": "Upload",
@@ -329,7 +330,8 @@
    "w": "Box width",
    "h": "Box height"
   },
-  "animation": "Animation"
+  "animation": "Animation",
+  "mg": "Motion graphic"
  },
  "kf": {
   "x": "Position X",
@@ -441,7 +443,8 @@
   "computer": "This computer (FFmpeg)",
   "browser": "In the app's browser",
   "ffmpegHint": "Made on this computer with FFmpeg — every format at full speed, nothing uploaded, no credits.",
-  "save": "Save"
+  "save": "Save",
+  "motionHere": "This video has nooi Motion graphics, which are drawn frame by frame, so it is made here on this device."
  },
  "proj": {
   "new": "New project",
@@ -713,5 +716,15 @@
   "picture": "Drawing the frame as {{name}}…",
   "video": "Making the video with {{model}}…",
   "done": "Restyled as {{name}}."
+ },
+ "mg": {
+  "hint": "Motion graphics drawn frame by frame from your words, colours and numbers. Point at one to see it play; click to add it at the playhead.",
+  "all": "All",
+  "code": "Motion code (JavaScript)",
+  "run": "Run",
+  "sealed": "Runs in a sealed sandbox: no access to your account or files.",
+  "missing": "This motion graphic is not available.",
+  "frames": "drawn frame by frame",
+  "reset": "Back to the template"
  }
 }

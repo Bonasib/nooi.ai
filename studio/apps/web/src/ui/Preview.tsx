@@ -6,6 +6,7 @@ import type { MediaClip, Project } from "@nooi/editor-core";
 import { Player } from "../engine/player";
 import { editor, playerRef, toast, ui, useProject, useUI, autosave } from "../state";
 import * as A from "../actions";
+import { onCode } from "../motion/code";
 
 export const tc = (s: number, fps = 30) => { const f = Math.floor((s % 1) * fps); const x = Math.floor(s); return String(Math.floor(x / 60)).padStart(2, "0") + ":" + String(x % 60).padStart(2, "0") + ":" + String(f).padStart(2, "0"); };
 // the project as it would look with the pointed-at effect / look (drawn only)
@@ -29,7 +30,8 @@ export function Preview() {
     const pl = new Player(editor, ref.current!); playerRef.current = pl; force((x) => x + 1);
     // (v226) while it plays, the time is drawn by <Timecode> on its own; the rest of the preview redraws when it stops, starts or seeks
     let was = false; const off = pl.onClock(() => { const now = pl.clock.playing; if (!now || now !== was) force((x) => x + 1); was = now; });
-    return () => { off(); pl.dispose(); playerRef.current = null; };
+    const offCode = onCode(() => pl.redraw());   // (v227) a Motion code picture arrived
+    return () => { off(); offCode(); pl.dispose(); playerRef.current = null; };
   }, []);
   useEffect(() => { playerRef.current?.setOverride(pv && !pv.startsWith("tr:") ? previewOf(pv) : null); }, [pv]);
   useEffect(() => { const pl = playerRef.current; if (pl) pl.loop = loop; }, [loop]);

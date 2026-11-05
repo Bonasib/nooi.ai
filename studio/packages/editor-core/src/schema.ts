@@ -72,7 +72,9 @@ export interface TextStyle {
   outline2?: { color: string; width: number } | null;
 }
 export interface TextAnim { type: string; dur: number }
-export interface TextClip extends ClipBase { type: "text"; text: string; style: TextStyle; animIn: TextAnim; animOut: TextAnim; template?: string }
+// motion: a nooi Motion graphic drawn frame by frame from its template and props (the clip's text is then its name)
+export interface MotionSpec { tpl: string; props: Record<string, unknown> }
+export interface TextClip extends ClipBase { type: "text"; text: string; style: TextStyle; animIn: TextAnim; animOut: TextAnim; template?: string; motion?: MotionSpec | null }
 export type Clip = MediaClip | TextClip;
 
 export type TrackKind = "video" | "audio" | "text";

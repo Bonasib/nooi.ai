@@ -178,7 +178,7 @@ const ClipView = memo(function ClipView({ c, p, zoom, sel, kind, onDown, anchore
   if (!isAudio && (a?.strip || a?.thumb)) { style.backgroundImage = `url(${a.strip || a.thumb})`; }
   const kfs = Object.values(c.keyframes).flatMap((l) => (l || []).map((k) => k.t));
   return (
-    <div className={"clip " + (c.type === "text" ? "text" : isAudio ? "audio" : "video") + (sel ? " sel" : "")} style={style} onPointerDown={(e) => onDown(e, c, "body")} data-clip={c.id} title={c.name} role="button" aria-pressed={sel} aria-label={c.name || (c.type === "text" ? c.text : a?.name)}>
+    <div className={"clip " + (c.type === "text" ? "text" + (c.motion ? " mg" : "") : isAudio ? "audio" : "video") + (sel ? " sel" : "")} style={style} onPointerDown={(e) => onDown(e, c, "body")} data-clip={c.id} title={c.name} role="button" aria-pressed={sel} aria-label={c.name || (c.type === "text" ? c.text : a?.name)}>
       {isAudio && a?.waveform && <ClipWave c={c as MediaClip} peaks={a.waveform} dur={a.duration || 1} />}
       <span className="cn" dir="auto">{c.type === "text" ? c.text : c.name || a?.name}</span>
       {anchored && <i className="anc" aria-hidden="true" />}

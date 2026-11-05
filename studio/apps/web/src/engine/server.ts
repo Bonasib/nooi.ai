@@ -31,7 +31,7 @@ export async function exportOnServer(p: Project, o: ExportSettings & { signal?: 
     media[id] = sent.get(key)!; i++;
   }
   const texts: Record<string, string> = {};
-  for (const t of p.tracks) if (t.kind === "text" && !t.hidden) for (const c of t.clips) if (c.type === "text" && c.text.trim()) texts[c.id] = await pngOf(c as TextClip, w, h);
+  for (const t of p.tracks) if (t.kind === "text" && !t.hidden) for (const c of t.clips) if (c.type === "text" && !c.motion && c.text.trim()) texts[c.id] = await pngOf(c as TextClip, w, h);
   o.onProgress?.(0.3, "queued");
   const job = await api.startRender({ project: p, media, texts, format: o.format, width: w, height: h, fps: o.fps, quality: o.quality });
   const stop = () => void api.cancelRender(job.id); o.signal?.addEventListener("abort", stop);

@@ -9,6 +9,7 @@ import { loadFont } from "../engine/text";
 import { useEffect, useRef, useState } from "react";
 import { MotionTiles } from "./Extras";
 import { FontPicker, TextFxGrid } from "./TextFx";
+import { MotionProps } from "../motion/Gallery";
 
 const KF: Partial<Record<string, KfProp>> = { "transform.x": "x", "transform.y": "y", "transform.scale": "scale", "transform.rotation": "rotation", opacity: "opacity", volume: "volume" };
 function Prop({ c, path, label, min, max, step, unit, fmt }: { c: Clip; path: string; label: string; min: number; max: number; step?: number; unit?: string; fmt?: (v: number) => string }) {
@@ -33,15 +34,16 @@ export function Inspector() {
   const clips = editor.selection.map((id) => findClip(p, id)?.clip).filter(Boolean) as Clip[]; const c = clips[0];
   if (!c) return <ProjectProps />;
   // the spec's four tabs (§4.4): Video (basic, effects, animation) · Color · Audio · Speed — and Text for titles
-  const tabs = c.type === "text" ? ["text", "video"] : p.assets[c.asset]?.kind === "audio" ? ["audio", "speed"] : ["video", "color", "audio", "speed"];
+  const tabs = c.type === "text" ? ((c as TextClip).motion ? ["mg", "video"] : ["text", "video"]) : p.assets[c.asset]?.kind === "audio" ? ["audio", "speed"] : ["video", "color", "audio", "speed"];
   const want = tab === "effects" || tab === "motion" ? "video" : tab; const cur = tabs.includes(want) ? want : tabs[0];
   return (
     <section className="inspector" aria-label={t("insp.label")}>
-      <div className="ihead"><h2 className="ns-h2">{c.type === "text" ? t("insp.text") : t("insp.clip")}</h2><span className="iname" dir="auto">{c.name || (c.type === "media" ? p.assets[c.asset]?.name : (c as TextClip).text)}</span>
+      <div className="ihead"><h2 className="ns-h2">{c.type === "text" ? ((c as TextClip).motion ? t("insp.mg") : t("insp.text")) : t("insp.clip")}</h2><span className="iname" dir="auto">{c.name || (c.type === "media" ? p.assets[c.asset]?.name : (c as TextClip).text)}</span>
         <Btn icon="close" ghost label={t("insp.close")} onClick={() => editor.select([])} /></div>
       {clips.length > 1 && <p className="hint">{t("insp.many", { n: clips.length })}</p>}
       <div className="subtabs" role="tablist">{tabs.map((x) => <button key={x} role="tab" type="button" aria-selected={cur === x} onClick={() => ui.set({ inspector: x })} data-testid={"insp-" + x}>{t("insp." + x)}</button>)}</div>
       <div className="ibody" onPointerUp={() => { if (editor.inTx) A.live.end(); }}>
+        {cur === "mg" && c.type === "text" && <MotionProps c={c as TextClip} />}
         {cur === "video" && <>
           <Prop c={c} path="transform.x" label={t("insp.x")} min={-1} max={1} />
           <Prop c={c} path="transform.y" label={t("insp.y")} min={-1} max={1} />

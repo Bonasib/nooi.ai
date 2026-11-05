@@ -12,3 +12,4 @@ export * from "./ffmpeg";
 export * from "./anchors";
 export * from "./nooi";
 export * from "./animate";
+export * as Motion from "./motion";
