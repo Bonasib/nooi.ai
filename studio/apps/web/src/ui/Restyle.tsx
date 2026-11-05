@@ -99,8 +99,8 @@ export function RestylePanel() {
       <Seg label={t("rs2.place")} value={place} onChange={setPlace} options={[{ v: "replace", label: t("rs2.replace") }, { v: "above", label: t("rs2.above") }]} />
       <p className="hint" data-testid="rs-price">{cost == null ? t("rs2.pricing") : total == null ? t("rs2.noPrice") : t("rs2.price", { pic: cost.pic, vid: cost.vid, total, s: dur })}</p>
       {busy ? <div className="aibusy" role="status"><span>{busy.step}</span><i style={{ width: Math.round(busy.k * 100) + "%" }} /></div>
-        : <Btn icon="sparkle" primary disabled={!clip || total == null || (me.credits != null && total > me.credits)} onClick={() => void go()} testid="rs-go">{t("rs2.go")}{total != null ? " · " + t("ai.credits", { n: total }) : ""}</Btn>}
-      {me.credits != null && total != null && total > me.credits && <p className="err">{t("rs2.short")}</p>}
+        : <Btn icon="sparkle" primary disabled={!clip || total == null || (!me.free && me.credits != null && total > me.credits)} onClick={() => void go()} testid="rs-go">{t("rs2.go")}{total != null ? " · " + t("ai.credits", { n: total }) : ""}</Btn>}
+      {!me.free && me.credits != null && total != null && total > me.credits && <p className="err">{t("rs2.short")}</p>}
     </div>}
   </>);
 }

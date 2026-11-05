@@ -104,7 +104,7 @@ export function AIPanel() {
   if (!me.signedIn) return <div className="empty"><Icon name="ai" size={20} /><p>{t("ai.signIn")}</p><a className="ns-btn primary" href={at("/?signin=1")}>{t("ai.signInBtn")}</a></div>;
   const price = (k: string) => (cost[k] == null ? "…" : cost[k] === 0 ? t("ai.free") : t("ai.credits", { n: cost[k] }));
   return (<>
-    <p className="hint">{t("ai.hint")} {me.credits != null && <b>{t("ai.balance", { n: me.credits })}</b>}</p>
+    <p className="hint">{t("ai.hint")} {me.free ? <b>{t("top.free")}</b> : me.credits != null && <b>{t("ai.balance", { n: me.credits })}</b>}</p>
     {Object.entries(busy).map(([k, b]) => <div key={k} className="aibusy" role="status"><span>{b.label}</span><i style={{ width: Math.round(Math.max(0.03, b.k) * 100) + "%" }} /></div>)}
     <div className="aicard">
       <h3 className="ns-h3"><Icon name="next" size={16} />{t("ai.extend")}</h3><p className="hint">{t("ai.extendHint")}</p>

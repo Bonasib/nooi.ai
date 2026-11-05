@@ -4455,7 +4455,7 @@ function featureOn(k){const f=API.mode==="server"&&API.cfg&&API.cfg.features?API
 function modelOn(k){const m=API.mode==="server"&&API.cfg&&API.cfg.models?API.cfg.models:S.admin.models;return m[k]!==false}
 const can=p=>(ME.perms||[]).includes(p);
 const isAdmin=()=>!!(ME.role&&ME.perms&&ME.perms.length);
-async function loadMe(){if(API.mode!=="server")return;try{const r=await API.req("/v1/me");ME.role=r.role||null;ME.perms=r.perms||[];renderShell()}catch(e){ME.role=null;ME.perms=[]}}
+async function loadMe(){if(API.mode!=="server")return;try{const r=await API.req("/v1/me");ME.role=r.role||null;ME.perms=r.perms||[];ME._srv=true;renderShell()}catch(e){ME.role=null;ME.perms=[];ME._srv=false}}
 setTimeout(loadMe,1200);
 function audit(what){S.admin.audit.unshift({t:Date.now(),who:(S.user&&S.user.name)||"admin",what});S.admin.audit=S.admin.audit.slice(0,200)}
 /* ---- nav: support for clients, admin group for staff; hide switched-off features ---- */
@@ -10077,7 +10077,7 @@ document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.c
   if(a.dataset.act==="dev-clear"){try{await caches.delete(DRIP_CACHE)}catch(err){}toast(L("Cleared — media will be downloaded again when you open it.","تم المسح — ستُحمَّل الملفات من جديد عند فتحها."),{type:"ok"});renderView()}});
 /* ================= v79: FREE PERIOD (nothing charged, prices & icons stay) · NOOI STAR LOADERS EVERYWHERE · FAILED JOBS SAY WHY + TRY AGAIN · AVATAR NEEDS ITS SCRIPT · WHOLE-WORD LABELS · REAL CHARACTER LOOKS · THE SKETCH REALLY TURNS INTO WHAT YOU DREW · AI 3D WORLD (phone-light, cloud render) ================= */
 // ---- free period: the server decides (Admin → Features → "Free period"); cost badges and the credit icon stay as they are
-function crFree(){return API.mode==="server"&&!!(API.cfg&&API.cfg.freeCredits)}
+function crFree(){return API.mode==="server"&&(!!(API.cfg&&API.cfg.freeCredits)||(!!ME._srv&&(ME.role==="owner"||ME.role==="admin")))}   /* (v236) the owner and admins: the server charges them nothing, so the page doesn't stop them for credits either */
 FEATURES.push(["freePeriod","Free period — no credits charged","فترة مجانية — بلا خصم رصيد","coin"]);
 // ---- loaders: the nooi stars, always moving (an animated SVG inside the image, plus a gentle pulse)
 (function(){const g='<defs><linearGradient id="g" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#6EC046"/><stop offset=".55" stop-color="#9CD245"/><stop offset="1" stop-color="#D2E33C"/></linearGradient></defs>';

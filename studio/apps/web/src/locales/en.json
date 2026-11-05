@@ -21,7 +21,9 @@
   "credits": "Your credits",
   "theme": "Light / dark",
   "projects": "Projects",
-  "export": "Export"
+  "export": "Export",
+  "free": "Owner / admin: AI is free for you — nothing is taken from your credits",
+  "freeShort": "Team · free"
  },
  "aspect": {
   "9x16": "Vertical",

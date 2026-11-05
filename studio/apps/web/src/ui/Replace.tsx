@@ -103,7 +103,7 @@ function ReplaceInner() {
         <Seg label={t("rs2.place")} value={placeAt} onChange={setPlaceAt} options={[{ v: "replace", label: t("rs2.replace") }, { v: "above", label: t("rs2.above") }]} />
         <p className="hint" data-testid="rp-price">{run.why ? run.why : run.cost == null ? t("rs2.pricing") : run.cost === 0 ? t("ai.free") : t("ai.credits", { n: run.cost })}</p>
         {run.busy ? <div className="aibusy" role="status"><span>{run.busy.step}</span><i style={{ width: Math.round(run.busy.k * 100) + "%" }} /></div>
-          : <Btn icon="sparkle" primary disabled={run.cost == null || !!run.why || (me.credits != null && run.cost > me.credits)} onClick={() => void run.go(picked.asset.name + " · " + t("rp.replaced"), placeAt)} testid="rp-go">{t("rp.go")}{run.cost ? " · " + t("ai.credits", { n: run.cost }) : ""}</Btn>}
+          : <Btn icon="sparkle" primary disabled={run.cost == null || !!run.why || (!me.free && me.credits != null && run.cost > me.credits)} onClick={() => void run.go(picked.asset.name + " · " + t("rp.replaced"), placeAt)} testid="rp-go">{t("rp.go")}{run.cost ? " · " + t("ai.credits", { n: run.cost }) : ""}</Btn>}
       </div>}
     </>}
   </div>);
@@ -160,7 +160,7 @@ function BackgroundInner() {
       <Seg label={t("rs2.place")} value={placeAt} onChange={setPlaceAt} options={[{ v: "replace", label: t("rs2.replace") }, { v: "above", label: t("rs2.above") }]} />
       <p className="hint" data-testid="bg-price">{!src ? t("rp.uploadingClip") : run.why ? run.why : run.cost == null ? t("rs2.pricing") : run.cost === 0 ? t("ai.free") : t("ai.credits", { n: run.cost })}</p>
       {run.busy ? <div className="aibusy" role="status"><span>{run.busy.step}</span><i style={{ width: Math.round(run.busy.k * 100) + "%" }} /></div>
-        : <Btn icon="sparkle" primary disabled={run.cost == null || !!run.why || (me.credits != null && run.cost > me.credits)} onClick={() => void run.go(picked.asset.name + " · " + (own ? t("bgr.own") : B ? (lang === "ar" ? B.ar : B.en) : t("bgr.newBg")), placeAt)} testid="bg-go">{t("bgr.go")}{run.cost ? " · " + t("ai.credits", { n: run.cost }) : ""}</Btn>}
+        : <Btn icon="sparkle" primary disabled={run.cost == null || !!run.why || (!me.free && me.credits != null && run.cost > me.credits)} onClick={() => void run.go(picked.asset.name + " · " + (own ? t("bgr.own") : B ? (lang === "ar" ? B.ar : B.en) : t("bgr.newBg")), placeAt)} testid="bg-go">{t("bgr.go")}{run.cost ? " · " + t("ai.credits", { n: run.cost }) : ""}</Btn>}
     </div>}
   </div>);
 }

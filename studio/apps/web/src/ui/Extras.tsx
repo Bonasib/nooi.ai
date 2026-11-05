@@ -165,7 +165,7 @@ export function AiGenPanel() {
     <MentionBox value={words} onChange={setWords} placeholder={t("gen.placeholder")} p={p} />
     <div className="row">{kind === "video" && <Seg label={t("gen.length")} value={dur} onChange={(v) => setDur(v)} options={[{ v: "5", label: "5s" }, { v: "10", label: "10s" }]} />}<span className="hint" dir="ltr">{aspect}</span></div>
     <Btn icon="sparkle" primary className="aibtn" onClick={go} disabled={busy || words.trim().length < 3} testid="gen-go">{busy ? t("gen.making") : t("gen.make") + (cost == null ? "" : " · " + (cost === 0 ? t("ai.free") : t("ai.credits", { n: cost })))}</Btn>
-    {me.credits != null && <p className="hint">{t("ai.balance", { n: me.credits })}</p>}
+    {me.free ? <p className="hint">{t("top.free")}</p> : me.credits != null && <p className="hint">{t("ai.balance", { n: me.credits })}</p>}
   </>);
 }
 

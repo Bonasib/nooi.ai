@@ -3,7 +3,7 @@
 declare global { interface Window { firebase?: FirebaseCompat; __nooiDevUser?: string } }
 interface FirebaseCompat { initializeApp(c: unknown): void; apps: unknown[]; auth(): { currentUser: { getIdToken(): Promise<string>; displayName: string | null; email: string | null; uid: string } | null; onAuthStateChanged(f: (u: unknown) => void): void } }
 
-export interface Me { signedIn: boolean; name: string; uid?: string; credits: number | null; plan?: string }
+export interface Me { signedIn: boolean; name: string; uid?: string; credits: number | null; plan?: string; role?: string | null; free?: boolean }   // free: the owner and admins (the server charges the team nothing)
 export interface Job { id: string; kind: string; status: string; prompt?: string; title?: string; resultUrl?: string; aspect?: string; dur?: number; created?: number; cost?: number; error?: string; progress?: number }
 export interface RenderJob { id: string; status: "queued" | "running" | "done" | "failed" | "cancelled"; progress: number; url: string | null; error: string | null; format: string; seconds: number; expiresAt?: string }
 import { at } from "./site";
@@ -47,8 +47,9 @@ class Api {
     if (!this.online) return;
     try {
       const u = window.firebase?.auth().currentUser || null;
-      const c = await this.req<{ credits?: number; balance?: number; plan?: string }>("/v1/billing").catch(() => null);
-      this.me = { signedIn: !!u || !this.cfg.firebase, name: u ? (u.displayName || (u.email || "").split("@")[0] || "") : "", uid: u?.uid, credits: c ? (c.credits ?? c.balance ?? null) : null, plan: c?.plan };
+      const [c, m] = await Promise.all([this.req<{ credits?: number; balance?: number; plan?: string }>("/v1/billing").catch(() => null), this.req<{ role?: string | null }>("/v1/me").catch(() => null)]);
+      const role = m?.role || null;
+      this.me = { signedIn: !!u || !this.cfg.firebase, name: u ? (u.displayName || (u.email || "").split("@")[0] || "") : "", uid: u?.uid, credits: c ? (c.credits ?? c.balance ?? null) : null, plan: c?.plan, role, free: role === "owner" || role === "admin" };
     } catch { /* offline */ }
     this.emit();
   }

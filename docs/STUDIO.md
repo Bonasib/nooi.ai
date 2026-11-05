@@ -455,3 +455,10 @@ Built on our own code. No code from Remotion or any other motion library is used
   - The price shows first. The words always say: no people, no chairs, no tables, no text, no logos.
   - A moving one is made from the picture: a slow push-in with gentle ambient motion.
   - The video's own background (v231) is still offered below it.
+
+## v236 — the owner and admins aren't stopped for credits
+
+- The server has always charged the team (role owner / admin) nothing. But the site's page and the studio checked the balance before sending, so an admin with 0 credits was told "Not enough credits".
+- **The site:** `crFree()` is now also true for the owner and admins. It switches on only once `/v1/me` has said so.
+- **The studio:** it reads the role from `/v1/me`. The team's AI buttons stay on, and the top bar shows "Team · free".
+- A customer with no credits is still told and stopped. Tested in `tests/v236.py`.

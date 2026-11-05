@@ -137,7 +137,7 @@ function AiBackdrop({ onMade }: { onMade: (a: Asset, name: string) => Promise<vo
     <Seg label={t("bk.aiKind")} value={kind} onChange={setKind} options={[{ v: "picture", label: t("bk.still") }, { v: "moving", label: t("bk.movingOne") }]} />
     <p className="hint" data-testid="bkai-price">{total == null ? t("rs2.pricing") : total === 0 ? t("ai.free") : t("ai.credits", { n: total })}</p>
     {busy ? <div className="aibusy" role="status"><span>{busy.step}</span><i style={{ width: Math.round(busy.k * 100) + "%" }} /></div>
-      : <Btn icon="sparkle" primary disabled={total == null || (me.credits != null && total > me.credits)} onClick={() => void go()} testid="bkai-go">{t("bk.aiGo")}{total ? " · " + t("ai.credits", { n: total }) : ""}</Btn>}
+      : <Btn icon="sparkle" primary disabled={total == null || (!me.free && me.credits != null && total > me.credits)} onClick={() => void go()} testid="bkai-go">{t("bk.aiGo")}{total ? " · " + t("ai.credits", { n: total }) : ""}</Btn>}
   </div>);
 }
 
