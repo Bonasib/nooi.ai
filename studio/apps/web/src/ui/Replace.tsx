@@ -25,8 +25,8 @@ type Change = { id: string; what?: string; to?: string; pic?: string; char?: { n
 
 function usePicked() { useEditorVersion(); const c = A.sel1(); const a = c?.type === "media" ? editor.project.assets[(c as MediaClip).asset] : null; return a && (a.kind === "video" || a.kind === "image") ? { clip: c as MediaClip, asset: a } : null; }
 const rel = (u: string) => serverPath(u) || u;
-async function charPic(c: Char): Promise<string | undefined> { if (!c.photo) return undefined; try { return rel(await api.upload(await (await fetch(c.photo)).blob(), "char-" + c.name.replace(/[^\p{L}\p{N}]+/gu, "_").slice(0, 20) + ".jpg")); } catch { return undefined; } }
-function place(clipId: string, j: Job, title: string, mode: "replace" | "above") {
+export async function charPic(c: Char): Promise<string | undefined> { if (!c.photo) return undefined; try { return rel(await api.upload(await (await fetch(c.photo)).blob(), "char-" + c.name.replace(/[^\p{L}\p{N}]+/gu, "_").slice(0, 20) + ".jpg")); } catch { return undefined; } }
+export function place(clipId: string, j: Job, title: string, mode: "replace" | "above") {
   const a = assetFromJob({ ...(j as unknown as { id: string; kind: string; resultUrl?: string; dur?: number }), resultUrl: (j as unknown as { url?: string }).url || j.resultUrl, title }); if (!a) return false;
   A.run("replace with AI", (p) => { p.assets[a.id] = a; const f = C.findClip(p, clipId); if (!f || f.clip.type !== "media") return;
     if (mode === "replace") { f.clip.asset = a.id; f.clip.in = 0; f.clip.speed = 1; f.clip.reverse = false; f.clip.freeze = null; f.clip.name = a.name; if (a.duration) f.clip.dur = Math.min(f.clip.dur, a.duration); }

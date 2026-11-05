@@ -35,7 +35,7 @@ export function TopBar() {
           <select value={aspect} onChange={(e) => A.format(e.target.value as Aspect)} aria-label={t("top.format")}>{ASPECTS.map((a) => <option key={a} value={a}>{narrow ? a : a + " · " + t("aspect." + a.replace(":", "x"))}</option>)}</select>
           <small dir="ltr">{p.width}×{p.height} · {duration(p).toFixed(1)}s</small>
         </label>
-        {me.free ? <span className="credits" title={t("top.free")} data-testid="top-free"><Icon name="sparkle" size={14} />{t("top.freeShort")}</span> : me.credits != null && <span className="credits" title={t("top.credits")}><Icon name="sparkle" size={14} />{me.credits}</span>}
+        {me.free ? <span className="credits" title={t("top.free")} data-testid="top-free"><Icon name="sparkle" size={14} /><span className="ctext">{t("top.freeShort")}</span></span> : me.credits != null && <span className="credits" title={t("top.credits")}><Icon name="sparkle" size={14} />{me.credits}</span>}
         <Btn icon={theme === "dark" ? "sun" : "moon"} label={t("top.theme")} onClick={() => ui.set({ theme: theme === "dark" ? "light" : "dark" })} />
         <Btn icon="globe" label={lang === "ar" ? "English" : "العربية"} onClick={() => ui.set({ lang: lang === "ar" ? "en" : "ar" })} testid="lang" />
         <Btn icon="folder" label={t("top.projects")} onClick={() => ui.set({ projectsOpen: true })} testid="projects" />

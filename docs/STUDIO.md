@@ -476,3 +476,17 @@ Built on our own code. No code from Remotion or any other motion library is used
 - Customers pay the same credits.
 - The models can be changed in Admin → MiniMax → Models (optional), now including the text model; also `MINIMAX_TEXT_MODEL`.
 - Tested in `tests/v237_minimax.mjs` against a mocked MiniMax (32 checks).
+
+## v238 — Recast, and why jobs fail
+
+- **Recast** (Stock & AI → Recast, our own design) changes a filmed video two ways:
+  - **Keep the motion.** The movement, camera and timing stay as filmed, and everything performing it comes from your references (an @character, outfits, props, places, products, a look, plus words).
+    - Per version, a new first frame is made from the original frame and up to 3 reference pictures. Picture 1 is the frame; the references are pictures 2–4.
+    - Then Motion Control carries the whole take's motion onto it (`mc26`; "Keep the original place" → `mc30`, which keeps the video's background).
+  - **Swap elements.** Each line says what changes and what it becomes, optionally with a reference picture or an @character: a person, a product, the text. They all go in one Replace-things job, which remakes only the seconds where they're seen.
+  - **Versions:** 1–4 from one setup (each its own job, `meta.v238`), and **More like this** on a result for two more.
+  - **Compare:** the original and the new version play in sync, with a handle to drag (or a slider).
+  - **Use it** (replace the clip) or **Add above**.
+  - The price shows first; credits are taken only when it works.
+  - It needs the AI engine: MiniMax's own API doesn't change an existing video.
+- **`deploy/why.sh`** (read-only, no keys): whether the AI engine and MiniMax are connected, whether everything is on MiniMax, and the last failed jobs — what was asked, where it went, why it failed, and whether MiniMax could have made it.

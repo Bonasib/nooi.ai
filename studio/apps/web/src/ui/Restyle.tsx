@@ -26,11 +26,11 @@ export const restyleWords = (s: Style, words: string) => ({
 });
 
 // the clip's first frame as a JPEG (at most 1280 px)
-async function frameOf(c: MediaClip): Promise<Blob> {
+export async function frameOf(c: MediaClip, at = c.in + 0.05): Promise<Blob> {   // (v238: any moment — Recast takes the first frame of the file)
   const a = editor.project.assets[c.asset]; const u = a && await urlOf(a, false); if (!u) throw new Error("no video");
   const v = document.createElement("video"); v.muted = true; v.playsInline = true; v.preload = "auto"; if (!u.startsWith("blob:")) v.crossOrigin = "anonymous";
   await new Promise<void>((ok, bad) => { v.onloadeddata = () => ok(); v.onerror = () => bad(new Error("The clip's video couldn't be read (" + (v.error?.code || 0) + ")")); setTimeout(() => bad(new Error("timeout")), 20000); v.src = u; });
-  await new Promise<void>((ok) => { v.onseeked = () => ok(); v.currentTime = Math.min(Math.max(0, (v.duration || 1) - 0.05), c.in + 0.05); setTimeout(ok, 4000); });
+  await new Promise<void>((ok) => { v.onseeked = () => ok(); v.currentTime = Math.min(Math.max(0, (v.duration || 1) - 0.05), Math.max(0.05, at)); setTimeout(ok, 4000); });
   const k = Math.min(1, 1280 / Math.max(v.videoWidth, v.videoHeight)); const cv = Object.assign(document.createElement("canvas"), { width: Math.round(v.videoWidth * k), height: Math.round(v.videoHeight * k) });
   cv.getContext("2d")!.drawImage(v, 0, 0, cv.width, cv.height); v.removeAttribute("src"); v.load();
   return await new Promise<Blob>((ok, bad) => cv.toBlob((b) => (b ? ok(b) : bad(new Error("frame"))), "image/jpeg", 0.9));
