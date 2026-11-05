@@ -5,11 +5,12 @@ import { Motion as M } from "@nooi/editor-core";
 import { CODE_EXAMPLE } from "./code";
 import { AR, BG, FAM, L3, T, cl, ease, labels, life, measure, nums, outK, px0, rrect, sp, text, words, type Group, type Template, type MCtx, type Props } from "./kit";
 import { MORE } from "./templates2";
+import { MORE3 } from "./templates3";
 export type { Field, FieldType, Group, MCtx, Props, Template } from "./kit";
 
 export const GROUPS: [Group, string, string][] = [["lower", "Lower thirds", "أشرطة سفلية"], ["titles", "Titles & typography", "عناوين وطباعة حركية"], ["social", "Social", "تواصل اجتماعي"],
   ["data", "Charts & numbers", "رسوم بيانية وأرقام"], ["shapes", "Shapes & backgrounds", "أشكال وخلفيات"], ["callouts", "Callouts", "إشارات توضيحية"], ["timers", "Timers", "مؤقتات"],
-  ["audio", "Sound-reactive", "تتفاعل مع الصوت"], ["intros", "Intros & outros", "مقدمات وخواتيم"], ["wipes", "Wipes & reveals", "مسحات وكشف"], ["code", "Motion code", "كود الحركة"]];
+  ["audio", "Sound-reactive", "تتفاعل مع الصوت"], ["intros", "Intros & outros", "مقدمات وخواتيم"], ["wipes", "Wipes & reveals", "مسحات وكشف"], ["badges", "Badges & offers", "شارات وعروض"], ["frames", "Frames & overlays", "إطارات وطبقات"], ["code", "Motion code", "كود الحركة"]];
 
 export const TEMPLATES: Template[] = [
   // ======== lower thirds
@@ -203,6 +204,7 @@ export const TEMPLATES: Template[] = [
     b.forEach((v, i) => { const a = (i / b.length) * Math.PI * 2, l = u * 0.02 + v * u * 0.16; x.beginPath(); x.moveTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); x.lineTo(cx + Math.cos(a) * (R + l), cy + Math.sin(a) * (R + l)); x.stroke(); });
     text(m, m.p.label, cx, cy, { px: u * 0.06, weight: 800, align: "center" }); } },
   ...MORE,
+  ...MORE3,
   // ======== code
   { id: "code", en: "Motion code", ar: "كود الحركة", group: "code", dur: 5, fields: [T("code", "code", "Code", "الكود", CODE_EXAMPLE)], draw() { /* drawn by the sandbox (motion/code.ts) */ } },
 ];

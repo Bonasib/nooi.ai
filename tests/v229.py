@@ -27,8 +27,8 @@ async def desktop(p):
     await pg.goto(B + "/studio/"); await pg.wait_for_function("window.__studio&&document.querySelector('[data-testid=preview]')", timeout=20000); await pg.wait_for_timeout(600)
     await pg.click('[data-testid="rail-titles"]'); await pg.click('.panel .subtabs button:has-text("Motion graphics")'); await pg.wait_for_selector('[data-testid="motion-gallery"]')
     n = await E("()=>({tiles:document.querySelectorAll('.mgal .mgt').length,groups:[...document.querySelectorAll('.mgal .chip')].map(c=>c.textContent)})")
-    chk("the gallery: 73 motion graphics; the new groups Intros & outros, Wipes & reveals", n["tiles"] == 73 and "Intros & outros" in n["groups"] and "Wipes & reveals" in n["groups"], n)
-    for g, cnt in (("intros", 4), ("wipes", 3), ("lower", 10), ("titles", 14)):
+    chk("the gallery: 110 motion graphics (since v230); the groups Intros & outros, Wipes & reveals", n["tiles"] == 110 and "Intros & outros" in n["groups"] and "Wipes & reveals" in n["groups"], n)
+    for g, cnt in (("intros", 7), ("wipes", 6), ("lower", 13), ("titles", 19)):
         await pg.click(f'[data-testid="mgg-{g}"]'); await pg.wait_for_timeout(150); c = await E("()=>document.querySelectorAll('.mgal .mgt').length")
         chk(f"group {g}: {cnt} graphics", c == cnt, c)
     await pg.click('[data-testid="mgg-all"]'); await pg.wait_for_timeout(200)
@@ -67,7 +67,7 @@ async def phone(p):
     await pg.click('[data-testid="rail-titles"]'); await pg.click('.panel .subtabs button:has-text("رسوم متحركة")'); await pg.wait_for_selector('[data-testid="motion-gallery"]')
     await pg.click('[data-testid="mgg-intros"]'); await pg.wait_for_timeout(200)
     v = await E("()=>({names:[...document.querySelectorAll('.mgal .mgt span:last-child')].map(s=>s.textContent),chip:document.querySelector('[data-testid=mgg-intros]').textContent,over:document.documentElement.scrollWidth-innerWidth})")
-    chk("phone (Arabic): the new group and its graphics in Arabic, nothing wider than the screen", v["chip"] == "مقدمات وخواتيم" and v["names"] == ["كشف الشعار", "شاشة النهاية", "لمعة ضوئية", "عدّ تنازلي سينمائي"] and v["over"] <= 0, v)
+    chk("phone (Arabic): the new group and its graphics in Arabic, nothing wider than the screen", v["chip"] == "مقدمات وخواتيم" and v["names"][:4] == ["كشف الشعار", "شاشة النهاية", "لمعة ضوئية", "عدّ تنازلي سينمائي"] and v["over"] <= 0, v)
     await pg.click('[data-testid="mg-in-logo"]'); await pg.wait_for_timeout(400)
     mg = await E("()=>" + P + ".tracks.flatMap(t=>t.clips.filter(c=>c.motion).map(c=>c.motion.props))")
     chk("phone: a new graphic added in Arabic gets Arabic words", len(mg) == 1 and mg[0].get("brand") == "نوي" and mg[0].get("tag") == "اجعلها تتحرك", mg)

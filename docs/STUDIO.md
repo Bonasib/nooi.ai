@@ -329,3 +329,19 @@ Built on our own code. No code from Remotion or any other motion library is used
 - **New group, Wipes and reveals (3):** colour wipe, circle reveal, bars sweep. These are full-frame; put one over the cut between two scenes.
 - Each graphic has English and Arabic names and default words. Arabic text moves word by word, so its letters stay joined.
 - The drawing helpers moved to `motion/kit.ts`; the second set is in `motion/templates2.ts`.
+
+## v230 — 37 more motion graphics (110 in all)
+
+- **Lower thirds (+3):** ribbon, box reveal, centred name.
+- **Titles (+5):** stacked lines, blur in, scramble decode, flip in, flowing gradient text.
+- **Social (+3):** star rating, chat messages (typing dots, then each bubble), live badge with viewers.
+- **Charts and numbers (+4):** gauge, timeline, funnel, percent squares.
+- **Shapes and backgrounds (+3):** aurora, dot grid wave, shape morph (circle → star → heart → hexagon → square → triangle, blended point by point).
+- **Callouts (+2):** scribble underline, numbered step.
+- **Timers (+2):** stopwatch, flip counter.
+- **Sound-reactive (+2):** sound ring, block equaliser.
+- **Intros and outros (+3):** curtain open, search bar, chapter card.
+- **Wipes and reveals (+3):** diagonal slash, blinds, shape burst.
+- **New group, Badges and offers (4):** sale burst, spinning badge, swinging price tag, corner ribbon.
+- **New group, Frames and overlays (3):** camera viewfinder (REC, timecode), VHS tape, glowing border. These are full-frame and go over the picture.
+- In `motion/templates3.ts`.
