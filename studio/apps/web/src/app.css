@@ -548,3 +548,9 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
 .bkcol input[type="color"] { width: 44px; height: 32px; padding: 0; border: 1px solid var(--line, rgba(255,255,255,.15)); border-radius: 8px; background: none; cursor: pointer; }
 .bgpic canvas { width: 100%; height: 100%; display: block; }
 .bgt[aria-pressed="true"] .bgpic { outline: 2px solid var(--accent, #00F0FF); outline-offset: -2px; }
+/* (v235) the background library */
+.bk .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.bgpic.kb img { animation: bgkb 6s ease-in-out infinite alternate; transform-origin: 50% 55%; }
+@keyframes bgkb { from { transform: scale(1); } to { transform: scale(1.1); } }
+@media (prefers-reduced-motion: reduce) { .bgpic.kb img { animation: none; } }
+.bkai { display: grid; gap: 8px; } .bkai > b { font-size: 14px; }

@@ -437,3 +437,21 @@ Built on our own code. No code from Remotion or any other motion library is used
   - Another pick replaces the background in the same place. "Remove the background" puts the person back on V1.
   - These are `putUnder` / `removeBackdrop` in editor-core (`key.ts`).
 - **Server export:** a keyed clip, a cut-out, and a picture with transparency stay see-through through the colour filters. FFmpeg makes the mask on a copy of the picture and joins it back. This is tested with real FFmpeg in `test/v234.test.ts`. The render service needs `deploy/render.sh` to pick this up.
+
+## v235 — the background library and backgrounds made with AI
+
+- **Pictures:**
+  - The owner's 20 background pictures are made Full HD: Lanczos scaling, light noise cleaning, sharpening, a touch of colour. They are served with the studio from `/studio/backdrops/`, with 320 px previews. The list is in `media/photos.ts`.
+  - They are sorted in four groups: 8 studios, 5 technology, 4 nature & travel, 3 business & finance.
+  - **Still or Moving:** moving adds a slow push-in (1 → 1.08) and the light that suits the picture — rain on the rainy lane and the news camera, stars on the telescopes and the circuit board, a warm light leak at sunset.
+  - A picture used again comes from the project's library instead of being downloaded twice. The 12 simple drawings stay below.
+- **Scenes:**
+  - 11 new studio sets (`motion/templates5.ts`), all empty rooms with no chairs, tables or people: white cyclorama, slatted studio, neon room, hex tech wall, data streams, connected world, market wall, finance ticker, glass office, news studio, garden wall.
+  - With the 16 scenes from v234 that makes 27, by group. Each can be moving, or still (speed 0 holds one picture). The Motion gallery now has 137 graphics.
+- **No clip picked:** the background goes on the main track, after what is already there.
+- **Make a background with AI:**
+  - Pick a group (studio, technology, nature, business, finance) or write your own words.
+  - Pick where the person will stand (centre, left, right), and whether it is a picture or a moving clip.
+  - The price shows first. The words always say: no people, no chairs, no tables, no text, no logos.
+  - A moving one is made from the picture: a slow push-in with gentle ambient motion.
+  - The video's own background (v231) is still offered below it.

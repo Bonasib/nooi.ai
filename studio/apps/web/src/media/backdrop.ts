@@ -54,10 +54,16 @@ export function applyLight(c: MediaClip, d: [number, number, number] | null) {
 }
 
 /** the background's clips for [start, start + dur]: a moving scene, a picture, or a video repeated (its sound off), filling the frame */
-export function backdropClips(p: Project, b: Backdrop, start: number, dur: number, name: string, lang: "en" | "ar"): Clip[] {
-  if (b.kind === "motion") { const tpl = templateOf(b.tpl)!; return [C.textClip(name, start, { dur, name, animIn: { type: "none", dur: 0 }, animOut: { type: "none", dur: 0 }, motion: { tpl: b.tpl, props: defaultsOf(tpl, lang) } })]; }
+export interface BackdropLook { still?: boolean; moving?: boolean; fx?: [string, number][] }
+/** (v235) still: a moving scene held on one picture; moving: a picture with a slow push-in and the light that suits it */
+export function backdropClips(p: Project, b: Backdrop, start: number, dur: number, name: string, lang: "en" | "ar", o: BackdropLook = {}): Clip[] {
+  if (b.kind === "motion") { const tpl = templateOf(b.tpl)!; const props = { ...defaultsOf(tpl, lang), ...(o.still ? { speed: 0 } : {}) };
+    return [C.textClip(name, start, { dur, name, animIn: { type: "none", dur: 0 }, animOut: { type: "none", dur: 0 }, motion: { tpl: b.tpl, props } })]; }
   const a = b.asset, F = p.width / p.height, k = a.w && a.h ? a.w / a.h : F, cover = Math.round(Math.max(k / F, F / k) * 1000) / 1000;
-  const one = (s: number, d: number): MediaClip => { const c = C.mediaClip(a, s); c.dur = d; c.in = 0; c.muted = true; c.name = name; c.transform = { ...c.transform, scale: cover }; return c; };
+  const one = (s: number, d: number): MediaClip => { const c = C.mediaClip(a, s); c.dur = d; c.in = 0; c.muted = true; c.name = name; c.transform = { ...c.transform, scale: cover };
+    if (o.moving && a.kind === "image") { c.keyframes = { ...c.keyframes, scale: [{ t: 0, v: cover, ease: "linear" }, { t: Math.round(d * 1000) / 1000, v: Math.round(cover * 1.08 * 1000) / 1000, ease: "linear" }] };
+      c.effects = (o.fx || []).map(([type, amount]) => ({ id: C.uid("fx"), type, enabled: true, params: { amount } })); }
+    return c; };
   if (a.kind !== "video" || !a.duration) return [one(start, dur)];
   const out: Clip[] = []; for (let s = 0; s < dur - 0.02; s += a.duration) out.push(one(Math.round((start + s) * 1e6) / 1e6, Math.min(a.duration, dur - s)));
   return out;

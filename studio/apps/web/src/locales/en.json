@@ -880,7 +880,7 @@
   "cutDone": "Cut out — the clip shows only the person; its sound stays (detached).",
   "cutFail": "The person couldn't be cut out here.",
   "kind": "Background",
-  "moving": "Moving",
+  "moving": "Scenes",
   "pictures": "Pictures",
   "own": "Your own",
   "ai": "AI",
@@ -892,6 +892,23 @@
   "badFile": "That file isn't a video or a picture.",
   "placed": "New background placed under the person — one undo step.",
   "change": "Change the background",
-  "newBg": "New background…"
+  "newBg": "New background…",
+  "pickOr": "Pick a clip to put a background behind the person — or pick a background now and it goes on the main track.",
+  "added": "Background added to the main track.",
+  "look": "Look",
+  "still": "Still",
+  "movingOne": "Moving",
+  "drawn": "Simple drawings",
+  "aiTitle": "Make a background with AI",
+  "aiHint": "Pick what it shows (or write your own words) and where the person will stand. No people, chairs or tables. The price shows first; credits are used only if it works.",
+  "space": "Space for the person",
+  "centre": "Centre",
+  "left": "Left",
+  "right": "Right",
+  "aiKind": "Kind",
+  "aiPic": "Making the picture…",
+  "aiMove": "Making it move…",
+  "aiGo": "Make the background",
+  "aiVideo": "Or change the video's own background with AI"
  }
 }

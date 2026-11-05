@@ -4,6 +4,7 @@
 // frame always draws the same picture), light enough to play smoothly. Our own designs.
 import { Motion as M } from "@nooi/editor-core";
 import { T, type MCtx, type Template } from "./kit";
+import { STUDIO_SETS } from "./templates5";
 
 const SPD = T("speed", "number", "Speed", "السرعة", 1, { min: 0, max: 3, step: 0.1 });
 const C = (k: string, en: string, ar: string, def: string) => T(k, "color", en, ar, def);
@@ -18,7 +19,7 @@ const stars = (m: MCtx, n: number, seed: string, top = 1) => { const x = m.ctx; 
   for (let i = 0; i < n; i++) { const tw = 0.5 + 0.5 * Math.sin(m.t * (1 + R(seed + "w", i) * 3) + R(seed + "p", i) * 6); x.globalAlpha = 0.25 + 0.75 * tw * R(seed + "a", i);
     const s = m.u * (0.0015 + R(seed + "s", i) * 0.003); x.fillRect(R(seed + "x", i) * m.W, R(seed + "y", i) * m.H * top, s, s); } x.globalAlpha = 1; };
 
-export const BACKGROUNDS: Template[] = [
+const SCENES: Template[] = [
   { id: "mb-aurora", en: "Aurora", ar: "الشفق القطبي", group: "backgrounds", dur: 10, fields: [C("c1", "Colour 1", "اللون 1", "#2dffb0"), C("c2", "Colour 2", "اللون 2", "#7b61ff"), SPD], draw(m) {
     const x = m.ctx, t = m.t * m.p.speed; fill(x, m.W, m.H, [[0, "#02040c"], [0.7, "#071428"], [1, "#0b1d2e"]]); stars(m, 120, "au", 0.7);
     x.globalCompositeOperation = "lighter";
@@ -129,3 +130,5 @@ export const BACKGROUNDS: Template[] = [
     for (let i = 0; i < 50; i++) { const X = wrap(R("dx", i) * m.W + Math.sin(t * 0.4 + i) * m.u * 0.04 + t * m.u * 0.01, m.W), Y = wrap(R("dy", i) * m.H - t * m.u * 0.008, m.H); glow(x, X, Y, m.u * 0.006, "rgba(255,250,200,1)", 0.5 * Math.sin(t + i) ** 2); }
     x.globalCompositeOperation = "source-over"; } },
 ];
+// (v235) and the studio sets: empty, formal backgrounds for a presenter
+export const BACKGROUNDS: Template[] = [...SCENES, ...STUDIO_SETS];
