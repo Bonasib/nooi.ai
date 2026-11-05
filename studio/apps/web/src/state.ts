@@ -10,7 +10,7 @@ export const editor = new Editor(emptyProject());
 export function useProject(): Project { useSyncExternalStore((f) => editor.subscribe(f), () => editor.version); return editor.project; }
 export function useEditorVersion() { return useSyncExternalStore((f) => editor.subscribe(f), () => editor.version); }
 
-export type Rail = "media" | "stock" | "audio" | "titles" | "transitions" | "effects" | "stickers" | "templates";   // the spec's 8-category dock (§4.2)
+export type Rail = "media" | "stock" | "auto" | "audio" | "titles" | "transitions" | "effects" | "stickers" | "templates";   // the spec's 8-category dock (§4.2)
 export type Workspace = "classic" | "vertical" | "color" | "audio";
 export type Tool = "select" | "ripple" | "roll" | "slip" | "slide";
 export interface UI {

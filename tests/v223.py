@@ -49,7 +49,7 @@ async def desktop(p):
     out["look"] = r
     chk("the Obsidian look: cyan accent, AI gradient, red playhead, Inter + JetBrains Mono", r["accent"].lower() == "#00f0ff" and "#7b61ff" in r["ai"].lower() and r["ph"].lower() == "#ff3b30" and r["font"] == '"Inter"' and r["mono"].startswith('"JetBrains Mono"'), r)
     chk("a 40 px header: logo, File, workspace, Nooi Mate, Cloud, Export (cyan)", r["h"] == 40 and all(r["parts"]) and r["exp"] == "rgb(0, 240, 255)" and r["over"] <= 1, r)
-    chk("the 8-category dock", r["rail"] == ["rail-media", "rail-stock", "rail-audio", "rail-titles", "rail-transitions", "rail-effects", "rail-stickers", "rail-templates"], r["rail"])
+    chk("the dock: the 8 categories + Auto (v233)", r["rail"] == ["rail-media", "rail-stock", "rail-auto", "rail-audio", "rail-titles", "rail-transitions", "rail-effects", "rail-stickers", "rail-templates"], r["rail"])
     # ---- File menu → project settings (520 × 440)
     await pg.click('[data-testid="file-menu"]'); items = await E("()=>[...document.querySelectorAll('.pop [role=menuitem]')].length")
     await pg.click('[data-testid="file-settings"]'); await pg.wait_for_selector('[data-testid="settings"]')
@@ -153,7 +153,7 @@ async def phone(p):
     await boot(pg)
     r = await E("""()=>{const off=[...document.querySelectorAll('.topbar button,.topbar a,.topbar select')].filter(e=>getComputedStyle(e).display!=='none'&&e.getBoundingClientRect().width>0).filter(e=>{const r=e.getBoundingClientRect();return r.right>innerWidth+1||r.left<-1}).map(e=>e.dataset.testid||e.className);
       return{off,over:document.documentElement.scrollWidth-innerWidth,rail:document.querySelectorAll('.mrail button').length,exp:!!document.querySelector('[data-testid=export]')}}""")
-    chk("phone: the header fits (nothing off the screen), the 8 dock tools at the foot", r["off"] == [] and r["over"] <= 1 and r["rail"] == 8 and r["exp"], r)
+    chk("phone: the header fits (nothing off the screen), the 8 dock tools + Auto at the foot (v233)", r["off"] == [] and r["over"] <= 1 and r["rail"] == 9 and r["exp"], r)
     await pg.click('[data-testid="file-menu"]'); fm = await E("()=>{const r=document.querySelector('.pop').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth}")
     chk("phone: the File menu opens inside the screen", fm)
     await pg.keyboard.press("Escape"); await pg.click('[data-testid="mate-open"]'); mw = await E("()=>Math.round(document.querySelector('[data-testid=mate]').getBoundingClientRect().width)")

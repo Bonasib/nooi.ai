@@ -11,6 +11,15 @@ import { MotionTiles } from "./Extras";
 import { FontPicker, TextFxGrid } from "./TextFx";
 import { MotionProps } from "../motion/Gallery";
 
+// (v233) the settings in sections, in the order pro editors use: each with its icon and a title; a tap folds or opens it (remembered)
+function Sec({ id, icon, title, children }: { id: string; icon: string; title: string; children: React.ReactNode }) {
+  const key = "nooi-isec-" + id; const [open, setOpen] = useState<boolean>(() => { try { return localStorage.getItem(key) !== "0"; } catch { return true; } });
+  return (<div className={"isec" + (open ? " open" : "")} data-sec={id}>
+    <button type="button" className="isech" aria-expanded={open} onClick={() => { const v = !open; setOpen(v); try { localStorage.setItem(key, v ? "1" : "0"); } catch { /* private mode */ } }} data-testid={"sec-" + id}>
+      <span className="isic"><Icon name={icon} size={16} /></span><b>{title}</b><span className="isarr"><Icon name="chevron" size={14} /></span></button>
+    {open && <div className="isecb">{children}</div>}
+  </div>);
+}
 const KF: Partial<Record<string, KfProp>> = { "transform.x": "x", "transform.y": "y", "transform.scale": "scale", "transform.rotation": "rotation", opacity: "opacity", volume: "volume" };
 function Prop({ c, path, label, min, max, step, unit, fmt }: { c: Clip; path: string; label: string; min: number; max: number; step?: number; unit?: string; fmt?: (v: number) => string }) {
   const { t } = useTranslation(); const kp = KF[path]; const local = (playerRef.current?.clock.t ?? 0) - c.start;
@@ -45,38 +54,45 @@ export function Inspector() {
       <div className="ibody" onPointerUp={() => { if (editor.inTx) A.live.end(); }}>
         {cur === "mg" && c.type === "text" && <MotionProps c={c as TextClip} />}
         {cur === "video" && <>
+          <Sec id="transform" icon="fit" title={t("isec.transform")}>
           <Prop c={c} path="transform.x" label={t("insp.x")} min={-1} max={1} />
           <Prop c={c} path="transform.y" label={t("insp.y")} min={-1} max={1} />
           <Prop c={c} path="transform.scale" label={t("insp.scale")} min={0.05} max={4} fmt={(v) => Math.round(v * 100) + "%"} />
           <Prop c={c} path="transform.rotation" label={t("insp.rotation")} min={-180} max={180} step={1} unit="°" />
-          <Prop c={c} path="opacity" label={t("insp.opacity")} min={0} max={1} fmt={(v) => Math.round(v * 100) + "%"} />
           <div className="row"><Btn icon="flip" pressed={c.transform.flipH} onClick={() => A.setProp("transform.flipH", !c.transform.flipH)}>{t("insp.flipH")}</Btn><Btn icon="flip" pressed={c.transform.flipV} onClick={() => A.setProp("transform.flipV", !c.transform.flipV)}>{t("insp.flipV")}</Btn>
             <Btn icon="rotate" onClick={() => A.setProp("transform.rotation", ((c.transform.rotation + 90 + 180) % 360) - 180)}>90°</Btn>
             <Btn icon="undo" onClick={A.resetTransform} testid="reset-transform">{t("insp.reset")}</Btn></div>
-          {c.type === "media" && <>
-            <span className="ns-lbl">{t("insp.crop")}</span>
+          </Sec>
+          <Sec id="compose" icon="layout" title={t("isec.compose")}>
+          <Prop c={c} path="opacity" label={t("insp.opacity")} min={0} max={1} fmt={(v) => Math.round(v * 100) + "%"} />
+          {c.type === "media" && <label className="ns-field"><span>{t("insp.blend")}</span><select className="ns-input" value={(c as MediaClip).blend} onChange={(e) => A.setProp("blend", e.target.value)}>{BLEND_MODES.map((b) => <option key={b} value={b}>{t("blend." + b)}</option>)}</select></label>}
+          </Sec>
+          {c.type === "media" && <Sec id="crop" icon="crop" title={t("insp.crop")}>
             {(["left", "top", "right", "bottom"] as const).map((k, i) => <Slider key={k} label={t("insp." + k)} value={c.transform.crop[i]} min={0} max={0.45} fmt={(v) => Math.round(v * 100) + "%"} onChange={(v) => { const cr = [...c.transform.crop] as [number, number, number, number]; cr[i] = v; A.live.set("transform.crop", cr); }} onCommit={A.live.end} />)}
-            <label className="ns-field"><span>{t("insp.blend")}</span><select className="ns-input" value={(c as MediaClip).blend} onChange={(e) => A.setProp("blend", e.target.value)}>{BLEND_MODES.map((b) => <option key={b} value={b}>{t("blend." + b)}</option>)}</select></label>
-          </>}
-          <KfList c={c} />
-          {c.type === "media" && <EffectsSection c={c} focus={tab === "effects"} />}
-          <span className="ns-lbl" id="isec-motion">{t("insp.animation")}</span>
-          <MotionTiles />
+          </Sec>}
+          <Sec id="keys" icon="keyframe" title={t("insp.keyframes")}><KfList c={c} /></Sec>
+          {c.type === "media" && <Sec id="fx" icon="effects" title={t("insp.effects")}><EffectsSection c={c} focus={tab === "effects"} /></Sec>}
+          <Sec id="anim" icon="sparkle" title={t("insp.animation")}><span id="isec-motion" />
+          <MotionTiles /></Sec>
         </>}
-        {cur === "speed" && c.type === "media" && <>
+        {cur === "speed" && c.type === "media" && <Sec id="speed" icon="speed" title={t("insp.speed")}>
           <Slider label={t("insp.speed")} value={c.speed} min={0.1} max={10} step={0.05} fmt={(v) => v.toFixed(2) + "×"} onChange={(v) => { if (!editor.inTx) editor.begin("speed"); editor.live((q) => { const f = findClip(q, c.id); if (f && f.clip.type === "media") { const src = f.clip.dur * f.clip.speed; f.clip.speed = v; f.clip.dur = Math.max(0.1, src / v); } }); }} onCommit={A.live.end} testid="speed" />
           <div className="chips">{[0.25, 0.5, 1, 1.5, 2, 4].map((v) => <button type="button" key={v} className="chip" aria-pressed={Math.abs(c.speed - v) < 1e-3} onClick={() => A.speed(v)}>{v}×</button>)}</div>
           <div className="row"><Btn icon="reverse" pressed={c.reverse} onClick={A.reverse} testid="reverse">{t("insp.reverse")}</Btn><Btn icon="freeze" onClick={A.freeze} testid="freeze">{t("insp.freeze")}</Btn></div>
           <p className="hint">{t("insp.speedHint")}</p>
-        </>}
+        </Sec>}
         {cur === "audio" && c.type === "media" && <>
+          <Sec id="volume" icon="volume" title={t("isec.volume")}>
           <Prop c={c} path="volume" label={t("insp.volume")} min={0} max={2} fmt={(v) => Math.round(v * 100) + "%"} />
           <Slider label={t("insp.fadeIn")} value={c.fadeIn} min={0} max={Math.min(5, c.dur / 2)} step={0.05} unit="s" onChange={(v) => A.live.set("fadeIn", v)} onCommit={A.live.end} />
           <Slider label={t("insp.fadeOut")} value={c.fadeOut} min={0} max={Math.min(5, c.dur / 2)} step={0.05} unit="s" onChange={(v) => A.live.set("fadeOut", v)} onCommit={A.live.end} />
+          </Sec>
+          <Sec id="clean" icon="denoise" title={t("isec.clean")}>
           <div className="row"><Btn icon={c.muted ? "mute" : "volume"} pressed={c.muted} onClick={() => A.setProp("muted", !c.muted)}>{t("insp.mute")}</Btn>
             {p.assets[c.asset]?.kind === "video" && <Btn icon="detach" onClick={A.detach} testid="detach">{t("insp.detach")}</Btn>}
             <Btn icon="denoise" pressed={!!c.denoise} onClick={() => A.setProp("denoise", !c.denoise)}>{t("insp.denoise")}</Btn></div>
           {c.denoise && <p className="hint">{t("insp.denoiseHint")}</p>}
+          </Sec>
         </>}
         {cur === "color" && c.type === "media" && <ColorProps c={c} />}
         {cur === "text" && c.type === "text" && <TextProps c={c} />}
@@ -88,7 +104,7 @@ function EffectsSection({ c, focus }: { c: MediaClip; focus: boolean }) {
   const { t } = useTranslation(); const lang = useUI((s) => s.lang); const ref = useRef<HTMLSpanElement>(null);
   useEffect(() => { if (focus) ref.current?.scrollIntoView({ block: "start", behavior: "smooth" }); }, [focus, c.effects.length]);
   return (<>
-    <span className="ns-lbl" ref={ref} id="isec-fx">{t("insp.effects")}</span>
+    <span ref={ref} id="isec-fx" />
           {!c.effects.length && <p className="hint">{t("insp.noEffects")}</p>}
           {c.effects.map((e, i) => <div key={e.id} className="fxrow">
             <label className="row"><input type="checkbox" checked={e.enabled} onChange={(ev) => A.run("effect", (q) => { const f = findClip(q, c.id); if (f && f.clip.type === "media") f.clip.effects[i].enabled = ev.target.checked; })} /> {lang === "ar" ? EFFECTS.find((x) => x.id === e.type)?.ar : EFFECTS.find((x) => x.id === e.type)?.en}</label>
@@ -103,7 +119,6 @@ function KfList({ c }: { c: Clip }) {
   const { t } = useTranslation(); const props = Object.entries(c.keyframes).filter(([, l]) => l && l.length);
   if (!props.length) return <p className="hint">{t("insp.kfHint")}</p>;
   return (<>
-    <span className="ns-lbl">{t("insp.keyframes")}</span>
     {props.map(([k, list]) => <div key={k} className="kfrow"><b>{t("kf." + k)}</b>{list!.map((x, i) => (
       <span key={i} className="kfdot"><button type="button" onClick={() => playerRef.current?.seek(c.start + x.t)} title={x.t.toFixed(2) + "s"}>◆ {x.t.toFixed(1)}s</button>
         <select aria-label={t("insp.ease")} value={typeof x.ease === "string" ? x.ease : "easeInOut"} onChange={(e) => A.run("ease", (q) => { const f = findClip(q, c.id); const l = f?.clip.keyframes[k as KfProp]; if (l) l[i] = { ...l[i], ease: e.target.value as "linear" }; })}>
@@ -114,14 +129,16 @@ function ColorProps({ c }: { c: MediaClip }) {
   const { t } = useTranslation(); const p = useProject();
   const S = (k: keyof MediaClip["color"], label: string) => <Slider key={k} label={label} value={c.color[k] as number} min={-1} max={1} fmt={(v) => (v > 0 ? "+" : "") + Math.round(v * 100)} onChange={(v) => A.live.set("color." + k, v)} onCommit={A.live.end} testid={"color-" + k} />;
   return (<>
-    {S("exposure", t("col.exposure"))}{S("contrast", t("col.contrast"))}{S("saturation", t("col.saturation"))}{S("temperature", t("col.temperature"))}{S("tint", t("col.tint"))}
-    {S("highlights", t("col.highlights"))}{S("shadows", t("col.shadows"))}{S("vibrance", t("col.vibrance"))}
-    <span className="ns-lbl">HSL</span>
+    <Sec id="cbasic" icon="color" title={t("isec.cbasic")}>{S("exposure", t("col.exposure"))}{S("contrast", t("col.contrast"))}{S("saturation", t("col.saturation"))}{S("temperature", t("col.temperature"))}{S("tint", t("col.tint"))}</Sec>
+    <Sec id="clight" icon="sun" title={t("isec.clight")}>{S("highlights", t("col.highlights"))}{S("shadows", t("col.shadows"))}{S("vibrance", t("col.vibrance"))}</Sec>
+    <Sec id="hsl" icon="wand" title="HSL">
     {HUE_BANDS.map((b) => <details key={b} className="hsl"><summary><i className={"hue " + b} />{t("hue." + b)}</summary>
       {(["hue", "sat", "lum"] as const).map((k, i) => <Slider key={k} label={t("hsl." + k)} value={c.color.hsl[b][i]} min={-1} max={1} onChange={(v) => { const arr = [...c.color.hsl[b]] as [number, number, number]; arr[i] = v; A.live.set("color.hsl." + b, arr); }} onCommit={A.live.end} />)}</details>)}
-    <span className="ns-lbl">LUT</span>
+    </Sec>
+    <Sec id="lut" icon="film" title="LUT">
     {c.lut ? <><Slider label={(p.assets[c.lut.asset]?.name || "LUT") + " · " + t("insp.amount")} value={c.lut.amount} min={0} max={1} fmt={(v) => Math.round(v * 100) + "%"} onChange={(v) => A.live.set("lut.amount", v)} onCommit={A.live.end} />
       <Btn icon="close" ghost onClick={() => A.setProp("lut", null)}>{t("col.removeLut")}</Btn></> : <p className="hint">{t("col.lutHint")}</p>}
+    </Sec>
     <Btn icon="undo" ghost onClick={() => A.run("reset color", (q) => { const f = findClip(q, c.id); if (f && f.clip.type === "media") { f.clip.color = { ...f.clip.color, exposure: 0, contrast: 0, saturation: 0, temperature: 0, tint: 0, highlights: 0, shadows: 0, vibrance: 0, hsl: Object.fromEntries(HUE_BANDS.map((b) => [b, [0, 0, 0]])) as MediaClip["color"]["hsl"] }; } })}>{t("col.reset")}</Btn>
   </>);
 }
@@ -129,9 +146,12 @@ function TextProps({ c }: { c: TextClip }) {
   const { t } = useTranslation(); const s = c.style; const lang = useUI((x) => x.lang);
   const set = (path: string, v: unknown) => A.setProp(path, v, "text");
   return (<>
-    <label className="ns-field"><span>{t("text.words")}</span><textarea className="ns-input" rows={3} dir="auto" value={c.text} onChange={(e) => { if (!editor.inTx) editor.begin("text"); editor.live((q) => { const f = findClip(q, c.id); if (f && f.clip.type === "text") { f.clip.text = e.target.value; f.clip.name = e.target.value.slice(0, 24); } }); }} onBlur={() => { editor.commit(); autosave(); }} data-testid="text-words" /></label>
-    <FontPicker c={c} />
-    <TextFxGrid />
+    <Sec id="twords" icon="text" title={t("text.words")}>
+    <label className="ns-field"><span className="sr-only">{t("text.words")}</span><textarea className="ns-input" rows={3} dir="auto" value={c.text} onChange={(e) => { if (!editor.inTx) editor.begin("text"); editor.live((q) => { const f = findClip(q, c.id); if (f && f.clip.type === "text") { f.clip.text = e.target.value; f.clip.name = e.target.value.slice(0, 24); } }); }} onBlur={() => { editor.commit(); autosave(); }} data-testid="text-words" /></label>
+    </Sec>
+    <Sec id="tfont" icon="text" title={t("text.font")}><FontPicker c={c} /></Sec>
+    <Sec id="tfx" icon="sparkle" title={t("text.effects")}><TextFxGrid /></Sec>
+    <Sec id="tstyle" icon="color" title={t("isec.tstyle")}>
     <Slider label={t("text.size")} value={s.size} min={0.02} max={0.3} fmt={(v) => Math.round(v * 1000) / 10 + "%"} onChange={(v) => A.live.set("style.size", v)} onCommit={A.live.end} />
     <div className="row"><Seg label={t("text.weight")} value={String(s.weight)} onChange={(v) => set("style.weight", +v)} options={[{ v: "400", label: t("text.regular") }, { v: "700", label: t("text.bold") }, { v: "900", label: t("text.black") }]} />
       <Seg label={t("text.align")} value={s.align} onChange={(v) => set("style.align", v)} options={[{ v: "start", label: t("text.start") }, { v: "center", label: t("text.center") }, { v: "end", label: t("text.end") }]} /></div>
@@ -141,12 +161,15 @@ function TextProps({ c }: { c: TextClip }) {
     <label className="row"><input type="checkbox" checked={!!s.shadow} onChange={(e) => set("style.shadow", e.target.checked ? { color: "rgba(0,0,0,0.6)", blur: 0.012, x: 0, y: 0.004 } : null)} /> {t("text.shadow")}</label>
     <label className="row"><input type="checkbox" checked={!!s.box} onChange={(e) => set("style.box", e.target.checked ? { color: "#000000", opacity: 0.55, pad: 0.25, radius: 0.2 } : null)} /> {t("text.box")}</label>
     {s.box && <div className="row"><input type="color" value={s.box.color} onChange={(e) => set("style.box.color", e.target.value)} aria-label={t("text.boxColor")} /><Slider label={t("text.boxOpacity")} value={s.box.opacity} min={0} max={1} onChange={(v) => A.live.set("style.box.opacity", v)} onCommit={A.live.end} /></div>}
+    </Sec>
+    <Sec id="tanim" icon="play" title={t("isec.tanim")}>
     <span className="ns-lbl">{t("text.animIn")}</span>
     <select className="ns-input" value={c.animIn.type} onChange={(e) => set("animIn.type", e.target.value)} aria-label={t("text.animIn")}>{TEXT_ANIMS.map((a) => <option key={a.id} value={a.id}>{lang === "ar" ? a.ar : a.en}</option>)}</select>
     <Slider label={t("text.animDur")} value={c.animIn.dur} min={0} max={2} step={0.05} unit="s" onChange={(v) => A.live.set("animIn.dur", v)} onCommit={A.live.end} />
     <span className="ns-lbl">{t("text.animOut")}</span>
     <select className="ns-input" value={c.animOut.type} onChange={(e) => set("animOut.type", e.target.value)} aria-label={t("text.animOut")}>{TEXT_ANIMS.map((a) => <option key={a.id} value={a.id}>{lang === "ar" ? a.ar : a.en}</option>)}</select>
     <Slider label={t("text.animDur")} value={c.animOut.dur} min={0} max={2} step={0.05} unit="s" onChange={(v) => A.live.set("animOut.dur", v)} onCommit={A.live.end} />
+    </Sec>
   </>);
 }
 function ProjectProps() {

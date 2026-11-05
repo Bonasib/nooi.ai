@@ -18,8 +18,9 @@ import { RestylePanel } from "./Restyle";
 import { TextFxGrid } from "./TextFx";
 import { MotionGallery } from "../motion/Gallery";
 import { BackgroundPanel, ReplacePanel } from "./Replace";
+import { AutoPanel } from "./Auto";
 
-export const RAILS: [Rail, string][] = [["media", "media"], ["stock", "stock"], ["audio", "audio"], ["titles", "text"], ["transitions", "transitions"], ["effects", "effects"], ["stickers", "sticker"], ["templates", "template"]];
+export const RAILS: [Rail, string][] = [["media", "media"], ["stock", "stock"], ["auto", "wand"], ["audio", "audio"], ["titles", "text"], ["transitions", "transitions"], ["effects", "effects"], ["stickers", "sticker"], ["templates", "template"]];
 export function RailBar({ mobile, toggle }: { mobile?: boolean; toggle?: boolean }) {
   const { t } = useTranslation(); const rail = useUI((s) => s.rail); const open = useUI((s) => s.panelOpen);
   return (
@@ -38,7 +39,7 @@ export function Panel() {
     <section className="panel" aria-label={t("rail." + rail)}>
       <h2 className="ns-h2 phead">{t("rail." + rail)}</h2>
       <div className="pbody">
-        {rail === "media" && <MediaPanel />}{rail === "stock" && <StockTabs />}{rail === "audio" && <AudioTabs />}{rail === "titles" && <TitleTabs />}
+        {rail === "media" && <MediaPanel />}{rail === "stock" && <StockTabs />}{rail === "auto" && <AutoPanel />}{rail === "audio" && <AudioTabs />}{rail === "titles" && <TitleTabs />}
         {rail === "transitions" && <TransitionsPanel />}{rail === "effects" && <EffectsPanel />}{rail === "stickers" && <StickerTabs />}{rail === "templates" && <TemplatesPanel />}
       </div>
     </section>

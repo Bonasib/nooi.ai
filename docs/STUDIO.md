@@ -395,3 +395,22 @@ Built on our own code. No code from Remotion or any other motion library is used
   - A quick tap picks the clip.
   - A press held still for 0.4 s (with a short vibration) lifts it to move or trim.
 - **Dragging the playhead's pin** to the timeline's edge scrolls the timeline along, so the playhead and the time stay in view.
+
+## v233 — Auto tools and the clip settings in sections
+
+- **Auto** (a new rail item, between Stock and Audio): tools that edit by themselves. Each is one tap and one undo step. Each card plays a small example of what it does.
+  - **Remove pauses:** cuts out the quiet stretches (over half a second) from the main track.
+  - **Cut to the beat:** finds the music's beats and trims the main track's clips so every cut lands on a beat (clips only get shorter).
+  - **Auto captions:** hears the words and places them as captions at their times. This is the only tool that uses the server (`/v1/captions169`): its price shows first, and it is charged only when it works.
+  - **Auto reframe:** changes the frame (9:16, 1:1, 16:9 …) and fills every picture to it, keeping the middle.
+  - **Auto colour:** balances each clip from its own middle frame (brightness, contrast, colour strength, colour cast).
+  - **Even loudness:** brings every clip's sound to the same level, without clipping.
+  - **Duck the music:** lowers the music under the voices.
+  - **Soft cuts:** a soft dissolve at every cut of the main track.
+  - **Auto-edit: do it all** runs pauses, loudness, colour, ducking and soft cuts in a row.
+  - Everything except captions runs on the device, from the edit's own pictures and sound.
+- **The clip's settings in sections**, as in the big editing apps. Each section has an icon and a title, opens or closes with a tap, and is remembered on the device:
+  - Video: Position & size, Opacity & blend, Crop, Keyframes, Effects, Enter & exit.
+  - Audio: Volume, Clean up. Speed. Colour: Basic, Light, HSL, Looks.
+  - Text: Words, Font, Effects, Style, Animation.
+- **A phone:** the bottom rail scrolls sideways, so every item fits (Auto included). On a computer the side rail scrolls when the window is short.

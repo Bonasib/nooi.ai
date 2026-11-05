@@ -55,7 +55,8 @@
   "titles": "Titles",
   "transitions": "Transitions",
   "stickers": "Stickers",
-  "templates": "Templates"
+  "templates": "Templates",
+  "auto": "Auto"
  },
  "sub": {
   "files": "Your files",
@@ -792,5 +793,63 @@
   "light": "Match the light to the new place",
   "go": "Change the background",
   "newBg": "new background"
+ },
+ "auto": {
+  "hint": "Tools that edit for you — one tap each, one undo step each. They work on this device from the edit's own pictures and sound.",
+  "empty": "Add a video to the timeline first.",
+  "all": "Auto-edit: do it all",
+  "allSays": "Removes the pauses, evens the loudness, balances the colour, lowers the music under voices and softens the cuts.",
+  "allDone": "Auto-edit is done — each step can be undone.",
+  "working": "Working…",
+  "go": "Do it",
+  "goFree": "Make the captions · free",
+  "goPrice": "Make the captions · {{n}} credits",
+  "capOff": "Needs the server (sign in)",
+  "undo": "Undo",
+  "shape": "Shape",
+  "pauses": "Remove the pauses",
+  "pausesD": "The quiet parts (over half a second) of the main track are taken out.",
+  "beat": "Cut to the beat",
+  "beatD": "The music's beats are found and every cut is moved onto a beat.",
+  "captions": "Auto captions",
+  "captionsD": "What is said is heard and placed as captions at its moment.",
+  "reframe": "Auto reframe",
+  "reframeD": "A new shape for another platform; every picture fills the frame, the middle kept.",
+  "color": "Auto colour",
+  "colorD": "Each clip is balanced from its own picture: brightness, contrast, colour strength, colour cast.",
+  "loud": "Even loudness",
+  "loudD": "Every clip's sound is brought to the same level, nothing too loud.",
+  "duck": "Duck the music",
+  "duckD": "The music goes down by itself whenever someone speaks.",
+  "trans": "Soft cuts",
+  "transD": "A soft cross-dissolve at every cut of the main track.",
+  "r": {
+   "noPauses": "No pauses longer than half a second.",
+   "pauses": "{{n}} pauses removed ({{s}} s).",
+   "noMusic": "Add music on a sound track first.",
+   "noBeats": "No clear beat was found in the music.",
+   "noClips": "Nothing to change on the timeline.",
+   "beat": "{{n}} cuts moved onto the beat ({{b}} beats found).",
+   "reframe": "{{n}} clips filled to {{a}}.",
+   "color": "{{n}} clips balanced.",
+   "noDuck": "It needs music and a voice (the video's sound or a voice track).",
+   "duck": "The music now lowers under {{n}} voice track(s).",
+   "noSound": "No sound to even out.",
+   "loud": "{{n}} clips evened out.",
+   "trans": "{{n}} soft cuts added.",
+   "noCuts": "No cuts to soften.",
+   "noWords": "No words were heard.",
+   "captions": "{{n}} captions placed."
+  }
+ },
+ "isec": {
+  "transform": "Position & size",
+  "compose": "Opacity & blend",
+  "volume": "Volume & fades",
+  "clean": "Clean-up",
+  "cbasic": "Basic colour",
+  "clight": "Light & shade",
+  "tstyle": "Style",
+  "tanim": "In & out"
  }
 }

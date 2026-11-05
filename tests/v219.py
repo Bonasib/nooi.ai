@@ -63,7 +63,7 @@ async def desktop(p):
     r = await E("""()=>({rail:[...document.querySelectorAll('.rail button')].map(b=>b.dataset.testid),logo:!!document.querySelector('.topbar .logo svg'),name:!!document.querySelector('.pname'),undo:!!document.querySelector('[data-testid=undo]'),
       k:!!document.querySelector('.kbtn'),crew:document.querySelectorAll('.crew i').length,fmt:!!document.querySelector('.fmt select'),exp:!!document.querySelector('[data-testid=export]'),
       areas:['.panel','.player','.inspector','.timeline'].map(s=>!!document.querySelector(s)),over:document.documentElement.scrollWidth-innerWidth,dir:document.documentElement.dir})""")
-    chk(f"{tag}: the workspace — top bar, the eight rail categories, library · preview · inspector · timeline", r["rail"] == ["rail-media", "rail-stock", "rail-audio", "rail-titles", "rail-transitions", "rail-effects", "rail-stickers", "rail-templates"] and r["logo"] and r["name"] and r["undo"] and r["k"] and r["crew"] == 4 and r["fmt"] and r["exp"] and all(r["areas"]) and r["over"] <= 1, r)
+    chk(f"{tag}: the workspace — top bar, the rail categories (8 + Auto since v233), library · preview · inspector · timeline", r["rail"] == ["rail-media", "rail-stock", "rail-auto", "rail-audio", "rail-titles", "rail-transitions", "rail-effects", "rail-stickers", "rail-templates"] and r["logo"] and r["name"] and r["undo"] and r["k"] and r["crew"] == 4 and r["fmt"] and r["exp"] and all(r["areas"]) and r["over"] <= 1, r)
     # ---- media
     await pg.set_input_files('[data-testid="file-input"]', [D + "/a.webm", D + "/b.webm", D + "/v.wav", D + "/warm.cube"])
     await pg.wait_for_function(P + "&&Object.keys(" + P + ".assets).length===4", timeout=30000); await pg.wait_for_timeout(500)
