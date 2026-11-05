@@ -462,3 +462,17 @@ Built on our own code. No code from Remotion or any other motion library is used
 - **The site:** `crFree()` is now also true for the owner and admins. It switches on only once `/v1/me` has said so.
 - **The studio:** it reads the role from `/v1/me`. The team's AI buttons stay on, and the top bar shows "Team · free".
 - A customer with no credits is still told and stopped. Tested in `tests/v236.py`.
+
+## v237 — everything on MiniMax
+
+- **The switch:** Admin → AI providers → MiniMax → **"Everything on MiniMax"**. Setting `MINIMAX_ALL=1` in the server's `.env` does the same.
+- **What moves to MiniMax:** every job MiniMax can make goes to the owner's MiniMax balance, whatever model the customer picked:
+  - videos from words or a picture (Hailuo);
+  - pictures, including with a character's photo (Image-01);
+  - voices (Speech) — a customer's chosen ElevenLabs voice stays as it is;
+  - music;
+  - the site's text AI (the Mate, the agents, analysis): MiniMax-M3 over MiniMax's Anthropic-compatible API (`/anthropic/v1/messages`). It falls back to another connected text AI if MiniMax fails.
+- **What stays with its own engine:** Character Swap, Motion Control, lip-sync, jobs that read a video, picture edits, upscaling, 3D.
+- Customers pay the same credits.
+- The models can be changed in Admin → MiniMax → Models (optional), now including the text model; also `MINIMAX_TEXT_MODEL`.
+- Tested in `tests/v237_minimax.mjs` against a mocked MiniMax (32 checks).

@@ -96,7 +96,7 @@ import { registerDownload187 } from "./lib/download187.js";
 import { registerMoyasar190, hookSeen190 } from "./lib/moyasar190.js";   // v190: the Moyasar setup steps in Admin → Payments (webhook connected in one tap)
 import { checkHook191 } from "./lib/webhook191.js";   // v191: Stripe, Airwallex, PayPal (and Moyasar) webhook signatures
 import { registerSpace188 } from "./lib/space188.js";   // v188: what fills the disk (Admin), "Free space now", the site's old temporary files cleared
-import { mmOn183, mmState183, mmRegion183 } from "./providers/minimax183.js";   // v183: MiniMax voices, pictures and music (v185: + videos)
+import { mmOn183, mmState183, mmRegion183, mmAll237 } from "./providers/minimax183.js";   // v183: MiniMax voices, pictures and music (v185: + videos)
 import { sendEmail, emailConfigured } from "./lib/email.js";
 import { renderEmail } from "./public/email-templates.js";
 import { uiLang, uiDict, uiTranslate, rateOk } from "./lib/uit.js";
@@ -269,9 +269,9 @@ app.post("/v1/ui-t/:lang", wrap(async (req, res) => {
 // v176: Admin → AI providers → NVIDIA AI → Check NVIDIA engines (an empty request to each engine: nothing is made or spent)
 app.post("/v1/admin/nvidia/check", requireUser, requireAdmin("providers.manage"), wrap(async (req, res) => res.json(await nvCheck176())));
 // v183: MiniMax — what it is used for (voices · pictures · music, each on unless switched off) and the free check of the key
-app.get("/v1/admin/minimax183", requireUser, requireAdmin("providers.manage"), (req, res) => { const m = mmState183(); res.json({ keySet: configured("minimax"), region: mmRegion183(), voice: m.voice !== false, image: m.image !== false, music: m.music !== false, video: m.video !== false, voices: (m.voices || []).length, checked: m.checked || 0, status: (platform().status || {}).minimax || null }); });
-app.put("/v1/admin/minimax183", requireUser, requireAdmin("providers.manage"), (req, res) => { const m = mmState183(), b = req.body || {}; for (const k of ["voice", "image", "music", "video"]) if (typeof b[k] === "boolean") m[k] = b[k]; save();
-  audit(req, "MiniMax used for: " + ["voice", "image", "music", "video"].filter((k) => m[k] !== false).join(", ")); res.json({ ok: true, voice: m.voice !== false, image: m.image !== false, music: m.music !== false, video: m.video !== false }); });
+app.get("/v1/admin/minimax183", requireUser, requireAdmin("providers.manage"), (req, res) => { const m = mmState183(); res.json({ keySet: configured("minimax"), region: mmRegion183(), all: mmAll237(), allEnv: /^(1|true|on|yes)$/i.test(String(process.env.MINIMAX_ALL || "")), voice: m.voice !== false, image: m.image !== false, music: m.music !== false, video: m.video !== false, voices: (m.voices || []).length, checked: m.checked || 0, status: (platform().status || {}).minimax || null }); });
+app.put("/v1/admin/minimax183", requireUser, requireAdmin("providers.manage"), (req, res) => { const m = mmState183(), b = req.body || {}; for (const k of ["voice", "image", "music", "video"]) if (typeof b[k] === "boolean") m[k] = b[k]; if (typeof b.all === "boolean") m.all = b.all; save();
+  audit(req, "MiniMax used for: " + (m.all ? "everything it can make · " : "") + ["voice", "image", "music", "video"].filter((k) => m[k] !== false).join(", ")); res.json({ ok: true, all: mmAll237(), voice: m.voice !== false, image: m.image !== false, music: m.music !== false, video: m.video !== false }); });
 app.post("/v1/admin/minimax183/check", requireUser, requireAdmin("providers.manage"), wrap(async (req, res) => { const { testProvider } = await import("./lib/health.js"); const st = await testProvider("minimax"); res.json({ ...st, voices: (mmState183().voices || []).length }); }));
 app.get("/v1/llm/test", requireUser, requireAdmin("providers.manage"), wrap(async (req, res) => {
   if (!llmConfigured()) throw Object.assign(new Error("The text AI isn't connected yet — add it in Admin → Connections."), { code: 501 });

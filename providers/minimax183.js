@@ -159,9 +159,26 @@ export function mmBackup185(cap, body) {
   if (cap === "image" && mmOn183("image") && !["edit", "upscale", "bgremove"].includes(kind)) return { key: "mm183-image", a: mmImage183() };
   return null;
 }
+// v237: "Everything on MiniMax" — the owner's switch in Admin (or MINIMAX_ALL=1 on the server): every job MiniMax can make goes to
+// the owner's MiniMax balance, whatever model was picked — videos from words or a picture, pictures, voices, music, and the site's
+// text AI (MiniMax-M3 over MiniMax's Anthropic-compatible API). What MiniMax can't make (a Character Swap, Motion Control, lip-sync,
+// a job that reads a video, picture edits, upscaling, 3D…) stays with its own engine. Customers pay the same credits.
+export const mmAll237 = () => configured("minimax") && (mmState183().all === true || /^(1|true|on|yes)$/i.test(String(process.env.MINIMAX_ALL || "")));
+const editsPicture = (body) => !!(body.inputs && (body.inputs.iRef || body.inputs.edit || body.inputs.mask)) || ["edit", "upscale", "bgremove", "inpaint", "outpaint"].includes(String(body.kind || ""));
+const mmVideoFits = (body) => { const inp = body.inputs || {}; return !/^mc(26|30|swap)$/.test(String(body.model || "")) && !["lipsync", "avatar", "swap"].includes(String(body.kind || "")) && !body.meta?.swap93
+  && !Object.values(inp).some((v) => VIDEO_FILE.test(String(v || ""))); };
+export const MM_TEXT237 = "MiniMax-M3";
+/** the site's text AI on MiniMax (Anthropic-compatible): its address, the key and the model */
+export const mmText237 = () => mmAll237() ? { base: base() + "/anthropic", key: cfg("minimax").apiKey, model: cfg("minimax").textModel || MM_TEXT237, provider: "minimax" } : null;
 // which MiniMax engine takes a job (null = not MiniMax): the voice and music switches, and MiniMax Image picked by hand
 export function mmRoute183(cap, body) {
   body = body || {};
+  if (mmAll237()) {
+    if (cap === "video" && ["video", "chapter", ""].includes(String(body.kind || "")) && mmVideoFits(body)) return { key: "mm183-video", a: mmVideo185() };
+    if (cap === "image" && !editsPicture(body)) return { key: "mm183-image", a: mmImage183() };
+    if (cap === "tts" && body.kind === "voice" && body.meta?.engine !== "elevenlabs") return { key: "mm183-voice", a: mmSpeech183() };
+    if (cap === "music" && body.kind === "music") return { key: "mm183-music", a: mmMusic183() };
+  }
   if (cap === "image" && body.model === "mmimage") return { key: "mm183-image", a: mmOn183("image") ? mmImage183() : { ...mmImage183(), configured: false } };   // (switched off → "not available", nothing charged)
   if (cap === "video" && body.model === "hailuo" && mmBackup185(cap, body)) return { key: "mm183-video", a: mmVideo185() };   // v185: MiniMax picked → MiniMax's own Hailuo
   if (cap === "tts" && body.kind === "voice" && body.meta?.engine !== "elevenlabs" && mmOn183("voice")) return { key: "mm183-voice", a: mmSpeech183() };
