@@ -60,7 +60,7 @@ Done in v223 (tests/v223.py). Each row below was built:
 
 ## Step 4 — Content libraries (spec §4.2)
 - 🟡 Titles: 3D kinetic titles, lower thirds, end credits, word-by-word captions.
-- ✅ nooi Motion (v227): our own programmatic motion-graphics engine (springs, interpolation, easing, colour blends, noise, shapes and path drawing, sequences). 37 motion graphics in 9 groups (lower thirds, kinetic titles, social, charts and numbers, shapes and backgrounds, callouts, timers, sound-reactive, Motion code), each drawn frame by frame from its props, with live tiles. Motion code runs in a sealed sandbox. ✅ Server and desktop export of motion graphics (v228).
+- ✅ nooi Motion (v227): our own programmatic motion-graphics engine (springs, interpolation, easing, colour blends, noise, shapes and path drawing, sequences). 73 motion graphics since v229 in 11 groups (lower thirds, kinetic titles, social, charts and numbers, shapes and backgrounds, callouts, timers, sound-reactive, intros and outros, wipes and reveals, Motion code), each drawn frame by frame from its props, with live tiles. Motion code runs in a sealed sandbox. ✅ Server and desktop export of motion graphics (v228).
 - ✅ Stickers (v225): 36 icon stickers and 10 banners from the classic editor (Material Symbols, Apache-2.0). Each tile shows how it looks, and a banner's lines and colour can be set before it is added. They are added as pictures that come in with a motion.
 - 🟡 Templates: split-screen layouts 2–9 and Instant montage (v223). ⬜ Numbered drop zones.
 - ⬜ Stock: needs a stock provider key from the owner — asked for only when this step starts.

@@ -3,45 +3,13 @@
 // preview, the tile's example and the export match. Our own designs.
 import { Motion as M } from "@nooi/editor-core";
 import { CODE_EXAMPLE } from "./code";
+import { AR, BG, FAM, L3, T, cl, ease, labels, life, measure, nums, outK, px0, rrect, sp, text, words, type Group, type Template, type MCtx, type Props } from "./kit";
+import { MORE } from "./templates2";
+export type { Field, FieldType, Group, MCtx, Props, Template } from "./kit";
 
-export type FieldType = "text" | "color" | "number" | "select" | "bool" | "list" | "code";
-export interface Field { k: string; type: FieldType; en: string; ar: string; def: unknown; min?: number; max?: number; step?: number; options?: [string, string, string][] }
-export type Props = Record<string, any>;   // eslint-disable-line @typescript-eslint/no-explicit-any
-export interface MCtx {
-  ctx: CanvasRenderingContext2D; W: number; H: number; u: number;   // u: the shorter side (sizes are shares of it)
-  frame: number; fps: number; t: number; dur: number; durF: number; p: Props;
-  audio: (t?: number) => number; bars: (n: number) => number[];
-}
-export interface Template { id: string; en: string; ar: string; group: Group; dur: number; fields: Field[]; draw: (m: MCtx) => void }
-export type Group = "lower" | "titles" | "social" | "data" | "shapes" | "callouts" | "timers" | "audio" | "code";
 export const GROUPS: [Group, string, string][] = [["lower", "Lower thirds", "أشرطة سفلية"], ["titles", "Titles & typography", "عناوين وطباعة حركية"], ["social", "Social", "تواصل اجتماعي"],
   ["data", "Charts & numbers", "رسوم بيانية وأرقام"], ["shapes", "Shapes & backgrounds", "أشكال وخلفيات"], ["callouts", "Callouts", "إشارات توضيحية"], ["timers", "Timers", "مؤقتات"],
-  ["audio", "Sound-reactive", "تتفاعل مع الصوت"], ["code", "Motion code", "كود الحركة"]];
-
-// ---- drawing helpers
-const AR = /[֐-ࣿ]/;
-const FAM = '"Inter","Cairo","IBM Plex Sans Arabic",system-ui,sans-serif';
-export const ease = M.Easing;
-const cl = (v: number, a = 0, b = 1) => Math.max(a, Math.min(b, v));
-function font(x: CanvasRenderingContext2D, px: number, weight = 700, fam = FAM) { x.font = `${weight} ${Math.max(1, px)}px ${fam}`; }
-function text(m: MCtx, s: string, X: number, Y: number, o: { px: number; weight?: number; color?: string; align?: CanvasTextAlign; base?: CanvasTextBaseline; fam?: string; maxW?: number }) {
-  const x = m.ctx; let px = o.px; font(x, px, o.weight, o.fam); if (o.maxW) { const w = x.measureText(s).width; if (w > o.maxW) { px *= o.maxW / w; font(x, px, o.weight, o.fam); } }
-  x.direction = AR.test(s) ? "rtl" : "ltr"; x.textAlign = o.align || "left"; x.textBaseline = o.base || "middle"; x.fillStyle = o.color || "#fff"; x.fillText(s, X, Y); return { px, w: x.measureText(s).width };
-}
-const measure = (m: MCtx, s: string, px: number, weight = 700, fam = FAM) => { font(m.ctx, px, weight, fam); return m.ctx.measureText(s).width; };
-function rrect(x: CanvasRenderingContext2D, X: number, Y: number, w: number, h: number, r: number) { x.beginPath(); if (x.roundRect) x.roundRect(X, Y, Math.max(0, w), Math.max(0, h), Math.max(0, Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2))); else x.rect(X, Y, w, h); }
-const sp = (m: MCtx, delay = 0, cfg: M.SpringConfig = { damping: 14, stiffness: 120 }) => M.spring({ frame: m.frame - delay, fps: m.fps, config: cfg });
-/** in from the start (0 → 1) and out at the end (1 → 0) */
-const life = (m: MCtx, inS = 0.5, outS = 0.4) => Math.min(cl(m.t / inS), cl((m.dur - m.t) / outS));
-const outK = (m: MCtx, outS = 0.4) => ease.easeIn(cl(1 - (m.dur - m.t) / outS));
-const T = (k: string, type: FieldType, en: string, ar: string, def: unknown, o: Partial<Field> = {}): Field => ({ k, type, en, ar, def, ...o });
-const words = (s: string) => String(s || "").split(/\s+/).filter(Boolean);
-const nums = (s: string) => String(s || "").split(/[,،\s]+/).map((v) => parseFloat(v)).filter((v) => isFinite(v));
-const labels = (s: string) => String(s || "").split(/[,،]+/).map((v) => v.trim());
-const BG = (o: Partial<Field> = {}) => T("accent", "color", "Accent", "اللون المميز", "#00F0FF", o);
-
-const L3 = (name: string, role: string) => [T("name", "text", "Name", "الاسم", [name, "أحمد علي"]), T("role", "text", "Title", "المسمى", [role, "مدير التسويق"]), BG(), T("pos", "select", "Place", "المكان", "left", { options: [["left", "Left", "يسار"], ["center", "Centre", "وسط"], ["right", "Right", "يمين"]] })];
-const px0 = (m: MCtx, w: number) => (m.p.pos === "right" ? m.W * 0.94 - w : m.p.pos === "center" ? (m.W - w) / 2 : m.W * 0.06);
+  ["audio", "Sound-reactive", "تتفاعل مع الصوت"], ["intros", "Intros & outros", "مقدمات وخواتيم"], ["wipes", "Wipes & reveals", "مسحات وكشف"], ["code", "Motion code", "كود الحركة"]];
 
 export const TEMPLATES: Template[] = [
   // ======== lower thirds
@@ -234,6 +202,7 @@ export const TEMPLATES: Template[] = [
     const x = m.ctx, u = m.u, b = m.bars(64), R = u * 0.16 * (1 + m.audio() * 0.25), cx = m.W / 2, cy = m.H / 2, k = life(m, 0.3, 0.3); x.globalAlpha = k; x.strokeStyle = m.p.accent; x.lineWidth = u * 0.008; x.lineCap = "round";
     b.forEach((v, i) => { const a = (i / b.length) * Math.PI * 2, l = u * 0.02 + v * u * 0.16; x.beginPath(); x.moveTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); x.lineTo(cx + Math.cos(a) * (R + l), cy + Math.sin(a) * (R + l)); x.stroke(); });
     text(m, m.p.label, cx, cy, { px: u * 0.06, weight: 800, align: "center" }); } },
+  ...MORE,
   // ======== code
   { id: "code", en: "Motion code", ar: "كود الحركة", group: "code", dur: 5, fields: [T("code", "code", "Code", "الكود", CODE_EXAMPLE)], draw() { /* drawn by the sandbox (motion/code.ts) */ } },
 ];

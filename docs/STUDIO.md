@@ -314,3 +314,18 @@ Built on our own code. No code from Remotion or any other motion library is used
 - `compile()` (editor-core) takes `motions: { clipId: file }`. FFmpeg splits the two halves, joins them with `alphamerge`, then `unpremultiply`. The result is one see-through layer, placed like a title (position, size, turn, opacity) at the clip's time, starting inside it when the range begins later.
 - The Export dialog keeps the server / this computer and says the graphics are drawn here first. The progress shows "Drawing the motion graphics".
 - The render service runs in Docker: after the editor update, run `bash /opt/nooi/deploy/render.sh` once to rebuild it.
+
+## v229 — 36 more motion graphics (73 in all)
+
+- **Lower thirds (+4):** glass card, corner brackets, slanted bars, gradient strip.
+- **Titles (+6):** letter wave, outline then fill, bouncy drop, rotating words, split reveal, cinematic title.
+- **Social (+4):** story bars, poll, swipe up, notification.
+- **Charts and numbers (+4):** horizontal bars, area chart, stat cards, versus.
+- **Shapes and backgrounds (+4):** retro grid, floating particles, moving stripes, orbits.
+- **Callouts (+3):** highlight box, spotlight, tooltip.
+- **Timers (+2):** video progress bar (with chapter marks), date stamp.
+- **Sound-reactive (+2):** sound wave, dot meter.
+- **New group, Intros and outros (4):** logo reveal, end screen, light sweep, film countdown.
+- **New group, Wipes and reveals (3):** colour wipe, circle reveal, bars sweep. These are full-frame; put one over the cut between two scenes.
+- Each graphic has English and Arabic names and default words. Arabic text moves word by word, so its letters stay joined.
+- The drawing helpers moved to `motion/kit.ts`; the second set is in `motion/templates2.ts`.
