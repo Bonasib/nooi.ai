@@ -38,6 +38,8 @@ def server_on():
     r = req("/v1/admin/minimax183", {"only": True}, who="boss", method="PUT"); c = req("/v1/config")
     chk("the owner turns it on: the AI engine is off, MiniMax makes videos, pictures, voices and music", r.get("only") is True and r.get("all") is True and c["providers"].get("engine") is False and c["providers"].get("mmOnly240") is True
         and all(c["providers"].get(k) for k in ("video", "image", "tts", "music")), [r, {k: c["providers"].get(k) for k in ("engine", "mmOnly240", "video", "image", "tts", "music")}])
+    adm = req("/v1/admin/settings", who="boss"); pe = (adm.get("providers") or {}).get("engine") or {}
+    chk("Admin still shows the AI engine's key as saved (paused, not gone)", pe.get("configured") is True and pe.get("paused240") is True, pe)
     made = {}
     for i, (name, b) in enumerate([("a Seedance video", {"kind": "video", "model": "seedance", "prompt": "a cat walks on a beach", "dur": 5}), ("an Auto video", {"kind": "video", "model": "auto", "prompt": "a dog runs", "dur": 5}),
             ("a picture", {"kind": "image", "model": "nano", "prompt": "a red apple"}), ("a voice", {"kind": "voice", "prompt": "hello there"}), ("music", {"kind": "music", "prompt": "calm piano"})]):
@@ -81,6 +83,8 @@ async def site(p, w, lang):
     sheet = await E("()=>!!document.querySelector('#rp136')")
     chk(f"site {w}: Replace things doesn't open", sheet is False, sheet)
     adm = await E("()=>{MM183.d={keySet:true,only:true,all:true,voice:true,image:true,music:true,video:true,status:{}};return mmBody183()}")
+    stt = await E("()=>{const d=A&&A();if(d){d.providers=d.providers||{};d.providers.engine={configured:true,paused240:true}}else{window.__a=1}return typeof aipState184==='function'&&A()?aipState184('engine'):null}")
+    chk(f"site {w}: the AI engine card says the key is saved and paused (not 'Not set')", stt is None or (stt[0] == "warn" and ("paused" in stt[1] or "متوقف" in stt[1])), stt)
     chk(f"site {w}: the Admin MiniMax card has the 'Only my MiniMax key' switch", 'data-k="only"' in adm and ("Only my MiniMax key" in adm or "مفتاح ميني ماكس فقط" in adm), adm[:300])
     chk(f"site {w}: no page errors", not errs, errs); await b.close()
 

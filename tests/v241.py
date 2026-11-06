@@ -86,8 +86,12 @@ def main():
     mc = req("/v1/jobs", {"kind": "video", "model": "mc30", "dur": 5, "inputs": {"mcMove": "/media/v.webm", "mcChar": "/media/start.png"}}, who="c5")
     chk("Only my MiniMax key: a Seedance pick still runs on ByteDance, Replace things in a video is ready (ByteDance), Motion Control stays off", r.get("only") is True and str(x4.get("prov", "")).startswith("bd@") and q.get("ready") is True and mc.get("status") == 501, {"x4": x4.get("prov"), "q": q, "mc": mc.get("status")})
     req("/v1/admin/minimax183", {"only": False}, who="boss", method="PUT")
+    pr = req("/v1/admin/providers/elevenlabs", {"apiKey": "el-test-key-999"}, who="boss", method="PUT"); chk("the owner saves a key in Admin", pr.get("ok") is True, pr)
+    time.sleep(3)   # (the server writes its data a moment after a change)
     w = subprocess.run(["bash", ROOT + "/deploy/why.sh"], env=dict(os.environ, APP=D, SEEDANCE_API_KEY="bd-test-key-000", SECRET_KEY="f" * 40), capture_output=True, text=True, timeout=60).stdout
-    chk("deploy/why.sh: ByteDance key yes, no keys printed", "ByteDance key (Seedance, BytePlus ModelArk): yes" in w and "bd-test" not in w, w)
+    chk("deploy/why.sh: ByteDance key yes, the keys saved in Admin listed (yes/no only), no keys printed", "ByteDance key (Seedance, BytePlus ModelArk): yes" in w and "keys saved in Admin: " in w and "elevenlabs" in w and "bd-test" not in w and "el-test" not in w and "can NOT be read" not in w, w)
+    w2 = subprocess.run(["bash", ROOT + "/deploy/why.sh"], env=dict(os.environ, APP=D, SECRET_KEY="g" * 40), capture_output=True, text=True, timeout=60).stdout
+    chk("deploy/why.sh: a key saved under another SECRET_KEY is reported as unreadable", "can NOT be read" in w2 and "elevenlabs" in w2.split("can NOT be read")[-1], w2)
 
 try: main()
 except Exception as e: chk("crashed", False, repr(e)[:700])

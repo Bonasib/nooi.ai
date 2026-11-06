@@ -16,6 +16,13 @@ const only = (() => { try { return st.mmOnly240 ? st.mmOnly240() : false; } catc
 console.log("  AI engine (videos, swaps, motion):", only ? (kieKey ? "OFF (key saved, not used: Only my MiniMax key is on)" : "OFF (Only my MiniMax key is on)") : yes(on("kie")));
 console.log("  MiniMax key:", yes(on("minimax")));
 console.log("  ByteDance key (Seedance, BytePlus ModelArk):", yes(on("seedance")));
+// v241b: every key saved in Admin, AI providers: saved yes/no (never the key). One that is saved but cannot be read means the
+// SECRET_KEY in the server .env was changed after it was saved
+try { const sec = await import(process.cwd() + "/lib/secrets.js"), P = st.S().providers || {}, saved = [], unread = [];
+  for (const [k, v] of Object.entries(P)) { if (!v || !v.enc) continue; const d = sec.decrypt(v.enc) || {}; if (!Object.keys(d).length) unread.push(k); else if (d.apiKey || d.secretKey || d.accessKey || d.clientId) saved.push(k); }
+  const nm = (k) => (k === "kie" ? "AI engine" : k);
+  console.log("  keys saved in Admin:", saved.length ? saved.map(nm).join(", ") : "none");
+  if (unread.length) console.log("  WARNING saved but can NOT be read (was SECRET_KEY in .env changed?):", unread.map(nm).join(", ")); } catch (e) { console.log("  keys saved in Admin: (could not check)"); }
 console.log("  Only my MiniMax key (the AI engine never used):", yes(only));
 let m = {}; try { m = st.S().minimax183 || {}; } catch {}
 console.log("  Everything on MiniMax:", yes((() => { try { return mm.mmAll237 ? mm.mmAll237() : false; } catch { return false; } })()), "· switches: videos", yes(m.video !== false), "· pictures", yes(m.image !== false), "· voices", yes(m.voice !== false), "· music", yes(m.music !== false));

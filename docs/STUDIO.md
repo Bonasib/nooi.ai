@@ -539,3 +539,7 @@ Built on our own code. No code from Remotion or any other motion library is used
 - **Real faces:** BytePlus says Seedance 2.0 / 2.5 refuse reference pictures or videos with real human faces. The exceptions are Seedance's own outputs from the last 30 days, its digital characters and authorised portraits. Such a job is refused; the customer is told why (EN + AR) and nothing is charged.
 - **Before using 2.0 / 2.5:** BytePlus requires the models to be activated (a balance above USD 30, a Savings Plan or a Seedance resource pack).
 - **`deploy/why.sh`** says whether the ByteDance key is connected.
+- **v241b — saved keys stay visible.**
+  - With "Only my MiniMax key" on, Admin → AI providers used to show the AI engine as "Not set", as if its key had been deleted. The key was always kept.
+  - Now it shows "Key saved — paused (Only my MiniMax key is on)", with how to use it again.
+  - `deploy/why.sh` lists every key saved in Admin (yes/no, never the key). It warns about any saved key the server can't read; that happens when `SECRET_KEY` in `.env` changed after the key was saved.
