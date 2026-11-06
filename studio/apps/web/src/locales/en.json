@@ -81,7 +81,8 @@
   "mgfx": "Motion graphics",
   "replace": "Replace person / voice",
   "background": "Background",
-  "recast": "Recast"
+  "recast": "Recast",
+  "extend": "Extend with AI"
  },
  "media": {
   "upload": "Upload",
@@ -608,7 +609,8 @@
   "sfx": "Sound effects",
   "montage": "Instant montage",
   "restyle": "Restyle with AI",
-  "translate": "Translate captions"
+  "translate": "Translate captions",
+  "extend": "Extend with AI"
  },
  "hist": {
   "title": "History",
@@ -978,5 +980,22 @@
   "more": "More like this",
   "used": "The clip now plays the new version.",
   "gone": "The clip is no longer on the timeline."
+ },
+ "ex": {
+  "hint": "The picked video clip goes on: the frame where it ends starts a new shot that continues it — the same people, place and light, no cut. It lands right after the clip; the clips after it move along.",
+  "pick": "Pick a video clip on the timeline first.",
+  "len": "How much longer",
+  "sec": "Extend with AI",
+  "model": "Video model",
+  "next": "What happens next (optional)",
+  "nextPh": "e.g. she turns to the camera and smiles",
+  "go": "Extend with AI",
+  "frame": "Taking the last frame…",
+  "making": "Making the next seconds…",
+  "more": "extended",
+  "done": "Extended — the new shot is right after the clip.",
+  "open": "Extend with AI",
+  "secHint": "Make the clip go on for a few more seconds, from its last frame.",
+  "secs": "+{{n}} s"
  }
 }

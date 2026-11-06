@@ -25,7 +25,7 @@ async def desktop(p):
     await pg.goto(B + "/studio/"); await pg.wait_for_function("window.__studio&&document.querySelector('[data-testid=preview]')", timeout=20000); await pg.wait_for_timeout(600)
     await pg.click('[data-testid="rail-titles"]'); await pg.click('.panel .subtabs button:has-text("Motion graphics")'); await pg.wait_for_selector('[data-testid="motion-gallery"]')
     n = await E("()=>({tiles:document.querySelectorAll('.mgal .mgt').length,groups:[...document.querySelectorAll('.mgal .chip')].map(c=>c.textContent)})")
-    chk("the gallery: 137 motion graphics (since v235); the new groups Badges & offers, Frames & overlays", n["tiles"] == 137 and "Badges & offers" in n["groups"] and "Frames & overlays" in n["groups"], n)
+    chk("the gallery: 149 motion graphics (since v242); the new groups Badges & offers, Frames & overlays", n["tiles"] == 149 and "Badges & offers" in n["groups"] and "Frames & overlays" in n["groups"], n)
     for g, cnt in (("badges", 4), ("frames", 3), ("data", 13), ("audio", 6)):
         await pg.click(f'[data-testid="mgg-{g}"]'); await pg.wait_for_timeout(150); c = await E("()=>document.querySelectorAll('.mgal .mgt').length")
         chk(f"group {g}: {cnt} graphics", c == cnt, c)

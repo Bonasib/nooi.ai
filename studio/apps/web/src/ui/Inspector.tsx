@@ -73,6 +73,7 @@ export function Inspector() {
           </Sec>}
           <Sec id="keys" icon="keyframe" title={t("insp.keyframes")}><KfList c={c} /></Sec>
           {c.type === "media" && editor.project.assets[(c as MediaClip).asset]?.kind !== "audio" && <Sec id="bk" icon="cutout" title={t("bk.sec")}><BackdropSection c={c} /></Sec>}
+          {c.type === "media" && editor.project.assets[(c as MediaClip).asset]?.kind === "video" && <Sec id="ex" icon="speed" title={t("ex.sec")}><p className="hint">{t("ex.secHint")}</p><Btn icon="sparkle" onClick={() => ui.set((s) => ({ rail: "stock", panelOpen: true, sub: { ...s.sub, stock: "extend" } }))} testid="ex-open">{t("ex.open")}</Btn></Sec>}
           {c.type === "media" && <Sec id="fx" icon="effects" title={t("insp.effects")}><EffectsSection c={c} focus={tab === "effects"} /></Sec>}
           <Sec id="anim" icon="sparkle" title={t("insp.animation")}><span id="isec-motion" />
           <MotionTiles /></Sec>

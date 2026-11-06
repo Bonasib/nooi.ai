@@ -37,7 +37,7 @@ async def desktop(p):
     await pg.goto(B + "/studio/"); await pg.wait_for_function("window.__studio&&document.querySelector('[data-testid=preview]')", timeout=20000); await pg.wait_for_timeout(600)
     await pg.click('[data-testid="rail-titles"]'); await pg.click('.panel .subtabs button:has-text("Motion graphics")'); await pg.wait_for_selector('[data-testid="motion-gallery"]')
     n = await E("()=>({tiles:document.querySelectorAll('.mgal .mgt').length,chips:document.querySelectorAll('.mgal .chip').length,groups:document.querySelectorAll('.mgal .ns-lbl').length})")
-    chk("the gallery: 137 motion graphics in 14 groups (+ All)", n == {"tiles": 137, "chips": 15, "groups": 14}, n)
+    chk("the gallery: 149 motion graphics in 15 groups (+ All)", n == {"tiles": 149, "chips": 16, "groups": 15}, n)
     # every tile is the template drawn (scrolled into view one by one; the code tile is drawn by the sandbox)
     ids = await E("()=>[...document.querySelectorAll('.mgal .mgt')].map(b=>b.dataset.testid.slice(3))"); blank = []
     for i in ids:
@@ -46,7 +46,7 @@ async def desktop(p):
     for i in ids:
         lit = await E("(i)=>{const c=document.querySelector('[data-testid=mg-'+i+'] canvas'),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let k=3;k<d.length;k+=16)if(d[k]>40)n++;return n}", i)
         if lit < 30: blank.append([i, lit])
-    chk("every tile shows its graphic drawn by its own program (none blank)", not blank and len(ids) == 137, blank)
+    chk("every tile shows its graphic drawn by its own program (none blank)", not blank and len(ids) == 149, blank)
     # pointing at a tile plays it
     tl = pg.locator('[data-testid="mg-ti-letters"]'); await tl.scroll_into_view_if_needed(); await tl.hover()
     FP = "()=>{const c=document.querySelector('[data-testid=mg-ti-letters] canvas'),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let h=0;for(let k=0;k<d.length;k+=40)h=(h*31+d[k])>>>0;return h}"
@@ -120,7 +120,7 @@ async def phone(p):
     await pg.click('[data-testid="lang"]'); await pg.wait_for_timeout(300)
     await pg.click('[data-testid="rail-titles"]'); await pg.click('.panel .subtabs button:has-text("رسوم متحركة")'); await pg.wait_for_selector('[data-testid="motion-gallery"]')
     v = await E("()=>({tiles:document.querySelectorAll('.mgal .mgt').length,first:document.querySelector('.mgal .mgt span:last-child').textContent,over:document.documentElement.scrollWidth-innerWidth,cols:new Set([...document.querySelectorAll('.mgal .mgt')].slice(0,6).map(b=>Math.round(b.getBoundingClientRect().left))).size})")
-    chk("phone (Arabic): the gallery in Arabic, at least two tiles a row, nothing wider than the screen", v["tiles"] == 137 and v["first"] == "شريط ملوّن" and v["over"] <= 0 and v["cols"] >= 2, v)
+    chk("phone (Arabic): the gallery in Arabic, at least two tiles a row, nothing wider than the screen", v["tiles"] == 149 and v["first"] == "شريط ملوّن" and v["over"] <= 0 and v["cols"] >= 2, v)
     await pg.click('[data-testid="mgg-data"]'); await pg.wait_for_timeout(200); nd = await E("()=>document.querySelectorAll('.mgal .mgt').length")
     await pg.click('[data-testid="mg-ch-counter"]'); await pg.wait_for_timeout(500); mg = await E(MG)
     chk("phone: the group filter, and a graphic added in Arabic gets Arabic words", nd == 13 and len(mg) == 1 and re.search("[؀-ۿ]", json.dumps(mg[0]["props"], ensure_ascii=False)) and mg[0]["text"] == "عدّاد أرقام", [nd, mg])

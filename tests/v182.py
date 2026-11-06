@@ -138,7 +138,7 @@ async def page_part(p, phone, lang):
         await E(f"()=>{{S.lang='{lang}';document.documentElement.lang='{lang}';document.documentElement.dir='{'rtl' if ar else 'ltr'}';S.user=null;API.token=async()=>null;persist();renderAll()}}")
         await pg.wait_for_function("!!document.getElementById('soon182')", timeout=10000); await pg.wait_for_timeout(400)
         v = await E("""()=>{const o=document.getElementById('soon182'),r=o.getBoundingClientRect(),W=innerWidth;const wide=[...o.querySelectorAll('*')].filter(e=>{const b=e.getBoundingClientRect();return b.width&&(b.right>W+1||b.left<-1)}).map(e=>e.className||e.tagName).slice(0,5);
-          return {state:soonState182(),text:o.innerText,cards:o.querySelectorAll('.s182card').length,agents:o.querySelectorAll('.s182agents span svg').length,reg:!!o.querySelector('[data-act="soon182-reg"]'),team:!!o.querySelector('[data-act="soon182-in"]'),
+          return {state:soonState182(),text:o.innerText,cards:o.querySelectorAll('.s182card').length,agents:o.querySelectorAll('.s182agents span svg, .s182agents span img').length,reg:!!o.querySelector('[data-act="soon182-reg"]'),team:!!o.querySelector('[data-act="soon182-in"]'),
             cover:r.top<=0&&r.left<=0&&r.width>=W&&r.height>=innerHeight-1,app:getComputedStyle(document.getElementById('app')).visibility,sw:o.scrollWidth,cw:o.clientWidth,wide,top:document.elementFromPoint(W/2,innerHeight/2).closest('#soon182')?1:0}}""")
         out[tag + "-visitor"] = {k: v[k] for k in ("state", "cards", "agents", "app", "sw", "cw", "wide")}
         ok(v["state"] == "visitor" and v["cover"] and v["top"] and v["app"] == "hidden", f"{tag}: the Coming soon page should cover the site: {out[tag + '-visitor']}")

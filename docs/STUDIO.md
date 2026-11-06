@@ -543,3 +543,21 @@ Built on our own code. No code from Remotion or any other motion library is used
   - With "Only my MiniMax key" on, Admin → AI providers used to show the AI engine as "Not set", as if its key had been deleted. The key was always kept.
   - Now it shows "Key saved — paused (Only my MiniMax key is on)", with how to use it again.
   - `deploy/why.sh` lists every key saved in Admin (yes/no, never the key). It warns about any saved key the server can't read; that happens when `SECRET_KEY` in `.env` changed after the key was saved.
+
+## v242 — The start page, the Mini Crew, Infographics, Extend with AI
+
+- **The start page** (visitors) follows the owner's design.
+  - The hero: "Your Creative Team, Always on Call", with the crew.
+  - "Meet Your Creative Team": a card per agent, swiped on a phone, with arrows on a computer, and dots underneath.
+  - The four benefits, and "Made with nooi".
+  - Then the plans, the questions and the footer, as before.
+  - On a phone, a bar at the bottom: Home · Projects · start · Team · Me.
+  - It's light like the design. Once someone signs in, the site's dark look comes back, unless they switched the theme themselves on the start page.
+- **The nine agents are the owner's Mini Crew** (`public/crew/*.webp`, cut from the owner's sheet): Quill writes, Nova designs, Max directs, Lumi films, Lyra voices, Echo makes the sound, Remy edits, Duke produces and Iris checks.
+  - `botSVG` draws each agent's picture everywhere agents appear; a working agent moves.
+- **Infographics** (Titles → Motion graphics → Infographics, 12): checklist, steps, cycle, pyramid, comparison table, KPI board, icon row, quote, call to action, news ticker, route and people chart.
+  - These are the classic editor's infographics redrawn for nooi Motion. They work in any language (Arabic right to left), and the preview matches the export.
+- **Extend with AI** (Stock & AI → Extend, or the clip's settings → Extend with AI).
+  - The frame where the picked clip ends starts a new shot that continues it. Because it uses the clip's own end, a trimmed clip continues from where it was cut.
+  - Length +3 to +10 s, the video model, and what happens next (optional). The price shows first.
+  - The new shot lands right after the clip, and the clips after it move along.

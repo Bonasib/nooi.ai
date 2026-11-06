@@ -171,15 +171,15 @@ async def agents(b):
     ok(r["order"] == want and r["hf"] == want and r["ag"] == want, f"{tag}: nine agents in the order the work runs {r['order']}")
     ok(r["lyra"][:2] == ["Lyra", "Dialogue & Voice Director"] and "voice" in r["lyra"][2] and r["echo"] == "Sound Designer", f"{tag}: Lyra and Echo's roles {r}")
     ok(len(set(r["fills"])) == 9, f"{tag}: every agent its own colour {r['fills']}")
-    s = await E("()=>{const d=document.createElement('div');d.innerHTML=botSVG('voice','working',64);return [!!d.querySelector('.shape rect[rx=\"25\"]'),!!d.querySelector('.fx-wave')]}")
-    ok(s == [True, True], f"{tag}: Lyra's own icon (a microphone with sound waves) {s}")
+    s = await E("()=>{const d=document.createElement('div');d.innerHTML=botSVG('voice','working',64);const i=d.querySelector('img');return [!!i&&/\\/crew\\/lyra\\.webp$/.test(i.getAttribute('src')),!!i&&i.classList.contains('cs-working')]}")
+    ok(s == [True, True], f"{tag}: Lyra's own picture (v242: the Mini Crew — headphones and a microphone), moving while working {s}")
     for l, nm, rl in (("ru", "Лира", "Режиссёр диалогов и озвучки"), ("ja", "ライラ", "台詞・ボイスディレクター"), ("fr", "Lyra", "Directeur des dialogues et des voix")):
         t = await E("(l)=>{S.lang=l;const b=BOT('voice'),r=[L(b.name[0],b.name[1]),L(b.role[0],b.role[1])];S.lang='en';return r}", l); ok(t == [nm, rl], f"{tag}: {l} name and role {t}")
     await E("()=>{go('crew');renderAll()}"); await pg.wait_for_timeout(800)
     r = await E("()=>({roles:[...document.querySelectorAll('.crewline .botcard[data-bot]')].map(c=>c.dataset.bot),cards:document.querySelectorAll('.crewline .botcard').length})")   # v93: the cards are the list
     ok(r["roles"] == want and r["cards"] == 9, f"{tag}: nooi Studio lists all nine in order {r}")
     await E("()=>{S.user=null;renderAll()}"); await pg.wait_for_timeout(500)
-    r = await E("()=>({ids:[...document.querySelectorAll('#lp-crew .lpbot')].map(x=>x.dataset.bot),h:(document.querySelector('#lp-crew .lph2')||{}).textContent})")
+    r = await E("()=>({ids:[...document.querySelectorAll('#lp-team .c242')].map(x=>x.dataset.bot),h:(document.querySelector('#lp-team .sub242')||{}).textContent})")   # (v242: Meet Your Creative Team)
     ok(r["ids"] == want and "Nine" in (r["h"] or ""), f"{tag}: the landing page — nine specialists in order {r}")
     await E("()=>{S.user={name:'T',method:'google'};S.crew.brief.idea='Sara and Omar meet at a café. Sara: Did you see the sunrise? Omar: Every day.';S.crew.brief.lang='en';S.crew.brief.seconds=20;go('crew');renderAll();runCrew()}")
     for _ in range(300):

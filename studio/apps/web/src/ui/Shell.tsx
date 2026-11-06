@@ -197,7 +197,7 @@ export function MateDrawer() {
 
 // ---------------- the AI Hub: every AI tool in one grid (320 × 280)
 const HUB: { id: string; icon: string; rail?: Rail; sub?: string; run?: () => void }[] = [
-  { id: "gen", icon: "film", rail: "stock", sub: "aigen" }, { id: "restyle", icon: "wand", rail: "stock", sub: "restyle" }, { id: "tools", icon: "ai", rail: "stock", sub: "aitools" },
+  { id: "gen", icon: "film", rail: "stock", sub: "aigen" }, { id: "restyle", icon: "wand", rail: "stock", sub: "restyle" }, { id: "extend", icon: "speed", rail: "stock", sub: "extend" }, { id: "tools", icon: "ai", rail: "stock", sub: "aitools" },
   { id: "captions", icon: "captions", rail: "titles", sub: "captions" }, { id: "mate", icon: "chat", run: () => ui.set({ mate: true }) },
   { id: "pauses", icon: "cut", run: () => ui.set({ mate: true }) }, { id: "clean", icon: "denoise", run: () => { const c = A.sel1(); if (c?.type === "media") A.setProp("denoise", true); else toast(tr("toast.pickClip"), "info"); } },
   { id: "translate", icon: "globe", rail: "titles", sub: "captions" }, { id: "sfx", icon: "audio", rail: "audio", sub: "sfx" }, { id: "montage", icon: "template", run: () => A.instantMontage() },
