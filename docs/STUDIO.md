@@ -517,3 +517,25 @@ Built on our own code. No code from Remotion or any other motion library is used
   - In the studio, Replace, Recast and Restyle say the same. Make with AI keeps working (on MiniMax).
   - Staff are also told which switch is doing it.
 - **`deploy/why.sh`** shows "AI engine: OFF (key saved, not used)" and "Only my MiniMax key: yes".
+
+## v241 — Seedance on your own ByteDance key (BytePlus ModelArk)
+
+- **Where the key goes:** Admin → AI providers → **Seedance (ByteDance)**, or `SEEDANCE_API_KEY`. The connection follows BytePlus's API reference: `POST {base}/contents/generations/tasks`, then `GET …/tasks/{id}`.
+- **Your key comes first** (before the AI engine and before MiniMax) for:
+  - every Seedance model picked: 2.0 Fast, 2.0, 2.5 and 2.0 Mini;
+  - editing a video's seconds: Edit with words, Replace things / Replace faces, Extend;
+  - "Auto" videos, unless MiniMax takes every video.
+  - With "Only my MiniMax key" on, Seedance picks and Replace things in a video still run on ByteDance, because it's your own key.
+  - Character Swap, Motion Control, lip-sync and pictures never go to ByteDance.
+- **Models:** `dreamina-seedance-2-0-fast-260128`, `dreamina-seedance-2-0-260128`, `dreamina-seedance-2-5-260628` and `dreamina-seedance-2-0-mini-260615`.
+  - Admin → Models (a model's API id) wins.
+  - A Seedance 2.x id on the Seedance card is used for plain Seedance. An old 1.0 id there is ignored.
+- **The request:** the site builds the same words and references as for Seedance on the AI engine, then sends them in BytePlus's form:
+  - text;
+  - `first_frame` / `last_frame`, or `reference_image` (@Image1…), `reference_video` (@Video1) and `reference_audio`;
+  - `ratio`, `duration` (4–15 s; up to 30 s on 2.5; a 2.5 edit keeps the video's own length), `resolution` per model (Fast and Mini go up to 720p), `generate_audio`, and `watermark: false`.
+- **Files:** pictures on the server go as Base64, so ByteDance doesn't need to reach the server for them. Videos and sounds go as a public link (`PUBLIC_BASE_URL`), the only form BytePlus takes.
+- **Results:** the finished video is saved on the server (ByteDance's links last 24 hours). A failed task is refunded, and no other engine is tried.
+- **Real faces:** BytePlus says Seedance 2.0 / 2.5 refuse reference pictures or videos with real human faces. The exceptions are Seedance's own outputs from the last 30 days, its digital characters and authorised portraits. Such a job is refused; the customer is told why (EN + AR) and nothing is charged.
+- **Before using 2.0 / 2.5:** BytePlus requires the models to be activated (a balance above USD 30, a Savings Plan or a Seedance resource pack).
+- **`deploy/why.sh`** says whether the ByteDance key is connected.

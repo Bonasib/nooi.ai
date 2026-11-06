@@ -4432,7 +4432,7 @@ const PERMS=[["analytics.view","View analytics","عرض الإحصاءات"],["u
 const ALLP=PERMS.map(p=>p[0]);
 const ROLE_DEF={owner:[["Owner","المالك"],ALLP],admin:[["Admin","مشرف عام"],ALLP.filter(p=>p!=="admins.manage")],support:[["Support agent","موظف دعم"],["users.view","support.reply","emails.send"]],finance:[["Finance","المالية"],["analytics.view","users.view","credits.adjust","payments.manage","audit.view"]],moderator:[["Content moderator","مشرف محتوى"],["users.view","users.edit","support.reply","audit.view"]],viewer:[["Viewer","مشاهد"],["analytics.view","users.view"]]};
 const AI_PROVIDERS=[
- ["seedance","Seedance (ByteDance)","سيدانس (بايت دانس)","video",[["apiKey","API key (BytePlus ModelArk)"],["model","Model id"],["baseUrl","Base URL"]],"https://ark.ap-southeast.bytepluses.com/api/v3"],
+ ["seedance","Seedance (ByteDance)","سيدانس (بايت دانس)","video",[["apiKey","API key (BytePlus ModelArk)"],["model","Model id (optional — e.g. dreamina-seedance-2-0-260128; empty = each Seedance model its own)"],["baseUrl","Base URL"]],"https://ark.ap-southeast.bytepluses.com/api/v3"],
  ["kling","Kling AI","كلينغ","video",[["accessKey","Access key"],["secretKey","Secret key"],["baseUrl","Base URL"]],"https://api.klingai.com"],
  ["qwen","Qwen · DashScope (Alibaba)","كوين · علي بابا","video · image · text · 3D",[["apiKey","DashScope API key"],["videoModel","Video model"],["imageModel","Image model"],["baseUrl","Base URL"],["model3d","3D model (Model Studio · empty = Tripo/Tripo-P1.0 · off = not used)"],["url3d","3D API URL (empty = Base URL; another region)"]],"https://dashscope-intl.aliyuncs.com/api/v1"],
  ["qwentext","Qwen text (Anthropic-compatible)","كوين للنصوص","text",[["apiKey","API key"],["model","Model"],["baseUrl","Base URL"]],"https://token-plan.maas.qwencloudapi.com/apps/anthropic"],
@@ -16177,11 +16177,11 @@ const engOffMsg240=()=>{const staff=typeof ME!=="undefined"&&ME&&(ME.role==="own
   return L("This tool isn't available right now — nothing is charged.","هذه الأداة غير متاحة الآن — لا يُخصم شيء.")+(staff?" "+L("(“Only my MiniMax key” is on in Admin → AI providers → MiniMax: this tool needs the AI engine.)","(«مفتاح ميني ماكس فقط» مفعّل في الإدارة ← مزودو الذكاء ← ميني ماكس: هذه الأداة تحتاج محرك الذكاء.)"):"")};
 VIEWS.motion=(o=>function(){const h=o.apply(this,arguments);if(!engOff240())return h;
   return h.replace('<div class="panel pad mc83">','<div class="panel pad mc83"><p class="small off240" data-testid="engine-off">'+ic("info","width:14px;height:14px;vertical-align:-2px")+" "+esc(engOffMsg240())+"</p>").replace('data-act="mc-make"','data-act="mc-make" disabled aria-disabled="true"')})(VIEWS.motion);
-rpSheet136=(o=>function(j){if(engOff240()){toast(engOffMsg240(),{type:"warn"});return}return o.apply(this,arguments)})(rpSheet136);
+rpSheet136=(o=>function(j){if(engOff240()&&!(API.cfg.providers.bd241&&!rpImg136(j))){toast(engOffMsg240(),{type:"warn"});return}return o.apply(this,arguments)})(rpSheet136);
 window.addEventListener("click",e=>{if(!engOff240())return;const a=e.target.closest&&e.target.closest('[data-act="mc-make"],[data-act="fc239-find"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();toast(engOffMsg240(),{type:"warn"})},true);
-renderAll=(o=>function(){try{document.body.classList.toggle("mmonly240",engOff240())}catch(e){}return o.apply(this,arguments)})(renderAll);
+renderAll=(o=>function(){try{document.body.classList.toggle("mmonly240",engOff240());document.body.classList.toggle("bd241",!!(API.cfg&&API.cfg.providers&&API.cfg.providers.bd241))}catch(e){}return o.apply(this,arguments)})(renderAll);
 (()=>{const st=document.createElement("style");st.textContent=`
-body.mmonly240 [data-act="rp136"],body.mmonly240 [data-act="fc239-find"],body.mmonly240 .fc239go{display:none!important}
+body.mmonly240:not(.bd241) [data-act="rp136"],body.mmonly240 [data-act="fc239-find"],body.mmonly240 .fc239go{display:none!important}
 .off240{padding:8px 10px;border-radius:10px;margin:0 0 12px;background:color-mix(in srgb,#f5b942 12%,var(--panel2));border:1px solid color-mix(in srgb,#f5b942 35%,var(--line))}`;document.head.appendChild(st)})();
 /* ================= v138: an AI engine that ran out of credits is said at once to staff ================= */
 // (the server: lib/alert138.js — GET /v1/me gives staff alerts138 {engine:{since,last,count}}): a red line at the top of Admin with

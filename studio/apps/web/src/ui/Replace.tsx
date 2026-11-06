@@ -39,7 +39,7 @@ function useMe() { const [me, setMe] = useState(api.me); useEffect(() => { void 
 function Gate({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation(); const me = useMe();
   if (!api.online) return <p className="hint">{t("ai.offline")}</p>;
-  if (api.engineOff) return <p className="hint warnline" data-testid="engine-off">{t("ai.engineOff")}</p>;
+  if (api.engineOff && !api.bytedance) return <p className="hint warnline" data-testid="engine-off">{t("ai.engineOff")}</p>;
   if (!me.signedIn) return <div className="empty"><Icon name="ai" size={20} /><p>{t("ai.signIn")}</p><a className="ns-btn primary" href={at("/?signin=1")}>{t("ai.signInBtn")}</a></div>;
   return <>{children}</>;
 }

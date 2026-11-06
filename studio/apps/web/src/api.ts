@@ -12,7 +12,9 @@ type Listener = () => void;
 class Api {
   online = false; cfg: Record<string, unknown> = {};
   /** v240: "Only my MiniMax key" is on — tools that need the AI engine (swaps, motion, replacing things in a video, picture edits) are off */
-  get engineOff(): boolean { return !!(this.cfg.providers as Record<string, unknown> | undefined)?.mmOnly240; } me: Me = { signedIn: false, name: "", credits: null };
+  get engineOff(): boolean { return !!(this.cfg.providers as Record<string, unknown> | undefined)?.mmOnly240; }
+  /** v241: Seedance runs on the owner's own ByteDance key — Replace (a person's look, a thing, the background in a video) works on it */
+  get bytedance(): boolean { return !!(this.cfg.providers as Record<string, unknown> | undefined)?.bd241; } me: Me = { signedIn: false, name: "", credits: null };
   private ready: Promise<void> | null = null; private ls = new Set<Listener>();
   on(f: Listener) { this.ls.add(f); return () => { this.ls.delete(f); }; }
   private emit() { this.ls.forEach((f) => f()); }
