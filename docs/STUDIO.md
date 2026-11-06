@@ -506,3 +506,14 @@ Built on our own code. No code from Remotion or any other motion library is used
   - no MiniMax key;
   - the switch is off;
   - a job MiniMax can't make: a Character Swap, Motion Control, lip-sync, Replace things / Replace faces, or anything that starts from a video. These need the AI engine's balance.
+
+## v240 — Only my MiniMax key
+
+- **The switch:** Admin → AI providers → MiniMax → **Only my MiniMax key**, or `MINIMAX_ONLY=1` on the server. It needs a saved MiniMax key.
+- **While it's on, the AI engine is never used**, even with its key saved. The site treats the engine as not connected; the key stays saved for later.
+- **Everything MiniMax can make goes to your MiniMax balance**, whatever model was picked: videos from words or a picture (Hailuo), pictures, voices, music and the site's text AI. This is the same routing as "Everything on MiniMax".
+- **What MiniMax can't make is refused before anything is charged:** Character Swap, Motion Control, Replace things / Replace faces in a video, lip-sync, picture edits, upscaling and sound effects.
+  - On the site, Motion Control shows "This tool isn't available right now — nothing is charged" and Make can't be pressed. Replace things doesn't open, and its buttons are hidden.
+  - In the studio, Replace, Recast and Restyle say the same. Make with AI keeps working (on MiniMax).
+  - Staff are also told which switch is doing it.
+- **`deploy/why.sh`** shows "AI engine: OFF (key saved, not used)" and "Only my MiniMax key: yes".

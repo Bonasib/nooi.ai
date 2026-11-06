@@ -5,7 +5,7 @@
 // too many requests · 2013 a bad input. The owner switches each use on or off in Admin → AI providers → MiniMax (S().minimax183);
 // a customer's picked ElevenLabs voice stays where it is. Admin's check (POST /v1/get_voice) costs nothing.
 // (v185: + videos — Hailuo on the same key, for MiniMax picks and whenever the AI engine can't take a job for its balance)
-import { cfg, configured, S } from "../lib/settings.js";
+import { cfg, configured, S, mmOnly240 } from "../lib/settings.js";
 import { save } from "../lib/store.js";
 import { saveBuffer, download, localPath, MEDIA_DIR } from "../lib/media.js";
 import fs from "fs";
@@ -178,7 +178,7 @@ export function mmWhyNot239(cap, body) {
 // the owner's MiniMax balance, whatever model was picked — videos from words or a picture, pictures, voices, music, and the site's
 // text AI (MiniMax-M3 over MiniMax's Anthropic-compatible API). What MiniMax can't make (a Character Swap, Motion Control, lip-sync,
 // a job that reads a video, picture edits, upscaling, 3D…) stays with its own engine. Customers pay the same credits.
-export const mmAll237 = () => configured("minimax") && (mmState183().all === true || /^(1|true|on|yes)$/i.test(String(process.env.MINIMAX_ALL || "")));
+export const mmAll237 = () => configured("minimax") && (mmState183().all === true || mmOnly240() || /^(1|true|on|yes)$/i.test(String(process.env.MINIMAX_ALL || "")));
 const editsPicture = (body) => !!(body.inputs && (body.inputs.iRef || body.inputs.edit || body.inputs.mask)) || ["edit", "upscale", "bgremove", "inpaint", "outpaint"].includes(String(body.kind || ""));
 const mmVideoFits = (body) => { const inp = body.inputs || {}; return !/^mc(26|30|swap)$/.test(String(body.model || "")) && !["lipsync", "avatar", "swap"].includes(String(body.kind || "")) && !body.meta?.swap93
   && !Object.values(inp).some((v) => VIDEO_FILE.test(String(v || ""))); };

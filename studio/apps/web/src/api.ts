@@ -10,7 +10,9 @@ import { at } from "./site";
 type Listener = () => void;
 
 class Api {
-  online = false; cfg: Record<string, unknown> = {}; me: Me = { signedIn: false, name: "", credits: null };
+  online = false; cfg: Record<string, unknown> = {};
+  /** v240: "Only my MiniMax key" is on — tools that need the AI engine (swaps, motion, replacing things in a video, picture edits) are off */
+  get engineOff(): boolean { return !!(this.cfg.providers as Record<string, unknown> | undefined)?.mmOnly240; } me: Me = { signedIn: false, name: "", credits: null };
   private ready: Promise<void> | null = null; private ls = new Set<Listener>();
   on(f: Listener) { this.ls.add(f); return () => { this.ls.delete(f); }; }
   private emit() { this.ls.forEach((f) => f()); }

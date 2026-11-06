@@ -82,6 +82,7 @@ export function RestylePanel() {
     } catch (e) { setBusy(null); const er = e as { message?: string; errorAr?: string }; toast((lang === "ar" && er.errorAr) || er.message || t("ai.failed"), "warn"); }
   };
   if (!api.online) return <p className="hint">{t("ai.offline")}</p>;
+  if (api.engineOff) return <p className="hint warnline" data-testid="engine-off">{t("ai.engineOff")}</p>;
   if (!me.signedIn) return <div className="empty"><Icon name="ai" size={20} /><p>{t("ai.signIn")}</p><a className="ns-btn primary" href={at("/?signin=1")}>{t("ai.signInBtn")}</a></div>;
   const total = cost && cost.pic != null && cost.vid != null ? cost.pic + cost.vid : null;
   return (<>

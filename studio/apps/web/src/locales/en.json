@@ -262,7 +262,8 @@
   "join": "Merge into one clip (the join can't be seen)",
   "joining": "Joining it to the clip…",
   "extendedJoined": "Extended — one clip on the timeline.",
-  "joinFailed": "Couldn't join them — the new part was added right after the clip."
+  "joinFailed": "Couldn't join them — the new part was added right after the clip.",
+  "engineOff": "This tool isn't available right now — nothing is charged."
  },
  "preview": {
   "label": "Preview",

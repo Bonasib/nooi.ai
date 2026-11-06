@@ -149,7 +149,7 @@ async def page_part(p, phone, lang):
           models:[...c.querySelectorAll('[data-mm183]')].map(i=>i.dataset.mm183),head:row.querySelector('.aiphead').innerText,text:c.innerText,
           wide:[...c.querySelectorAll('*')].filter(e=>{const b=e.getBoundingClientRect();return b.width&&(b.right>W+1||b.left<-1)}).length}}""")
         out[tag] = {k: v[k] for k in ("sw", "models", "wide")}
-        ok(v["sw"] == ["all:false", "voice:true", "image:true", "music:true", "video:true"] and v["models"] == ["speechModel", "imageModel", "musicModel", "videoModel", "textModel"] and not v["wide"], f"{tag}: the MiniMax row should have the Videos switch and the video model: {out[tag]}")
+        ok(v["sw"] == ["only:false", "all:false", "voice:true", "image:true", "music:true", "video:true"] and v["models"] == ["speechModel", "imageModel", "musicModel", "videoModel", "textModel"] and not v["wide"], f"{tag}: the MiniMax row should have the Videos switch and the video model: {out[tag]}")
         ok(("فيديو" in v["head"] and "Hailuo 2.3" in v["text"]) if ar else ("videos" in v["head"] and "Hailuo 2.3" in v["text"]), f"{tag}: the row should say MiniMax makes videos (Hailuo 2.3): {v['head']}")
         await pg.screenshot(path=D + f"/{tag}.png")
         await pg.click('[data-act="mm183-use"][data-k="video"]'); await pg.wait_for_function("API.cfg.providers.minimax183.video===false", timeout=15000)

@@ -161,7 +161,7 @@ async def page_part(p, phone, lang):
           region:[...c.querySelectorAll('[data-act="mm183-region"]')].map(b=>b.dataset.v+':'+b.getAttribute('aria-pressed')),models:[...c.querySelectorAll('[data-mm183]')].map(i=>i.dataset.mm183),
           wide:[...c.querySelectorAll('*')].filter(e=>{const b=e.getBoundingClientRect();return b.width&&(b.right>W+1||b.left<-1)}).length,st:document.getElementById('mm183st').textContent}}""")
         out[tag + "-card"] = {k: v[k] for k in ("sw", "region", "models", "wide", "st")}
-        ok(v["sw"] == ["all:false", "voice:true", "image:true", "music:true", "video:true"] and v["region"] == ["intl:true", "cn:false"] and v["models"] == ["speechModel", "imageModel", "musicModel", "videoModel", "textModel"] and not v["wide"], f"{tag}: the MiniMax box: {out[tag + '-card']}")
+        ok(v["sw"] == ["only:false", "all:false", "voice:true", "image:true", "music:true", "video:true"] and v["region"] == ["intl:true", "cn:false"] and v["models"] == ["speechModel", "imageModel", "musicModel", "videoModel", "textModel"] and not v["wide"], f"{tag}: the MiniMax box: {out[tag + '-card']}")
         await pg.screenshot(path=D + f"/{tag}-card.png")
         # MiniMax Image-01 among the picture engines; switched off → gone
         has = lambda: E("()=>{S.hf.tab='image';hfModelSheet();const t=(document.getElementById('modalRoot').innerText||'');document.getElementById('modalRoot').innerHTML='';return t.includes('MiniMax Image-01')}")

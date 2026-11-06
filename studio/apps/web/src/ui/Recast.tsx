@@ -131,6 +131,7 @@ export function RecastPanel() {
     } catch (e) { const er = e as { message?: string; errorAr?: string }; if (live) setWhy((lang === "ar" && er.errorAr) || er.message || ""); } }, 400);
     return () => { live = false; clearTimeout(tm); }; }, [clip?.id, mode, keepPlace, ready, JSON.stringify(rows), refs.length, me.signedIn]);
   if (!api.online) return <p className="hint">{t("ai.offline")}</p>;
+  if (api.engineOff) return <p className="hint warnline" data-testid="engine-off">{t("ai.engineOff")}</p>;
   if (!me.signedIn) return <div className="empty"><Icon name="ai" size={20} /><p>{t("ai.signIn")}</p><a className="ns-btn primary" href={at("/?signin=1")}>{t("ai.signInBtn")}</a></div>;
   const total = cost == null ? null : cost * count, short = !me.free && me.credits != null && total != null && total > me.credits;
   const addPic = async (f?: File) => { if (!f) return; setBusyUp(true); try { const u = await api.upload(f, f.name); setRefs((r) => [...r, { id: uid(), kind, label: f.name.replace(/\.\w+$/, "").slice(0, 40), url: rel(u), thumb: URL.createObjectURL(f) }]); }
