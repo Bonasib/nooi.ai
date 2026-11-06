@@ -490,3 +490,19 @@ Built on our own code. No code from Remotion or any other motion library is used
   - The price shows first; credits are taken only when it works.
   - It needs the AI engine: MiniMax's own API doesn't change an existing video.
 - **`deploy/why.sh`** (read-only, no keys): whether the AI engine and MiniMax are connected, whether everything is on MiniMax, and the last failed jobs — what was asked, where it went, why it failed, and whether MiniMax could have made it.
+
+## v239 — Replace faces (several people in one video)
+
+- **The analysis finds every face.** `lib/scan136.js` now asks the analysis agents for each person's face box (and to list two different people as two items). Each person gets a square 192 px face picture (`item.face`, `faceBox`).
+  - Without a face box, the face is guessed from the top of the person's box (`faceGuess`).
+  - A list made before v239 gets its faces from the frames already on the server, without asking the agents again.
+- **A new face for any of them, several at once.** On the site, the Replace things sheet opens with a **Faces** row. Under each face: **New face** (a photo) or **@ Character** (one with a face picture), and **Keep**.
+  - All the faces picked go into one Replace-things job, made in one pass over the seconds they're seen in. The price shows first; nothing is charged if it fails.
+  - Up to 6 new faces in a video and 3 in a picture; the server says so with a 400.
+  - The change is face only (`changes[].face: true`): the person keeps their hair, body and clothes, and every movement, expression and lip movement.
+- **Motion Control → Replace the person, step 3** has **Several people? Replace their faces**. It sends that video to the analysis (once) and opens the same Faces sheet.
+- **The studio:** Stock & AI → Replace person / voice shows the same faces (photo or @character for each) and makes them in one go.
+- **Why MiniMax didn't take over** (owner and admins only). When the AI engine refuses a job for its balance and MiniMax doesn't step in, the reason goes on the card's staff line and in `deploy/why.sh`. It is one of:
+  - no MiniMax key;
+  - the switch is off;
+  - a job MiniMax can't make: a Character Swap, Motion Control, lip-sync, Replace things / Replace faces, or anything that starts from a video. These need the AI engine's balance.

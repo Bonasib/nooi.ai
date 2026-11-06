@@ -783,7 +783,16 @@
   "replaced": "replaced",
   "go": "Replace",
   "upload": "The clip couldn't be sent to the server.",
-  "uploadingClip": "Sending the clip…"
+  "uploadingClip": "Sending the clip…",
+  "faces": "Faces",
+  "facesHint": "Every face the analysis found. Give any of them a new face — a photo or one of your characters. Pick several and they're all made in one go.",
+  "newFace": "New face",
+  "facePhoto": "Photo",
+  "keepFace": "Keep",
+  "facesN": "{{n}} new faces · made in one go",
+  "facesMax": "Up to {{n}} new faces at once — make the rest in a second go.",
+  "faceOf": "New face for {{name}}",
+  "goFaces": "Replace the faces"
  },
  "bgr": {
   "hint": "A new place behind the people: pick an example, describe one, or use your own picture or video. The people stay as they are, with the light on them matched to the new place.",

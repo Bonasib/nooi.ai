@@ -295,7 +295,7 @@ async def phone(b):
     mk = await E("()=>{const j=S.jobs[S.jobs.length-1];return{n:S.jobs.length,meta:j&&j.meta&&j.meta.replace136,remote:j&&j.remote||null,sheet:!!document.getElementById('rp136')}}")
     rr = waitjob(mk["remote"], 240, tok="l") if mk.get("remote") else {}
     out["sheet"] = {"sheet": sh, "summary": sm, "made": mk, "status": rr.get("status"), "error": rr.get("error")}
-    chk("Replace things… on the page: the people, vehicles and sounds in the video, each with a small picture; nothing picked → Make is off", sh["heads"][:2] == ["People 1", "Vehicles 1"] and any(h.startswith("Sounds") for h in sh["heads"]) and sh["thumbs"] >= 2 and sh["go"], sh)
+    chk("Replace things… on the page: the people, vehicles and sounds in the video, each with a small picture; nothing picked → Make is off", [h for h in sh["heads"] if not h.startswith("Faces")][:2] == ["People 1", "Vehicles 1"] and any(h.startswith("Sounds") for h in sh["heads"]) and sh["thumbs"] >= 2 and sh["go"], sh)
     chk("…'Change' and the words: 'What changes' says it in a numbered list, the price, Make; Make sends the change and the video comes back changed", sm["sum"] == ["the man in the red coat → a woman in a blue dress"] and not sm["go"] and sm["cost"] not in ("…", "—")
         and mk["n"] == n0 + 1 and (mk["meta"] or {}).get("changes") == [{"id": "i1", "to": "a woman in a blue dress"}] and not mk["sheet"] and rr.get("status") == "done", out["sheet"])
     chk("phone: no page errors", not errs, errs[:3]); await ctx.close()

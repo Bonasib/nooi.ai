@@ -16003,11 +16003,12 @@ const RPS136={speech:["Speech","كلام","voice"],music:["Music","موسيقى"
 const RPV136=[["woman","A woman","امرأة"],["man","A man","رجل"],["young_woman","A young woman","شابة"],["young_man","A young man","شاب"],["old_woman","An older woman","امرأة مسنّة"],["old_man","An older man","رجل مسنّ"]];
 const mmss136=t=>{t=Math.max(0,+t||0);return Math.floor(t/60)+":"+String(Math.floor(t%60)).padStart(2,"0")};
 const rpImg136=j=>j&&["image","look","sheet"].includes(j.kind);
-function rpSheet136(j,o){if(!j)return;if(API.mode!=="server"||!j.remote){toast(L("Replace things works on your saved videos and pictures once you're signed in.","استبدال الأشياء يعمل على فيديوهاتك وصورك المحفوظة بعد تسجيل الدخول."));return}
-  Object.assign(RP136,{j,scan:null,ch:{},pics:{},q:null,busy:true,clip:(o&&o.clip)||null,custom:[]});
-  hfSheet(L("Replace things","استبدال الأشياء"),'<div class="rp136" id="rp136"><p class="rp136w">'+STARS()+"<span>"+esc(L("The analysis agents are looking at it — the people, animals, vehicles, buildings, things and writing in it"+(rpImg136(j)?"":", and its sounds")+"…","وكلاء التحليل ينظرون إليه — الأشخاص والحيوانات والمركبات والمباني والأشياء والكتابة"+(rpImg136(j)?"":"، وأصواته")+"…"))+"</span></p></div>");
+const rpWho239=j=>j&&j.remote?{job:j.remote}:{src:j&&j.src239};
+function rpSheet136(j,o){if(!j)return;if(API.mode!=="server"||(!j.remote&&!j.src239)){toast(L("Replace things works on your saved videos and pictures once you're signed in.","استبدال الأشياء يعمل على فيديوهاتك وصورك المحفوظة بعد تسجيل الدخول."));return}
+  Object.assign(RP136,{j,scan:null,ch:{},pics:{},q:null,busy:true,clip:(o&&o.clip)||null,custom:[],faces:!!(o&&o.faces)});
+  hfSheet(o&&o.faces?L("Replace faces","استبدال الوجوه"):L("Replace things","استبدال الأشياء"),'<div class="rp136" id="rp136"><p class="rp136w">'+STARS()+"<span>"+esc(L("The analysis agents are looking at it — the people, animals, vehicles, buildings, things and writing in it"+(rpImg136(j)?"":", and its sounds")+"…","وكلاء التحليل ينظرون إليه — الأشخاص والحيوانات والمركبات والمباني والأشياء والكتابة"+(rpImg136(j)?"":"، وأصواته")+"…"))+"</span></p></div>");
   rpScan136(false)}
-async function rpScan136(hear){const j=RP136.j;try{const r=await API.req("/v1/scan136",{json:{job:j.remote,lang:S.lang,...(hear?{hear:true}:{})}});if(RP136.j!==j)return;RP136.scan=r;RP136.busy=false;if(hear&&typeof loadMe==="function")loadMe();rpPaint136()}
+async function rpScan136(hear){const j=RP136.j;try{const r=await API.req("/v1/scan136",{json:{...rpWho239(j),lang:S.lang,...(hear?{hear:true}:{})}});if(RP136.j!==j)return;RP136.scan=r;RP136.busy=false;if(hear&&typeof loadMe==="function")loadMe();rpPaint136()}
   catch(e){RP136.busy=false;const b=$("#rp136");if(b)b.innerHTML='<p class="small">'+esc(S.lang==="ar"&&e.errorAr?e.errorAr:String(e.message||e))+"</p>"}}
 function rpRow136(it,snd){const c=RP136.ch[it.id]||{mode:"keep"},m=c.mode,seg=["keep","change","remove"].map(v=>'<button type="button" data-act="rp136-mode" data-id="'+esc(it.id)+'" data-v="'+v+'" aria-pressed="'+(m===v)+'">'+esc(v==="keep"?L("Keep","أبقِ"):v==="change"?(snd&&it.kind==="speech"?L("New voice","صوت جديد"):L("Change","غيّر")):L("Remove","أزِل"))+"</button>").join("");
   const when=snd?mmss136(it.from)+"–"+mmss136(it.to):(it.seen&&it.seen.length&&RP136.scan.kind==="video"?it.seen.map(s=>mmss136(s[0])+"–"+mmss136(s[1])).join(", "):""),sub=[snd?L(RPS136[it.kind][0],RPS136[it.kind][1]):it.where,when].filter(Boolean).join(" · ");
@@ -16019,11 +16020,13 @@ function rpRow136(it,snd){const c=RP136.ch[it.id]||{mode:"keep"},m=c.mode,seg=["
     more='<input class="rp136in" dir="auto" data-rp136to="'+esc(it.id)+'" value="'+esc(c.to||"")+'" placeholder="'+esc(L("What instead? e.g. a man in a blue suit, a red sports car","ماذا بدلاً منه؟ مثلاً رجل ببدلة زرقاء، سيارة رياضية حمراء"))+'"><div class="rp136x">'+
       '<label class="btn sm">'+(p&&p.url?'<img src="'+esc(p.url)+'" alt="">':ic("image"))+esc(p&&p.busy?L("Uploading…","يُرفع…"):p&&p.url?L("Picture","الصورة"):L("From a picture","من صورة"))+'<input type="file" accept="image/*" data-rp136pic="'+esc(it.id)+'"></label>'+
       (it.kind==="person"&&cs.length?'<select class="rp136in sm" data-rp136char="'+esc(it.id)+'" aria-label="'+esc(L("One of your characters","إحدى شخصياتك"))+'"><option value="">'+esc(L("One of your characters…","إحدى شخصياتك…"))+"</option>"+cs.map(x=>'<option value="'+esc(x.id)+'"'+(c.char===x.id?" selected":"")+">"+esc(x.name)+"</option>").join("")+"</select>":"")+"</div>"}
+  if(m==="face")more='<small class="fc239n">'+ic("check","width:12px;height:12px;vertical-align:-1px")+" "+esc(L("A new face — picked above, under Faces.","وجه جديد — اخترته بالأعلى في «الوجوه»."))+"</small>";
   return'<div class="rp136i'+(m!=="keep"?" on":"")+'" data-rp136="'+esc(it.id)+'">'+pic+'<div class="rp136m"><b dir="auto">'+esc(it.name||(snd?L(RPS136[it.kind][0],RPS136[it.kind][1]):""))+"</b>"+(sub?'<small dir="auto">'+esc(sub)+"</small>":"")+(snd&&it.text&&m==="keep"?'<small class="rp136q" dir="auto">“'+esc(it.text.slice(0,140))+"”</small>":"")+'<div class="seg rp136seg">'+seg+"</div>"+more+"</div></div>"}
 function rpPaint136(){const b=$("#rp136"),s=RP136.scan;if(!b||!s)return;const sc=b.scrollTop;
   const groups=Object.keys(RPK136).map(k=>[k,(s.items||[]).filter(i=>i.kind===k)]).filter(g=>g[1].length),snd=s.kind==="video"?(s.sounds||[]):[],speech=snd.some(x=>x.kind==="speech");
   let h=(s.scene?'<p class="small mute rp136sc" dir="auto">'+esc(s.scene)+"</p>":"")+(s.by==="basic"?'<p class="small mute">'+esc(L("A short list from the words it was made from — with the vision AI connected the agents list everything they see.","قائمة قصيرة من الكلمات التي صُنع منها — عند ربط الذكاء البصري يسرد الوكلاء كل ما يرونه."))+"</p>":"");
   if(s.failed)h='<p class="small rp136f">'+ic("info","width:14px;height:14px;vertical-align:-2px")+" "+esc(L("The analysis agents couldn't look at it this time — describe what to change below, or try again in a moment.","تعذّر على وكلاء التحليل النظر إليه هذه المرة — صِف ما تريد تغييره بالأسفل، أو حاول بعد لحظة."))+(s.why?'<br><small class="mute" dir="ltr">'+esc(s.why)+"</small>":"")+"</p>"+(s.scene?'<p class="small mute rp136sc" dir="auto">'+esc(s.scene)+"</p>":"");
+  h+=rpFaces239(s);
   h+=groups.map(([k,its])=>'<h3 class="rp136h">'+ic(RPK136[k][3])+esc(L(RPK136[k][1],RPK136[k][2]))+' <span class="mute">'+its.length+"</span></h3>"+its.map(i=>rpRow136(i,false)).join("")).join("");
   if(!groups.length&&!s.failed)h+='<p class="small mute">'+esc(L("Nothing to list in it.","لا شيء يُسرد فيه."))+"</p>";
   h+='<h3 class="rp136h">'+ic("plus")+esc(L("Something not in the list","شيء ليس في القائمة"))+"</h3>"+RP136.custom.map(rpCustom136).join("")+'<button type="button" class="btn sm ghost" data-act="rp136-add">'+ic("plus")+esc(L("Describe something to change","صِف شيئاً لتغييره"))+"</button>";
@@ -16033,6 +16036,7 @@ function rpPaint136(){const b=$("#rp136"),s=RP136.scan;if(!b||!s)return;const sc
 // the changes, as the server takes them
 function rpChanges136(){const s=RP136.scan,out=[];if(!s)return out;
   for(const [id,c] of Object.entries(RP136.ch)){if(!c||c.mode==="keep")continue;const snd=id[0]==="s",p=RP136.pics[id],ch=c.char&&(S.chars||[]).find(x=>x.id===c.char);
+    if(c.mode==="face"){const x={id,face:true};if(p&&p.url)x.pic=String(p.url).replace(location.origin,"");else if(ch){const fu=fcUrl239(ch);if(fu){x.pic=fu;x.char={name:ch.name,look:[ch.look,ch.outfit].filter(Boolean).join(", "),face:fu}}}if(x.pic)out.push(x);continue}
     const x={id};if(c.mode==="remove")x.remove=true;else{if(c.to)x.to=c.to;if(p&&p.url)x.pic=String(p.url).replace(location.origin,"");if(ch)x.char={name:ch.name,look:[ch.look,ch.outfit].filter(Boolean).join(", ")};
       if(snd){const it=(s.sounds||[]).find(y=>y.id===id);if(it&&it.kind==="speech"){x.say=c.say!=null?c.say:it.text||"";x.voice=c.voice||"woman"}}}
     if(x.remove||x.to||x.pic||x.char||x.say)out.push(x)}
@@ -16042,6 +16046,7 @@ function rpChanges136(){const s=RP136.scan,out=[];if(!s)return out;
 function rpSum136(){const el=$("#rp136s"),s=RP136.scan;if(!el||!s)return;const list=rpChanges136(),find=id=>(s.items||[]).find(i=>i.id===id)||(s.sounds||[]).find(i=>i.id===id);
   const li=list.map(x=>{const it=find(x.id)||(x.what?{name:x.what}:{}),snd=x.id[0]==="s",nm=it.name||(snd?L(RPS136[it.kind][0],RPS136[it.kind][1]):""),t=snd?" ("+mmss136(it.from)+"–"+mmss136(it.to)+")":"";
     if(x.remove)return L("Remove: ","إزالة: ")+nm+t;
+    if(x.face)return nm+" → "+L("a new face","وجه جديد")+(x.char?": "+x.char.name:L(" (from your photo)"," (من صورتك)"));
     if(snd&&it.kind==="speech")return L("New voice","صوت جديد")+t+": “"+(x.say||"").slice(0,80)+"” — "+L(RPV136.find(v=>v[0]===x.voice)[1],RPV136.find(v=>v[0]===x.voice)[2]);
     return nm+t+" → "+(x.char?x.char.name:x.to||"")+(x.pic?L(" (from your picture)"," (من صورتك)"):"")});
   el.innerHTML=li.length?'<h3 class="rp136h">'+ic("check")+esc(L("What changes","ما الذي يتغير"))+'</h3><ol dir="auto">'+li.map(x=>"<li>"+esc(x)+"</li>").join("")+'</ol><p class="small mute">'+esc(L("Everything else stays exactly as it was"+(s.kind==="video"?" — only the seconds they are seen in are made again, and the video keeps its own sound unless you change it.":"."),"يبقى كل شيء آخر كما هو"+(s.kind==="video"?" — تُعاد صناعة الثواني التي تظهر فيها فقط، ويبقى صوت الفيديو ما لم تغيّره.":".")))+"</p>":"";
@@ -16049,7 +16054,7 @@ function rpSum136(){const el=$("#rp136s"),s=RP136.scan;if(!el||!s)return;const l
   if(!list.length){if(c)c.textContent="—";const n=$("#rp136n");if(n)n.textContent=L("Pick what changes: Change or Remove next to it.","اختر ما يتغير: «غيّر» أو «أزِل» بجانبه.");return}
   if(c)c.textContent="…";RP136.qt=setTimeout(rpQuote136,350)}
 async function rpQuote136(){const j=RP136.j,list=rpChanges136();if(!j||!list.length)return;
-  try{const q=await API.req("/v1/replace136/quote",{json:{job:j.remote,lang:S.lang,changes:list}});if(RP136.j!==j)return;RP136.q=q;const c=$("#rp136c"),n=$("#rp136n"),g=document.querySelector('#modalRoot [data-act="rp136-go"]');
+  try{const q=await API.req("/v1/replace136/quote",{json:{...rpWho239(j),lang:S.lang,changes:list}});if(RP136.j!==j)return;RP136.q=q;const c=$("#rp136c"),n=$("#rp136n"),g=document.querySelector('#modalRoot [data-act="rp136-go"]');
     if(c)c.textContent=crFree()?"0":q.total;if(g)g.disabled=!q.ready;
     if(n)n.textContent=!q.ready?L("Replace things isn't available right now.","استبدال الأشياء غير متاح الآن."):q.secs?L("The seconds "+mmss136(q.from)+"–"+mmss136(q.to)+" are made again ("+q.secs+" s)"+(q.sounds?", and the sounds you changed":"")+".","تُعاد صناعة الثواني "+mmss136(q.from)+"–"+mmss136(q.to)+" ("+q.secs+" ث)"+(q.sounds?"، والأصوات التي غيّرتها":"")+"."):""}
   catch(e){const n=$("#rp136n");if(n)n.textContent=S.lang==="ar"&&e.errorAr?e.errorAr:String(e.message||e)}}
@@ -16057,7 +16062,7 @@ async function rpGo136(){const j=RP136.j,q=RP136.q,list=rpChanges136();if(!j||!l
   if(Object.values(RP136.pics).some(p=>p&&p.busy)){toast(L("A picture is still uploading — one moment.","ما زالت صورة تُرفع — لحظة."));return}
   if(!crFree()&&S.credits<q.total){toast(L("Not enough credits for this.","الرصيد لا يكفي لهذه العملية."));return}
   const img=rpImg136(j),words=[...document.querySelectorAll("#rp136s li")].map(x=>x.textContent).join(". ");
-  const n=addJob({kind:img?"image":"video",prompt:words,title:L("Replaced: ","مستبدل: ")+String(j.title||j.prompt||"").slice(0,60),model:j.model,...(img?{}:{dur:+j.dur||5}),aspect:j.aspect||undefined,cost:q.total,meta:{replace136:{job:j.remote,lang:S.lang,changes:list},noPhysics:true}});
+  const n=addJob({kind:img?"image":"video",prompt:words,title:L("Replaced: ","مستبدل: ")+String(j.title||j.prompt||"").slice(0,60),model:j.model,...(img?{}:{dur:+j.dur||5}),aspect:j.aspect||undefined,cost:q.total,meta:{replace136:{...rpWho239(j),lang:S.lang,changes:list},noPhysics:true}});
   $("#modalRoot").innerHTML="";if(!n)return;if(RP136.clip&&typeof EDED135==="object")EDED135[n.id]=RP136.clip;if(!img)S.lastVideo=n.id;persist();renderAll();
   toast(L("Replacing — everything else stays as it was.","يجري الاستبدال — يبقى كل شيء آخر كما هو."),{type:"ok"})}
 document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="rp136"],[data-act="rp136-mode"],[data-act="rp136-hear"],[data-act="rp136-go"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const act=a.dataset.act;
@@ -16121,6 +16126,47 @@ previewCol=(o=>function(g){const h=o.apply(this,arguments),r=g&&g.status==="comp
 .rp136f{padding:8px 10px;border-radius:10px;background:color-mix(in srgb,#f5b942 12%,var(--panel2));border:1px solid color-mix(in srgb,#f5b942 35%,var(--line))}
 .rp136seg [data-act="rp136-cdel"]{padding:4px 8px}.rp136seg [data-act="rp136-cdel"] svg{width:12px;height:12px}
 `;document.head.appendChild(st)})();
+/* ================= v239: Replace faces — every person's face found in the video, each given another face ================= */
+// The analysis agents (lib/scan136.js) list every person with a picture of their face. Each face can keep, or take a new face: a
+// photo, or one of the customer's characters. All the faces picked are made in ONE go (Replace things, face only: each person keeps
+// their body, clothes, hair and every movement and lip movement) — the price is shown first, nothing is charged if it fails.
+// Up to 6 new faces in a video, 3 in a picture. Opened from the Replace things sheet and from Motion Control → Replace the person.
+const fcUrl239=ch=>{const u=String((typeof face87==="function"?face87(ch):ch&&ch.face)||"").replace(location.origin,"");return/^\/media\/[A-Za-z0-9._-]+$/.test(u)?u:""};
+const fcMax239=()=>rpImg136(RP136.j)?3:6;
+function rpFaces239(s){const ps=(s.items||[]).filter(i=>i.kind==="person"&&(i.face||i.thumb));if(!ps.length)return RP136.faces?'<p class="small mute">'+esc(L("No faces were found in it — describe the person below, or pick a clearer video.","لم يُعثر على وجوه فيه — صِف الشخص بالأسفل، أو اختر فيديو أوضح."))+"</p>":"";
+  const cs=(S.chars||[]).filter(x=>x&&x.name&&fcUrl239(x)).slice(-12),n=ps.filter(i=>(RP136.ch[i.id]||{}).mode==="face").length,mx=fcMax239();
+  return'<h3 class="rp136h">'+ic("users")+esc(L("Faces","الوجوه"))+' <span class="mute">'+ps.length+'</span></h3><p class="small mute fc239h">'+esc(L("Tap “New face” under anyone to give them another face — a photo or one of your characters. Pick several and they're all made in one go (up to "+mx+").","اضغط «وجه جديد» تحت أي شخص لتمنحه وجهاً آخر — صورة أو إحدى شخصياتك. اختر عدة أشخاص وتُصنع كلها مرة واحدة (حتى "+mx+")."))+'</p><div class="fc239g" data-testid="fc239-grid">'+
+    ps.map(it=>{const c=RP136.ch[it.id]||{},on=c.mode==="face",p=RP136.pics[it.id],ch=on&&c.char&&cs.find(x=>x.id===c.char),nu=on?(p&&p.url?p.url:ch?fcUrl239(ch):""):"";
+      return'<div class="fc239'+(on?" on":"")+'" data-fc239="'+esc(it.id)+'"><div class="fc239p"><img src="'+esc(it.face||it.thumb)+'" alt="'+esc(it.name||"")+'">'+(on?'<span class="fc239ar" aria-hidden="true">'+ic("arrow")+"</span>"+(nu?'<img src="'+esc(nu)+'" alt="">':'<span class="fc239e">'+(p&&p.busy?STARS():ic("image"))+"</span>"):"")+'</div><b dir="auto">'+esc(it.name||"")+"</b>"+
+        '<div class="fc239a"><label class="btn sm'+(on?"":" primary")+'">'+ic("image")+esc(p&&p.busy?L("Uploading…","يُرفع…"):on?L("Another photo","صورة أخرى"):L("New face","وجه جديد"))+'<input type="file" accept="image/*" data-rp136pic="'+esc(it.id)+'" data-face239="1" aria-label="'+esc(L("A photo of the new face","صورة للوجه الجديد"))+'"></label>'+
+        (cs.length?'<select class="rp136in sm" data-rp239char="'+esc(it.id)+'" aria-label="'+esc(L("One of your characters","إحدى شخصياتك"))+'"><option value="">'+esc(L("@ Character…","@ شخصية…"))+"</option>"+cs.map(x=>'<option value="'+esc(x.id)+'"'+(on&&c.char===x.id?" selected":"")+">"+esc(x.name)+"</option>").join("")+"</select>":"")+
+        (on?'<button type="button" class="btn sm ghost" data-act="rp239-keep" data-id="'+esc(it.id)+'">'+esc(L("Keep","أبقِ"))+"</button>":"")+"</div></div>"}).join("")+"</div>"+(n>mx?'<p class="small warn83">'+esc(L("Up to "+mx+" new faces at once — make the rest in a second go.","حتى "+mx+" وجوه جديدة في المرة الواحدة — اصنع الباقي في مرة ثانية."))+"</p>":"")}
+// a photo picked for a face: that person takes a new face (before the upload listener, which clears the field)
+window.addEventListener("change",e=>{const t=e.target;if(!t||!t.dataset)return;
+  if(t.dataset.face239&&t.dataset.rp136pic&&t.files&&t.files[0]){const c=RP136.ch[t.dataset.rp136pic]||(RP136.ch[t.dataset.rp136pic]={});c.mode="face";delete c.char;return}
+  if(t.dataset.rp239char!=null){const id=t.dataset.rp239char;e.stopImmediatePropagation();if(!t.value){delete RP136.ch[id];rpPaint136();return}RP136.ch[id]={mode:"face",char:t.value};delete RP136.pics[id];rpPaint136()}},true);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="rp239-keep"],[data-act="fc239-find"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
+  if(a.dataset.act==="rp239-keep"){delete RP136.ch[a.dataset.id];delete RP136.pics[a.dataset.id];rpPaint136();return}
+  fcFind239(a)},true);
+// Motion Control → Replace the person: "Several people? Replace their faces" — the video goes to the server (once) and the agents look
+async function fcFind239(btn){const m=M.mcMove;if(!m)return;if(API.mode!=="server"){toast(L("Replace faces works once you're signed in.","استبدال الوجوه يعمل بعد تسجيل الدخول."));return}
+  const lib=S.jobs.find(x=>x.remote&&mediaUrl(x)===m.url&&x.status==="complete"),d=mcDur83();
+  if(!lib&&!m.src239){const loc=String(m.remote||"").replace(location.origin,"");
+    if(/^\/media\/[A-Za-z0-9._-]+$/.test(loc))m.src239=loc;
+    else if(m.file){if(btn){btn.disabled=true;btn.innerHTML=STARS()+esc(L("Sending the video…","يُرسل الفيديو…"))}
+      try{const r=await API.upload(m.file,m.file.name||"video.mp4");m.src239=String(r.url||"").replace(location.origin,"")}catch(x){toast(L("The video couldn't be sent — try again.","تعذّر إرسال الفيديو — حاول مجدداً."),{type:"warn"})}
+      if(btn){btn.disabled=false;renderView()}if(!m.src239)return}
+    else{toast(L("Add the video first.","أضف الفيديو أولاً."));return}}
+  rpSheet136(lib||{src239:m.src239,kind:"video",title:m.name||L("Your video","فيديوك"),dur:d||5,aspect:mcAspect93()},{faces:true})}
+who107=(o=>function(){const h=o.apply(this,arguments);return M.mcMove?h+'<div class="fc239go"><button type="button" class="btn sm" data-act="fc239-find" data-testid="fc239-find">'+ic("users")+esc(L("Several people? Replace their faces","أكثر من شخص؟ استبدل وجوههم"))+'</button><small class="mute">'+esc(L("The analysis agents find every face in the video; give any of them a new face — several at once.","يجد وكلاء التحليل كل وجه في الفيديو؛ امنح أياً منهم وجهاً جديداً — عدة وجوه مرة واحدة."))+"</small></div>":h})(who107);
+(()=>{const st=document.createElement("style");st.textContent=`
+.fc239h{margin:0 0 8px}.fc239g{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px;margin-bottom:6px}
+.fc239{display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);min-width:0}.fc239.on{border-color:color-mix(in srgb,var(--lime) 60%,var(--line));box-shadow:0 0 0 1px color-mix(in srgb,var(--lime) 30%,transparent)}
+.fc239p{display:flex;align-items:center;gap:4px}.fc239p img,.fc239e{flex:1;min-width:0;aspect-ratio:1;border-radius:10px;object-fit:cover;background:var(--panel);display:grid;place-items:center;color:var(--mute)}.fc239p img:first-child:last-child{flex:none;width:100%}
+.fc239ar{flex:none;color:var(--lime)}.fc239ar svg{width:14px;height:14px}[dir=rtl] .fc239ar svg{transform:scaleX(-1)}.fc239e svg{width:18px;height:18px}
+.fc239 b{font-size:12.5px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.fc239a{display:flex;flex-wrap:wrap;gap:4px}.fc239a label{position:relative}.fc239a input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}.fc239a .btn{padding:5px 8px;font-size:12px}.fc239a select{flex:1;min-width:0;font-size:12px;padding:5px 6px}
+.fc239n{color:var(--mute)}.fc239go{display:flex;flex-direction:column;gap:4px;margin:8px 0}.fc239go .btn{align-self:flex-start}`;document.head.appendChild(st)})();
 /* ================= v138: an AI engine that ran out of credits is said at once to staff ================= */
 // (the server: lib/alert138.js — GET /v1/me gives staff alerts138 {engine:{since,last,count}}): a red line at the top of Admin with
 // how many jobs failed and since when, and once a visit a short note on any page. Customers only see the calm sentence (quota).

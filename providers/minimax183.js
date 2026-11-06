@@ -159,6 +159,21 @@ export function mmBackup185(cap, body) {
   if (cap === "image" && mmOn183("image") && !["edit", "upscale", "bgremove"].includes(kind)) return { key: "mm183-image", a: mmImage183() };
   return null;
 }
+// v239: why MiniMax didn't take a job over when the AI engine refused it for its balance — said to the owner and admins only (the
+// card's staff line): no MiniMax key, the switch off, or a job MiniMax can't make (it makes videos from words or a picture; a swap,
+// Motion Control, lip-sync, Replace things or anything that starts from a video needs the AI engine's balance)
+export function mmWhyNot239(cap, body) {
+  body = body || {}; const inp = body.inputs || {}, kind = String(body.kind || ""), m = body.meta || {};
+  if (!configured("minimax")) return "no MiniMax key — add it in Admin → AI providers → MiniMax";
+  const cant = m.replace136 ? "Replace things re-makes seconds of your own video" : /^mc(26|30|swap)$/.test(String(body.model || "")) || m.swap93 || kind === "swap" ? "a Character Swap / Motion Control works from a video"
+    : ["lipsync", "avatar"].includes(kind) ? "lip-sync works from a video" : m.edit135 || m.extend132 ? "editing or extending a video works from that video"
+    : Object.values(inp).some((v) => VIDEO_FILE.test(String(v || ""))) ? "the job starts from a video" : cap === "image" && editsPicture(body) ? "it changes a picture you gave (an edit)" : "";
+  if (cant) return `MiniMax can't make this one: ${cant} — it needs the AI engine's balance`;
+  if (cap === "video" && !mmOn183("video")) return "MiniMax's video switch is off (Admin → AI providers → MiniMax)";
+  if (cap === "image" && !mmOn183("image")) return "MiniMax's picture switch is off (Admin → AI providers → MiniMax)";
+  if (!["video", "image"].includes(cap)) return "MiniMax doesn't make this kind of job as a backup";
+  return "";
+}
 // v237: "Everything on MiniMax" — the owner's switch in Admin (or MINIMAX_ALL=1 on the server): every job MiniMax can make goes to
 // the owner's MiniMax balance, whatever model was picked — videos from words or a picture, pictures, voices, music, and the site's
 // text AI (MiniMax-M3 over MiniMax's Anthropic-compatible API). What MiniMax can't make (a Character Swap, Motion Control, lip-sync,

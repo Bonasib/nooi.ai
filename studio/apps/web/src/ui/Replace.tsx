@@ -18,10 +18,12 @@ import { at } from "../site";
 import { ensureOnServer, waitJob } from "./AIPanel";
 import { VOICES231, charsNow, type Char } from "./Mentions";
 
-interface Item { id: string; kind: string; name: string; en?: string; where?: string; thumb?: string | null; at?: number | null }
+interface Item { id: string; kind: string; name: string; en?: string; where?: string; thumb?: string | null; face?: string | null; at?: number | null }
 interface Sound { id: string; kind: string; from?: number; to?: number; words?: string }
 interface Scan { items?: Item[]; sounds?: Sound[]; dur?: number; image?: boolean; src?: string; job?: string | null; failed?: boolean }
-type Change = { id: string; what?: string; to?: string; pic?: string; char?: { name: string; look?: string }; voice?: string; say?: string; remove?: boolean };
+type Change = { id: string; what?: string; to?: string; pic?: string; char?: { name: string; look?: string }; voice?: string; say?: string; remove?: boolean; face?: boolean };
+// v239: a new face for a person: a photo uploaded, or one of the characters (its photo)
+type NewFace = { pic?: string; char?: string; busy?: boolean };
 
 function usePicked() { useEditorVersion(); const c = A.sel1(); const a = c?.type === "media" ? editor.project.assets[(c as MediaClip).asset] : null; return a && (a.kind === "video" || a.kind === "image") ? { clip: c as MediaClip, asset: a } : null; }
 const rel = (u: string) => serverPath(u) || u;
@@ -62,8 +64,11 @@ function ReplaceInner() {
   const { t } = useTranslation(); const lang = useUI((s) => s.lang); const picked = usePicked(); const me = useMe();
   const [scan, setScan] = useState<Scan | null>(null); const [looking, setLooking] = useState(false); const [sel, setSel] = useState<string>(""); const [mode, setMode] = useState<"char" | "words" | "remove">("char");
   const [to, setTo] = useState(""); const [char, setChar] = useState<string>(""); const [voice, setVoice] = useState("woman"); const [say, setSay] = useState(""); const [pic, setPic] = useState<string | undefined>(); const [placeAt, setPlaceAt] = useState<"replace" | "above">("replace");
-  const chars = charsNow(); const ch = chars.find((c) => c.id === char);
-  useEffect(() => { setScan(null); setSel(""); }, [picked?.clip.id]);
+  const chars = charsNow(); const ch = chars.find((c) => c.id === char); const [faces, setFaces] = useState<Record<string, NewFace>>({});
+  useEffect(() => { setScan(null); setSel(""); setFaces({}); }, [picked?.clip.id]);
+  const faceSet = (id: string, f: NewFace | null) => setFaces((o) => { const n = { ...o }; if (f) n[id] = f; else delete n[id]; return n; });
+  const facePhoto = async (id: string, file?: File) => { if (!file) return; faceSet(id, { busy: true }); try { faceSet(id, { pic: rel(await api.upload(file, file.name || "face.jpg")) }); } catch { faceSet(id, null); toast(t("rp.upload"), "warn"); } };
+  const faceChar = async (id: string, cid: string) => { const c = chars.find((x) => x.id === cid); if (!c) return faceSet(id, null); faceSet(id, { char: cid, busy: true }); const u = await charPic(c); if (u) faceSet(id, { char: cid, pic: u }); else { faceSet(id, null); toast(t("rp.upload"), "warn"); } };
   useEffect(() => { let live = true; setPic(undefined); if (ch && mode === "char") void charPic(ch).then((u) => live && setPic(u)); return () => { live = false; }; }, [char, mode]);
   const look = async () => {
     if (!picked) return; setLooking(true);
@@ -75,13 +80,30 @@ function ReplaceInner() {
     if (isSound) return { id: sel, voice, ...(say.trim() ? { say: say.trim() } : {}) };
     if (mode === "char") return ch ? { id: sel, char: { name: ch.name, look: ch.look || "" }, ...(pic ? { pic } : {}) } : null;
     return to.trim() ? { id: sel, to: to.trim() } : null; };
-  const body = () => { const c = change(); return scan && c ? { ...(scan.job ? { job: scan.job } : { src: scan.src }), changes: [c], lang } : null; };
-  const run = useRun(picked, body, [scan?.src, sel, mode, to, char, voice, say, pic]);
+  const faceList = (): Change[] => Object.entries(faces).filter(([, f]) => f.pic && !f.busy).map(([id, f]) => { const c = f.char ? chars.find((x) => x.id === f.char) : undefined; return { id, face: true, pic: f.pic, ...(c ? { char: { name: c.name, look: c.look || "" } } : {}) }; });
+  const body = () => { const c = change(), fl = faceList(), all = [...fl, ...(c && !faces[c.id] ? [c] : [])]; return scan && all.length ? { ...(scan.job ? { job: scan.job } : { src: scan.src }), changes: all, lang } : null; };
+  const run = useRun(picked, body, [scan?.src, sel, mode, to, char, voice, say, pic, JSON.stringify(faces)]);
+  const maxFaces = scan?.image ? 3 : 6, nFaces = faceList().length;
   const people = (scan?.items || []).filter((i) => i.kind === "person"), things = (scan?.items || []).filter((i) => i.kind !== "person"), speech = (scan?.sounds || []).filter((s) => s.kind === "speech" || s.kind === "music");
   return (<div className="rp" data-testid="replace-panel">
     <p className="hint">{t("rp.hint")}</p>
     {!picked ? <p className="hint warnline">{t("rp.pick")}</p> : !scan ? <Btn icon="search" primary disabled={looking} onClick={() => void look()} testid="rp-look">{looking ? t("rp.looking") : t("rp.look")}</Btn> : <>
       {scan.failed && <p className="hint warnline">{t("rp.basic")}</p>}
+      {people.some((i) => i.face) && <div data-testid="rp-faces"><span className="ns-lbl">{t("rp.faces")}</span><p className="hint">{t("rp.facesHint")}</p>
+        <div className="rpfaces">{people.filter((i) => i.face).map((i) => { const f = faces[i.id], c = f?.char ? chars.find((x) => x.id === f.char) : undefined; return <div key={i.id} className={"rpface" + (f ? " on" : "")} data-testid={"rpf-" + i.id}>
+          <div className="rpfp"><img src={at(i.face!)} alt="" />{f && <><span className="rpfar"><Icon name="chevron" size={14} /></span>{f.pic ? <img src={at(f.pic)} alt="" /> : <span className="rpph"><Icon name="image" size={14} /></span>}</>}</div>
+          <span dir="auto" className="rpfn">{i.name}</span>
+          <div className="rpfa"><label className="ns-btn sm" title={t("rp.faceOf", { name: i.name })}><Icon name="upload" size={14} />{f?.busy ? "…" : f ? t("rp.facePhoto") : t("rp.newFace")}<input type="file" accept="image/*" hidden onChange={(e) => { void facePhoto(i.id, e.target.files?.[0]); e.target.value = ""; }} data-testid={"rpf-up-" + i.id} /></label>
+            {chars.length > 0 && <select className="ns-input sm" value={f?.char || ""} aria-label={t("rp.char")} onChange={(e) => void faceChar(i.id, e.target.value)} data-testid={"rpf-ch-" + i.id}><option value="">@…</option>{chars.map((x) => <option key={x.id} value={x.id}>@{x.name}</option>)}</select>}
+            {f && <button type="button" className="ns-btn sm ghost" onClick={() => faceSet(i.id, null)}>{t("rp.keepFace")}</button>}</div>
+          {c && <span className="hint">@{c.name}</span>}</div>; })}</div>
+        {nFaces > 0 && <p className={"hint" + (nFaces > maxFaces ? " warnline" : "")} data-testid="rp-faces-n">{nFaces > maxFaces ? t("rp.facesMax", { n: maxFaces }) : t("rp.facesN", { n: nFaces })}</p>}
+        {nFaces > 0 && !sel && <div className="aicard" data-testid="rp-faces-form">
+          <Seg label={t("rs2.place")} value={placeAt} onChange={setPlaceAt} options={[{ v: "replace", label: t("rs2.replace") }, { v: "above", label: t("rs2.above") }]} />
+          <p className="hint" data-testid="rp-faces-price">{run.why ? run.why : run.cost == null ? t("rs2.pricing") : run.cost === 0 ? t("ai.free") : t("ai.credits", { n: run.cost })}</p>
+          {run.busy ? <div className="aibusy" role="status"><span>{run.busy.step}</span><i style={{ width: Math.round(run.busy.k * 100) + "%" }} /></div>
+            : <Btn icon="sparkle" primary disabled={run.cost == null || !!run.why || nFaces > maxFaces || (!me.free && me.credits != null && run.cost > me.credits)} onClick={() => void run.go(picked.asset.name + " · " + t("rp.faces"), placeAt)} testid="rp-faces-go">{t("rp.goFaces")}{run.cost ? " · " + t("ai.credits", { n: run.cost }) : ""}</Btn>}
+        </div>}</div>}
       {[["people", people], ["things", things]].map(([k, list]) => (list as Item[]).length > 0 && <div key={k as string}><span className="ns-lbl">{t("rp." + k)}</span>
         <div className="rpgrid">{(list as Item[]).map((i) => <button key={i.id} type="button" className="ns-tile rpt" aria-pressed={sel === i.id} onClick={() => setSel(i.id)} data-testid={"rp-" + i.id}>
           {i.thumb ? <img src={at(i.thumb)} alt="" /> : <span className="rpph"><Icon name={i.kind === "person" ? "users" : "image"} size={18} /></span>}<span dir="auto">{i.name}</span></button>)}</div></div>)}

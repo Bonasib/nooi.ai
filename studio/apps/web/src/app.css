@@ -578,3 +578,11 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
 /* (v238) the top bar badge on one line */
 .topbar .credits { white-space: nowrap; }
 @media (max-width: 1100px) { .topbar .credits .ctext { display: none; } }
+/* v239: Replace faces — every face found, each given a new face */
+.rpfaces { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 6px; }
+.rpface { display: flex; flex-direction: column; gap: 5px; padding: 6px; border-radius: 10px; border: 1px solid var(--line, rgba(255,255,255,.1)); background: var(--panel2, rgba(255,255,255,.04)); min-width: 0; }
+.rpface.on { border-color: var(--accent, #22d3ee); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent, #22d3ee) 35%, transparent); }
+.rpfp { display: flex; align-items: center; gap: 3px; } .rpfp img, .rpfp .rpph { flex: 1; min-width: 0; aspect-ratio: 1; object-fit: cover; border-radius: 8px; }
+.rpfar { flex: none; display: grid; transform: rotate(-90deg); color: var(--accent, #22d3ee); } [dir="rtl"] .rpfar { transform: rotate(90deg); }
+.rpfn { font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rpfa { display: flex; flex-wrap: wrap; gap: 4px; } .rpfa .ns-btn { font-size: 11.5px; padding: 4px 7px; gap: 4px; } .rpfa select { flex: 1; min-width: 0; font-size: 11.5px; padding: 3px 4px; }
