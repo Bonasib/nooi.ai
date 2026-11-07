@@ -47,7 +47,7 @@ async def desktop(p):
     rails = await E("()=>[...document.querySelectorAll('.rail button')].map(b=>b.dataset.testid)")
     await pg.click('[data-testid="rail-auto"]'); await pg.wait_for_selector('[data-testid="auto-panel"]')
     cards = await E("()=>[...document.querySelectorAll('.autoc')].map(c=>({id:c.dataset.testid,anim:[...c.querySelectorAll('.autodemo *')].some(x=>getComputedStyle(x).animationName!=='none'),btn:!!c.querySelector('button')}))")
-    chk("the rail's ninth section is Auto: 8 tools, each a card with a moving example and a button", rails[2] == "rail-auto" and len(rails) == 9 and len(cards) == 8 and all(c["anim"] and c["btn"] for c in cards), [rails, cards])
+    chk("the rail's ninth section is Auto: 8 tools, each a card with a moving example and a button", rails[2] == "rail-auto" and len(rails) == 9 and len(cards) == 10 and all(c["anim"] and c["btn"] for c in cards), [rails, cards])
     # the edit: the talk twice on V1 (a cut at 6 s), the dark clip after it, the music under them
     await E("()=>{const s=window.__studio,as=Object.values(s.editor.project.assets),f=n=>as.find(a=>a.name===n);s.actions.addAsset(f('talk'));s.actions.addAsset(f('talk'));s.actions.addAsset(f('dark'));s.actions.addAsset(f('music'),0);s.editor.select([])}")
     await pg.wait_for_timeout(400); v0 = await E(V1)
@@ -71,7 +71,7 @@ async def desktop(p):
     r = await go(pg, E, "trans"); tr = await E("()=>" + P + ".transitions.map(t=>t.type)")
     chk("Soft cuts: a dissolve at each of the two cuts", tr == ["fade", "fade"], [r, tr])
     # ---- reframe
-    await pg.click('[data-testid="auto-reframe"] .ns-seg button:has-text("9:16")'); r = await go(pg, E, "reframe"); v5 = await E(V1); dims = await E("()=>[" + P + ".width," + P + ".height]")
+    await pg.click('[data-testid="auto-reframe"] .ns-seg button:has-text("9:16")'); await pg.click('[data-testid="auto-reframe"] .ns-seg button:has-text("Keep the middle")'); r = await go(pg, E, "reframe"); v5 = await E(V1); dims = await E("()=>[" + P + ".width," + P + ".height]")
     chk("Auto reframe: the project becomes 9:16 and each 16:9 picture fills it (scale 3.16)", dims == [1080, 1920] and all(abs(c["sc"] - 3.16) < 0.02 for c in v5), [r, dims, [c["sc"] for c in v5]])
     # ---- captions (the server's hearing simulated)
     btn = await E("()=>document.querySelector('[data-testid=auto-go-captions]').textContent")

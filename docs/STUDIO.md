@@ -561,3 +561,30 @@ Built on our own code. No code from Remotion or any other motion library is used
   - The frame where the picked clip ends starts a new shot that continues it. Because it uses the clip's own end, a trimmed clip continues from where it was cut.
   - Length +3 to +10 s, the video model, and what happens next (optional). The price shows first.
   - The new shot lands right after the clip, and the clips after it move along.
+
+## v243 — Smart cut by the words, follow the person, check before posting, beat cuts on a grid
+
+Ideas taken from the open-source video-editing-skill project (MIT), rewritten in our own code. The core is plain functions in `packages/editor-core/src/cutting.ts`, tested in `test/v243.test.ts`; the panels are in `apps/web/src/ui/Smart.tsx`.
+
+- **Smart cut by the words** (Auto → first card).
+  - The edit's sound is heard once on the server, the same way Auto captions is (`/v1/captions169`). The price shows first.
+  - It lists what it would take out, for a look first:
+    - long pauses (over 0.6 s, with 0.15 s of air kept on each side);
+    - filler sounds: um, uh, er, hmm, امم, آه, إيه;
+    - leaned-on words, only when asked: like, basically, you know, يعني, طيب, بصراحة, أصلاً…;
+    - retakes: the same first three words, or the first eight words over 72% alike, said again within the next four phrases. The earlier take goes.
+  - Arabic spellings are folded (أ/إ/آ → ا, ة → ه, ى → ي, no tashkeel, stretched letters shortened) so they match however they were written.
+  - Each line can be unticked; a tap on its time plays from there.
+  - One tap cuts them all in one undo step. A cut never falls inside a word that stays.
+  - The music keeps playing: a music bed that crosses a cut isn't split, a bed after it moves up, and the bed is trimmed to the new end.
+  - The words are kept while the edit is open (moved to their new times after a cut), so Cut to the beat can avoid them.
+- **Cut to the beat on a grid**: every beat, every bar (every fourth beat, starting on the strongest of the first four) or the 8ths. A cut never lands inside a word that was heard; it moves to the beat before.
+- **Auto reframe follows the person** (the default; "Keep the middle" is still there).
+  - The person is found on this device with MediaPipe's selfie segmenter. A wide picture is looked at in three overlapping squares, which finds a small, far person far better.
+  - Their centre is sampled every 0.25 s (at most 80 times a clip), gaps are filled, a median of five steadies it, and a dead zone ignores small moves.
+  - The result is eased x keyframes on the clip, never a jitter, and never past the picture's edges.
+- **Check before posting** (Auto, and a short version in the Export dialog for the chosen platform). For TikTok, Reels, Shorts, YouTube, X, LinkedIn, Facebook, podcast and TV (EBU R128) it checks:
+  - the shape, the length limits and the frame rate;
+  - titles under the platform's buttons and caption (the safe area). "Show the safe area" draws it on the preview;
+  - the loudness, measured with ITU-R BS.1770 (K-weighting, 400 ms blocks, gated) and the peak. The target is −14 LUFS for the social platforms, −16 for podcasts and −23 for TV.
+  - Each problem has its fix: change the shape, move the title in, or make it the platform's loudness. The loudness fix never lets the peak go over −1 dB, and a clip's volume goes no higher than 2× (the toast says when that limits it).

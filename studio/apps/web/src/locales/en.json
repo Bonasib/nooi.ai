@@ -829,7 +829,7 @@
   "captions": "Auto captions",
   "captionsD": "What is said is heard and placed as captions at its moment.",
   "reframe": "Auto reframe",
-  "reframeD": "A new shape for another platform; every picture fills the frame, the middle kept.",
+  "reframeD": "A new shape for another platform; the picture follows the person (or keeps the middle).",
   "color": "Auto colour",
   "colorD": "Each clip is balanced from its own picture: brightness, contrast, colour strength, colour cast.",
   "loud": "Even loudness",
@@ -854,7 +854,18 @@
    "trans": "{{n}} soft cuts added.",
    "noCuts": "No cuts to soften.",
    "noWords": "No words were heard.",
-   "captions": "{{n}} captions placed."
+   "captions": "{{n}} captions placed.",
+   "wordSafe": "{{n}} cut(s) moved to the beat before, so no word is clipped."
+  },
+  "smart": "Smart cut by the words",
+  "smartD": "The words are heard once; the long pauses, the um and uh, and the retakes are listed for a look — then cut, never inside a word, with the music still playing.",
+  "check": "Check before posting",
+  "checkD": "The platform's shape, length, frame rate, safe area and loudness — each with its fix.",
+  "grid": "Cut on",
+  "g": {
+   "beats": "Every beat",
+   "bars": "Every bar",
+   "8ths": "8ths"
   }
  },
  "isec": {
@@ -997,5 +1008,53 @@
   "open": "Extend with AI",
   "secHint": "Make the clip go on for a few more seconds, from its last frame.",
   "secs": "+{{n}} s"
+ },
+ "sc": {
+  "hearPrice": "Hear the words · {{n}} credits",
+  "hearFree": "Hear the words · free",
+  "once": "Heard once — the same words then make captions and keep beat cuts off the words.",
+  "heard": "{{n}} words heard.",
+  "k": {
+   "pause": "Long pauses",
+   "filler": "Um, uh, امم",
+   "retake": "Retakes"
+  },
+  "soft": "Leaned-on words (like, basically, يعني, طيب)",
+  "keepMusic": "Keep the music playing",
+  "none": "Nothing to cut — it flows.",
+  "keepThis": "Cut this",
+  "apply": "Cut {{n}} · −{{s}} s",
+  "again": "Hear again",
+  "done": "{{n}} cuts made (−{{s}} s). One undo step."
+ },
+ "fp": {
+  "how": "Picture",
+  "follow": "Follow the person",
+  "middle": "Keep the middle",
+  "done": "Changed to {{a}}; the picture follows the person in {{n}} clip(s)."
+ },
+ "chk": {
+  "for": "Posting on",
+  "hear": "Measure the loudness",
+  "heard": "{{l}} LUFS · peak {{p}} dB",
+  "safe": "Show the safe area",
+  "under": "{{p}}'s buttons and caption",
+  "fixAspect": "Change to {{a}}",
+  "fixSafe": "Move it in",
+  "fixLoud": "Make it {{n}} LUFS",
+  "evened": "The sound is now about {{n}} LUFS (the peak kept under −1 dB).",
+  "i": {
+   "ok": "Ready for {{p}}.",
+   "aspect": "{{p}} wants {{n}} — this edit is another shape.",
+   "long": "Longer than {{p}} allows ({{n}} s).",
+   "short": "Shorter than {{p}} takes ({{n}} s).",
+   "fps": "{{p}} plays {{n}} frames a second best.",
+   "unsafe": "“{{n}}” sits under {{p}}'s buttons or caption.",
+   "silent": "There is no sound.",
+   "loud": "The sound is {{n}} LUFS; {{p}} plays {{l}} LUFS.",
+   "peak": "The loudest moment ({{n}} dB) may crackle after upload."
+  },
+  "capped": "Turned up as far as the clips go (twice their sound) — still a little quiet.",
+  "peakHeld": "Turned up {{n}} dB — more would make the loudest moment crackle."
  }
 }

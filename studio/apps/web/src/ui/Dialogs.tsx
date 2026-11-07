@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Btn, Icon, Seg } from "@nooi/ui";
-import { PRESETS, duration, frameSize, aspectOf, emptyProject, COMMANDS } from "@nooi/editor-core";
+import { PRESETS, PLATFORMS, checkProject, duration, frameSize, aspectOf, emptyProject, COMMANDS } from "@nooi/editor-core";
 import type { ExportSettings } from "@nooi/editor-core";
 import { editor, toast, toasts, ui, useProject, useUI, openProject, cloudId, autosave, playerRef } from "../state";
 import { exportProject } from "../engine/export";
@@ -77,6 +77,10 @@ export function ExportDialog() {
           <p className="hint">{placeOf === "server" ? t("exp.serverHint") : placeOf === "ffmpeg" ? t("exp.ffmpegHint") : t("exp.local")}</p>
           {moving && placeOf !== "device" && <p className="hint motionnote" data-testid="exp-motion">{t("exp.motionFirst")}</p>}
           {prog && <div className="aibusy" role="status"><span>{t("exp.step." + prog.note)} · {Math.round(prog.k * 100)}%</span><i style={{ width: Math.round(prog.k * 100) + "%" }} /></div>}
+          {(() => { const pl = PLATFORMS.find((x) => x.id === o.preset); if (!pl) return null; const iss = checkProject(p, pl, { fps: o.fps }).filter((x) => x.level !== "ok");
+            return <div className="expcheck" data-testid="exp-check">{iss.length ? <ul className="chk-list">{iss.map((i, k) => <li key={k} className={"chk-" + i.level} data-testid={"exp-i-" + i.code}><span dir="auto">{t("chk.i." + i.code, { n: i.n, p: lang === "ar" ? pl.nameAr : pl.name, l: pl.lufs })}</span></li>)}</ul>
+              : <p className="hint okline">{t("chk.i.ok", { p: lang === "ar" ? pl.nameAr : pl.name })}</p>}
+              <button type="button" className="linkbtn" onClick={() => { ui.set({ exportOpen: false, rail: "auto" as never, panelOpen: true }); }} data-testid="exp-check-more">{t("auto.check")}</button></div>; })()}
           {err && <p className="err" role="alert">{err}</p>}
           {res && <div className="expdone"><Icon name="check" size={20} /><span>{res.name} · {(res.size / 1e6).toFixed(1)} MB</span>
             {NATIVE ? <Btn icon="export" primary onClick={() => void saveFile(res.blob, res.name)} testid="download">{t("exp.save")}</Btn> : <a className="ns-btn primary" href={res.url} download={res.name} data-testid="download">{t("exp.download")}</a>}

@@ -26,6 +26,11 @@ export function finder(): Promise<Seg> {
 const even = (x: number) => Math.max(2, Math.round(x / 2) * 2);
 const ss = (a: number, b: number, v: number) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
 
+/** (v243) the person's raw confidence (0..1) for a picture, at the model's own size — for finding where they are */
+export function personConf(S: Seg, img: TexImageSource): { w: number; h: number; f: Float32Array } | null {
+  const r = S.segmentForVideo(img, (clock += 33)); const ms = r.confidenceMasks || []; const m = ms[ms.length - 1];
+  if (!m) { r.close(); return null; } const out = { w: m.width, h: m.height, f: new Float32Array(m.getAsFloat32Array()) }; r.close(); return out;
+}
 /** the person's mask of a picture, as a small grey canvas (soft edges pulled in a little, so no rim of the old background; steadied against the frame before when given) */
 export class Matte {
   private prev: Float32Array | null = null; cv: OffscreenCanvas | null = null;

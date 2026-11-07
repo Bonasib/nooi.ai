@@ -14,6 +14,7 @@ import { quietRanges } from "../mate";
 import { decodeSound, fileOf, monoOf, urlOf } from "../media/library";
 import { mixSound } from "../engine/export";
 import { encodeWav } from "../engine/wav";
+import { CheckPost, SmartCut, followPerson, setWords243, words243 } from "./Smart";
 
 type Say = (k: string, o?: Record<string, unknown>) => string;
 const media = (p: Project) => p.tracks.flatMap((t) => t.clips.map((c) => ({ t, c }))).filter((x) => x.c.type === "media") as { t: Track; c: MediaClip }[];
@@ -27,25 +28,28 @@ export async function autoPauses(t: Say): Promise<string> {
   const r = await quietRanges(0.5); if (!r.length) return t("auto.r.noPauses");
   A.run("auto: remove pauses", (p) => { for (const [x, y] of r) C.cutRange(p, x, y); }); return t("auto.r.pauses", { n: r.length, s: r.reduce((s, [x, y]) => s + y - x, 0).toFixed(1) });
 }
-/** the music's beats found, and the main track's clips trimmed so every cut lands on a beat */
-export async function autoBeat(t: Say): Promise<string> {
+/** the music's beats found, and the main track's clips trimmed so every cut lands on the grid (every beat, every bar, or the 8ths) — never inside a word */
+export async function autoBeat(t: Say, grid: C.Grid = "beats"): Promise<string> {
   const p = editor.project; const music = media(p).filter((x) => x.t.kind === "audio" && p.assets[x.c.asset]?.kind === "audio").sort((a, b) => b.c.dur - a.c.dur)[0];
   if (!music) return t("auto.r.noMusic");
   const a = p.assets[music.c.asset], f = await fileOf(a), ab = f && (await decodeSound(f)); if (!ab) return t("auto.r.noMusic");
-  const src = C.beats(monoOf(ab), ab.sampleRate, { minGap: 0.28 }), m = music.c;
-  const times = src.map((b) => m.start + (b - m.in) / m.speed).filter((x) => x >= m.start && x <= C.clipEnd(m));
+  const mono = monoOf(ab), src = C.beats(mono, ab.sampleRate, { minGap: 0.28 }), m = music.c;
+  const energy = src.map((b) => { const i = Math.floor(b * ab.sampleRate), w = Math.floor(ab.sampleRate * 0.05); let s = 0; for (let j = i; j < Math.min(mono.length, i + w); j++) s += mono[j] * mono[j]; return s; });
+  const all = src.map((b) => m.start + (b - m.in) / m.speed); const keep = all.map((x) => x >= m.start && x <= C.clipEnd(m));
+  const times = C.beatGrid(all.filter((_, i) => keep[i]), grid, energy.filter((_, i) => keep[i]));
   if (times.length < 2) return t("auto.r.noBeats");
   const tr = mainTrack(p); const n = tr ? tr.clips.filter((c) => c.type === "media").length : 0; if (!n) return t("auto.r.noClips");
-  let cuts = 0;
+  const words = words243() || []; let cuts = 0, held = 0;
   A.run("auto: cut to the beat", (q) => {
     q.beats = times.map(r2); const tk = q.tracks.find((x) => x.id === tr!.id); if (!tk) return;
     const list = [...tk.clips].sort((x, y) => x.start - y.start); let at = list[0].start;
-    for (const c of list) {
-      const end = [...times].reverse().find((b) => b <= at + c.dur + 1e-6 && b >= at + 0.45);   // the last beat inside the clip (it only gets shorter)
+    for (const c of list) {   // the last grid line inside the clip that isn't inside a word (it only gets shorter)
+      const shift = c.start - at; const ws = words.map((w) => ({ ...w, s: w.s - shift, e: w.e - shift }));
+      const end = C.safeBeat(times, at + 0.45, at + c.dur, ws); const plain = C.safeBeat(times, at + 0.45, at + c.dur); if (plain != null && end !== plain) held++;
       c.start = r2(at); if (end != null) { c.dur = Math.max(0.2, end - at); cuts++; } at = c.start + c.dur;
     }
   });
-  return t("auto.r.beat", { n: cuts, b: times.length });
+  return t("auto.r.beat", { n: cuts, b: times.length }) + (held ? " " + t("auto.r.wordSafe", { n: held }) : "");
 }
 /** every picture filled to the frame in a new shape (the middle kept) */
 export function autoReframe(t: Say, aspect: Aspect): string {
@@ -111,7 +115,7 @@ export async function autoCaptions(t: Say, lang: string): Promise<string> {
   const p = editor.project, d = C.duration(p); if (!d) return t("auto.r.noClips");
   const ab = await mixSound(p, 0, d); const rate = 16000, n = Math.ceil(ab.duration * rate), off = new OfflineAudioContext(1, n, rate), s = off.createBufferSource(); s.buffer = ab; s.connect(off.destination); s.start();
   const small = await off.startRendering(); const url = await api.upload(encodeWav(small), "captions.wav");
-  const r = await api.req<{ lines?: { s: number; e: number; text: string }[] }>("/v1/captions169", { json: { url, lang } }); const lines = (r.lines || []).filter((l) => l.text && l.text.trim());
+  const r = await api.req<{ words?: C.Word[]; lines?: { s: number; e: number; text: string }[] }>("/v1/captions169", { json: { url, lang } }); if (r.words?.length) setWords243(r.words.filter((w) => w.w && w.e > w.s)); const lines = (r.lines || []).filter((l) => l.text && l.text.trim());
   if (!lines.length) return t("auto.r.noWords");
   A.run("auto: captions", (q) => { const tr = addTrack(q, "text", 0); tr.name = t("cap.track");
     for (const l of lines) C.addClip(q, textClip(l.text.trim(), l.s, { template: "caption", dur: Math.max(0.3, l.e - l.s), style: textStyle0({ size: 0.055, box: { color: "#000000", opacity: 0.55, pad: 0.25, radius: 0.2 } }), animIn: { type: "fade", dur: 0.12 }, animOut: { type: "fade", dur: 0.12 } }), tr.id); });
@@ -119,18 +123,18 @@ export async function autoCaptions(t: Say, lang: string): Promise<string> {
 }
 
 // ---- the panel
-const TOOLS = ["pauses", "beat", "captions", "reframe", "color", "loud", "duck", "trans"] as const;
+const TOOLS = ["smart", "pauses", "beat", "captions", "reframe", "check", "color", "loud", "duck", "trans"] as const;
 type Tool = (typeof TOOLS)[number];
-const ICON: Record<Tool, string> = { pauses: "cut", beat: "beat", captions: "captions", reframe: "crop", color: "color", loud: "volume", duck: "audio", trans: "transitions" };
+const ICON: Record<Tool, string> = { smart: "words", check: "checklist", pauses: "cut", beat: "beat", captions: "captions", reframe: "crop", color: "color", loud: "volume", duck: "audio", trans: "transitions" };
 export function AutoPanel() {
   const { t } = useTranslation(); const p = useProject(); const lang = useUI((s) => s.lang); const [busy, setBusy] = useState<string>(""); const [done, setDone] = useState<Record<string, string>>({});
-  const [aspect, setAspect] = useState<Aspect>("9:16"); const [capCost, setCapCost] = useState<number | null | undefined>(undefined); const d = C.duration(p);
+  const [aspect, setAspect] = useState<Aspect>("9:16"); const [follow, setFollow] = useState<"middle" | "follow">("follow"); const [grid, setGrid] = useState<C.Grid>("beats"); const [prog, setProg] = useState(0); const [capCost, setCapCost] = useState<number | null | undefined>(undefined); const d = C.duration(p);
   useEffect(() => { let live = true; if (!api.online || !api.me.signedIn || !d) { setCapCost(null); return; } void captionsPrice(d).then((c) => live && setCapCost(c)); return () => { live = false; }; }, [Math.ceil(d)]);
   const run = async (k: Tool | "all") => {
-    setBusy(k);
+    setBusy(k); setProg(0);
     try {
       const say: Say = (key, o) => t(key, o);
-      const one = async (x: Tool) => x === "pauses" ? autoPauses(say) : x === "beat" ? autoBeat(say) : x === "captions" ? autoCaptions(say, lang) : x === "reframe" ? autoReframe(say, aspect) : x === "color" ? autoColor(say) : x === "loud" ? autoLoud(say) : x === "duck" ? autoDuck(say) : autoTransitions(say);
+      const one = async (x: Tool) => x === "pauses" ? autoPauses(say) : x === "beat" ? autoBeat(say, grid) : x === "captions" ? autoCaptions(say, lang) : x === "reframe" ? (follow === "follow" ? followPerson(say, aspect, setProg) : autoReframe(say, aspect)) : x === "color" ? autoColor(say) : x === "loud" ? autoLoud(say) : x === "duck" ? autoDuck(say) : autoTransitions(say);
       if (k === "all") { const out: Record<string, string> = {}; for (const x of ["pauses", "loud", "color", "duck", "trans"] as Tool[]) out[x] = await one(x); setDone((s) => ({ ...s, ...out })); toast(t("auto.allDone"), "ok"); }
       else { const m = await one(k); setDone((s) => ({ ...s, [k]: m })); toast(m, "ok"); }
     } catch (e) { const er = e as { message?: string; errorAr?: string }; toast((lang === "ar" && er.errorAr) || er.message || t("ai.failed"), "warn"); }
@@ -145,9 +149,11 @@ export function AutoPanel() {
       <div className={"autodemo ad-" + k} aria-hidden="true"><i /><i /><i /><i /><i /><b /></div>
       <div className="autot"><Icon name={ICON[k]} size={16} /><b>{t("auto." + k)}</b></div>
       <p className="hint">{t("auto." + k + "D")}</p>
-      {k === "reframe" && <Seg label={t("auto.shape")} value={aspect} onChange={(v) => setAspect(v as Aspect)} options={(["9:16", "1:1", "4:5", "16:9"] as Aspect[]).map((v) => ({ v, label: v }))} />}
-      <Btn icon={ICON[k]} disabled={!!busy || empty || (k === "captions" && (capCost === null || !api.online))} onClick={() => void run(k)} testid={"auto-go-" + k}>
-        {busy === k ? t("auto.working") : k === "captions" ? (capCost == null ? t("auto.capOff") : capCost ? t("auto.goPrice", { n: capCost }) : t("auto.goFree")) : t("auto.go")}</Btn>
+      {k === "reframe" && <><Seg label={t("auto.shape")} value={aspect} onChange={(v) => setAspect(v as Aspect)} options={(["9:16", "1:1", "4:5", "16:9"] as Aspect[]).map((v) => ({ v, label: v }))} />
+        <Seg label={t("fp.how")} value={follow} onChange={(v) => setFollow(v as "middle" | "follow")} options={[{ v: "follow", label: t("fp.follow") }, { v: "middle", label: t("fp.middle") }]} /></>}
+      {k === "beat" && <Seg label={t("auto.grid")} value={grid} onChange={(v) => setGrid(v as C.Grid)} options={(["beats", "bars", "8ths"] as C.Grid[]).map((v) => ({ v, label: t("auto.g." + v) }))} />}
+      {k === "smart" ? <SmartCut price={capCost} /> : k === "check" ? <CheckPost /> : <Btn icon={ICON[k]} disabled={!!busy || empty || (k === "captions" && (capCost === null || !api.online))} onClick={() => void run(k)} testid={"auto-go-" + k}>
+        {busy === k ? t("auto.working") + (prog ? " " + Math.round(prog * 100) + "%" : "") : k === "captions" ? (capCost == null ? t("auto.capOff") : capCost ? t("auto.goPrice", { n: capCost }) : t("auto.goFree")) : t("auto.go")}</Btn>}
       {done[k] && <p className="hint okline" data-testid={"auto-done-" + k}>{done[k]} · <button type="button" className="linkbtn" onClick={() => A.undo()}>{t("auto.undo")}</button></p>}
     </div>)}</div>
   </div>);

@@ -49,6 +49,16 @@ const P: Record<string, string> = {
   wand: "M4 20L15 9 M14 4v3 M19 9h-3 M17.5 5.5l-2 2 M12 3l.5 1.5 M20 11l1.5.5", sparkle: "M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z", users: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M2 21a7 7 0 0 1 14 0 M17 3a4 4 0 0 1 0 8 M22 21a7 7 0 0 0-4-6.3",
   grip: "M9 6h.01 M15 6h.01 M9 12h.01 M15 12h.01 M9 18h.01 M15 18h.01", beat: "M3 12h3l2-6 3 12 3-9 2 3h5", denoise: "M3 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0 M5 18h14",
   home: "M3 11l9-7 9 7 M5 10v10h14V10", menu: "M4 6h16 M4 12h16 M4 18h16",
+  // (v243)
+  words: "M4 6h9 M4 10h6 M4 14h8 M4 18h5 M17 8a2 2 0 1 0 0 .01 M17 16a2 2 0 1 0 0 .01 M18.5 9.5L14 14 M18.5 14.5L16 12",
+  follow: "M12 8a2.5 2.5 0 1 0 0 .01 M8 20c0-3 1.8-5 4-5s4 2 4 5 M3 8V4h4 M21 8V4h-4 M3 16v4h4 M21 16v4h-4",
+  checklist: "M4 6l1.5 1.5L8 5 M4 12l1.5 1.5L8 11 M4 18l1.5 1.5L8 17 M11 6h9 M11 12h9 M11 18h9",
+  cube: "M12 3l8 4.5v9L12 21l-8-4.5v-9z M4 7.5l8 4.5 8-4.5 M12 12v9 M8 5.2l8 4.6",
+  pencil: "M4 20l1-4L16 5l3 3L8 19z M14 7l3 3 M4 20h6",
+  shorts: "M7 3h10a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z M10.5 9.5v5l4-2.5z M3 7v10 M21 7v10",
+  ramp: "M3 18h4c4 0 6-12 10-12h4 M3 6h2 M19 18h2 M9 18h.01 M12 18h.01",
+  nle: "M3 5h18v14H3z M3 9h18 M7 13h5 M9 16h8 M14 13h3",
+  notes: "M9 17V6l10-2v11 M9 17a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z M19 15a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z M9 10l10-2",
 };
 export type IconName = keyof typeof P | string;
 export function Icon({ name, size = 16, style, label }: { name: IconName; size?: 14 | 16 | 18 | 20 | 22 | 24; style?: CSSProperties; label?: string }) {

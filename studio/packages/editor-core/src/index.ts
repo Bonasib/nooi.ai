@@ -14,3 +14,4 @@ export * from "./nooi";
 export * from "./animate";
 export * as Motion from "./motion";
 export * from "./key";
+export * from "./cutting";
