@@ -74,9 +74,9 @@ async def computer(b, lang, tag):
     p1 = await E("()=>!!document.querySelector('#main>.view>.hubtabs .pill118')"); await pg.wait_for_timeout(600)
     p1b = await E("()=>!!document.querySelector('#main .pill118')")
     ok(p1 and not p1b, f"{tag}: the tab's pill glides to the picked tab, then goes ({p1}, {p1b})")
-    await pg.click('#main>.topm .hnav98 [data-go="edit"]'); await pg.wait_for_timeout(60)
-    p2 = await E("()=>!!document.querySelector('#main>.topm .hnav98 .pill118')"); await pg.wait_for_timeout(600)
-    ok(p2 and await E("()=>S.view") == "edit", f"{tag}: the header's pill glides to the picked section ({p2})")
+    # (v253: the sections moved from the header to the side menu — no header pill any more)
+    await pg.click('#sb253 [data-sb253="calendar"]'); await pg.wait_for_timeout(200); await pg.click('#sb253 .sbg253.open .sbi253'); await pg.wait_for_timeout(400)
+    ok(await E("()=>S.view") == "calendar", f"{tag}: a section in the side menu opens its page")
     # results rise in once; a redraw doesn't replay it
     await E("()=>{go('video');renderAll()}"); await pg.wait_for_timeout(40)
     r1 = await E("()=>document.querySelectorAll('#main .gc98.rise118').length"); await pg.wait_for_timeout(1300)

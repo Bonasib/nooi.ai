@@ -75,12 +75,14 @@ async def site(p):
     pg = await b.new_page(viewport={"width": 1440, "height": 900}); pg.on("pageerror", lambda e: errs.append(str(e)[:300])); E = pg.evaluate
     await pg.goto(B + "/"); await pg.wait_for_timeout(1500)
     land = await E("()=>{const a=document.querySelector('.lplinks .st224l');return a?{href:a.getAttribute('href'),t:a.textContent,first:a===a.parentElement.firstElementChild}:null}")
-    chk("the landing page links to the Studio", land == {"href": "/studio/", "t": "Studio", "first": True}, land)
+    chk("the landing page links to the Studio", land and land["href"] == "/studio/" and land["t"] == "Studio", land)   # (v242 put Team first on the new home page)
     await pg.wait_for_function("typeof S!=='undefined'&&typeof go==='function'", timeout=20000); await E(SIGNIN); await pg.wait_for_timeout(800)
-    nav = await E("()=>[...document.querySelectorAll('#main>.topm .hnav98 button')].map(b=>(b.className==='st224'?'*':'')+b.dataset.go)")
-    chk("the computer header: Studio right after Explore (in place of Edit)", nav[:2] == ["explore", "*edit"] and nav.count("edit") == 0 and nav.count("*edit") == 1, nav)
-    await pg.click('.hnav98 .st224'); await pg.wait_for_url("**/studio/**", timeout=15000)
-    chk("Studio in the header opens nooi Studio", "/studio/" in pg.url, pg.url)
+    # (v253: the sections live in the side menu — the editor is Edit › Video editor, marked New)
+    await pg.click('#sb253 [data-sb253="edit"]'); await pg.wait_for_timeout(200)
+    nav = await E("()=>[...document.querySelectorAll('#sb253 .sbg253.open .sbi253')].map(b=>(b.querySelector('.new253')?'*':'')+b.dataset.go)")
+    chk("the computer's side menu: Edit opens with the Video editor first, marked New", nav[:1] == ["*edit"], nav)
+    await pg.click('#sb253 .sbg253.open [data-go="edit"]'); await pg.wait_for_url("**/studio/**", timeout=15000)
+    chk("the Video editor in the menu opens nooi Studio", "/studio/" in pg.url, pg.url)
     # phone
     ctx = await b.new_context(**p.devices["iPhone 13"]); pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)[:300])); E = pg.evaluate
     await pg.goto(B + "/"); await pg.wait_for_function("typeof S!=='undefined'&&typeof go==='function'", timeout=20000); await E(SIGNIN); await pg.wait_for_timeout(800)

@@ -30,17 +30,18 @@ async def run(b, W, H, lang, tag):
     ok(first["theme"] == "dark" and first["attr"] == "dark", f"{tag}: a visitor on the automatic theme gets the dark one {first}")
     await E("(l)=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.user={name:'T',method:'google'};AU.showAuth=false;setUILang(l);document.getElementById('modalRoot').innerHTML='';renderAll()}", lang)
     await E(SEED, 30); await E("()=>{go('video');renderAll()}"); await pg.wait_for_timeout(600)
-    h = await E("""()=>{const t=document.querySelector('#main>.topm'),n=[...document.querySelectorAll('#main .hnav98 [data-go]')];const r=t.getBoundingClientRect(),m=document.getElementById('main').getBoundingClientRect();
-      return {header:getComputedStyle(t).display!=='none'&&r.top<=1,side:getComputedStyle(document.getElementById('side')).display,nav:n.filter(b=>b.getBoundingClientRect().width>0).map(b=>b.dataset.go),cur:(n.find(b=>b.getAttribute('aria-current')==='page')||{}).dataset?.go,
+    h = await E("""()=>{const t=document.querySelector('#main>.topm'),n=[...document.querySelectorAll('#sb253 .sbh253')];const r=t.getBoundingClientRect(),m=document.getElementById('main').getBoundingClientRect();
+      return {header:getComputedStyle(t).display!=='none'&&r.top<=1,side:getComputedStyle(document.getElementById('side')).display,nav:n.filter(b=>b.getBoundingClientRect().width>0).map(b=>b.dataset.sb253),cur:(document.querySelector('#sb253 .sbi253[aria-current=page]')||{}).dataset?.go,
         lib:!!document.querySelector('#main .lib98'),bottom:getComputedStyle(document.getElementById('bottomnav')).display,mainW:Math.round(m.width),wide:document.documentElement.scrollWidth-innerWidth}}""")
     out[tag] = {"header": h}
     if W >= 768:
-        ok(h["header"] and h["side"] == "none" and h["bottom"] == "none" and h["lib"], f"{tag}: one header, no side menu, no bottom bar {h}")
-        ok([x for x in h["nav"] if x != "edit"][:3] == ["explore", "image", "video"] and h["nav"][1:2] == ["edit"] and "apps" in h["nav"] + ["apps"] and h["cur"] == "video", f"{tag}: the sections in the header, Video marked {h['nav']} {h['cur']}")
-        ok(h["mainW"] >= W - 2, f"{tag}: the page uses the whole width ({h['mainW']} of {W})")
-        await pg.click('#main .hnav98 [data-go="image"]'); await pg.wait_for_timeout(300)
-        ok(await E("()=>S.view") == "image", f"{tag}: a section in the header opens its page")
-        await pg.click('#main>.topm .brand'); await pg.wait_for_timeout(300)
+        # (v253: the owner's new layout — the sections are in the grouped side menu on the start edge; the old side menu stays hidden)
+        ok(h["header"] and h["side"] == "none" and h["bottom"] == "none" and h["lib"], f"{tag}: one header, the old side menu hidden, no bottom bar {h}")
+        ok(h["nav"][:3] == ["image", "video", "audio"] and h["cur"] == "video", f"{tag}: the sections in the side menu, Video's page marked {h['nav']} {h['cur']}")
+        ok(h["mainW"] >= W - 232 - 2, f"{tag}: the page uses the width beside the menu ({h['mainW']} of {W})")
+        await pg.click('#sb253 [data-sb253="image"]'); await pg.wait_for_timeout(200); await pg.click('#sb253 .sbg253.open .sbi253'); await pg.wait_for_timeout(300)
+        ok(await E("()=>S.view") == "image", f"{tag}: a section in the side menu opens its page")
+        await pg.click('#sb253 .sbbrand253'); await pg.wait_for_timeout(300)
         ok(await E("()=>S.view") == "home", f"{tag}: the logo goes Home")
         await E("()=>{go('video');renderAll()}"); await pg.wait_for_timeout(400)
     else:
@@ -62,7 +63,7 @@ async def run(b, W, H, lang, tag):
     await pg.click('#main .cz98 [data-o93="model"]', force=True); await pg.wait_for_timeout(300)
     p = await E("""()=>{const s=document.getElementById('sec93-model'),b=document.querySelector('#main .cz98').getBoundingClientRect(),r=s&&s.getBoundingClientRect();return {open:!!s&&!s.hidden,above:!!r&&r.bottom<=b.top+2,inView:!!r&&r.top>=0}}""")
     ok(p["open"] and p["above"] and p["inView"], f"{tag}: a chip's choices open just above the bar {p}")
-    await pg.mouse.click(10, 140 if W >= 768 else 200); await pg.wait_for_timeout(300)
+    await pg.mouse.click(250 if W >= 768 else 10, 140 if W >= 768 else 200); await pg.wait_for_timeout(300)   # (v253: x 250 — beside the side menu)
     ok(await E("()=>document.getElementById('sec93-model').hidden"), f"{tag}: a tap elsewhere closes them")
     await pg.click('#main .cz98 [data-o93="model"]', force=True); await pg.wait_for_timeout(200); await pg.keyboard.press("Escape"); await pg.wait_for_timeout(300)
     ok(await E("()=>document.getElementById('sec93-model').hidden"), f"{tag}: Esc closes them")

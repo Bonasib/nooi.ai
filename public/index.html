@@ -25677,6 +25677,166 @@ window.addEventListener("click",e=>{const im=e.target.closest&&e.target.closest(
 .hfst251 small{flex-basis:100%;font-size:11.5px;opacity:.8}
 `;document.head.appendChild(st)})();
 
+/* ================= v253: ONE SHELL — a grouped side menu, a slim header, one place for job notices, drop a file anywhere, template cards =================
+   The owner asked to re-order the whole site after the layout of an open-source AI studio (structure only — every word,
+   drawing and line here is nooi's own; the colours are nooi's lime, light and dark, Arabic and English):
+   · a side menu on the start edge, in groups (Image · Video · Audio · Characters · 3D · Edit · Publish · Agents & automation),
+     each group opening its tools; one group open at a time; it folds to icons only (remembered on this device); on a phone
+     it is the drawer behind the Menu button
+   · a slim header: where you are (section › tool) on the start side; search, credits, gifts, language, theme, Library,
+     Admin and the account on the end side, as before
+   · one stack of job notices in the top corner: a job being made (with its minutes), then made (Open) or not made (why)
+   · a file dropped anywhere already goes to the right tool (since v80); its frame is lime now
+   · template cards: tall cover cards, the kind in small lime letters above the name
+   The editor (/studio/) and the Admin dashboard are kept as they are. */
+const SB253={k:"nooi.sb253",fold:false,open:null};
+try{SB253.fold=localStorage.getItem(SB253.k)==="1"}catch(e){}
+const SBG253=["image","video","audio","chars","world","edit","calendar","auto"];
+function sbHubs253(){const on=v=>{const f=typeof FEATURE_OF_VIEW!=="undefined"&&FEATURE_OF_VIEW[v];return!(f&&typeof featureOn==="function"&&!featureOn(f))};
+  const out=[];for(const k of SBG253){
+    if(k==="auto"){const items=[];if(VIEWS.crew)items.push(["crew","crew","Film by 9 agents","فيلم بتسعة وكلاء"]);if(VIEWS.recipes)items.push(["recipes","tools","Recipes · steps in a row","الوصفات · خطوات متتالية"]);
+      if(items.length)out.push(["auto","crew","Agents & automation","الوكلاء والأتمتة",items]);continue}
+    const h=HUBS.find(x=>x[0]===k);if(!h)continue;const items=h[4].filter(t=>on(t[0])&&!(k==="explore"&&t[0]==="recipes"));if(items.length)out.push([h[0],h[1],h[2],h[3],items])}
+  return out}
+function curHub253(){const v=ALIAS82[S.view]||S.view;if(v==="crew"||v==="recipes")return"auto";const h=typeof hubOf==="function"&&hubOf(v);return h?h[0]:v}
+// (a section's tab is [page, English, Arabic]; its icon is the tool's own)
+function tIcon253(v,dflt){const t=(typeof TOOLS82!=="undefined"?TOOLS82:[]).find(x=>x[1]===v);return(t&&t[2])||dflt}
+function sbItem253(v,icn,en,ar,cur,extra){return'<button type="button" class="sbi253" data-go="'+v+'"'+(cur?' aria-current="page"':"")+' title="'+esc(L(en,ar))+'">'+ic(icn)+"<span>"+esc(L(en,ar))+"</span>"+(extra||"")+"</button>"}
+function sidebar253(){const cur=ALIAS82[S.view]||S.view,ch=curHub253();if(SB253.open==null)SB253.open=ch;const adm=typeof isAdmin==="function"&&isAdmin();
+  const top=[["home","home","Home","الرئيسية"],["explore","explore","Templates","القوالب"],["discover","grid","Explore","استكشف"],["apps","tools","All tools","كل الأدوات"]];
+  const groups=sbHubs253().map(g=>{const op=SB253.open===g[0],here=ch===g[0];
+    return'<div class="sbg253'+(op?" open":"")+(here?" here":"")+'" data-sec90="'+(typeof secKey90==="function"?secKey90(g[0]==="auto"?"video":g[0]):"brand")+'">'+
+      '<button type="button" class="sbh253" data-sb253="'+g[0]+'" aria-expanded="'+op+'" title="'+esc(L(g[2],g[3]))+'">'+ic(g[1])+"<span>"+esc(L(g[2],g[3]))+"</span>"+ic("chevron")+"</button>"+
+      '<div class="sbl253" role="group" aria-label="'+esc(L(g[2],g[3]))+'">'+g[4].map(t=>sbItem253(t[0],g[0]==="auto"?t[1]:tIcon253(t[0],g[1]),g[0]==="auto"?t[2]:t[1],g[0]==="auto"?t[3]:t[2],cur===t[0],t[0]==="edit"?'<i class="new253">'+esc(L("New","جديد"))+"</i>":"")).join("")+"</div></div>"}).join("");
+  const foot=[["library","library","My library","مكتبتي"],["account","account","Settings","الإعدادات"]].concat(adm?[["admin","dash","Admin dashboard","لوحة الإدارة"]]:[]);
+  return'<div class="sbtop253"><div class="brand sbbrand253" data-go="home" role="link" tabindex="0" aria-label="'+esc(L("Home","الرئيسية"))+'">'+(document.querySelector("#main>.topm .brand .nbrand")?.outerHTML||"<b>nooi</b>")+"</div>"+
+    '<button type="button" class="sbfold253" data-act="sb253-fold" aria-pressed="'+SB253.fold+'" aria-label="'+esc(SB253.fold?L("Open the menu","افتح القائمة"):L("Fold the menu","اطوِ القائمة"))+'" title="'+esc(SB253.fold?L("Open the menu","افتح القائمة"):L("Fold the menu","اطوِ القائمة"))+'">'+ic("menu")+"</button></div>"+
+    '<nav class="sbnav253" aria-label="'+esc(L("Site menu","قائمة الموقع"))+'">'+top.map(t=>sbItem253(t[0],t[1],t[2],t[3],cur===t[0])).join("")+'<div class="sbsep253"></div>'+groups+'<div class="sbsep253"></div>'+foot.map(t=>sbItem253(t[0],t[1],t[2],t[3],curHub253()===t[0]||cur===t[0])).join("")+"</nav>"}
+function crumb253(){const ch=curHub253(),v=ALIAS82[S.view]||S.view,g=sbHubs253().find(x=>x[0]===ch),t0=g&&g[4].find(x=>x[0]===v),t=t0&&(ch==="auto"?[t0[0],t0[1],t0[2],t0[3]]:[t0[0],"",t0[1],t0[2]]);
+  const hb=HUBS.find(x=>x[0]===ch)||HUBS.find(x=>x[4].some(y=>y[0]===v));const sec=g?L(g[2],g[3]):hb?L(hb[2],hb[3]):"",tool=t?L(t[2],t[3]):(hb&&hb[4].find(y=>y[0]===v))?L(hb[4].find(y=>y[0]===v)[1],hb[4].find(y=>y[0]===v)[2]):"";
+  return'<div class="crumb253" aria-label="'+esc(L("You are here","أنت هنا"))+'"><i class="dot253"></i>'+(sec?"<span>"+esc(sec)+"</span>":"")+(tool&&tool!==sec?'<span class="sep253">›</span><b>'+esc(tool)+"</b>":"")+"</div>"}
+function shell253(){const on=!!S.user&&!(typeof landingPreview!=="undefined"&&landingPreview)&&!(typeof AU!=="undefined"&&AU.showAuth);document.body.classList.toggle("sb253on",on);document.body.classList.toggle("sb253fold",on&&SB253.fold);
+  let a=document.getElementById("sb253");if(!on){if(a)a.hidden=true;return}
+  if(!a){a=document.createElement("aside");a.id="sb253";a.className="sb253";document.body.appendChild(a);const bd=document.createElement("div");bd.id="sb253bd";bd.className="sbbd253";bd.addEventListener("click",()=>{if(typeof menu82==="function")menu82(false)});document.body.appendChild(bd)}
+  a.hidden=false;a.innerHTML=sidebar253();
+  const t=document.querySelector("#main>.topm");if(t&&!t.querySelector(".crumb253")){const b=t.querySelector(".hnav98")||t.querySelector(".brand");if(b)b.insertAdjacentHTML("afterend",crumb253());else t.insertAdjacentHTML("afterbegin",crumb253())}}
+renderView=(o=>function(){const r=o.apply(this,arguments);try{shell253();tpl253()}catch(e){console.warn("v253 shell:",e)}return r})(renderView);
+if(typeof renderShell==="function")renderShell=(o=>function(){const r=o.apply(this,arguments);try{shell253()}catch(e){console.warn("v253 shell:",e)}return r})(renderShell);
+document.addEventListener("click",e=>{const h=e.target.closest&&e.target.closest("[data-sb253]");if(h){const k=h.dataset.sb253;
+    if(SB253.fold&&window.innerWidth>=768){const g=sbHubs253().find(x=>x[0]===k);if(g&&g[4][0])go(g[4][0][0]);return}
+    SB253.open=SB253.open===k?"":k;const a=document.getElementById("sb253");if(a)a.innerHTML=sidebar253();return}
+  if(e.target.closest&&e.target.closest('[data-act="sb253-fold"]')){SB253.fold=!SB253.fold;try{localStorage.setItem(SB253.k,SB253.fold?"1":"0")}catch(x){}shell253();return}
+});
+// (a tool in the menu closes the phone drawer — caught first, since the page change stops the click going further)
+document.addEventListener("click",e=>{const it=e.target.closest&&e.target.closest("#sb253 [data-go]");if(it){SB253.open=null;if(typeof menu82==="function"&&document.body.classList.contains("menu82"))setTimeout(()=>menu82(false),0)}},true);
+
+// ---- one stack of job notices (top corner): being made → made (Open) or not made (why); a made one closes after 12 s
+const NT253={seen:{},cards:{},boot:Date.now()};
+const kindPage253=j=>j.kind==="video"?"video":j.kind==="image"?"image":["voice","music","sfx","audio"].includes(j.kind)?"voice":"library";
+function ntRoot253(){let r=document.getElementById("nt253");if(!r){r=document.createElement("div");r.id="nt253";r.className="nt253";r.setAttribute("role","status");r.setAttribute("aria-live","polite");document.body.appendChild(r)}return r}
+function ntDraw253(id,j,state){const r=ntRoot253();let c=NT253.cards[id];if(!c){c=document.createElement("div");c.className="ntc253";c.dataset.id=id;r.prepend(c);NT253.cards[id]=c}
+  const w=String(j.title||j.prompt||"").slice(0,70),min=Math.max(0,Math.floor((Date.now()-(+j.created||+j.t||NT253.boot))/60000));
+  c.className="ntc253 "+state;
+  c.innerHTML=(state==="busy"?'<span class="sp253" aria-hidden="true"></span>':state==="ok"?ic("check"):ic("x"))+'<div class="ntt253"><b>'+esc(state==="busy"?L("Being made","قيد الصنع"):state==="ok"?L("Ready","جاهز"):L("Not made","لم يُصنع"))+
+    (state==="busy"?' <small class="mono">'+min+" "+esc(L("min","د"))+"</small>":"")+'</b><span dir="auto">'+esc(state==="bad"&&j.error?String(j.error).slice(0,120):w)+"</span></div>"+
+    (state!=="busy"?'<button type="button" class="btn ghost sm" data-nt253="'+esc(id)+'" data-page="'+kindPage253(j)+'">'+esc(state==="ok"?L("Open","افتح"):L("See","اعرض"))+"</button>":"")+
+    '<button type="button" class="ntx253" data-ntx253="'+esc(id)+'" aria-label="'+esc(L("Close","إغلاق"))+'">'+ic("x")+"</button>";
+  if(state!=="busy"&&!c.dataset.t){c.dataset.t="1";setTimeout(()=>ntClose253(id),12000)}}
+function ntClose253(id){const c=NT253.cards[id];if(c){c.remove();delete NT253.cards[id]}}
+function ntTick253(){if(!S.user||!Array.isArray(S.jobs))return;for(const j of S.jobs){if(!j||!j.id)continue;const st=j.status==="complete"?"ok":["failed","error"].includes(j.status)?"bad":"busy",was=NT253.seen[j.id];
+    if(was===undefined){NT253.seen[j.id]=st;if(st==="busy")ntDraw253(j.id,j,"busy");continue}   // (a job already finished before this page opened isn't announced)
+    if(st==="busy"&&NT253.cards[j.id])ntDraw253(j.id,j,"busy");
+    if(st!==was){NT253.seen[j.id]=st;if(st!=="busy")ntDraw253(j.id,j,st)}}}
+setInterval(()=>{try{ntTick253()}catch(e){}},1000);
+document.addEventListener("click",e=>{const x=e.target.closest&&e.target.closest("[data-ntx253]");if(x){ntClose253(x.dataset.ntx253);return}
+  const b=e.target.closest&&e.target.closest("[data-nt253]");if(b){ntClose253(b.dataset.nt253);go(b.dataset.page)}});
+
+// ---- template cards: a tall cover; the kind, the name and one line on it (the aspect and length stay in its corners)
+function tpl253(){document.querySelectorAll("#main .tpl2[data-id]").forEach(c=>{if(c.querySelector(".cv253"))return;const t=(typeof TEMPLATES!=="undefined"?TEMPLATES:[]).find(x=>x.id===c.dataset.id);
+  const ti=c.querySelector(":scope>.ti"),pd=c.querySelector(":scope>.tpd"),ft=c.querySelector(":scope>.tpf");if(!ti)return;
+  const cat=t?(typeof lab==="function"&&typeof TYPES!=="undefined"?lab(TYPES,t.type):t.type):"";const ov=document.createElement("div");ov.className="cv253";
+  ov.innerHTML=(cat?'<span class="cat253">'+esc(cat)+"</span>":"");ov.appendChild(ti);if(pd)ov.appendChild(pd);if(ft)ov.appendChild(ft);c.appendChild(ov);
+  const m=c.querySelector(".thumb>.m");if(m)m.classList.add("asp253")})}
+
+(()=>{const st=document.createElement("style");st.textContent=`
+:root{--sbw:232px}
+body.sb253fold{--sbw:68px}
+.sb253{position:fixed;top:0;bottom:0;inset-inline-start:0;width:var(--sbw);z-index:60;display:flex;flex-direction:column;background:var(--bg);border-inline-end:1px solid var(--line);transition:width .18s ease}
+.sb253[hidden]{display:none}
+.sbtop253{display:flex;align-items:center;gap:8px;height:64px;padding:0 12px;flex:none;border-bottom:1px solid var(--line)}
+.sbbrand253{cursor:pointer;display:flex;align-items:center;min-width:0}.sbbrand253 .nbrand svg{height:34px;width:auto}
+.sbfold253{margin-inline-start:auto;flex:none;width:34px;height:34px;display:grid;place-items:center;border-radius:10px;border:1px solid var(--line);background:none;color:var(--mute);cursor:pointer}
+.sbfold253:hover{color:var(--text);border-color:var(--line2)}
+.sbnav253{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 8px 18px;display:flex;flex-direction:column;gap:2px;scrollbar-width:thin}
+.sbi253,.sbh253{position:relative;display:flex;align-items:center;gap:10px;width:100%;min-height:38px;padding:8px 10px;border:1px solid transparent;border-radius:10px;background:none;color:var(--mute);font:500 13.5px/1.2 var(--sans);text-align:start;cursor:pointer}
+.sbi253 svg,.sbh253 svg{width:17px;height:17px;flex:none}
+.sbi253 span,.sbh253 span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sbi253:hover,.sbh253:hover{color:var(--text);background:var(--panel2)}
+.sbi253[aria-current="page"]{color:var(--text);background:color-mix(in srgb,var(--lime) 13%,transparent);border-color:color-mix(in srgb,var(--lime) 30%,transparent)}
+.sbi253[aria-current="page"]::before{content:"";position:absolute;inset-inline-start:-8px;top:9px;bottom:9px;width:3px;border-radius:3px;background:var(--lime)}
+.sbh253>svg:first-child{color:var(--hub,var(--mute))}
+.sbh253>svg:last-child{width:14px;height:14px;opacity:.6;transition:transform .15s}
+.sbg253.open>.sbh253>svg:last-child{transform:rotate(90deg)}[dir="rtl"] .sbg253:not(.open)>.sbh253>svg:last-child{transform:scaleX(-1)}
+.sbg253.here>.sbh253{color:var(--text);background:linear-gradient(90deg,color-mix(in srgb,var(--lime) 12%,transparent),transparent)}
+[dir="rtl"] .sbg253.here>.sbh253{background:linear-gradient(270deg,color-mix(in srgb,var(--lime) 12%,transparent),transparent)}
+.sbl253{display:none;flex-direction:column;gap:2px;padding:2px 0 6px;padding-inline-start:14px;margin-inline-start:18px;border-inline-start:1px solid var(--line)}
+.sbg253.open>.sbl253{display:flex}
+.sbl253 .sbi253{min-height:34px;font-size:13px}
+.new253{font:600 10px/1 var(--sans);font-style:normal;padding:3px 6px;border-radius:6px;background:var(--lime);color:#111}
+.sbsep253{height:1px;background:var(--line);margin:8px 6px}
+.sbbd253{display:none}
+.crumb253{display:none}
+@media (min-width:768px){
+  body.sb253on .app{padding-inline-start:var(--sbw)!important}
+  body.sb253on #main>.topm .hnav98,body.sb253on #main>.topm>.brand{display:none!important}
+  body.sb253on #main>.topm{min-height:60px!important}
+  body.sb253on .crumb253{display:flex;align-items:center;gap:8px;min-width:0;padding:7px 14px;border:1px solid var(--line);border-radius:999px;font:500 13px/1 var(--sans);color:var(--mute);white-space:nowrap;overflow:hidden}
+  .crumb253 b{color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis}.sep253{opacity:.5}
+  .dot253{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 10px color-mix(in srgb,var(--lime) 70%,transparent);flex:none}
+  body.sb253fold .sbtop253{flex-direction:column;justify-content:center;height:auto;padding:12px 0;gap:10px}
+  body.sb253fold .sbbrand253 .nbrand svg{height:26px}
+  body.sb253fold .sbfold253{margin:0}
+  body.sb253fold .sbi253 span,body.sb253fold .sbh253 span,body.sb253fold .sbh253>svg:last-child,body.sb253fold .new253{display:none}
+  body.sb253fold .sbi253,body.sb253fold .sbh253{justify-content:center;padding:9px 0}
+  body.sb253fold .sbl253{display:none!important}
+  body.sb253fold .sbi253[aria-current="page"]::before{inset-inline-start:-6px}
+  body.sb253fold .sbg253.here>.sbh253{background:color-mix(in srgb,var(--lime) 13%,transparent)}
+}
+@media (max-width:767px){
+  .sb253{width:280px;max-width:86vw;transform:translateX(-105%);transition:transform .2s ease;z-index:120;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+  [dir="rtl"] .sb253{transform:translateX(105%)}
+  body.menu82 .sb253{transform:none}
+  body.sb253on.menu82 #side{display:none!important}
+  body.sb253on.menu82 .sbbd253{display:block;position:fixed;inset:0;z-index:110;background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+  .sbfold253{display:none}
+}
+/* job notices */
+.nt253{position:fixed;top:72px;inset-inline-end:16px;z-index:200;width:min(340px,calc(100vw - 32px));display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.ntc253{pointer-events:auto;display:flex;align-items:center;gap:10px;padding:10px 10px 10px 12px;border-radius:14px;background:var(--panel);border:1px solid var(--line2);box-shadow:0 14px 40px rgba(0,0,0,.35);animation:nt253in .2s ease}
+.ntc253.ok{border-color:color-mix(in srgb,var(--lime) 60%,transparent)}.ntc253.ok>svg{color:var(--lime)}
+.ntc253.bad{border-color:color-mix(in srgb,#ff5a5f 60%,transparent)}.ntc253.bad>svg{color:#ff5a5f}
+.ntc253>svg{width:18px;height:18px;flex:none}
+.ntt253{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.ntt253 b{font:600 13px/1.2 var(--sans)}.ntt253 small{color:var(--mute);font-weight:500}
+.ntt253 span{font-size:12.5px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ntx253{flex:none;width:26px;height:26px;display:grid;place-items:center;border:0;background:none;color:var(--mute);border-radius:8px;cursor:pointer}.ntx253 svg{width:14px;height:14px}
+.sp253{width:18px;height:18px;flex:none;border-radius:50%;border:2px solid color-mix(in srgb,var(--lime) 25%,transparent);border-top-color:var(--lime);animation:sp253 .8s linear infinite}
+@keyframes sp253{to{transform:rotate(360deg)}}@keyframes nt253in{from{opacity:0;transform:translateY(-6px)}}
+@media (max-width:767px){.nt253{top:64px}}
+/* drop anywhere (the site already sends a dropped file to the right tool): its frame in lime */
+body.dragging #dropveil{border:2px dashed var(--lime)!important;border-radius:20px}#dropveil svg{color:var(--lime)}
+/* template cards: tall covers */
+#main .tpl2{position:relative;padding:0!important;overflow:hidden;border-radius:16px;aspect-ratio:3/4;display:block;transition:transform .18s ease,border-color .18s ease}
+#main .tpl2>.thumb{position:absolute;inset:0;border-radius:0;aspect-ratio:auto!important;height:100%;margin:0}
+#main .tpl2>.thumb .frame{transition:transform .35s ease}#main .tpl2:hover>.thumb .frame{transform:scale(1.05)}
+#main .tpl2 .asp253{top:10px;bottom:auto;inset-inline-end:10px;inset-inline-start:auto}
+.cv253{position:absolute;inset-inline:0;bottom:0;padding:56px 14px 14px;display:flex;flex-direction:column;gap:4px;background:linear-gradient(to top,rgba(0,0,0,.9),rgba(0,0,0,.55) 60%,transparent);color:#fff;text-align:start}
+.cv253 .ti{color:#fff!important;font-weight:700;margin:0!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cv253 .tpd{color:rgba(255,255,255,.8)!important;margin:0!important;font-size:12.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cv253 .tpf{display:none!important}
+#main .tpl2:hover{border-color:var(--lime);transform:translateY(-2px)}#main .tpl2:hover .ti{color:var(--lime)!important}
+.cat253{display:block;font:700 10.5px/1.2 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--lime)}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

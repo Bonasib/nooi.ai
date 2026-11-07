@@ -727,3 +727,21 @@ Ideas taken from the open-source video-editing-skill project (MIT), rewritten in
   - A video ByteDance turns down for any other reason goes to the owner's MiniMax key once, when MiniMax can make it (from words or a picture). MiniMax's videos are silent. The customer is charged only once it's made. A real face is still never sent elsewhere.
   - `deploy/why.sh` shows each failed job's time in UTC and how long ago, plus **what the maker said** (its own words, keys hidden). A new section, **jobs being made now**, shows each job's stage, where it is, how many minutes it has waited, its parts, and a ⚠ after 20 minutes.
 - Tests: `tests/v252.py`, plus `v185`, `v237`–`v241`, `v246`–`v251`.
+
+## v253 — one shell: a grouped side menu, a slim header, job notices, template covers (lime)
+
+The owner asked to re-order the whole site after the layout of an open-source AI studio (structure only; nooi's own words, drawings and code; nooi's lime, light and dark, Arabic and English). The editor (`/studio/`) and the Admin dashboard are unchanged.
+
+- **Side menu on the start edge (computer):**
+  - Home, Templates, Explore, All tools.
+  - Then the groups: Image, Video, Audio, Characters, 3D, Edit, Publish, and Agents & automation (Film by 9 agents, Recipes).
+  - Then My library, Settings and Admin (staff only).
+  - Each group opens its tools, one group at a time; the group you're in opens by itself. The page you're on is marked in lime.
+  - The menu folds to icons only, and this device remembers it. Folded, a group opens its first tool.
+  - In Arabic it's on the right.
+- **Slim header:** where you are (section › tool) on the start side. Search, credits, gifts, language, theme, Library, Admin and the account are on the end side, as before. The row of sections left the header.
+- **Phone:** the Menu button opens the same grouped menu as a drawer, and a tool closes it.
+- **Job notices:** one stack in the top corner. A job being made shows its minutes, then "Ready · Open", or "Not made" with why. A finished notice closes after 12 s. Jobs already finished when the page opened aren't announced.
+- **Templates:** tall 3:4 cover cards. The kind sits in small lime capitals above the name and one line; the length and shape sit in the corners.
+- **Drop anywhere** already sent a file to the right tool (since v80); its frame is lime now.
+- Tests: `tests/v253.py`. `v98`, `v118` and `v224` were updated to the side menu; `v224` also no longer expects Studio as the landing page's first link (v242 changed that page).
