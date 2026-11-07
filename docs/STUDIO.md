@@ -709,3 +709,12 @@ Ideas taken from the open-source video-editing-skill project (MIT), rewritten in
   - With none switched on, the AI engine makes it, if it can take work. Otherwise the customer is told plainly ("Seedance isn't switched on for this site yet — nothing was charged").
   - Admin's Seedance card shows which model isn't activated. `deploy/why.sh` says which model and how to activate it.
 - Tests: `tests/v250.py`, plus `v241`, `v246`, `v247`, `v248` and `v249`.
+
+## v251 — sound on MiniMax videos, picture names, tap to view, one header, Seedance waiting
+
+- **No sound on MiniMax videos:** MiniMax's video models (Hailuo) make silent videos; they have no sound track at all. With "Everything on MiniMax" on, a video that asks for sound now goes to Seedance (it makes sound with the video), on the owner's ByteDance key first. Silent videos stay on MiniMax.
+- **Picture names in the prompt:** a picture added to the prompt box is tagged with its file name (`#elias` for `elias.png`). Two with the same name get `elias2`. Camera or screenshot names (`IMG_1234`, `Screenshot…`) still get `#image1`.
+- **Tap to view:** a finished picture or video in the results has a full-screen button, and tapping a picture opens it. Both open the viewer, which has Download.
+- **Waiting:** a job that isn't finished shows its stage and how long it has run (m:ss). For Seedance it adds a note that it usually takes 2–8 minutes, and longer for long videos, which are made in parts.
+- **One header:** the editor wears the site's own header: the logo (to Home), the site's sections, theme, search, credits (to Plans), language, Library and the account. Below 1180 px wide the sections sit behind the menu button, so nothing overlaps on tablets or phones. The editor's own bar (file, undo, export…) sits under it.
+- Tests: `tests/v251.py`, `tests/v251_route.mjs`. `v231`, `v232` and `v236` were updated to the new header. `v246` now checks the balance note (not the whole reply, where a time stamp can hold "404").

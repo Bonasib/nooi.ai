@@ -69,7 +69,7 @@ def main():
         try: urllib.request.urlopen(B + "/v1/health", timeout=2); break
         except Exception: time.sleep(0.5)
     t = req("/v1/admin/providers/kie/test", {}, who="boss")
-    chk("the engine's balance is read (a saved …/api/v1 base no longer gives a 404)", ST["credit"] >= 1 and "120 credits left" in json.dumps(t) and "404" not in json.dumps(t), t)
+    chk("the engine's balance is read (a saved …/api/v1 base no longer gives a 404)", ST["credit"] >= 1 and "120 credits left" in str(t.get("note")) and "404" not in str(t.get("note")), t)   # (the note, not the whole reply: a time stamp can hold "404")
     # ---- a swap on the owner's ByteDance key
     b0 = req("/v1/billing").get("credits"); j = req("/v1/jobs", SW()); x = wait(j.get("id")); b1 = req("/v1/billing").get("credits")
     bp = ST["bp"][-1] if ST["bp"] else {}; roles = [c.get("role") for c in bp.get("content", [])]

@@ -40,7 +40,7 @@ async def studio(p, role):
     b = await p.chromium.launch(); pg = await (await b.new_context(viewport={"width": 1440, "height": 900})).new_page(); errs = []; E = pg.evaluate; pg.on("pageerror", lambda e: errs.append(str(e)[:300]))
     await pg.route(re.compile(r".*/v1/(me|billing|scan136|replace136/quote)$"), mocker(role, 0))
     await pg.goto(B + "/studio/?new=1"); await pg.wait_for_function("window.__studio&&document.querySelector('[data-testid=preview]')", timeout=20000); await pg.wait_for_timeout(1500)
-    top = await E("()=>(document.querySelector('[data-testid=top-free]')||{}).textContent||(document.querySelector('.topbar .credits')||{}).textContent||''")
+    top = await E("()=>(document.querySelector('[data-testid=top-free]')||{}).textContent||(document.querySelector('.sitebar .credits,.topbar .credits')||{}).textContent||''")
     await pg.click('[data-testid="rail-media"]'); await pg.set_input_files('[data-testid="file-input"]', D + "/a.webm")
     await pg.wait_for_function("Object.values(window.__studio.editor.project.assets).some(a=>a.w&&a.duration)", timeout=30000)
     await E("()=>{const s=window.__studio,a=Object.values(s.editor.project.assets)[0];s.actions.addAsset(a);s.editor.select([s.editor.project.tracks.flatMap(t=>t.clips)[0].id])}"); await pg.wait_for_timeout(300)

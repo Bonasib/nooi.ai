@@ -45,9 +45,9 @@ async def tablets(p):
     for name, vp in (("1024×768 sideways", {"width": 1024, "height": 768}), ("iPad upright", {"width": 834, "height": 1194}), ("laptop 1280×720", {"width": 1280, "height": 720})):
         b = await p.chromium.launch(); ctx = await b.new_context(viewport=vp, has_touch=True); pg = await ctx.new_page()
         await pg.goto(B + "/studio/"); await pg.wait_for_function("window.__studio&&document.querySelector('[data-testid=preview]')", timeout=20000); await pg.wait_for_timeout(500)
-        res[name] = await pg.evaluate("()=>({bar:!!document.querySelector('.sitebar'),links:document.querySelectorAll('.sitebar .snav a').length,home:(document.querySelector('[data-testid=site-home]')||{}).getAttribute?.('href')||document.querySelector('.sitebar [data-testid=site-home]')?.getAttribute('href'),logo:document.querySelector('.topbar a.logo')?.getAttribute('href'),page:document.documentElement.scrollWidth-innerWidth})"); await b.close()
+        res[name] = await pg.evaluate("()=>({bar:!!document.querySelector('.sitebar'),links:document.querySelectorAll('.sitebar .snav a').length,home:(document.querySelector('[data-testid=site-home]')||{}).getAttribute?.('href')||document.querySelector('.sitebar [data-testid=site-home]')?.getAttribute('href'),menu:!!document.querySelector('.sitebar [data-testid=site-menu]'),page:document.documentElement.scrollWidth-innerWidth})"); await b.close()
     out["tablets"] = res
-    chk("computers and tablets: the site's sections are on top (also 1024×768 sideways); Home and the logo go to /?view=home", all(r["bar"] and r["links"] == 11 and r["home"] == "/?view=home" and r["logo"] == "/?view=home" and r["page"] <= 0 for r in res.values()), res)
+    chk("computers and tablets: the site's sections are on top (also 1024×768 sideways); Home and the logo go to /?view=home", all(r["bar"] and (r["links"] == 9 or r["menu"]) and r["home"] == "/?view=home" and r["page"] <= 0 for r in res.values()) and res["laptop 1280×720"]["links"] == 9, res)   # (v251: under 1180 px the sections sit behind the menu button)
 
 async def touch(p):
     b = await p.chromium.launch(); ctx = await b.new_context(**p.devices["iPhone 13"]); pg = await ctx.new_page(); errs = []; E = pg.evaluate; pg.on("pageerror", lambda e: errs.append(str(e)[:300]))
@@ -59,7 +59,7 @@ async def touch(p):
     await pg.click('[data-testid="site-menu"]')
     hdr = await E("()=>{const t=document.querySelector('.topbar');return{spill:t.scrollWidth-t.clientWidth,boxes:[...t.children].map(k=>{const r=k.getBoundingClientRect();return[k.className||k.tagName,Math.round(r.left),Math.round(r.right)]})}}")
     ov = [[a[0], c[0]] for i, a in enumerate(hdr["boxes"]) for c in hdr["boxes"][i + 1:] if a[1] < c[2] - 1 and c[1] < a[2] - 1 and a[2] > a[1] and c[2] > c[1]]
-    chk("phone: a Home icon (to the site's home) and a menu beside it with the site's sections; the header fits", hm == {"home": "/?view=home", "menu": True, "bar": False, "logo": False} and n == 12 and hdr["spill"] <= 0 and not ov, [hm, n, hdr, ov])
+    chk("phone: a Home icon (to the site's home) and a menu beside it with the site's sections; the header fits", hm == {"home": "/?view=home", "menu": True, "bar": True, "logo": False} and n == 12 and hdr["spill"] <= 0 and not ov, [hm, n, hdr, ov])
     # a clip on the timeline, zoomed in so the timeline can scroll
     await pg.click('[data-testid="rail-media"]'); await pg.set_input_files('[data-testid="file-input"]', D + "/a.webm"); await pg.wait_for_function("Object.values(" + P + ".assets).some(a=>a.duration>7)", timeout=30000)
     await E("()=>{const s=window.__studio,a=Object.values(s.editor.project.assets)[0];s.actions.addAsset(a,0);s.editor.select([])}"); await pg.wait_for_timeout(300)

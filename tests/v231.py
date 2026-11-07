@@ -88,10 +88,11 @@ async def desktop(p):
     pg = await ctx.new_page(); errs = []; E = pg.evaluate; pg.on("pageerror", lambda e: errs.append(str(e)[:300]))
     await pg.route(re.compile(r".*/v1/(jobs.*|scan136|replace136/quote)$"), mock)
     await pg.goto(B + "/studio/"); await pg.wait_for_function("window.__studio&&document.querySelector('[data-testid=preview]')", timeout=20000); await pg.wait_for_timeout(600)
-    sb = await E("()=>({links:[...document.querySelectorAll('.sitebar .snav a')].map(a=>[a.textContent,a.getAttribute('href'),a.getAttribute('aria-current')]),free:(document.querySelector('[data-testid=site-free]')||{}).textContent})")
+    sb = await E("()=>({links:[...document.querySelectorAll('.sitebar .snav a')].map(a=>[a.textContent,a.getAttribute('href'),a.getAttribute('aria-current')]),home:document.querySelector('.sitebar [data-testid=site-home]')?.getAttribute('href')})")
     hrefs = dict((x[0].replace("New", ""), x[1]) for x in sb["links"])
-    chk("the site's sections along the top: 11, Studio is this page, each opens its page of the site", len(sb["links"]) == 11 and hrefs.get("Explore") == "/?view=explore" and hrefs.get("Characters") == "/?view=chars" and hrefs.get("Plans") == "/?view=account" and hrefs.get("Home") == "/?view=home"
-        and [x for x in sb["links"] if x[2] == "page"][0][1] == "/studio/" and sb["free"] == "Editor free in every plan", sb)
+    # (v251: the studio wears the site's own header — its 9 sections, Home on the logo, the plans on the credits pill)
+    chk("the site's sections along the top: the site's 9, Studio is this page, each opens its page of the site", len(sb["links"]) == 9 and hrefs.get("Explore") == "/?view=explore" and hrefs.get("Characters") == "/?view=chars" and sb["home"] == "/?view=home"
+        and [x for x in sb["links"] if x[2] == "page"][0][1] == "/studio/", sb)
     h = await E(HDR); ov = boxes_overlap(h["boxes"])
     chk("desktop: nothing in the two top bars overlaps or spills", not ov and max(h["over"]) <= 0 and h["page"] <= 0, {"overlap": ov, "over": h["over"]})
     # ---- media: a video and a picture called "girl"
@@ -183,7 +184,7 @@ async def phone(p):
     await pg.goto(B + "/studio/?new=1"); await pg.wait_for_function("window.__studio&&document.querySelector('[data-testid=preview]')", timeout=20000); await pg.wait_for_timeout(600)
     await pg.click('[data-testid="lang"]'); await pg.wait_for_timeout(300); await pg.click('[data-testid="site-menu"]'); await pg.wait_for_timeout(200)
     m = await E("()=>({n:document.querySelectorAll('.smenu-list a').length,first:document.querySelector('.smenu-list a').textContent,free:document.querySelector('.smenu-list .sfree').textContent,bar:!!document.querySelector('.sitebar'),page:document.documentElement.scrollWidth-innerWidth,inview:(()=>{const r=document.querySelector('.smenu-list').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&[...document.querySelectorAll('.smenu-list a')].every(a=>{const q=a.getBoundingClientRect(),e=document.elementFromPoint(q.left+q.width/2,q.top+q.height/2);return e&&a.contains(e)})})()})")
-    chk("phone (Arabic): the logo opens the site's sections (and the free-editor line), inside the screen", m["n"] == 12 and m["first"] == "الرئيسية" and m["free"] == "المحرر مجاني في كل الباقات" and not m["bar"] and m["page"] <= 0 and m["inview"], m)
+    chk("phone (Arabic): the logo opens the site's sections (and the free-editor line), inside the screen", m["n"] == 12 and m["first"] == "الرئيسية" and m["free"] == "المحرر مجاني في كل الباقات" and m["bar"] and m["page"] <= 0 and m["inview"], m)
     chk("phone: no page errors", not errs, errs); await b.close()
 
 async def main():

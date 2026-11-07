@@ -10,7 +10,7 @@ import { ui, useUI, editor, pickedNow, useProject } from "./state";
 import { Btn } from "@nooi/ui";
 import { ClipBar } from "./ui/ClipBar";
 import { MateDrawer, RecOverlay, ReframeDialog, SettingsDialog } from "./ui/Shell";
-import { SiteBar, useSiteBar } from "./ui/SiteBar";
+import { SiteBar } from "./ui/SiteBar";
 
 // One editor, three arrangements of the same parts:
 //  · full (computers and tablets): rail · library · preview · inspector over the timeline — on a tablet held upright the same
@@ -26,7 +26,7 @@ const modeNow = (): Mode => (matchMedia(phoneQ).matches ? "phone" : matchMedia(c
 
 export function App() {
   const { t } = useTranslation(); const exp = useUI((s) => s.exportOpen); const pal = useUI((s) => s.paletteOpen); const prj = useUI((s) => s.projectsOpen); const open = useUI((s) => s.panelOpen); const ws = useUI((s) => s.workspace); const setOpen = useUI((s) => s.settingsOpen); const rf = useUI((s) => s.reframeOpen); const mate = useUI((s) => s.mate);
-  const [mode, setMode] = useState<Mode>(modeNow); const bar = useSiteBar();
+  const [mode, setMode] = useState<Mode>(modeNow);
   const [insp, setInsp] = useState(false);
   useEffect(() => {
     const ms = [matchMedia(phoneQ), matchMedia(compactQ)]; const f = () => setMode(modeNow());
@@ -42,7 +42,7 @@ export function App() {
   const phoneSel = mode === "phone" && editor.selection.length === 1;
   return (
     <div className={"app " + mode + " ws-" + ws + (mate ? " mated" : "") + (mode === "phone" && sheet ? " sheeted" : "")} data-testid="studio">
-      {mode !== "phone" && bar && <SiteBar />}
+      <SiteBar />
       <TopBar />
       {mode === "phone" ? (<>
         <main className="mmain">

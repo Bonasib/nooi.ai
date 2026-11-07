@@ -77,7 +77,8 @@ export function bdRoute241(cap, body = {}, { mmAll = false } = {}) {
   if (model === "mcswap" && ["seedance", "seedancefast"].includes(swapEngine())) { const m = swapEngine() === "seedance" ? BD_MODELS241.seedance20 : BD_MODELS241.seedance; return { key: "bd@" + m, a: bytedance241(m) }; }
   if (/^mc(26|30|swap)$/.test(model) || body.meta?.swap93 || ["lipsync", "avatar", "swap", "upscale"].includes(kind)) return null;
   const edit = !!body.meta?.edit135, readsVideo = Object.values(body.inputs || {}).some((v) => VIDEO_FILE.test(String(v || "")));
-  const auto = (model === "auto" || !model) && !mmAll && ["video", "chapter", ""].includes(kind) && !readsVideo;
+  // (v251: a video that asks for sound goes to Seedance even while "Everything on MiniMax" is on — MiniMax's videos are silent)
+  const auto = (model === "auto" || !model) && (!mmAll || !!body.meta?.audio) && ["video", "chapter", ""].includes(kind) && !readsVideo;
   if (!SEEDANCE_PICKS.has(model) && !auto && !edit) return null;
   const m = bdModel241(body); return { key: "bd@" + m, a: bytedance241(m) };
 }
