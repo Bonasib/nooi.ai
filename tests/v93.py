@@ -140,6 +140,7 @@ async def studio(b):
         r = await E("""()=>{S.draft.prompt='A rider crosses the desert at dawn';const n=S.jobs.length;makeVideo();const j=S.jobs.slice(n)[0];return j&&{p:j.prompt,t:j.title,m:j.meta.cinema}}""")
         ok(r and r["p"].startswith("A rider crosses the desert at dawn. ") and "noir" in r["p"] and r["t"] == "A rider crosses the desert at dawn" and r["m"]["light"] == "noir", f"{tag}: the shot gets the camera wording, the title stays the client's words {r}")
         # the agents' film: same page, its box first, no "Who does what"
+        await pg.keyboard.press("Escape"); await pg.wait_for_timeout(150)   # (v254: more lenses make the open panel taller — close it first, as a person would)
         await pg.click('.mode93 [data-go="crew"]'); await pg.wait_for_timeout(500)
         r = await E("""()=>({view:S.view,h1:document.querySelector('#main h1').textContent.trim(),roles:!!document.querySelector('.roles90'),box:!!document.querySelector('.box93 [data-act="crew-start"]'),
           first:!!(document.querySelector('.crewgrid').compareDocumentPosition(document.querySelector('.crewline'))&Node.DOCUMENT_POSITION_FOLLOWING),chips:[...document.querySelectorAll('.box93 [data-o93]')].map(c=>c.dataset.o93),tab:(document.querySelector('.hubtabs [aria-selected=true]')||{dataset:{}}).dataset.go,cards:document.querySelectorAll('.crewline .botcard').length})""")

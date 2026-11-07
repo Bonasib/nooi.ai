@@ -25837,6 +25837,92 @@ body.dragging #dropveil{border:2px dashed var(--lime)!important;border-radius:20
 .cat253{display:block;font:700 10.5px/1.2 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--lime)}
 `;document.head.appendChild(st)})();
 
+/* ================= v254: DIRECTING AND ERAS — more cameras and lenses, a Directing chip and an Era chip in nooi Studio =================
+   The owner asked for lenses, directing options and time periods like an open-source studio's Cinema page has lenses (it has
+   no directing or eras — those are nooi's own). Every option keeps the Cinema rule: a small drawing and a fixed, tested
+   wording added to the shot, "Auto" leaves it to the engine.
+   · Camera: + 70 mm film, Super 8, 90s camcorder · Lens: + tilt-shift, fisheye, swirl bokeh, halation filter, clinical sharp,
+     warm prime, 1970s zoom, probe lens · Focal length: + 8 mm · Aperture: + f/4
+   · Directing (one chip): shot size, camera angle, pace, composition, directing style (described by its traits, never a
+     real director's name)
+   · Era (one chip): from the ancient world to the far future, with Arabian heritage and the Islamic golden age; each sets
+     the clothes, buildings, colours and film grain of its time */
+const T254=(s,x=12,y=15.5,fs=8)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" font-size="'+fs+'" font-weight="700" font-family="system-ui,sans-serif" fill="currentColor" stroke="none">'+s+"</text>";
+CIN82.cam.push(
+  ["film70","70 mm film","فيلم 70 مم","shot on large-format 70mm film, immense detail, very fine grain, rich deep color",'<rect x="2.5" y="4" width="19" height="16" rx="1"/><path d="M6 4v16M18 4v16M2.5 8h3.5M2.5 12h3.5M2.5 16h3.5M18 8h3.5M18 12h3.5M18 16h3.5"/>'],
+  ["super8","Super 8","سوبر 8","shot on Super 8 home-movie film, heavy grain, warm faded colors, soft focus, slight gate weave",'<rect x="4" y="6" width="16" height="12" rx="2"/>'+T254("S8",12,14.6,7)],
+  ["camcorder","90s camcorder","كاميرا فيديو التسعينات","shot on a 1990s consumer camcorder, interlaced video look, soft detail, slightly bleeding colors, date stamp free",'<rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10l5-2v8l-5-2"/><circle cx="9.5" cy="12" r="2.5"/>']);
+CIN82.lens.push(
+  ["tiltshift","Tilt-shift","إمالة وإزاحة","tilt-shift lens, a thin plane of focus, the scene looks like a miniature model",'<rect x="3" y="9" width="18" height="6" rx="1"/><path d="M3 5h18M3 19h18" opacity=".35"/>'],
+  ["fisheye","Fisheye","عين السمكة","fisheye lens, strong barrel distortion, curved horizon, very wide view",'<circle cx="12" cy="12" r="9"/><path d="M3.5 12c3-3 14-3 17 0M3.5 12c3 3 14 3 17 0" opacity=".6"/>'],
+  ["swirl","Swirl bokeh","بوكيه دوّامي","vintage portrait lens with swirling bokeh around a sharp center",'<circle cx="12" cy="12" r="2"/><path d="M12 4a8 8 0 0 1 8 8M20 12a8 8 0 0 1-8 8M12 20a8 8 0 0 1-8-8M4 12a8 8 0 0 1 8-8" stroke-dasharray="3 2"/>'],
+  ["halation","Halation filter","فلتر التوهّج","diffusion filter with glowing halation around highlights, dreamy soft contrast",'<circle cx="12" cy="12" r="4" fill="currentColor" fill-opacity=".35"/><circle cx="12" cy="12" r="8" opacity=".4"/>'],
+  ["clinical","Clinical sharp","حادة جداً","ultra-sharp modern prime lens, clinical detail, no distortion",'<circle cx="12" cy="12" r="8"/><path d="M8 12h8M12 8v8"/>'],
+  ["warmprime","Warm prime","عدسة دافئة","warm-toned cinema prime lens, gentle contrast, flattering skin",'<circle cx="12" cy="12" r="8"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0" />'],
+  ["zoom70s","1970s zoom","زوم السبعينات","1970s cinema zoom lens, slightly soft, warm flares, period look",'<rect x="3" y="8" width="18" height="8" rx="2"/><path d="M8 8v8M13 8v8" opacity=".6"/>'],
+  ["probe","Probe lens","عدسة مسبار","probe lens, the camera slips through tiny spaces at ground level, bug's-eye view",'<path d="M3 12h13"/><circle cx="18.5" cy="12" r="2.5"/>']);
+CIN82.focal.unshift([8,"8 mm","8 مم","8mm ultra-wide lens, extreme perspective, almost a full half-sphere of view",fov82(8)]);
+CIN82.ap.splice(2,0,["4","f/4","f/4","aperture f/4, balanced depth of field, the subject sharp and the background soft",ap82(4)]);
+Object.assign(CIN82,{
+ shot:[["xwide","Extreme wide","بعيدة جداً","extreme wide shot, tiny figures in a vast place",'<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M12 15v-2" stroke-width="2"/>'],
+  ["wide","Wide","بعيدة","wide shot, the whole body and the place around it",'<rect x="3" y="5" width="18" height="14" rx="1"/><circle cx="12" cy="10" r="1.3"/><path d="M12 11.5v4"/>'],
+  ["full","Full shot","لقطة كاملة","full shot, the subject from head to toe",'<rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="12" cy="7.5" r="2"/><path d="M12 9.5v7M9 12h6M12 16.5l-2.5 3M12 16.5l2.5 3"/>'],
+  ["medium","Medium","متوسطة","medium shot, from the waist up",'<rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="12" cy="9" r="3"/><path d="M6 21c0-4 3-6.5 6-6.5s6 2.5 6 6.5"/>'],
+  ["mcu","Medium close-up","متوسطة قريبة","medium close-up, head and shoulders",'<rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="12" cy="10" r="4.5"/><path d="M4 21c1-3.5 4-5 8-5s7 1.5 8 5"/>'],
+  ["close","Close-up","قريبة","close-up on the face, every expression readable",'<rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="12" cy="12" r="7"/><path d="M9.5 11h.01M14.5 11h.01M10 15c1.2.8 2.8.8 4 0"/>'],
+  ["xclose","Extreme close-up","قريبة جداً","extreme close-up on a single detail, the eyes or the hands",'<rect x="3" y="3" width="18" height="18" rx="1"/><path d="M4 12c3-4 13-4 16 0-3 4-13 4-16 0z"/><circle cx="12" cy="12" r="2"/>']],
+ angle:[["eye","Eye level","مستوى العين","camera at eye level, neutral and honest",'<path d="M3 12h18" opacity=".4"/><path d="M5 12c2.5-3.5 11.5-3.5 14 0-2.5 3.5-11.5 3.5-14 0z"/><circle cx="12" cy="12" r="1.8"/>'],
+  ["low","Low angle","زاوية منخفضة","low angle looking up, the subject powerful and tall",'<path d="M4 20L12 6l8 14"/><path d="M12 20v-3" opacity=".6"/>'],
+  ["high","High angle","زاوية مرتفعة","high angle looking down, the subject small and exposed",'<path d="M4 4l8 14 8-14"/>'],
+  ["top","Top-down","من الأعلى","top-down overhead view straight from above",'<rect x="5" y="5" width="14" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3" opacity=".5"/>'],
+  ["worm","Worm's-eye","من الأرض","worm's-eye view from the ground, looking sharply up",'<path d="M3 20h18"/><path d="M12 20L7 5M12 20l5-15"/>'],
+  ["dutch","Dutch tilt","مائلة","dutch tilt, the frame tilted for unease",'<rect x="5" y="6" width="14" height="12" rx="1" transform="rotate(-14 12 12)"/>'],
+  ["ots","Over the shoulder","من فوق الكتف","over-the-shoulder shot, one person's shoulder in the foreground",'<path d="M3 21c0-5 3-8 7-8"/><circle cx="7" cy="9" r="3"/><circle cx="17" cy="9" r="2.2" opacity=".6"/>'],
+  ["pov","Point of view","وجهة نظر","first-person point of view, we see through the character's eyes",'<path d="M2 12c3-5 17-5 20 0-3 5-17 5-20 0z"/><circle cx="12" cy="12" r="3"/>']],
+ pace:[["calm","Slow & calm","هادئ وبطيء","slow, calm pacing, lingering moments",'<path d="M3 12c3-4 6-4 9 0s6 4 9 0"/>'],
+  ["steady","Steady","ثابت الإيقاع","steady, even pacing",'<path d="M3 12h18"/><path d="M7 9v6M12 9v6M17 9v6" opacity=".5"/>'],
+  ["fast","Fast & energetic","سريع وحيوي","fast, energetic pacing with quick motion",'<path d="M3 15l4-6 4 6 4-6 4 6"/>'],
+  ["slowmo","Slow motion","حركة بطيئة","dramatic slow motion",'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l2 1.5"/><path d="M5 5l2 2" opacity=".5"/>'],
+  ["timelapse","Time-lapse","تسريع الزمن","time-lapse, hours passing in seconds, clouds and light racing",'<circle cx="12" cy="12" r="8.5"/><path d="M12 6v6l4 4"/><path d="M16 4l2 1M19 7l1 2" opacity=".6"/>']],
+ comp:[["center","Centered symmetry","تماثل مركزي","perfectly centered symmetrical composition",'<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M12 4v16" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="3"/>'],
+  ["thirds","Rule of thirds","قاعدة الأثلاث","rule-of-thirds composition, the subject off-center",'<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M9 4v16M15 4v16M3 9.3h18M3 14.7h18" opacity=".45"/><circle cx="15" cy="9.3" r="1.8" fill="currentColor"/>'],
+  ["lines","Leading lines","خطوط موجِّهة","leading lines drawing the eye to the subject",'<path d="M3 21L12 9l9 12M8 21l4-6 4 6" opacity=".7"/><circle cx="12" cy="7" r="1.6" fill="currentColor"/>'],
+  ["frame","Frame in a frame","إطار داخل إطار","frame within a frame, the subject seen through a doorway or window",'<rect x="3" y="3" width="18" height="18" rx="1"/><rect x="8" y="7" width="8" height="10" rx="1"/>'],
+  ["negative","Negative space","مساحة فارغة","minimal composition with wide negative space around a small subject",'<rect x="3" y="4" width="18" height="16" rx="1"/><circle cx="17" cy="15" r="1.4" fill="currentColor"/>'],
+  ["depth","Foreground depth","عمق بمقدّمة","layered depth with an out-of-focus foreground element",'<path d="M3 20c2-6 4-9 6-9" stroke-width="3" opacity=".45"/><rect x="11" y="6" width="9" height="12" rx="1"/>']],
+ dstyle:[["pastel","Symmetric pastel","متماثل بألوان باستيل","whimsical storybook directing: centered symmetrical frames, pastel palette, deadpan staging, flat lateral camera moves",'<rect x="4" y="5" width="16" height="14" rx="1"/><path d="M12 5v14" opacity=".4"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/>'],
+  ["gritty","Gritty realism","واقعي خشن","gritty realist directing: handheld, natural light, desaturated colors, raw unpolished moments",'<path d="M3 12c2-3 3 3 5 0s3 3 5 0 3 3 5 0 2 3 3 1"/><path d="M4 18h16" opacity=".4"/>'],
+  ["epic","Epic scale","ملحمي","epic large-scale directing: vast vistas, sweeping crane and aerial moves, monumental framing, a sense of grandeur",'<path d="M2 19l6-9 4 5 3-4 7 8z"/><circle cx="17" cy="6" r="1.8"/>'],
+  ["dreamy","Dreamy","حالم","dreamy poetic directing: soft focus, glowing backlight, floating slow camera, ethereal mood",'<path d="M7 17a5 5 0 1 1 1-9.9A6 6 0 0 1 19 10a4 4 0 0 1-1 7.9z"/>'],
+  ["neonnoir","Neon thriller","إثارة نيون","stylish neon thriller directing: saturated neon colors, hard contrast, rain-slick reflections, tense framing",'<path d="M5 20V9l7-5 7 5v11"/><path d="M9 13h6" stroke-width="2.4"/>'],
+  ["longtake","One long take","لقطة واحدة طويلة","one continuous unbroken take, the camera choreographed through the whole scene",'<path d="M3 16c4-8 6 4 9-4s5 4 9-4"/><circle cx="3" cy="16" r="1.5" fill="currentColor"/>'],
+  ["quiet","Quiet minimal","هادئ بسيط","quiet minimal directing: still locked-off frames, sparse composition, long silences",'<rect x="4" y="6" width="16" height="12" rx="1"/><path d="M9 12h6" opacity=".5"/>']],
+ era:[["ancient","Ancient world","العالم القديم","set in the ancient world: stone temples, linen and bronze, oil lamps and firelight, earthy ochre palette",'<path d="M4 20h16M5 9h14M6 9v11M10 9v11M14 9v11M18 9v11M4 9l8-5 8 5"/>'],
+  ["medieval","Medieval","العصور الوسطى","set in the medieval era: castles and timber villages, wool and chainmail, torchlight, muted earthy colors",'<path d="M4 21V9h3v2h3V9h4v2h3V9h3v12z"/><path d="M10 21v-4h4v4"/>'],
+  ["golden","Islamic golden age","العصر الذهبي الإسلامي","set in the Islamic golden age: arches and geometric tilework, scholars' libraries, brass astrolabes, lantern light, rich lapis and gold",'<path d="M5 21V11a7 7 0 0 1 14 0v10"/><path d="M9 21v-7a3 3 0 0 1 6 0v7"/><path d="M12 2l1 2h-2z" fill="currentColor"/>'],
+  ["heritage","Arabian heritage","التراث العربي","set in old Arabia: mud-brick Najdi houses with triangular openings, palm-wood doors, a busy old souk, traditional thobes and shemaghs, warm desert light",'<path d="M3 21V8h18v13"/><path d="M6 8l1.5-2L9 8l1.5-2L12 8l1.5-2L15 8l1.5-2L18 8"/><path d="M10 21v-5h4v5"/>'],
+  ["victorian","1800s","القرن التاسع عشر","set in the 1800s: gaslight streets, carriages, top hats and long dresses, sepia-warm tones",T254("1800",12,15.5,7)],
+  ["d1920","1920s","العشرينات","set in the 1920s: art deco, jazz clubs, flapper dresses and fedoras, black-and-white or tinted film with flicker",T254("20s")],
+  ["d1950","1950s","الخمسينات","set in the 1950s: chrome diners and classic cars, pastel colors, saturated Technicolor look",T254("50s")],
+  ["d1970","1970s","السبعينات","set in the 1970s: flared clothes, wood panelling, warm brown and orange tones, grainy film",T254("70s")],
+  ["d1980","1980s","الثمانينات","set in the 1980s: neon, synth-era fashion, bold colors, soft VHS glow",T254("80s")],
+  ["d1990","1990s","التسعينات","set in the 1990s: baggy fashion, early mobile phones, slightly washed-out film colors",T254("90s")],
+  ["today","Today","اليوم","set today: contemporary clothes, smartphones, modern city, clean digital look",T254("NOW",12,15.5,7)],
+  ["nearfuture","Near future","المستقبل القريب","set in the near future: sleek glass architecture, transparent screens, subtle tech, clean cool palette",'<rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 7h6M9 11h6" opacity=".6"/>'],
+  ["farfuture","Far future","المستقبل البعيد","set in the far future: towering megastructures, flying vehicles, luminous materials, otherworldly palette",'<path d="M12 2l3 6-3 14-3-14z"/><path d="M5 18l4-4M19 18l-4-4" opacity=".6"/>']]});
+const DIR254=[["shot",["Shot size","حجم اللقطة"]],["angle",["Camera angle","زاوية الكاميرا"]],["pace",["Pace","الإيقاع"]],["comp",["Composition","التكوين"]],["dstyle",["Directing style","أسلوب الإخراج"]]];
+const dirVal254=()=>{const c=cine93(),on=DIR254.filter(([k])=>c[k]).map(([k])=>{const x=cinPick82(k,c[k]);return L(x[1],x[2])});return on.length?on.slice(0,2).join(" · ")+(on.length>2?" +"+(on.length-2):""):L("Auto","تلقائي")};
+const dirSec254=()=>'<p class="small mute" style="margin:0 0 8px">'+L("How the shot is directed. Leave any on Auto and the engine decides.","كيف تُخرج اللقطة. اترك أياً منها على «تلقائي» ويقرّر المحرّك.")+"</p>"+DIR254.map(([k,t])=>'<span class="lbl">'+esc(L(t[0],t[1]))+"</span>"+cineSec93(k)).join("");
+const eraSec254=()=>'<p class="small mute" style="margin:0 0 8px">'+L("When it happens: the clothes, buildings, colours and film look of that time.","متى تحدث: ملابس ذلك الزمن ومبانيه وألوانه وشكل أفلامه.")+"</p>"+cineSec93("era");
+box93=(o=>function(panel,spec){if(Array.isArray(spec)&&!spec.some(x=>x.key==="dir254")){const i=spec.findIndex(x=>x.key==="c_light");
+    if(i>=0)spec.splice(i+1,0,{key:"dir254",icon:svg('<rect x="3" y="7" width="18" height="13" rx="1.5"/><path d="M3 7l3-4h4l-3 4M10 7l3-4h4l-3 4M17 7l3-4h1"/>'),title:L("Directing","الإخراج"),value:dirVal254,html:dirSec254,test:()=>false},
+      {key:"era254",icon:svg('<path d="M7 3h10M7 21h10M8 3c0 5 8 5 8 9s-8 4-8 9M16 3c0 5-8 5-8 9"/>'),title:L("Era","الحقبة"),value:()=>cineVal93("era"),html:eraSec254,test:()=>false})}
+  return o.apply(this,arguments)})(box93);
+// the wording: what the client chose, after the camera and lens words
+cineWords93=(o=>function(){const c=cine93(),base=o.apply(this,arguments),w=[];for(const k of["shot","angle","pace","comp","dstyle","era"])if(c[k]&&CIN82[k].some(x=>x[0]===c[k]))w.push(cinPick82(k,c[k])[3]);
+  if(!w.length)return base;const t=w.join(", ");return(base?base+" ":"")+t[0].toUpperCase()+t.slice(1)+"."})(cineWords93);
+// a ready look sets the camera words only (directing and era stay as the client set them)
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

@@ -745,3 +745,15 @@ The owner asked to re-order the whole site after the layout of an open-source AI
 - **Templates:** tall 3:4 cover cards. The kind sits in small lime capitals above the name and one line; the length and shape sit in the corners.
 - **Drop anywhere** already sent a file to the right tool (since v80); its frame is lime now.
 - Tests: `tests/v253.py`. `v98`, `v118` and `v224` were updated to the side menu; `v224` also no longer expects Studio as the landing page's first link (v242 changed that page).
+
+## v254 — directing and eras in nooi Studio; more cameras and lenses
+
+The owner asked for lenses, directing options and time periods. The open-source studio we looked at only had lenses; directing and eras are nooi's own. Every option follows the Cinema rule: a small drawing, a fixed tested wording added to the shot, and Auto leaves it to the engine.
+
+- **Camera:** adds 70 mm film, Super 8 and a 90s camcorder.
+- **Lens:** adds tilt-shift, fisheye, swirl bokeh, a halation filter, clinical sharp, warm prime, a 1970s zoom and a probe lens (12 in all).
+- **Focal length:** adds 8 mm. **Aperture:** adds f/4.
+- **Directing** (one chip): shot size (7), camera angle (8), pace (5), composition (6) and directing style (7). Styles are described by their traits, never by a real director's name.
+- **Era** (one chip): the ancient world, medieval, the Islamic golden age, Arabian heritage (Najdi mud-brick houses and the old souk), the 1800s, every decade from the 1920s to the 1990s, today, the near future and the far future. Each sets the clothes, buildings, colours and film look of its time.
+- The job keeps the client's own words as its title; the wording goes to the engine, and `meta.cinema` keeps the picks.
+- Tests: `tests/v254.py`. `v93` now closes the open panel before switching tabs (with more lenses the panel is taller on a phone).
