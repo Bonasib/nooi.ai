@@ -11883,6 +11883,9 @@ const LOOK87=()=>IMG_MODELS.nano?"nano":FACE87(),lookCost87=()=>(IMG_MODELS[LOOK
 const avById87=id=>(AV.items||[]).find(x=>x.id===id);
 const PRES_ALL87=()=>(AV.items||[]).filter(a=>a&&a.url);
 // the real face of a character (an address the engines can read), "" when it has none yet
+// v259: a character's newest finished sheet (front, side, back, expressions), if it has one
+// (only a sheet drawn from the character's face — meta.face87 — is used: an older sheet drawn from words alone may show someone else)
+function sheet259(c){if(!c)return"";const j=S.jobs.filter(x=>x.kind==="sheet"&&x.meta&&x.meta.face87&&x.status==="complete"&&x.meta.char===c.id&&mediaUrl(x)).pop();return j?mediaUrl(j):""}
 function face87(c){if(!c)return"";if(c.face)return c.face;
   const av=c.av87||PRES_AV[c.id];if(av){const a=avById87(av);if(a&&a.url)return a.url}
   const js=S.jobs.filter(j=>j.kind==="look"&&j.meta&&j.meta.char===c.id&&j.status==="complete"&&mediaUrl(j));
@@ -12050,16 +12053,22 @@ addJob=(o=>function(j){if(NO87||!j||!["image","video"].includes(j.kind)||(j.meta
     toast(L("Making "+none.map(c=>c.name).join(", ")+" real first — then your "+(j.kind==="video"?"video":"picture")+" starts with that face.","يتم جعل "+none.map(c=>c.name).join("، ")+" حقيقية أولاً — ثم يبدأ "+(j.kind==="video"?"الفيديو":"الصورة")+" بذلك الوجه."),{type:"ok"});
     const r=S.jobs.find(x=>x.id===waits[0]);return r||null}
   const faces=cs.map(face87),who=cs.map((c,i)=>"@"+c.name+" = the person in reference picture "+(i+1+(j.kind==="image"&&M.iRef?1:0))+": the exact same face, hair, skin tone and build (the same real person).").join(" ");
-  j.prompt=plain87(j.prompt,cs)+(who?"\n"+who.replace(/@/g,""):"");j.meta=Object.assign({},j.meta,{chars87:cs.map(c=>({id:c.id,name:c.name}))});
+  // v259 (after ViMax's character portraits): a character's finished sheet (front, side, back) goes with the face when there's room
+  const off259=j.kind==="image"&&M.iRef?1:0,room259=Math.max(0,(j.kind==="image"?4-off259:3)-faces.length),sh259=cs.map(c=>({c,u:sheet259(c)})).filter(x=>x.u).slice(0,room259);
+  const shW259=sh259.map((x,k)=>x.c.name+"'s character sheet (the same person from the front, the side and the back) is reference picture "+(off259+faces.length+k+1)).join("; ");
+  j.prompt=plain87(j.prompt,cs)+(who?"\n"+who.replace(/@/g,""):"")+(shW259?" "+shW259+".":"");j.meta=Object.assign({},j.meta,{chars87:cs.map(c=>({id:c.id,name:c.name}))},sh259.length?{sheets259:sh259.map(x=>x.c.id)}:{});
   if(j.kind==="image"){const free=["iRef","iRef2","iRef3","iRef4"].filter(k=>!M[k]),map={};faces.forEach((u,i)=>{if(free[i])map[free[i]]={type:"image",remote:u,url:u,name:"face"+(i+1)+".jpg"}});
+    sh259.forEach((x,k)=>{const f=free[faces.length+k];if(f)map[f]={type:"image",remote:x.u,url:x.u,name:"sheet"+(k+1)+".png"}});
     if(!IMG_MODELS[j.model]||["auto","dotimg","sdxl","flux","zimage"].includes(j.model))j.model=FACE87();return withSlots87(map,()=>o(j))}
   // video: a start picture of this scene with these people → the video from it (unless the user gave a first frame)
   if(M.vStart||M.startImage||(j.meta&&j.meta.start)){j.prompt+=" Keep these people exactly as they appear in the first frame.";return o(j)}
   const map={};faces.forEach((u,i)=>{map[["iRef","iRef2","iRef3"][i]]={type:"image",remote:u,url:u,name:"face"+(i+1)+".jpg"}});const fm=FACE87();
+  sh259.forEach((x,k)=>{map[["iRef","iRef2","iRef3","iRef4"][faces.length+k]]={type:"image",remote:x.u,url:x.u,name:"sheet"+(k+1)+".png"}});   // (v259: the sheets after the faces)
+  const used259=faces.length+sh259.length;
   // (v179: the # pictures go into the first frame too — after the faces — so nooi Auto keeps the place and things they show)
-  const pics179=(j.meta&&Array.isArray(j.meta.refs130)?j.meta.refs130:[]).filter(r=>r&&M[r.slot]).slice(0,Math.max(0,4-faces.length));
-  pics179.forEach((r,i)=>{map[["iRef","iRef2","iRef3","iRef4"][faces.length+i]]=M[r.slot]});
-  const picW179=pics179.length?" "+pics179.map((r,i)=>"#"+r.tag+" is reference picture "+(faces.length+i+1)).join(", ")+": keep the place, the things and the look they show.":"";
+  const pics179=(j.meta&&Array.isArray(j.meta.refs130)?j.meta.refs130:[]).filter(r=>r&&M[r.slot]).slice(0,Math.max(0,4-used259));
+  pics179.forEach((r,i)=>{map[["iRef","iRef2","iRef3","iRef4"][used259+i]]=M[r.slot]});
+  const picW179=pics179.length?" "+pics179.map((r,i)=>"#"+r.tag+" is reference picture "+(used259+i+1)).join(", ")+": keep the place, the things and the look they show.":"";
   const pic=withSlots87(map,()=>{NO87++;try{return o({kind:"image",model:fm,prompt:"The first frame of a video: "+plain87(j.prompt,cs)+picW179+" Photorealistic, cinematic, natural light.",title:(j.title||String(j.prompt).slice(0,40))+" · "+L("first frame","الإطار الأول"),aspect:j.aspect||"16:9",cost:(IMG_MODELS[fm]||{cr:4}).cr,secs:8,art:"scene",meta:{chars87:j.meta.chars87,face87:1,frame87:1,for177:j.model}})}finally{NO87--}});
   if(!pic)return null;const job=Object.assign({},j,{prompt:j.prompt+" Keep these people exactly as they appear in the first frame."});delete job.id;
   S.flow87.push({id:uid(),at:Date.now(),wait:[pic.id],then:job,start:pic.id,grab:!!HF_GRAB});persist();

@@ -805,3 +805,11 @@ nooi Studio shows a **Quality** chip when a video is made of several parts: Stan
   - With no text AI connected, the text is cut into the shots in order, sentences kept whole.
 - **The job** keeps the script once (`meta.script258`); its parts don't carry it. With no words of its own, the script's first line is the idea and the title.
 - Tests: `tests/v258.py` (stand-in engine and text AI), `tests/v258_plan.mjs`, `tests/v258_page.py`; `v93`, `v98`, `v254` and `v257_page` still pass.
+
+## v259 — the character sheet goes with the face in every shot (after ViMax's character portraits)
+
+- A character's sheet drawn from its face (front, side and back views plus expressions, since v87/v159, `meta.face87`) is now also used. Whenever the character is used with @ — a picture, or a video's first picture — the newest finished sheet goes as one more reference picture after the faces.
+- The words say which is which: "Layla = the person in reference picture 1 …; Layla's character sheet (the same person from the front, the side and the back) is reference picture 2."
+- It fits in the 4 reference pictures (faces first, then sheets, then the # pictures), so the side and back views stay the same person.
+- A sheet drawn from words alone (a character with no face) is never used as a reference: it may show someone else.
+- Test: `tests/v259.py`; `v87`, `v159` and `v179` still pass.
