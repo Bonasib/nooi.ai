@@ -757,3 +757,13 @@ The owner asked for lenses, directing options and time periods. The open-source 
 - **Era** (one chip): the ancient world, medieval, the Islamic golden age, Arabian heritage (Najdi mud-brick houses and the old souk), the 1800s, every decade from the 1920s to the 1990s, today, the near future and the far future. Each sets the clothes, buildings, colours and film look of its time.
 - The job keeps the client's own words as its title; the wording goes to the engine, and `meta.cinema` keeps the picks.
 - Tests: `tests/v254.py`. `v93` now closes the open panel before switching tabs (with more lenses the panel is taller on a phone).
+
+## v255 — long videos: who is in each shot, and the camera positions (after ViMax)
+
+This follows ViMax's storyboard and camera tree (MIT; the ideas only, in our own code).
+
+- **The agents' plan** says, for each shot, who is in it (the customer's # pictures, by name) and which camera position it's filmed from (A, B, C…). The same letter means the film cuts back to a position it used before. Older plain answers still read.
+- **Each shot's first picture** gets only the pictures of the people in that shot (all of them when the plan didn't say, up to 3).
+- **A shot back on an earlier camera position** is drawn from that shot's picture, so when the film cuts back, the place behind the people is the same. The other shots are drawn from the first shot, as before. Pictures are still made at the same time wherever they can be.
+- The job's plan (`plan132`) now also carries `cams` and `who`.
+- Tests: `tests/v255_plan.mjs`; `v136` still passes.
