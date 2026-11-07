@@ -676,3 +676,13 @@ Ideas taken from the open-source video-editing-skill project (MIT), rewritten in
 - **Formal stickers** (Stickers → Formal, 24): gold and quality seals; APPROVED, OFFICIAL, CONFIDENTIAL, DRAFT, PAID and URGENT stamps; Verified; Certified and Official Partner ribbons; Breaking news; a laurel award, a medal and a trophy; a secure shield; Information and Notice signs; quote marks; a gold divider and gold corners; a signature line; Coming soon; Limited offer.
   - They use navy, gold, burgundy and green. The ones with words have an Arabic drawing too, which shows and is added when the editor is in Arabic.
 - Tests: `tests/v247.py` (the server) and `tests/v247_studio.py`.
+
+## v248 — "Seedance (ByteDance): no task id"
+
+- **What happened:** the owner's key was saved and Admin showed it as Connected, but a video from a prompt failed with "no task id". The site only accepted the exact answer `{ id }` to a new task. Any other answer had nothing to go on, and nobody could see what had actually come back.
+- **What changed** (`providers/bytedance241.js`):
+  - The Base URL is cleaned up (`bdBase248`). An empty field, a console or docs page, an `ark…` host without `/api/v3`, or a pasted full `/contents/generations/tasks` address all become the API's address. Another provider's address is kept as it is. The Test in Admin uses the same address.
+  - The task id is read from `{id}`, `{task_id}`, `{data:{id}}`, `{data:{task_id}}` or `{data:"…"}`. The task's state is read from `{status}` or `{data:{status}}` in any case (succeeded / SUCCESS / completed…), and the video from `content.video_url` or the other usual places.
+  - A web page that comes back with "OK" says the Base URL is wrong. An error inside an "OK" answer gives its own words (for example "has not activated the model", or "insufficient balance"). A reply that carries a task's state is still read as a task, even a failed one. An answer with nothing usable shows what it said (keys hidden). The real reason shows on the failed job and in `deploy/why.sh`.
+  - A key's name typed in the Model id field (`apikey-…`) is ignored. Only a Seedance model id is used there.
+- Tests: `tests/v248_bd.mjs` (every answer shape and Base URL against a stand-in fetch), plus `v241`, `v246` and `v247`.

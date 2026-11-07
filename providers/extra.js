@@ -25,7 +25,7 @@ export const seedance = (mo) => { const c = cfg("seedance"); const base = (c.bas
   return { name: "Seedance", configured: configured("seedance"),
     async submit(p) { const rs = /1080|2k|4k/i.test(p.meta?.res || "") ? "1080p" : /480/.test(p.meta?.res || "") ? "480p" : "720p";   // (v187: the resolution asked for)
       const content = [{ type: "text", text: `${fullPrompt(p)} --rt ${ratio(p.aspect)} --dur ${p.dur >= 10 ? 10 : 5} --rs ${rs}` }]; if (startImg(p)) content.push({ type: "image_url", image_url: { url: startImg(p) } });
-      const d = await j(await fetch(base + "/contents/generations/tasks", { method: "POST", headers: h, body: JSON.stringify({ model: mo || c.model || "seedance-1-0-pro-250528", content }) }), "Seedance"); return { remoteId: d.id }; },
+      const d = await j(await fetch(base + "/contents/generations/tasks", { method: "POST", headers: h, body: JSON.stringify({ model: mo || (/seedance/i.test(c.model || "") ? c.model : "") || "seedance-1-0-pro-250528", content }) }), "Seedance"); return { remoteId: d.id }; },
     async poll(id) { const d = await j(await fetch(base + "/contents/generations/tasks/" + id, { headers: h }), "Seedance"); const s = d.status;
       return s === "succeeded" ? { status: "done", url: d.content?.video_url } : s === "failed" || s === "cancelled" ? { status: "failed", error: d.error?.message || "Seedance failed" } : { status: s === "queued" ? "queued" : "rendering" }; } }; };
 
