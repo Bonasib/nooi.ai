@@ -5,11 +5,13 @@ import { BufferTarget, CanvasSource, Mp4OutputFormat, Output, QUALITY_HIGH, WebM
 import type { Project, TextClip } from "@nooi/editor-core";
 import { motionCanvas, barsAt, levelAt } from "./render";
 import { codeReady } from "./code";
+import { preparePics } from "./pics";
 
 const even = (x: number) => Math.max(2, Math.round(x / 2) * 2);
 export const motionClips = (p: Project) => p.tracks.filter((t) => t.kind !== "audio" && !t.hidden).flatMap((t) => t.clips.filter((c): c is TextClip => c.type === "text" && !!c.motion));
 
 export async function bakeMotion(p: Project, c: TextClip, W: number, H: number, fps: number, o: { signal?: AbortSignal; onProgress?: (k: number) => void } = {}): Promise<{ blob: Blob; ext: string }> {
+  await preparePics(p);   // (v247)
   const k = Math.min(1, 1920 / W, 1080 / H), w = even(W * k), h = even(H * k);   // (at most 1080p: the server scales it to the frame)
   const cv = new OffscreenCanvas(w, h * 2), x = cv.getContext("2d")!;
   let format: WebMOutputFormat | Mp4OutputFormat = new WebMOutputFormat();

@@ -12,7 +12,8 @@ import * as A from "./actions";
 import { getJSON } from "./media/idb";
 import { installShortcuts } from "./shortcuts";
 import { hasLegacy, importLegacy } from "./legacy";
-import { assetFromJob, visualsFor } from "./media/library";
+import { assetFromJob, visualsFor, urlOf } from "./media/library";
+import { initPics } from "./motion/pics";
 
 async function boot() {
   const q = new URLSearchParams(location.search);
@@ -54,4 +55,5 @@ boot();
 if ("serviceWorker" in navigator && location.protocol === "https:" && !NATIVE && location.pathname.startsWith("/studio/")) navigator.serviceWorker.register("/studio/sw.js", { scope: "/studio/" }).catch(() => undefined);
 window.addEventListener("beforeunload", (e) => { if (editor.dirty) { autosave(); e.preventDefault(); } });
 // for tests and the agents (the same named commands the AI prompt edit will use)
+initPics(async (id) => { const a = editor.project.assets[id]; return a ? (await urlOf(a)) || null : null; }, () => playerRef.current?.redraw());   // (v247) pictures in motion scenes
 (window as unknown as Record<string, unknown>).__studio = { editor, api, actions: A, ui, core: { addTrack, textClip, addClip }, get player() { return playerRef.current; } };

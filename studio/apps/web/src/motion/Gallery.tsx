@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Btn, Icon, Slider } from "@nooi/ui";
 import type { TextClip } from "@nooi/editor-core";
-import { useUI } from "../state";
+import { useProject, useUI } from "../state";
 import * as A from "../actions";
 import { GROUPS, TEMPLATES, defaultsOf, templateOf, type Field } from "./templates";
 import { drawTemplate, propsOf, MG_ANIMS } from "./render";
@@ -13,7 +13,7 @@ import { codeErrors, codePicture, onCode, tryCode } from "./code";
 
 const TW = 320, TH = 180;
 // (v244) an icon for each group of graphics
-const GICON: Record<string, string> = { all: "template", lower: "lower", titles: "text", social: "chat", data: "chart", infographics: "checklist", "3d": "cube", drawn: "pencil", shapes: "sticker", callouts: "marker",
+const GICON: Record<string, string> = { all: "template", scenes: "media", lower: "lower", titles: "text", social: "chat", data: "chart", infographics: "checklist", "3d": "cube", drawn: "pencil", shapes: "sticker", callouts: "marker",
   timers: "history", audio: "wave", intros: "film", wipes: "transitions", badges: "sparkle", frames: "fit", backgrounds: "image", code: "settings" };
 function MotionTile({ id }: { id: string }) {
   const tpl = templateOf(id)!; const lang = useUI((s) => s.lang); const ref = useRef<HTMLCanvasElement>(null); const btn = useRef<HTMLButtonElement>(null);
@@ -42,9 +42,19 @@ export function MotionGallery() {
   </div>);
 }
 
+// (v247) a scene's picture slots: tap your pictures (in order, up to the slots it has); tap again to take one out
+function PicsField({ f, v, label, lang }: { f: Field; v: unknown; label: string; lang: "en" | "ar" }) {
+  const p = useProject(); const pics = Object.values(p.assets).filter((a) => a.kind === "image"); const cur = Array.isArray(v) ? (v as string[]) : []; const max = f.max || 12;
+  const toggle = (id: string) => { const n = cur.includes(id) ? cur.filter((x) => x !== id) : cur.length < max ? [...cur, id] : cur; A.setMotionProp(f.k, n); };
+  return <div className="ns-field mgpics" data-testid="mgp-pics"><span>{label}</span>
+    {pics.length ? <div className="mgpg">{pics.map((a) => { const i = cur.indexOf(a.id); return <button key={a.id} type="button" className="mgpt" aria-pressed={i >= 0} onClick={() => toggle(a.id)} data-testid={"mgp-pic-" + a.id} title={a.name}>
+      {a.thumb ? <img src={a.thumb} alt="" /> : <i />}{i >= 0 && <b>{i + 1}</b>}</button>; })}</div>
+      : <small className="hint">{lang === "ar" ? "أضف صوراً في «الوسائط» أولاً — حتى ذلك الحين تُرسم أماكن الصور." : "Add pictures in Media first — until then the slots are drawn as placeholders."}</small>}</div>;
+}
 // ---- the picked graphic's props
 function FieldRow({ f, v, lang }: { f: Field; v: unknown; lang: "en" | "ar" }) {
   const label = lang === "ar" ? f.ar : f.en, tid = "mgp-" + f.k;
+  if (f.type === "pics") return <PicsField f={f} v={v} label={label} lang={lang} />;
   if (f.type === "number") return <Slider label={label} value={Number(v) || 0} min={f.min ?? 0} max={f.max ?? 100} step={f.step} onChange={(x) => A.live.set("motion.props." + f.k, x)} onCommit={A.live.end} testid={tid} />;
   if (f.type === "color") return <label className="ns-field mgcol"><span>{label}</span><input type="color" value={/^#[0-9a-f]{6}$/i.test(String(v)) ? String(v) : "#ffffff"} onChange={(e) => A.setMotionProp(f.k, e.target.value)} data-testid={tid} /></label>;
   if (f.type === "bool") return <Btn pressed={!!v} onClick={() => A.setMotionProp(f.k, !v)} testid={tid}>{label}</Btn>;

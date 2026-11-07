@@ -478,7 +478,8 @@
   "icons": "Icons",
   "line1": "First line",
   "line2": "Second line",
-  "addBanner": "Add banner"
+  "addBanner": "Add banner",
+  "formal": "Formal"
  },
  "logo": {
   "hint": "Your logo on the whole video, in a corner.",

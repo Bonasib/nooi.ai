@@ -1,6 +1,7 @@
 // A nooi Motion clip drawn at one moment: its template's program runs on a frame-size canvas with the clip's props, the project's
 // frame rate and the sound playing at that moment. The same frame always gives the same picture (preview, tile and export match).
 import { clipEnd, sourceTime, srcLimit } from "@nooi/editor-core";
+import { picsVersion206 } from "./scenes206";
 import type { MediaClip, Project, TextClip } from "@nooi/editor-core";
 import { Motion as M } from "@nooi/editor-core";
 import { defaultsOf, templateOf, type MCtx, type Props } from "./templates";
@@ -60,7 +61,7 @@ export function motionCanvas(c: TextClip, local: number, W: number, H: number, p
     const key = "code|" + (f ? f.key : "none") + "|" + W + "x" + H; if (e.key === key) return { cv: e.cv, look: lookOf(c, local), changed: false };
     e.key = key; ctx.clearRect(0, 0, W, H); if (f) ctx.drawImage(f.bmp, 0, 0, W, H); return { cv: e.cv, look: lookOf(c, local), changed: true };
   }
-  const key = [id, JSON.stringify(props), W, H, frame, fps, c.dur, sound].join("|");
+  const key = [id, JSON.stringify(props), W, H, frame, fps, c.dur, sound, Array.isArray(props.pics) && props.pics.length ? picsVersion206() : 0].join("|");
   if (e.key === key) return { cv: e.cv, look: lookOf(c, local), changed: false };
   e.key = key; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
   drawTemplate(ctx, id, props, frame / fps, c.dur, W, H, p, at);

@@ -110,3 +110,15 @@ export function swapBack246(job, msg, { engineOk = true } = {}) {
   if (!String(job.prov || "").startsWith("bd@") || job.payload?.model !== "mcswap" || job.triedEngine246 || !engineOk || !BD_FACE246.test(m)) return null;
   return "kie@" + (SWAP_MODELS[swapEngine()] || SWAP_MODELS.seedancefast);
 }
+
+// v247: the owner: "make sure Seedance takes over every time the engine gives an error". A video the AI engine couldn't make — out
+// of credits, a refused key, busy, its own failure — goes to Seedance on the owner's ByteDance key, once: any text or picture to
+// video, references, a part of a long video, editing a video's seconds, a Character Swap. Not what Seedance can't do (Kling
+// Motion Control, lip-sync, talking avatars, upscaling, 3D, pictures).
+export function bdBackup247(job) {
+  const p = job.payload || {}, kind = String(p.kind || job.kind || ""), model = String(p.model || "");
+  if (!bdOn241() || job.cap !== "video" || !String(job.prov || "").startsWith("kie@") || job.triedBd247 || job.children) return null;
+  if (/^mc(26|30)$/.test(model) || ["lipsync", "avatar", "swap", "upscale", "voice", "music"].includes(kind)) return null;
+  const m = model === "mcswap" ? (swapEngine() === "seedance" ? BD_MODELS241.seedance20 : BD_MODELS241.seedance) : bdModel241(p);
+  return { key: "bd@" + m, a: bytedance241(m) };
+}

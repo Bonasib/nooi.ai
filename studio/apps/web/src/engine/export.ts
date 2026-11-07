@@ -9,6 +9,7 @@ import type { Asset, ExportSettings, MediaClip, Project } from "@nooi/editor-cor
 import { Compositor, parseCube } from "./compositor";
 import { drawMoment, type Frame } from "./render";
 import { prepareCode } from "../motion/code";
+import { preparePics } from "../motion/pics";
 import { barsAt, levelAt } from "../motion/render";
 import { decodeSound, fileOf } from "../media/library";
 import { encodeGif } from "./gif";
@@ -49,7 +50,7 @@ export async function exportProject(p: Project, o: ExportOpts): Promise<ExportRe
   const comp = new Compositor(canvas); comp.resize(w, h);
   const inputs = new Map<string, Input>(), sinks = new Map<string, CanvasSink>(), cursors = new Map<string, Cursor>(), imgs = new Map<string, ImageBitmap>(), luts = new Map<string, { tex: WebGLTexture; size: number }>();
   const need = new Set<string>(); for (const t of p.tracks) for (const c of t.clips) if (c.type === "media") need.add(c.asset);
-  report(0, "media");
+  report(0, "media"); await preparePics(p);   // (v247: the pictures in motion scenes, before the first frame)
   for (const id of need) {
     const a = p.assets[id]; if (!a) continue; const b = await fileOf(a); if (!b) continue;
     if (a.kind === "image") { try { imgs.set(id, await createImageBitmap(b)); } catch { /* unreadable */ } }

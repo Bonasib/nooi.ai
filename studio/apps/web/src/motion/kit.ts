@@ -2,7 +2,7 @@
 // rounded boxes, springs, in/out timing, field makers). Our own code.
 import { Motion as M } from "@nooi/editor-core";
 
-export type FieldType = "text" | "color" | "number" | "select" | "bool" | "list" | "code";
+export type FieldType = "text" | "color" | "number" | "select" | "bool" | "list" | "code" | "pics";   // (v247: pics — picture asset ids from the library)
 export interface Field { k: string; type: FieldType; en: string; ar: string; def: unknown; min?: number; max?: number; step?: number; options?: [string, string, string][] }
 export type Props = Record<string, any>;   // eslint-disable-line @typescript-eslint/no-explicit-any
 export interface MCtx {
@@ -11,7 +11,7 @@ export interface MCtx {
   audio: (t?: number) => number; bars: (n: number) => number[];
 }
 export interface Template { id: string; en: string; ar: string; group: Group; dur: number; fields: Field[]; draw: (m: MCtx) => void }
-export type Group = "lower" | "titles" | "social" | "data" | "infographics" | "shapes" | "callouts" | "timers" | "audio" | "intros" | "wipes" | "badges" | "frames" | "backgrounds" | "code" | "3d" | "drawn";
+export type Group = "lower" | "titles" | "social" | "data" | "infographics" | "shapes" | "callouts" | "timers" | "audio" | "intros" | "wipes" | "badges" | "frames" | "backgrounds" | "code" | "3d" | "drawn" | "scenes";
 
 // ---- drawing helpers
 export const AR = /[֐-ࣿ]/;

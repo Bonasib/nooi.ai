@@ -7,7 +7,8 @@ const star = (cx: number, cy: number, r: number, fill: string) => { let d = ""; 
 const spark = (cx: number, cy: number, r: number, fill: string) => `<path d="M${cx} ${cy - r}Q${cx + r * 0.18} ${cy - r * 0.18} ${cx + r} ${cy}Q${cx + r * 0.18} ${cy + r * 0.18} ${cx} ${cy + r}Q${cx - r * 0.18} ${cy + r * 0.18} ${cx - r} ${cy}Q${cx - r * 0.18} ${cy - r * 0.18} ${cx} ${cy - r}Z" fill="${fill}"/>`;
 const burst = (fill: string) => { let d = ""; for (let i = 0; i < 32; i++) { const a = (i * Math.PI) / 16, rr = i % 2 ? 84 : 120; d += (i ? "L" : "M") + (128 + rr * Math.cos(a)).toFixed(1) + " " + (128 + rr * Math.sin(a)).toFixed(1); } return `<path d="${d}Z" fill="${fill}" stroke="${K}" stroke-width="6"/>`; };
 
-export const STICKERS: { id: string; en: string; ar: string; group: "shapes" | "badges" | "faces" | "marks"; svg: string }[] = [
+export type StickerGroup = "formal" | "shapes" | "badges" | "faces" | "marks";
+export const STICKERS: { id: string; en: string; ar: string; group: StickerGroup; svg: string; svgAr?: string }[] = [
   { id: "star", en: "Star", ar: "نجمة", group: "shapes", svg: star(128, 132, 116, Y) },
   { id: "heart", en: "Heart", ar: "قلب", group: "shapes", svg: `<path d="M128 220C40 160 16 112 32 76c16-36 64-44 96-6 32-38 80-30 96 6 16 36-8 84-96 144z" fill="${R}"/>` },
   { id: "arrow", en: "Arrow", ar: "سهم", group: "marks", svg: `<path d="M24 104h132V56l80 72-80 72v-48H24z" fill="${L}" stroke="${K}" stroke-width="8" stroke-linejoin="round"/>` },
@@ -39,12 +40,55 @@ export const STICKERS: { id: string; en: string; ar: string; group: "shapes" | "
   { id: "sparkles", en: "Sparkles", ar: "لمعان", group: "shapes", svg: spark(150, 104, 80, Y) + spark(64, 176, 44, W) + spark(196, 206, 30, L) },
   { id: "frame", en: "Photo frame", ar: "إطار", group: "shapes", svg: `<rect x="24" y="24" width="208" height="208" rx="20" fill="none" stroke="${W}" stroke-width="16"/><rect x="40" y="40" width="176" height="176" rx="10" fill="none" stroke="${L}" stroke-width="4" stroke-dasharray="10 10"/>` },
 ];
+
+// ---- (v247) formal stickers: seals, stamps, a verified mark, awards, a shield, ribbons and ornaments — navy, gold, burgundy and
+// green; the ones with words have an English and an Arabic drawing (the one in the editor's language is shown and added)
+const NV = "#1b2a4a", GD = "#c9a227", G2 = "#f0d77a", BG2 = "#7a1f2b", GN = "#1f6f4a", AF = "Georgia,'Times New Roman',serif", ARF = "'Noto Naskh Arabic','Amiri','Cairo',serif";
+const ftxt = (t: string, y: number, size: number, fill: string, ar = false, ls = 0) => `<text x="128" y="${y}" text-anchor="middle" font-family="${ar ? ARF : AF}" font-weight="700" font-size="${size}" letter-spacing="${ar ? 0 : ls}" fill="${fill}"${ar ? ' direction="rtl"' : ""}>${t}</text>`;
+const scallop = (r: number, n: number, d: number, fill: string, stroke = "") => { let p = ""; for (let i = 0; i <= n * 2; i++) { const a = (i * Math.PI) / n - Math.PI / 2, rr = i % 2 ? r - d : r; p += (i ? "L" : "M") + (128 + rr * Math.cos(a)).toFixed(1) + " " + (128 + rr * Math.sin(a)).toFixed(1); } return `<path d="${p}Z" fill="${fill}"${stroke ? ` stroke="${stroke}" stroke-width="4"` : ""}/>`; };
+const ringText = (t: string, r: number, size: number, fill: string, ar = false) => `<defs><path id="rt${r}${t.length}" d="M128 ${128 + r}a${r} ${r} 0 1 1 0.01 0"/></defs><text font-family="${ar ? ARF : AF}" font-weight="700" font-size="${size}" fill="${fill}" letter-spacing="${ar ? 0 : 3}"><textPath href="#rt${r}${t.length}" startOffset="50%" text-anchor="middle">${t}</textPath></text>`;
+const seal = (top: string, mid: string, ar = false, col = GD, ink = NV) => `<g>${[...Array(2)].map((_, i) => `<path d="M${100 + i * 56} 170l${i ? 24 : -24} 70 ${i ? -26 : 26}-16 ${i ? -4 : 4}-10z" fill="${BG2}"/>`).join("")}</g>` + scallop(112, 28, 9, col) + `<circle cx="128" cy="128" r="88" fill="none" stroke="${ink}" stroke-width="3"/><circle cx="128" cy="128" r="62" fill="${ink}"/>` + ringText(top, 75, ar ? 20 : 17, ink, ar) + star(128, 104, 16, col) + ftxt(mid, 150, ar ? 26 : 22, G2, ar, 2);
+const stamp = (t: string, col: string, ar = false, rot = -12) => `<g transform="rotate(${rot} 128 128)" opacity=".95"><rect x="16" y="84" width="224" height="88" rx="10" fill="#fbf6ea" fill-opacity=".93" stroke="${col}" stroke-width="9"/><rect x="28" y="96" width="200" height="64" rx="6" fill="none" stroke="${col}" stroke-width="3"/>${ftxt(t, ar ? 142 : 140, ar ? Math.min(46, 300 / Math.max(3, t.length)) : Math.min(32, 230 / t.length), col, ar, ar ? 0 : 3)}</g>`;
+const ribbon = (t: string, col: string, ar = false) => `<path d="M8 96h240l-22 32 22 32H8l22-32z" fill="${col}"/><path d="M8 96h240" stroke="${G2}" stroke-width="3"/><path d="M8 160h240" stroke="${G2}" stroke-width="3"/>${ftxt(t, ar ? 140 : 138, ar ? Math.min(32, 330 / Math.max(4, t.length)) : Math.min(26, 300 / t.length), "#fff", ar, ar ? 0 : 2)}`;
+const laurel = (col: string) => [...Array(7)].map((_, i) => { const a = 200 - i * 22, r = 92, x = 128 + r * Math.cos((a * Math.PI) / 180), y = 132 + r * Math.sin((a * Math.PI) / 180), x2 = 256 - x;
+  return `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="10" ry="22" transform="rotate(${(a - 70).toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})" fill="${col}"/><ellipse cx="${x2.toFixed(1)}" cy="${y.toFixed(1)}" rx="10" ry="22" transform="rotate(${(110 - a).toFixed(0)} ${x2.toFixed(1)} ${y.toFixed(1)})" fill="${col}"/>`; }).join("");
+const FORMAL: typeof STICKERS = [
+  { id: "f-seal", en: "Gold seal", ar: "ختم ذهبي", group: "formal", svg: seal("OFFICIAL · SEAL", "2026"), svgAr: seal("ختم رسمي معتمد", "٢٠٢٦", true) },
+  { id: "f-quality", en: "Quality seal", ar: "ختم الجودة", group: "formal", svg: seal("QUALITY · GUARANTEED", "100%", false, G2, BG2), svgAr: seal("جودة مضمونة", "١٠٠٪", true, G2, BG2) },
+  { id: "f-approved", en: "APPROVED stamp", ar: "ختم معتمد", group: "formal", svg: stamp("APPROVED", GN), svgAr: stamp("معتمد", GN, true) },
+  { id: "f-official", en: "OFFICIAL stamp", ar: "ختم رسمي", group: "formal", svg: stamp("OFFICIAL", NV), svgAr: stamp("رسمي", NV, true) },
+  { id: "f-confidential", en: "CONFIDENTIAL stamp", ar: "ختم سري", group: "formal", svg: stamp("CONFIDENTIAL", BG2), svgAr: stamp("سري للغاية", BG2, true) },
+  { id: "f-draft", en: "DRAFT stamp", ar: "ختم مسودة", group: "formal", svg: stamp("DRAFT", "#5b6472", false, 0), svgAr: stamp("مسودة", "#5b6472", true, 0) },
+  { id: "f-paid", en: "PAID stamp", ar: "ختم مدفوع", group: "formal", svg: stamp("PAID", GN, false, 8), svgAr: stamp("مدفوع", GN, true, 8) },
+  { id: "f-urgent", en: "URGENT stamp", ar: "ختم عاجل", group: "formal", svg: stamp("URGENT", "#c62828"), svgAr: stamp("عاجل", "#c62828", true) },
+  { id: "f-verified", en: "Verified", ar: "موثّق", group: "formal", svg: scallop(108, 16, 14, "#1d9bf0") + `<path d="M84 130l30 30 60-66" fill="none" stroke="#fff" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>` },
+  { id: "f-certified", en: "Certified ribbon", ar: "شريط معتمد", group: "formal", svg: ribbon("CERTIFIED", NV), svgAr: ribbon("شهادة معتمدة", NV, true) },
+  { id: "f-official-r", en: "Official ribbon", ar: "شريط رسمي", group: "formal", svg: ribbon("OFFICIAL PARTNER", BG2), svgAr: ribbon("شريك رسمي", BG2, true) },
+  { id: "f-breaking", en: "Breaking news", ar: "عاجل", group: "formal", svg: `<rect x="8" y="92" width="240" height="72" fill="#c62828"/><rect x="8" y="92" width="80" height="72" fill="${NV}"/>${ftxt("NEWS", 137, 20, "#fff", false, 1).replace('x="128"', 'x="48"')}${ftxt("BREAKING", 138, 24, "#fff", false, 1).replace('x="128"', 'x="168"')}`,
+    svgAr: `<rect x="8" y="92" width="240" height="72" fill="#c62828"/><rect x="168" y="92" width="80" height="72" fill="${NV}"/>${ftxt("خبر", 140, 30, "#fff", true).replace('x="128"', 'x="208"')}${ftxt("عاجل", 140, 40, "#fff", true).replace('x="128"', 'x="88"')}` },
+  { id: "f-laurel", en: "Laurel award", ar: "إكليل الغار", group: "formal", svg: laurel(GD) + star(128, 120, 34, GD) + ftxt("BEST", 196, 24, NV, false, 4), svgAr: laurel(GD) + star(128, 120, 34, GD) + ftxt("الأفضل", 198, 28, NV, true) },
+  { id: "f-medal", en: "Medal", ar: "ميدالية", group: "formal", svg: `<path d="M84 16h36l20 70h-36zM172 16h-36l-20 70h36z" fill="${BG2}"/><path d="M120 16h16l-8 66z" fill="${NV}"/>` + `<circle cx="128" cy="160" r="70" fill="${GD}" stroke="${G2}" stroke-width="8"/><circle cx="128" cy="160" r="50" fill="none" stroke="#a8851c" stroke-width="3"/>` + star(128, 160, 34, G2) },
+  { id: "f-trophy", en: "Trophy", ar: "كأس", group: "formal", svg: `<path d="M72 36h112v52c0 40-26 64-56 64s-56-24-56-64z" fill="${GD}"/><path d="M72 52H40c0 36 18 52 40 54M184 52h32c0 36-18 52-40 54" fill="none" stroke="${GD}" stroke-width="12"/><rect x="116" y="150" width="24" height="40" fill="${GD}"/><rect x="76" y="190" width="104" height="22" rx="4" fill="${NV}"/><rect x="64" y="212" width="128" height="22" rx="4" fill="${NV}"/>` + star(128, 88, 22, G2) },
+  { id: "f-shield", en: "Secure shield", ar: "درع آمن", group: "formal", svg: `<path d="M128 18l92 34v62c0 62-40 104-92 124C76 218 36 176 36 114V52z" fill="${NV}" stroke="${GD}" stroke-width="8"/><path d="M90 126l26 26 52-56" fill="none" stroke="${G2}" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>` },
+  { id: "f-info", en: "Information", ar: "معلومة", group: "formal", svg: `<circle cx="128" cy="128" r="104" fill="${NV}"/><circle cx="128" cy="72" r="14" fill="#fff"/><rect x="114" y="100" width="28" height="92" rx="8" fill="#fff"/>` },
+  { id: "f-warning", en: "Notice", ar: "تنبيه", group: "formal", svg: `<path d="M128 24l112 196H16z" fill="#f2b705" stroke="${NV}" stroke-width="10" stroke-linejoin="round"/><rect x="116" y="86" width="24" height="74" rx="8" fill="${NV}"/><circle cx="128" cy="186" r="13" fill="${NV}"/>` },
+  { id: "f-quote", en: "Quote marks", ar: "علامتا اقتباس", group: "formal", svg: `<path d="M40 180c0-60 20-96 64-112l8 18c-22 12-32 30-32 50h32v72H40zM144 180c0-60 20-96 64-112l8 18c-22 12-32 30-32 50h32v72h-72z" fill="${GD}"/>` },
+  { id: "f-divider", en: "Gold divider", ar: "فاصل ذهبي", group: "formal", svg: `<path d="M12 128h92M152 128h92" stroke="${GD}" stroke-width="5"/><path d="M128 100l28 28-28 28-28-28z" fill="${GD}"/><circle cx="12" cy="128" r="6" fill="${GD}"/><circle cx="244" cy="128" r="6" fill="${GD}"/>` },
+  { id: "f-corners", en: "Gold corners", ar: "زوايا ذهبية", group: "formal", svg: `<g fill="none" stroke="${GD}" stroke-width="10" stroke-linecap="square"><path d="M20 76V20h56M180 20h56v56M236 180v56h-56M76 236H20v-56"/></g><g fill="none" stroke="${G2}" stroke-width="3"><path d="M34 76V34h42M180 34h42v42M222 180v42h-42M76 222H34v-42"/></g>` },
+  { id: "f-signature", en: "Signature line", ar: "خانة التوقيع", group: "formal", svg: `<path d="M24 176h208" stroke="${NV}" stroke-width="4"/><path d="M40 160c20-40 30-60 40-40s-10 44 6 30 24-50 34-30 10 24 30 4" fill="none" stroke="#2b4a8a" stroke-width="5" stroke-linecap="round"/>` + ftxt("Signature", 206, 22, NV, false, 2),
+    svgAr: `<path d="M24 176h208" stroke="${NV}" stroke-width="4"/><path d="M216 160c-20-40-30-60-40-40s10 44-6 30-24-50-34-30-10 24-30 4" fill="none" stroke="#2b4a8a" stroke-width="5" stroke-linecap="round"/>` + ftxt("التوقيع", 208, 26, NV, true) },
+  { id: "f-soon", en: "Coming soon", ar: "قريباً", group: "formal", svg: `<rect x="20" y="88" width="216" height="80" rx="40" fill="${NV}" stroke="${GD}" stroke-width="5"/>` + ftxt("COMING SOON", 137, 24, G2, false, 3), svgAr: `<rect x="20" y="88" width="216" height="80" rx="40" fill="${NV}" stroke="${GD}" stroke-width="5"/>` + ftxt("قريباً", 142, 38, G2, true) },
+  { id: "f-limited", en: "Limited offer", ar: "عرض محدود", group: "formal", svg: scallop(110, 20, 10, BG2, GD) + ftxt("LIMITED", 122, 28, "#fff", false, 2) + ftxt("OFFER", 156, 26, G2, false, 4), svgAr: scallop(110, 20, 10, BG2, GD) + ftxt("عرض", 120, 38, "#fff", true) + ftxt("محدود", 166, 38, G2, true) },
+];
+STICKERS.unshift(...FORMAL);
+/** the drawing for the editor's language (formal stamps have an Arabic one) */
+export const stickerFor = (s: { svg: string; svgAr?: string }, lang?: string) => ({ svg: lang === "ar" && s.svgAr ? s.svgAr : s.svg });
 export const stickerSvg = (s: { svg: string }) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="512" height="512">${s.svg}</svg>`;
 export const stickerUrl = (s: { svg: string }) => "data:image/svg+xml;charset=utf-8," + encodeURIComponent(stickerSvg(s));
 // the drawing as a 512 px PNG file (what goes into the project)
-export async function stickerFile(id: string): Promise<File | null> {
+export async function stickerFile(id: string, lang?: string): Promise<File | null> {
   const s = STICKERS.find((x) => x.id === id); if (!s) return null;
-  const img = new Image(); img.decoding = "async"; img.src = stickerUrl(s); await img.decode();
+  const img = new Image(); img.decoding = "async"; img.src = stickerUrl(stickerFor(s, lang)); await img.decode();
   const cv = Object.assign(document.createElement("canvas"), { width: 512, height: 512 }); cv.getContext("2d")!.drawImage(img, 0, 0, 512, 512);
   const b = await new Promise<Blob | null>((ok) => cv.toBlob(ok, "image/png")); return b ? new File([b], "sticker-" + id + ".png", { type: "image/png" }) : null;
 }

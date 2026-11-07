@@ -658,3 +658,21 @@ Ideas taken from the open-source video-editing-skill project (MIT), rewritten in
   - If the engine is off (Only my MiniMax key) or known to be out of credits, the customer gets ByteDance's reason instead of "the engine can't take work", and nothing is charged.
 - Motion Control (Kling) and lip-sync still need the AI engine.
 - `deploy/why.sh` says this on a failed swap. Tests: `tests/v246.py`, and `tests/v241_bytedance.mjs` (updated).
+
+## v247 — Seedance takes over every engine error; the reference-video scenes in the studio; formal stickers
+
+- **Seedance takes over every time the AI engine gives an error** (`bdBackup247`, ahead of the MiniMax backup).
+  - A video the engine couldn't make (out of credits, a refused key, busy, its own failure) goes to Seedance on the owner's ByteDance key, once.
+  - That covers text or picture to video, references, a part of a long video, editing a video's seconds and a Character Swap on any swap engine.
+  - It doesn't cover what Seedance can't do: Kling Motion Control, lip-sync, talking avatars, upscaling, 3D and pictures.
+  - The owner is still told when the engine is out of credits. The customer is charged once, on success.
+- **Video scenes** (Titles → Motion graphics → Video scenes, 28). These are the classic editor's v206 scenes, made after the owner's reference videos:
+  - the 20 named effects: Orbit, Chat Takeover, Frame Escape, Snap Zoom, Checklist Pop, Headline Storm, Zoom Portal, Growth Curve, Studio Reveal, B-roll Overlay, Paper Cutout, Dolly Zoom, Magazine Cover, Liquid Glass, Zoom Through Cut, Green Screen, Frame Break, Digital Zoom, Phone Mockup and Checklist;
+  - the showcases: Totem Wall, Spread Rows, Iso Cascade, Wheel Carousel and Cascade Deck;
+  - the reference motions: Kinetic promo, Vlog kit and App burst.
+  - The drawing is the classic editor's own code (`motion/scenes206.js`) with the helpers it uses, so they look the same. Each keeps its words, list, number and colour, on its glowing background or over the video.
+  - **Picture slots:** a new field type, `pics`. You tap your pictures from Media; they're numbered in order and repeat across the slots when there are fewer of them.
+  - Pictures are loaded once (`motion/pics.ts`). The preview redraws when they arrive, and the device, server and desktop exports wait for them first.
+- **Formal stickers** (Stickers → Formal, 24): gold and quality seals; APPROVED, OFFICIAL, CONFIDENTIAL, DRAFT, PAID and URGENT stamps; Verified; Certified and Official Partner ribbons; Breaking news; a laurel award, a medal and a trophy; a secure shield; Information and Notice signs; quote marks; a gold divider and gold corners; a signature line; Coming soon; Limited offer.
+  - They use navy, gold, burgundy and green. The ones with words have an Arabic drawing too, which shows and is added when the editor is in Arabic.
+- Tests: `tests/v247.py` (the server) and `tests/v247_studio.py`.

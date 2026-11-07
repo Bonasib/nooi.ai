@@ -11,14 +11,14 @@ import { waitJob } from "./AIPanel";
 import { MentionBox, withRefs } from "./Mentions";
 import { editor, toast, ui, useProject, useUI } from "../state";
 import * as A from "../actions";
-import { STICKERS, stickerFile, stickerUrl } from "../media/stickers";
+import { STICKERS, stickerFile, stickerFor, stickerUrl } from "../media/stickers";
 import { BANNERS, ICON_STICKERS, canvasFile, drawBanner, drawIconSticker, iconName, tileOf } from "../media/icons";
 import type { Banner } from "../media/icons";
 import { SFX, playSfx, sfxFile } from "../media/sfx";
 
 export function StickersPanel() {
   const { t } = useTranslation(); const lang = useUI((s) => s.lang); const [busy, setBusy] = useState(""); const [ban, setBan] = useState<Banner | null>(null);
-  const add = async (id: string) => { setBusy(id); try { const f = await stickerFile(id); if (f) await A.addMade(f, { kind: "overlay", dur: 3, scale: 0.32 }); } finally { setBusy(""); } };
+  const add = async (id: string) => { setBusy(id); try { const f = await stickerFile(id, lang); if (f) await A.addMade(f, { kind: "overlay", dur: 3, scale: 0.32 }); } finally { setBusy(""); } };
   const addIcon = async (n: string, col: string) => { setBusy(n); try { const f = await canvasFile(drawIconSticker(n, col), "sticker-" + n + ".png"); const c = f && await A.addMade(f, { kind: "overlay", dur: 3, scale: 0.28 }); if (c) A.applyMotion("ac:bounceIn", c.id); } finally { setBusy(""); } };
   return (<>
     <p className="hint">{t("stk.hint")}</p>
@@ -33,11 +33,11 @@ export function StickersPanel() {
       <button key={n} type="button" className="stk" onClick={() => void addIcon(n, col)} disabled={!!busy} title={iconName(n)} aria-label={iconName(n)} data-testid={"ico-" + n}>
         <img src={tileOf("i:" + n, () => drawIconSticker(n, col, 128))} alt="" draggable={false} />
       </button>))}</div>
-    {(["badges", "shapes", "faces", "marks"] as const).map((g) => <div key={g}>
+    {(["formal", "badges", "shapes", "faces", "marks"] as const).map((g) => <div key={g}>
       <span className="ns-lbl">{t("stk." + g)}</span>
       <div className="stkg">{STICKERS.filter((s) => s.group === g).map((s) => (
         <button key={s.id} type="button" className="stk" onClick={() => void add(s.id)} disabled={!!busy} title={lang === "ar" ? s.ar : s.en} aria-label={lang === "ar" ? s.ar : s.en} data-testid={"stk-" + s.id}>
-          <img src={stickerUrl(s)} alt="" draggable={false} />
+          <img src={stickerUrl(stickerFor(s, lang))} alt="" draggable={false} />
         </button>))}</div>
     </div>)}
   </>);
