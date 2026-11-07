@@ -699,3 +699,13 @@ Ideas taken from the open-source video-editing-skill project (MIT), rewritten in
   - the address as the server cleans it;
   - where each one comes from: Admin or `.env`.
 - Tests: `tests/v249.py`; `tests/v184.py` still passes.
+
+## v250 — "Your account has not activated the model dreamina-seedance-2-0-260128"
+
+- **The real reason, shown by v248:** BytePlus switches on each Seedance model separately, for each account (BytePlus console → ModelArk → model activation). It asks for a balance above USD 30, a Savings Plan or a Seedance resource pack. The owner's key works, but Seedance 2.0 isn't switched on for it.
+- **What the site does now:**
+  - A model BytePlus calls "not activated" is remembered for 6 hours. It's forgotten sooner on the Seedance card's Test in Admin, or when a video is made on that model.
+  - The job goes to the nearest Seedance model the account *has* switched on. For example 2.0 → 2.0 Fast → 2.5 → Mini, each tried once. If that model is cheaper, the customer pays its lower price.
+  - With none switched on, the AI engine makes it, if it can take work. Otherwise the customer is told plainly ("Seedance isn't switched on for this site yet — nothing was charged").
+  - Admin's Seedance card shows which model isn't activated. `deploy/why.sh` says which model and how to activate it.
+- Tests: `tests/v250.py`, plus `v241`, `v246`, `v247`, `v248` and `v249`.

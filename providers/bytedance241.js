@@ -17,6 +17,7 @@ import path from "path";
 import { cfg, configured, S as settingsS } from "../lib/settings.js";
 import { kieInput, swapEngine, SWAP_MODELS } from "./kie.js";
 import { MEDIA_DIR } from "../lib/media.js";
+import { save as saveDb } from "../lib/store.js";
 
 export const BD_DEFAULT241 = "https://ark.ap-southeast.bytepluses.com/api/v3";
 // the site's Seedance models → BytePlus model ids (BytePlus's model list, November 2026)
@@ -48,8 +49,23 @@ export function bdModel241(body = {}) {
   const pick = String(body.model || "auto"), own = (settingsS().modelCat || {})[pick]?.apiModel, card = String(cfg("seedance").model || "");
   if (own && /seedance/i.test(own)) return own;
   if (["seedance", "auto"].includes(pick) && /^dreamina-seedance-2/.test(card)) return card;
-  return BD_MODELS241[pick] || (body.meta?.edit135 ? BD_MODELS241.seedance20 : BD_MODELS241.seedance);
+  return open250(BD_MODELS241[pick] || (body.meta?.edit135 ? BD_MODELS241.seedance20 : BD_MODELS241.seedance));
 }
+// v250: "Your account … has not activated the model …" — BytePlus switches each Seedance model on separately (Ark Console → model
+// activation). A model it turned down is remembered for 6 hours (or until the Seedance card's Test in Admin, or a video made on
+// it): jobs go to the nearest Seedance model the account HAS switched on, and Admin and why.sh say which one to activate.
+export const NOT_OPEN250 = /has not activated the model|ModelNotOpen|model (service )?(is )?not (been )?(activated|open)/i;
+const NEAR250 = { "dreamina-seedance-2-0-260128": ["dreamina-seedance-2-0-fast-260128", "dreamina-seedance-2-5-260628", "dreamina-seedance-2-0-mini-260615"],
+  "dreamina-seedance-2-0-fast-260128": ["dreamina-seedance-2-0-260128", "dreamina-seedance-2-0-mini-260615", "dreamina-seedance-2-5-260628"],
+  "dreamina-seedance-2-5-260628": ["dreamina-seedance-2-0-260128", "dreamina-seedance-2-0-fast-260128", "dreamina-seedance-2-0-mini-260615"],
+  "dreamina-seedance-2-0-mini-260615": ["dreamina-seedance-2-0-fast-260128", "dreamina-seedance-2-0-260128", "dreamina-seedance-2-5-260628"] };
+const shut250 = () => { const st = settingsS(); const o = (st.bd250 = st.bd250 || {}); const now = Date.now(); for (const [m, t] of Object.entries(o)) if (now - t > 6 * 3600e3) delete o[m]; return o; };
+export const notOpen250 = () => Object.keys(shut250());
+export function markShut250(model) { const o = shut250(); if (!o[model]) { o[model] = Date.now(); const st = settingsS(); st.status = st.status || {};
+  st.status.seedance = { ...(st.status.seedance || {}), state: "degraded", type: "model", note: "Not activated in your BytePlus account: " + Object.keys(o).join(", ") + " — activate it in the Ark Console (model activation); jobs use your other Seedance models meanwhile", checked: Date.now() }; saveDb(); } }
+export function clearShut250(model) { const o = shut250(); if (model ? o[model] : Object.keys(o).length) { if (model) delete o[model]; else for (const k of Object.keys(o)) delete o[k]; saveDb(); } }
+/** a model the account has switched on: this one, or the nearest that isn't known to be off (all off: this one, to try again) */
+export function open250(model, tried = []) { const off = shut250(); if (!off[model] && !tried.includes(model)) return model; return (NEAR250[model] || []).find((m) => !off[m] && !tried.includes(m)) || (tried.includes(model) ? null : model); }
 // does the owner's ByteDance key take this job? A Seedance model picked (any task: words, a picture, references, editing a video's
 // seconds — Edit with words, Replace things, Extend), or a plain "Auto" video while MiniMax doesn't take every video. Never a
 // Character Swap, Motion Control or lip-sync (other engines), and never a job that isn't a video.
@@ -117,7 +133,10 @@ async function call(pathName, init) {
   return d;
 }
 export const bytedance241 = (model) => ({ name: "Seedance (ByteDance)", configured: bdOn241(),
-  async submit(p) { const d = await call("/contents/generations/tasks", { method: "POST", body: JSON.stringify(bdBody241(model || bdModel241(p), p)) }); const id = bdId248(d);
+  async submit(p) { const m = model || bdModel241(p); let d;
+    try { d = await call("/contents/generations/tasks", { method: "POST", body: JSON.stringify(bdBody241(m, p)) }); }
+    catch (e) { if (NOT_OPEN250.test(String(e.message))) { markShut250(m); e.notOpen250 = m; } throw e; }
+    const id = bdId248(d);
     if (!id) throw new Error("Seedance (ByteDance): the answer had no task id — it said: " + JSON.stringify(d).replace(/"(api_?key|authorization|token)":"[^"]*"/gi, '"$1":"…"').slice(0, 220)); return { remoteId: String(id) }; },
   async poll(id) { const d0 = await call("/contents/generations/tasks/" + encodeURIComponent(id), { method: "GET" }), d = unwrap(d0), s0 = String(d.status || d.state || d.task_status || "").toLowerCase();
     const s = ["succeeded", "success", "succeed", "completed", "complete", "done"].includes(s0) ? "succeeded" : ["failed", "failure", "fail", "error"].includes(s0) ? "failed" : ["expired", "cancelled", "canceled"].includes(s0) ? "cancelled" : s0;
