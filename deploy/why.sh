@@ -24,6 +24,16 @@ try { const sec = await import(process.cwd() + "/lib/secrets.js"), P = st.S().pr
   console.log("  keys saved in Admin:", saved.length ? saved.map(nm).join(", ") : "none");
   if (unread.length) console.log("  WARNING saved but can NOT be read (was SECRET_KEY in .env changed?):", unread.map(nm).join(", ")); } catch (e) { console.log("  keys saved in Admin: (could not check)"); }
 console.log("  Only my MiniMax key (the AI engine never used):", yes(only));
+// v249: what the server uses right now for the video makers (no keys): Admin wins over .env, and a change in Admin is used at once
+// (no restart) — it is kept, encrypted, in data/db.json, so it is NOT in the .env file
+try { const sec = await import(process.cwd() + "/lib/secrets.js"), P = st.S().providers || {};
+  let bd = {}; try { bd = await import(process.cwd() + "/providers/bytedance241.js"); } catch {}
+  console.log("── what the server uses right now (Admin wins over .env; saved in data/db.json, used at once, no restart)");
+  for (const [k, nm] of [["seedance", "ByteDance (Seedance)"], ["kie", "AI engine"], ["minimax", "MiniMax"]]) {
+    const adm = P[k] && P[k].enc ? sec.decrypt(P[k].enc) || {} : {}, c = st.cfg(k), from = (f) => (adm[f] ? "Admin" : c[f] ? ".env" : "-");
+    let model = c.model || "", base = c.baseUrl || "";
+    if (k === "seedance") { model = !model ? "(each Seedance model its own)" : /seedance/i.test(model) ? model : "IGNORED (" + String(model).slice(0, 40) + " is not a Seedance model id - put - in the field and save to clear it)"; base = bd.bdBase248 ? bd.bdBase248(c.baseUrl) : base; }
+    console.log("  " + nm + ": key " + (c.apiKey ? "yes (" + from("apiKey") + ")" : "NO") + " · model " + (model || "-") + (c.model ? " (" + from("model") + ")" : "") + " · address " + (base || "(default)") + (c.baseUrl ? " (" + from("baseUrl") + ")" : "")); } } catch (e) { console.log("  (could not read the settings: " + e.message + ")"); }
 let m = {}; try { m = st.S().minimax183 || {}; } catch {}
 console.log("  Everything on MiniMax:", yes((() => { try { return mm.mmAll237 ? mm.mmAll237() : false; } catch { return false; } })()), "· switches: videos", yes(m.video !== false), "· pictures", yes(m.image !== false), "· voices", yes(m.voice !== false), "· music", yes(m.music !== false));
 let s = {}; try { s = (st.S().platform || {}).status || {}; } catch {} for (const k of ["kie", "minimax"]) if (s[k]) console.log(`  last check ${k === "kie" ? "AI engine" : "MiniMax"}: ${s[k].state || "?"} ${s[k].note ? "· " + String(s[k].note).slice(0, 90) : ""}`);

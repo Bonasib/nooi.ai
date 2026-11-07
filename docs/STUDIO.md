@@ -686,3 +686,16 @@ Ideas taken from the open-source video-editing-skill project (MIT), rewritten in
   - A web page that comes back with "OK" says the Base URL is wrong. An error inside an "OK" answer gives its own words (for example "has not activated the model", or "insufficient balance"). A reply that carries a task's state is still read as a task, even a failed one. An answer with nothing usable shows what it said (keys hidden). The real reason shows on the failed job and in `deploy/why.sh`.
   - A key's name typed in the Model id field (`apikey-…`) is ignored. Only a Seedance model id is used there.
 - Tests: `tests/v248_bd.mjs` (every answer shape and Base URL against a stand-in fetch), plus `v241`, `v246` and `v247`.
+
+## v249 — where the Admin settings live, and clearing a saved value
+
+- **The owner asked:** "anything written in the dashboard doesn't show on the VPS".
+  - Admin → AI providers saves on the server at once, encrypted, in `data/db.json`. That's not the `.env` file, so it doesn't appear there.
+  - These values win over `.env`, and they're used at once, with no restart.
+- **A saved value can now be cleared:** type `-` in its field and save. Before, an empty field left the saved value as it was, so a wrong value (such as an API key's name in Seedance's Model id) could never be taken out. Each provider card says so under its fields once a key is saved.
+- **`deploy/why.sh` → "what the server uses right now"** shows, for ByteDance (Seedance), the AI engine and MiniMax:
+  - whether there's a key (never the key);
+  - the model id, and whether a Seedance Model id is ignored because it's not a model id;
+  - the address as the server cleans it;
+  - where each one comes from: Admin or `.env`.
+- Tests: `tests/v249.py`; `tests/v184.py` still passes.
