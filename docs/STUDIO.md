@@ -785,3 +785,13 @@ The owner asked for the work to be automated, after an open-source studio's Work
 - **Templates are read-only** until saved as yours. My workflows are the same list as My recipes; Recipes also shows a Music step now.
 - The site's small arrow icon (`chevron`) was missing, so the menu's group arrows and Back were blank; it's drawn now.
 - Tests: `tests/v256.py`; `v83`, `v83b` and `v83c` still pass.
+
+## v257 — Best quality for a long video: the better of two pictures, and a last frame per shot (after ViMax)
+
+nooi Studio shows a **Quality** chip when a video is made of several parts: Standard, or Best quality.
+
+- **The agents** also write how each shot ends (`end`, a still moment).
+- **Each shot's first picture** is drawn twice. The vision check (`pick257`) sees the reference picture and both candidates, and keeps the one that shows the shot best while keeping the same people and place, with nothing broken. With no text AI connected, the first candidate is kept.
+- **Each shot's last picture** is drawn from its first with the planned ending. Its part gets it as the end frame (the customer's own end frame still wins on the last part).
+- **Price:** 3 extra pictures a part at the picture engine's price. It's added to Generate's price before anything is made, and the server holds the same (`hqExtra257`). It applies only where the shots are drawn (not one continuous take, not a storyboard).
+- Tests: `tests/v257.py` (stand-in engine and text AI) and `tests/v257_page.py`; `v136` and `v255_plan` still pass.

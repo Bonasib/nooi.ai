@@ -26051,6 +26051,24 @@ curHub253=(o=>function(){return(ALIAS82[S.view]||S.view)==="flow256"?"auto":o.ap
 @media (max-width:767px){.fchain256{flex-direction:column;overflow:visible;align-items:stretch}.fnode256,.fadd256{width:auto}.fadd256{margin:14px 0 0}.flink256{width:2px;height:22px;align-self:center}.flink256::after{inset-inline-end:auto;left:-4px;top:auto;bottom:-6px;border:5px solid transparent;border-top-color:var(--lime)}}
 `;document.head.appendChild(st)})();
 
+/* ================= v257: BEST QUALITY for a long video (after ViMax) — two pictures per shot, the better one kept; a last frame per shot =================
+   For a video made of several parts, nooi Studio has a Quality chip: Standard, or Best quality — the agents also plan how each
+   shot ends; each shot's first picture is drawn twice and a vision check keeps the one that shows the shot best and keeps the
+   people and the place; each shot also gets its last picture, so the part lands where it was planned. It costs 3 extra pictures a
+   part, shown on Generate before anything is made (the server holds the same price). */
+const hqParts257=()=>{const d=S.draft||{};return typeof parts132==="function"?parts132(d.model,d.dur):1};
+const hqEx257=()=>{const d=S.draft||{},n=hqParts257();return d.hq257&&n>1?n*3*((IMG_MODELS.nano&&IMG_MODELS.nano.cr)||5)*Math.max(1,+d.variations||1):0};
+const hqSec257=()=>{const d=S.draft||{},n=hqParts257(),per=n*3*((IMG_MODELS.nano&&IMG_MODELS.nano.cr)||5);
+  return'<p class="small mute" style="margin:0 0 8px">'+esc(L("This video is made of "+n+" parts. Best quality draws two pictures for each shot and keeps the better one, and gives each shot its planned last frame — the people, places and endings hold better.","هذا الفيديو يُصنع من "+n+" أجزاء. أفضل جودة ترسم صورتين لكل لقطة وتُبقي الأفضل، وتعطي كل لقطة إطارها الأخير المخطط — فتثبت الوجوه والأماكن والنهايات أكثر."))+"</p>"+
+  '<div class="tiles cin82t"><button class="tile" data-set="draft.hq257" data-val="" aria-pressed="'+!d.hq257+'"><span class="gl">'+ic("video")+'</span><span class="lb">'+esc(L("Standard","عادية"))+'</span></button><button class="tile" data-set="draft.hq257" data-val="1" aria-pressed="'+!!d.hq257+'"><span class="gl">'+ic("spark")+'</span><span class="lb">'+esc(L("Best quality","أفضل جودة"))+" · +"+per+" cr</span></button></div>"};
+box93=(o=>function(panel,spec){if(Array.isArray(spec)&&S.view==="video"&&!spec.some(x=>x.key==="hq257")&&hqParts257()>1){const i=spec.findIndex(x=>x.key==="length");
+    if(i>=0)spec.splice(i+1,0,{key:"hq257",icon:ic("spark"),title:L("Quality","الجودة"),value:()=>S.draft&&S.draft.hq257?L("Best","الأفضل"):L("Standard","عادية"),html:hqSec257,test:()=>false})}
+  return o.apply(this,arguments)})(box93);
+VIEWS.video=(o=>function(){const h=o.apply(this,arguments),ex=hqEx257();if(typeof h!=="string"||!ex)return h;
+  return h.replace(/(<button class="btn primary big" data-act="gen-video"[^>]*>[\s\S]*?<span class="cost">)(\d+)( cr<\/span>)/,(m,a,n,z)=>a+(+n+ex)+z)})(VIEWS.video);
+addJob=(o=>function(j){if(j&&j.kind==="video"&&S.view==="video"&&S.draft&&S.draft.hq257&&hqParts257()>1){j.meta=Object.assign({},j.meta,{hq257:1});const n=hqParts257();if(typeof j.cost==="number")j.cost+=n*3*((IMG_MODELS.nano&&IMG_MODELS.nano.cr)||5)}
+  return o.apply(this,arguments)})(addJob);
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
