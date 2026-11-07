@@ -1,5 +1,6 @@
 // The rail and its panels: Media (the library), Audio, Text, Captions, Effects (+ transitions), Color, AI.
 import { useTranslation } from "react-i18next";
+import { CodeMusic } from "./Music";
 import { useEffect, useRef, useState } from "react";
 import type { DragEvent } from "react";
 import { Btn, Icon } from "@nooi/ui";
@@ -154,6 +155,8 @@ function AudioPanel() {
       <span className="hint">{t("audio.voiceTracks")}</span>
       <div className="chips">{p.tracks.filter((x) => x.kind === "audio").map((tr) => <button type="button" key={tr.id} className="chip" aria-pressed={p.ducking.voiceTracks.includes(tr.id)} onClick={() => A.run("ducking", (d) => { const v = d.ducking.voiceTracks; d.ducking.voiceTracks = v.includes(tr.id) ? v.filter((x) => x !== tr.id) : [...v, tr.id]; })}>{tr.name}</button>)}</div>
     </>}
+    <span className="ns-lbl">{t("cm.title")}</span>
+    <CodeMusic />
     <span className="ns-lbl">{t("audio.yours")}</span>
     {sounds.length ? <div className="lib">{sounds.map((a) => <AssetTile key={a.id} a={a} />)}</div> : <p className="hint">{t("audio.none")}</p>}
   </>);

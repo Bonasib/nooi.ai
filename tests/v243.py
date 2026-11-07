@@ -1,5 +1,5 @@
 # v243 — editing by the words, following the person, checking before posting, beat cuts on a grid (Auto in the studio)
-#  · Auto has ten tools now; Smart cut and Check before posting are cards with a moving example like the others
+#  · Auto has eleven tools now; Smart cut and Check before posting are cards with a moving example like the others
 #  · Smart cut: the price first, the edit's sound heard once (simulated here); the long pauses, the "um", the retake are listed for a
 #    look, the leaned-on words (يعني) only when asked; one tap cuts them in one undo step — the talk gets shorter, the music under it
 #    is not cut (one clip, still from 0, trimmed to the new end)
@@ -54,7 +54,7 @@ async def desktop(p):
     await E("()=>{const s=window.__studio,as=Object.values(s.editor.project.assets),f=n=>as.find(a=>a.name===n);s.actions.addAsset(f('talk'));s.actions.addAsset(f('music'),0);s.editor.select([])}"); await pg.wait_for_timeout(400)
     await pg.click('[data-testid="rail-auto"]'); await pg.wait_for_selector('[data-testid="auto-panel"]')
     cards = await E("()=>[...document.querySelectorAll('.autoc')].map(c=>({id:c.dataset.testid,anim:[...c.querySelectorAll('.autodemo *')].some(x=>getComputedStyle(x).animationName!=='none'),btn:!!c.querySelector('button')}))")
-    chk("Auto has ten tools — Smart cut first and Check before posting — each with a moving example and a button", len(cards) == 10 and cards[0]["id"] == "auto-smart" and any(c["id"] == "auto-check" for c in cards) and all(c["anim"] and c["btn"] for c in cards), cards)
+    chk("Auto has eleven tools — Smart cut first and Check before posting — each with a moving example and a button", len(cards) == 11 and cards[0]["id"] == "auto-smart" and any(c["id"] == "auto-check" for c in cards) and all(c["anim"] and c["btn"] for c in cards), cards)
     await pg.screenshot(path=D + "/auto.png")
     # ---- smart cut
     hear = await E("()=>document.querySelector('[data-testid=sc-hear]').textContent")

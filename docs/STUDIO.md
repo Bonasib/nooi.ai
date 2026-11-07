@@ -622,3 +622,29 @@ Ideas taken from the open-source video-editing-skill project (MIT), rewritten in
   - Each tile shows its curve (higher means faster) and a dot that moves at its speeds.
   - A ramp cuts the clip into ten equal parts of its source, each at the curve's speed (`editor-core/src/ramps.ts`). The preview, the device export and FFmpeg all play it with no new engine.
   - The clips after it move along. It's one undo step.
+
+## v245 — For another editor, music made in code, long video → shorts, the lossless server cut
+
+- **For another editor** (Export → For another editor). The edit goes out as a small text file, with the media referred to by file name (keep the files next to it). The code is in `editor-core/src/nle.ts`:
+  - **FCPXML 1.10** for Final Cut Pro, DaVinci Resolve and Premiere: the main track is the spine (with gaps), the other tracks are connected clips (lanes), speed is a time map, and volume and markers are included.
+  - **EDL (CMX3600)** for any editor: the main track's shots with source and record timecodes, M2 lines for speed, the clip names and the markers.
+  - **MLT** for Shotcut and Kdenlive: a playlist for each track that has clips, with blanks for gaps and speed through timewarp.
+- **Music made here** (Audio → Music made here): eight moods — Calm, Upbeat, Epic, Lo-fi, Corporate, Tension, Happy and Cinematic.
+  - Each mood has an icon and a little equaliser moving at its tempo. You choose a length of 15, 30 or 60 s; Listen plays it, and Add puts it on the timeline.
+  - A mood sets the tempo, key, chords, drum pattern, bass pattern, how busy the tune is and the swing.
+  - The score is written from a seed (`editor-core/src/music.ts`): the first bar is an intro, the tune walks the scale and lands on the chord, and the end fades. The same seed always gives the same music; Another tune changes the seed.
+  - The browser plays it with its own synthesizers (`media/synth.ts`): a pad, bass, lead, pluck, kick, snare and hi-hat, made from oscillators and noise and mixed offline.
+  - Add places a WAV at the playhead and marks its beats. It's free, nothing is downloaded and there's no licence to worry about.
+- **Long video → shorts** (Auto). It uses the same words as Smart cut, heard once.
+  - A moment is 20–60 s of whole phrases. It scores for:
+    - a hook in its first words (a question, a number, "how", "why", "the secret", لماذا, كيف, سر…);
+    - ending on a full sentence;
+    - steady talk;
+    - few long pauses and fillers;
+    - being close to 35 s.
+  - The best moments that don't overlap are listed (the weak ones are left out), each with why it was picked.
+  - "Make this short" saves the long edit as it is and opens a copy cut to that moment. The copy is 9:16 and follows the person, with captions from its words (a few words a line, never leaving one or two words of a sentence alone).
+- **The lossless server cut** (`lib/smartcut245.js`, used by `trim135` when a customer's video is trimmed before merging).
+  - For H.264, only the frames from the cut to the next keyframe are made again, matched to the source's profile, pixel format and frame rate. Everything after the keyframe is copied: the picture data is the source's, byte for byte. The sound is cut exactly.
+  - Anything else (VP9, variable frame rate, no keyframe in the range) is re-encoded as before.
+  - Tested in `tests/v245_smartcut.mjs`: exact length, no decode errors, the copied packets the same, and the first frame the source's.

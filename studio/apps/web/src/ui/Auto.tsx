@@ -14,7 +14,7 @@ import { quietRanges } from "../mate";
 import { decodeSound, fileOf, monoOf, urlOf } from "../media/library";
 import { mixSound } from "../engine/export";
 import { encodeWav } from "../engine/wav";
-import { CheckPost, SmartCut, followPerson, setWords243, words243 } from "./Smart";
+import { CheckPost, Shorts, SmartCut, followPerson, setWords243, words243 } from "./Smart";
 
 type Say = (k: string, o?: Record<string, unknown>) => string;
 const media = (p: Project) => p.tracks.flatMap((t) => t.clips.map((c) => ({ t, c }))).filter((x) => x.c.type === "media") as { t: Track; c: MediaClip }[];
@@ -123,9 +123,9 @@ export async function autoCaptions(t: Say, lang: string): Promise<string> {
 }
 
 // ---- the panel
-const TOOLS = ["smart", "pauses", "beat", "captions", "reframe", "check", "color", "loud", "duck", "trans"] as const;
+const TOOLS = ["smart", "shorts", "pauses", "beat", "captions", "reframe", "check", "color", "loud", "duck", "trans"] as const;
 type Tool = (typeof TOOLS)[number];
-const ICON: Record<Tool, string> = { smart: "words", check: "checklist", pauses: "cut", beat: "beat", captions: "captions", reframe: "crop", color: "color", loud: "volume", duck: "audio", trans: "transitions" };
+const ICON: Record<Tool, string> = { smart: "words", shorts: "shorts", check: "checklist", pauses: "cut", beat: "beat", captions: "captions", reframe: "crop", color: "color", loud: "volume", duck: "audio", trans: "transitions" };
 export function AutoPanel() {
   const { t } = useTranslation(); const p = useProject(); const lang = useUI((s) => s.lang); const [busy, setBusy] = useState<string>(""); const [done, setDone] = useState<Record<string, string>>({});
   const [aspect, setAspect] = useState<Aspect>("9:16"); const [follow, setFollow] = useState<"middle" | "follow">("follow"); const [grid, setGrid] = useState<C.Grid>("beats"); const [prog, setProg] = useState(0); const [capCost, setCapCost] = useState<number | null | undefined>(undefined); const d = C.duration(p);
@@ -152,7 +152,7 @@ export function AutoPanel() {
       {k === "reframe" && <><Seg label={t("auto.shape")} value={aspect} onChange={(v) => setAspect(v as Aspect)} options={(["9:16", "1:1", "4:5", "16:9"] as Aspect[]).map((v) => ({ v, label: v }))} />
         <Seg label={t("fp.how")} value={follow} onChange={(v) => setFollow(v as "middle" | "follow")} options={[{ v: "follow", label: t("fp.follow") }, { v: "middle", label: t("fp.middle") }]} /></>}
       {k === "beat" && <Seg label={t("auto.grid")} value={grid} onChange={(v) => setGrid(v as C.Grid)} options={(["beats", "bars", "8ths"] as C.Grid[]).map((v) => ({ v, label: t("auto.g." + v) }))} />}
-      {k === "smart" ? <SmartCut price={capCost} /> : k === "check" ? <CheckPost /> : <Btn icon={ICON[k]} disabled={!!busy || empty || (k === "captions" && (capCost === null || !api.online))} onClick={() => void run(k)} testid={"auto-go-" + k}>
+      {k === "smart" ? <SmartCut price={capCost} /> : k === "shorts" ? <Shorts price={capCost} /> : k === "check" ? <CheckPost /> : <Btn icon={ICON[k]} disabled={!!busy || empty || (k === "captions" && (capCost === null || !api.online))} onClick={() => void run(k)} testid={"auto-go-" + k}>
         {busy === k ? t("auto.working") + (prog ? " " + Math.round(prog * 100) + "%" : "") : k === "captions" ? (capCost == null ? t("auto.capOff") : capCost ? t("auto.goPrice", { n: capCost }) : t("auto.goFree")) : t("auto.go")}</Btn>}
       {done[k] && <p className="hint okline" data-testid={"auto-done-" + k}>{done[k]} · <button type="button" className="linkbtn" onClick={() => A.undo()}>{t("auto.undo")}</button></p>}
     </div>)}</div>

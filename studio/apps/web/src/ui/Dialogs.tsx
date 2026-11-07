@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Btn, Icon, Seg } from "@nooi/ui";
-import { PRESETS, PLATFORMS, checkProject, duration, frameSize, aspectOf, emptyProject, COMMANDS } from "@nooi/editor-core";
+import { PRESETS, PLATFORMS, checkProject, toEDL, toFCPXML, toMLT, duration, frameSize, aspectOf, emptyProject, COMMANDS } from "@nooi/editor-core";
 import type { ExportSettings } from "@nooi/editor-core";
 import { editor, toast, toasts, ui, useProject, useUI, openProject, cloudId, autosave, playerRef } from "../state";
 import { exportProject } from "../engine/export";
@@ -58,6 +58,10 @@ export function ExportDialog() {
       if (preset?.maxSec && d > preset.maxSec) toast(t("exp.tooLong", { name: preset.name, s: preset.maxSec }), "warn");
     } catch (e) { setProg(null); if ((e as Error).name !== "AbortError") setErr((e as { code?: string }).code === "NO_ENCODER" ? t("exp.noEncoder") : String((e as Error).message || e)); }
   };
+  // (v245) the edit for another editor: a small text file; the media stays where it is (same file names next to it)
+  const nle = async (k: "fcpxml" | "edl" | "mlt") => { const q = editor.project, base = (q.name || "nooi").replace(/[^\p{L}\p{N} _-]+/gu, "").trim().slice(0, 60) || "nooi";
+    const text = k === "fcpxml" ? toFCPXML(q) : k === "edl" ? toEDL(q) : toMLT(q); const name = base + (k === "fcpxml" ? ".fcpxml" : k === "edl" ? ".edl" : ".mlt"), blob = new Blob([text], { type: k === "edl" ? "text/plain" : "application/xml" });
+    if (NATIVE) { await saveFile(blob, name); return; } const u = URL.createObjectURL(blob), a = Object.assign(document.createElement("a"), { href: u, download: name }); document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); toast(t("nle.done", { name }), "ok"); };
   const save = async () => { if (!res) return; try { const url = await api.upload(res.blob, res.name); toast(t("exp.saved"), "ok"); void url; } catch { toast(t("exp.saveFail"), "warn"); } };
   return (
     <Modal title={t("exp.title")} onClose={close} wide>
@@ -65,6 +69,10 @@ export function ExportDialog() {
         <div>
           <span className="ns-lbl">{t("exp.for")}</span>
           <div className="ns-grid">{PRESETS.map((x) => <button key={x.id} type="button" className="ns-tile" aria-pressed={o.preset === x.id} onClick={() => pick(x.id)} data-testid={"preset-" + x.id}><i className="ratio" style={{ aspectRatio: x.aspect.replace(":", "/") }} /><span>{lang === "ar" ? x.nameAr : x.name}</span><small dir="ltr">{x.aspect} · {x.res}</small></button>)}</div>
+          <span className="ns-lbl">{t("nle.title")}</span>
+          <div className="nlerow" data-testid="nle">{([["fcpxml", "FCPXML", "Final Cut · Resolve · Premiere"], ["edl", "EDL", t("nle.any")], ["mlt", "MLT", "Shotcut · Kdenlive"]] as const).map(([k, name, apps]) =>
+            <button key={k} type="button" className="ns-tile nlet" onClick={() => void nle(k)} data-testid={"nle-" + k}><Icon name="nle" size={18} /><b>{name}</b><small>{apps}</small></button>)}</div>
+          <p className="hint">{t("nle.hint")}</p>
         </div>
         <div>
           <span className="ns-lbl">{t("exp.format")}</span>

@@ -47,7 +47,7 @@ async def desktop(p):
     rails = await E("()=>[...document.querySelectorAll('.rail button')].map(b=>b.dataset.testid)")
     await pg.click('[data-testid="rail-auto"]'); await pg.wait_for_selector('[data-testid="auto-panel"]')
     cards = await E("()=>[...document.querySelectorAll('.autoc')].map(c=>({id:c.dataset.testid,anim:[...c.querySelectorAll('.autodemo *')].some(x=>getComputedStyle(x).animationName!=='none'),btn:!!c.querySelector('button')}))")
-    chk("the rail's ninth section is Auto: 8 tools, each a card with a moving example and a button", rails[2] == "rail-auto" and len(rails) == 9 and len(cards) == 10 and all(c["anim"] and c["btn"] for c in cards), [rails, cards])
+    chk("the rail's ninth section is Auto: 8 tools, each a card with a moving example and a button", rails[2] == "rail-auto" and len(rails) == 9 and len(cards) == 11 and all(c["anim"] and c["btn"] for c in cards), [rails, cards])
     # the edit: the talk twice on V1 (a cut at 6 s), the dark clip after it, the music under them
     await E("()=>{const s=window.__studio,as=Object.values(s.editor.project.assets),f=n=>as.find(a=>a.name===n);s.actions.addAsset(f('talk'));s.actions.addAsset(f('talk'));s.actions.addAsset(f('dark'));s.actions.addAsset(f('music'),0);s.editor.select([])}")
     await pg.wait_for_timeout(400); v0 = await E(V1)

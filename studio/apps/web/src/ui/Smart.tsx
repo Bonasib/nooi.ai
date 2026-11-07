@@ -13,7 +13,8 @@ import { Btn, Icon } from "@nooi/ui";
 import * as C from "@nooi/editor-core";
 import type { Aspect, MediaClip, Project, Word } from "@nooi/editor-core";
 import { api } from "../api";
-import { editor, toast, ui, useProject, useUI, playerRef } from "../state";
+import { editor, toast, ui, useProject, useUI, playerRef, openProject, autosave } from "../state";
+import { putJSON } from "../media/idb";
 import * as A from "../actions";
 import { urlOf } from "../media/library";
 import { mixSound } from "../engine/export";
@@ -143,4 +144,34 @@ export function CheckPost() {
 export function SafeArea() {
   const { t } = useTranslation(); const lang = useUI((s) => s.lang); const id = useUI((s) => s.safePl); const pl = id ? C.PLATFORMS.find((x) => x.id === id) : null; if (!pl) return null; const s = pl.safe, pc = (v: number) => (v * 100).toFixed(1) + "%";
   return <div className="safe243" aria-hidden="true" data-testid="safe243"><i style={{ inset: `${pc(s.top)} ${pc(s.right)} ${pc(s.bottom)} ${pc(s.left)}` }} /><b style={{ height: pc(s.bottom) }}>{t("chk.under", { p: lang === "ar" ? pl.nameAr : pl.name })}</b><u style={{ width: pc(s.right), bottom: pc(s.bottom) }} /></div>;
+}
+
+// ---- (v245) a long video → shorts
+const WHY: Record<string, string> = { hook: "sh.w.hook", ends: "sh.w.ends", pace: "sh.w.pace", clean: "sh.w.clean" };
+/** a moment made its own edit: a copy of this one (saved first, untouched), cut to the moment, 9:16 following the person, captions from the words */
+export async function makeShort(m: C.Moment, n: number, t: Say, onStep?: (k: number) => void): Promise<string> {
+  const src = editor.project, words = words243() || [];
+  await putJSON("proj_" + src.id, src);   // the long edit is kept as it is
+  const q: Project = JSON.parse(JSON.stringify(src)); q.id = C.uid("p"); q.name = (src.name || "nooi") + " · " + t("sh.short") + " " + n; q.createdAt = q.updatedAt = Date.now();
+  const end = C.duration(q); C.applyCuts(q, [{ a: 0, b: m.a }, { a: m.b, b: end }].filter((c) => c.b - c.a > 0.02), { keepMusic: false });
+  await openProject(q); autosave();
+  const said = C.wordsAfter(words.filter((w) => w.s >= m.a - 0.01 && w.e <= m.b + 0.01).map((w) => ({ ...w })), [{ a: 0, b: m.a }]);
+  try { await followPerson(t, "9:16", onStep); } catch { autoMiddle("9:16"); }
+  A.run("short: captions", (p) => { const tr = C.addTrack(p, "text", 0); tr.name = t("cap.track");
+    for (const l of C.captionLines(said)) C.addClip(p, C.textClip(l.text, l.s, { template: "caption", dur: Math.max(0.3, l.e - l.s), style: C.textStyle0({ size: 0.06, weight: 900, box: { color: "#000000", opacity: 0.6, pad: 0.25, radius: 0.25 } }), animIn: { type: "pop", dur: 0.12 }, animOut: { type: "fade", dur: 0.1 } }), tr.id); });
+  setWords243(said); return t("sh.made", { name: editor.project.name });
+}
+function autoMiddle(aspect: Aspect) { A.format(aspect); const p = editor.project, F = p.width / p.height; A.run("reframe", (q) => { for (const tr of q.tracks) for (const c of tr.clips) { if (c.type !== "media") continue; const a = q.assets[(c as MediaClip).asset]; if (!a?.w || !a.h) continue; const k = a.w / a.h; c.transform = { ...c.transform, x: 0, y: 0, scale: r2(Math.max(k / F, F / k)) }; } }); }
+export function Shorts({ price }: { price: number | null | undefined }) {
+  const { t } = useTranslation(); const lang = useUI((s) => s.lang); const words = useWords(); useProject(); const [busy, setBusy] = useState(""); const [prog, setProg] = useState(0);
+  const moments = useMemo(() => (words ? C.findMoments(words, { n: 3 }) : []), [words]); const best = Math.max(1, ...moments.map((m) => m.score));
+  const hear = async () => { setBusy("hear"); try { await hearEdit(editor.project, lang); } catch (e) { const er = e as { message?: string; errorAr?: string }; toast((lang === "ar" && er.errorAr) || er.message || t("ai.failed"), "warn"); } finally { setBusy(""); } };
+  if (!words) return <><Btn icon="words" disabled={!!busy || price === null || !api.online} onClick={() => void hear()} testid="sh-hear">{busy ? t("auto.working") : price == null ? t("auto.capOff") : price ? t("sc.hearPrice", { n: price }) : t("sc.hearFree")}</Btn><p className="hint">{t("sc.once")}</p></>;
+  if (!moments.length) return <p className="hint warnline" data-testid="sh-none">{t("sh.none")}</p>;
+  return <ul className="shl" data-testid="sh-list">{moments.map((m, i) => <li key={i} data-testid={"sh-m-" + i}>
+    <div className="shh"><b dir="ltr">{fmt(m.a)}–{fmt(m.b)}</b><small>{Math.round(m.b - m.a)} s</small><i className="shbar" style={{ width: Math.max(8, Math.round((m.score / best) * 100)) + "%" }} /></div>
+    <span dir="auto" className="sht">“{m.title}”</span><small className="shw">{m.why.map((w) => t(WHY[w] || w)).join(" · ")}</small>
+    <div className="row"><button type="button" className="linkbtn" onClick={() => playerRef.current?.seek(m.a)}>{t("sh.play")}</button>
+      <Btn icon="shorts" primary disabled={!!busy} onClick={async () => { setBusy("m" + i); setProg(0); try { toast(await makeShort(m, i + 1, (k, o) => t(k, o), setProg), "ok"); } catch (e) { toast(String((e as Error).message || e), "warn"); } finally { setBusy(""); } }} testid={"sh-make-" + i}>
+        {busy === "m" + i ? t("auto.working") + (prog ? " " + Math.round(prog * 100) + "%" : "") : t("sh.make")}</Btn></div></li>)}</ul>;
 }

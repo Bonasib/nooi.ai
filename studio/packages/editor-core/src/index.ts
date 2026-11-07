@@ -16,3 +16,6 @@ export * as Motion from "./motion";
 export * from "./key";
 export * from "./cutting";
 export * from "./ramps";
+export * from "./nle";
+export * from "./music";
+export * from "./shorts";

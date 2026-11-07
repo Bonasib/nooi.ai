@@ -866,7 +866,9 @@
    "beats": "Every beat",
    "bars": "Every bar",
    "8ths": "8ths"
-  }
+  },
+  "shorts": "Long video → shorts",
+  "shortsD": "The moments worth posting on their own (20–60 s, starting on a hook, ending on a full sentence) — each made its own 9:16 edit with captions."
  },
  "isec": {
   "transform": "Position & size",
@@ -1062,5 +1064,34 @@
   "done": "{{name}}: the clip now changes speed along the curve (one undo step).",
   "cant": "A clip running backwards or a frozen frame can't be ramped.",
   "hint": "The clip is played at changing speeds along the curve — the line shows the speed, the dot shows how it plays. The clips after it move along."
+ },
+ "nle": {
+  "title": "For another editor",
+  "any": "Any editor",
+  "hint": "The cuts, tracks, speed and markers, for Final Cut Pro, DaVinci Resolve, Premiere, Shotcut or Kdenlive. Keep the media files next to it with the same names.",
+  "done": "{{name}} is ready."
+ },
+ "cm": {
+  "title": "Music made here",
+  "len": "Length",
+  "listen": "Listen",
+  "stop": "Stop",
+  "add": "Add to the edit",
+  "another": "Another tune",
+  "added": "{{name}} music added ({{s}} s) — its beats are marked.",
+  "hint": "Written in code and played by your browser's own synthesizers: free, nothing downloaded, yours to use anywhere. Each tap of Another tune writes a new one in the same mood."
+ },
+ "sh": {
+  "short": "Short",
+  "none": "No 20–60 s moment found — the talk may be too short.",
+  "play": "Play it",
+  "make": "Make this short",
+  "made": "{{name}} is open — 9:16, following the person, with captions. The long edit is kept as it was.",
+  "w": {
+   "hook": "starts with a hook",
+   "ends": "ends on a full sentence",
+   "pace": "steady talk",
+   "clean": "no ums or long pauses"
+  }
  }
 }
