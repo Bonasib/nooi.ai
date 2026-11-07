@@ -767,3 +767,21 @@ This follows ViMax's storyboard and camera tree (MIT; the ideas only, in our own
 - **A shot back on an earlier camera position** is drawn from that shot's picture, so when the film cuts back, the place behind the people is the same. The other shots are drawn from the first shot, as before. Pictures are still made at the same time wherever they can be.
 - The job's plan (`plan132`) now also carries `cams` and `who`.
 - Tests: `tests/v255_plan.mjs`; `v136` still passes.
+
+## v256 — Workflows: build a chain of steps, save it, run it with the price first
+
+The owner asked for the work to be automated, after an open-source studio's Workflows page (its layout only). The engine underneath is nooi's own Recipes chain since v83: each step starts from the result of the one before on the server, is held when it starts, charged when made and given back if it fails. A failed step stops the steps after it.
+
+- **Where:** Agents & automation → Workflows (`?view=flow256`).
+- **The list:** Templates and My workflows as tall cards with the steps drawn on the cover, plus "Create a workflow". There are two new templates: Moment with music, and Sharp portrait.
+- **A workflow opens on its Form:**
+  - what it needs: your idea, the voice's words, the shape;
+  - the steps with their prices, the total, and Run.
+  - Runs appear beside it with what each step made.
+- **Or on its Builder:**
+  - the steps as linked cards. Add a step from Picture, Video from it, Sharper copy, Voiceover or Music;
+  - change a step's words, its engine and length, move it, remove it; rename the workflow.
+  - The server's rules are checked here: up to 5 steps; a video step comes first or after a picture; a sharper copy comes after a picture or a video.
+- **Templates are read-only** until saved as yours. My workflows are the same list as My recipes; Recipes also shows a Music step now.
+- The site's small arrow icon (`chevron`) was missing, so the menu's group arrows and Back were blank; it's drawn now.
+- Tests: `tests/v256.py`; `v83`, `v83b` and `v83c` still pass.

@@ -25689,6 +25689,7 @@ window.addEventListener("click",e=>{const im=e.target.closest&&e.target.closest(
    · a file dropped anywhere already goes to the right tool (since v80); its frame is lime now
    · template cards: tall cover cards, the kind in small lime letters above the name
    The editor (/studio/) and the Admin dashboard are kept as they are. */
+if(!ICONS.chevron)ICONS.chevron='<path d="M9 6l6 6-6 6"/>';   // (a small arrow: the menu's groups, back, move)
 const SB253={k:"nooi.sb253",fold:false,open:null};
 try{SB253.fold=localStorage.getItem(SB253.k)==="1"}catch(e){}
 const SBG253=["image","video","audio","chars","world","edit","calendar","auto"];
@@ -25922,6 +25923,133 @@ box93=(o=>function(panel,spec){if(Array.isArray(spec)&&!spec.some(x=>x.key==="di
 cineWords93=(o=>function(){const c=cine93(),base=o.apply(this,arguments),w=[];for(const k of["shot","angle","pace","comp","dstyle","era"])if(c[k]&&CIN82[k].some(x=>x[0]===c[k]))w.push(cinPick82(k,c[k])[3]);
   if(!w.length)return base;const t=w.join(", ");return(base?base+" ":"")+t[0].toUpperCase()+t.slice(1)+"."})(cineWords93);
 // a ready look sets the camera words only (directing and era stay as the client set them)
+
+/* ================= v256: WORKFLOWS — build a chain of steps, save it, run it with the price first =================
+   The owner asked for the work to be automated, after an open-source studio's Workflows page (its layout only — the engine is
+   nooi's own Recipes chain since v83: each step starts from the result of the one before on the server, is held when it starts,
+   charged when made and given back if it fails; a failed step stops the steps after it).
+   · Workflows (Agents & automation): Templates and My workflows as tall cards; "Create a workflow"
+   · a workflow opens on its Form (what it needs — your idea, the voice's words, the shape — the steps and the total price, Run)
+     or its Builder (the steps as linked cards: add a step from Picture · Video from it · Sharper copy · Voiceover · Music, change
+     its words, engine and length, move it, remove it; the rules the server follows are checked here: up to 5 steps, a video
+     step comes first or after a picture, a sharper copy after a picture or a video)
+   · runs appear beside the form with what each step made; My workflows are the same as My recipes (one list) */
+const STEPK256=Object.assign({},STEP83,{music:["music","Music","موسيقى"]});
+const FLOWTPL256=[
+  {id:"t256story",name:["Moment with music","لحظة بموسيقى"],desc:["A cinematic picture, a video from it, then music for it.","صورة سينمائية، ثم فيديو منها، ثم موسيقى لها."],aspect:"16:9",
+   steps:[{kind:"image",prompt:"{idea}. Cinematic still, natural light, a clear subject, no text."},{kind:"video",dur:5,prompt:"Gentle push-in, natural motion, calm and cinematic."},{kind:"music",prompt:"{idea}. Calm cinematic background music, warm and hopeful."}]},
+  {id:"t256portrait",name:["Sharp portrait","بورتريه واضح"],desc:["A portrait picture, then a sharper, larger copy.","صورة بورتريه، ثم نسخة أوضح وأكبر."],aspect:"1:1",
+   steps:[{kind:"image",prompt:"{idea}. Portrait, soft window light, 85mm lens, natural skin, no text."},{kind:"finish"}]}];
+if(!STEP83.music)STEP83.music=["music","Music","موسيقى"];   // (Recipes shows a Music step too — a saved workflow is a recipe)
+const flowCost256=(s,f)=>s.kind==="music"?((PRICE_TABLE.fixed&&PRICE_TABLE.fixed.music)||15):recStepCost83(s,f);
+const FL256=()=>{const o=S.fl256&&typeof S.fl256==="object"?S.fl256:(S.fl256={});for(const [k,v] of [["tab","tpl"],["open",""],["mode","form"]])if(o[k]===undefined)o[k]=v;return o};   // (the same object every time)
+const flowAll256=()=>RECIPES83.concat(FLOWTPL256.filter(t=>!RECIPES83.some(x=>x.id===t.id)),R83().mine);
+const flowName256=f=>Array.isArray(f.name)?L(f.name[0],f.name[1]):String(f.name||L("My workflow","سير عملي"));
+const flowDesc256=f=>Array.isArray(f.desc)?L(f.desc[0],f.desc[1]):String(f.desc||"");
+const isMine256=f=>R83().mine.some(x=>x.id===f.id);
+// what the server accepts: up to 5 steps; a video first or after a picture; a sharper copy after a picture or a video
+function flowCheck256(steps){if(!steps.length)return L("Add a first step.","أضف خطوة أولى.");if(steps.length>5)return L("A workflow has up to 5 steps.","سير العمل حتى 5 خطوات.");
+  for(let i=0;i<steps.length;i++){const k=steps[i].kind,p=i?steps[i-1].kind:"";
+    if(k==="video"&&i&&p!=="image")return L("Step "+(i+1)+": a video starts from a picture — put a Picture step before it.","الخطوة "+(i+1)+": الفيديو يبدأ من صورة — ضع خطوة صورة قبلها.");
+    if(k==="finish"&&(!i||!["image","video"].includes(p)))return L("Step "+(i+1)+": a sharper copy needs a picture or a video before it.","الخطوة "+(i+1)+": النسخة الأوضح تحتاج صورة أو فيديو قبلها.")}
+  return""}
+const flowNeeds256=f=>{const t=f.steps.map(s=>s.prompt||"").join(" ");return{idea:/\{idea\}/.test(t),voice:/\{voice\}/.test(t)||f.steps.some(s=>s.kind==="voice")}};
+const FGR256=[["#ff8a3d","#ffc23d"],["#7c5cff","#c84bff"],["#12b886","#0ea5e9"],["#e64980","#ff8787"],["#1c7ed6","#22b8cf"],["#5c940d","#c0eb75"],["#862e9c","#e599f7"],["#d9480f","#ffa94d"]];
+function flowCover256(f){let h=0;for(const ch of String(f.id))h=(h*31+ch.charCodeAt(0))>>>0;const g=FGR256[h%FGR256.length];
+  return'<div class="fcov256" style="background:linear-gradient(150deg,'+g[0]+","+g[1]+')"><div class="fic256">'+f.steps.map(s=>'<i>'+ic((STEPK256[s.kind]||STEPK256.image)[0])+"</i>").join('<em aria-hidden="true"></em>')+"</div></div>"}
+function flowCard256(f){return'<button type="button" class="fcard256" data-fl256="'+esc(f.id)+'">'+flowCover256(f)+'<div class="fcv256"><span class="cat253">'+esc(f.steps.length+" "+L(f.steps.length===1?"step":"steps",f.steps.length===1?"خطوة":"خطوات"))+'</span><b dir="auto">'+esc(flowName256(f))+'</b><span dir="auto">'+esc(flowDesc256(f))+"</span></div></button>"}
+function flowList256(){const F=FL256(),mine=R83().mine,list=F.tab==="mine"?mine:RECIPES83.concat(FLOWTPL256.filter(t=>!RECIPES83.some(x=>x.id===t.id)));
+  return'<div class="spread fhead256"><div><h1>'+esc(L("Workflows","سير العمل"))+'</h1><p class="lede">'+esc(L("Chain the tools: a picture, a video from it, a sharper copy, a voice, music. Save it, then run it again with one tap — each step starts from the one before.","اربط الأدوات: صورة، ثم فيديو منها، ثم نسخة أوضح، ثم صوت وموسيقى. احفظه ثم شغّله من جديد بضغطة — كل خطوة تبدأ من التي قبلها."))+'</p></div><button type="button" class="btn primary" data-act="fl256-new">'+ic("plus")+esc(L("Create a workflow","أنشئ سير عمل"))+"</button></div>"+
+    '<div class="ftabs256" role="tablist">'+[["tpl",L("Templates","القوالب")],["mine",L("My workflows","سير عملي")+" ("+mine.length+")"]].map(t=>'<button role="tab" data-fl256tab="'+t[0]+'" aria-selected="'+(F.tab===t[0])+'">'+esc(t[1])+"</button>").join("")+"</div>"+
+    (list.length?'<div class="fgrid256">'+list.map(flowCard256).join("")+"</div>":'<div class="fempty256">'+esc(L("No workflows of your own yet — open a template and save it, or create one.","لا يوجد سير عمل خاص بك بعد — افتح قالباً واحفظه، أو أنشئ واحداً."))+"</div>")}
+function flowStepCard256(s,i,n,f){const k=STEPK256[s.kind]||STEPK256.image,mine=isMine256(f),vids=["auto"].concat(Object.keys(MODELS).filter(x=>x!=="auto"&&modelAllowed(x))),imgs=Object.keys(IMG_MODELS).filter(x=>typeof imgAllowed!=="function"||imgAllowed(x)).slice(0,14);
+  return'<div class="fnode256" data-i="'+i+'"><div class="fnh256"><span class="fni256">'+ic(k[0])+'</span><b>'+(i+1)+" · "+esc(L(k[1],k[2]))+'</b><small class="mute">'+flowCost256(s,f)+" cr</small></div>"+
+    (s.kind==="finish"?'<p class="small mute" style="margin:6px 0 0">'+esc(L("Makes the result before it sharper and larger.","يجعل النتيجة التي قبلها أوضح وأكبر."))+"</p>":
+     '<textarea data-fl256p="'+i+'" dir="auto" rows="3"'+(mine?"":" readonly")+' aria-label="'+esc(L("What this step asks","ما تطلبه هذه الخطوة"))+'">'+esc(s.prompt||"")+"</textarea>")+
+    (mine&&s.kind==="video"?'<div class="fopt256"><select data-fl256m="'+i+'" aria-label="'+esc(L("Engine","المحرك"))+'">'+vids.map(x=>'<option value="'+x+'"'+((s.model||"auto")===x?" selected":"")+">"+esc(x==="auto"?"nooi Auto":(MODELS[x]||{}).name||x)+"</option>").join("")+'</select><select data-fl256d="'+i+'" aria-label="'+esc(L("Length","المدة"))+'">'+[3,5,8,10].map(d=>'<option value="'+d+'"'+((+s.dur||5)===d?" selected":"")+">"+d+L(" s"," ث")+"</option>").join("")+"</select></div>":"")+
+    (mine&&s.kind==="image"?'<div class="fopt256"><select data-fl256m="'+i+'" aria-label="'+esc(L("Engine","المحرك"))+'"><option value="">'+esc(L("Picture engine: auto","محرك الصورة: تلقائي"))+"</option>"+imgs.map(x=>'<option value="'+x+'"'+(s.model===x?" selected":"")+">"+esc((IMG_MODELS[x]||{}).name||x)+"</option>").join("")+"</select></div>":"")+
+    (mine?'<div class="fna256"><button type="button" class="btn ghost sm" data-fl256mv="'+i+'" data-d="-1"'+(i?"":" disabled")+' aria-label="'+esc(L("Move earlier","انقل للأمام"))+'">'+ic("chevron")+'</button><button type="button" class="btn ghost sm" data-fl256mv="'+i+'" data-d="1"'+(i<n-1?"":" disabled")+' aria-label="'+esc(L("Move later","انقل للخلف"))+'">'+ic("chevron")+'</button><button type="button" class="btn ghost sm" data-fl256rm="'+i+'" aria-label="'+esc(L("Remove the step","احذف الخطوة"))+'">'+ic("trash")+"</button></div>":"")+"</div>"}
+function flowRuns256(f){const name=flowName256(f),runs=(R83().runs||[]).filter(r=>String(r.title||"").startsWith(name)).slice(-4).reverse();
+  if(!runs.length)return'<div class="panel pad"><div class="empty" style="min-height:140px">'+esc(L("What this workflow makes appears here.","يظهر هنا ما يصنعه سير العمل هذا."))+"</div></div>";
+  return runs.map(run=>{const js=run.jobs.map(id=>S.jobs.find(x=>x.id===id)).filter(Boolean);return'<div class="panel pad frun256"><div class="spread"><b dir="auto">'+esc(run.title)+'</b><span class="badge">'+esc(run.status==="done"?L("Done","تم"):run.status==="running"?L("Running","يعمل")+" · "+Math.min(js.length,run.total)+"/"+run.total:L("Stopped","توقف"))+"</span></div>"+
+    '<div class="strip">'+js.map(j=>'<div data-open-job="'+j.id+'" role="button" tabindex="0">'+thumb("j:"+j.id,{dur:j.kind==="image"?null:j.dur})+"</div>").join("")+"</div>"+(run.msg?'<p class="small warn83" style="margin:8px 0 0">'+esc(run.msg)+"</p>":"")+"</div>"}).join("")}
+function flowOpen256(f){const F=FL256(),R=R83(),mine=isMine256(f),need=flowNeeds256(f),bad=flowCheck256(f.steps),cost=f.steps.reduce((n,s)=>n+flowCost256(s,f),0),aspect=f.aspect||"16:9";
+  const bar='<div class="fbar256"><button type="button" class="btn ghost sm" data-act="fl256-back">'+ic("chevron")+esc(L("All workflows","كل سير العمل"))+'</button>'+
+    '<div class="seg fmode256"><button data-fl256mode="form" aria-pressed="'+(F.mode!=="build")+'">'+esc(L("Form","النموذج"))+'</button><button data-fl256mode="build" aria-pressed="'+(F.mode==="build")+'">'+esc(L("Builder","البنّاء"))+"</button></div>"+
+    (mine?'<input class="fname256" data-fl256name="1" dir="auto" value="'+esc(flowName256(f))+'" aria-label="'+esc(L("Name","الاسم"))+'">':'<b class="fname256" dir="auto">'+esc(flowName256(f))+"</b>")+"</div>";
+  const chain='<div class="fchain256">'+f.steps.map((s,i)=>flowStepCard256(s,i,f.steps.length,f)+(i<f.steps.length-1?'<span class="flink256" aria-hidden="true"></span>':"")).join("")+
+    (mine&&f.steps.length<5?'<div class="fadd256"><span class="small mute">'+esc(L("Add a step","أضف خطوة"))+'</span>'+["image","video","finish","voice","music"].map(k=>'<button type="button" class="chip" data-fl256add="'+k+'">'+ic(STEPK256[k][0])+esc(L(STEPK256[k][1],STEPK256[k][2]))+"</button>").join("")+"</div>":"")+"</div>";
+  const form='<div class="panel pad">'+(need.idea?'<label class="lbl" style="margin-top:0" for="fl256idea">'+esc(L("Your idea","فكرتك"))+'</label><textarea id="fl256idea" data-bind="rec83.idea" dir="auto" style="min-height:76px" placeholder="'+esc(L("e.g. a glass bottle of oud perfume on black marble","مثال: زجاجة عطر عود على رخام أسود"))+'">'+esc(R.idea)+"</textarea>":"")+
+    (need.voice?'<label class="lbl" for="fl256voice">'+esc(L("Voiceover words","كلمات التعليق الصوتي"))+'</label><textarea id="fl256voice" data-bind="rec83.voice" dir="auto" style="min-height:56px">'+esc(R.voice)+"</textarea>":"")+
+    '<span class="lbl">'+esc(L("Format","الأبعاد"))+'</span><div class="seg">'+["9:16","16:9","1:1"].map(a=>'<button data-set="rec83.aspect" data-val="'+a+'" aria-pressed="'+((R.aspect||aspect)===a)+'">'+a+"</button>").join("")+"</div>"+
+    '<span class="lbl">'+esc(L("The steps","الخطوات"))+'</span><ol class="rsteps83">'+f.steps.map((s,i)=>'<li><span class="rsi83">'+ic((STEPK256[s.kind]||STEPK256.image)[0])+"</span><div><b>"+esc(L((STEPK256[s.kind]||STEPK256.image)[1],(STEPK256[s.kind]||STEPK256.image)[2]))+(s.kind==="video"?" · "+(s.dur||5)+L(" s"," ث"):"")+'</b><small class="mute">'+flowCost256(s,f)+" cr</small></div></li>").join("")+"</ol>"+
+    (bad?'<p class="small warn83" role="alert">'+esc(bad)+"</p>":'<p class="small mute" style="margin:8px 0 0">'+esc(L("Each step is held when it starts, charged when it's made and given back if it fails. If a step fails, the steps after it don't run.","كل خطوة تُحجز عند بدئها، وتُخصم عند صنعها، وتُسترجع إذا فشلت. وإذا فشلت خطوة لا تعمل الخطوات بعدها."))+"</p>")+
+    '<div class="row" style="margin-top:14px"><button class="btn primary big" data-act="fl256-run"'+(bad?" disabled":"")+">"+ic("play")+esc(L("Run","شغّل"))+'<span class="cost">'+cost+' cr</span></button>'+(mine?'<button class="btn ghost" data-act="fl256-del">'+ic("trash")+esc(L("Delete","حذف"))+"</button>":'<button class="btn" data-act="fl256-copy">'+ic("plus")+esc(L("Save as mine to change it","احفظه كخاص بي لتعدّله"))+"</button>")+"</div></div>";
+  return bar+(F.mode==="build"?(mine?"":'<p class="small mute">'+esc(L("A template can't be changed — save it as yours first.","لا يمكن تغيير القالب — احفظه كخاص بك أولاً."))+' <button class="btn sm" data-act="fl256-copy">'+esc(L("Save as mine","احفظه كخاص بي"))+"</button></p>")+chain+(bad?'<p class="small warn83" role="alert">'+esc(bad)+"</p>":""):'<div class="two82 ftwo256">'+form+'<div class="runs83">'+flowRuns256(f)+"</div></div>")}
+VIEWS.flow256=()=>{const F=FL256(),f=F.open&&flowAll256().find(x=>x.id===F.open);return'<div class="view flow256">'+(f?flowOpen256(f):flowList256())+"</div>"};
+TOOLDESC.flow256=["Chain the tools and run them in one go.","اربط الأدوات وشغّلها دفعة واحدة."];
+const curFlow256=()=>{const F=FL256();return flowAll256().find(x=>x.id===F.open)};
+const mineFlow256=()=>{const f=curFlow256();return f&&isMine256(f)?f:null};
+function copyFlow256(f){const R=R83(),id="my"+uid(),c={id,name:flowName256(f),desc:flowDesc256(f),aspect:f.aspect,video:f.video,voice:f.voice||f.steps.some(s=>s.kind==="voice"),steps:f.steps.map(s=>Object.assign({},s))};R.mine.push(c);R.mine=R.mine.slice(-12);return c}
+document.addEventListener("click",e=>{const t=e.target;if(!t.closest)return;const F=FL256();let x;
+  if((x=t.closest("[data-fl256]"))){F.open=x.dataset.fl256;F.mode="form";persist();renderView();$("#main").scrollTop=0;return}
+  if((x=t.closest("[data-fl256tab]"))){F.tab=x.dataset.fl256tab;persist();renderView();return}
+  if((x=t.closest("[data-fl256mode]"))){F.mode=x.dataset.fl256mode;persist();renderView();return}
+  if(t.closest('[data-act="fl256-back"]')){F.open="";persist();renderView();return}
+  if(t.closest('[data-act="fl256-new"]')){const c=copyFlow256({name:L("My workflow","سير عملي"),desc:"",aspect:"16:9",steps:[{kind:"image",prompt:"{idea}. Cinematic still, natural light, no text."}]});F.open=c.id;F.mode="build";F.tab="mine";persist();renderView();return}
+  if(t.closest('[data-act="fl256-copy"]')){const f=curFlow256();if(!f)return;const c=copyFlow256(f);F.open=c.id;F.mode="build";F.tab="mine";persist();renderView();toast(L("Saved as yours — change any step.","حُفظ كخاص بك — غيّر أي خطوة."),{type:"ok"});return}
+  if(t.closest('[data-act="fl256-del"]')){const f=mineFlow256();if(!f)return;const R=R83();R.mine=R.mine.filter(y=>y.id!==f.id);F.open="";F.tab="mine";persist();renderView();return}
+  if((x=t.closest("[data-fl256add]"))){const f=mineFlow256();if(!f||f.steps.length>=5)return;const k=x.dataset.fl256add;
+    f.steps.push(k==="finish"?{kind:"finish"}:k==="video"?{kind:"video",dur:5,prompt:"Gentle camera move, natural motion."}:k==="voice"?{kind:"voice",prompt:"{voice}"}:k==="music"?{kind:"music",prompt:"{idea}. Background music that fits."}:{kind:"image",prompt:"{idea}. Cinematic still, natural light, no text."});
+    if(k==="voice")f.voice=true;persist();renderView();return}
+  if((x=t.closest("[data-fl256rm]"))){const f=mineFlow256();if(!f)return;f.steps.splice(+x.dataset.fl256rm,1);persist();renderView();return}
+  if((x=t.closest("[data-fl256mv]"))){const f=mineFlow256();if(!f)return;const i=+x.dataset.fl256mv,j=i+(+x.dataset.d);if(j<0||j>=f.steps.length)return;[f.steps[i],f.steps[j]]=[f.steps[j],f.steps[i]];persist();renderView();return}
+  if(t.closest('[data-act="fl256-run"]')){e.preventDefault();e.stopImmediatePropagation();const f=curFlow256();if(!f)return;const bad=flowCheck256(f.steps);if(bad){toast(bad,{type:"warn"});return}
+    const R=R83();R.sel=f.id;
+    // (the workflow runs on the Recipes engine: it is picked as the recipe and the recipe's Run is pressed; a Workflows-only
+    // template is lent to the Recipes list for that moment)
+    const lend=!RECIPES83.concat(R.mine).some(y=>y.id===f.id);if(lend)RECIPES83.push(f);
+    const b=document.createElement("button");b.dataset.act="rec-run";b.hidden=true;document.body.appendChild(b);try{b.click()}finally{b.remove();if(lend){const k=RECIPES83.indexOf(f);if(k>=0)RECIPES83.splice(k,1)}}
+    S.view="flow256";persist();renderView();return}},true);
+document.addEventListener("input",e=>{const t=e.target;if(!t||!t.dataset)return;const f=mineFlow256();if(!f)return;
+  if(t.dataset.fl256p!=null){f.steps[+t.dataset.fl256p].prompt=t.value;persist()}
+  else if(t.dataset.fl256name){f.name=t.value.slice(0,40);persist()}});
+document.addEventListener("change",e=>{const t=e.target;if(!t||!t.dataset)return;const f=mineFlow256();if(!f)return;
+  if(t.dataset.fl256m!=null){const s=f.steps[+t.dataset.fl256m];s.model=t.value||undefined;if(s.kind==="video")f.video=undefined;persist();renderView()}
+  else if(t.dataset.fl256d!=null){f.steps[+t.dataset.fl256d].dur=+t.value;persist();renderView()}});
+// the menu: Workflows first in Agents & automation
+sbHubs253=(o=>function(){const out=o.apply(this,arguments),g=out.find(x=>x[0]==="auto");if(g&&!g[4].some(t=>t[0]==="flow256"))g[4].splice(1,0,["flow256","tools","Workflows","سير العمل"]);return out})(sbHubs253);
+curHub253=(o=>function(){return(ALIAS82[S.view]||S.view)==="flow256"?"auto":o.apply(this,arguments)})(curHub253);
+(()=>{const st=document.createElement("style");st.textContent=`
+.flow256 .fhead256{align-items:flex-start;gap:16px;flex-wrap:wrap}.flow256 .fhead256 h1{margin:0 0 4px}
+.ftabs256{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:14px 0 18px}
+.ftabs256 button{border:0;background:none;color:var(--mute);font:600 14px/1 var(--sans);padding:10px 12px;border-bottom:2px solid transparent;cursor:pointer}
+.ftabs256 button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--lime)}
+.fgrid256{display:grid;gap:16px;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (min-width:760px){.fgrid256{grid-template-columns:repeat(3,minmax(0,1fr))}}@media (min-width:1100px){.fgrid256{grid-template-columns:repeat(4,minmax(0,1fr))}}@media (min-width:1500px){.fgrid256{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.fcard256{position:relative;aspect-ratio:3/4;border-radius:16px;overflow:hidden;border:1px solid var(--line2);background:var(--panel);padding:0;cursor:pointer;text-align:start;transition:transform .18s ease,border-color .18s ease}
+.fcard256:hover{border-color:var(--lime);transform:translateY(-2px)}.fcard256:hover b{color:var(--lime)}
+.fcov256{position:absolute;inset:0;display:grid;place-items:center}
+.fic256{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;padding:0 14px;margin-top:-30%}
+.fic256 i{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(0,0,0,.25);color:#fff;font-style:normal}.fic256 i svg{width:20px;height:20px}
+.fic256 em{width:12px;height:2px;background:rgba(255,255,255,.7);border-radius:2px}
+.fcv256{position:absolute;inset-inline:0;bottom:0;padding:48px 14px 14px;display:flex;flex-direction:column;gap:4px;background:linear-gradient(to top,rgba(0,0,0,.88),rgba(0,0,0,.5) 60%,transparent);color:#fff}
+.fcv256 b{font:700 15px/1.25 var(--sans);transition:color .15s}.fcv256>span:last-child{font-size:12.5px;color:rgba(255,255,255,.8);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fempty256{padding:36px;border:1px dashed var(--line2);border-radius:16px;text-align:center;color:var(--mute)}
+.fbar256{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0 18px}
+[dir="ltr"] .fbar256>.btn svg{transform:scaleX(-1)}
+.fname256{margin-inline-start:auto;font:600 16px/1.2 var(--sans);color:var(--lime)}input.fname256{background:none;border:1px solid var(--line2);border-radius:10px;padding:8px 10px;max-width:260px}
+.fchain256{display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding:4px 2px 14px;scrollbar-width:thin}
+.fnode256{flex:none;width:260px;display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:16px;border:1px solid var(--line2);background:var(--panel)}
+.fnh256{display:flex;align-items:center;gap:8px}.fnh256 b{flex:1;font-size:14px}.fni256{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:color-mix(in srgb,var(--lime) 16%,transparent);color:var(--lime)}.fni256 svg{width:16px;height:16px}
+.fnode256 textarea{min-height:84px;font-size:13px}.fopt256{display:flex;gap:6px}.fopt256 select{flex:1;min-width:0}
+.fna256{display:flex;gap:4px;justify-content:flex-end}.fna256 [data-d="-1"] svg{transform:scaleX(-1)}[dir="rtl"] .fna256 [data-d="-1"] svg{transform:none}[dir="rtl"] .fna256 [data-d="1"] svg{transform:scaleX(-1)}
+.flink256{flex:none;width:28px;align-self:center;height:2px;background:var(--lime);position:relative}.flink256::after{content:"";position:absolute;inset-inline-end:-1px;top:-4px;border:5px solid transparent;border-inline-start-color:var(--lime)}
+.fadd256{flex:none;width:220px;margin-inline-start:16px;display:flex;flex-direction:column;gap:6px;padding:14px;border-radius:16px;border:1px dashed var(--line2)}
+.fadd256 .chip{justify-content:flex-start;gap:8px}.fadd256 .chip svg{width:16px;height:16px;flex:none}
+.fbar256>.btn svg{width:15px;height:15px}
+@media (max-width:767px){.fchain256{flex-direction:column;overflow:visible;align-items:stretch}.fnode256,.fadd256{width:auto}.fadd256{margin:14px 0 0}.flink256{width:2px;height:22px;align-self:center}.flink256::after{inset-inline-end:auto;left:-4px;top:auto;bottom:-6px;border:5px solid transparent;border-top-color:var(--lime)}}
+`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;
