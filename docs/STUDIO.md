@@ -718,3 +718,12 @@ Ideas taken from the open-source video-editing-skill project (MIT), rewritten in
 - **Waiting:** a job that isn't finished shows its stage and how long it has run (m:ss). For Seedance it adds a note that it usually takes 2–8 minutes, and longer for long videos, which are made in parts.
 - **One header:** the editor wears the site's own header: the logo (to Home), the site's sections, theme, search, credits (to Plans), language, Library and the account. Below 1180 px wide the sections sit behind the menu button, so nothing overlaps on tablets or phones. The editor's own bar (file, undo, export…) sits under it.
 - Tests: `tests/v251.py`, `tests/v251_route.mjs`. `v231`, `v232` and `v236` were updated to the new header. `v246` now checks the balance note (not the whole reply, where a time stamp can hold "404").
+
+## v252 — "The provider couldn't process this request" on Seedance 2.0 (why.sh)
+
+- **What was wrong:** the screen showed only the short customer line, never what ByteDance said. ByteDance's own reasons (a real person's face, for example) were also lost on the way to the customer (`lib/errors.js classify` dropped them), so the customer saw the generic line.
+- **Now:**
+  - ByteDance's own words reach the customer when we have them (for example, its real-face message).
+  - A video ByteDance turns down for any other reason goes to the owner's MiniMax key once, when MiniMax can make it (from words or a picture). MiniMax's videos are silent. The customer is charged only once it's made. A real face is still never sent elsewhere.
+  - `deploy/why.sh` shows each failed job's time in UTC and how long ago, plus **what the maker said** (its own words, keys hidden). A new section, **jobs being made now**, shows each job's stage, where it is, how many minutes it has waited, its parts, and a ⚠ after 20 minutes.
+- Tests: `tests/v252.py`, plus `v185`, `v237`–`v241`, `v246`–`v251`.

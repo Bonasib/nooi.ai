@@ -44,9 +44,18 @@ const VID = /\.(mp4|mov|webm|mkv|m4v)(\?|$)/i, mask = (x) => String(x || "").rep
 console.log(`\n── the last ${jobs.length} failed jobs (newest first)`);
 for (const j of jobs) { const p = j.payload || {}, inp = p.inputs || {};
   const cant = /^mc(26|30|swap)$/.test(String(p.model || "")) ? "Motion Control / Character Swap" : ["lipsync", "avatar", "swap"].includes(String(p.kind || "")) ? p.kind : Object.values(inp).some((v) => VID.test(String(v || ""))) ? "starts from a video" : "";
-  console.log(`• ${new Date(j.created || 0).toISOString().slice(0, 16).replace("T", " ")} · ${p.kind || j.kind} · model ${p.model || "auto"} · went to ${mask(j.prov) || "?"}${j.own185 ? " (after " + mask(j.own185) + ")" : ""}`);
+  const ago = (t) => { const m = Math.round((Date.now() - (t || 0)) / 60000); return m < 60 ? m + " min ago" : m < 2880 ? Math.round(m / 60) + " h ago" : Math.round(m / 1440) + " days ago"; };
+  console.log(`• ${new Date(j.created || 0).toISOString().slice(0, 16).replace("T", " ")} UTC (${ago(j.created)}) · ${p.kind || j.kind} · model ${p.model || "auto"} · went to ${mask(j.prov) || "?"}${j.own185 ? " (after " + mask(j.own185) + ")" : ""}`);
   console.log(`    why: ${mask(j.error || (j.errors || []).slice(-1)[0] || "?").slice(0, 220)}`);
+  // v252: what the maker itself said (the customer sees the short line above) — keys never shown
+  { const raw = [...(j.errors || []), j.errorDetail ? (j.prov || "") + ": " + j.errorDetail : ""].filter(Boolean).slice(-3).map((x) => mask(x).replace(/(Bearer\s+|api[_-]?key["=: ]+)[A-Za-z0-9._-]{8,}/gi, "$1…").slice(0, 260));
+    if (raw.length) console.log(`    what the maker said: ${raw.join(" | ")}`); }
   console.log(`    MiniMax could make it: ${cant ? "NO — " + cant + (p.model === "mcswap" ? " (from v246 the ByteDance key takes Character Swaps first; a real face then needs the AI engine balance)" : " (needs the AI engine balance)") : "yes"}`);
   if (j.mmWhy239) console.log(`    why MiniMax did not take over: ${j.mmWhy239}`); }
 if (!jobs.length) console.log("  (none)");
+// v252: the jobs still being made — how long each has waited and where (Seedance usually 2-8 min; a long video is made in parts)
+{ const live = Object.values(db.users || {}).flatMap((U) => Object.values(U.jobs || {})).filter((j) => j && ["queued", "rendering"].includes(j.status)).sort((a, b) => (a.created || 0) - (b.created || 0));
+  console.log(`\n── jobs being made now: ${live.length}`);
+  for (const j of live.slice(-12)) { const p = j.payload || {}, min = Math.round((Date.now() - (j.created || 0)) / 60000);
+    console.log(`• ${p.kind || j.kind} · model ${p.model || "auto"} · ${j.status}${j.stage ? " (" + j.stage + ")" : ""} · at ${mask(j.prov) || "?"} · ${min} min${j.partsTotal ? " · parts " + (j.partsDone || 0) + "/" + j.partsTotal : ""}${j.remoteId ? "" : " · not sent yet"}${min > 20 ? "  ⚠ longer than usual" : ""}`); } }
 '
