@@ -26069,6 +26069,29 @@ VIEWS.video=(o=>function(){const h=o.apply(this,arguments),ex=hqEx257();if(typeo
 addJob=(o=>function(j){if(j&&j.kind==="video"&&S.view==="video"&&S.draft&&S.draft.hq257&&hqParts257()>1){j.meta=Object.assign({},j.meta,{hq257:1});const n=hqParts257();if(typeof j.cost==="number")j.cost+=n*3*((IMG_MODELS.nano&&IMG_MODELS.nano.cr)||5)}
   return o.apply(this,arguments)})(addJob);
 
+/* ================= v258: A SCRIPT OR A CHAPTER BECOMES THE FILM (after ViMax's Script2Video / Novel2Video) =================
+   nooi Studio has a Script chip: paste a screenplay, a story or a novel's chapter (up to 30,000 characters). The agents condense a
+   long text to its key events, then plan the film's shots in its own order — the characters' names, the places, one line of
+   dialogue a shot; the shots are made as usual (Best quality works too). A short length makes one shot: the chip says so. */
+const SCR258=30000;
+const scrSec258=()=>{const d=S.draft||{},t=String(d.script258||""),n=typeof parts132==="function"?parts132(d.model,d.dur):1;
+  return'<p class="small mute" style="margin:0 0 8px">'+esc(L("Paste a script, a story or a chapter. The agents keep its events in order, its characters and places, and one line of dialogue a shot.","الصق سيناريو أو قصة أو فصلاً من رواية. يحافظ الوكلاء على أحداثه بترتيبها، وشخصياته وأماكنه، وجملة حوار واحدة في كل لقطة."))+"</p>"+
+  '<textarea data-scr258="1" dir="auto" rows="8" maxlength="'+SCR258+'" style="min-height:160px;width:100%" placeholder="'+esc(L("INT. OLD SOUK — DAY\nLayla walks between the spice stalls…","داخلي. السوق القديم — نهار\nتمشي ليلى بين دكاكين البهارات…"))+'">'+esc(t)+"</textarea>"+
+  '<div class="spread small mute" style="margin-top:6px"><span data-scr258n="1">'+t.length.toLocaleString("en")+" / "+SCR258.toLocaleString("en")+"</span>"+(t?'<button type="button" class="btn ghost sm" data-act="scr258-clear">'+esc(L("Clear","مسح"))+"</button>":"")+"</div>"+
+  (t&&n<=1?'<p class="small warn83" role="note">'+esc(L("This length makes one shot — set Length & frames to 30 s or more to film the whole script.","هذه المدة تصنع لقطة واحدة — اجعل المدة 30 ث أو أكثر لتصوير السيناريو كله."))+"</p>":t?'<p class="small mute">'+esc(L("It becomes "+n+" shots.","سيصبح "+n+" لقطات."))+"</p>":"")};
+box93=(o=>function(panel,spec){if(Array.isArray(spec)&&S.view==="video"&&!spec.some(x=>x.key==="scr258")){const i=spec.findIndex(x=>x.key==="length");
+    if(i>=0)spec.splice(i,0,{key:"scr258",icon:svg('<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 11h7M9 14h7M9 17h4"/>'),title:L("Script","السيناريو"),value:()=>{const t=String((S.draft||{}).script258||"");return t?Math.max(1,Math.round(t.split(/\s+/).length))+L(" words"," كلمة"):L("None","بدون")},html:scrSec258,test:()=>false})}
+  return o.apply(this,arguments)})(box93);
+document.addEventListener("input",e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.scr258)return;S.draft.script258=t.value.slice(0,SCR258);persist();const n=document.querySelector("[data-scr258n]");if(n)n.textContent=t.value.length.toLocaleString("en")+" / "+SCR258.toLocaleString("en");
+  const v=document.querySelector('#main [data-o93="scr258"] .o93v');if(v)v.textContent=t.value.trim()?Math.max(1,t.value.trim().split(/\s+/).length)+L(" words"," كلمة"):L("None","بدون")});
+document.addEventListener("change",e=>{const t=e.target;if(t&&t.dataset&&t.dataset.scr258)renderView()});
+document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest('[data-act="scr258-clear"]')){S.draft.script258="";persist();renderView()}});
+// the job carries the script; with no words of its own, its first line is the idea (the title)
+makeVideo=(o=>function(){const d=S.draft,sc=S.view==="video"&&String(d&&d.script258||"").trim(),orig=d&&d.prompt;if(!sc)return o.apply(this,arguments);
+  if(!String(orig||"").trim())d.prompt=sc.split(/\n/).map(x=>x.trim()).filter(Boolean)[0].slice(0,120);
+  const ad=addJob;addJob=function(j){if(j&&j.kind==="video")j.meta=Object.assign({},j.meta,{script258:sc.slice(0,SCR258)});return ad.apply(this,arguments)};
+  try{return o.apply(this,arguments)}finally{addJob=ad;if(!String(orig||"").trim())d.prompt=orig||""}})(makeVideo);
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

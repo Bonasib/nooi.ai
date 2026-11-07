@@ -795,3 +795,13 @@ nooi Studio shows a **Quality** chip when a video is made of several parts: Stan
 - **Each shot's last picture** is drawn from its first with the planned ending. Its part gets it as the end frame (the customer's own end frame still wins on the last part).
 - **Price:** 3 extra pictures a part at the picture engine's price. It's added to Generate's price before anything is made, and the server holds the same (`hqExtra257`). It applies only where the shots are drawn (not one continuous take, not a storyboard).
 - Tests: `tests/v257.py` (stand-in engine and text AI) and `tests/v257_page.py`; `v136` and `v255_plan` still pass.
+
+## v258 — a script or a chapter becomes the film (after ViMax's Script2Video / Novel2Video)
+
+- **nooi Studio has a Script chip:** paste a screenplay, a story or a novel's chapter (up to 30,000 characters). The chip shows the word count. When the length makes only one shot, it says so (30 s or more films the whole script).
+- **The agents:**
+  - A long text (over 6,000 characters) is first condensed by the story editor into its key events, in order: names and looks, places, and the lines of dialogue that matter, word for word.
+  - The planner then adapts it into the film's shots in its own order, with at most one quoted line of dialogue a shot, in its own language. Best quality (v257), the camera positions and the people in each shot (v255) all apply.
+  - With no text AI connected, the text is cut into the shots in order, sentences kept whole.
+- **The job** keeps the script once (`meta.script258`); its parts don't carry it. With no words of its own, the script's first line is the idea and the title.
+- Tests: `tests/v258.py` (stand-in engine and text AI), `tests/v258_plan.mjs`, `tests/v258_page.py`; `v93`, `v98`, `v254` and `v257_page` still pass.
