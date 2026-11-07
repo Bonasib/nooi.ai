@@ -35,7 +35,7 @@ for (const j of jobs) { const p = j.payload || {}, inp = p.inputs || {};
   const cant = /^mc(26|30|swap)$/.test(String(p.model || "")) ? "Motion Control / Character Swap" : ["lipsync", "avatar", "swap"].includes(String(p.kind || "")) ? p.kind : Object.values(inp).some((v) => VID.test(String(v || ""))) ? "starts from a video" : "";
   console.log(`• ${new Date(j.created || 0).toISOString().slice(0, 16).replace("T", " ")} · ${p.kind || j.kind} · model ${p.model || "auto"} · went to ${mask(j.prov) || "?"}${j.own185 ? " (after " + mask(j.own185) + ")" : ""}`);
   console.log(`    why: ${mask(j.error || (j.errors || []).slice(-1)[0] || "?").slice(0, 220)}`);
-  console.log(`    MiniMax could make it: ${cant ? "NO — " + cant + " (needs the AI engine balance)" : "yes"}`);
+  console.log(`    MiniMax could make it: ${cant ? "NO — " + cant + (p.model === "mcswap" ? " (from v246 the ByteDance key takes Character Swaps first; a real face then needs the AI engine balance)" : " (needs the AI engine balance)") : "yes"}`);
   if (j.mmWhy239) console.log(`    why MiniMax did not take over: ${j.mmWhy239}`); }
 if (!jobs.length) console.log("  (none)");
 '

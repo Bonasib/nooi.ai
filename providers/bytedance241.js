@@ -15,7 +15,7 @@
 import fs from "fs";
 import path from "path";
 import { cfg, configured, S as settingsS } from "../lib/settings.js";
-import { kieInput } from "./kie.js";
+import { kieInput, swapEngine, SWAP_MODELS } from "./kie.js";
 import { MEDIA_DIR } from "../lib/media.js";
 
 export const BD_DEFAULT241 = "https://ark.ap-southeast.bytepluses.com/api/v3";
@@ -43,6 +43,9 @@ export function bdModel241(body = {}) {
 export function bdRoute241(cap, body = {}, { mmAll = false } = {}) {
   if (cap !== "video" || !bdOn241()) return null;
   const kind = String(body.kind || ""), model = String(body.model || "");
+  // v246: a Character Swap while the swap engine is Seedance goes to the owner's key first (BytePlus refuses a real person's face —
+  // then the job moves on to the AI engine, see swapBack246)
+  if (model === "mcswap" && ["seedance", "seedancefast"].includes(swapEngine())) { const m = swapEngine() === "seedance" ? BD_MODELS241.seedance20 : BD_MODELS241.seedance; return { key: "bd@" + m, a: bytedance241(m) }; }
   if (/^mc(26|30|swap)$/.test(model) || body.meta?.swap93 || ["lipsync", "avatar", "swap", "upscale"].includes(kind)) return null;
   const edit = !!body.meta?.edit135, readsVideo = Object.values(body.inputs || {}).some((v) => VIDEO_FILE.test(String(v || "")));
   const auto = (model === "auto" || !model) && !mmAll && ["video", "chapter", ""].includes(kind) && !readsVideo;
@@ -98,3 +101,12 @@ export const bytedance241 = (model) => ({ name: "Seedance (ByteDance)", configur
     if (s === "succeeded") return d.content && d.content.video_url ? { status: "done", url: d.content.video_url } : { status: "failed", error: "Seedance (ByteDance): no video in the answer" };
     if (["failed", "expired", "cancelled"].includes(s)) { const why = (d.error && (d.error.message || d.error.code)) || s, code = String((d.error && d.error.code) || ""); return { status: "failed", error: FACES.test(why + " " + code) ? "ByteDance doesn't accept photos or videos of real people's faces for this. (" + String(why).slice(0, 160) + ")" : "Seedance (ByteDance): " + why }; }
     return { status: s === "queued" ? "queued" : "rendering" }; } });
+
+// v246: a Character Swap ByteDance turned down because of a real person's face → the same swap on the AI engine, once — unless the
+// engine is switched off (Only my MiniMax key) or is known to be out of credits; then the customer is told ByteDance's reason
+export const BD_FACE246 = /ByteDance doesn't accept photos or videos of real people's faces/;
+export function swapBack246(job, msg, { engineOk = true } = {}) {
+  const m = String((msg && (msg.userMsg || msg.message)) || msg || "");
+  if (!String(job.prov || "").startsWith("bd@") || job.payload?.model !== "mcswap" || job.triedEngine246 || !engineOk || !BD_FACE246.test(m)) return null;
+  return "kie@" + (SWAP_MODELS[swapEngine()] || SWAP_MODELS.seedancefast);
+}

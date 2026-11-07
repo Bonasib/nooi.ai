@@ -648,3 +648,13 @@ Ideas taken from the open-source video-editing-skill project (MIT), rewritten in
   - For H.264, only the frames from the cut to the next keyframe are made again, matched to the source's profile, pixel format and frame rate. Everything after the keyframe is copied: the picture data is the source's, byte for byte. The sound is cut exactly.
   - Anything else (VP9, variable frame rate, no keyframe in the range) is re-encoded as before.
   - Tested in `tests/v245_smartcut.mjs`: exact length, no decode errors, the copied packets the same, and the first frame the source's.
+
+## v246 — from the owner's why.sh: the engine's balance read again, Character Swap on the ByteDance key
+
+- **Why videos were failing:** the AI engine's account is out of credits. Character Swaps went only to it, so they all failed. Customers were refunded.
+- **The balance check had a bug.** It built its address from the saved base URL as it was. A saved base like `https://api.kie.ai/api/v1` (or `kie.ai`) gave a doubled path and a 404, so the site never saw a top-up by itself. It now uses the same cleaned address the jobs use (`kieBase`). After a top-up, the "out of credits" mark clears at the 15-minute check, or at once with Admin → Models → Connections & live status → Test.
+- **Character Swap now goes to the owner's ByteDance key first** while the swap engine is Seedance (the default). The video and the new person go as BytePlus references, and it's charged once on success.
+  - BytePlus turns down a real person's face. Then the same swap goes to the AI engine, once.
+  - If the engine is off (Only my MiniMax key) or known to be out of credits, the customer gets ByteDance's reason instead of "the engine can't take work", and nothing is charged.
+- Motion Control (Kling) and lip-sync still need the AI engine.
+- `deploy/why.sh` says this on a failed swap. Tests: `tests/v246.py`, and `tests/v241_bytedance.mjs` (updated).

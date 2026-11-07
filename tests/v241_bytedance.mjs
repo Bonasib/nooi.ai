@@ -30,7 +30,10 @@ ok(key("video", { kind: "video", model: "seedance25" }) === "bd@dreamina-seedanc
 ok(key("video", { kind: "video", model: "seedance2mini" }) === "bd@dreamina-seedance-2-0-mini-260615", "Seedance 2.0 Mini → ByteDance");
 ok(key("video", { kind: "video", model: "auto" }).startsWith("bd@"), "Auto → ByteDance");
 ok(key("video", { kind: "video", model: "seedance20", meta: { edit135: 1 }, inputs: { edVideo: "/media/c.mp4" } }).startsWith("bd@"), "editing a video's seconds (Edit with words / Replace things) → ByteDance");
-for (const [n, b] of [["a Character Swap", { kind: "video", model: "mcswap", meta: { swap93: true } }], ["Motion Control", { kind: "video", model: "mc30" }], ["lip-sync", { kind: "lipsync", model: "auto" }], ["Kling", { kind: "video", model: "kling30" }]])
+// (v246: a Character Swap goes to ByteDance first while the swap engine is Seedance — the default; tests/v246.py)
+ok(key("video", { kind: "video", model: "mcswap", meta: { swap93: true } }) === "bd@dreamina-seedance-2-0-fast-260128", "a Character Swap (Seedance swap engine) → ByteDance first (v246)");
+process.env.SWAP_ENGINE = "h3"; ok(!String(key("video", { kind: "video", model: "mcswap", meta: { swap93: true } })).startsWith("bd@"), "a Character Swap on another swap engine never goes to ByteDance"); delete process.env.SWAP_ENGINE;
+for (const [n, b] of [["Motion Control", { kind: "video", model: "mc30" }], ["lip-sync", { kind: "lipsync", model: "auto" }], ["Kling", { kind: "video", model: "kling30" }]])
   ok(!String(key("video", b)).startsWith("bd@"), n + " never goes to ByteDance", key("video", b));
 ok(!String(key("image", { kind: "image", model: "nano" })).startsWith("bd@"), "a picture never goes to ByteDance");
 process.env.MINIMAX_API_KEY = "mm-test"; MM.mmState183().all = true;
