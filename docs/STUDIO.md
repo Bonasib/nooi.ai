@@ -588,3 +588,37 @@ Ideas taken from the open-source video-editing-skill project (MIT), rewritten in
   - titles under the platform's buttons and caption (the safe area). "Show the safe area" draws it on the preview;
   - the loudness, measured with ITU-R BS.1770 (K-weighting, 400 ms blocks, gated) and the peak. The target is −14 LUFS for the social platforms, −16 for podcasts and −23 for TV.
   - Each problem has its fix: change the shape, move the title in, or make it the platform's loudness. The loudness fix never lets the peak go over −1 dB, and a clip's volume goes no higher than 2× (the toast says when that limits it).
+
+## v244 — 3D graphics, hand-drawn looks, Emoji pop, Text punch, speed ramps, group icons
+
+- **3D** (Titles → Motion graphics → 3D, 8): an extruded 3D title, a spinning coin logo, a product box (its label on the faces), a phone mockup (its screen made from the words), flying particles, a camera fly-through of panels, a 3D bar chart and a globe with routes.
+  - They are drawn by a small 3D renderer of our own on the same 2D canvas (`motion/templates7.ts`): perspective, flat shading from one light, back faces hidden, far faces drawn first, and words mapped onto faces. No WebGL is needed, so the preview, the tile and the export are the same picture.
+- **Hand-drawn** (7): cut paper, crosshatch ink, a risograph print, a sketchbook, a math explainer, isometric line art and pixel art.
+  - These are print and animation looks, drawn in our own code. The idea of a set of looks came from the MIT-licensed animate kit in video-editing-skill; none of its code is used.
+  - They move "on twos" (12 drawings a second) like hand animation, and their lines boil. All randomness is from fixed seeds, so a frame always draws the same.
+  - Pixel art is drawn at one sixth of the size and enlarged without smoothing.
+- **Emoji pop** (Social) and **Text punch** (Titles). These were the two missing from the 18 flat graphics in video-editing-skill's list; the other 16 were already in nooi Motion:
+
+  | Their graphic | nooi Motion |
+  |---|---|
+  | lower third | Lower thirds (13) |
+  | title card | Cinematic title |
+  | kinetic text | Words spring up |
+  | callout | Callouts |
+  | counter | Number counter |
+  | list reveal | Checklist |
+  | quote card | Quote |
+  | progress bar | Video progress bar |
+  | subscribe | Subscribe button |
+  | logo sting | Logo reveal |
+  | chapter title | Chapter card |
+  | bar chart | Bar chart |
+  | highlight box | Highlight box |
+  | shape wipe | Shape burst |
+  | notification | Notification |
+  | countdown | Countdown |
+- **An icon on every group** of motion graphics, both on the chips and on the group titles.
+- **Speed ramps** (the clip's Speed tab → Speed ramps, 8): Hero moment, Bullet time, Montage, Jump cut, Flash in, Flash out, Smooth rise and Slow finish.
+  - Each tile shows its curve (higher means faster) and a dot that moves at its speeds.
+  - A ramp cuts the clip into ten equal parts of its source, each at the curve's speed (`editor-core/src/ramps.ts`). The preview, the device export and FFmpeg all play it with no new engine.
+  - The clips after it move along. It's one undo step.

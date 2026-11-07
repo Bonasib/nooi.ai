@@ -7,11 +7,12 @@ import { AR, BG, FAM, L3, T, cl, ease, labels, life, measure, nums, outK, px0, r
 import { MORE } from "./templates2";
 import { MORE3 } from "./templates3";
 import { BACKGROUNDS } from "./templates4";
-import { INFOGRAPHICS } from "./templates6";   // v242: the classic editor's infographics, back
+import { INFOGRAPHICS } from "./templates6";
+import { DRAWN, FLAT2, THREE_D } from "./templates7";   // v244: 3D, hand-drawn looks, emoji pop, text punch   // v242: the classic editor's infographics, back
 export type { Field, FieldType, Group, MCtx, Props, Template } from "./kit";
 
 export const GROUPS: [Group, string, string][] = [["lower", "Lower thirds", "أشرطة سفلية"], ["titles", "Titles & typography", "عناوين وطباعة حركية"], ["social", "Social", "تواصل اجتماعي"],
-  ["data", "Charts & numbers", "رسوم بيانية وأرقام"], ["infographics", "Infographics", "إنفوجرافيك"], ["shapes", "Shapes & backgrounds", "أشكال وخلفيات"], ["callouts", "Callouts", "إشارات توضيحية"], ["timers", "Timers", "مؤقتات"],
+  ["data", "Charts & numbers", "رسوم بيانية وأرقام"], ["infographics", "Infographics", "إنفوجرافيك"], ["3d", "3D", "ثلاثي الأبعاد"], ["drawn", "Hand-drawn", "مرسوم باليد"], ["shapes", "Shapes & backgrounds", "أشكال وخلفيات"], ["callouts", "Callouts", "إشارات توضيحية"], ["timers", "Timers", "مؤقتات"],
   ["audio", "Sound-reactive", "تتفاعل مع الصوت"], ["intros", "Intros & outros", "مقدمات وخواتيم"], ["wipes", "Wipes & reveals", "مسحات وكشف"], ["badges", "Badges & offers", "شارات وعروض"], ["frames", "Frames & overlays", "إطارات وطبقات"], ["backgrounds", "Moving backgrounds", "خلفيات متحركة"], ["code", "Motion code", "كود الحركة"]];
 
 export const TEMPLATES: Template[] = [
@@ -205,7 +206,7 @@ export const TEMPLATES: Template[] = [
     const x = m.ctx, u = m.u, b = m.bars(64), R = u * 0.16 * (1 + m.audio() * 0.25), cx = m.W / 2, cy = m.H / 2, k = life(m, 0.3, 0.3); x.globalAlpha = k; x.strokeStyle = m.p.accent; x.lineWidth = u * 0.008; x.lineCap = "round";
     b.forEach((v, i) => { const a = (i / b.length) * Math.PI * 2, l = u * 0.02 + v * u * 0.16; x.beginPath(); x.moveTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); x.lineTo(cx + Math.cos(a) * (R + l), cy + Math.sin(a) * (R + l)); x.stroke(); });
     text(m, m.p.label, cx, cy, { px: u * 0.06, weight: 800, align: "center" }); } },
-  ...MORE, ...INFOGRAPHICS,
+  ...MORE, ...INFOGRAPHICS, ...THREE_D, ...DRAWN, ...FLAT2,
   ...MORE3,
   ...BACKGROUNDS,
   // ======== code

@@ -11,7 +11,7 @@ export interface MCtx {
   audio: (t?: number) => number; bars: (n: number) => number[];
 }
 export interface Template { id: string; en: string; ar: string; group: Group; dur: number; fields: Field[]; draw: (m: MCtx) => void }
-export type Group = "lower" | "titles" | "social" | "data" | "infographics" | "shapes" | "callouts" | "timers" | "audio" | "intros" | "wipes" | "badges" | "frames" | "backgrounds" | "code";
+export type Group = "lower" | "titles" | "social" | "data" | "infographics" | "shapes" | "callouts" | "timers" | "audio" | "intros" | "wipes" | "badges" | "frames" | "backgrounds" | "code" | "3d" | "drawn";
 
 // ---- drawing helpers
 export const AR = /[֐-ࣿ]/;

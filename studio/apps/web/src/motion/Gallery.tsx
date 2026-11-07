@@ -2,7 +2,7 @@
 // graphic's props form (words, colours, numbers, choices, data, and code with Run and its errors).
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Btn, Slider } from "@nooi/ui";
+import { Btn, Icon, Slider } from "@nooi/ui";
 import type { TextClip } from "@nooi/editor-core";
 import { useUI } from "../state";
 import * as A from "../actions";
@@ -12,6 +12,9 @@ import { TEXT_ANIMS } from "@nooi/editor-core";
 import { codeErrors, codePicture, onCode, tryCode } from "./code";
 
 const TW = 320, TH = 180;
+// (v244) an icon for each group of graphics
+const GICON: Record<string, string> = { all: "template", lower: "lower", titles: "text", social: "chat", data: "chart", infographics: "checklist", "3d": "cube", drawn: "pencil", shapes: "sticker", callouts: "marker",
+  timers: "history", audio: "wave", intros: "film", wipes: "transitions", badges: "sparkle", frames: "fit", backgrounds: "image", code: "settings" };
 function MotionTile({ id }: { id: string }) {
   const tpl = templateOf(id)!; const lang = useUI((s) => s.lang); const ref = useRef<HTMLCanvasElement>(null); const btn = useRef<HTMLButtonElement>(null);
   const [seen, setSeen] = useState(false); const [play, setPlay] = useState(false);
@@ -33,8 +36,8 @@ export function MotionGallery() {
   const { t } = useTranslation(); const lang = useUI((s) => s.lang); const [g, setG] = useState<string>("all");
   return (<div className="mgal" data-testid="motion-gallery">
     <p className="hint">{t("mg.hint")}</p>
-    <div className="chips" role="tablist">{[["all", t("mg.all"), t("mg.all")] as [string, string, string], ...GROUPS].map(([id, en, ar]) => <button key={id} type="button" role="tab" className="chip" aria-selected={g === id} aria-pressed={g === id} onClick={() => setG(id)} data-testid={"mgg-" + id}>{lang === "ar" ? ar : en}</button>)}</div>
-    {GROUPS.filter(([id]) => g === "all" || g === id).map(([id, en, ar]) => <div key={id}><span className="ns-lbl">{lang === "ar" ? ar : en}</span>
+    <div className="chips" role="tablist">{[["all", t("mg.all"), t("mg.all")] as [string, string, string], ...GROUPS].map(([id, en, ar]) => <button key={id} type="button" role="tab" className="chip" aria-selected={g === id} aria-pressed={g === id} onClick={() => setG(id)} data-testid={"mgg-" + id}><Icon name={GICON[id] || "template"} size={14} />{lang === "ar" ? ar : en}</button>)}</div>
+    {GROUPS.filter(([id]) => g === "all" || g === id).map(([id, en, ar]) => <div key={id}><span className="ns-lbl mggl"><Icon name={GICON[id] || "template"} size={14} />{lang === "ar" ? ar : en}</span>
       <div className="ns-grid fxg">{TEMPLATES.filter((x) => x.group === id).map((x) => <MotionTile key={x.id} id={x.id} />)}</div></div>)}
   </div>);
 }

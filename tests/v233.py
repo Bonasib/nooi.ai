@@ -93,7 +93,7 @@ async def desktop(p):
     await pg.reload(); await pg.wait_for_function("window.__studio&&document.querySelector('[data-testid=preview]')", timeout=20000); await pg.wait_for_timeout(800)
     await E("()=>{const s=window.__studio,c=s.editor.project.tracks.flatMap(t=>t.clips).find(c=>c.type==='media'&&s.editor.project.assets[c.asset].kind==='video');s.editor.select([c.id])}"); await pg.wait_for_timeout(300); await pg.click('[data-testid="insp-video"]'); await pg.wait_for_timeout(200)
     still = await E("()=>({crop:!document.querySelector('[data-sec=crop] .isecb'),trans:!!document.querySelector('[data-sec=transform] .isecb')})")
-    for tab, want in (("audio", ["volume", "clean"]), ("color", ["cbasic", "clight", "hsl", "lut"]), ("speed", ["speed"])):
+    for tab, want in (("audio", ["volume", "clean"]), ("color", ["cbasic", "clight", "hsl", "lut"]), ("speed", ["speed", "ramps"])):
         await pg.click(f'[data-testid="insp-{tab}"]'); await pg.wait_for_timeout(150); got = await E("()=>[...document.querySelectorAll('.inspector .isec')].map(s=>s.dataset.sec)")
         chk(f"the {tab} tab in sections", got == want, got)
     chk("a section folds with a tap and stays folded after a reload", folded and still == {"crop": True, "trans": True}, [folded, still])

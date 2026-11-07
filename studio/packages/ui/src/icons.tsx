@@ -58,6 +58,8 @@ const P: Record<string, string> = {
   shorts: "M7 3h10a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z M10.5 9.5v5l4-2.5z M3 7v10 M21 7v10",
   ramp: "M3 18h4c4 0 6-12 10-12h4 M3 6h2 M19 18h2 M9 18h.01 M12 18h.01",
   nle: "M3 5h18v14H3z M3 9h18 M7 13h5 M9 16h8 M14 13h3",
+  chart: "M4 20V10 M10 20V4 M16 20v-7 M21 20H3",
+  lower: "M3 15h12 M3 19h8 M3 5h18v6H3z",
   notes: "M9 17V6l10-2v11 M9 17a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z M19 15a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z M9 10l10-2",
 };
 export type IconName = keyof typeof P | string;

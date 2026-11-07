@@ -11,6 +11,7 @@ import { MotionTiles } from "./Extras";
 import { FontPicker, TextFxGrid } from "./TextFx";
 import { MotionProps } from "../motion/Gallery";
 import { BackdropSection } from "./Backdrop";
+import { RampTiles } from "./Ramps";
 
 // (v233) the settings in sections, in the order pro editors use: each with its icon and a title; a tap folds or opens it (remembered)
 function Sec({ id, icon, title, children }: { id: string; icon: string; title: string; children: React.ReactNode }) {
@@ -84,6 +85,7 @@ export function Inspector() {
           <div className="row"><Btn icon="reverse" pressed={c.reverse} onClick={A.reverse} testid="reverse">{t("insp.reverse")}</Btn><Btn icon="freeze" onClick={A.freeze} testid="freeze">{t("insp.freeze")}</Btn></div>
           <p className="hint">{t("insp.speedHint")}</p>
         </Sec>}
+        {cur === "speed" && c.type === "media" && editor.project.assets[(c as MediaClip).asset]?.kind === "video" && <Sec id="ramps" icon="ramp" title={t("rmp.title")}><RampTiles clip={c as MediaClip} /></Sec>}
         {cur === "audio" && c.type === "media" && <>
           <Sec id="volume" icon="volume" title={t("isec.volume")}>
           <Prop c={c} path="volume" label={t("insp.volume")} min={0} max={2} fmt={(v) => Math.round(v * 100) + "%"} />

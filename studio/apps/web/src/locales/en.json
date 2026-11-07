@@ -1056,5 +1056,11 @@
   },
   "capped": "Turned up as far as the clips go (twice their sound) — still a little quiet.",
   "peakHeld": "Turned up {{n}} dB — more would make the loudest moment crackle."
+ },
+ "rmp": {
+  "title": "Speed ramps",
+  "done": "{{name}}: the clip now changes speed along the curve (one undo step).",
+  "cant": "A clip running backwards or a frozen frame can't be ramped.",
+  "hint": "The clip is played at changing speeds along the curve — the line shows the speed, the dot shows how it plays. The clips after it move along."
  }
 }
