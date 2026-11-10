@@ -36,7 +36,7 @@ async def desktop(p, lang):
     o = await E(OVER)
     if lang == "en":
         chk("computer: a side menu in groups, the open group's tools, the page marked in lime; the header says where you are; no row of sections in the header",
-            r["groups"][:8] == ["Image", "Video", "Audio", "Characters", "3D", "Edit", "Publish", "Agents & automation"] and "Motion Control" in r["open"] and r["cur"] == "nooi Studio" and "Video" in (r["crumb"] or "") and "nooi Studio" in (r["crumb"] or "") and not r["hnav"]
+            r["groups"] == ["Video", "Audio", "Edit", "Publish", "More"] and "Motion Control" in r["open"] and r["cur"] == "nooi Studio" and "Video" in (r["crumb"] or "") and "nooi Studio" in (r["crumb"] or "") and not r["hnav"]
             and o["side"] == [0, 232] and o["main"][0] >= 232 and o["page"] <= 0, [r, o])
         await pg.click('#sb253 [data-sb253="audio"]'); await pg.wait_for_timeout(200)
         a = await E("()=>[...document.querySelectorAll('#sb253 .sbg253.open .sbi253 span')].map(s=>s.textContent)")
@@ -66,7 +66,7 @@ async def phone(p):
     s0 = await E("()=>Math.round(document.querySelector('#sb253').getBoundingClientRect().right)")
     await pg.click('#bottomnav [data-act="menu82"]'); await pg.wait_for_timeout(400)
     s1 = await E("()=>{const r=document.querySelector('#sb253').getBoundingClientRect();return{l:Math.round(r.left),w:Math.round(r.width),side:getComputedStyle(document.querySelector('#side')).display,bd:getComputedStyle(document.querySelector('#sb253bd')).display}}")
-    await pg.click('#sb253 [data-sb253="image"]'); await pg.wait_for_timeout(200); await pg.click('#sb253 .sbg253.open .sbi253'); await pg.wait_for_timeout(600)
+    await pg.click('#sb253 [data-go="image"]'); await pg.wait_for_timeout(600)   # (v262: Image is one tool — a plain item)
     s2 = await E("()=>({v:S.view,menu:document.body.classList.contains('menu82'),right:Math.round(document.querySelector('#sb253').getBoundingClientRect().right),page:document.documentElement.scrollWidth-innerWidth})")
     chk("phone: Menu opens the same grouped menu as a drawer; a tool opens and the drawer closes", s0 <= 0 and s1["l"] == 0 and s1["w"] >= 260 and s1["side"] == "none" and s1["bd"] == "block" and s2["v"] == "image" and not s2["menu"] and s2["right"] <= 0 and s2["page"] <= 0, [s0, s1, s2])
     chk("phone: no page errors", not errs, errs); await b.close()

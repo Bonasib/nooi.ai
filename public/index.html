@@ -25712,9 +25712,11 @@ function curHub253(){const v=ALIAS82[S.view]||S.view;if(v==="crew"||v==="recipes
 // (a section's tab is [page, English, Arabic]; its icon is the tool's own)
 function tIcon253(v,dflt){const t=(typeof TOOLS82!=="undefined"?TOOLS82:[]).find(x=>x[1]===v);return(t&&t[2])||dflt}
 function sbItem253(v,icn,en,ar,cur,extra){return'<button type="button" class="sbi253" data-go="'+v+'"'+(cur?' aria-current="page"':"")+' title="'+esc(L(en,ar))+'">'+ic(icn)+"<span>"+esc(L(en,ar))+"</span>"+(extra||"")+"</button>"}
-function sidebar253(){const cur=ALIAS82[S.view]||S.view,ch=curHub253();if(SB253.open==null||SB253.hub!==ch)SB253.open=ch;SB253.hub=ch;/* (v261: going to another section — from anywhere — opens its group) */const adm=typeof isAdmin==="function"&&isAdmin();
+function sidebar253(){const cur=typeof cur262==="function"?cur262(ALIAS82[S.view]||S.view):ALIAS82[S.view]||S.view,ch=curHub253();if(SB253.open==null||SB253.hub!==ch)SB253.open=ch;SB253.hub=ch;/* (v261: going to another section — from anywhere — opens its group) */const adm=typeof isAdmin==="function"&&isAdmin();
   const top=[["home","home","Home","الرئيسية"],["explore","explore","Templates","القوالب"],["discover","grid","Explore","استكشف"]].concat(VIEWS.community204?[["community204","users","Community","المجتمع"]]:[],[["apps","tools","All tools","كل الأدوات"]]);
   const groups=sbHubs253().map(g=>{const op=SB253.open===g[0],here=ch===g[0];
+    // (v262: a section with one tool is that tool — no group to open)
+    if(g[4].length===1){const t=g[4][0],sec=typeof secKey90==="function"?secKey90(g[0]==="auto"?"video":g[0]):"brand";return'<div class="sb1262" data-sec90="'+sec+'">'+(g[0]==="auto"?sbItem253(t[0],t[1],t[2],t[3],cur===t[0]):sbItem253(t[0],g[1],g[2],g[3],cur===t[0]))+"</div>"}
     return'<div class="sbg253'+(op?" open":"")+(here?" here":"")+'" data-sec90="'+(typeof secKey90==="function"?secKey90(g[0]==="auto"?"video":g[0]):"brand")+'">'+
       '<button type="button" class="sbh253" data-sb253="'+g[0]+'" aria-expanded="'+op+'" title="'+esc(L(g[2],g[3]))+'">'+ic(g[1])+"<span>"+esc(L(g[2],g[3]))+"</span>"+ic("chevron")+"</button>"+
       '<div class="sbl253" role="group" aria-label="'+esc(L(g[2],g[3]))+'">'+g[4].map(t=>sbItem253(t[0],g[0]==="auto"?t[1]:tIcon253(t[0],g[1]),g[0]==="auto"?t[2]:t[1],g[0]==="auto"?t[3]:t[2],cur===t[0],t[0]==="edit"?'<i class="new253">'+esc(L("New","جديد"))+"</i>":"")).join("")+"</div></div>"}).join("");
@@ -25731,7 +25733,7 @@ function shell253(){const on=!!S.user&&!(typeof landingPreview!=="undefined"&&la
   a.hidden=false;a.innerHTML=sidebar253();
   // v261: one navigation — on a computer the side menu lists every tool of these sections, so the page's own row of tabs (the
   // same list again) is hidden there; a phone keeps it (its menu is a drawer), and so do Settings and Admin (their tabs aren't in the menu)
-  {const ch=curHub253(),dup=SBG253.includes(ch)||ch==="explore"||ch==="apps";document.querySelectorAll("#main>.view>.hubtabs").forEach(x=>x.classList.toggle("dup261",dup))}
+  {const ch=curHub253(),dup=SBG253.includes(ch)||ch==="explore"||ch==="apps";document.querySelectorAll("#main .hubtabs").forEach(x=>x.classList.toggle("dup261",dup))}
   const t=document.querySelector("#main>.topm");if(t&&!t.querySelector(".crumb253")){const b=t.querySelector(".hnav98")||t.querySelector(".brand");if(b)b.insertAdjacentHTML("afterend",crumb253());else t.insertAdjacentHTML("afterbegin",crumb253())}}
 renderView=(o=>function(){const r=o.apply(this,arguments);try{shell253();tpl253()}catch(e){console.warn("v253 shell:",e)}return r})(renderView);
 if(typeof renderShell==="function")renderShell=(o=>function(){const r=o.apply(this,arguments);try{shell253()}catch(e){console.warn("v253 shell:",e)}return r})(renderShell);
@@ -25799,7 +25801,7 @@ body.sb253fold{--sbw:68px}
 .sbsep253{height:1px;background:var(--line);margin:8px 6px}
 .sbbd253{display:none}
 .crumb253{display:none}
-@media (min-width:768px){body.sb253on #main>.view>.hubtabs.dup261{display:none!important}}
+@media (min-width:768px){body.sb253on #main .hubtabs.dup261{display:none!important}}
 @media (min-width:768px){
   body.sb253on .app{padding-inline-start:var(--sbw)!important}
   body.sb253on #main>.topm .hnav98,body.sb253on #main>.topm>.brand{display:none!important}
@@ -26120,6 +26122,27 @@ document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest
 (()=>{const st=document.createElement("style");st.textContent=`.hid261{display:none!important}
 .more261{display:inline-flex;align-items:center;margin:8px 0 2px;padding:7px 12px;border-radius:999px;border:1px dashed var(--line2);background:none;color:var(--mute);font:500 12.5px/1 var(--sans);cursor:pointer}
 .more261:hover{color:var(--text);border-color:var(--lime)}`;document.head.appendChild(st)})();
+
+/* ================= v262: FEWER DOORS — the film tools are modes of nooi Studio; rarely used tools sit under More =================
+   The owner approved the merge (nothing is deleted, every page still opens):
+   · nooi Studio's mode row is now One video · A film by 9 agents · Chapter story · Storyboard — four ways to make a film in one
+     place; Chapter story, Storyboard and the agents' film left the side menu
+   · More (at the end of the menu): Sketch to life, Coloring book, Video intelligence, Hook lab
+   · a section with one tool (Image, Characters, 3D, Workflows) is a plain item in the menu, not a group to open */
+const FILM262=["crew","story","board"],MORE262=["sketch","coloring","vss","hooks"];
+const cur262=v=>FILM262.includes(v)?"video":v;
+sbHubs253=(o=>function(){const out=o.apply(this,arguments),more=[];
+  for(const g of out){if(g[0]==="auto"){g[4]=g[4].filter(t=>!FILM262.includes(t[0]));continue}
+    g[4]=g[4].filter(t=>{if(FILM262.includes(t[0]))return false;if(MORE262.includes(t[0])){more.push(t);return false}return true})}
+  const res=out.filter(g=>g[4].length);if(more.length)res.push(["more","tools","More","المزيد",more]);return res})(sbHubs253);
+curHub253=(o=>function(){const v=ALIAS82[S.view]||S.view;return FILM262.includes(v)?"video":MORE262.includes(v)?"more":o.apply(this,arguments)})(curHub253);
+function modes262(){const v=ALIAS82[S.view]||S.view,on=typeof FEATURE_OF_VIEW!=="undefined"?k=>{const f=FEATURE_OF_VIEW[k];return!(f&&typeof featureOn==="function"&&!featureOn(f))}:()=>true;
+  return'<div class="mode93 mode262" role="tablist" aria-label="'+esc(L("What to make","ماذا تصنع"))+'">'+[["video","video","One video","فيديو واحد"],["crew","users","A film by 9 agents","فيلم من 9 وكلاء"],["story","story","Chapter story","قصة الفصول"],["board","board","Storyboard","ستوري بورد"]].filter(m=>VIEWS[m[0]]&&on(m[0]))
+    .map(m=>'<button role="tab" data-go="'+m[0]+'" aria-selected="'+(v===m[0])+'">'+ic(m[1])+esc(L(m[2],m[3]))+"</button>").join("")+"</div>"}
+renderView=(o=>function(){const r=o.apply(this,arguments);try{const v=ALIAS82[S.view]||S.view;if(v==="video"||FILM262.includes(v)){const view=document.querySelector("#main>.view,#main>.fillwrap");if(view){const old=view.querySelector(".mode93");
+      if(old)old.outerHTML=modes262();else{const at=view.querySelector(".hubtabs");if(at)at.insertAdjacentHTML("afterend",modes262());else view.insertAdjacentHTML("afterbegin",modes262())}}}}catch(e){console.warn("v262",e)}return r})(renderView);
+(()=>{const st=document.createElement("style");st.textContent=`.mode262{flex-wrap:wrap;border-radius:18px}.fillhead82 .mode262{margin:0 0 10px}.sb1262>.sbi253>svg{color:var(--hub,var(--mute))}
+@media (max-width:767px){.mode262{width:100%;overflow-x:auto;flex-wrap:nowrap;border-radius:999px;scrollbar-width:none}.mode262 button{flex:none}}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

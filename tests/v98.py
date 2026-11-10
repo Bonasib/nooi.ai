@@ -37,9 +37,9 @@ async def run(b, W, H, lang, tag):
     if W >= 768:
         # (v253: the owner's new layout — the sections are in the grouped side menu on the start edge; the old side menu stays hidden)
         ok(h["header"] and h["side"] == "none" and h["bottom"] == "none" and h["lib"], f"{tag}: one header, the old side menu hidden, no bottom bar {h}")
-        ok(h["nav"][:3] == ["image", "video", "audio"] and h["cur"] == "video", f"{tag}: the sections in the side menu, Video's page marked {h['nav']} {h['cur']}")
+        ok(h["nav"][:2] == ["video", "audio"] and h["cur"] == "video", f"{tag}: the sections in the side menu, Video's page marked {h['nav']} {h['cur']}")
         ok(h["mainW"] >= W - 232 - 2, f"{tag}: the page uses the width beside the menu ({h['mainW']} of {W})")
-        await pg.click('#sb253 [data-sb253="image"]'); await pg.wait_for_timeout(200); await pg.click('#sb253 .sbg253.open .sbi253'); await pg.wait_for_timeout(300)
+        await pg.click('#sb253 [data-go="image"]'); await pg.wait_for_timeout(300)   # (v262: Image is one tool — a plain item)
         ok(await E("()=>S.view") == "image", f"{tag}: a section in the side menu opens its page")
         await pg.click('#sb253 .sbbrand253'); await pg.wait_for_timeout(300)
         ok(await E("()=>S.view") == "home", f"{tag}: the logo goes Home")

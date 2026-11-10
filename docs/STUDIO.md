@@ -827,3 +827,14 @@ nooi Studio shows a **Quality** chip when a video is made of several parts: Stan
 - **Long walls of choices are folded:** a wall of more than 12 choices on a page (Hook lab's 32 languages, Content plan, Chapter story) shows its first ten and the chosen one, with "Show all (N)" / "Show fewer". Choices inside a chip's own panel and in sheets are unchanged.
 - **Staff directions:** a customer already never sees "Admin → …" lines (v82); the test now checks it on the Voice page.
 - Tests: `tests/v261.py`; `v118` picks tools in the side menu on a computer. The other tests that mention tab rows still pass.
+
+## v262 — fewer doors: the film tools are modes of nooi Studio; rarely used tools under More
+
+The owner approved the merge. Nothing is deleted; every page still opens, and All tools still lists everything.
+
+- **nooi Studio's mode row** is now One video · A film by 9 agents · Chapter story · Storyboard, shown on all four pages with the open one marked. Chapter story, Storyboard and the agents' film left the side menu; the menu marks nooi Studio on all four.
+- **More** (the last group in the menu): Sketch to life, Coloring book, Video intelligence, Hook lab.
+- **A section with one tool** (Image, Characters, 3D, Workflows) is a plain item in the menu, not a group to open.
+- The menu is now: Home, Templates, Explore, Community, All tools · Image, Video, Audio, Characters, 3D, Edit, Publish, Workflows, More · My library, Settings, Admin.
+- On a phone the page's tab row still lists Chapter story and Storyboard beside the mode row (to tidy later).
+- Tests: `tests/v262.py`; `v253`, `v98` and `v93` follow the new menu and modes.
