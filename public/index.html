@@ -5714,7 +5714,7 @@ const DEAL_STAGES=[["new","New","جديدة"],["contacted","Contacted","تم ا�
 const EXP_CATS=[["ai","AI providers","مزودو الذكاء"],["hosting","Hosting","الاستضافة"],["marketing","Marketing","التسويق"],["salaries","Salaries","الرواتب"],["software","Software","البرمجيات"],["other","Other","أخرى"]];
 function crmData(){const D=A();D.crm=D.crm||{deals:[{id:"d1",company:"Riyadh Media House",email:"ops@rmh.sa",value:24000,stage:"proposal",next:L("Send studio team quote","أرسل عرض فريق الاستوديو"),t:Date.now()-3*864e5},{id:"d2",company:"Gulf Retail Group",email:"marketing@grg.ae",value:9000,stage:"contacted",next:L("Demo UGC ads","عرض إعلانات UGC"),t:Date.now()-6*864e5},{id:"d3",company:"EduKids",email:"hello@edukids.com",value:4800,stage:"won",next:"",t:Date.now()-12*864e5}],tasks:[{id:"k1",title:L("Call Riyadh Media House","اتصل بـ Riyadh Media House"),due:Date.now()+864e5,done:false},{id:"k2",title:L("Win-back email to inactive paying clients","رسالة استعادة للعملاء المدفوعين غير النشطين"),due:Date.now()+2*864e5,done:false}],stage:{},notes:{}};return D.crm}
 function erpData(){const D=A();D.erp=D.erp||{costRate:45,expenses:[{id:"e1",vendor:"Hostinger",cat:"hosting",amount:120,t:Date.now()-5*864e5},{id:"e2",vendor:"Kling API",cat:"ai",amount:1850,t:Date.now()-9*864e5},{id:"e3",vendor:"Meta Ads",cat:"marketing",amount:900,t:Date.now()-14*864e5},{id:"e4",vendor:"Resend",cat:"software",amount:75,t:Date.now()-20*864e5}]};return D.erp}
-async function saveAdm(name,val){persist();if(API.mode==="server"){try{await API.req("/v1/admin/data/"+name,{method:"PUT",json:{value:val}})}catch(e){toast(String(e.message||e),{type:"warn"})}}}
+async function saveAdm(name,val){persist();if(API.mode==="server"&&(()=>{try{return staff82()}catch(e){return true}})()){ /* v267: staff only — a customer's browser tried this save and showed them "Not allowed" */ try{await API.req("/v1/admin/data/"+name,{method:"PUT",json:{value:val}})}catch(e){toast(String(e.message||e),{type:"warn"})}}}
 function stageOf(u){const C=crmData();if(C.stage[u.id])return C.stage[u.id];const idle=(Date.now()-(u.lastSeen||0))/864e5;if(u.plan==="free")return idle>30?"churned":"trial";return idle>14?"risk":"active"}
 function crmView(){const D=A(),C=crmData(),us=D.users;const by={};CRM_STAGES.forEach(s=>by[s[0]]=[]);us.forEach(u=>by[stageOf(u)].push(u));C.deals.filter(d=>!["won","lost"].includes(d.stage)).forEach(d=>by.lead.push({id:"deal:"+d.id,name:d.company,email:d.email,plan:"deal",country:"",deal:d}));
   const mrr=us.filter(u=>u.plan!=="free"&&stageOf(u)!=="churned").reduce((a,u)=>a+(PRICE.SAR[u.plan]||0),0),pipe=C.deals.filter(d=>!["won","lost"].includes(d.stage)).reduce((a,d)=>a+d.value,0);
@@ -25730,7 +25730,7 @@ function crumb253(){const ch=curHub253(),v=ALIAS82[S.view]||S.view,g=sbHubs253()
 function shell253(){const on=!!S.user&&!(typeof landingPreview!=="undefined"&&landingPreview)&&!(typeof AU!=="undefined"&&AU.showAuth);document.body.classList.toggle("sb253on",on);document.body.classList.toggle("sb253fold",on&&SB253.fold);
   let a=document.getElementById("sb253");if(!on){if(a)a.hidden=true;return}
   if(!a){a=document.createElement("aside");a.id="sb253";a.className="sb253";document.body.appendChild(a);const bd=document.createElement("div");bd.id="sb253bd";bd.className="sbbd253";bd.addEventListener("click",()=>{if(typeof menu82==="function")menu82(false)});document.body.appendChild(bd)}
-  a.hidden=false;a.innerHTML=sidebar253();
+  a.hidden=false;{const h=sidebar253();if(a.__h267!==h){a.__h267=h;a.innerHTML=h}} /* v267: rebuilt only when it changed — a rebuild between press and release (leaving a field you just edited redraws the page) lost the click */
   // v261: one navigation — on a computer the side menu lists every tool of these sections, so the page's own row of tabs (the
   // same list again) is hidden there; a phone keeps it (its menu is a drawer), and so do Settings and Admin (their tabs aren't in the menu)
   {const ch=curHub253(),dup=SBG253.includes(ch)||ch==="explore"||ch==="apps"||ch==="more";document.querySelectorAll("#main .hubtabs").forEach(x=>x.classList.toggle("dup261",dup))}
@@ -25739,7 +25739,7 @@ renderView=(o=>function(){const r=o.apply(this,arguments);try{shell253();tpl253(
 if(typeof renderShell==="function")renderShell=(o=>function(){const r=o.apply(this,arguments);try{shell253()}catch(e){console.warn("v253 shell:",e)}return r})(renderShell);
 document.addEventListener("click",e=>{const h=e.target.closest&&e.target.closest("[data-sb253]");if(h){const k=h.dataset.sb253;
     if(SB253.fold&&window.innerWidth>=768){const g=sbHubs253().find(x=>x[0]===k);if(g&&g[4][0])go(g[4][0][0]);return}
-    SB253.open=SB253.open===k?"":k;const a=document.getElementById("sb253");if(a)a.innerHTML=sidebar253();return}
+    SB253.open=SB253.open===k?"":k;const a=document.getElementById("sb253");if(a)a.innerHTML=a.__h267=sidebar253();return}
   if(e.target.closest&&e.target.closest('[data-act="sb253-fold"]')){SB253.fold=!SB253.fold;try{localStorage.setItem(SB253.k,SB253.fold?"1":"0")}catch(x){}shell253();return}
 });
 // (a tool in the menu closes the phone drawer — caught first, since the page change stops the click going further)

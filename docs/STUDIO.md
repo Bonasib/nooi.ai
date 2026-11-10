@@ -889,3 +889,11 @@ The owner approved making real examples on the site's own key. The session can't
   - "Use this shot" opens nooi Studio with the finished prompt and sound on. Nothing is made or charged until Generate. "Copy the prompt" copies it.
 - Dubbing an already-finished video into another language stays in Subtitles & dubbing; the shot's sheet doesn't load a video there.
 - Tests: `tests/v266.py` (stand-in ByteDance); `v80_hubs` follows the tab rows of v264.
+
+## v267 — two faults found by running the site as a customer
+
+- **The first click on the side menu was lost** after editing a field: leaving the field redraws the page, and the menu
+  was rebuilt between press and release. The menu is now rebuilt only when its content changed.
+- **A customer saw “Not allowed”**: any edited field or pressed button made the browser try to save staff-only notes.
+  That save now runs for staff only.
+- Test: `tests/v267.py`.
