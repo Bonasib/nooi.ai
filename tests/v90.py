@@ -127,7 +127,7 @@ async def run(b, lang, w, theme):
     if w > 500: ok(k["side"] == ["home", "explore", "apps", "image", "video", "audio", "chars", "world", "edit", "calendar", "library", "account", "admin"], f"{tag}: the menu {k['side']}")
     ok(k["audio"][0] == "voice" and k["audio"][1] == ["voice", "subs"] and k["audio"][2] == "audio" and (w < 500 or k["audio"][3] == ["audio"]), f"{tag}: Audio = Voice & audio + Subtitles & dubbing {k['audio']}")
     ok(k["subs"] == ["audio", ["subs"]], f"{tag}: Subtitles & dubbing is in Audio {k['subs']}")
-    ok(k["edit"] == ["edit", "fx", "finish", "vss"], f"{tag}: Edit has four tabs (v122: Video from pictures makes a video — it is in Video) {k['edit']}")
+    ok(k["edit"] == ["edit", "fx", "finish"], f"{tag}: Edit has three tabs (v122: Video from pictures is in Video; v262: Video intelligence is under More) {k['edit']}")
     a = k["apps"]; ok(a["n"] >= 23 and a["n"] == a["unique"] and not a["colours"], f"{tag}: All tools lists every tool once, in its colour {a}")
     ok(a["secs"] == ["brand", "image", "video", "audio", "chars", "world", "edit", "publish"], f"{tag}: All tools is grouped by section {a['secs']}")
     ok(not k["opened"], f"{tag}: every card on All tools opens its page {k['opened'][:4]}")

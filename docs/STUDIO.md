@@ -850,3 +850,16 @@ A measured scan of 31 pages (computer, phone, Arabic phone, Arabic tablet) for c
 - After these the scan finds nothing on any page.
 - Still inconsistent (not errors, design work to do): the create pages use three different layouts; Settings pages are a narrow centred column while others are full width; Library shows Projects above its title.
 - Tests: `tests/v263.py`.
+
+## v264 — one frame for every page (clean-up step 2)
+
+Measured on every page: most tool pages already shared one frame (the options in a 420 px column on the start side, the result beside it). The odd ones out are fixed:
+
+- **Settings pages** (Account, Credits, Integrations, Legal, Help) and **Hook lab** were a narrow column in the middle of the screen. They start at the same edge as every other page now; their content keeps its readable width.
+- **Subtitles & dubbing** had its options on the end side. They're the 420 px column on the start side, like every other tool.
+- **Chapter story and Storyboard** started 8 px off the common edge.
+- **Pages under More** show no tab row on a computer.
+- **A phone's tab rows** no longer repeat what moved in v262: Chapter story and Storyboard (now modes of nooi Studio), Sketch, Coloring book, Video intelligence and Hook lab (now under More). The open page's own tab stays.
+- Every page's title now starts at the same edge (264 px on a 1440 px screen); Home and Explore open with a banner instead of a title.
+- Not changed: Image and nooi Studio keep their gallery with the prompt bar at the bottom; Characters, Coloring book, Enhance and Voice keep their own inner arrangement.
+- Tests: `tests/v264.py`; `v93` and `v90` follow the merged tab rows.

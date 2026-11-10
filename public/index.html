@@ -25733,7 +25733,7 @@ function shell253(){const on=!!S.user&&!(typeof landingPreview!=="undefined"&&la
   a.hidden=false;a.innerHTML=sidebar253();
   // v261: one navigation — on a computer the side menu lists every tool of these sections, so the page's own row of tabs (the
   // same list again) is hidden there; a phone keeps it (its menu is a drawer), and so do Settings and Admin (their tabs aren't in the menu)
-  {const ch=curHub253(),dup=SBG253.includes(ch)||ch==="explore"||ch==="apps";document.querySelectorAll("#main .hubtabs").forEach(x=>x.classList.toggle("dup261",dup))}
+  {const ch=curHub253(),dup=SBG253.includes(ch)||ch==="explore"||ch==="apps"||ch==="more";document.querySelectorAll("#main .hubtabs").forEach(x=>x.classList.toggle("dup261",dup))}
   const t=document.querySelector("#main>.topm");if(t&&!t.querySelector(".crumb253")){const b=t.querySelector(".hnav98")||t.querySelector(".brand");if(b)b.insertAdjacentHTML("afterend",crumb253());else t.insertAdjacentHTML("afterbegin",crumb253())}}
 renderView=(o=>function(){const r=o.apply(this,arguments);try{shell253();tpl253()}catch(e){console.warn("v253 shell:",e)}return r})(renderView);
 if(typeof renderShell==="function")renderShell=(o=>function(){const r=o.apply(this,arguments);try{shell253()}catch(e){console.warn("v253 shell:",e)}return r})(renderShell);
@@ -26156,6 +26156,25 @@ renderView=(o=>function(){const r=o.apply(this,arguments);try{const v=ALIAS82[S.
 @media (max-width:767px){.fd134{height:32px!important;top:-20px!important}#main .btn.sm{min-height:32px}}
 @media (max-width:767px){.nw-stage .nw-top{inset-inline:10px!important;flex-wrap:wrap;justify-content:flex-end;row-gap:6px}}
 `;document.head.appendChild(st)})();
+
+/* ================= v264: ONE FRAME FOR EVERY PAGE (clean-up step 2) =================
+   Measured on every page: most tool pages already share one frame (the options in a 420 px column on the start side, the result
+   beside it) — the odd ones out are fixed:
+   · Settings pages (Account, Credits, Integrations, Legal, Help) and Hook lab were a narrow column in the middle of the screen:
+     they start at the same edge as every other page now (their content keeps its readable width)
+   · Subtitles & dubbing had its options on the end side and the video on the start side — the options are the 420 px column on
+     the start side, like every other tool
+   · Chapter story and Storyboard started 8 px off the common edge
+   · a phone's tab row no longer repeats what moved in v262 (Chapter story, Storyboard → nooi Studio's modes; Sketch, Coloring
+     book, Video intelligence, Hook lab → More in the menu) */
+renderView=(o=>function(){const r=o.apply(this,arguments);try{const m=document.getElementById("main");if(m){m.dataset.v=ALIAS82[S.view]||S.view;
+    m.querySelectorAll(".hubtabs [data-go]").forEach(b=>{const g=b.dataset.go;if((FILM262.includes(g)||MORE262.includes(g))&&b.getAttribute("aria-selected")!=="true")b.remove()})}}catch(e){}return r})(renderView);
+(()=>{const st=document.createElement("style");st.textContent=`@media (min-width:768px){
+  body.sb253on #main>.view{margin-inline:0 auto!important}
+  body.sb253on #main .fillhead82{padding-inline-start:32px}
+  #main[data-v="subs"] .edgrid{grid-template-columns:420px minmax(0,1fr)!important}
+  #main[data-v="subs"] .edgrid>:nth-child(2){order:-1}
+}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;
