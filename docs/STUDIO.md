@@ -819,3 +819,11 @@ nooi Studio shows a **Quality** chip when a video is made of several parts: Stan
 - The signed-in Home starts with the create box. The gift-code strip is gone from it (the header's gift button and Credits already redeem a code); the landing page keeps the strip.
 - Recipes left the side menu: Workflows lists the same chains. Old links to Recipes still open.
 - The audit behind this (32 pages, computer and phone) and the clean-up plan are in the session notes; the next steps need the owner's decisions.
+
+## v261 — clean-up steps 1 and 5: one navigation, folded walls of choices
+
+- **One navigation:** on a computer the side menu lists every tool, so the page's own row of tabs (the same list again) is hidden for Image, Video, Audio, Edit, Publish, Explore and All tools. Settings and Admin keep their tabs (they aren't in the menu). A phone keeps the tabs, since its menu is a drawer.
+- **Community** is in the side menu. Going to another section from anywhere opens its group in the menu.
+- **Long walls of choices are folded:** a wall of more than 12 choices on a page (Hook lab's 32 languages, Content plan, Chapter story) shows its first ten and the chosen one, with "Show all (N)" / "Show fewer". Choices inside a chip's own panel and in sheets are unchanged.
+- **Staff directions:** a customer already never sees "Admin → …" lines (v82); the test now checks it on the Voice page.
+- Tests: `tests/v261.py`; `v118` picks tools in the side menu on a computer. The other tests that mention tab rows still pass.

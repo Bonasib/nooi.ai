@@ -70,10 +70,10 @@ async def computer(b, lang, tag):
     ok(k >= 200, f"{tag}: a redraw keeps where you scrolled the settings ({k})")
     # the pill glides: a page's tabs, then the header's sections
     await E("()=>{go('video');renderAll()}"); await pg.wait_for_timeout(500)
-    await pg.click('#main>.view>.hubtabs [data-go="ugcads"]'); await pg.wait_for_timeout(60)
-    p1 = await E("()=>!!document.querySelector('#main>.view>.hubtabs .pill118')"); await pg.wait_for_timeout(600)
-    p1b = await E("()=>!!document.querySelector('#main .pill118')")
-    ok(p1 and not p1b, f"{tag}: the tab's pill glides to the picked tab, then goes ({p1}, {p1b})")
+    # (v261: on a computer the side menu is the one navigation — the page's row of tabs is hidden there, so a tool is picked in the menu)
+    hid = await E("()=>{const t=document.querySelector('#main>.view>.hubtabs');return !t||getComputedStyle(t).display==='none'}")
+    await pg.click('#sb253 .sbg253.open [data-go="ugcads"]'); await pg.wait_for_timeout(400)
+    ok(hid and await E("()=>S.view") == "ugcads", f"{tag}: the tab row is hidden on a computer; the side menu opens the tool ({hid})")
     # (v253: the sections moved from the header to the side menu — no header pill any more)
     await pg.click('#sb253 [data-sb253="calendar"]'); await pg.wait_for_timeout(200); await pg.click('#sb253 .sbg253.open .sbi253'); await pg.wait_for_timeout(400)
     ok(await E("()=>S.view") == "calendar", f"{tag}: a section in the side menu opens its page")
@@ -103,7 +103,7 @@ async def phone(b):
 async def reduced(b):
     tag = "reduce motion"; ctx, pg, errs = await page(b, 1440, 900, "en", tag, True); E = pg.evaluate
     await E("()=>{go('video');renderAll()}"); await pg.wait_for_timeout(400)
-    await pg.click('#main>.view>.hubtabs [data-go="ugcads"]'); await pg.wait_for_timeout(60)
+    await pg.click('#sb253 .sbg253.open [data-go="ugcads"]'); await pg.wait_for_timeout(60)
     p = await E("()=>!!document.querySelector('#main .pill118')")
     await E("()=>{go('video');renderAll()}"); await pg.wait_for_timeout(40)
     r = await E("()=>document.querySelectorAll('#main .rise118').length")

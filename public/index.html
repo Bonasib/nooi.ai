@@ -25712,8 +25712,8 @@ function curHub253(){const v=ALIAS82[S.view]||S.view;if(v==="crew"||v==="recipes
 // (a section's tab is [page, English, Arabic]; its icon is the tool's own)
 function tIcon253(v,dflt){const t=(typeof TOOLS82!=="undefined"?TOOLS82:[]).find(x=>x[1]===v);return(t&&t[2])||dflt}
 function sbItem253(v,icn,en,ar,cur,extra){return'<button type="button" class="sbi253" data-go="'+v+'"'+(cur?' aria-current="page"':"")+' title="'+esc(L(en,ar))+'">'+ic(icn)+"<span>"+esc(L(en,ar))+"</span>"+(extra||"")+"</button>"}
-function sidebar253(){const cur=ALIAS82[S.view]||S.view,ch=curHub253();if(SB253.open==null)SB253.open=ch;const adm=typeof isAdmin==="function"&&isAdmin();
-  const top=[["home","home","Home","الرئيسية"],["explore","explore","Templates","القوالب"],["discover","grid","Explore","استكشف"],["apps","tools","All tools","كل الأدوات"]];
+function sidebar253(){const cur=ALIAS82[S.view]||S.view,ch=curHub253();if(SB253.open==null||SB253.hub!==ch)SB253.open=ch;SB253.hub=ch;/* (v261: going to another section — from anywhere — opens its group) */const adm=typeof isAdmin==="function"&&isAdmin();
+  const top=[["home","home","Home","الرئيسية"],["explore","explore","Templates","القوالب"],["discover","grid","Explore","استكشف"]].concat(VIEWS.community204?[["community204","users","Community","المجتمع"]]:[],[["apps","tools","All tools","كل الأدوات"]]);
   const groups=sbHubs253().map(g=>{const op=SB253.open===g[0],here=ch===g[0];
     return'<div class="sbg253'+(op?" open":"")+(here?" here":"")+'" data-sec90="'+(typeof secKey90==="function"?secKey90(g[0]==="auto"?"video":g[0]):"brand")+'">'+
       '<button type="button" class="sbh253" data-sb253="'+g[0]+'" aria-expanded="'+op+'" title="'+esc(L(g[2],g[3]))+'">'+ic(g[1])+"<span>"+esc(L(g[2],g[3]))+"</span>"+ic("chevron")+"</button>"+
@@ -25729,6 +25729,9 @@ function shell253(){const on=!!S.user&&!(typeof landingPreview!=="undefined"&&la
   let a=document.getElementById("sb253");if(!on){if(a)a.hidden=true;return}
   if(!a){a=document.createElement("aside");a.id="sb253";a.className="sb253";document.body.appendChild(a);const bd=document.createElement("div");bd.id="sb253bd";bd.className="sbbd253";bd.addEventListener("click",()=>{if(typeof menu82==="function")menu82(false)});document.body.appendChild(bd)}
   a.hidden=false;a.innerHTML=sidebar253();
+  // v261: one navigation — on a computer the side menu lists every tool of these sections, so the page's own row of tabs (the
+  // same list again) is hidden there; a phone keeps it (its menu is a drawer), and so do Settings and Admin (their tabs aren't in the menu)
+  {const ch=curHub253(),dup=SBG253.includes(ch)||ch==="explore"||ch==="apps";document.querySelectorAll("#main>.view>.hubtabs").forEach(x=>x.classList.toggle("dup261",dup))}
   const t=document.querySelector("#main>.topm");if(t&&!t.querySelector(".crumb253")){const b=t.querySelector(".hnav98")||t.querySelector(".brand");if(b)b.insertAdjacentHTML("afterend",crumb253());else t.insertAdjacentHTML("afterbegin",crumb253())}}
 renderView=(o=>function(){const r=o.apply(this,arguments);try{shell253();tpl253()}catch(e){console.warn("v253 shell:",e)}return r})(renderView);
 if(typeof renderShell==="function")renderShell=(o=>function(){const r=o.apply(this,arguments);try{shell253()}catch(e){console.warn("v253 shell:",e)}return r})(renderShell);
@@ -25796,6 +25799,7 @@ body.sb253fold{--sbw:68px}
 .sbsep253{height:1px;background:var(--line);margin:8px 6px}
 .sbbd253{display:none}
 .crumb253{display:none}
+@media (min-width:768px){body.sb253on #main>.view>.hubtabs.dup261{display:none!important}}
 @media (min-width:768px){
   body.sb253on .app{padding-inline-start:var(--sbw)!important}
   body.sb253on #main>.topm .hnav98,body.sb253on #main>.topm>.brand{display:none!important}
@@ -26100,6 +26104,22 @@ makeVideo=(o=>function(){const d=S.draft,sc=S.view==="video"&&String(d&&d.script
   if(!String(orig||"").trim())d.prompt=sc.split(/\n/).map(x=>x.trim()).filter(Boolean)[0].slice(0,120);
   const ad=addJob;addJob=function(j){if(j&&j.kind==="video")j.meta=Object.assign({},j.meta,{script258:sc.slice(0,SCR258)});return ad.apply(this,arguments)};
   try{return o.apply(this,arguments)}finally{addJob=ad;if(!String(orig||"").trim())d.prompt=orig||""}})(makeVideo);
+
+/* ================= v261: LONG WALLS OF CHOICES ARE FOLDED — the first ten and the chosen one show, "Show all" opens the rest =================
+   Hook lab showed 32 language tiles at once, Content plan 15, Chapter story 22 styles. A wall of more than 12 choices on a page
+   now shows its first ten (and whatever is chosen), with one "Show all (N)" button; opened walls stay open while you're on the
+   site. Choices inside a chip's own panel (nooi Studio, Images) and in sheets are left as they are — they already open on demand. */
+const FOLD261=new Set();
+function fold261(){const main=document.getElementById("main");if(!main)return;let n=0;
+  main.querySelectorAll(".tiles,.chips").forEach(box=>{if(box.closest(".sec93,.modal,.hfsheet,.sheet,.fadd256")||box.dataset.f261)return;const kids=[...box.children].filter(k=>k.matches("button,label,[role=button]"));if(kids.length<=12)return;
+    const key=S.view+":"+(n++);box.dataset.f261=key;const open=FOLD261.has(key);
+    if(!open){let shown=0;kids.forEach((k,i)=>{const on=k.getAttribute("aria-pressed")==="true"||k.getAttribute("aria-checked")==="true"||k.classList.contains("on")||!!k.querySelector("input:checked");if(i<10||on)shown++;else k.classList.add("hid261")});if(shown===kids.length)return}
+    const b=document.createElement("button");b.type="button";b.className="more261";b.dataset.more261=key;b.setAttribute("aria-expanded",String(open));b.textContent=open?L("Show fewer","اعرض أقل"):L("Show all","اعرض الكل")+" ("+kids.length+")";box.after(b)})}
+renderView=(o=>function(){const r=o.apply(this,arguments);try{fold261()}catch(e){console.warn("fold261",e)}return r})(renderView);
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-more261]");if(!b)return;const k=b.dataset.more261;if(FOLD261.has(k))FOLD261.delete(k);else FOLD261.add(k);renderView()});
+(()=>{const st=document.createElement("style");st.textContent=`.hid261{display:none!important}
+.more261{display:inline-flex;align-items:center;margin:8px 0 2px;padding:7px 12px;border-radius:999px;border:1px dashed var(--line2);background:none;color:var(--mute);font:500 12.5px/1 var(--sans);cursor:pointer}
+.more261:hover{color:var(--text);border-color:var(--lime)}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;
