@@ -838,3 +838,15 @@ The owner approved the merge. Nothing is deleted; every page still opens, and Al
 - The menu is now: Home, Templates, Explore, Community, All tools · Image, Video, Audio, Characters, 3D, Edit, Publish, Workflows, More · My library, Settings, Admin.
 - On a phone the page's tab row still lists Chapter story and Storyboard beside the mode row (to tidy later).
 - Tests: `tests/v262.py`; `v253`, `v98` and `v93` follow the new menu and modes.
+
+## v263 — look fixes from going through every page
+
+A measured scan of 31 pages (computer, phone, Arabic phone, Arabic tablet) for cut-off text, things outside the screen and too-small buttons, plus a look at each page:
+
+- **The agents' row** was laid out for eight agents, so the ninth dropped alone onto a second line. It's one even row for any number of agents on a computer, and three across on a phone.
+- **3D World on a phone:** the view buttons ran off the screen's edge; they wrap inside it.
+- **Small tap targets on a phone** (the prompt bar's fold handle, small buttons) are at least 32 px high.
+- **Workflows' title** has the tool icon beside it, like every other page.
+- After these the scan finds nothing on any page.
+- Still inconsistent (not errors, design work to do): the create pages use three different layouts; Settings pages are a narrow centred column while others are full width; Library shows Projects above its title.
+- Tests: `tests/v263.py`.

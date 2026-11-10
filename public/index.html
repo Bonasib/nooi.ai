@@ -25974,7 +25974,7 @@ function flowCover256(f){let h=0;for(const ch of String(f.id))h=(h*31+ch.charCod
   return'<div class="fcov256" style="background:linear-gradient(150deg,'+g[0]+","+g[1]+')"><div class="fic256">'+f.steps.map(s=>'<i>'+ic((STEPK256[s.kind]||STEPK256.image)[0])+"</i>").join('<em aria-hidden="true"></em>')+"</div></div>"}
 function flowCard256(f){return'<button type="button" class="fcard256" data-fl256="'+esc(f.id)+'">'+flowCover256(f)+'<div class="fcv256"><span class="cat253">'+esc(f.steps.length+" "+L(f.steps.length===1?"step":"steps",f.steps.length===1?"خطوة":"خطوات"))+'</span><b dir="auto">'+esc(flowName256(f))+'</b><span dir="auto">'+esc(flowDesc256(f))+"</span></div></button>"}
 function flowList256(){const F=FL256(),mine=R83().mine,list=F.tab==="mine"?mine:RECIPES83.concat(FLOWTPL256.filter(t=>!RECIPES83.some(x=>x.id===t.id)));
-  return'<div class="spread fhead256"><div><h1>'+esc(L("Workflows","سير العمل"))+'</h1><p class="lede">'+esc(L("Chain the tools: a picture, a video from it, a sharper copy, a voice, music. Save it, then run it again with one tap — each step starts from the one before.","اربط الأدوات: صورة، ثم فيديو منها، ثم نسخة أوضح، ثم صوت وموسيقى. احفظه ثم شغّله من جديد بضغطة — كل خطوة تبدأ من التي قبلها."))+'</p></div><button type="button" class="btn primary" data-act="fl256-new">'+ic("plus")+esc(L("Create a workflow","أنشئ سير عمل"))+"</button></div>"+
+  return'<div class="spread fhead256"><div><h1><span class="tchip90" aria-hidden="true">'+ic("tools")+"</span>"+esc(L("Workflows","سير العمل"))+'</h1><p class="lede">'+esc(L("Chain the tools: a picture, a video from it, a sharper copy, a voice, music. Save it, then run it again with one tap — each step starts from the one before.","اربط الأدوات: صورة، ثم فيديو منها، ثم نسخة أوضح، ثم صوت وموسيقى. احفظه ثم شغّله من جديد بضغطة — كل خطوة تبدأ من التي قبلها."))+'</p></div><button type="button" class="btn primary" data-act="fl256-new">'+ic("plus")+esc(L("Create a workflow","أنشئ سير عمل"))+"</button></div>"+
     '<div class="ftabs256" role="tablist">'+[["tpl",L("Templates","القوالب")],["mine",L("My workflows","سير عملي")+" ("+mine.length+")"]].map(t=>'<button role="tab" data-fl256tab="'+t[0]+'" aria-selected="'+(F.tab===t[0])+'">'+esc(t[1])+"</button>").join("")+"</div>"+
     (list.length?'<div class="fgrid256">'+list.map(flowCard256).join("")+"</div>":'<div class="fempty256">'+esc(L("No workflows of your own yet — open a template and save it, or create one.","لا يوجد سير عمل خاص بك بعد — افتح قالباً واحفظه، أو أنشئ واحداً."))+"</div>")}
 function flowStepCard256(s,i,n,f){const k=STEPK256[s.kind]||STEPK256.image,mine=isMine256(f),vids=["auto"].concat(Object.keys(MODELS).filter(x=>x!=="auto"&&modelAllowed(x))),imgs=Object.keys(IMG_MODELS).filter(x=>typeof imgAllowed!=="function"||imgAllowed(x)).slice(0,14);
@@ -26143,6 +26143,19 @@ renderView=(o=>function(){const r=o.apply(this,arguments);try{const v=ALIAS82[S.
       if(old)old.outerHTML=modes262();else{const at=view.querySelector(".hubtabs");if(at)at.insertAdjacentHTML("afterend",modes262());else view.insertAdjacentHTML("afterbegin",modes262())}}}}catch(e){console.warn("v262",e)}return r})(renderView);
 (()=>{const st=document.createElement("style");st.textContent=`.mode262{flex-wrap:wrap;border-radius:18px}.fillhead82 .mode262{margin:0 0 10px}.sb1262>.sbi253>svg{color:var(--hub,var(--mute))}
 @media (max-width:767px){.mode262{width:100%;overflow-x:auto;flex-wrap:nowrap;border-radius:999px;scrollbar-width:none}.mode262 button{flex:none}}`;document.head.appendChild(st)})();
+
+/* ================= v263: LOOK FIXES — found by going through every page (computer, phone, Arabic) =================
+   · the agents' row was laid out for eight agents: the ninth dropped alone onto a second line. It is one even row for any number
+     of agents on a computer, and three across on a phone (3 × 3)
+   · small tap targets on a phone (the fold handle of the prompt bar, small icon buttons) are at least 32 px high
+   · 3D World on a phone: the view buttons (Walk · Fly · Orbit · full screen) ran off the screen's edge; they wrap inside it
+   · Workflows' title has the tool icon beside it, like every other page */
+(()=>{const st=document.createElement("style");st.textContent=`
+@media (min-width:1000px){.crewline{display:flex!important;gap:4px!important;overflow:visible!important}.crewline .botcard{flex:1 1 0;min-width:0}.crewline .baton{flex:none;width:14px}}
+@media (max-width:900px){.crewline{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media (max-width:767px){.fd134{height:32px!important;top:-20px!important}#main .btn.sm{min-height:32px}}
+@media (max-width:767px){.nw-stage .nw-top{inset-inline:10px!important;flex-wrap:wrap;justify-content:flex-end;row-gap:6px}}
+`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;
