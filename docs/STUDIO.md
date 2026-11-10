@@ -813,3 +813,9 @@ nooi Studio shows a **Quality** chip when a video is made of several parts: Stan
 - It fits in the 4 reference pictures (faces first, then sheets, then the # pictures), so the side and back views stay the same person.
 - A sheet drawn from words alone (a character with no face) is never used as a reference: it may show someone else.
 - Test: `tests/v259.py`; `v87`, `v159` and `v179` still pass.
+
+## v260 — two duplicates removed (first step of the clean-up)
+
+- The signed-in Home starts with the create box. The gift-code strip is gone from it (the header's gift button and Credits already redeem a code); the landing page keeps the strip.
+- Recipes left the side menu: Workflows lists the same chains. Old links to Recipes still open.
+- The audit behind this (32 pages, computer and phone) and the clean-up plan are in the session notes; the next steps need the owner's decisions.

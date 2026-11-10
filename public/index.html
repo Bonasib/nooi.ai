@@ -7831,7 +7831,7 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
 setInterval(()=>{if(S.gfPending&&S.user&&API.mode==="server"&&!GF.redeeming&&!AU.showAuth)gfRedeemNow(S.gfPending)},1200);
 /* top of the page: landing (signed out) and home; a gift button next to the credits */
 vLanding=(o=>function(){const h=o();return h.replace('<header class="lpnav">',gfStrip()+'<header class="lpnav">')})(vLanding);
-VIEWS.home=(o=>()=>{const h=o();return h.replace('<div class="hfhero">',gfStrip()+'<div class="hfhero">')})(VIEWS.home);
+// (v260: the signed-in Home starts with the create box — the gift code lives on the header's gift button and in Credits; the landing page keeps the strip)
 crBtn=(o=>function(){return o()+'<button class="btn ghost sm gfbtn" data-act="gfr-open" aria-label="'+esc(L("Redeem gift code","استخدم رمز الهدية"))+'" title="'+esc(L("Redeem gift code","استخدم رمز الهدية"))+'">'+ic("gift","width:17px;height:17px")+'</button>'})(crBtn);
 /* a redeem link from an email while signed out → open the sheet so they can sign up */
 (()=>{const q=new URLSearchParams(window.BOOT_Q||"");const red=q.get("redeem");if(!red)return;setTimeout(function w(n){if(S.user)return;if(typeof AU!=="undefined"&&!AU.showAuth&&$("#modalRoot")){gfOpen(red)}else if((n||0)<20)setTimeout(()=>w((n||0)+1),400)},1500)})();
@@ -25704,7 +25704,7 @@ try{SB253.fold=localStorage.getItem(SB253.k)==="1"}catch(e){}
 const SBG253=["image","video","audio","chars","world","edit","calendar","auto"];
 function sbHubs253(){const on=v=>{const f=typeof FEATURE_OF_VIEW!=="undefined"&&FEATURE_OF_VIEW[v];return!(f&&typeof featureOn==="function"&&!featureOn(f))};
   const out=[];for(const k of SBG253){
-    if(k==="auto"){const items=[];if(VIEWS.crew)items.push(["crew","crew","Film by 9 agents","فيلم بتسعة وكلاء"]);if(VIEWS.recipes)items.push(["recipes","tools","Recipes · steps in a row","الوصفات · خطوات متتالية"]);
+    if(k==="auto"){const items=[];if(VIEWS.crew)items.push(["crew","crew","Film by 9 agents","فيلم بتسعة وكلاء"]);/* (v260: Recipes left the menu — Workflows lists the same chains; old links to Recipes still open) */
       if(items.length)out.push(["auto","crew","Agents & automation","الوكلاء والأتمتة",items]);continue}
     const h=HUBS.find(x=>x[0]===k);if(!h)continue;const items=h[4].filter(t=>on(t[0])&&!(k==="explore"&&t[0]==="recipes"));if(items.length)out.push([h[0],h[1],h[2],h[3],items])}
   return out}
