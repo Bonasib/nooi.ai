@@ -905,3 +905,11 @@ The owner approved making real examples on the site's own key. The session can't
 - The Sound switch in the settings sheet is on by default, and browsers that had saved it off get it on once.
 - Why the live videos were silent: Seedance 2.0 wasn't activated on the ByteDance account, so MiniMax (silent video only) made them.
 - Test: `tests/v268.py`.
+
+## v269 — phone fixes from the owner's screenshots (Motion Control)
+
+- The action bar (Replace the person, Make the ad…) is fixed right on top of the bottom menu on phones; it used to float at a
+  different height once the page was scrolled, with page text showing below it.
+- The bottom menu is solid on phones (text no longer shows through it), and the page ends above the bar.
+- The chosen option's icon is dark on its lime square; titles split word by word have one normal space between words.
+- Test: `tests/v269.py`.

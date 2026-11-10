@@ -26300,6 +26300,24 @@ document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.c
 @media (max-width:767px){.cgrid266{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.cv266 b{font-size:12.5px}}
 `;document.head.appendChild(st)})();
 
+/* v269: phone fixes from the owner's screenshots — the action bar (Replace the person, Generate…) sat at different heights and
+   partly under the bottom menu, page text showed through the bottom menu, the chosen option's icon was lime on lime, and a title's
+   words had a double gap */
+(()=>{const st=document.createElement("style");st.textContent=`
+@media (max-width:767px){
+  #bottomnav{background:var(--bg)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+  .go118{position:fixed!important;left:0!important;right:0!important;bottom:var(--bn269,0px)!important;top:auto!important;margin:0!important;
+    padding:10px 16px!important;z-index:45;background:var(--panel)!important;border-top:1px solid var(--line)!important;box-shadow:0 -10px 18px -12px rgba(0,0,0,.55)!important}
+  body.go269 #main{padding-bottom:calc(var(--bn269,0px) + var(--go269,76px) + 24px)!important}
+}
+#main .mcm93[aria-checked="true"] .gl,#main .mcm93[aria-checked="true"] .gl svg{color:var(--on-lime,#0a1200)!important}
+h1:has(>.w121){column-gap:0!important;flex-wrap:wrap}
+h1:has(>.w121)>.tchip90{margin-inline-end:10px}
+h1>.w121+.w121{margin-inline-start:.26em}`;document.head.appendChild(st)})();
+function bar269(){try{const n=document.getElementById("bottomnav"),h=n&&getComputedStyle(n).display!=="none"?Math.round(n.getBoundingClientRect().height):0,r=document.documentElement.style;
+  r.setProperty("--bn269",h+"px");const g=innerWidth<768&&document.querySelector("#main .go118");document.body.classList.toggle("go269",!!g);if(g)r.setProperty("--go269",Math.round(g.getBoundingClientRect().height)+"px")}catch(e){}}
+renderView=(o=>function(){const r=o.apply(this,arguments);bar269();return r})(renderView);
+addEventListener("resize",bar269);if(window.visualViewport)visualViewport.addEventListener("resize",bar269);setTimeout(bar269,300);
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
