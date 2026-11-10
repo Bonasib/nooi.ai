@@ -863,3 +863,14 @@ Measured on every page: most tool pages already shared one frame (the options in
 - Every page's title now starts at the same edge (264 px on a 1440 px screen); Home and Explore open with a banner instead of a title.
 - Not changed: Image and nooi Studio keep their gallery with the prompt bar at the bottom; Characters, Coloring book, Enhance and Voice keep their own inner arrangement.
 - Tests: `tests/v264.py`; `v93` and `v90` follow the merged tab rows.
+
+## v265 — the common frame on the last four pages: Enhance, Coloring book, Voice & audio, Characters
+
+Every tool page now has the same frame: the options in a 420 px column on the start side (its main button in it), the result beside it. These four had their own arrangements. Their own fields, buttons and handlers are moved into the frame, never rewritten (`frame265`).
+
+- **Enhance:** the eight tools are a compact row of choices (name only). The chosen tool's options and its Run button are the column; what you enhanced is beside it.
+- **Coloring book:** every option and its button are the column; the pages it makes are beside it.
+- **Voice & audio:** the open tab's form is the column; its voices and results are beside it.
+- **Characters:** the list of characters and "from a photo" are the column; the chosen character (its face, looks, sheet) and its details are beside it, in two columns on a wide screen.
+- An empty result side says what will appear there. A phone stacks the options first, then the result.
+- Tests: `tests/v265.py`; `voice_sketch` follows the frame. The other tests of these pages still pass.

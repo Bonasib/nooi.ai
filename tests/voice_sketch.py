@@ -91,7 +91,7 @@ async def ui(p, w):
     lang = "ar" if mob else "en"
     await E("()=>{window.__t=[];const t0=toast;toast=function(m,o){window.__t.push(String(m));return t0.apply(this,arguments)};S.langAsked=true;document.getElementById('langsug')?.remove();S.lang='%s';S.user={name:'T',method:'google'};AU.showAuth=false;S.nd=null;go('voice');renderAll()}" % lang)
     ok(await wait_for("()=>!!document.querySelector('#ndlg')&&ND.info&&ND.info.voices.length===20", 15), f"{tag}: dialogue tool on the Voice page")
-    r["first"] = await E("()=>{const v=document.querySelector('.view'),p=document.querySelector('#ndlg'),lede=v.querySelector('.lede');let n=lede&&lede.nextElementSibling;if(n&&n.matches('.secbar122'))n=n.nextElementSibling;return !!lede&&n===p}")
+    r["first"] = await E("()=>{const v=document.querySelector('.view'),p=document.querySelector('#ndlg'),lede=v.querySelector('.lede');let n=lede&&lede.nextElementSibling;if(n&&n.matches('.secbar122'))n=n.nextElementSibling;if(n&&n.matches('.f265'))n=n.querySelector('.set265').firstElementChild;return !!lede&&n===p}")
     # (v122: the bar of the page's parts may sit between the intro and the first part)
     ok(r["first"], f"{tag}: the dialogue tool comes right after the intro")
     script = "سارة: (بحماس) هل رأيت شروق الشمس؟\nعمر: كل يوم… (يضحك)\nوهكذا بدأت الحكاية." if mob else "Sara: (excited) Did you see the sunrise?\nOmar: Every single day… (laughs)\nAnd that was how it all began."

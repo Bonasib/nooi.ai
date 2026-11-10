@@ -26176,6 +26176,51 @@ renderView=(o=>function(){const r=o.apply(this,arguments);try{const m=document.g
   #main[data-v="subs"] .edgrid>:nth-child(2){order:-1}
 }`;document.head.appendChild(st)})();
 
+/* ================= v265: THE COMMON FRAME ON THE LAST FOUR PAGES — Enhance, Coloring book, Voice & audio, Characters =================
+   Every tool page: the options in a 420 px column on the start side (its main button at its foot), the result beside it.
+   These four had their own arrangements; their own fields, buttons and handlers are moved into the frame, never rewritten.
+   · Enhance: the eight tools are one compact row of choices; the chosen tool's options are the column; what you enhanced is beside it
+   · Coloring book: every option is in the column; the pages it makes are beside it
+   · Voice & audio: the open tab's form is the column; its voices / results are beside it
+   · Characters: the list of characters and "from a photo" are the column; the chosen character (its looks, sheet and details) is beside it
+   A phone stacks them in the same order. */
+function frame265(view,setNodes,resNodes,empty,anchor){setNodes=setNodes.filter(Boolean);if(!setNodes.length||view.querySelector(":scope>.f265"))return null;
+  const box=document.createElement("div");box.className="two tool118 f265";const set=document.createElement("div");set.className="set118 set265";const res=document.createElement("div");res.className="res265";
+  (anchor||setNodes[0]).before(box);box.appendChild(set);box.appendChild(res);setNodes.forEach(n=>set.appendChild(n));resNodes.filter(Boolean).forEach(n=>res.appendChild(n));
+  if(empty&&![...res.children].some(k=>k.getBoundingClientRect().height>8))res.insertAdjacentHTML("afterbegin",'<div class="panel pad e265"><div class="empty">'+esc(empty)+"</div></div>");
+  return box}
+const after265=(view,sel)=>{const k=[...view.children],i=k.findIndex(e=>e.matches(sel));return i<0?[[],[]]:[k.slice(0,i+1),k.slice(i+1)]};
+const body265=view=>[...view.children].filter(e=>!e.matches("h1,.lede,.hubtabs,.sr98,.laichip,.spread:has(h1)"));
+const FRAME265={
+  finish(view){const form=view.querySelector(":scope>.panel.pad");if(!form)return;const kids=body265(view),i=kids.indexOf(form),note=kids.slice(0,i).filter(e=>!e.matches(".toolgrid"));
+    const box=frame265(view,[form],kids.slice(i+1),L("What you enhance appears here.","يظهر هنا ما تحسّنه."));if(box)note.forEach(n=>box.querySelector(".set265").appendChild(n))},
+  coloring(view){const go=view.querySelector(':scope>.btn.primary.big');if(!go)return;const kids=body265(view),i=kids.indexOf(go);
+    frame265(view,kids.slice(0,i+1),kids.slice(i+1),L("Your coloring pages appear here.","تظهر صفحات التلوين هنا."))},
+  voice(view){const form=view.querySelector(":scope>.panel.pad");if(!form)return;const kids=body265(view),i=kids.indexOf(form);
+    frame265(view,[form],kids.slice(i+1),L("Your voices and sounds appear here.","تظهر أصواتك هنا."))},
+  chars(view){const grid=view.querySelector(":scope>.chargrid"),photo=view.querySelector(":scope>.a3card");if(!grid||grid.children.length<2)return;const list=grid.children[0];
+    frame265(view,[list,photo],[grid],"",photo||grid)}};
+renderView=(o=>function(){const r=o.apply(this,arguments);try{const v=ALIAS82[S.view]||S.view,f=FRAME265[v],view=document.querySelector("#main>.view");if(f&&view){f(view);view.classList.add("fr265")}}catch(e){console.warn("v265 frame",e)}return r})(renderView);
+(()=>{const st=document.createElement("style");st.textContent=`
+.set265{display:flex;flex-direction:column;gap:10px;min-width:0}.res265{min-width:0;display:flex;flex-direction:column;gap:14px}
+.e265 .empty{min-height:220px;display:grid;place-items:center;color:var(--mute);text-align:center}
+#main[data-v="coloring"] .set265,#main[data-v="chars"] .set265>.charlist265{padding:16px;border:1px solid var(--line2);border-radius:16px;background:var(--panel)}
+#main[data-v="coloring"] .set265 .grid2{grid-template-columns:minmax(0,1fr)!important}
+#main[data-v="finish"] .set265>.panel.pad{max-width:none!important;width:auto!important}
+#main[data-v="finish"] .toolgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-bottom:16px}
+#main[data-v="finish"] .toolgrid .tool{display:grid;grid-template-columns:auto 1fr auto;align-items:center;column-gap:10px;row-gap:0;min-height:0;height:auto;padding:10px 12px;text-align:start}
+#main[data-v="finish"] .toolgrid .tool>span:not(.ico):not(.cost){display:none}
+#main[data-v="finish"] .toolgrid .tool b{font-size:13.5px;margin:0}
+#main[data-v="voice"] .set265>.panel.pad{max-width:none!important}
+#main[data-v="chars"] .res265>.chargrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;align-items:start}
+#main[data-v="chars"] .res265>.chargrid>:first-child{grid-row:1 / span 3}
+#main[data-v="chars"] .res265>.chargrid>.cbuild{width:auto!important;max-width:none!important}
+@media (max-width:1200px){#main[data-v="chars"] .res265>.chargrid{grid-template-columns:minmax(0,1fr)!important}#main[data-v="chars"] .res265>.chargrid>:first-child{grid-row:auto}}
+#main[data-v="chars"] .set265>.a3card{margin:0!important}
+@media (max-width:900px){.f265{display:block}.f265>.set265{margin-bottom:14px}}
+@media (max-width:767px){#main[data-v="finish"] .toolgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
