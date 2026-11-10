@@ -26221,6 +26221,85 @@ renderView=(o=>function(){const r=o.apply(this,arguments);try{const v=ALIAS82[S.
 @media (max-width:767px){#main[data-v="finish"] .toolgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 `;document.head.appendChild(st)})();
 
+/* ================= v266: CINEMATIC SHOTS — real film examples across genres; each is a template you can reuse =================
+   The owner approved making real examples on the site's own key. Admin → AI providers → Showcase has "Make the cinematic shots":
+   24 five-second film shots with sound (fantasy, action, the 80s, the 90s, comedy, science fiction, adventure, horror, western,
+   noir, romance, Arabian heritage, animation, documentary, historical epic, sport) — it says how many it will make before it
+   starts. A shot that has been made shows on Templates under "Cinematic shots" (by genre); a shot not made yet is not shown.
+   Opening a shot: its video (with sound), its prompt, and three choices before "Use this shot":
+   · who is in it — as filmed, or one of your characters (@Name: the face goes with it)
+   · the spoken line — as filmed, in another language (12), or no line
+   · the shape
+   "Use this shot" puts the finished prompt in nooi Studio with sound on; nothing is made or charged until you press Generate. */
+const GEN266={fantasy:["Fantasy","فانتازيا"],action:["Action","أكشن"],"80s":["The 80s","الثمانينات"],"90s":["The 90s","التسعينات"],comedy:["Comedy","كوميديا"],scifi:["Sci-fi","خيال علمي"],adventure:["Adventure","مغامرة"],horror:["Horror","رعب"],western:["Western","غرب أمريكي"],noir:["Noir","نوار"],romance:["Romance","رومانسي"],heritage:["Arabian heritage","تراث عربي"],animation:["Animation","رسوم متحركة"],documentary:["Documentary","وثائقي"],epic:["Historical epic","ملحمة تاريخية"],sport:["Sport","رياضة"]};
+const LANG266=[["en","English","الإنجليزية"],["ar","Arabic","العربية"],["fr","French","الفرنسية"],["es","Spanish","الإسبانية"],["tr","Turkish","التركية"],["ur","Urdu","الأردية"],["hi","Hindi","الهندية"],["id","Indonesian","الإندونيسية"],["de","German","الألمانية"],["ja","Japanese","اليابانية"],["ko","Korean","الكورية"],["zh","Chinese","الصينية"]];
+const CN266=()=>(S.cn266=Object.assign({genre:"",open:"",who:"",lang:"",aspect:""},S.cn266||{}));
+const cineAll266=()=>(typeof SC!=="undefined"&&SC.items||[]).filter(s=>s.cat==="cinema");
+const cineMade266=()=>cineAll266().filter(s=>s.url);
+// the finished prompt: the shot with its person (or the customer's @character) and the line in the chosen language
+function cinePrompt266(s,o){o=o||{};const c=o.who&&(S.chars||[]).find(x=>x.id===o.who),who=c?"@"+c.name:s.who[0].replace(/^./,ch=>ch.toUpperCase());let p=s.tpl[0].replace("{who}",who);
+  const lang=o.lang||"en";if(s.line&&lang!=="none"){const L0=LANG266.find(x=>x[0]===lang)||LANG266[0];
+    p+=lang==="en"?' Spoken line, in English: "'+s.line[0]+'"':lang==="ar"?' Spoken line, in Arabic: "'+s.line[1]+'"':" Spoken line, said in "+L0[1]+' (the '+L0[1]+' for: "'+s.line[0]+'")'}
+  return p}
+function cineCard266(s){const g=GEN266[s.genre]||[s.genre,s.genre];return'<button type="button" class="cc266" data-cn266="'+esc(s.id)+'" style="--ar:'+esc(String(s.aspect||"16:9").replace(":","/"))+'"><video class="frame sv" src="'+esc(s.url)+'#t=0.1" muted loop playsinline preload="metadata"></video><span class="cv266"><span class="cat253">'+esc(L(g[0],g[1]))+'</span><b dir="auto">'+esc(L(s.title[0],s.title[1]))+"</b></span></button>"}
+function cineBlock266(){const C=CN266(),made=cineMade266();if(!made.length)return typeof staff82==="function"&&staff82()&&API.mode==="server"&&cineAll266().length?'<div class="cnstaff266 small mute">'+ic("spark")+esc(L("Staff: the cinematic shots aren't made yet — Admin dashboard, AI providers, Showcase, “Make the cinematic shots”. Customers don't see this line.","للفريق: اللقطات السينمائية لم تُصنع بعد — لوحة الإدارة، مزودو الذكاء، المعرض، «اصنع اللقطات السينمائية». العملاء لا يرون هذا السطر."))+"</div>":"";
+  const gens=[...new Set(made.map(s=>s.genre))],list=C.genre&&gens.includes(C.genre)?made.filter(s=>s.genre===C.genre):made;
+  return'<section class="cn266" aria-label="'+esc(L("Cinematic shots","لقطات سينمائية"))+'"><div class="spread"><h2 class="sec" style="margin:0">'+esc(L("Cinematic shots","لقطات سينمائية"))+'</h2><span class="small mute">'+esc(L("Open one: swap the person, pick the language, use it.","افتح واحدة: بدّل الشخص، اختر اللغة، واستخدمها."))+"</span></div>"+
+    '<div class="cng266" role="tablist"><button role="tab" data-cng266="" aria-selected="'+!C.genre+'">'+esc(L("All","الكل"))+"</button>"+gens.map(g=>'<button role="tab" data-cng266="'+esc(g)+'" aria-selected="'+(C.genre===g)+'">'+esc(L((GEN266[g]||[g])[0],(GEN266[g]||[g,g])[1]))+"</button>").join("")+"</div>"+
+    '<div class="cgrid266">'+list.map(cineCard266).join("")+"</div></section>"}
+VIEWS.explore=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="string")return h;const b=cineBlock266();if(!b)return h;const i=h.indexOf('<div class="tplcats"');return i<0?h:h.slice(0,i)+b+h.slice(i)})(VIEWS.explore);
+function cineSheet266(){const C=CN266(),s=cineAll266().find(x=>x.id===C.open);if(!s||!s.url){closeSheet();return}const g=GEN266[s.genre]||[s.genre,s.genre],chars=(S.chars||[]).filter(c=>c&&c.name);
+  const opt=(v,t,cur)=>'<option value="'+esc(v)+'"'+(String(cur||"")===String(v)?" selected":"")+">"+esc(t)+"</option>";
+  $("#modalRoot").innerHTML='<div class="modal sheetwrap" data-act="close-sheet"><div class="sheet cns266" role="dialog" aria-modal="true" aria-label="'+esc(L(s.title[0],s.title[1]))+'" data-act="noop">'+
+    '<div class="spread" style="margin-bottom:10px"><div><span class="cat253">'+esc(L(g[0],g[1]))+'</span><h2 style="margin:2px 0 0" dir="auto">'+esc(L(s.title[0],s.title[1]))+'</h2></div><button class="btn ghost sm" data-act="close-sheet" aria-label="'+esc(L("Close","إغلاق"))+'">'+ic("x")+"</button></div>"+
+    '<video class="cnv266" src="'+esc(s.url)+'" controls playsinline loop style="aspect-ratio:'+esc(String(s.aspect).replace(":","/"))+'"></video>'+
+    '<div class="cnf266"><label><span class="lbl">'+esc(L("Who is in it","من يظهر فيها"))+'</span><select data-cn266f="who">'+opt("",L("As filmed","كما صُوّرت")+" — "+L(s.who[0],s.who[1]),C.who)+chars.map(c=>opt(c.id,"@"+c.name,C.who)).join("")+"</select></label>"+
+    (s.line?'<label><span class="lbl">'+esc(L("Spoken line","الجملة المنطوقة"))+'</span><select data-cn266f="lang">'+LANG266.map(x=>opt(x[0],L(x[1],x[2]),C.lang||(S.lang==="ar"?"ar":"en"))).join("")+opt("none",L("No line","بدون جملة"),C.lang)+"</select></label>":"")+
+    '<label><span class="lbl">'+esc(L("Shape","الأبعاد"))+'</span><select data-cn266f="aspect">'+[s.aspect,"16:9","9:16","1:1","21:9"].filter((a,i,arr)=>arr.indexOf(a)===i).map(a=>opt(a,a,C.aspect||s.aspect)).join("")+"</select></label></div>"+
+    (s.line?'<p class="small mute" dir="auto" style="margin:8px 0 0">'+esc(L("The line: ","الجملة: ")+"“"+L(s.line[0],s.line[1])+"”")+"</p>":"")+
+    '<details class="cnp266"><summary>'+esc(L("The prompt","البرومبت"))+'</summary><p dir="ltr" data-cn266p="1">'+esc(cinePrompt266(s,{who:C.who,lang:C.lang||(S.lang==="ar"?"ar":"en")}))+"</p></details>"+
+    (!chars.length?'<p class="small mute" style="margin:8px 0 0">'+esc(L("To put yourself or your own character in the shot, make a character first (Characters).","لتضع نفسك أو شخصيتك في اللقطة، أنشئ شخصية أولاً (الشخصيات)."))+"</p>":"")+
+    '<div class="row" style="margin-top:14px"><button class="btn primary big" data-act="cn266-use">'+ic("video")+esc(L("Use this shot","استخدم هذه اللقطة"))+'</button><button class="btn" data-act="cn266-copy">'+ic("copy")+esc(L("Copy the prompt","انسخ البرومبت"))+"</button></div>"+
+    '<p class="small mute" style="margin:8px 0 0">'+esc(L("It opens in nooi Studio with sound on. Nothing is made or charged until you press Generate there.","تُفتح في استوديو nooi والصوت مفعّل. لا يُصنع شيء ولا يُخصم حتى تضغط توليد هناك."))+"</p></div></div>"}
+document.addEventListener("click",e=>{const t=e.target;if(!t.closest)return;const C=CN266();let x;
+  if((x=t.closest("[data-cng266]"))){C.genre=x.dataset.cng266;persist();renderView();return}
+  if((x=t.closest("[data-cn266]"))){C.open=x.dataset.cn266;C.who="";C.lang="";C.aspect="";persist();cineSheet266();return}
+  const s=cineAll266().find(y=>y.id===C.open);if(!s)return;const o={who:C.who,lang:C.lang||(S.lang==="ar"?"ar":"en")};
+  if(t.closest('[data-act="cn266-copy"]')){e.stopImmediatePropagation();const p=cinePrompt266(s,o);try{navigator.clipboard.writeText(p)}catch(err){}toast(L("Prompt copied.","نُسخ البرومبت."),{type:"ok"});return}
+  if(t.closest('[data-act="cn266-use"]')){e.stopImmediatePropagation();const d=S.draft;d.prompt=cinePrompt266(s,o);d.audio=true;const a=C.aspect||s.aspect;if(a)d.aspect=a;if(MODELS.seedance20&&(typeof modelAllowed!=="function"||modelAllowed("seedance20")))d.model="seedance20";d.dur=5;
+    closeSheet();persist();go("video");setTimeout(()=>{const q=document.getElementById("dprompt");if(q){q.focus();q.scrollIntoView({block:"center"})}},80);toast(L("The shot is in the box — change anything, then Generate.","اللقطة في الصندوق — غيّر ما تشاء ثم اضغط توليد."),{type:"ok"});return}},true);
+document.addEventListener("change",e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.cn266f)return;const C=CN266();C[t.dataset.cn266f]=t.value;persist();const s=cineAll266().find(y=>y.id===C.open),p=document.querySelector("[data-cn266p]");if(s&&p)p.textContent=cinePrompt266(s,{who:C.who,lang:C.lang||(S.lang==="ar"?"ar":"en")})});
+// Explore's examples: a cinematic shot is listed only once it is made (no drawn stand-ins for films)
+xpExamples=(o=>function(){const r=o.apply(this,arguments);return Array.isArray(r)?r.filter(x=>!(x&&x.cat==="cinema"&&!x.url)):r})(xpExamples);
+// ---- Admin: make the cinematic shots (how many is said first; a second press starts them)
+SC_KIND.cinema=["Film shot","لقطة فيلم"];
+scAdmin=(o=>function(){const h=o.apply(this,arguments),list=(SC.admin||[]).filter(x=>x.cat==="cinema");if(!list.length||typeof h!=="string")return h;
+  const done=list.filter(x=>x.status==="done").length,run=list.filter(x=>x.status==="rendering").length,todo=list.length-done-run;
+  const box='<div class="cnadm266"><div class="spread"><b>'+esc(L("Cinematic shots","لقطات سينمائية"))+" · "+done+" / "+list.length+(run?" · "+run+" "+L("being made","قيد الصنع"):"")+'</b></div><p class="small mute" style="margin:6px 0">'+esc(L("24 film shots across 16 genres (fantasy, action, the 80s, the 90s, comedy, sci-fi, adventure and more), 5 seconds each, with sound, on Seedance 2.0 — on your own ByteDance key first. They show on Templates with their prompts; customers swap the person and the language. Staff jobs cost no nooi credits; your key's own balance is used.","24 لقطة فيلم في 16 نوعاً (فانتازيا، أكشن، الثمانينات، التسعينات، كوميديا، خيال علمي، مغامرة وغيرها)، 5 ثوانٍ لكل لقطة، بصوت، على Seedance 2.0 — بمفتاح ByteDance الخاص بك أولاً. تظهر في القوالب مع البرومبت؛ ويبدّل العملاء الشخص واللغة. أعمال الفريق لا تخصم رصيد nooi؛ يُستخدم رصيد مفتاحك."))+"</p>"+
+    (SC.cineAsk?'<p class="small" role="alert" style="margin:6px 0"><b>'+esc(L("This makes "+todo+" videos × 5 seconds ("+todo*5+" seconds of Seedance 2.0 with sound) on your key. Start?","سيُصنع "+todo+" فيديو × 5 ثوانٍ ("+todo*5+" ثانية على Seedance 2.0 بصوت) بمفتاحك. أبدأ؟"))+'</b></p><div class="row"><button class="btn sm primary" data-act="cine266-go" '+(SC.busy?"disabled":"")+">"+esc(L("Yes, make them","نعم، اصنعها"))+'</button><button class="btn sm" data-act="cine266-no">'+esc(L("Not now","ليس الآن"))+"</button></div>"
+      :'<div class="row"><button class="btn sm primary" data-act="cine266-ask" '+(SC.busy||!todo?"disabled":"")+">"+ic("video")+esc(todo?L("Make the cinematic shots","اصنع اللقطات السينمائية")+" ("+todo+")":L("All made","صُنعت كلها"))+"</button></div>")+"</div>";
+  const i=h.lastIndexOf("</div>");return h.slice(0,i)+box+h.slice(i)})(scAdmin);
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="cine266-ask"],[data-act="cine266-go"],[data-act="cine266-no"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const act=a.dataset.act;
+  if(act==="cine266-ask"){SC.cineAsk=true;renderView();return}if(act==="cine266-no"){SC.cineAsk=false;renderView();return}
+  SC.cineAsk=false;SC.busy=true;SC.msg="";renderView();
+  try{const r=await API.req("/v1/admin/showcase",{method:"POST",json:{group:"cinema"}});SC.admin=r.items||[];const n=SC.admin.filter(x=>x.status==="rendering").length;SC.msg=n?L(n+" in progress — each takes a few minutes. You can leave this page.",n+" قيد الإنشاء — كل واحدة تحتاج بضع دقائق. يمكنك مغادرة الصفحة."):L("Nothing new to make.","لا يوجد جديد لإنشائه.")}
+  catch(err){SC.msg=String(err.message||err)}finally{SC.busy=false;renderView()}},true);
+(()=>{const st=document.createElement("style");st.textContent=`
+.cn266{margin:6px 0 22px}.cng266{display:flex;gap:6px;overflow-x:auto;margin:10px 0 12px;scrollbar-width:none}.cng266::-webkit-scrollbar{display:none}
+.cng266 button{flex:none;border:1px solid var(--line2);background:none;color:var(--mute);font:500 13px/1 var(--sans);padding:8px 12px;border-radius:999px;cursor:pointer}
+.cng266 button[aria-selected="true"]{color:#111;background:var(--lime);border-color:var(--lime)}
+.cgrid266{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.cc266{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;border:1px solid var(--line2);background:#000;padding:0;cursor:pointer;transition:transform .18s ease,border-color .18s ease}
+.cc266 video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.cc266:hover{border-color:var(--lime);transform:translateY(-2px)}
+.cv266{position:absolute;inset-inline:0;bottom:0;padding:30px 12px 10px;display:flex;flex-direction:column;gap:2px;text-align:start;background:linear-gradient(to top,rgba(0,0,0,.85),transparent);color:#fff}.cv266 b{font:700 14px/1.25 var(--sans)}
+.cns266{max-width:760px}.cnv266{width:100%;max-height:52vh;border-radius:12px;background:#000;display:block}
+.cnf266{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:12px}.cnf266 label{display:flex;flex-direction:column;gap:4px;min-width:0}.cnf266 select{width:100%}
+.cnp266{margin-top:10px}.cnp266 p{font-size:12.5px;color:var(--mute);margin:6px 0 0;line-height:1.5}
+.cnstaff266{display:flex;gap:8px;align-items:center;padding:10px 12px;border:1px dashed var(--line2);border-radius:12px;margin:0 0 14px}.cnstaff266 svg{width:15px;height:15px;flex:none;color:var(--lime)}
+.cnadm266{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+@media (max-width:767px){.cgrid266{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.cv266 b{font-size:12.5px}}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

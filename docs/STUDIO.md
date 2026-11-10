@@ -874,3 +874,18 @@ Every tool page now has the same frame: the options in a 420 px column on the st
 - **Characters:** the list of characters and "from a photo" are the column; the chosen character (its face, looks, sheet) and its details are beside it, in two columns on a wide screen.
 - An empty result side says what will appear there. A phone stacks the options first, then the result.
 - Tests: `tests/v265.py`; `voice_sketch` follows the frame. The other tests of these pages still pass.
+
+## v266 — cinematic shots: real film examples across genres, each a reusable template
+
+The owner approved making real examples on the site's own key. The session can't reach the live site, so the owner starts them from Admin.
+
+- **The set** (`lib/cinema266.js`): 24 five-second film shots with sound in 16 genres — fantasy, action, the 80s, the 90s, comedy, science fiction, adventure, horror, western, noir, romance, Arabian heritage, animation, documentary, historical epic, sport. Everyone in them is fictional. Each is a template: `{who}` is the person in it, and it has a spoken line (English and Arabic; the documentary shot has none).
+- **Making them:** Admin → AI providers → Showcase → "Make the cinematic shots". It first says how many it will make (24 videos × 5 seconds on Seedance 2.0 with sound); a second press starts them. They go to the owner's ByteDance key first. Staff jobs cost no nooi credits; the key's own balance is used. Only missing ones are made; the older "Make the showcase" button doesn't start them.
+- **Where they show:** Templates → "Cinematic shots", with genre chips. A shot that isn't made yet isn't shown to customers (staff see one line saying where to make them). Each made shot is also posted to Explore with its prompt.
+- **Reusing a shot:** opening it shows its video, then:
+  - who is in it: as filmed, or one of the customer's characters (`@Name`, so the face goes with it);
+  - the spoken line's language: English, Arabic, French, Spanish, Turkish, Urdu, Hindi, Indonesian, German, Japanese, Korean, Chinese, or no line;
+  - the shape.
+  - "Use this shot" opens nooi Studio with the finished prompt and sound on. Nothing is made or charged until Generate. "Copy the prompt" copies it.
+- Dubbing an already-finished video into another language stays in Subtitles & dubbing; the shot's sheet doesn't load a video there.
+- Tests: `tests/v266.py` (stand-in ByteDance); `v80_hubs` follows the tab rows of v264.
