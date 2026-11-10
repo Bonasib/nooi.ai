@@ -263,3 +263,4 @@ echo "▶ v264: every page's title at the same edge, Subtitles' options on the s
 echo "▶ v265: Enhance, Coloring book, Voice and Characters in the common frame"; python3 tests/v265.py | python3 -c "import sys;t=sys.stdin.read();print(t.strip().splitlines()[-1] if t.strip() else 'no output');sys.exit(0 if 'v265 OK' in t else 1)"
 echo "▶ v266: the cinematic showcase — 24 shots made from Admin, reused with another person and language"; python3 tests/v266.py | python3 -c "import sys;t=sys.stdin.read();print(t.strip().splitlines()[-1] if t.strip() else 'no output');sys.exit(0 if 'v266 OK' in t else 1)"
 echo "▶ v267: one click on the side menu after editing a field; no staff-only saves from a customer's browser"; python3 tests/v267.py
+echo "▶ v268: videos are made with sound unless it is turned off"; python3 tests/v268.py

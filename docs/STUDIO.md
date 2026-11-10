@@ -897,3 +897,11 @@ The owner approved making real examples on the site's own key. The session can't
 - **A customer saw “Not allowed”**: any edited field or pressed button made the browser try to save staff-only notes.
   That save now runs for staff only.
 - Test: `tests/v267.py`.
+
+## v268 — videos with sound
+
+- Tools that send no sound choice (films, long videos, agents) now ask an engine that makes sound for it; edits of the client's
+  own video keep that video's sound; silent engines (MiniMax Hailuo) stay silent.
+- The Sound switch in the settings sheet is on by default, and browsers that had saved it off get it on once.
+- Why the live videos were silent: Seedance 2.0 wasn't activated on the ByteDance account, so MiniMax (silent video only) made them.
+- Test: `tests/v268.py`.

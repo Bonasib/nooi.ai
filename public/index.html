@@ -21536,7 +21536,7 @@ setTimeout(disk186,3000);setInterval(disk186,600000);
    6. no slow-motion buttons: "slow motion", "slow-mo", "سلو موشن", "حركة بطيئة", "تصوير بطيء" in the words turn it on (the server
       makes it — lib/caps187.js), the editor's speed tool (0.5× / 0.25×) makes its own smooth one (v168). */
 const HF187={add:false};
-S.hf=Object.assign({batch:1,sound:false,br:"high"},S.hf||{});
+S.hf=Object.assign({batch:1,sound:true,br:"high"},S.hf||{});if(!S.hf.snd268){S.hf.snd268=1;S.hf.sound=true} /* v268: sound on by default — it was off, so every video came out silent unless the switch was found and turned on (the sound is in the price) */;
 ["360P","480P","540P","768P"].forEach(r=>{if(!HF_RES.video.includes(r))HF_RES.video.push(r)});
 const RANK187=["360P","480P","540P","720P","768P","1080P","2K","4K"];
 const near187=(list,want)=>{const w=RANK187.indexOf(String(want||"").toUpperCase());if(!list||!list.length)return want;if(w<0)return list[0];return list.slice().sort((a,b)=>Math.abs(RANK187.indexOf(a)-w)-Math.abs(RANK187.indexOf(b)-w)||RANK187.indexOf(b)-RANK187.indexOf(a))[0]};
