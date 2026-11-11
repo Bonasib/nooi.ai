@@ -4074,7 +4074,7 @@ function moderate(t){t=String(t||"").toLowerCase();const minor=/(child|kid|minor
   if(minor&&sexual)return"minors";if(sexual)return"sexual";if(/(deepfake|undress|remove (her|his) clothes|face ?swap (of|with) (a )?(celebrity|politician)|تعرية|ديب فيك)/.test(t))return"likeness";return null}
 const MOD_MSG={minors:["This request isn't allowed. Content sexualizing minors is strictly forbidden.","هذا الطلب غير مسموح. أي محتوى جنسي يتعلق بالقاصرين ممنوع منعاً باتاً."],sexual:["Sexual or explicit content isn't allowed on nooi.ai.","المحتوى الجنسي أو الصريح غير مسموح في nooi.ai."],likeness:["Deepfakes or undressing real people aren't allowed.","التزييف العميق أو تعرية الأشخاص الحقيقيين غير مسموح."]};
 addJob=(orig=>function(o){const flag=o&&moderate((o.prompt||"")+" "+(o.title||""));if(flag){toast(L(MOD_MSG[flag][0],MOD_MSG[flag][1]));logUse(L("Blocked by safety filter","حُجب بفلتر الأمان"),0,"");return null}
-  if(o&&o.model==="auto"){const r=o.kind==="image"?{id:pickImage(o.prompt)}:pickVideo(o.prompt,Object.assign({},S.draft,o.meta||{}));o.model=r.id;o.meta=Object.assign({},o.meta,{auto:true})}
+  if(o&&o.model==="auto"&&!(o.kind==="video"&&typeof auto272c==="function"&&auto272c())){const r=o.kind==="image"?{id:pickImage(o.prompt)}:pickVideo(o.prompt,Object.assign({},S.draft,o.meta||{}));o.model=r.id;o.meta=Object.assign({},o.meta,{auto:true})}
   const j=orig(o);if(j)logUse(KIND(j)+" · "+(j.title||j.prompt||""),j.cost||0,j.model&&MODELS[j.model]?MODELS[j.model].name:"");return j})(addJob);
 enqueueChapter=(orig=>function(c){if(moderate(c.prompt)){const f=moderate(c.prompt);toast(L(MOD_MSG[f][0],MOD_MSG[f][1]));return false}if(c.model==="auto")c.model=pickVideo(c.prompt,{camera:c.camera,style:S.story.style}).id;const ok=orig(c);if(ok)logUse(L("Chapter · ","فصل · ")+c.title,vcost(c.model,c.dur),MODELS[c.model]&&MODELS[c.model].name);return ok})(enqueueChapter);
 makeImages=(orig=>function(prompt){const p=(prompt||S.img.prompt||"");if(moderate(p)){const f=moderate(p);toast(L(MOD_MSG[f][0],MOD_MSG[f][1]));return}const was=S.img.model;if(was==="auto")S.img.model=pickImage(p);try{orig(prompt)}finally{S.img.model=was}})(makeImages);
@@ -26322,6 +26322,46 @@ addEventListener("resize",bar269);if(window.visualViewport)visualViewport.addEve
    controls now play with sound; one that starts by itself (allowed only muted) gets its sound the moment the person presses play */
 document.addEventListener("play",e=>{const v=e.target;if(!v||v.tagName!=="VIDEO"||!(v.hasAttribute("controls")||v.closest(".vp87"))||!v.muted)return;
   const act=navigator.userActivation?navigator.userActivation.isActive:true;if(act){v.muted=false;if(!v.volume)v.volume=1}},true);
+/* v272: nooi Auto is the only place engines are chosen for the customer — and it's done on the server: the agents write the video
+   as scenes (about one every 5 s) and give each the engine it needs: the strong one (API.cfg.auto272.strong) for action and visual
+   effects, the light one for calm scenes. The page sends "auto" (no shot plan of its own) and shows the most it can cost — every
+   scene on the strong engine; the server lowers the hold to what the scenes really use. A model the customer picks is made on that
+   model or not at all (no backup engine anywhere). */
+const AUTO272={sending:false};
+const auto272c=()=>API.mode==="server"&&API.cfg&&API.cfg.auto272&&API.cfg.auto272.strong?API.cfg.auto272:null;
+hfStudio=(o=>function(prompt,dur){const T=auto272c();if(!T)return o.apply(this,arguments);if(AUTO272.sending)return null;
+  dur=+dur||5;const n=Math.max(1,Math.min(16,Math.round(dur/5))),per=Math.ceil(dur/n),one=vcost(T.strong,per),all=one*n;
+  return{cat:hfCat(prompt),n,per,shots:Array.from({length:n},()=>({m:T.strong,hero:true})),total:all,all,save:0,auto272:T,least:vcost(T.light,per)*n}})(hfStudio);
+hfStudioPlanHTML=(o=>function(){const h=o(),T=auto272c();if(!T||S.hf.tab!=="video"||!nooiOn())return h;
+  const key=L("Picks the engine for each shot:","يختار محرك كل لقطة:"),i=h.indexOf(key);if(i<0)return h;const a=h.lastIndexOf('<li',i),b=h.indexOf("</li>",i);if(a<0||b<0)return h;
+  const pl=hfStudioP(),same=T.strong===T.light;
+  const txt=esc(same?L("Reads every scene and makes it on "+hfMName("video",T.strong)+".","يقرأ كل مشهد ويصنعه على "+hfMName("video",T.strong)+".")
+    :L("Reads every scene: action and visual effects go to the strong engine, calm scenes to the light one — you see the most it can cost, and pay only what the scenes use.","يقرأ كل مشهد: الأكشن والمؤثرات البصرية للمحرك القوي، والمشاهد الهادئة للمحرك الخفيف — ترى أقصى سعر، وتدفع فقط ما تستخدمه المشاهد."));
+  const chips='<span class="mchips"><span class="mshot"><small>'+esc(L("Action · VFX","أكشن · مؤثرات"))+"</small>"+mchip(T.strong)+"</span>"+(same?"":'<span class="mshot"><small>'+esc(L("Calm","هادئ"))+"</small>"+mchip(T.light)+"</span>")+"</span>"+
+    (pl&&!same&&pl.least<pl.total?'<em class="hfsave">'+esc(L(pl.least+"–"+pl.total+" credits","من "+pl.least+" إلى "+pl.total+" رصيد"))+"</em>":"");
+  return h.slice(0,a)+hfBotLine("producer",txt,chips)+h.slice(b+5)})(hfStudioPlanHTML);
+addJob=(o=>function(j){const T=auto272c(),H=S.hf;
+  if(j&&T&&HF_GRAB&&j.kind==="video"&&H.tab==="video"&&nooiOn()&&!(j.meta&&(j.meta.parts||j.meta.partModels||j.meta.partImages))){
+    const pl=hfStudio(j.prompt,j.dur||H.dur);AUTO272.sending=true;
+    try{j.model="auto";if(pl)j.cost=pl.total;j.meta=Object.assign({},j.meta,{cat:hfCat(j.prompt),studio:2});return o.apply(this,arguments)}finally{AUTO272.sending=false}}
+  return o.apply(this,arguments)})(addJob);
+/* v272: Admin → AI providers → "nooi Auto": which engine takes action / visual-effects scenes (strong) and which takes calm ones (light).
+   Empty = the first one that is on and connected. */
+const A272={d:null,busy:false,msg:""};
+function auto272Box(){const d=A272.d;if(!d)return'<div class="panel pad auto272adm"><b>'+esc(L("nooi Auto","nooi التلقائي"))+"</b> <span class=\"small mute\">…</span></div>";
+  const nm=id=>(MODELS[id]||{}).name||id,opt=(list,cur)=>'<option value="">'+esc(L("Automatic","تلقائي"))+"</option>"+list.map(id=>'<option value="'+esc(id)+'"'+(cur===id?" selected":"")+">"+esc(nm(id))+"</option>").join("");
+  const now=d.now?L("Now: "+nm(d.now.strong)+" for action · "+nm(d.now.light)+" for calm scenes","الآن: "+nm(d.now.strong)+" للأكشن · "+nm(d.now.light)+" للمشاهد الهادئة"):L("No engine is connected for Auto yet.","لا يوجد محرك متصل للتلقائي بعد.");
+  return'<div class="panel pad auto272adm"><div class="spread"><b>'+esc(L("nooi Auto — the engines it uses","nooi التلقائي — المحركات التي يستخدمها"))+'</b></div><p class="small mute" style="margin:4px 0 10px">'+
+    esc(L("The agents write the video as scenes. Action and visual-effects scenes go to the strong engine, calm scenes to the light one. A model a customer picks is always made on that model — the site never switches engines on its own.","يكتب الوكلاء الفيديو كمشاهد. مشاهد الأكشن والمؤثرات البصرية للمحرك القوي، والهادئة للخفيف. النموذج الذي يختاره العميل يُصنع عليه دائماً — الموقع لا يغيّر المحرك من تلقاء نفسه."))+'</p>'+
+    '<div class="grid2"><div><label class="lbl" for="a272s">'+esc(L("Strong (action · VFX)","قوي (أكشن · مؤثرات)"))+'</label><select id="a272s">'+opt(d.strongList||[],d.strong)+'</select></div><div><label class="lbl" for="a272l">'+esc(L("Light (calm scenes)","خفيف (مشاهد هادئة)"))+'</label><select id="a272l">'+opt(d.lightList||[],d.light)+"</select></div></div>"+
+    '<div class="row" style="margin-top:10px;gap:10px;align-items:center"><button class="btn" data-act="a272-save"'+(A272.busy?" disabled":"")+">"+esc(L("Save","حفظ"))+'</button><span class="small mute" role="status">'+esc(A272.msg||now)+"</span></div></div>"}
+function auto272Load(){if(A272.busy)return;A272.busy=true;API.req("/v1/admin/auto272").then(r=>{A272.d=r}).catch(()=>{A272.d={strongList:[],lightList:[],now:null}}).finally(()=>{A272.busy=false;if(S.view==="admin")renderView()})}
+renderView=(o=>function(){const r=o.apply(this,arguments);try{if(S.view==="admin"&&S.admTab==="models"&&API.mode==="server"&&typeof isAdmin==="function"&&isAdmin()&&!document.querySelector("#main .auto272adm")){
+  const row=document.querySelector("#main .aiprow");if(row){row.insertAdjacentHTML("beforebegin",auto272Box());if(!A272.d)auto272Load()}}}catch(e){console.warn("v272 admin",e)}return r})(renderView);
+document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest('[data-act="a272-save"]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();
+  const s=($("#a272s")||{}).value||"",l=($("#a272l")||{}).value||"";A272.busy=true;renderView();
+  try{const r=await API.req("/v1/admin/auto272",{method:"PUT",json:{strong:s,light:l}});A272.d=Object.assign({},A272.d,r);A272.msg=L("Saved.","تم الحفظ.");API.cfg=await API.req("/v1/config")}catch(err){A272.msg=String(err.message||err)}
+  A272.busy=false;renderView();setTimeout(()=>{A272.msg="";if(S.view==="admin")renderView()},2500)},true);
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

@@ -936,3 +936,23 @@ The owner approved making real examples on the site's own key. The session can't
 - Price: MiniMax video cost is H3's $0.08/s at 768P ($0.40 per 5 s); H3 is paid from MiniMax's pay-as-you-go balance, not the
   video packages. MiniMax's v2 errors (e.g. "insufficient balance (1008)") are read.
 - Tests: `tests/v271.py`; v185, v187, v252 follow H3.
+
+## v272 — the customer's model is the model; nooi Auto picks an engine per scene
+
+- **No backup engine anywhere.** A job is made on the engine it was sent to or not at all: when it fails, it fails with that
+  engine's reason and every credit comes back. Removed: the AI engine's other models in turn, Seedance on the owner's key after an
+  engine error, MiniMax after the AI engine or ByteDance, NVIDIA's replacement engine, the other 3D engine, the free backup voice,
+  the avatar's other face engine and other voice models, a long video's part moved to another engine, a Seedance model swapped for
+  the "nearest" one switched on. What stays: the same engine asked once more when it failed on its own side (Motion Control /
+  Character Swap, a part of a long video), and a swap's first result when its remake didn't work.
+- **A picked model is made on that model.** If the site would make it on another one (its engine isn't connected, or an owner
+  switch would move it), the job is refused before anything is charged. "Everything on MiniMax" now takes only jobs with no model of
+  their own (Auto).
+- **nooi Auto** (`lib/auto272.js`) is the only choice the site makes: about one scene every 5 s; the agents' planner tags each
+  scene `"power": "strong"` (action, fights, chases, explosions, crowds, creatures, magic, fire, storms, other visual effects) or
+  `"light"` (calm); without the tag, the scene's words decide. Strong scenes go to the strong engine, calm ones to the light one —
+  only engines in the customer's plan, on, connected and not closed to the key. The page sends "auto" and shows the most it can cost
+  (every scene strong); the server lowers the hold to what the scenes use. A one-scene video gets its engine at once.
+- **Admin → AI providers → nooi Auto**: the owner names the strong and light engines (empty = the first available).
+- Tests: `tests/v272.py`. v175, v185, v247, v250, v252 (backup behaviour) are retired; v165, v179, v237, v240, nvidia_e2e follow
+  the new rule.

@@ -23,14 +23,17 @@ ok(AI.llmInfo().provider !== "minimax", "off: the text AI isn't MiniMax");
 // ---- on
 MM.mmState183().all = true;
 ok(MM.mmAll237(), "on: the owner's switch");
-for (const m of ["kling30", "seedance", "auto", "veo3", "wan30"]) ok(key("video", { kind: "video", model: m, prompt: "a", dur: 5 }) === "mm183-video", `a video picked as ${m} → MiniMax`);
-ok(key("video", { kind: "video", model: "seedance", inputs: { vStart: "/media/a.jpg" } }) === "mm183-video", "a video from a picture → MiniMax (Hailuo first frame)");
+// (v272: "Everything on MiniMax" takes the jobs with no model of their own; a model the customer picked stays with its own engine)
+ok(key("video", { kind: "video", model: "auto", prompt: "a", dur: 5 }) === "mm183-video", "a video on Auto → MiniMax");
+for (const m of ["kling30", "seedance", "veo3", "wan30"]) ok(key("video", { kind: "video", model: m, prompt: "a", dur: 5 }) !== "mm183-video", `a video picked as ${m} stays with its own engine`);
+ok(key("video", { kind: "video", model: "auto", inputs: { vStart: "/media/a.jpg" } }) === "mm183-video", "an Auto video from a picture → MiniMax (H3 first frame)");
 ok(key("video", { kind: "video", model: "mcswap", inputs: { vRef1: "/media/a.mp4" } }) !== "mm183-video", "a Character Swap stays with its engine");
 ok(key("video", { kind: "video", model: "mc30" }) !== "mm183-video", "Motion Control stays");
 ok(key("video", { kind: "lipsync", model: "auto" }) !== "mm183-video", "lip-sync stays");
 ok(key("video", { kind: "video", model: "auto", inputs: { vIn: "/media/x.webm" } }) !== "mm183-video", "a job that reads a video stays");
-for (const m of ["nano", "dotimg", "mj", "img20", "auto"]) ok(key("image", { kind: "image", model: m, prompt: "a" }) === "mm183-image", `a picture picked as ${m} → MiniMax`);
-ok(key("image", { kind: "image", model: "nano", inputs: { chRef: "/media/face.jpg" } }) === "mm183-image", "a picture with a character's photo → MiniMax (subject reference)");
+ok(key("image", { kind: "image", model: "auto", prompt: "a" }) === "mm183-image", "a picture on Auto → MiniMax");
+for (const m of ["nano", "dotimg", "mj", "img20"]) ok(key("image", { kind: "image", model: m, prompt: "a" }) !== "mm183-image", `a picture picked as ${m} stays with its own engine`);
+ok(key("image", { kind: "image", model: "auto", inputs: { chRef: "/media/face.jpg" } }) === "mm183-image", "an Auto picture with a character's photo → MiniMax (subject reference)");
 ok(key("image", { kind: "image", model: "nano", inputs: { iRef: "/media/frame.jpg" } }) !== "mm183-image", "a picture edit (a picture to change) stays");
 ok(key("image", { kind: "upscale" }) !== "mm183-image", "upscaling stays");
 MM.mmState183().voice = false; MM.mmState183().music = false;
@@ -53,7 +56,7 @@ const t2 = await AI.llm("hi", {}); ok(t2 === "from the other AI" && seen.length 
 delete process.env.LLM_API_KEY;
 // ---- off again; MINIMAX_ALL=1 on the server turns it on whatever Admin says
 MM.mmState183().all = false; ok(!MM.mmAll237() && key("video", { kind: "video", model: "kling30" }) !== "mm183-video", "switched off → back to each model's engine");
-process.env.MINIMAX_ALL = "1"; ok(MM.mmAll237() && key("image", { kind: "image", model: "nano" }) === "mm183-image", "MINIMAX_ALL=1 turns it on from the server");
+process.env.MINIMAX_ALL = "1"; ok(MM.mmAll237() && key("image", { kind: "image", model: "auto" }) === "mm183-image", "MINIMAX_ALL=1 turns it on from the server");
 delete process.env.MINIMAX_API_KEY; st.saveCfg("providers", "minimax", { apiKey: "" });
 ok(!MM.mmAll237() || st.configured("minimax"), "no MiniMax key → nothing goes to MiniMax");
 fs.rmSync(D, { recursive: true, force: true });

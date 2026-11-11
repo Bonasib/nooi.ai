@@ -130,8 +130,8 @@ def server_checks():
     mode(failAvatar=True); j, d, reqs = avatar("Good morning! Today we open the new shop. Thank you for waiting.")
     mode(failAvatar=False); ms = models(reqs); f2 = face_of(reqs, "infinitalk/from-audio"); f1 = face_of(reqs)
     out["fallback"] = {"models": ms, "status": d.get("status"), "short": f2.get("prompt", ""), "same": f1.get("audio_url") == f2.get("audio_url")}
-    ok(ms.count("elevenlabs/text-to-dialogue-v3") == 1 and "infinitalk/from-audio" in ms and out["fallback"]["same"] and d.get("status") == "done", f"the next face engine, the same voice (made once) {out['fallback']}")
-    ok("never a fixed stare" in f2.get("prompt", "") and "Expressions in order: warm smile" in f2.get("prompt", "") and len(f2.get("prompt", "")) < 700, f"InfiniteTalk's short direction {f2.get('prompt')}")
+    # (v272: no backup engine — the face engine that fails is the end of it: the avatar fails, nothing charged, no other face engine)
+    ok("infinitalk/from-audio" not in ms and d.get("status") == "failed", f"the face engine fails → the avatar fails (no other face engine) {out['fallback']}")
     # 5. a face video (lips only): the acted voice, the video's own eyes (no direction sent)
     n = len(stats()["reqs"]); j = api("/v1/jobs", {"kind": "lipsync", "prompt": "Wow, this is amazing! Can you believe it?", "inputs": {"lsV": "/media/face.mp4"}, "meta": {}}); d = done(j.get("id", "")); reqs = stats()["reqs"][n:]
     volc = face_of(reqs, "volcengine/video-to-video-lip-sync"); out["video"] = {"models": models(reqs), "volc": volc, "status": d.get("status")}
@@ -140,8 +140,9 @@ def server_checks():
     mode(refuseV3=True); j, d, reqs = avatar("Hello friends! We are so happy to see you.")
     v2 = next(((r["body"].get("input") or {}) for r in reqs if r["body"].get("model") == "elevenlabs/text-to-speech-multilingual-v2"), {})
     out["refused"] = {"models": models(reqs), "v2": v2, "status": d.get("status")}
-    ok(models(reqs)[:3] == ["elevenlabs/text-to-dialogue-v3", "elevenlabs/text-to-speech-multilingual-v2", "kling/ai-avatar-standard"] and v2.get("text") == "Hello friends! We are so happy to see you." and v2.get("stability") == 0.46 and d.get("status") == "done",
-       f"v3 refused → v2 with the warm delivery, no tags {out['refused']}")
+    # (v272: no backup voice model — v3 refused → the avatar fails, nothing charged; v3 is then skipped for a while)
+    ok(models(reqs)[:1] == ["elevenlabs/text-to-dialogue-v3"] and "elevenlabs/text-to-speech-multilingual-v2" not in models(reqs) and d.get("status") == "failed",
+       f"v3 refused → the avatar fails (no other voice model) {out['refused']}")
     j, d, reqs = avatar("See you tomorrow, same place.")
     ok("elevenlabs/text-to-dialogue-v3" not in models(reqs) and d.get("status") == "done", f"…and v3 isn't asked again for a while {models(reqs)}")
     mode(refuseV3=False)

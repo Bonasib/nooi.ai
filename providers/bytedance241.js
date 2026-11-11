@@ -48,8 +48,9 @@ export const bdOn241 = () => configured("seedance");
 export function bdModel241(body = {}) {
   const pick = String(body.model || "auto"), own = (settingsS().modelCat || {})[pick]?.apiModel, card = String(cfg("seedance").model || "");
   if (own && /seedance/i.test(own)) return own;
-  if (["seedance", "auto"].includes(pick) && /^dreamina-seedance-2/.test(card)) return card;
-  return open250(BD_MODELS241[pick] || (body.meta?.edit135 ? BD_MODELS241.seedance20 : BD_MODELS241.seedance));
+  // (v272: the Seedance model picked is the one sent — never the "nearest" one the account has switched on)
+  if (["seedance", "auto"].includes(pick) && /^dreamina-seedance-2/.test(card)) return card;   // (the owner's card says which Seedance "Seedance" is on the key)
+  return BD_MODELS241[pick] || (body.meta?.edit135 ? BD_MODELS241.seedance20 : BD_MODELS241.seedance);
 }
 // v250: "Your account … has not activated the model …" — BytePlus switches each Seedance model on separately (Ark Console → model
 // activation). A model it turned down is remembered for 6 hours (or until the Seedance card's Test in Admin, or a video made on

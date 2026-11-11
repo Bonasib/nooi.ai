@@ -423,16 +423,15 @@ async function makeVoice165(p, call, plan, said) {
       return await wait(t); }
     catch (e) { errs.push("v3: " + String(e.message).slice(0, 120)); if ([400, 404, 422].includes(e.status)) V3_165.offUntil = Date.now() + 6 * 3600e3; else if (e.taskFail) V3_165.offUntil = Date.now() + 3600e3; }
   }
-  // the avatar's own voice on multilingual v2, then on turbo 2.5, then the engine's default voice (always on the engine)
-  const tries = [["elevenlabs/text-to-speech-multilingual-v2", own], ["elevenlabs/text-to-speech-turbo-2-5", own], ["elevenlabs/text-to-speech-multilingual-v2", KIE_VOICE_DEFAULT]];
+  // the avatar's own voice on multilingual v2 (v272: one engine and the chosen voice — no other model, no other voice, no backup voice)
+  if (plan && errs.length) throw Object.assign(new Error("The voice couldn't be made — the avatar wasn't charged (" + errs.join(" · ") + ")"), { type: "provider", retryable: false, noFallback: true });
+  const tries = [["elevenlabs/text-to-speech-multilingual-v2", own]];
   for (const [tm, vid] of tries) {
     try {
       const t = await call("/api/v1/jobs/createTask", { method: "POST", body: JSON.stringify({ model: tm, input: { ...kieInput(tm, { ...p, prompt: plain, kind: "voice", meta: { ...(p.meta || {}), voiceId: vid, plain96: tm !== tries[0][0] || vid !== own } }), ...extraInputs(cfg("kie"), tm) } }) });
       return await wait(t);
     } catch (e) { errs.push(tm.split("/")[1] + ": " + String(e.message).slice(0, 120)); await new Promise((r) => setTimeout(r, 2500)); }
   }
-  // the backup voice on our own server (free), so the avatar still speaks
-  try { const { piperOn, backupVoiceFile } = await import("./piper.js"); if (piperOn()) return await backupVoiceFile(plain, p.meta?.lang); } catch (e) { errs.push("backup voice: " + String(e.message).slice(0, 120)); }
   throw Object.assign(new Error("The voice service is busy — the avatar wasn't charged (" + errs.join(" · ") + ")"), { type: "provider", retryable: false, noFallback: true,
     userMsg: "The avatar's voice couldn't be made right now — nothing was charged. Try again in a minute, or add a voice file." });
 }

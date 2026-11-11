@@ -217,14 +217,16 @@ export const mmText237 = () => mmAll237() ? { base: base() + "/anthropic", key: 
 // which MiniMax engine takes a job (null = not MiniMax): the voice and music switches, and MiniMax Image picked by hand
 export function mmRoute183(cap, body) {
   body = body || {};
+  // (v272: "Everything on MiniMax" takes the jobs with no model of their own — a model the customer picked is made on that model)
+  const own272 = !body.model || body.model === "auto";
   if (mmAll237()) {
-    if (cap === "video" && ["video", "chapter", ""].includes(String(body.kind || "")) && mmVideoFits(body)) return { key: "mm183-video", a: mmVideo185() };
-    if (cap === "image" && !editsPicture(body)) return { key: "mm183-image", a: mmImage183() };
+    if (cap === "video" && own272 && ["video", "chapter", ""].includes(String(body.kind || "")) && mmVideoFits(body)) return { key: "mm183-video", a: mmVideo185() };
+    if (cap === "image" && own272 && !editsPicture(body)) return { key: "mm183-image", a: mmImage183() };
     if (cap === "tts" && body.kind === "voice" && body.meta?.engine !== "elevenlabs") return { key: "mm183-voice", a: mmSpeech183() };
     if (cap === "music" && body.kind === "music") return { key: "mm183-music", a: mmMusic183() };
   }
   if (cap === "image" && body.model === "mmimage") return { key: "mm183-image", a: mmOn183("image") ? mmImage183() : { ...mmImage183(), configured: false } };   // (switched off → "not available", nothing charged)
-  if (cap === "video" && body.model === "hailuo" && mmBackup185(cap, body)) return { key: "mm183-video", a: mmVideo185() };   // v185: MiniMax picked → MiniMax's own Hailuo
+  if (cap === "video" && body.model === "hailuo" && mmBackup185(cap, body)) return { key: "mm183-video", a: mmVideo185() };   // v185: MiniMax picked → MiniMax's own engine (H3)
   if (cap === "tts" && body.kind === "voice" && body.meta?.engine !== "elevenlabs" && mmOn183("voice")) return { key: "mm183-voice", a: mmSpeech183() };
   if (cap === "music" && body.kind === "music" && mmOn183("music")) return { key: "mm183-music", a: mmMusic183() };
   return null;

@@ -62,7 +62,7 @@ try {
   j = await job({ kind: "image", model: "nvsd35", prompt: "a red apple", aspect: "1:1" }); ok(j.status === "done" && media(j.url).equals(PNG) && kieN() === k, "NVIDIA SD 3.5 → its own endpoint ({image} answer), no fallback");
   j = await job({ kind: "image", model: "auto", prompt: "make it night", aspect: "1:1", inputs: { iRef: `http://localhost:${MPORT}/out.png` } });
   ok(seen.some((s) => s.path === "/nv/genai/kontext" && s.body.image === "data:image/png;asset_id,a1"), "picture edit → FLUX Kontext with the picture as an NVCF asset");
-  ok(j.status === "done" && seen.some((s) => s.path === "kie"), "Kontext failed → the job finished on Kie AI (" + j.status + ")");
+  { const kk = kieN(); ok(j.status === "failed" && kieN() === kk, "Kontext failed → the job fails (v272: no backup engine), Kie AI not asked (" + j.status + ")"); }
   j = await job({ kind: "3d", prompt: "a vase", meta: { mode: "objects", engine: "trellis" }, inputs: { s3dImg: `http://localhost:${MPORT}/out.png` } });
   ok(j.status === "done" && /\.glb$/.test(j.url) && media(j.url).slice(0, 4).toString() === "glTF", "3D → TRELLIS: 202 → status poll → zip → .glb (" + j.status + " " + (j.url || j.error) + ")");
   ok(statusPolls >= 2, "NVCF status polled until ready");

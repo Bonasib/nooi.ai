@@ -46,7 +46,11 @@ def server_on():
         j = req("/v1/jobs", b, who="u%d" % i); made[name] = j.get("id") or j
     time.sleep(3); jobs = {j: x for U in db()["users"].values() for j, x in (U.get("jobs") or {}).items()}
     provs = {n: (jobs.get(i) or {}).get("prov") if isinstance(i, str) else i for n, i in made.items()}
-    chk("every video, picture, voice and music job goes to MiniMax, whatever model was picked", provs == {"a Seedance video": "mm183-video", "an Auto video": "mm183-video", "a picture": "mm183-image", "a voice": "mm183-voice", "music": "mm183-music"}, provs)
+    # (v272: a model the customer picked is never made on another one — with the AI engine paused, a picked Seedance video or Nano
+    # picture is refused (nothing charged); Auto, voices and music go to MiniMax)
+    refused = lambda x: isinstance(x, dict) and x.get("status") in (409, 501)
+    chk("Auto, voices and music go to MiniMax; a picked model of the paused engine is refused, not moved", provs.get("an Auto video") == "mm183-video" and provs.get("a voice") == "mm183-voice" and provs.get("music") == "mm183-music"
+        and refused(provs.get("a Seedance video")) and refused(provs.get("a picture")), provs)
     chk("…none of them went to the AI engine (not even after MiniMax failed)", not any(str(x.get("prov", "")).startswith("kie@") or str(x.get("own185") or "").startswith("kie@") for x in jobs.values()), [(x.get("prov"), x.get("errors")) for x in jobs.values()])
     before = req("/v1/billing", who="c1").get("credits")
     out = {}

@@ -174,7 +174,7 @@ async def run(p, phone, lang, full):
         await E(CLEAR); await E("()=>{S.hf.vModel='auto';renderAll()}"); await add_pic(pg, E); await words(E, "a man walks into #image1"); await E("()=>{SENT.length=0}")
         v3 = await E("()=>S.jobs.filter(x=>x.kind==='video').length"); await E("()=>hfSend()"); await done_video(pg, v3)
         s4 = await E("()=>SENT.filter(x=>x.kind==='video').map(x=>({model:x.model,inputs:x.inputs,refs:x.meta.refs130||null,read:x.meta.read178||null}))"); R["autoPic"] = s4
-        ok(s4 and "vRef1" in s4[0]["inputs"] and ((s4[0]["model"] in ("seedance20", "seedance25", "seedance", "kling40") and s4[0]["refs"]) or (s4[0]["read"] and "vStart" in s4[0]["inputs"] and not s4[0]["refs"])),
+        ok(s4 and "vRef1" in s4[0]["inputs"] and ((s4[0]["model"] in ("auto", "seedance20", "seedance25", "seedance", "kling40") and s4[0]["refs"]) or (s4[0]["read"] and "vStart" in s4[0]["inputs"] and not s4[0]["refs"])),
            f"{tag}: nooi Auto keeps the picture — as the first frame read into the words, or as a reference {s4}")
     hint = await E("()=>{const k=NV176.r;NV176.r={engines:[{task:'video',state:'closed',label:'NVIDIA Cosmos (video)',url:'u',status:404}]};const a=nvCheckHTML176();NV176.r={engines:[{task:'video',state:'open',label:'x',url:'u'}]};const b=nvCheckHTML176();NV176.r=k;return{closed:a.includes('nvhint180')&&a.includes('Public API Endpoints'),open:b.includes('nvhint180')}}")
     R["hint"] = hint; ok(hint["closed"] and not hint["open"], f"{tag}: Admin's NVIDIA check says what to do on NVIDIA's side when Cosmos is closed (only then) {hint}")
