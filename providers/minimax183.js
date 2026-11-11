@@ -29,8 +29,9 @@ function mmErr(code, msg) {
 async function call(path, body, ms = 180000) {
   const r = await fetch(base() + path, { method: "POST", headers: { Authorization: "Bearer " + cfg("minimax").apiKey, "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(ms) });
   const t = await r.text(); let d = {}; try { d = JSON.parse(t); } catch {}
-  const code = d.base_resp ? +d.base_resp.status_code || 0 : r.ok ? 0 : r.status;
-  if (!r.ok || code) throw mmErr(code || r.status, (d.base_resp && d.base_resp.status_msg) || t.slice(0, 200));
+  const v2 = d.error && typeof d.error === "object" ? d.error : null, v2code = v2 && +((String(v2.message || "").match(/\((\d{3,5})\)\s*$/) || [])[1] || 0);   // (v271: the v2 API's errors)
+  const code = d.base_resp ? +d.base_resp.status_code || 0 : r.ok && !v2 ? 0 : v2code || r.status;
+  if (!r.ok || code) throw mmErr(code || r.status, (d.base_resp && d.base_resp.status_msg) || (v2 && v2.message) || t.slice(0, 200));
   return d;
 }
 const abs = (u) => (typeof u === "string" && u.startsWith("/") ? (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "") + u : u);
@@ -114,12 +115,32 @@ export const mmMusic183 = () => ({ name: "MiniMax Music", configured: configured
 async function get(path, ms = 30000) {
   const r = await fetch(base() + path, { headers: { Authorization: "Bearer " + cfg("minimax").apiKey }, signal: AbortSignal.timeout(ms) });
   const t = await r.text(); let d = {}; try { d = JSON.parse(t); } catch {}
-  const code = d.base_resp ? +d.base_resp.status_code || 0 : r.ok ? 0 : r.status;
-  if (!r.ok || code) throw mmErr(code || r.status, (d.base_resp && d.base_resp.status_msg) || t.slice(0, 200));
+  const v2 = d.error && typeof d.error === "object" ? d.error : null, v2code = v2 && +((String(v2.message || "").match(/\((\d{3,5})\)\s*$/) || [])[1] || 0);   // (v271: the v2 API's errors)
+  const code = d.base_resp ? +d.base_resp.status_code || 0 : r.ok && !v2 ? 0 : v2code || r.status;
+  if (!r.ok || code) throw mmErr(code || r.status, (d.base_resp && d.base_resp.status_msg) || (v2 && v2.message) || t.slice(0, 200));
   return d;
 }
-const VIDEO_DEFAULT = "MiniMax-Hailuo-2.3";
-const videoModel = () => { const c = cfg("minimax"); return c.videoModel || (/hailuo|^[it]2v-/i.test(String(c.model || "")) ? c.model : VIDEO_DEFAULT); };
+// v271: MiniMax H3 (Hailuo 3) by default — it makes the sound with the picture (Hailuo 2.x makes silent videos). The owner asked to
+// move from 2.x to 3, so a Hailuo 2.x name saved in Admin is read as H3 too; H3 Highspeed / Lite / Max can be typed in Admin.
+const VIDEO_DEFAULT = "MiniMax-H3";
+const videoModel = () => { const c = cfg("minimax"), m = c.videoModel || (/hailuo|^[it]2v-|^minimax-h3/i.test(String(c.model || "")) ? c.model : VIDEO_DEFAULT);
+  return /hailuo|^[it]2v-/i.test(String(m)) ? VIDEO_DEFAULT : m; };
+export const isH3271 = (m) => /^minimax-h3/i.test(String(m || ""));
+const H3_RATIOS = ["21:9", "16:9", "4:3", "1:1", "3:4", "9:16"];
+// H3 on the v2 address (platform.minimax.io → Create Video Generation Task): the words and the pictures go in one "content" list —
+// a first frame (and a last one) or nothing; 4–15 s (Max 5–15); 768P (2K only on MiniMax-H3, when the owner sets 2K in Admin);
+// text-only needs a real shape (not "adaptive"), a picture decides its own shape. The result: GET /v2/query/video_generation/{id}
+// → task.status (queued · running · succeeded · failed · cancelled), task.content.url
+function h3Body(model, p, prompt) {
+  const c = mmCfg(), first = p.inputs?.startImage || p.inputs?.vStart || "", last = p.inputs?.vEnd || "";
+  const content = [{ type: "text", text: prompt || "A cinematic shot." }];
+  if (first) content.push({ type: "image_url", image_url: { url: asData(first) }, role: "first_frame" });
+  if (last) content.push({ type: "image_url", image_url: { url: asData(last) }, role: "last_frame" });
+  const lo = /max$/i.test(model) ? 5 : 4, duration = Math.max(lo, Math.min(15, Math.round(+p.dur || 5)));
+  const resolution = /^minimax-h3$/i.test(model) && /^2k$/i.test(String(c.videoResolution || "")) ? "2K" : "768P";
+  const shape = H3_RATIOS.includes(p.aspect) ? p.aspect : "16:9", pics = content.length > 1;
+  return { model, content, resolution, duration, ratio: pics && !/lite$/i.test(model) ? "adaptive" : shape };
+}
 function asData(u) {   // a picture of ours → its bytes; a link elsewhere stays a link
   const f = typeof u === "string" && (/^\/media\//.test(u) ? path.join(MEDIA_DIR, path.basename(u.split("?")[0])) : localPath(u.split("?")[0]));
   if (f && fs.existsSync(f) && fs.statSync(f).size < 19e6) { const ext = path.extname(f).slice(1).toLowerCase(); return `data:image/${ext === "jpg" ? "jpeg" : ext || "jpeg"};base64,` + fs.readFileSync(f).toString("base64"); }
@@ -128,6 +149,9 @@ function asData(u) {   // a picture of ours → its bytes; a link elsewhere stay
 export const mmVideo185 = (mo) => ({ name: "MiniMax Hailuo", configured: configured("minimax"),
   async submit(p) {
     const c = mmCfg(), model = mo || videoModel(), prompt = [words(p), p.camera && `Camera: ${p.camera}`].filter(Boolean).join("\n").slice(0, 2000);
+    if (isH3271(model)) { const body = h3Body(model, p, prompt.slice(0, 7000)), d = await call("/v2/video_generation", body, 60000);
+      if (!d.task_id) throw new Error("MiniMax gave no task for the video");
+      return { remoteId: "h3:" + d.task_id, sent: { prompt: body.content[0].text, model, duration: body.duration, resolution: body.resolution, ratio: body.ratio, sound: "always", ...(body.content.length > 1 ? { pictures: body.content.length - 1 } : {}) } }; }
     let img = p.inputs?.startImage || p.inputs?.vStart || "";
     if (!img && p.aspect && p.aspect !== "16:9") { const d = await call("/v1/image_generation", { model: c.imageModel, prompt: prompt.slice(0, 1500), aspect_ratio: RATIOS.includes(p.aspect) ? p.aspect : "9:16", n: 1, response_format: "url", prompt_optimizer: true });
       img = (d.data && (d.data.image_urls || [])[0]) || ""; }
@@ -138,6 +162,11 @@ export const mmVideo185 = (mo) => ({ name: "MiniMax Hailuo", configured: configu
     return { remoteId: String(d.task_id), sent: { prompt, model, duration, resolution, ...(img ? { pictures: 1 } : {}) } };
   },
   async poll(id) {
+    if (String(id).startsWith("h3:")) { const d = await get("/v2/query/video_generation/" + encodeURIComponent(String(id).slice(3))), t = d.task || {}, s = String(t.status || "").toLowerCase();
+      if (s === "succeeded") { const u = t.content && t.content.url; return u ? { status: "done", url: u } : { status: "failed", error: "MiniMax finished but gave no video" }; }
+      if (s === "failed" || s === "cancelled") { const why = (t.error && (t.error.message || t.error.code)) || s;
+        return { status: "failed", error: "MiniMax couldn't make this video: " + String(why).slice(0, 200) }; }
+      return { status: s === "queued" ? "queued" : "rendering" }; }
     const d = await get("/v1/query/video_generation?task_id=" + encodeURIComponent(id)), s = String(d.status || "").toLowerCase();
     if (s === "success") { if (!d.file_id) return { status: "failed", error: "MiniMax finished but gave no video file" };
       const f = await get("/v1/files/retrieve?file_id=" + encodeURIComponent(d.file_id)), u = f.file && f.file.download_url;

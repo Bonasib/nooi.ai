@@ -37,6 +37,8 @@ http.createServer((q,s)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{const u=
  if(u.pathname==='/stats')return J(200,st);
  if(u.pathname==='/vid.webm'){s.setHeader('content-type','video/webm');return s.end(fs.readFileSync(path.join(DIR,'vid.webm')))}
  let body={};try{body=JSON.parse(b||'{}')}catch{}
+ if(u.pathname==='/v2/video_generation'){st.mm.push({prompt:((body.content||[]).find(c=>c.type==='text')||{}).text,resolution:body.resolution,duration:body.duration,ratio:body.ratio,model:body.model});return J(200,{task_id:'h3v'+(++n)})}
+ if(u.pathname.startsWith('/v2/query/video_generation/'))return J(200,{task:{id:u.pathname.split('/').pop(),status:'succeeded',content:{url:'http://localhost:'+P+'/vid.webm'}}});
  if(/^\/v1\/(get_voice|video_generation|query\/video_generation|files\/retrieve)$/.test(u.pathname)){const key=(q.headers.authorization||'').replace('Bearer ','');
    if(u.pathname==='/v1/video_generation')st.mm.push(Object.assign({},body,{first_frame_image:undefined}));
    if(key!=='mm-good-key')return J(200,{base_resp:{status_code:1004,status_msg:'login fail'}});
@@ -94,9 +96,9 @@ def server_part():
         except Exception: time.sleep(0.25)
     cfg = api("/v1/config")[1]; caps, reg = cfg.get("caps187") or {}, cfg.get("registry") or {}
     out["caps"] = {k: caps.get(k) for k in ("hailuo", "kling40", "seedance20", "veo")}
-    ok(caps.get("hailuo", {}).get("audio") is False and caps.get("kling40", {}).get("audio") == "always" and caps.get("seedance20", {}).get("audio") is True
+    ok(caps.get("hailuo", {}).get("audio") == "always" and caps.get("kling40", {}).get("audio") == "always" and caps.get("seedance20", {}).get("audio") is True
        and "1080P" in caps.get("seedance20", {}).get("res", []) and caps.get("veo", {}).get("res") == ["720P"], f"config should carry each engine's resolutions and sound: {out['caps']}")
-    ok(reg.get("hailuo", {}).get("audio") is False and "1080P" in reg.get("kling30", {}).get("res", []), f"the registry should carry them too: {reg.get('hailuo')} {reg.get('kling30')}")
+    ok(reg.get("hailuo", {}).get("audio") == "always" and "1080P" in reg.get("kling30", {}).get("res", []), f"the registry should carry them too: {reg.get('hailuo')} {reg.get('kling30')}")
     ok(api("/v1/admin/providers/minimax", {"apiKey": "mm-good-key", "baseUrl": M}, method="PUT")[0] == 200, "saving the MiniMax key failed")
     # 1. the format, the resolution and the sound reach the engine
     j = make({"model": "seedance20", "aspect": "9:16", "prompt": 'A woman on a balcony says "صباح الخير يا جميل", v187 one', "meta": {"res": "1080P", "audio": True}}, tok=None)
@@ -116,7 +118,7 @@ def server_part():
     make({"model": "wan30", "prompt": "A tram in the rain, v187 six", "meta": {"res": "1080P"}}, tok=None)
     i = (kie_for("v187 six") or [{}])[-1].get("input", {}); out["wan30"] = i.get("resolution")
     ok(i.get("resolution") == "1080P", f"Wan 3.0 should get 1080P: {i.get('resolution')}")
-    for dur, want, w in ((6, "1080P", "v187 seven"), (10, "768P", "v187 eight")):
+    for dur, want, w in ((6, "768P", "v187 seven"), (10, "768P", "v187 eight")):   # (v271: MiniMax H3 on the owner's key — 768P, the length asked)
         j = make({"model": "hailuo", "dur": dur, "prompt": "Waves on black rocks, " + w, "meta": {"res": "1080P", "audio": True}}, tok=None)
         b = ([x for x in stats()["mm"] if w in (x.get("prompt") or "")] or [{}])[-1]; out["hailuo-%d" % dur] = {k: b.get(k) for k in ("resolution", "duration")}
         ok(j.get("status") == "done" and b.get("resolution") == want and b.get("duration") == dur, f"MiniMax Hailuo {dur} s asked for 1080P → {want}: {out['hailuo-%d' % dur]} {PICK(j)}")
@@ -195,8 +197,8 @@ async def page_part(p, phone, lang):
         s = await sheet(); R["sheet-hailuo"] = s
         names = ["الأبعاد", "العدد", "الجودة", "المدة", "الصوت", "معدل البت"] if ar else ["Aspect ratio", "Batch size", "Quality", "Duration", "Sound", "Bitrate"]
         ok(s["names"][:6] == names and not s["wide"], f"{tag}: the sheet should have format, how many, quality, length, sound, bitrate: {s['names']} wide {s['wide']}")
-        ok(s["snd"]["dis"] and s["snd"]["on"] == "false" and (("صامتة" in s["snd"]["hint"]) if ar else ("silent" in s["snd"]["hint"])), f"{tag}: MiniMax → Sound off and greyed with the reason: {s['snd']}")
-        ok(s["q"] == ["768P", "1080P*"], f"{tag}: MiniMax's qualities, 1080P chosen: {s['q']}")
+        ok(s["snd"]["dis"] and s["snd"]["on"] == "true" and (("دائماً" in s["snd"]["hint"]) if ar else ("always" in s["snd"]["hint"])), f"{tag}: MiniMax (H3) → Sound on and fixed, with the reason: {s['snd']}")
+        ok(s["q"] == ["768P*"], f"{tag}: MiniMax's quality (768P on the owner's key): {s['q']}")
         await E("()=>closeSheet()")
         # Seedance 2.0: Sound can be turned on; the price follows how many and the length
         await E("()=>{S.hf.vModel='seedance20';persist();renderView()}"); s = await sheet(); R["sheet-seedance"] = s

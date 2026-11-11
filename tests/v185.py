@@ -36,6 +36,16 @@ http.createServer((q,s)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{const u=
  if(u.pathname==='/vid.webm'){s.setHeader('content-type','video/webm');return s.end(fs.readFileSync(path.join(DIR,'vid.webm')))}
  if(u.pathname==='/img.jpeg'){s.setHeader('content-type','image/jpeg');return s.end(fs.readFileSync(path.join(DIR,'pic.jpeg')))}
  let body={};try{body=JSON.parse(b||'{}')}catch{}
+ // v271: MiniMax H3 on the v2 address — the words and pictures in "content"; the result's link in task.content.url; OpenAI-style errors
+ if(/^\/v2\/(video_generation|query\/video_generation\/.+)$/.test(u.pathname)){const key=(q.headers.authorization||'').replace('Bearer ','');
+   const cut=Object.assign({},body,{content:(body.content||[]).map(c=>c.image_url?Object.assign({},c,{image_url:{url:String(c.image_url.url).slice(0,40)}}):c)});
+   st.mm.push({p:u.pathname.startsWith('/v2/query/')?'/v2/query':u.pathname,key,body:cut,q:u.search});
+   if(key!=='mm-good-key')return J(401,{type:'error',error:{type:'authorized_error',message:'login fail (1004)',http_code:'401'}});
+   if(u.pathname==='/v2/video_generation'){const id='h3v'+(++n),txt=((body.content||[]).find(c=>c.type==='text')||{}).text||'';task[id]={fail:/FAILME/.test(txt),polls:0};return J(200,{task_id:id})}
+   const id=u.pathname.split('/').pop(),t=task[id]||{};t.polls=(t.polls||0)+1;
+   if(t.fail)return J(200,{task:{id,model:'MiniMax-H3',status:'failed',error:{code:'1026',message:'the picture breaks the content rules'}}});
+   if(t.polls<2)return J(200,{task:{id,model:'MiniMax-H3',status:'running'}});
+   return J(200,{task:{id,model:'MiniMax-H3',status:'succeeded',content:{url:'http://localhost:'+P+'/vid.webm'}}})}
  // the stand-in MiniMax: HTTP 200 and its own code in base_resp; video tasks → a file → its link
  if(/^\/v1\/(get_voice|image_generation|video_generation|query\/video_generation|files\/retrieve)$/.test(u.pathname)){const key=(q.headers.authorization||'').replace('Bearer ','');
    st.mm.push({p:u.pathname,key,body:u.pathname==='/v1/video_generation'?Object.assign({},body,{first_frame_image:body.first_frame_image?String(body.first_frame_image).slice(0,40):undefined}):body,q:u.search});
@@ -97,20 +107,22 @@ def server_part():
     # 1. the engine's balance is empty: Kling 2.6 from a picture → MiniMax Hailuo makes it
     k0, b0 = len(stats()["kie"]), bal()
     j = make({"model": "kling26", "prompt": "Elias walks in this field and the house behind him, v185 one", "inputs": {"startImage": "/media/field.jpeg"}}); out["kling_moved"] = PICK(j)
-    v = (mm("/v1/video_generation") or [{}])[-1].get("body", {}); out["mm_video"] = v
+    v = (mm("/v2/video_generation") or [{}])[-1].get("body", {}); out["mm_video"] = v
+    vc = v.get("content") or []; txt = (vc[0] if vc else {}).get("text", ""); fr = [c for c in vc if c.get("type") == "image_url"]
     ok(j.get("status") == "done" and j.get("url") == M + "/vid.webm", f"the video should be made by MiniMax: {PICK(j)}")
-    ok(v.get("model") == "MiniMax-Hailuo-2.3" and v.get("duration") == 6 and v.get("resolution") == "768P" and str(v.get("first_frame_image") or "").startswith("data:image/jpeg;base64,") and "Elias" in (v.get("prompt") or ""),
-       f"MiniMax should get Hailuo 2.3, 6 s, 768P, the picture as its bytes and the words: {v}")
+    ok(v.get("model") == "MiniMax-H3" and v.get("duration") == 5 and v.get("resolution") == "768P" and v.get("ratio") == "adaptive" and len(fr) == 1 and fr[0].get("role") == "first_frame"
+       and str(fr[0]["image_url"]["url"]).startswith("data:image/jpeg;base64,") and "Elias" in txt,
+       f"MiniMax should get H3 (v2), 5 s, 768P, the picture as its bytes as the first frame and the words: {v}")
     ok(len(stats()["kie"]) - k0 == 1, f"the empty engine should be asked once, not on every model: {stats()['kie'][k0:]}")
     ok(j.get("madeBy") == ["hailuo"], f"the card should say MiniMax made it: {j.get('madeBy')}")
     paid = b0 - bal(); out["paid"] = [paid, j.get("cost")]; ok(paid > 0 and paid == j.get("cost"), f"the customer pays what was asked, once: {paid} vs {j.get('cost')}")
     me = api("/v1/me")[1]; out["alerts"] = me.get("alerts138"); ok((me.get("alerts138") or {}).get("engine", {}).get("type") == "quota", f"staff should be told the engine is out of credits: {me.get('alerts138')}")
-    # 2. tall, 10 s, no picture → a 9:16 first frame from image-01, then Hailuo 10 s from it
+    # 2. tall, 10 s, no picture → H3 makes 9:16 itself (no first frame needed any more, unlike Hailuo 2.3)
     n_img = len(mm("/v1/image_generation"))
     j = make({"model": "seedance20", "prompt": "a lantern festival over the river, v185 two", "aspect": "9:16", "dur": 10}); out["tall"] = PICK(j)
-    im = mm("/v1/image_generation")[n_img:]; v = (mm("/v1/video_generation") or [{}])[-1].get("body", {})
-    ok(j.get("status") == "done" and len(im) == 1 and im[0]["body"].get("aspect_ratio") == "9:16" and v.get("duration") == 10 and v.get("resolution") == "768P" and v.get("first_frame_image") == M + "/img.jpeg",
-       f"a tall video should start from a 9:16 first frame: {out['tall']} {[x['body'].get('aspect_ratio') for x in im]} {v}")
+    im = mm("/v1/image_generation")[n_img:]; v = (mm("/v2/video_generation") or [{}])[-1].get("body", {})
+    ok(j.get("status") == "done" and len(im) == 0 and v.get("ratio") == "9:16" and v.get("duration") == 10 and v.get("resolution") == "768P" and len(v.get("content") or []) == 1,
+       f"a tall video is asked of H3 as 9:16, words only: {out['tall']} {v}")
     # 3. MiniMax picked by hand → MiniMax at once, the engine never asked
     k1 = len(stats()["kie"]); j = make({"model": "hailuo", "prompt": "waves on black rocks at dusk, v185 three"}); out["picked"] = PICK(j)
     ok(j.get("status") == "done" and len(stats()["kie"]) == k1 and "madeBy" not in j, f"MiniMax picked → MiniMax only: {PICK(j)} {stats()['kie'][k1:]}")
@@ -123,16 +135,16 @@ def server_part():
     time.sleep(0.5); ok(j.get("status") == "failed" and bal() == b0 and "content rules" in (j.get("error") or ""), f"MiniMax's failure → failed with its reason, credits back: {PICK(j)} {b0}→{bal()}")
     # 6. Videos off → the calm message, credits back, MiniMax not asked
     ok(api("/v1/admin/minimax183", {"video": False}, method="PUT")[1].get("video") is False, "switching videos off failed")
-    n_v, k2, b0 = len(mm("/v1/video_generation")), len(stats()["kie"]), bal()
+    n_v, k2, b0 = len(mm("/v2/video_generation")), len(stats()["kie"]), bal()
     j = make({"model": "kling26", "prompt": "a quiet library at night, v185 six"}); out["off"] = PICK(j)
-    time.sleep(0.5); ok(j.get("status") == "failed" and "can't take new work" in (j.get("error") or "") and bal() == b0 and len(mm("/v1/video_generation")) == n_v and len(stats()["kie"]) - k2 == 1,
+    time.sleep(0.5); ok(j.get("status") == "failed" and "can't take new work" in (j.get("error") or "") and bal() == b0 and len(mm("/v2/video_generation")) == n_v and len(stats()["kie"]) - k2 == 1,
        f"Videos off → fails calmly, credits back, MiniMax not asked, the engine once: {PICK(j)} {stats()['kie'][k2:]}")
     ok(api("/v1/config")[1]["providers"]["minimax183"]["video"] is False, "config should follow the Videos switch")
     api("/v1/admin/minimax183", {"video": True}, method="PUT")
     # 7. the engine has credits again → Kling 2.6 on the engine, MiniMax not asked
-    urllib.request.urlopen(M + "/kiebal?to=1", timeout=5); n_v = len(mm("/v1/video_generation"))
+    urllib.request.urlopen(M + "/kiebal?to=1", timeout=5); n_v = len(mm("/v2/video_generation"))
     j = make({"model": "kling26", "prompt": "a cyclist on a mountain road, v185 seven"}); out["kie_back"] = PICK(j)
-    ok(j.get("status") == "done" and len(mm("/v1/video_generation")) == n_v and "madeBy" not in j, f"with credits the engine makes it again: {PICK(j)}")
+    ok(j.get("status") == "done" and len(mm("/v2/video_generation")) == n_v and "madeBy" not in j, f"with credits the engine makes it again: {PICK(j)}")
     urllib.request.urlopen(M + "/kiebal?to=0", timeout=5)
 
 async def page_part(p, phone, lang):
@@ -150,7 +162,7 @@ async def page_part(p, phone, lang):
           wide:[...c.querySelectorAll('*')].filter(e=>{const b=e.getBoundingClientRect();return b.width&&(b.right>W+1||b.left<-1)}).length}}""")
         out[tag] = {k: v[k] for k in ("sw", "models", "wide")}
         ok(v["sw"] == ["only:false", "all:false", "voice:true", "image:true", "music:true", "video:true"] and v["models"] == ["speechModel", "imageModel", "musicModel", "videoModel", "textModel"] and not v["wide"], f"{tag}: the MiniMax row should have the Videos switch and the video model: {out[tag]}")
-        ok(("فيديو" in v["head"] and "Hailuo 2.3" in v["text"]) if ar else ("videos" in v["head"] and "Hailuo 2.3" in v["text"]), f"{tag}: the row should say MiniMax makes videos (Hailuo 2.3): {v['head']}")
+        ok(("فيديو" in v["head"] and "MiniMax H3" in v["text"]) if ar else ("videos" in v["head"] and "MiniMax H3" in v["text"]), f"{tag}: the row should say MiniMax makes videos (H3): {v['head']}")
         await pg.screenshot(path=D + f"/{tag}.png")
         await pg.click('[data-act="mm183-use"][data-k="video"]'); await pg.wait_for_function("API.cfg.providers.minimax183.video===false", timeout=15000)
         await E("()=>{S.admTab='models';go('admin')}"); await pg.wait_for_function("!!document.querySelector('[data-act=\"mm183-use\"][data-k=\"video\"]')", timeout=15000)

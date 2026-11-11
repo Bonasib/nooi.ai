@@ -19,6 +19,7 @@ class M(BaseHTTPRequestHandler):
         b = o if isinstance(o, bytes) else json.dumps(o).encode(); self.send_response(code); self.send_header("Content-Type", ctype); self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
     def do_GET(self):
         if self.path == "/res.mp4": return self.send(open(D + "/res.mp4", "rb").read(), ctype="video/mp4")
+        if self.path.startswith("/v2/query/video_generation/"): return self.send({"task": {"id": self.path.split("/")[-1], "status": "succeeded", "content": {"url": f"http://127.0.0.1:{MP}/res.mp4"}}})   # (v271: MiniMax H3)
         if self.path.startswith("/v1/query/video_generation"): return self.send({"status": "Success", "file_id": "f1", "base_resp": {"status_code": 0}})
         if self.path.startswith("/v1/files/retrieve"): return self.send({"file": {"download_url": f"http://127.0.0.1:{MP}/res.mp4"}, "base_resp": {"status_code": 0}})
         return self.send({}, 404)
@@ -28,6 +29,7 @@ class M(BaseHTTPRequestHandler):
             ST["bp"].append(b); code = "InputImageSensitiveContentDetected.PrivacyInformation" if ST.get("face") else "InvalidParameter"
             msg = "The request failed because the input image may contain real person" if ST.get("face") else ST["why"]
             return self.send({"error": {"code": code, "message": msg, "type": "BadRequest"}}, 400)
+        if self.path == "/v2/video_generation": ST["mm"].append(b); return self.send({"task_id": "h%d" % len(ST["mm"])})
         if self.path == "/v1/video_generation": ST["mm"].append(b); return self.send({"task_id": "m%d" % len(ST["mm"]), "base_resp": {"status_code": 0}})
         if self.path == "/v1/image_generation": return self.send({"data": {"image_urls": [f"http://127.0.0.1:{MP}/res.mp4"]}, "base_resp": {"status_code": 0}})
         return self.send({}, 404)

@@ -266,3 +266,4 @@ echo "▶ v267: one click on the side menu after editing a field; no staff-only 
 echo "▶ v268: videos are made with sound unless it is turned off"; python3 tests/v268.py
 echo "▶ v269: phone action bar on the bottom menu, solid menu, visible icon, title spacing"; python3 tests/v269.py
 echo "▶ v270: finished videos keep their sound and play with it"; python3 tests/v270.py
+echo "▶ v271: MiniMax H3 (Hailuo 3) with its sound on the owner's key"; python3 tests/v271.py

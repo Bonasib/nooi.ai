@@ -922,3 +922,17 @@ The owner approved making real examples on the site's own key. The session can't
   presses play.
 - The voice engine (ElevenLabs / the AI engine) doesn't touch a made video's sound; MiniMax Hailuo 2.3 (the backup) is silent.
 - Test: `tests/v270.py` (a video with sound made through the site, tapped and played).
+
+## v271 — MiniMax H3 (Hailuo 3) in place of Hailuo 2.x
+
+- MiniMax videos on the owner's key are made with **MiniMax-H3** on MiniMax's v2 address (`POST /v2/video_generation`, words and
+  pictures in `content`, `GET /v2/query/video_generation/{id}` → `task.content.url`), per platform.minimax.io. H3 makes the sound
+  with the picture, always.
+- A Hailuo 2.x name saved in Admin → AI providers → MiniMax → Video model is read as MiniMax-H3 (the owner asked to move to 3);
+  `MiniMax-H3-Highspeed`, `-Lite` or `-Max` can be typed there.
+- 4–15 s as asked (Max 5–15), 768P (2K only on MiniMax-H3 when the resolution in Admin is 2K); words only → the shape asked; a first
+  (and last) picture → `first_frame` / `last_frame`, the shape from the picture.
+- "Everything on MiniMax" now keeps talking videos on MiniMax (v251 sent them to Seedance because Hailuo 2.x was silent).
+- Price: MiniMax video cost is H3's $0.08/s at 768P ($0.40 per 5 s); H3 is paid from MiniMax's pay-as-you-go balance, not the
+  video packages. MiniMax's v2 errors (e.g. "insufficient balance (1008)") are read.
+- Tests: `tests/v271.py`; v185, v187, v252 follow H3.
