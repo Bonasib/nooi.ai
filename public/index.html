@@ -2694,7 +2694,7 @@ setInterval(async()=>{
 const _stl=stLabel;stLabel=st=>({failed:L("Failed","فشل"),scheduled:L("Scheduled","مجدول"),published:L("Published","منشور")})[st]||_stl(st);
 const _thumb=thumb;
 thumb=function(ref,o){const it=objFor(ref);const url=mediaUrl(it);let h=_thumb(ref,o);if(url&&it.status==="complete"){const isImg=it.kind==="image"||it.kind==="look"||it.kind==="sheet";h=h.replace(/<canvas class="frame" data-ref="[^"]*"><\/canvas>/,isImg?'<img class="frame" style="object-fit:cover" src="'+esc(url)+'" alt="">':'<video class="frame" style="object-fit:cover" src="'+esc(url)+'#t=0.5" muted playsinline preload="metadata"></video>')}return h};
-function stageMedia(ref){const o=objFor(ref);const url=mediaUrl(o);return url&&o.status==="complete"?'<video class="frame" style="object-fit:contain;background:#000" src="'+esc(url)+'" controls loop playsinline autoplay muted></video>':'<canvas class="frame live" data-ref="'+ref+'"></canvas>'}
+function stageMedia(ref){const o=objFor(ref);const url=mediaUrl(o);return url&&o.status==="complete"?'<video class="frame" style="object-fit:contain;background:#000" src="'+esc(url)+'" controls loop playsinline autoplay></video>':'<canvas class="frame live" data-ref="'+ref+'"></canvas>'}
 
 /* ---------- real sign-in (Firebase) when self-hosted ---------- */
 function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
@@ -7332,7 +7332,7 @@ VIEWS.discover=()=>{if(!XP.items||Date.now()-XP.at>60000)setTimeout(xpLoad,0);co
     '<div class="xpgrid">'+(list.length?list.map(x=>xpCard(x)).join(""):'<p class="mute">'+L("Nothing in this category yet.","لا شيء في هذه الفئة بعد.")+"</p>")+"</div></div>"};
 function xpFind(id){return(XP.items||[]).find(x=>x.id===id)||xpExamples().find(x=>x.id===id)}
 function xpOpen(x){const lg=x.model&&logoFor(x.model),mname=x.model&&((MODELS[x.model]||IMG_MODELS[x.model]||{}).name||x.model);
-  const media=x.ex!=null?thumb("s:"+x.ex,{}):x.kind==="image"?'<img src="'+esc(x.url)+'" alt="" style="width:100%;border-radius:14px">':'<video src="'+esc(x.url)+'" controls autoplay muted loop playsinline style="width:100%;border-radius:14px;background:#000"></video>';
+  const media=x.ex!=null?thumb("s:"+x.ex,{}):x.kind==="image"?'<img src="'+esc(x.url)+'" alt="" style="width:100%;border-radius:14px">':'<video src="'+esc(x.url)+'" controls autoplay loop playsinline style="width:100%;border-radius:14px;background:#000"></video>';
   hfSheet(x.title||L("From the community","من المجتمع"),media+'<p class="serif" style="margin:12px 0 6px">“'+esc(x.prompt||"")+'”</p><div class="row small mute" style="gap:8px">'+(lg?'<img src="'+lg+'" alt="" style="width:18px;height:18px;border-radius:5px;background:#fff">':"")+esc(mname||"")+" · "+esc(x.author||"")+(x.aspect?" · "+esc(x.aspect):"")+"</div>"+
     '<div class="row" style="margin-top:12px"><button class="btn primary" data-act="xp-recreate" data-id="'+esc(x.id)+'">'+ic("refresh")+L("Recreate","أعد الإنشاء")+"</button>"+(x.ex==null&&API.mode==="server"?'<button class="btn" data-act="xp-like" data-id="'+esc(x.id)+'">♥ '+(x.likes||0)+"</button>":"")+(x.url?'<button class="btn" data-act="xp-dl" data-id="'+esc(x.id)+'">'+ic("download")+L("Download","تنزيل")+"</button>":"")+
     (x.mine||(["owner","admin"].includes(ME.role))?'<button class="btn ghost danger" data-act="xp-del" data-id="'+esc(x.id)+'">'+ic("trash")+L("Remove","إزالة")+"</button>":"")+(["owner","admin"].includes(ME.role)&&x.ex==null?'<button class="btn ghost" data-act="xp-feat" data-id="'+esc(x.id)+'">'+(x.featured?L("Unfeature","إلغاء التمييز"):L("Feature","ميّزه"))+"</button>":"")+"</div>")}
@@ -7476,7 +7476,7 @@ hfSend=(o=>async function(){const H=S.hf,q=$("#hfq"),p=((q&&q.value)||H.prompt||
   else if(S.view!=="home"){S.view="home";renderAll()}})(hfSend);
 const HF_KIND={video:["Video","فيديو"],image:["Image","صورة"],voice:["Voice","صوت"],music:["Music","موسيقى"],sfx:["Sound effect","مؤثر صوتي"],lipsync:["Avatar","أفاتار"]};
 function hfrCard(j){const ref="j:"+j.id,url=mediaUrl(j),done=j.status==="complete",fail=j.status==="failed",img=["image","look","sheet"].includes(j.kind),aud=["voice","music","sfx"].includes(j.kind),pc=Math.round((j.progress||0)*100);
-  const media=done&&url?(img?'<img src="'+esc(url)+'" alt="">':aud?hfAudio(j,url):'<video src="'+esc(url)+'#t=0.1" controls playsinline muted loop preload="metadata"></video>')
+  const media=done&&url?(img?'<img src="'+esc(url)+'" alt="">':aud?hfAudio(j,url):'<video src="'+esc(url)+'#t=0.1" controls playsinline loop preload="metadata"></video>')
     :fail?'<div class="hfrph bad">'+ic("warn")+"<p>"+esc(errText81(j))+"</p>"+(j.detail?'<small dir="ltr">'+esc(j.detail)+"</small>":"")+"</div>"
     :done?thumb(ref,{})
     :'<div class="hfrph" role="status" aria-label="'+esc(stLabel(j.status))+'">'+STARS("load")+"</div>";
@@ -7962,7 +7962,7 @@ hfSend=(o=>async function(){const H=S.hf;HF_PLAN=null;const q=$("#hfq"),p=((q&&q
 /* result cards: scene badge, small play/pause instead of the big native overlay, live progress estimate */
 hfrCard=(o=>function(j){let h=o(j);const sc=j.sceneCheck;
   if(j.meta&&j.meta.scene)h=h.replace("<small>",'<span class="scbadge'+(sc&&!sc.same?" bad":"")+'">'+ic("layers")+(sc?sc.retrying&&j.status!=="complete"?L("Re-making to stay in the scene","يُعاد صنعها لتبقى في المشهد"):sc.first?L("Scene anchor","مرجع المشهد"):sc.same?L("In scene · ","داخل المشهد · ")+sc.score+"%":L("Left the scene · ","خرجت عن المشهد · ")+sc.score+"%":j.status==="complete"?L("Checking the scene…","فحص المشهد…"):L("Scene lock on","قفل المشهد مفعّل"))+"</span><small>");
-  h=h.replace(/<video src="([^"]*)" controls playsinline muted loop preload="metadata"><\/video>/,'<video class="sv hfv" src="$1" playsinline muted loop preload="metadata"></video><button class="hfvp" data-act="hfvp" aria-label="'+esc(L("Play or pause","تشغيل أو إيقاف"))+'">'+svg('<path d="M8 5v14l11-7z"/>')+'</button><button class="hfvm" data-act="hfvm" aria-label="'+esc(L("Sound on or off","تشغيل الصوت أو كتمه"))+'" aria-pressed="false">'+svg('<path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="w1" d="M16.5 8.5a5 5 0 0 1 0 7"/><path class="mx" d="M17 9l5 6M22 9l-5 6"/>')+'</button><button class="hfvf" data-act="hfvf" aria-label="'+esc(L("Full screen","ملء الشاشة"))+'">'+svg('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>')+"</button>");
+  h=h.replace(/<video src="([^"]*)" controls playsinline loop preload="metadata"><\/video>/,'<video class="sv hfv" src="$1" playsinline muted loop preload="metadata"></video><button class="hfvp" data-act="hfvp" aria-label="'+esc(L("Play or pause","تشغيل أو إيقاف"))+'">'+svg('<path d="M8 5v14l11-7z"/>')+'</button><button class="hfvm" data-act="hfvm" aria-label="'+esc(L("Sound on or off","تشغيل الصوت أو كتمه"))+'" aria-pressed="false">'+svg('<path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="w1" d="M16.5 8.5a5 5 0 0 1 0 7"/><path class="mx" d="M17 9l5 6M22 9l-5 6"/>')+'</button><button class="hfvf" data-act="hfvf" aria-label="'+esc(L("Full screen","ملء الشاشة"))+'">'+svg('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>')+"</button>");
   return h})(hfrCard);
 document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="hfvp"],[data-act="hfvf"],[data-act="hfvm"],.hfrm video.hfv');if(!a)return;const box=a.closest(".hfrm"),v=box&&box.querySelector("video");if(!v)return;e.stopImmediatePropagation();
   if(a.dataset.act==="hfvm"){v.muted=!v.muted;if(!v.muted&&v.paused){const p=v.play();if(p&&p.catch)p.catch(()=>{})}box.classList.toggle("sound",!v.muted);a.setAttribute("aria-pressed",String(!v.muted));return}
@@ -26318,6 +26318,10 @@ function bar269(){try{const n=document.getElementById("bottomnav"),h=n&&getCompu
   r.setProperty("--bn269",h+"px");const g=innerWidth<768&&document.querySelector("#main .go118");document.body.classList.toggle("go269",!!g);if(g)r.setProperty("--go269",Math.round(g.getBoundingClientRect().height)+"px")}catch(e){}}
 renderView=(o=>function(){const r=o.apply(this,arguments);bar269();return r})(renderView);
 addEventListener("resize",bar269);if(window.visualViewport)visualViewport.addEventListener("resize",bar269);setTimeout(bar269,300);
+/* v270: finished videos played with the sound off — the result players carried "muted" (the files have their sound). Players with
+   controls now play with sound; one that starts by itself (allowed only muted) gets its sound the moment the person presses play */
+document.addEventListener("play",e=>{const v=e.target;if(!v||v.tagName!=="VIDEO"||!(v.hasAttribute("controls")||v.closest(".vp87"))||!v.muted)return;
+  const act=navigator.userActivation?navigator.userActivation.isActive:true;if(act){v.muted=false;if(!v.volume)v.volume=1}},true);
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){

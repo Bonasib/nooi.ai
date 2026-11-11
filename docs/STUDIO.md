@@ -913,3 +913,12 @@ The owner approved making real examples on the site's own key. The session can't
 - The bottom menu is solid on phones (text no longer shows through it), and the page ends above the bar.
 - The chosen option's icon is dark on its lime square; titles split word by word have one normal space between words.
 - Test: `tests/v269.py`.
+
+## v270 — finished videos played with the sound off
+
+- The files kept the engine's sound through every step here (download, the AI mark, lips) — checked with ffprobe.
+- But the players muted it: tapping a result in nooi Studio opened a player that started **muted** (and the result card's own
+  player was muted too). Players now start with sound; one the browser won't let start with sound gets it as soon as the person
+  presses play.
+- The voice engine (ElevenLabs / the AI engine) doesn't touch a made video's sound; MiniMax Hailuo 2.3 (the backup) is silent.
+- Test: `tests/v270.py` (a video with sound made through the site, tapped and played).

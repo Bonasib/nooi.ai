@@ -265,3 +265,4 @@ echo "▶ v266: the cinematic showcase — 24 shots made from Admin, reused with
 echo "▶ v267: one click on the side menu after editing a field; no staff-only saves from a customer's browser"; python3 tests/v267.py
 echo "▶ v268: videos are made with sound unless it is turned off"; python3 tests/v268.py
 echo "▶ v269: phone action bar on the bottom menu, solid menu, visible icon, title spacing"; python3 tests/v269.py
+echo "▶ v270: finished videos keep their sound and play with it"; python3 tests/v270.py
