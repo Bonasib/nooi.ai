@@ -269,3 +269,4 @@ echo "▶ v270: finished videos keep their sound and play with it"; python3 test
 echo "▶ v271: MiniMax H3 (Hailuo 3) with its sound on the owner's key"; python3 tests/v271.py
 echo "▶ v272: no backup engines; the customer's model is the model; Auto picks an engine per scene"; python3 tests/v272.py
 echo "▶ v273: the ready cast — 30 characters with a face, a sheet and their own voice"; python3 tests/v273.py
+echo "▶ v274: the cast at work — a 15-second talking example video for each ready character (Admin confirm; Seedance 2.0 or MiniMax H3 with their own voice; shown in the window and Explore)"; python3 tests/v274.py

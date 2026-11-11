@@ -10,6 +10,7 @@ import { save } from "../lib/store.js";
 import { saveBuffer, download, localPath, MEDIA_DIR } from "../lib/media.js";
 import fs from "fs";
 import path from "path";
+import { refsOf130, tagWords130 } from "../lib/refs130.js";   // (v274: reference pictures on H3)
 
 const base = () => (cfg("minimax").baseUrl || "https://api.minimax.io").replace(/\/+$/, "").replace(/\/v1$/, "");
 export const MM_DEFAULTS183 = { speechModel: "speech-2.8-hd", imageModel: "image-01", musicModel: "music-2.6" };
@@ -131,19 +132,26 @@ const H3_RATIOS = ["21:9", "16:9", "4:3", "1:1", "3:4", "9:16"];
 // a first frame (and a last one) or nothing; 4–15 s (Max 5–15); 768P (2K only on MiniMax-H3, when the owner sets 2K in Admin);
 // text-only needs a real shape (not "adaptive"), a picture decides its own shape. The result: GET /v2/query/video_generation/{id}
 // → task.status (queued · running · succeeded · failed · cancelled), task.content.url
+// v274: or reference pictures (the person to keep — "reference image 1"…, up to 9) and a reference voice ("the voice follows reference
+// audio 1"), never with a frame (MiniMax doesn't mix the two); the shape is then said, not taken from a picture
 function h3Body(model, p, prompt) {
   const c = mmCfg(), first = p.inputs?.startImage || p.inputs?.vStart || "", last = p.inputs?.vEnd || "";
-  const content = [{ type: "text", text: prompt || "A cinematic shot." }];
+  const refs = first || last ? [] : refsOf130(p).slice(0, 9), voice = refs.length && typeof p.inputs?.vVoice274 === "string" ? p.inputs.vVoice274 : "";
+  let text = prompt || "A cinematic shot.";
+  if (refs.length) text = [tagWords130(text, refs, (i) => "reference image " + (i + 1)), "Keep every person exactly as they look in the reference " + (refs.length > 1 ? "images" : "image") + ": the same face, hair, age and build.", voice && "The voice timbre follows reference audio 1."].filter(Boolean).join("\n");
+  const content = [{ type: "text", text: text.slice(0, 7000) }];
   if (first) content.push({ type: "image_url", image_url: { url: asData(first) }, role: "first_frame" });
   if (last) content.push({ type: "image_url", image_url: { url: asData(last) }, role: "last_frame" });
+  for (const r of refs) content.push({ type: "image_url", image_url: { url: asData(r.url) }, role: "reference_image" });
+  if (voice) content.push({ type: "audio_url", audio_url: { url: asData(voice, "audio") }, role: "reference_audio" });
   const lo = /max$/i.test(model) ? 5 : 4, duration = Math.max(lo, Math.min(15, Math.round(+p.dur || 5)));
   const resolution = /^minimax-h3$/i.test(model) && /^2k$/i.test(String(c.videoResolution || "")) ? "2K" : "768P";
-  const shape = H3_RATIOS.includes(p.aspect) ? p.aspect : "16:9", pics = content.length > 1;
-  return { model, content, resolution, duration, ratio: pics && !/lite$/i.test(model) ? "adaptive" : shape };
+  const shape = H3_RATIOS.includes(p.aspect) ? p.aspect : "16:9", frames = !!(first || last);
+  return { model, content, resolution, duration, ratio: frames && !/lite$/i.test(model) ? "adaptive" : shape };
 }
-function asData(u) {   // a picture of ours → its bytes; a link elsewhere stays a link
+function asData(u, kind = "image") {   // a picture (or a voice) of ours → its bytes; a link elsewhere stays a link
   const f = typeof u === "string" && (/^\/media\//.test(u) ? path.join(MEDIA_DIR, path.basename(u.split("?")[0])) : localPath(u.split("?")[0]));
-  if (f && fs.existsSync(f) && fs.statSync(f).size < 19e6) { const ext = path.extname(f).slice(1).toLowerCase(); return `data:image/${ext === "jpg" ? "jpeg" : ext || "jpeg"};base64,` + fs.readFileSync(f).toString("base64"); }
+  if (f && fs.existsSync(f) && fs.statSync(f).size < 14e6) { const ext = path.extname(f).slice(1).toLowerCase(); return `data:${kind}/${kind === "audio" ? (ext === "wav" ? "wav" : "mp3") : ext === "jpg" ? "jpeg" : ext || "jpeg"};base64,` + fs.readFileSync(f).toString("base64"); }
   return abs(u);
 }
 export const mmVideo185 = (mo) => ({ name: "MiniMax Hailuo", configured: configured("minimax"),
@@ -151,7 +159,7 @@ export const mmVideo185 = (mo) => ({ name: "MiniMax Hailuo", configured: configu
     const c = mmCfg(), model = mo || videoModel(), prompt = [words(p), p.camera && `Camera: ${p.camera}`].filter(Boolean).join("\n").slice(0, 2000);
     if (isH3271(model)) { const body = h3Body(model, p, prompt.slice(0, 7000)), d = await call("/v2/video_generation", body, 60000);
       if (!d.task_id) throw new Error("MiniMax gave no task for the video");
-      return { remoteId: "h3:" + d.task_id, sent: { prompt: body.content[0].text, model, duration: body.duration, resolution: body.resolution, ratio: body.ratio, sound: "always", ...(body.content.length > 1 ? { pictures: body.content.length - 1 } : {}) } }; }
+      return { remoteId: "h3:" + d.task_id, sent: { prompt: body.content[0].text, model, duration: body.duration, resolution: body.resolution, ratio: body.ratio, sound: "always", ...(body.content.length > 1 ? { pictures: body.content.filter((x) => x.type === "image_url").length } : {}), ...(body.content.some((x) => x.role === "reference_image") ? { refs: "reference_image" } : {}), ...(body.content.some((x) => x.type === "audio_url") ? { voice: "reference_audio" } : {}) } }; }
     let img = p.inputs?.startImage || p.inputs?.vStart || "";
     if (!img && p.aspect && p.aspect !== "16:9") { const d = await call("/v1/image_generation", { model: c.imageModel, prompt: prompt.slice(0, 1500), aspect_ratio: RATIOS.includes(p.aspect) ? p.aspect : "9:16", n: 1, response_format: "url", prompt_optimizer: true });
       img = (d.data && (d.data.image_urls || [])[0]) || ""; }

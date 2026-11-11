@@ -26428,6 +26428,57 @@ renderView=(o=>function(){const r=o.apply(this,arguments);try{
 .cmeta273{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12.5px;color:var(--mute)}.cmeta273 span{display:inline-flex;gap:6px;align-items:center}.cmeta273 svg{width:14px;height:14px}
 @media (max-width:767px){.cgrid273{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.cgrid273.sm{grid-template-columns:repeat(4,minmax(0,1fr))}.cn273 b{font-size:12px}.cpics273{grid-template-columns:minmax(0,1fr)}.csm273{grid-template-columns:1fr 1fr}}
 `;document.head.appendChild(st)})();
+// ================= v274: the cast at work — each ready character's own 15-second example video =================
+// Made from Admin (the owner's engine key, after a confirm: how many, how long, on which engine), each person in a real job, speaking
+// to the camera in their own language and voice, with sound. The window of a character shows their example (with the line and what
+// it means); a card with a made example has a play mark; Explore lists an example only once it is made.
+const cdOf274=id=>((typeof SC!=="undefined"&&SC.items)||[]).find(s=>s.cat==="castdemo"&&s.cast===id)||null;
+castCard=(o=>function(c){let h=o.apply(this,arguments);const d=cdOf274(c.id);if(d&&d.url&&typeof h==="string"){const i=h.lastIndexOf("</button>");if(i>0)h=h.slice(0,i)+'<i class="vid274" title="'+esc(L("Has an example video","له فيديو مثال"))+'">'+ic("play")+"</i>"+h.slice(i)}return h})(castCard);
+castSheet273=(o=>function(){const r=o.apply(this,arguments);try{const c=castById(CAST.open);if(!c)return r;
+  if(!SC.items&&API.mode==="server"){scLoad().then(()=>{if(CAST.open===c.id&&document.querySelector("#modalRoot .cs273")&&cdOf274(c.id))castSheet273()});return r}
+  const d=cdOf274(c.id),box=document.querySelector("#modalRoot .cpics273");if(!d||!d.url||!box)return r;
+  const ln=d.line||[],mean=L(ln[1]||"",ln[2]||ln[1]||""),tall=d.aspect==="9:16";
+  box.insertAdjacentHTML("afterend",'<section class="cd274" aria-label="'+esc(L("Example video","فيديو مثال"))+'"><div class="cd274v'+(tall?" tall":"")+'"><video src="'+esc(d.url+(/#/.test(d.url)?"":"#t=0.1"))+'" controls playsinline preload="metadata"></video></div>'+
+    '<div class="cd274t"><span class="cat253">'+ic("video")+esc(L("At work · 15 s","في العمل · 15 ث"))+'</span><h3 dir="auto">'+esc(L(d.role[0],d.role[1]))+"</h3>"+
+    '<p class="cd274l" dir="auto" lang="'+esc(d.lang||"")+'">'+esc(ln[0]||"")+"</p>"+(mean&&mean!==ln[0]?'<p class="small mute" dir="auto">'+esc(mean)+"</p>":"")+
+    '<button class="btn sm" data-act="cast273-like">'+ic("spark")+esc(L("Make one like it","اصنع مثله"))+"</button></div></section>")}catch(err){console.warn("v274 example",err)}return r})(castSheet273);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="cast273-like"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();
+  const c=castById(CAST.open),d=c&&cdOf274(c.id);if(!d)return;const ch=castUse273(c),dr=S.draft;dr.prompt="@"+ch.name+" — "+String(d.prompt[0]||"");dr.audio=true;dr.aspect=d.aspect||dr.aspect;
+  if(MODELS.seedance20&&(typeof modelAllowed!=="function"||modelAllowed("seedance20")))dr.model="seedance20";if(S.hf)S.hf.prompt=dr.prompt;closeSheet();persist();go("video");
+  toast(L("The example is in the box with "+ch.name+" — change the job, the place or the words, then Generate.","المثال في الصندوق مع "+ch.name+" — غيّر العمل أو المكان أو الكلام ثم اضغط توليد."),{type:"ok"})},true);
+// Explore: an example is listed only once it is made
+xpExamples=(o=>function(){const r=o.apply(this,arguments);return Array.isArray(r)?r.filter(x=>!(x&&x.cat==="castdemo"&&!x.url)):r})(xpExamples);
+// ---- Admin: the cast examples (the general showcase list leaves them out; their own box says how many and asks first)
+SC_KIND.castdemo=["Cast example","مثال شخصية"];
+const CD_MODELS274=[["seedance20","Seedance 2.0","Seedance 2.0"],["hailuo","MiniMax H3 — keeps their own voice","MiniMax H3 — يحافظ على صوتهم الخاص"]];
+scAdmin=(o=>function(){const all=SC.admin;let h;if(Array.isArray(all))SC.admin=all.filter(x=>x.cat!=="castdemo");try{h=o.apply(this,arguments)}finally{SC.admin=all}
+  const list=(all||[]).filter(x=>x.cat==="castdemo");if(!list.length||typeof h!=="string")return h;
+  const done=list.filter(x=>x.status==="done").length,run=list.filter(x=>x.status==="rendering").length,todo=list.filter(x=>x.status!=="done"&&x.status!=="rendering"),m=SC.cdModel||"seedance20",mn=(CD_MODELS274.find(x=>x[0]===m)||CD_MODELS274[0]),ask=SC.cdAsk,n=ask?(ask.ids?ask.ids.length:todo.length):0;
+  const box='<div class="cdadm274"><div class="spread"><b>'+esc(L("Cast examples","أمثلة الشخصيات"))+" · "+done+" / "+list.length+(run?" · "+run+" "+L("being made","قيد الصنع"):"")+"</b></div>"+
+    '<p class="small mute" style="margin:6px 0">'+esc(L("A 15-second talking video of each ready character at work — shops, restaurants, tourism, a factory, an office, an actor, a teacher, football, diving, news, radio, a journalist, a scientist, a doctor, a crime-series villain, a hacker — in their own language and voice, with sound. The children have family-friendly roles. Each shows in the character's window and in Explore. Made on your own engine key (staff jobs cost no nooi credits).","فيديو ناطق مدته 15 ثانية لكل شخصية جاهزة في عملها — محلات ومطاعم وسياحة ومصنع ومكتب وممثل ومعلّم وكرة قدم وغوص وأخبار وراديو وصحفي وعالِم وطبيب وشرير مسلسل جريمة وهاكر — بلغتها وصوتها مع الصوت. الأطفال بأدوار عائلية مناسبة. يظهر كل فيديو في نافذة الشخصية وفي الاستكشاف. يُصنع بمفتاح محرّكك الخاص (مهام الإدارة لا تخصم رصيد nooi)."))+"</p>"+
+    '<label class="small" style="display:flex;gap:8px;align-items:center;margin:6px 0">'+esc(L("Engine","المحرّك"))+'<select data-cd274m '+(SC.busy?"disabled":"")+">"+CD_MODELS274.map(x=>'<option value="'+x[0]+'"'+(x[0]===m?" selected":"")+">"+esc(L(x[1],x[2]))+"</option>").join("")+"</select></label>"+
+    '<div class="cdl274">'+list.map(x=>{const st=x.status==="done"?"ok":x.status==="rendering"?"run":x.status==="failed"?"bad":"";return'<span class="cdc274 '+st+'"'+(x.error?' title="'+esc(String(x.error).slice(0,200))+'"':"")+">"+(x.url?'<a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(L(x.title[0],x.title[1]))+"</a>":esc(L(x.title[0],x.title[1])))+(x.made?" <small>"+esc(x.made==="hailuo"?"H3":"Seedance")+"</small>":"")+'<button class="btn sm ghost" data-act="cd274-ask" data-v="'+esc(x.id)+'" aria-label="'+esc(L("Make again","أنشئه من جديد"))+'" '+(x.status==="rendering"||SC.busy?"disabled":"")+">"+ic("refresh")+"</button></span>"}).join("")+"</div>"+
+    (ask?'<p class="small" role="alert" style="margin:8px 0 6px"><b>'+esc(L("This makes "+n+" video"+(n>1?"s":"")+" × 15 seconds ("+n*15+" seconds of "+mn[1].split(" —")[0]+" with sound) on your key. Each takes a few minutes. Start?","سيُصنع "+n+" فيديو × 15 ثانية ("+n*15+" ثانية على "+mn[2].split(" —")[0]+" بصوت) بمفتاحك. كل فيديو يحتاج بضع دقائق. أبدأ؟"))+'</b></p><div class="row"><button class="btn sm primary" data-act="cd274-go" '+(SC.busy?"disabled":"")+">"+esc(L("Yes, make them","نعم، اصنعها"))+'</button><button class="btn sm" data-act="cd274-no">'+esc(L("Not now","ليس الآن"))+"</button></div>"
+      :'<div class="row"><button class="btn sm primary" data-act="cd274-ask" '+(SC.busy||!todo.length?"disabled":"")+">"+ic("video")+esc(todo.length?L("Make the cast examples","اصنع أمثلة الشخصيات")+" ("+todo.length+")":L("All made","صُنعت كلها"))+"</button></div>")+"</div>";
+  const i=h.lastIndexOf("</div>");return h.slice(0,i)+box+h.slice(i)})(scAdmin);
+document.addEventListener("change",e=>{const t=e.target;if(t&&t.matches&&t.matches("[data-cd274m]")){SC.cdModel=t.value;renderView()}});
+document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.closest('[data-act="cd274-ask"],[data-act="cd274-go"],[data-act="cd274-no"]');if(!a)return;e.preventDefault();e.stopImmediatePropagation();const act=a.dataset.act;
+  if(act==="cd274-ask"){SC.cdAsk=a.dataset.v?{ids:[a.dataset.v]}:{};renderView();return}if(act==="cd274-no"){SC.cdAsk=null;renderView();return}
+  const ask=SC.cdAsk||{},json=ask.ids?{ids:ask.ids,force:true,model:SC.cdModel||"seedance20",sure:true}:{group:"castdemo",model:SC.cdModel||"seedance20",sure:true};SC.cdAsk=null;SC.busy=true;SC.msg="";renderView();
+  try{const r=await API.req("/v1/admin/showcase",{method:"POST",json});SC.admin=r.items||[];const n=SC.admin.filter(x=>x.cat==="castdemo"&&x.status==="rendering").length,bad=SC.admin.filter(x=>x.cat==="castdemo"&&x.status==="failed");
+    SC.msg=n?L(n+" in progress — each takes a few minutes. You can leave this page.",n+" قيد الإنشاء — كل فيديو يحتاج بضع دقائق. يمكنك مغادرة الصفحة."):bad.length?L("Couldn't start: ","تعذّر البدء: ")+String(bad[0].error||""):L("Nothing new to make.","لا يوجد جديد لإنشائه.")}
+  catch(err){SC.msg=String(err.message||err)}finally{SC.busy=false;renderView()}},true);
+(()=>{const st=document.createElement("style");st.textContent=`
+.vid274{position:absolute;top:7px;inset-inline-end:7px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:grid;place-items:center}.vid274 svg{width:11px;height:11px}.mine273+.vid274{inset-inline-end:34px}.cd274t .cat253 svg{width:13px;height:13px;vertical-align:-2px;margin-inline-end:4px}
+.cd274{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin:12px 0 0;align-items:start}
+.cd274v{border-radius:12px;overflow:hidden;background:#000;aspect-ratio:16/9}.cd274v.tall{aspect-ratio:9/16;max-height:440px;justify-self:center;width:100%;max-width:250px}
+.cd274v video{width:100%;height:100%;object-fit:cover;display:block}
+.cd274t h3{margin:6px 0 4px;font-size:17px}.cd274l{margin:0 0 6px;font-size:15px;line-height:1.55;padding-inline-start:10px;border-inline-start:3px solid var(--lime)}.cd274t .btn{margin-top:6px}
+.cdadm274{margin-top:14px;padding-top:12px;border-top:1px solid var(--line2)}
+.cdl274{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.cdc274{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line2);border-radius:999px;padding:2px 4px 2px 10px;font-size:12.5px}
+.cdc274.ok{border-color:var(--lime)}.cdc274.run{border-color:var(--cyan,#3cc)}.cdc274.bad{border-color:#e55}.cdc274 small{color:var(--mute)}.cdc274 .btn{padding:2px 6px;min-height:0}
+@media (max-width:640px){.cd274{grid-template-columns:minmax(0,1fr)}}
+`;document.head.appendChild(st)})();
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
