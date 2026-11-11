@@ -48,6 +48,7 @@ import { newCode, checkCode } from "./lib/otp.js";
 import { isStaff, requireAdmin, audit } from "./lib/admin.js";
 import { registerStudio219, proxyRender219, proxyRenderUpgrade219 } from "./lib/studio219.js";
 import { registerShowcase } from "./lib/showcase.js";
+import { registerCast273 } from "./lib/cast273.js";   // v273: the ready cast (30 characters with a face, a sheet and a voice)
 import { registerScenes } from "./lib/scenes.js";
 import { registerLearn } from "./lib/learn.js";
 import { registerVss, vssServer } from "./lib/vss.js";
@@ -404,7 +405,7 @@ registerV88(app, requireUser); startKeepMedia(); registerScrub131(app, requireUs
 registerEdit147(app, requireUser);
 registerEdit148(app, requireUser); registerEdit149(app, requireUser, isStaff); registerCaptions169(app, requireUser, isStaff); registerMotion150(app, requireUser);
 registerIngest(app);
-registerExplore(app); registerExplore200(app); registerSocial204(app); registerShowcase(app); registerGifts(app); registerInvoices(app); registerRefer173(app); registerLaunch182(app, requireUser);
+registerExplore(app); registerExplore200(app); registerSocial204(app); registerShowcase(app); registerCast273(app); registerGifts(app); registerInvoices(app); registerRefer173(app); registerLaunch182(app, requireUser);
 registerDownload187(app, requireUser);   // v187: the Download menu — MP4, MP3 (when there is sound), a PNG of a frame
 registerMoyasar190(app, requireUser, requireAdmin, audit, wrap);   // v190: GET /v1/admin/pay190/moyasar · POST …/webhook · …/ip · …/mark
 registerSpace188(app, requireUser, isStaff);   // v188: GET /v1/admin/space188 · POST /v1/admin/space188/free

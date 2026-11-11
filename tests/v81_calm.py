@@ -63,7 +63,7 @@ def unit_checks():
       console.log(JSON.stringify({{ made, user: err && err.userMsg, msg: err && err.message }})); process.exit(0)""")
     try: v = json.loads(o.splitlines()[-1])
     except Exception: v = {}
-    ok(v.get("made") == [["elevenlabs/text-to-speech-multilingual-v2", GEORGE], ["elevenlabs/text-to-speech-turbo-2-5", GEORGE], ["elevenlabs/text-to-speech-multilingual-v2", DEF]], f"avatar voice: own voice ×2 models, then the default voice {v} {e}")
+    ok(v.get("made") == [["elevenlabs/text-to-speech-multilingual-v2", GEORGE]], f"avatar voice: its own voice, one model — no other model or default voice (v272: no backups) {v} {e}")
     ok(v.get("user") == "The avatar's voice couldn't be made right now — nothing was charged. Try again in a minute, or add a voice file." and "Internal Error" in (v.get("msg") or ""), f"avatar voice: a friendly sentence for people, the detail for the admin {v}")
 
 def stage_checks():

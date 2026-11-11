@@ -956,3 +956,18 @@ The owner approved making real examples on the site's own key. The session can't
 - **Admin → AI providers → nooi Auto**: the owner names the strong and light engines (empty = the first available).
 - Tests: `tests/v272.py`. v175, v185, v247, v250, v252 (backup behaviour) are retired; v165, v179, v237, v240, nvidia_e2e follow
   the new rule.
+
+## v273 — the ready cast: 30 characters with a face, a sheet and their own voice
+
+- 30 fictional people from the owner's portraits (10) and character sheets (20) — `lib/cast273.js`, pictures in `public/cast/<id>/`
+  (face, smile, body, sheet — or photo). At start they are copied into the media folder (`cast273-<id>-<file>.jpg`) so engines reach
+  them like any picture on this server.
+- Each has a description for the engines (age, look, outfit), a native language (14 languages), and a voice of the voice engine
+  matched to age, gender and tone. Children (7) are marked "family-friendly use only".
+- `/v1/cast` lists them; `/v1/avatars` puts them first among the ready avatars (Avatar tool, UGC presenters); `/v1/voice/sample
+  {cast}` says hello in their own language and voice — made once, kept for everyone, free.
+- Characters → "Ready characters" (filters: women, men, children, seniors, Arabic): open one → their sheet, language and voice,
+  "Hear the voice", "Use this character", "UGC ad with them", "Video with them". Used once, they are normal characters (@Name works
+  everywhere); their face goes to every engine as the face reference and their sheet as an extra one (v259). Picking one as a UGC
+  presenter makes the same character, with its voice.
+- Tests: `tests/v273.py`; v79_fixes and v81_calm follow v272 (the avatar's voice: one model, the chosen voice).

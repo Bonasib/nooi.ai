@@ -60,14 +60,15 @@ def unit_checks():
     # the avatar's voice: retries the engine's voice, then a second voice model; all busy → one clear message, no other avatar model
     o, e = node(f"""import {{ _lipVoice }} from "{ROOT}/providers/kie.js"; let n = 0, made = [];
       const call = (k) => async (p, opt) => {{ if (p.includes("createTask")) {{ made.push(JSON.parse(opt.body).model); return {{ taskId: "t" + (++n) }}; }} return k(n); }};
-      const t0 = Date.now(), url = await _lipVoice({{ prompt: "Hello there", meta: {{}} }}, call((i) => i < 3 ? {{ state: "fail", failMsg: "Internal Error, Please try again later." }} : {{ state: "success", resultJson: JSON.stringify({{ resultUrls: ["https://cdn/x.mp3"] }}) }}));
+      const t0 = Date.now(), url = await _lipVoice({{ prompt: "Hello there", meta: {{}} }}, call((i) => ({{ state: "success", resultJson: JSON.stringify({{ resultUrls: ["https://cdn/x.mp3"] }}) }})));
       let err = null; made = []; n = 0; try {{ await _lipVoice({{ prompt: "Hi", meta: {{}} }}, call(() => ({{ state: "fail", failMsg: "Internal Error" }}))); }} catch (x) {{ err = x; }}
       console.log(JSON.stringify({{ url, made, msg: err && err.message, noFb: err && err.noFallback, type: err && err.type, ms: Date.now() - t0 }})); process.exit(0)""", U)
     try: v = json.loads(o.splitlines()[-1])
     except Exception: v = {}
-    ok(v.get("url") == "https://cdn/x.mp3", f"avatar voice: the third try gives the voice {v} {e}")
-    ok(v.get("made") == ["elevenlabs/text-to-speech-multilingual-v2", "elevenlabs/text-to-speech-turbo-2-5", "elevenlabs/text-to-speech-multilingual-v2"], f"avatar voice: v2, turbo, then the engine's default voice {v.get('made')}")
-    ok("voice service is busy" in (v.get("msg") or "") and v.get("noFb") is True and v.get("type") == "provider", f"avatar voice: one clear message, no other avatar model {v}")
+    # (v272: no backup voice model or other voice — one engine, the chosen voice; a failure is one clear message)
+    ok(v.get("url") == "https://cdn/x.mp3", f"avatar voice: the voice is made {v} {e}")
+    ok(v.get("made") == ["elevenlabs/text-to-speech-multilingual-v2"], f"avatar voice: asked once, of one voice model (no turbo, no default voice) {v.get('made')}")
+    ok(v.get("noFb") is True and v.get("type") == "provider", f"avatar voice: one clear message, no other avatar model {v}")
     # the world plan is cleaned: known places and kinds only (an unknown thing becomes a labelled box), ≤ 60 entries, counts and
     # positions clamped to the world, colours checked
     o, e = node(f"""import {{ cleanPlan }} from "{ROOT}/public/world/plan.js";

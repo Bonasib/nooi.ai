@@ -268,3 +268,4 @@ echo "▶ v269: phone action bar on the bottom menu, solid menu, visible icon, t
 echo "▶ v270: finished videos keep their sound and play with it"; python3 tests/v270.py
 echo "▶ v271: MiniMax H3 (Hailuo 3) with its sound on the owner's key"; python3 tests/v271.py
 echo "▶ v272: no backup engines; the customer's model is the model; Auto picks an engine per scene"; python3 tests/v272.py
+echo "▶ v273: the ready cast — 30 characters with a face, a sheet and their own voice"; python3 tests/v273.py

@@ -26362,6 +26362,72 @@ document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.c
   const s=($("#a272s")||{}).value||"",l=($("#a272l")||{}).value||"";A272.busy=true;renderView();
   try{const r=await API.req("/v1/admin/auto272",{method:"PUT",json:{strong:s,light:l}});A272.d=Object.assign({},A272.d,r);A272.msg=L("Saved.","تم الحفظ.");API.cfg=await API.req("/v1/config")}catch(err){A272.msg=String(err.message||err)}
   A272.busy=false;renderView();setTimeout(()=>{A272.msg="";if(S.view==="admin")renderView()},2500)},true);
+/* v273: the ready cast — 30 fictional people, each a complete character: a fixed face, a character sheet (front, sides, back,
+   six expressions), the full body, a description and a voice in their own language. Anyone can use them: Characters → "Ready
+   characters" (open one → hear the voice, use it, make a UGC ad or a video with it), UGC ads (presenters) and the Avatar tool
+   (ready avatars, from /v1/avatars). Used once, the person is a normal character (@Name works everywhere): the face goes to every
+   engine as the face reference and the sheet as an extra one (v259), so they stay the same person in every shot. */
+const CAST={items:null,busy:false,open:"",f:"all",audio:null};
+async function castLoad(){if(CAST.items||CAST.busy||API.mode!=="server")return;CAST.busy=true;try{CAST.items=(await API.req("/v1/cast")).items||[]}catch(e){CAST.items=[]}CAST.busy=false;if(["chars","ugcads"].includes(S.view))renderView()}
+const castById=id=>(CAST.items||[]).find(c=>c.id===id);
+const CASTF=[["all","All","الكل"],["female","Women","نساء"],["male","Men","رجال"],["kids","Children","أطفال"],["senior","Seniors","كبار السن"],["ar","Arabic","بالعربية"]];
+const castPass=(c,f)=>f==="all"||(f==="kids"?c.kid:f==="senior"?c.band==="senior":f==="ar"?c.lang==="ar":!c.kid&&c.gender===f);
+function castCard(c,act){return'<button type="button" class="cc273" data-'+act+'="'+esc(c.id)+'" aria-label="'+esc(L(c.name[0],c.name[1]))+'"><img src="'+esc(c.thumb)+'" alt="" loading="lazy" decoding="async"><span class="cn273"><b dir="auto">'+esc(L(c.name[0],c.name[1]))+"</b><small>"+c.flag+" "+esc(L(c.country[0],c.country[1]))+" · "+c.age+"</small></span>"+(c.kid?'<i class="kid273">'+esc(L("Child","طفل"))+"</i>":"")+(charById(c.id)?'<i class="mine273">'+ic("check")+"</i>":"")+"</button>"}
+function castBlock(){if(API.mode!=="server")return"";if(!CAST.items){castLoad();return""}if(!CAST.items.length)return"";const list=CAST.items.filter(c=>castPass(c,CAST.f));
+  return'<section class="cast273" aria-label="'+esc(L("Ready characters","شخصيات جاهزة"))+'"><div class="spread"><h2 class="sec" style="margin:0">'+esc(L("Ready characters","شخصيات جاهزة"))+'</h2><span class="small mute">'+esc(L(CAST.items.length+" people with a face, a full character sheet and their own voice — for videos, UGC ads and avatars.",CAST.items.length+" شخصية بوجه وورقة شخصية كاملة وصوت خاص — للفيديو وإعلانات UGC والأفاتار."))+"</span></div>"+
+    '<div class="chips273" role="tablist">'+CASTF.map(f=>'<button type="button" class="chip" data-castf273="'+f[0]+'" aria-pressed="'+(CAST.f===f[0])+'">'+esc(L(f[1],f[2]))+"</button>").join("")+"</div>"+
+    '<div class="cgrid273">'+list.map(c=>castCard(c,"cast273")).join("")+"</div></section>"}
+// a cast member as one of the customer's characters
+function castUse273(c){let ch=charById(c.id);if(!ch){ch=normChar({id:c.id,name:c.name[0],age:c.age,gender:c.gender,look:c.who,outfit:c.outfit,persona:L("Ready character","شخصية جاهزة"),
+    voice:{dialect:c.voice.dialect,gender:c.gender,age:c.voice.age,tone:c.voice.tone,id:c.voice.id,name:c.voice.name},face:c.face,sheet273:c.sheet||"",thumb273:c.thumb,body273:c.body||"",cast273:c.id,lang273:c.lang,kid273:!!c.kid,looks:[hashStr(c.id)%1e6,1,2,3],lookSeed:null,locked:true});S.chars.push(ch)}
+  persist();return ch}
+avChar87=(o=>function(id){if(/^cast-/.test(String(id||""))){const c=castById(id);if(c)return castUse273(c)}return o.apply(this,arguments)})(avChar87);
+// their pictures wherever the site shows a character's photo (cp:) or body (cb:)
+thumb=(o=>function(ref,op){if(typeof ref==="string"&&/^c[pb]:cast-/.test(ref)){const c=charById(ref.slice(3));if(c&&c.cast273){const u=ref[1]==="b"?(c.body273||c.face):(c.thumb273||c.face);op=op||{};
+  return'<div class="thumb '+(op.cls||"")+'" '+(op.attrs||"")+(op.ar?' style="aspect-ratio:'+op.ar+'"':"")+'><img class="frame" src="'+esc(u)+'" alt="" loading="lazy" style="object-fit:cover;width:100%;height:100%"></div>'}}return o.apply(this,arguments)})(thumb);
+// the sheet goes with the face as a reference (v259 looks for a made sheet first)
+sheet259=(o=>function(c){return o.apply(this,arguments)||(c&&c.sheet273)||""})(sheet259);
+function castSheet273(){const c=castById(CAST.open);if(!c){closeSheet();return}const mine=!!charById(c.id),pics=[c.smile||c.thumb,c.body,c.sheet].filter(Boolean),ln=c.langName?L(c.langName[0],c.langName[1]):c.lang;
+  $("#modalRoot").innerHTML='<div class="modal sheetwrap" data-act="close-sheet"><div class="sheet cs273" role="dialog" aria-modal="true" aria-label="'+esc(L(c.name[0],c.name[1]))+'" data-act="noop">'+
+    '<div class="spread" style="margin-bottom:10px"><div><span class="cat253">'+c.flag+" "+esc(L(c.country[0],c.country[1]))+'</span><h2 style="margin:2px 0 0" dir="auto">'+esc(L(c.name[0],c.name[1]))+' <small class="mute" style="font-size:14px">· '+c.age+"</small></h2></div>"+
+    '<button class="btn ghost sm" data-act="close-sheet" aria-label="'+esc(L("Close","إغلاق"))+'">'+ic("x")+"</button></div>"+
+    '<div class="cpics273'+(c.sheet?"":" one")+'">'+(c.sheet?'<img class="cbig273" src="'+esc(c.sheet)+'" alt="'+esc(L("Character sheet","ورقة الشخصية"))+'">':'<img class="cbig273" src="'+esc(c.face)+'" alt="">')+(c.sheet?'<div class="csm273">'+pics.slice(0,2).map(u=>'<img src="'+esc(u)+'" alt="" loading="lazy">').join("")+"</div>":"")+"</div>"+
+    '<p class="small" style="margin:10px 0 0" dir="ltr">'+esc(c.who)+", "+esc(L("wearing ","ترتدي/يرتدي "))+esc(c.outfit)+".</p>"+
+    '<div class="cmeta273"><span>'+ic("globe")+esc(L("Speaks ","يتكلم ")+ln)+"</span><span>"+ic("mic")+esc(L("Voice: ","الصوت: ")+c.voice.name+" · "+c.voice.tone)+"</span>"+(c.kid?"<span>"+ic("info")+esc(L("Child character — family-friendly content only.","شخصية طفل — لمحتوى عائلي مناسب فقط."))+"</span>":"")+"</div>"+
+    '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:14px"><button class="btn" data-act="cast273-hear">'+ic("play")+esc(L("Hear the voice","اسمع الصوت"))+"</button>"+
+    '<button class="btn primary" data-act="cast273-use">'+ic("user")+esc(mine?L("In my characters","ضمن شخصياتي"):L("Use this character","استخدم الشخصية"))+"</button>"+
+    '<button class="btn" data-act="cast273-ugc">'+ic("coin")+esc(L("UGC ad with them","إعلان UGC بها"))+"</button>"+
+    '<button class="btn" data-act="cast273-video">'+ic("video")+esc(L("Video with them","فيديو بها"))+'</button></div><p class="small mute" role="status" data-cast273msg style="margin:8px 0 0"></p></div></div>';
+  const f=$("#modalRoot [data-act=cast273-use]");if(f)f.focus()}
+document.addEventListener("click",async e=>{const t=e.target;if(!t.closest)return;let x;
+  if((x=t.closest("[data-castf273]"))){CAST.f=x.dataset.castf273;renderView();return}
+  if((x=t.closest("[data-cast273]"))){CAST.open=x.dataset.cast273;castSheet273();return}
+  const a=t.closest("[data-act^='cast273-']");if(!a)return;const c=castById(CAST.open);if(!c)return;e.preventDefault();const act=a.dataset.act,msg=$("#modalRoot [data-cast273msg]");
+  if(act==="cast273-hear"){a.disabled=true;if(msg)msg.textContent=L("Getting the voice…","جارٍ تجهيز الصوت…");
+    try{const r=await API.req("/v1/voice/sample",{method:"POST",json:{cast:c.id}});if(CAST.audio)CAST.audio.pause();CAST.audio=new Audio(r.url);CAST.audio.play().catch(()=>{});if(msg)msg.textContent=""}
+    catch(err){if(msg)msg.textContent=String(err.message||err)}a.disabled=false;return}
+  const ch=castUse273(c),nm=ch.name;
+  if(act==="cast273-use"){closeSheet();S.charSel=S.chars.indexOf(ch);if(S.view!=="chars")go("chars");else renderView();toast(L(nm+" is in your characters — write @"+nm+" in any prompt.",nm+" ضمن شخصياتك — اكتب @"+nm+" في أي وصف."),{type:"ok"});return}
+  if(act==="cast273-ugc"){closeSheet();S.draft.charId=ch.id;persist();go("ugcads");return}
+  if(act==="cast273-video"){closeSheet();const add="@"+nm+" ";S.draft.prompt=(S.draft.prompt||"").includes(add.trim())?S.draft.prompt:add+(S.draft.prompt||"");if(S.hf)S.hf.prompt=S.draft.prompt;persist();go("video");return}});
+renderView=(o=>function(){const r=o.apply(this,arguments);try{
+  if(S.view==="chars"&&API.mode==="server"&&!document.querySelector("#main .cast273")){const g=document.querySelector("#main .chargrid")||document.querySelector("#main>.view>.f265")||document.querySelector("#main>.view");if(g){const h=castBlock();if(h){if(g.classList.contains("view"))g.insertAdjacentHTML("beforeend",h);else g.insertAdjacentHTML("beforebegin",h)}}}
+  // UGC ads: the cast is in the ready presenters (from /v1/avatars); a cast presenter is the same character as in Characters
+  if(S.view==="ugcads"&&API.mode==="server"){if(!CAST.items)castLoad();document.querySelectorAll('#main [data-act="ugc-av87"]').forEach(b=>{if(/^cast-/.test(b.dataset.v))b.setAttribute("aria-pressed",String(S.draft.charId===b.dataset.v))})}
+}catch(err){console.warn("v273 cast",err)}return r})(renderView);
+(()=>{const st=document.createElement("style");st.textContent=`
+.cast273{margin:6px 0 18px}.chips273{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.cgrid273{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}.cgrid273.sm{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:6px}
+.cc273{position:relative;display:block;padding:0;border:1px solid var(--line2);border-radius:14px;overflow:hidden;background:var(--panel2);cursor:pointer;text-align:start;aspect-ratio:4/5;color:#fff}
+.cc273 img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.cc273:hover{border-color:var(--lime)}.cc273:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+.cn273{position:absolute;inset:auto 0 0 0;padding:26px 9px 8px;display:flex;flex-direction:column;gap:1px;background:linear-gradient(to top,rgba(0,0,0,.82),transparent)}.cn273 b{font:700 13.5px/1.2 var(--sans)}.cn273 small{font-size:11px;opacity:.9}
+.kid273{position:absolute;top:7px;inset-inline-start:7px;font:600 10.5px var(--sans);font-style:normal;background:rgba(0,0,0,.6);padding:2px 7px;border-radius:99px}
+.mine273{position:absolute;top:7px;inset-inline-end:7px;width:22px;height:22px;border-radius:50%;background:var(--lime);color:var(--on-lime,#0a1200);display:grid;place-items:center}.mine273 svg{width:13px;height:13px}
+.cs273{max-width:820px}.cpics273{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,1fr);gap:8px}.cpics273.one{grid-template-columns:minmax(0,1fr);max-width:360px;margin:0 auto}
+.cbig273{width:100%;border-radius:12px;background:#fff;display:block}.csm273{display:grid;gap:8px;align-content:start}.csm273 img{width:100%;border-radius:10px;display:block;background:#fff}
+.cmeta273{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12.5px;color:var(--mute)}.cmeta273 span{display:inline-flex;gap:6px;align-items:center}.cmeta273 svg{width:14px;height:14px}
+@media (max-width:767px){.cgrid273{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.cgrid273.sm{grid-template-columns:repeat(4,minmax(0,1fr))}.cn273 b{font-size:12px}.cpics273{grid-template-columns:minmax(0,1fr)}.csm273{grid-template-columns:1fr 1fr}}
+`;document.head.appendChild(st)})();
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
