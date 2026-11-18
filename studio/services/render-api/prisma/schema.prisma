@@ -1,0 +1,53 @@
+// nooi Studio render service — PostgreSQL (Prisma). The accounts, credits and projects stay with the nooi.ai server;
+// this keeps the uploaded files, the renders (queue state and results, deleted after 7 days) and a usage log for the admin.
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+datasource db {
+  provider = "postgresql"
+}
+model MediaFile {
+  id        String   @id
+  owner     String
+  name      String
+  path      String
+  url       String
+  mime      String
+  size      Int
+  scanned   String   @default("skipped") // "clean" | "skipped" (no scanner configured)
+  createdAt DateTime @default(now())
+  @@index([owner, createdAt])
+}
+model RenderJob {
+  id         String    @id
+  owner      String
+  plan       String
+  status     String // queued | running | done | failed | cancelled
+  progress   Float     @default(0)
+  format     String
+  width      Int
+  height     Int
+  fps        Int
+  seconds    Float
+  outputPath String?
+  url        String?
+  error      String?
+  priority   Int       @default(5)
+  createdAt  DateTime  @default(now())
+  startedAt  DateTime?
+  finishedAt DateTime?
+  expiresAt  DateTime
+  @@index([owner, createdAt])
+  @@index([status])
+}
+model UsageLog {
+  id        Int      @id @default(autoincrement())
+  owner     String
+  kind      String // render | upload | proxy
+  credits   Int      @default(0)
+  seconds   Float    @default(0)
+  meta      Json?
+  createdAt DateTime @default(now())
+  @@index([owner, createdAt])
+}

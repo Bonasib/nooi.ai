@@ -39,10 +39,10 @@ try {
   ok(await toEnglish("قارب في النهر", { ask: () => new Promise(() => {}), timeoutMs: 50 }) === "قارب في النهر", "a text AI that never answers doesn't hold the job (as it was)");
   let n0 = asked.length; const both = await Promise.all([toEnglish("حصان يركض", { ask: async (p, o) => { asked.push({ p, o }); await new Promise((r) => setTimeout(r, 60)); return "A horse runs"; } }), toEnglish("حصان يركض", { ask: ask("asked twice") })]);
   ok(both[0] === "A horse runs" && both[1] === "A horse runs" && asked.length === n0 + 1, "the same words sent twice at once (a network retry) are put into English once");
-  ok(noTextLine("A boat at sunset") === "A boat at sunset " + NO_TEXT, "a video prompt asks for no on-screen text");
+  ok(noTextLine("A boat at sunset") === "A boat at sunset. " + NO_TEXT && noTextLine("A boat at sunset.") === "A boat at sunset. " + NO_TEXT, "a video prompt asks for no on-screen text (v96: the sentence ends first)");
   ok(noTextLine("A shop with a sign that says OPEN") === "A shop with a sign that says OPEN" && noTextLine("عنوان كبير على الشاشة") === "عنوان كبير على الشاشة", "… unless the words want text (a sign, a title)");
   ok(noTextLine('A man says "أهلاً"') === 'A man says "أهلاً" ' + NO_TEXT, "a spoken line is not text on screen: the line is still added");
-  ok(noTextLine(noTextLine("A boat")) === "A boat " + NO_TEXT && noTextLine("") === "" && noTextLine("  ") === "  ", "the line is added once, never to an empty prompt (an empty request is still refused)");
+  ok(noTextLine(noTextLine("A boat")) === "A boat. " + NO_TEXT && noTextLine("") === "" && noTextLine("  ") === "  ", "the line is added once, never to an empty prompt (an empty request is still refused)");
 } catch (e) { ok(false, "units crashed: " + (e.stack || e.message)); }
 
 // ---------- B) a real server in front of a mocked Kie and a mocked text AI ----------

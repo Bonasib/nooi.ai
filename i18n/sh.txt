@@ -95,7 +95,7 @@
 095|Čije je ono što generiram?
 096|Tvoje. Tvoji videozapisi su tvoji, i za komercijalnu upotrebu.
 097|Koji su jezici podržani?
-098|Titlovi i sinkronizacija na 35 jezika s regionalnim dijalektima — saudijski, egipatski, kuvajtski, tuniski, britanski, australski, škotski i mnogi drugi. Samo sučelje postoji na 26 jezika.
+098|Titlovi i sinkronizacija na 35 jezika s regionalnim dijalektima — saudijski, egipatski, kuvajtski, tuniski, britanski, australski, škotski i mnogi drugi. Samo sučelje postoji na 32 jezika.
 099|Kako Priča u poglavljima ostaje dosljedna?
 100|Svako poglavlje počinje od posljednjeg kadra prethodnog, a identitet tvog lika zaključan je u svakom kadru.
 101|Može li objavljivati umjesto mene?
@@ -134,7 +134,7 @@
 134|Maksimalna duljina videa
 135|Razlučivost
 136|Broj sličica
-137|Video modeli
+137|Video motori
 138|Kloniranje glasa
 139|Najpopularnije
 140|Pro
@@ -162,7 +162,7 @@
 162|E-pošta
 163|Prioritetna
 164|Prioritetna + uvođenje
-165|Modeli slika
+165|Motori slika
 166|Svi modeli slika
 167|ElevenLabs glasovi
 168|Svi · uključujući Eleven v3
@@ -174,7 +174,7 @@
 174|+ profesionalno kloniranje glasa
 175|jezika za titlove, sinkronizaciju i glas
 176|TVOJA AI FILMSKA EKIPA
-177|Osam stručnjaka.
+177|Devet stručnjaka.
 178|Jedan film.
 179|Svaki projekt vodi ekipa AI agenata — od prvog reda scenarija do završne kontrole kvalitete.
 180|Pretvara tvoju ideju u scenarij: scene, dijalog i naraciju.
@@ -281,7 +281,7 @@
 281|Još ništa. Opišite kadar iznad da napravite prvi klip.
 282|Nova priča
 283|Nova montaža
-284|AI model
+284|AI motor
 285|Pametno
 286|najbolje za vaš prompt
 287|Sekunde
@@ -311,8 +311,8 @@
 311|Stil
 312|filmski, tople boje
 313|Koristi ovu strukturu
-314|Jedan red po dijelu — botovi čitaju svaki dio.
-315|Video model
+314|Jedan red po dijelu — agenti čitaju svaki dio.
+315|Video motor
 316|Početni i završni kadar
 317|Početni kadar
 318|Učitaj
@@ -328,7 +328,7 @@
 328|Nije povezano
 329|Izvan mreže
 330|Demo
-331|Svi modeli
+331|Svi motori
 332|Uvjeti
 333|Privatnost
 334|Govorite umjesto tipkanja
@@ -375,3 +375,5 @@
 375|Ukloni preuzete modele
 376|Radi na tvom uređaju · besplatno
 377|Gotovo na tvom uređaju — bez potrošenih kredita.
+378|Audio
+379|Svi alati

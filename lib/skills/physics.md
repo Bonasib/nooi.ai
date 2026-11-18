@@ -65,3 +65,27 @@ ar: سبب واحد ونتيجة واحدة لكل لقطة
 how: Video engines follow one clear physical event per shot ("the glass slips off the table and shatters on the tiles") much better than several at once. Put the next event in the next shot.
 how_ar: محركات الفيديو تتبع حدثاً فيزيائياً واحداً واضحاً في اللقطة («ينزلق الكأس عن الطاولة ويتحطم على البلاط») أفضل بكثير من عدة أحداث معاً. ضع الحدث التالي في اللقطة التالية.
 when: planning shots with action
+
+## A body moves from its centre
+ar: الجسد يتحرك من مركزه
+how: Every real movement starts at the hips and the chest and travels out to the arms, hands and head; the weight shifts onto one foot before a step, the shoulders counter-swing the hips, and the arms swing opposite the legs. Write it ("she shifts her weight to her left foot, turns from the hips, her arms swinging opposite her stride") so the body moves as one, not as floating parts.
+how_ar: كل حركة حقيقية تبدأ من الوركين والصدر ثم تنتقل إلى الذراعين واليدين والرأس؛ ينتقل الوزن إلى قدم قبل الخطوة، ويتأرجح الكتفان عكس الوركين، والذراعان عكس الساقين. اكتبها («تنقل وزنها إلى قدمها اليسرى، وتستدير من الوركين، وذراعاها تتأرجحان عكس خطوتها») ليتحرك الجسد كوحدة واحدة لا كأجزاء طافية.
+when: people walking, turning, dancing, fighting or doing sport
+
+## Feet stay on the ground
+ar: القدمان ثابتتان على الأرض
+how: A foot that carries weight does not slide; the heel lands first when walking, the knees bend to absorb a landing, and a body leaning on a wall or a table presses into it. Name the contact ("his heel plants, the knee bends as he lands") — sliding feet and weightless landings are the first thing that makes a video look fake.
+how_ar: القدم التي تحمل الوزن لا تنزلق؛ الكعب يلمس الأرض أولاً عند المشي، والركبتان تنثنيان لامتصاص الهبوط، والجسد المستند إلى جدار أو طاولة يضغط عليه. سمِّ نقطة التلامس («يثبت كعبه، وتنثني ركبته وهو يهبط») — انزلاق القدمين والهبوط بلا وزن أول ما يجعل الفيديو يبدو مزيفاً.
+when: walking, running, jumping, standing up, any shot showing the feet
+
+## Follow-through and settle
+ar: الاستمرار ثم الاستقرار
+how: Nothing stops dead: hair, clothes, a ponytail, loose sleeves and the arms keep moving a moment after the body stops, then settle; a head turn ends with a small overshoot and comes back. Ask for it ("her hair swings and settles after she turns") and motion reads as real weight.
+how_ar: لا شيء يتوقف فجأة: الشعر والملابس وذيل الحصان والأكمام والذراعان تستمر في الحركة لحظة بعد توقف الجسد ثم تستقر؛ والتفاتة الرأس تنتهي بتجاوز بسيط ثم تعود. اطلبها («يتأرجح شعرها ثم يستقر بعد أن تلتفت») لتُقرأ الحركة كوزن حقيقي.
+when: turns, stops, dance moves, wind, anything with hair or loose cloth
+
+## A still body still lives
+ar: الجسد الساكن حيّ أيضاً
+how: A person standing or sitting is never frozen: the chest rises with each breath, the weight shifts from foot to foot every few seconds, the fingers move a little, the eyes blink and look around. Say "standing naturally, breathing, small shifts of weight" so an idle moment does not look like a paused frame.
+how_ar: الشخص الواقف أو الجالس لا يتجمد أبداً: يرتفع صدره مع كل نفس، وينقل وزنه من قدم إلى أخرى كل بضع ثوانٍ، وتتحرك أصابعه قليلاً، وترمش عيناه وتتلفتان. قل «يقف بشكل طبيعي، يتنفس، مع تحولات صغيرة في الوزن» كي لا تبدو لحظة السكون كإطار متوقف.
+when: talking heads, presenters, waiting, listening, any shot longer than two seconds with a person in it

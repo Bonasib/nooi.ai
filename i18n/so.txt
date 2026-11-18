@@ -95,7 +95,7 @@
 095|Yaa leh waxa aan sameeyo?
 096|Adiga. Muuqaalladaadu adigaa leh, xitaa isticmaal ganacsi.
 097|Luqadee la taageeraa?
-098|Qoraal-hoosaad iyo dubbing 35 luqadood oo leh lahjado gobol — Sacuudi, Masri, Kuweyti, Tuunisi, Ingiriis, Australiyaan, Iskootish iyo kuwo kale oo badan. Interface-ka laftiisa wuxuu ku jiraa 26 luqadood.
+098|Qoraal-hoosaad iyo dubbing 35 luqadood oo leh lahjado gobol — Sacuudi, Masri, Kuweyti, Tuunisi, Ingiriis, Australiyaan, Iskootish iyo kuwo kale oo badan. Interface-ka laftiisa wuxuu ku jiraa 32 luqadood.
 099|Sidee Sheekada Cutubyada leh u ahaataa mid isku xidhan?
 100|Cutub kasta wuxuu ka bilaabmaa sawirka ugu dambeeya ee kii ka horreeyay, aqoonsiga jilaagaaguna wuu go'an yahay muuqaal kasta.
 101|Ma ii daabici kartaa?
@@ -134,7 +134,7 @@
 134|Dhererka ugu badan ee muuqaalka
 135|Tayada
 136|Heerka sawirrada
-137|Moodellada muuqaalka
+137|Matoorada muuqaalka
 138|Koobiyeynta codka
 139|Ugu caansan
 140|Pro
@@ -162,7 +162,7 @@
 162|Iimayl
 163|Mudnaan
 164|Mudnaan + hagid bilow
-165|Moodellada sawirka
+165|Matoorada sawirka
 166|Dhammaan moodellada sawirka
 167|Codadka ElevenLabs
 168|Dhammaan · oo ay ku jirto Eleven v3
@@ -174,7 +174,7 @@
 174|+ koobiyeynta codka xirfadeed
 175|luqadood qoraal-hoosaad, dubbing iyo cod
 176|KOOXDAADA FILIMKA AI
-177|Siddeed khabiir.
+177|Sagaal khabiir.
 178|Hal filim.
 179|Mashruuc kasta waxaa maamula koox wakiillo AI ah — laga bilaabo sadarka koowaad ee qoraalka ilaa hubinta tayada ee ugu dambeysa.
 180|Fikraddaada u beddela qoraal filim: muuqaallo, wadahadal iyo sheeko.
@@ -281,7 +281,7 @@
 281|Weli waxba ma jiraan. Kor ka qeex muuqaal si aad u samayso kilibkaaga ugu horreeya.
 282|Sheeko cusub
 283|Tifaftir cusub
-284|Moodalka AI
+284|Matoorka AI
 285|Caqli badan
 286|kan ugu fiican amarkaaga
 287|Ilbiriqsi
@@ -311,8 +311,8 @@
 311|Qaab
 312|shineemo, midabbo diiran
 313|Isticmaal qaabkan
-314|Hal sadar qayb kasta — botyadu qayb kasta way akhriyaan.
-315|Moodalka muuqaalka
+314|Hal sadar qayb kasta — wakiilladu qayb kasta way akhriyaan.
+315|Matoorka muuqaalka
 316|Sawirka koowaad & kan dambe
 317|Sawirka koowaad
 318|Soo geli
@@ -328,7 +328,7 @@
 328|Lama xidhin
 329|Khadka ka maqan
 330|Tijaabo
-331|Dhammaan moodellada
+331|Dhammaan matoorada
 332|Shuruudaha
 333|Asturnaanta
 334|Ku hadal halkii aad qori lahayd
@@ -375,3 +375,5 @@
 375|Tirtir moodallada la soo dejiyay
 376|Wuxuu ka shaqeeyaa qalabkaaga · bilaash
 377|Waxaa lagu dhammeeyay qalabkaaga — credit lama isticmaalin.
+378|Cod
+379|Dhammaan qalabka

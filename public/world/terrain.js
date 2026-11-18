@@ -20,7 +20,7 @@ export function noise2(seed) {
 
 const GROUND = {
   grass: ["#5d8a3a", "#6c9a44", "#4f7d33"], sand: ["#dcc38c", "#e6cf9a", "#ceb27b"], snow: ["#eef3f7", "#e2eaf0", "#f6f9fb"], dirt: ["#a98b63", "#9b7d58", "#b39770"],
-  asphalt: ["#9b978f", "#a39f97", "#928e86"], stone: ["#8e8a83", "#84807a", "#99958e"], redrock: ["#b8673d", "#a65a35", "#c77a4c"], floor: ["#b98a58", "#a87b4b", "#c69a66"], moon: ["#a09e9a", "#8e8c88", "#b0aeaa"]
+  asphalt: ["#9b978f", "#a39f97", "#928e86"], stone: ["#8e8a83", "#84807a", "#99958e"], redrock: ["#b8673d", "#a65a35", "#c77a4c"], floor: ["#b98a58", "#a87b4b", "#c69a66"], studio: ["#dfe2e5", "#dadde0", "#e5e7e9"], moon: ["#a09e9a", "#8e8c88", "#b0aeaa"]
 };
 const ROCK = "#7f7b74", WET = "#b9a273", SNOWCAP = "#f0f4f7";
 
@@ -84,10 +84,12 @@ export function buildTerrain(T, plan, tier, rnd) {
       if (d < pad) { const k = j * res + i; heights[k] = lerp(target, heights[k], smooth(0, pad, d)); } }
     return target;
   }
-  function mesh(roads = []) {
+  // o.plain: the base is white so a photo texture shows its own colours (roads, wet edges, rock and snow still paint over it)
+  function mesh(roads = [], o = {}) {
     const g = new T.PlaneGeometry(S, S, res - 1, res - 1); g.rotateX(-Math.PI / 2);
     const pos = g.attributes.position, col = new Float32Array(pos.count * 3), c = new T.Color(), pal = (GROUND[ground] || GROUND.grass).map((h) => new T.Color(h)), rock = new T.Color(ROCK), wet = new T.Color(WET), snow = new T.Color(SNOWCAP);
     if (plan.terrain.color) pal[0].set(plan.terrain.color); if (plan.terrain.color2) pal[1].set(plan.terrain.color2);
+    if (o.plain) { pal[0].set("#ffffff"); pal[1].set("#f2f2f2"); pal[2].set("#e6e6e6"); }
     const peak = Math.max(1, ...heights), road = new T.Color(ground === "asphalt" ? "#3b3e42" : ground === "sand" ? "#c9b07c" : "#a48f6e");
     for (let k = 0; k < pos.count; k++) {
       const x = pos.getX(k), z = pos.getZ(k), i = Math.round((x + S / 2) / step), j = Math.round((z + S / 2) / step), h = heights[j * res + i]; pos.setY(k, h);
@@ -101,7 +103,7 @@ export function buildTerrain(T, plan, tier, rnd) {
       col[k * 3] = c.r; col[k * 3 + 1] = c.g; col[k * 3 + 2] = c.b;
     }
     g.setAttribute("color", new T.BufferAttribute(col, 3)); g.computeVertexNormals(); g.computeBoundingSphere();
-    const m = new T.Mesh(g, new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.96, metalness: 0, flatShading: tier.name === "low" }));
+    const m = new T.Mesh(g, new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.96, metalness: 0 }));   // (v214) smooth normals everywhere — the faceted ground read as "shapeless" on phones
     m.receiveShadow = tier.shadows > 0; m.name = "nooi_ground"; return m;
   }
   // the land past the edge: low hills or dunes in the fog, so the world never ends at a cliff

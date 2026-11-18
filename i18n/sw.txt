@@ -95,7 +95,7 @@
 095|Ninachotengeneza ni mali ya nani?
 096|Ni mali yako. Video zako ni zako, hata kwa matumizi ya kibiashara.
 097|Ni lugha gani zinazotumika?
-098|Manukuu na uigizaji sauti kwa lugha 35 pamoja na lahaja za kikanda — Kisaudi, Kimisri, Kikuwaiti, Kitunisia, Kiingereza cha Uingereza, cha Australia, cha Uskoti na nyingine nyingi. Kiolesura chenyewe kinapatikana kwa lugha 26.
+098|Manukuu na uigizaji sauti kwa lugha 35 pamoja na lahaja za kikanda — Kisaudi, Kimisri, Kikuwaiti, Kitunisia, Kiingereza cha Uingereza, cha Australia, cha Uskoti na nyingine nyingi. Kiolesura chenyewe kinapatikana kwa lugha 32.
 099|Hadithi ya Sura inabakije thabiti?
 100|Kila sura huanza kutoka fremu ya mwisho ya iliyotangulia, na utambulisho wa mhusika wako umefungwa katika kila picha.
 101|Inaweza kuchapisha kwa niaba yangu?
@@ -134,7 +134,7 @@
 134|Urefu wa juu wa video
 135|Ubora
 136|Kasi ya fremu
-137|Miundo ya video
+137|Injini za video
 138|Kunakili sauti
 139|Maarufu zaidi
 140|Pro
@@ -162,7 +162,7 @@
 162|Barua pepe
 163|Kipaumbele
 164|Kipaumbele + kuanzishwa
-165|Miundo ya picha
+165|Injini za picha
 166|Miundo yote ya picha
 167|Sauti za ElevenLabs
 168|Zote · pamoja na Eleven v3
@@ -174,7 +174,7 @@
 174|+ kunakili sauti kitaalamu
 175|lugha za manukuu, uigizaji sauti na sauti
 176|TIMU YAKO YA FILAMU YA AI
-177|Wataalamu wanane.
+177|Wataalamu tisa.
 178|Filamu moja.
 179|Kila mradi unashughulikiwa na timu ya mawakala wa AI — kuanzia mstari wa kwanza wa hati hadi ukaguzi wa mwisho wa ubora.
 180|Hugeuza wazo lako kuwa hati: matukio, mazungumzo na usimulizi.
@@ -281,7 +281,7 @@
 281|Bado hakuna kitu. Eleza picha hapo juu ili kutengeneza klipu yako ya kwanza.
 282|Hadithi mpya
 283|Uhariri mpya
-284|Muundo wa AI
+284|Injini ya AI
 285|Mahiri
 286|bora kwa maelekezo yako
 287|Sekunde
@@ -311,8 +311,8 @@
 311|Mtindo
 312|kisinema, rangi za joto
 313|Tumia muundo huu
-314|Mstari mmoja kwa kila sehemu — boti husoma kila sehemu.
-315|Muundo wa video
+314|Mstari mmoja kwa kila sehemu — mawakala husoma kila sehemu.
+315|Injini ya video
 316|Fremu ya kwanza na ya mwisho
 317|Fremu ya kwanza
 318|Pakia
@@ -328,7 +328,7 @@
 328|Haijaunganishwa
 329|Nje ya mtandao
 330|Onyesho
-331|Miundo yote
+331|Injini zote
 332|Masharti
 333|Faragha
 334|Ongea badala ya kuandika
@@ -375,3 +375,5 @@
 375|Ondoa modeli zilizopakuliwa
 376|Inaendeshwa kwenye kifaa chako · bure
 377|Imekamilika kwenye kifaa chako — hakuna mikopo iliyotumika.
+378|Sauti
+379|Zana zote

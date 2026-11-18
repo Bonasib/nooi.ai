@@ -20,14 +20,15 @@ option groups are folded into one line (“choose …”). Shared parts (top bar
 | 16:9 | chooses the format (16:9, 9:16, 1:1…) |
 | Send | creates from the prompt |
 | Claude & ChatGPT Connect | opens **Integrations · MCP** |
+| All tools | opens **All tools** |
 | Create video Text or image to video with camera control and  | opens **Create video** |
 | Create image Several images per prompt, pick the best. | opens **Create image** |
-| nooi Studio Eight AI bots write, design, direct, shoot, scor | opens **nooi Studio** |
+| nooi Studio Nine AI agents write, design, direct, shoot, voi | opens **nooi Studio** |
 | UGC ads Market a product with a presenter, product shots, an | opens **UGC ads** |
 | Characters Characters with ages, voices and several looks. | opens **Characters** |
 | 3D World Write what you want — or add a picture — and walk a | opens **3D World** |
 | Video editor Trim, effects, text, and edit frames with a pro | opens **Video editor** |
-| Sketch to life Draw and watch it become a character, asset o | opens **Sketch to life** |
+| Sketch to life Draw, say what it is, and preview it with AI  | opens **Sketch to life** |
 | Continue the next chapter | continues the last chapter story |
 | Storyboard | opens **Storyboard** |
 | All templates | opens **Templates** |
@@ -134,6 +135,44 @@ _Ready steps in a row: picture → video → sharper copy._
 | Help & support | opens **Help & support** |
 | Admin login | admin sign-in |
 
+## All tools
+
+### All tools  `apps`
+
+_Every tool in one place, by section._
+
+| control | what it does |
+|---|---|
+| Find a tool | field (search) |
+| Templates Ready-made starting points. | opens **Templates** |
+| Community Videos and images made by the community — recreate | opens **Community** |
+| Recipes Ready steps in a row: picture → video → sharper copy | opens **Recipes** |
+| Create image Several images per prompt, pick the best. | opens **Create image** |
+| Sketch to life Draw, say what it is, and preview it with AI  | opens **Sketch to life** |
+| Coloring book Turn your film, story or post into printable c | opens **Coloring book** |
+| Create video Text or image to video with camera control and  | opens **Create video** |
+| Cinema Studio Camera, lens, focal length, aperture, move and | opens **Cinema Studio** |
+| Motion Control A character performs the movement of any vide | opens **Motion Control** |
+| UGC ads Market a product with a presenter, product shots, an | opens **UGC ads** |
+| nooi Studio Nine AI agents write, design, direct, shoot, voi | opens **nooi Studio** |
+| Chapter story Multi-chapter films that continue from the las | opens **Chapter story** |
+| Storyboard Frames, dialogue, sound and transitions on a canv | opens **Storyboard** |
+| Voice & audio Voices by dialect and age, lip sync, music and | opens **Voice & audio** |
+| Subtitles & dubbing Transcribe, translate and dub with synce | opens **Subtitles & dubbing** |
+| Characters Characters with ages, voices and several looks. | opens **Characters** |
+| 3D World Write what you want — or add a picture — and walk a | opens **3D World** |
+| Video editor Trim, effects, text, and edit frames with a pro | opens **Video editor** |
+| Video from pictures Your pictures become a video with gentle | opens **Video from pictures** |
+| Visual effects Background & keying, color grading and motion | opens **Visual effects** |
+| Enhance Upscale 4K, 120 fps, extend, reframe, captions, dubb | opens **Enhance** |
+| Video intelligence Summarize long videos, ask questions abou | opens **Video intelligence** |
+| Schedule & publish Schedule and publish to every platform. | opens **Schedule & publish** |
+| Content plan Analyze your website and get a ready content pl | opens **Content plan** |
+| Hook lab Openings that stop the scroll, for any topic. | opens **Hook lab** |
+| contact@nooi.ai | link → mailto:contact@nooi.ai |
+| Help & support | opens **Help & support** |
+| Admin login | admin sign-in |
+
 ## Image
 
 ### Create image  `image`
@@ -163,21 +202,13 @@ _Several images per prompt, pick the best._
 
 ### Sketch to life  `sketch`
 
-_Draw and watch it become a character, asset or place in real time._
+_Draw, say what it is, and preview it with AI — one picture or up to ten different looks._
 
 | control | what it does |
 |---|---|
 | Create image | opens **Create image** |
 | Sketch to life | opens **Sketch to life** |
 | Coloring book | opens **Coloring book** |
-| Live sketch | opens **Sketch to life** |
-| Draw a scene | opens **draw** |
-| Characters | action `sk-target` |
-| Vehicles | action `sk-target` |
-| Environments | action `sk-target` |
-| Animals | action `sk-target` |
-| Assets & props | action `sk-target` |
-| Floor plan → 3D scene | action `sk-target` |
 | Pencil | action `sk-tool` |
 | Marker | action `sk-tool` |
 | Brush | action `sk-tool` |
@@ -185,8 +216,6 @@ _Draw and watch it become a character, asset or place in real time._
 | Undo | action `sk-undo` |
 | Redo | action `sk-redo` |
 | Clear | action `sk-clear` |
-| Import drawing | field (file) |
-| Trace a photo | field (file) |
 | #1b1b1b | action `sk-color` |
 | #ffffff | action `sk-color` |
 | #8a8f98 | action `sk-color` |
@@ -199,20 +228,13 @@ _Draw and watch it become a character, asset or place in real time._
 | #6d4c41 | action `sk-color` |
 | #f1c27d | action `sk-color` |
 | 6 | field (range) |
-| Preview · free | action `lsk-mode` |
-| Live AI · 1 / 4 frames | action `lsk-mode` |
-| When I pause · 5 | action `lsk-mode` |
-| Camera | action `lsk-cam` |
-| Screen | action `lsk-cam` |
-| Record the session | action `lsk-rec` |
-| Keep this frame | action `lsk-keep` |
-| e.g. a red vintage car, a falcon with golden wings | field |
-| Style Realistic | — |
-| 65 | field (range) |
-| Save to cast | action `sk-save` |
-| Make it real · 22 | action `sk-hd` |
-| Make 3D | turns the drawing into 3D |
-| Download | action `sk-dl` |
+| e.g. a red vintage car on a coast road | field |
+| 1 | action `sk91-n` |
+| 4 | action `sk91-n` |
+| 6 | action `sk91-n` |
+| 8 | action `sk91-n` |
+| 10 | action `sk91-n` |
+| Preview with AI 22 | action `sk91-go` |
 | contact@nooi.ai | link → mailto:contact@nooi.ai |
 | Help & support | opens **Help & support** |
 | Admin login | admin sign-in |
@@ -390,7 +412,7 @@ _Market a product with a presenter, product shots, an image or motion graphics._
 
 ### nooi Studio  `crew`
 
-_Eight AI bots write, design, direct, shoot, score, edit, produce and audit your film._
+_Nine AI agents write, design, direct, shoot, voice, score, edit, produce and check your film._
 
 | control | what it does |
 |---|---|
@@ -407,7 +429,7 @@ _Eight AI bots write, design, direct, shoot, score, edit, produce and audit your
 | Format 16:9 | — |
 | French Arabic English Japanese Chinese Hindi Spanish Korean  | field |
 | English | — |
-| Start the crew ~ 11 | action `crew-start` |
+| Start the crew ~ 12 | action `crew-start` |
 | contact@nooi.ai | link → mailto:contact@nooi.ai |
 | Help & support | opens **Help & support** |
 | Admin login | admin sign-in |
@@ -503,204 +525,7 @@ _Frames, dialogue, sound and transitions on a canvas._
 | Put it together in the editor | action `agsb-edit` |
 | Render every frame as a clip 336 | action `board-render` |
 
-## Characters
-
-### Characters  `chars`
-
-_Characters with ages, voices and several looks._
-
-| control | what it does |
-|---|---|
-| Upload a photo → new character | field (file) |
-| Add a photo to this character | field (file) |
-| The Keeper 72 · 172cm · Male Story | action `pick-char` |
-| Delete this character | deletes this character (asks first) |
-| New character | action `new-char` |
-| Make it real 22 | makes this character real (one photoreal face from its description or photo) |
-| 4 real looks 88 | action `gen-looks` |
-| Make 3D · walks in your worlds 37 | makes this character's 3D body (it walks in your worlds) |
-| Character sheet 22 | action `gen-sheet` |
-| Lock identity across shots | — |
-| Use as main character | action `char-to-story` |
-| Delete | action `del-char` |
-| The Keeper | field |
-| choose: Male · Female | sets `char.gender` |
-| 72 | field (range) |
-| 172 | field (range) |
-| choose: Slim · Athletic · Average · Muscular · Curvy · Broad / heavy | sets `char.shape` |
-| choose: (no label) | sets `char.skin` |
-| choose: (no label) | sets `char.eyes` |
-| choose: (no label) | sets `char.hair` |
-| choose: (no label) | sets `char.hairStyle` |
-| choose: (no label) | sets `char.facial` |
-| Style Realistic | — |
-| choose: (no label) | sets `char.headwear` |
-| choose: (no label) | sets `char.outfitStyle` |
-| #2b3a67 | field (color) |
-| (no label) | — |
-| Thick white beard, sun-weathered face, grey eyes. | field |
-| Wool sweater, yellow raincoat, brass lantern. | field |
-| Quiet, stubborn, gentle at heart. | field |
-| enUK | field |
-| (no label) | action `vc-char-new` |
-| choose: (no label) | sets `char.voice.age` |
-| choose: (no label) | sets `char.voice.gender` |
-| choose: (no label) | sets `char.voice.tone` |
-| (no label) | action `speak-char` |
-| contact@nooi.ai | link → mailto:contact@nooi.ai |
-| Help & support | opens **Help & support** |
-| Admin login | admin sign-in |
-
-## 3D
-
-### 3D World  `world`
-
-_Write what you want — or add a picture — and walk around inside it: a living world with people, animals, water, weather and real physics. Light enough for any phone._
-
-| control | what it does |
-|---|---|
-| Describe a world: a desert oasis at sunset with camels… | field |
-| Characters @ | opens your characters to put one in the prompt (@name) |
-| Create world | creates the world from your words / picture (or changes it) |
-| Auto | sets the time of day, the weather or the look (Fast · free / Realistic) |
-| Day | sets the time of day, the weather or the look (Fast · free / Realistic) |
-| Sunset | sets the time of day, the weather or the look (Fast · free / Realistic) |
-| Night | sets the time of day, the weather or the look (Fast · free / Realistic) |
-| Clear | sets the time of day, the weather or the look (Fast · free / Realistic) |
-| Rain | sets the time of day, the weather or the look (Fast · free / Realistic) |
-| Snow | sets the time of day, the weather or the look (Fast · free / Realistic) |
-| Fog | sets the time of day, the weather or the look (Fast · free / Realistic) |
-| Storm | sets the time of day, the weather or the look (Fast · free / Realistic) |
-| Fast · free | sets the time of day, the weather or the look (Fast · free / Realistic) |
-| Realistic · AI 22 | sets the time of day, the weather or the look (Fast · free / Realistic) |
-| A desert oasis at sunset with camels and palm trees | fills the box with an example |
-| An old Najdi village in the afternoon with a market | fills the box with an example |
-| A snowy mountain village at night with a campfire | fills the box with an example |
-| A majlis with floor cushions, a red rug and lanterns | fills the box with an example |
-| A modern city street with towers, cars and people | fills the box with an example |
-| A beach with boats, palms and a ball to kick | fills the box with an example |
-| A rainy forest with a lake and a wooden cabin | fills the box with an example |
-| An underwater coral reef with fish | fills the box with an example |
-| contact@nooi.ai | link → mailto:contact@nooi.ai |
-| Help & support | opens **Help & support** |
-| Admin login | admin sign-in |
-
-## Edit
-
-### Video editor  `edit`
-
-_Trim, effects, text, and edit frames with a prompt._
-
-| control | what it does |
-|---|---|
-| Video editor | opens **Video editor** |
-| Video from pictures | opens **Video from pictures** |
-| Visual effects | opens **Visual effects** |
-| Voice & audio | opens **Voice & audio** |
-| Subtitles & dubbing | opens **Subtitles & dubbing** |
-| Enhance | opens **Enhance** |
-| Video intelligence | opens **Video intelligence** |
-| Instagram Reels 1080×1920 | action `open-fmt` |
-| Export video | action `ed-out` |
-| Add or change with a prompt | field |
-| Go | action `edcmd-go` |
-| Add a drone shot of the city at sunset | action `edcmd-ex` |
-| Add calm oud music | action `edcmd-ex` |
-| Add a thunder sound | action `edcmd-ex` |
-| Add the title: “Grand opening” | action `edcmd-ex` |
-| Make the selected clip night | action `edcmd-ex` |
-| Text | adds a text layer |
-| Music / audio | field (file) |
-| Record voice | action `ed-rec` |
-| Captions | opens **Subtitles & dubbing** |
-| AI voiceover | action `edai-vo` |
-| Play / pause | action `ed-play` |
-| − | action `ed-zoom` |
-| + | action `ed-zoom` |
-| Undo | action `ed-undo` |
-| Redo | action `ed-redo` |
-| Earlier | action `ed-move` |
-| Split | action `ed-split` |
-| Duplicate | action `ed-dup` |
-| Later | action `ed-move` |
-| Delete | action `ed-del` |
-| Text | — |
-| Music | — |
-| Upload | field (file) |
-| Camera | field (file) |
-| Library | action `ed-lib` |
-| choose: 3D asset · Effects · Infographics · Clip · Text · Adjust & effects · Audio · AI edit · Export · 3D · Tracking · Logo · Motion & zoom · Color & VFX … | sets `ed.tab` |
-| contact@nooi.ai | link → mailto:contact@nooi.ai |
-| Help & support | opens **Help & support** |
-| Admin login | admin sign-in |
-
-### Video from pictures  `slideshow`
-
-_Your pictures become a video with gentle motion, captions and music — free._
-
-| control | what it does |
-|---|---|
-| Video editor | opens **Video editor** |
-| Video from pictures | opens **Video from pictures** |
-| Visual effects | opens **Visual effects** |
-| Voice & audio | opens **Voice & audio** |
-| Subtitles & dubbing | opens **Subtitles & dubbing** |
-| Enhance | opens **Enhance** |
-| Video intelligence | opens **Video intelligence** |
-| Upload pictures | field (file) |
-| Format 9:16 | — |
-| Camera move Zoom in | — |
-| Transition Fade | — |
-| choose: 2 · 3 · 4 · 5 | sets `ss83.secs` |
-| No music | field |
-| Make the video · free | action `ss83-make` |
-| contact@nooi.ai | link → mailto:contact@nooi.ai |
-| Help & support | opens **Help & support** |
-| Admin login | admin sign-in |
-
-### Visual effects  `fx`
-
-_Background & keying, color grading and motion capture._
-
-| control | what it does |
-|---|---|
-| Video editor | opens **Video editor** |
-| Video from pictures | opens **Video from pictures** |
-| Visual effects | opens **Visual effects** |
-| Voice & audio | opens **Voice & audio** |
-| Subtitles & dubbing | opens **Subtitles & dubbing** |
-| Enhance | opens **Enhance** |
-| Video intelligence | opens **Video intelligence** |
-| Redeem gift code | redeems a gift code |
-| Agent | chooses what to make |
-| Video | chooses what to make |
-| Image | chooses what to make |
-| Audio | chooses what to make |
-| Avatar | chooses what to make |
-| Describe what to create | field |
-| Characters @ | opens your characters to put one in the prompt (@name) |
-| 16:9 | chooses the format (16:9, 9:16, 1:1…) |
-| Send | creates from the prompt |
-| Claude & ChatGPT Connect | opens **Integrations · MCP** |
-| Create video Text or image to video with camera control and  | opens **Create video** |
-| Create image Several images per prompt, pick the best. | opens **Create image** |
-| nooi Studio Eight AI bots write, design, direct, shoot, scor | opens **nooi Studio** |
-| UGC ads Market a product with a presenter, product shots, an | opens **UGC ads** |
-| Characters Characters with ages, voices and several looks. | opens **Characters** |
-| 3D World Write what you want — or add a picture — and walk a | opens **3D World** |
-| Video editor Trim, effects, text, and edit frames with a pro | opens **Video editor** |
-| Sketch to life Draw and watch it become a character, asset o | opens **Sketch to life** |
-| Continue the next chapter | continues the last chapter story |
-| Storyboard | opens **Storyboard** |
-| All templates | opens **Templates** |
-| 00:08 9:16 Skincare review · selfie A creator reviews a skin | starts from this template |
-| 00:10 9:16 Unboxing reaction Hands open a parcel and react t | starts from this template |
-| 00:08 21:9 Action trailer beat A fast crash-zoom beat for a  | starts from this template |
-| 00:08 16:9 Anime opening An anime title shot with a sweeping | starts from this template |
-| Advanced studio — every option | opens the full studio with every option |
-| contact@nooi.ai | link → mailto:contact@nooi.ai |
-| Help & support | opens **Help & support** |
-| Admin login | admin sign-in |
+## Audio
 
 ### Voice & audio  `voice`
 
@@ -708,13 +533,8 @@ _Voices by dialect and age, lip sync, music and SFX._
 
 | control | what it does |
 |---|---|
-| Video editor | opens **Video editor** |
-| Video from pictures | opens **Video from pictures** |
-| Visual effects | opens **Visual effects** |
 | Voice & audio | opens **Voice & audio** |
 | Subtitles & dubbing | opens **Subtitles & dubbing** |
-| Enhance | opens **Enhance** |
-| Video intelligence | opens **Video intelligence** |
 | Script | field |
 | Natural | action `nd-emo` |
 | Calm | action `nd-emo` |
@@ -791,13 +611,8 @@ _Transcribe, translate and dub with synced captions._
 
 | control | what it does |
 |---|---|
-| Video editor | opens **Video editor** |
-| Video from pictures | opens **Video from pictures** |
-| Visual effects | opens **Visual effects** |
 | Voice & audio | opens **Voice & audio** |
 | Subtitles & dubbing | opens **Subtitles & dubbing** |
-| Enhance | opens **Enhance** |
-| Video intelligence | opens **Video intelligence** |
 | Upload the video to subtitle or dub | field (file) |
 | + From library… | field |
 | Demo clip | action `subs-demo` |
@@ -812,6 +627,206 @@ _Transcribe, translate and dub with synced captions._
 | Help & support | opens **Help & support** |
 | Admin login | admin sign-in |
 
+## Characters
+
+### Characters  `chars`
+
+_Characters with ages, voices and several looks._
+
+| control | what it does |
+|---|---|
+| Upload a photo → new character | field (file) |
+| Add a photo to this character | field (file) |
+| The Keeper 72 · 172cm · Male Story | action `pick-char` |
+| Delete this character | deletes this character (asks first) |
+| New character | action `new-char` |
+| Make it real 22 | makes this character real (one photoreal face from its description or photo) |
+| 4 real looks 88 | action `gen-looks` |
+| Make 3D · walks in your worlds 37 | makes this character's 3D body (it walks in your worlds) |
+| Character sheet 22 | action `gen-sheet` |
+| Lock identity across shots | — |
+| Use as main character | action `char-to-story` |
+| Delete | action `del-char` |
+| The Keeper | field |
+| choose: Male · Female | sets `char.gender` |
+| 72 | field (range) |
+| 172 | field (range) |
+| choose: Slim · Athletic · Average · Muscular · Curvy · Broad / heavy | sets `char.shape` |
+| choose: (no label) | sets `char.skin` |
+| choose: (no label) | sets `char.eyes` |
+| choose: (no label) | sets `char.hair` |
+| choose: (no label) | sets `char.hairStyle` |
+| choose: (no label) | sets `char.facial` |
+| Style Realistic | — |
+| choose: (no label) | sets `char.headwear` |
+| choose: (no label) | sets `char.outfitStyle` |
+| #2b3a67 | field (color) |
+| (no label) | — |
+| Thick white beard, sun-weathered face, grey eyes. | field |
+| Wool sweater, yellow raincoat, brass lantern. | field |
+| Quiet, stubborn, gentle at heart. | field |
+| enUK | field |
+| (no label) | action `vc-char-new` |
+| choose: (no label) | sets `char.voice.age` |
+| choose: (no label) | sets `char.voice.gender` |
+| choose: (no label) | sets `char.voice.tone` |
+| (no label) | action `vp91-pick` |
+| (no label) | action `vp91-all` |
+| (no label) | action `speak-char` |
+| contact@nooi.ai | link → mailto:contact@nooi.ai |
+| Help & support | opens **Help & support** |
+| Admin login | admin sign-in |
+
+## 3D
+
+### 3D World  `world`
+
+_Write what you want — or add a picture — and walk around inside it: a living world with people, animals, water, weather and real physics. Light enough for any phone._
+
+| control | what it does |
+|---|---|
+| Describe a world: a desert oasis at sunset with camels… | field |
+| Characters @ | opens your characters to put one in the prompt (@name) |
+| Create world | creates the world from your words / picture (or changes it) |
+| Auto | sets the time of day, the weather or the look (Fast · free / Realistic) |
+| Day | sets the time of day, the weather or the look (Fast · free / Realistic) |
+| Sunset | sets the time of day, the weather or the look (Fast · free / Realistic) |
+| Night | sets the time of day, the weather or the look (Fast · free / Realistic) |
+| Clear | sets the time of day, the weather or the look (Fast · free / Realistic) |
+| Rain | sets the time of day, the weather or the look (Fast · free / Realistic) |
+| Snow | sets the time of day, the weather or the look (Fast · free / Realistic) |
+| Fog | sets the time of day, the weather or the look (Fast · free / Realistic) |
+| Storm | sets the time of day, the weather or the look (Fast · free / Realistic) |
+| Fast · free | sets the time of day, the weather or the look (Fast · free / Realistic) |
+| Realistic · AI 42 | sets the time of day, the weather or the look (Fast · free / Realistic) |
+| A desert oasis at sunset with camels and palm trees | fills the box with an example |
+| An old Najdi village in the afternoon with a market | fills the box with an example |
+| A snowy mountain village at night with a campfire | fills the box with an example |
+| A majlis with floor cushions, a red rug and lanterns | fills the box with an example |
+| A modern city street with towers, cars and people | fills the box with an example |
+| A beach with boats, palms and a ball to kick | fills the box with an example |
+| A rainy forest with a lake and a wooden cabin | fills the box with an example |
+| An underwater coral reef with fish | fills the box with an example |
+| contact@nooi.ai | link → mailto:contact@nooi.ai |
+| Help & support | opens **Help & support** |
+| Admin login | admin sign-in |
+
+## Edit
+
+### Video editor  `edit`
+
+_Trim, effects, text, and edit frames with a prompt._
+
+| control | what it does |
+|---|---|
+| Video editor | opens **Video editor** |
+| Video from pictures | opens **Video from pictures** |
+| Visual effects | opens **Visual effects** |
+| Enhance | opens **Enhance** |
+| Video intelligence | opens **Video intelligence** |
+| Instagram Reels 1080×1920 | action `open-fmt` |
+| Export video | action `ed-out` |
+| Add or change with a prompt | field |
+| Go | action `edcmd-go` |
+| Fade transitions between all clips | action `edcmd-ex` |
+| Make it vertical | action `edcmd-ex` |
+| Slow motion | action `edcmd-ex` |
+| Captions on | action `edcmd-ex` |
+| Music quieter | action `edcmd-ex` |
+| Extend the selected shot | action `edcmd-ex` |
+| Add calm oud music | action `edcmd-ex` |
+| Make the selected clip night | action `edcmd-ex` |
+| Text | adds a text layer |
+| Music / audio | field (file) |
+| Record voice | action `ed-rec` |
+| Captions | opens **Subtitles & dubbing** |
+| AI voiceover | action `edai-vo` |
+| Play / pause | action `ed-play` |
+| − | action `ed-zoom` |
+| + | action `ed-zoom` |
+| Undo | action `ed-undo` |
+| Redo | action `ed-redo` |
+| Earlier | action `ed-move` |
+| Split | action `ed-split` |
+| Duplicate | action `ed-dup` |
+| Extend | action `ed-extend91` |
+| Later | action `ed-move` |
+| Delete | action `ed-del` |
+| Text | — |
+| Music | — |
+| Upload | field (file) |
+| Camera | field (file) |
+| Library | action `ed-lib` |
+| choose: 3D asset · Effects · Infographics · Clip · Text · Adjust & effects · Audio · AI edit · Export · 3D · Tracking · Logo · Motion & zoom · Color & VFX … | sets `ed.tab` |
+| contact@nooi.ai | link → mailto:contact@nooi.ai |
+| Help & support | opens **Help & support** |
+| Admin login | admin sign-in |
+
+### Video from pictures  `slideshow`
+
+_Your pictures become a video with gentle motion, captions and music — free._
+
+| control | what it does |
+|---|---|
+| Video editor | opens **Video editor** |
+| Video from pictures | opens **Video from pictures** |
+| Visual effects | opens **Visual effects** |
+| Enhance | opens **Enhance** |
+| Video intelligence | opens **Video intelligence** |
+| Upload pictures | field (file) |
+| Format 9:16 | — |
+| Camera move Zoom in | — |
+| Transition Fade | — |
+| choose: 2 · 3 · 4 · 5 | sets `ss83.secs` |
+| No music | field |
+| Make the video · free | action `ss83-make` |
+| contact@nooi.ai | link → mailto:contact@nooi.ai |
+| Help & support | opens **Help & support** |
+| Admin login | admin sign-in |
+
+### Visual effects  `fx`
+
+_Background & keying, color grading and motion capture._
+
+| control | what it does |
+|---|---|
+| Video editor | opens **Video editor** |
+| Video from pictures | opens **Video from pictures** |
+| Visual effects | opens **Visual effects** |
+| Enhance | opens **Enhance** |
+| Video intelligence | opens **Video intelligence** |
+| Redeem gift code | redeems a gift code |
+| Agent | chooses what to make |
+| Video | chooses what to make |
+| Image | chooses what to make |
+| Audio | chooses what to make |
+| Avatar | chooses what to make |
+| Describe what to create | field |
+| Characters @ | opens your characters to put one in the prompt (@name) |
+| 16:9 | chooses the format (16:9, 9:16, 1:1…) |
+| Send | creates from the prompt |
+| Claude & ChatGPT Connect | opens **Integrations · MCP** |
+| All tools | opens **All tools** |
+| Create video Text or image to video with camera control and  | opens **Create video** |
+| Create image Several images per prompt, pick the best. | opens **Create image** |
+| nooi Studio Nine AI agents write, design, direct, shoot, voi | opens **nooi Studio** |
+| UGC ads Market a product with a presenter, product shots, an | opens **UGC ads** |
+| Characters Characters with ages, voices and several looks. | opens **Characters** |
+| 3D World Write what you want — or add a picture — and walk a | opens **3D World** |
+| Video editor Trim, effects, text, and edit frames with a pro | opens **Video editor** |
+| Sketch to life Draw, say what it is, and preview it with AI  | opens **Sketch to life** |
+| Continue the next chapter | continues the last chapter story |
+| Storyboard | opens **Storyboard** |
+| All templates | opens **Templates** |
+| 00:08 9:16 Skincare review · selfie A creator reviews a skin | starts from this template |
+| 00:10 9:16 Unboxing reaction Hands open a parcel and react t | starts from this template |
+| 00:08 21:9 Action trailer beat A fast crash-zoom beat for a  | starts from this template |
+| 00:08 16:9 Anime opening An anime title shot with a sweeping | starts from this template |
+| Advanced studio — every option | opens the full studio with every option |
+| contact@nooi.ai | link → mailto:contact@nooi.ai |
+| Help & support | opens **Help & support** |
+| Admin login | admin sign-in |
+
 ### Enhance  `finish`
 
 _Upscale 4K, 120 fps, extend, reframe, captions, dubbing._
@@ -821,11 +836,10 @@ _Upscale 4K, 120 fps, extend, reframe, captions, dubbing._
 | Video editor | opens **Video editor** |
 | Video from pictures | opens **Video from pictures** |
 | Visual effects | opens **Visual effects** |
-| Voice & audio | opens **Voice & audio** |
-| Subtitles & dubbing | opens **Subtitles & dubbing** |
 | Enhance | opens **Enhance** |
 | Video intelligence | opens **Video intelligence** |
 | choose: Upscale to 4K Sharper detail without re-rendering. 8 · Smooth motion · up to 120 fps AI frame interpolation for 60/ · Extend video Continue the shot past its last frame. 10 · Auto-reframe Turn 16:9 into 9:16 or 1:1, following the subje · Auto captions Transcribe speech and burn in styled captions. · Translate & dub Same voice, new language, synced lips. 15 · Restore & stabilize Denoise, deblur and stabilize shaky foot · Remove objects Erase people, logos or wires from a shot. 8 | sets `tools.finish.tool` |
+| Subtitles & dubbing | opens **Subtitles & dubbing** |
 | Choose from your library… | field |
 | …or upload a file | field (file) |
 | choose: 2× · 4× | sets `tools.finish.opt.upscale.scale` |
@@ -844,8 +858,6 @@ _Summarize long videos, ask questions about them, search every video in plain wo
 | Video editor | opens **Video editor** |
 | Video from pictures | opens **Video from pictures** |
 | Visual effects | opens **Visual effects** |
-| Voice & audio | opens **Voice & audio** |
-| Subtitles & dubbing | opens **Subtitles & dubbing** |
 | Enhance | opens **Enhance** |
 | Video intelligence | opens **Video intelligence** |
 | Summarize & ask | action `vss-tab` |
@@ -1247,4 +1259,4 @@ _Plug in your APIs and accounts._
 | Admin login | admin sign-in |
 
 
-_1379 controls on 34 pages_
+_1393 controls on 35 pages_

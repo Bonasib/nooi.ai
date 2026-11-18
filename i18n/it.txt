@@ -95,7 +95,7 @@
 095|Di chi è ciò che genero?
 096|Tuo. I tuoi video sono tuoi, anche per uso commerciale.
 097|Quali lingue sono supportate?
-098|Sottotitoli e doppiaggio in 35 lingue con dialetti regionali — saudita, egiziano, kuwaitiano, tunisino, britannico, australiano, scozzese e molti altri. L'interfaccia stessa è disponibile in 26 lingue.
+098|Sottotitoli e doppiaggio in 35 lingue con dialetti regionali — saudita, egiziano, kuwaitiano, tunisino, britannico, australiano, scozzese e molti altri. L'interfaccia stessa è disponibile in 32 lingue.
 099|Come resta coerente la Storia a capitoli?
 100|Ogni capitolo parte dall'ultimo fotogramma del precedente e l'identità del tuo personaggio resta bloccata in ogni inquadratura.
 101|Può pubblicare al posto mio?
@@ -134,7 +134,7 @@
 134|Durata massima del video
 135|Risoluzione
 136|Frequenza fotogrammi
-137|Modelli video
+137|Motori video
 138|Clonazione vocale
 139|Il più scelto
 140|Pro
@@ -162,7 +162,7 @@
 162|Email
 163|Prioritaria
 164|Prioritaria + onboarding
-165|Modelli di immagine
+165|Motori di immagine
 166|Tutti i modelli di immagine
 167|Voci ElevenLabs
 168|Tutte · incluso Eleven v3
@@ -174,7 +174,7 @@
 174|+ clonazione vocale professionale
 175|lingue per sottotitoli, doppiaggio e voce
 176|LA TUA TROUPE IA
-177|Otto specialisti.
+177|Nove specialisti.
 178|Un solo film.
 179|Ogni progetto è seguito da una troupe di agenti IA — dalla prima riga della sceneggiatura al controllo qualità finale.
 180|Trasforma la tua idea in una sceneggiatura: scene, dialoghi e narrazione.
@@ -281,7 +281,7 @@
 281|Ancora niente. Descrivi un'inquadratura qui sopra per creare la tua prima clip.
 282|Nuova storia
 283|Nuovo montaggio
-284|Modello IA
+284|Motore IA
 285|Smart
 286|il migliore per il tuo prompt
 287|Secondi
@@ -311,8 +311,8 @@
 311|Stile
 312|cinematografico, colori caldi
 313|Usa questa struttura
-314|Una riga per parte — i bot leggono ogni parte.
-315|Modello video
+314|Una riga per parte — gli agenti leggono ogni parte.
+315|Motore video
 316|Primo e ultimo fotogramma
 317|Primo fotogramma
 318|Carica
@@ -328,7 +328,7 @@
 328|Non collegato
 329|Offline
 330|Demo
-331|Tutti i modelli
+331|Tutti i motori
 332|Termini
 333|Privacy
 334|Parla invece di scrivere
@@ -375,3 +375,5 @@
 375|Rimuovi i modelli scaricati
 376|Funziona sul tuo dispositivo · gratis
 377|Fatto sul tuo dispositivo — nessun credito usato.
+378|Audio
+379|Tutti gli strumenti

@@ -1,4 +1,4 @@
-# The 8 agents (v78c) on a fresh server with its own data + media, a mocked text AI (Anthropic Messages format), mocked web
+# The 9 agents (v78c; Lyra, the Dialogue & Voice Director, joined in v91) on a fresh server with its own data + media, a mocked text AI (Anthropic Messages format), mocked web
 # pages for the agents to learn from, a mocked video engine (generic WAN adapter) and a mocked ElevenLabs voice.
 # API: sources (admin) → learn (pages → skill cards; redirects checked; private hops refused; no duplicates on a second run)
 #      → plan (brief understanding, every agent's decision, the skills injected, shots + bible) → storyboard (scenes +
@@ -13,6 +13,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); PORT, LPORT 
 D = tempfile.mkdtemp(prefix="nooi-agents-"); os.makedirs(D + "/data"); os.makedirs(D + "/media"); os.symlink(ROOT + "/public", D + "/public"); os.symlink(ROOT + "/node_modules", D + "/node_modules")
 FF = os.environ.get("FFMPEG_PATH", "ffmpeg")
 subprocess.run([FF, "-v", "error", "-y", "-f", "lavfi", "-i", "sine=frequency=330:sample_rate=44100:duration=2", "-c:a", "libmp3lame", "-b:a", "64k", D + "/tone.mp3"], check=True)
+# (v155: a real little clip — since v132 a storyboard's parts are joined into one video, which 64 empty bytes can't be)
+subprocess.run([FF, "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=320x180:rate=24:duration=2", "-c:v", "libx264", "-pix_fmt", "yuv420p", D + "/clip.mp4"], check=True)
 # a job made with a seeded skill card, to check that results teach the cards
 json.dump({"users": {"local": {"plan": "studio", "credits": 5000, "ledger": [], "posts": {}, "accounts": {},
   "jobs": {"J1": {"id": "J1", "kind": "image", "status": "done", "progress": 1, "url": "/media/x.png", "created": 1, "payload": {"kind": "image", "model": "nano", "meta": {"skills": ["SEED1"], "cat": "people"}}}}}},
@@ -38,7 +40,7 @@ http.createServer((q,s)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{const J=
      agents:Object.fromEntries(['writer','casting','director','cine','sound','editor','producer','proof'].map(r=>[r,'board '+r]))}}
   return J({content:[{type:'text',text:JSON.stringify(o)}]})}
  if(u==='/wan'&&q.method==='POST'){const j=JSON.parse(b);st.wan.push({t:Date.now(),image:j.image_url||null,prompt:(j.prompt||'').slice(0,60)});return J({status:'done',url:'http://localhost:'+P+'/clip.mp4'})}
- if(u==='/clip.mp4'){s.setHeader('content-type','video/mp4');return s.end(Buffer.alloc(64))}
+ if(u==='/clip.mp4'){s.setHeader('content-type','video/mp4');return s.end(fs.readFileSync(D+'/clip.mp4'))}
  if(/^\/el\/v1\/text-to-speech\//.test(u)){st.tts++;s.setHeader('content-type','audio/mpeg');return s.end(fs.readFileSync(D+'/tone.mp3'))}
  J({error:'nf '+u},404)})}).listen(P);
 """
@@ -55,7 +57,7 @@ def stats(): return json.loads(urllib.request.urlopen(f"http://localhost:{LPORT}
 M = f"http://localhost:{LPORT}"
 
 def api_checks():
-    g = api("/v1/agents"); ok(len(g.get("agents", [])) == 8 and g["agents"][0]["name"] == "Quill" and "sources" in g, f"agents list {[a.get('name') for a in g.get('agents', [])]}")
+    g = api("/v1/agents"); ok(len(g.get("agents", [])) == 9 and g["agents"][0]["name"] == "Quill" and any(a["name"] == "Lyra" and a["role"] == "Dialogue & Voice Director" for a in g["agents"]) and "sources" in g, f"agents list {[a.get('name') for a in g.get('agents', [])]}")
     s = api("/v1/agents/sources", {"writer": [M + "/page/writer", "http://evil.example/x", "ftp://x"], "sound": M + "/page/sound", "cine": [M + "/redirect"], "proof": [M + "/private", M + "/binary"]}, "PUT")
     ok(s.get("sources", {}).get("writer") == [M + "/page/writer"] and s["sources"]["cine"] == [M + "/redirect"] and s["sources"]["casting"] == [], f"sources saved & filtered {s}")
     r = api("/v1/agents/learn", {}); log = r.get("log", [])
@@ -67,7 +69,7 @@ def api_checks():
     n1 = sum(len(a["skills"]) for a in g["agents"]); api("/v1/agents/learn", {}); n2 = sum(len(a["skills"]) for a in api("/v1/agents")["agents"]); ok(n1 == n2, f"no duplicates on a second run {n1}→{n2}")
     # plan: brief, every agent's decision, skills used, shots
     p = api("/v1/agents/plan", {"prompt": "A 20 second ad for my coffee shop", "task": "video", "dur": 20, "aspect": "9:16", "lang": "ar"})
-    ok(p.get("by") == "ai" and len(p.get("agents", {})) == 8 and p["brief"]["audience"] == "young adults" and len(p.get("shots", [])) == 2 and p["prompt"].startswith("Cinematic") and p.get("skills"), f"plan {p}")
+    ok(p.get("by") == "ai" and len(p.get("agents", {})) == 9 and p["brief"]["audience"] == "young adults" and len(p.get("shots", [])) == 2 and p["prompt"].startswith("Cinematic") and p.get("skills"), f"plan {p}")
     pl = stats()["plans"]; ok(pl and pl[-1]["n"] == 2 and pl[-1]["skills"] and pl[-1]["seed"] and pl[-1]["lang"] == "Arabic", f"plan prompt carries the skills {pl[-1:]}")
     p = api("/v1/agents/plan", {"prompt": "a red fox", "task": "image"}); ok(p.get("cost") == 0 and set(p.get("agents", {}).keys()) == {"writer", "casting", "cine", "producer", "proof"}, f"image plan {p.get('cost')} {list(p.get('agents', {}))}")
     ok(api("/v1/agents/plan", {"prompt": ""}).get("_status") == 400, "empty brief refused")
@@ -80,12 +82,12 @@ def api_checks():
     o = api("/v1/agents/skills/SEED1", {"off": True}, "PUT"); seed = next(x for x in api("/v1/agents")["agents"][0]["skills"] if x["id"] == "SEED1"); ok(o.get("ok") and seed["off"], "admin turns a card off")
     p = api("/v1/agents/plan", {"prompt": "coffee ad", "task": "video", "dur": 5}); ok(not stats()["plans"][-1]["seed"], "a card that is off isn't used")
     # a storyboard video: each part from its scene picture, no waiting for the previous part
-    j = api("/v1/jobs", {"kind": "video", "model": "auto", "dur": 10, "prompt": "kite story", "meta": {"parts": 2, "partSec": 5, "shots": ["scene one", "scene two"], "partImages": ["/media/a.png", "https://example.com/b.png"], "partModels": ["auto", "auto"]}})
-    for _ in range(40):
+    w0 = len(stats()["wan"]); j = api("/v1/jobs", {"kind": "video", "model": "auto", "dur": 10, "prompt": "kite story", "meta": {"parts": 2, "partSec": 5, "shots": ["scene one", "scene two"], "partImages": ["/media/a.png", "https://example.com/b.png"], "partModels": ["auto", "auto"]}})
+    for _ in range(360):   # (v155: since v132/v133 the parts are checked for continuity and joined into one video — more than 10 s)
         j = api("/v1/jobs/" + j["id"])
         if j.get("status") in ("done", "failed"): break
         time.sleep(.25)
-    wan = stats()["wan"][-2:]; out["wan"] = wan
+    wan = stats()["wan"][w0:w0 + 2]; out["wan"] = wan   # (the first request of each part — a part made again for continuity comes later)
     ok(j.get("status") == "done" and len(wan) == 2 and {w["image"] for w in wan} == {f"http://localhost:{PORT}/media/a.png", "https://example.com/b.png"} and abs(wan[0]["t"] - wan[1]["t"]) < 1500, f"storyboard parts start from their pictures {j.get('status')} {wan}")
 
 async def ui(p, w):
@@ -99,22 +101,23 @@ async def ui(p, w):
             await asyncio.sleep(.25)
         return False
     await E("()=>{window.__t=[];const t0=toast;toast=function(m,o){window.__t.push(String(m));return t0.apply(this,arguments)};S.langAsked=true;document.getElementById('langsug')?.remove();S.lang='%s';S.user={name:'T',method:'google'};AU.showAuth=false;S.hf.tab='video';S.hf.vModel='auto';S.hf.bots=true;S.hf.sb=false;S.hf.dur=20;S.hf.out=[];go('home');renderAll()}" % ("ar" if mob else "en"))
-    ok(await wait_for("()=>!!document.querySelector('.hfbox [data-act=agx-sb]')", 10), f"{tag}: Storyboard option in the box")
+    ok(await wait_for("()=>!!document.querySelector('.hfbox [data-act=hf187-set]')", 10) and await E("()=>{document.querySelector('.hfbox [data-act=hf187-set]').click();const ok=!!document.querySelector('#modalRoot [data-act=agx-sb]');closeSheet();return ok}"), f"{tag}: Storyboard option in the box's settings")   # (v187: in the settings sheet)
     await pg.click("#hfq"); await pg.keyboard.type("A 20 second ad for my coffee shop")
     ok(await wait_for("()=>document.querySelectorAll('#agstrip .agb').length===1&&AG.cur==='writer'", 5), f"{tag}: typing shows Quill")
     # sending: the icons appear one at a time
     await E("()=>{window.__seen=[];const iv=setInterval(()=>{const n=document.querySelectorAll('#agstrip .agb').length;if(window.__seen[window.__seen.length-1]!==n)window.__seen.push(n)},60);window.__iv=iv;document.querySelector('.hfsend').click()}")
-    ok(await wait_for("()=>AG.shown.length===8&&AG.shown[7]==='proof'", 40), f"{tag}: all 8 agents appeared")
+    ok(await wait_for("()=>AG.shown.length===9&&AG.shown[8]==='proof'", 40), f"{tag}: all 9 agents appeared")
     r["seen"] = await E("()=>{clearInterval(window.__iv);return window.__seen}")
-    ok(r["seen"] == sorted(r["seen"]) and len(r["seen"]) >= 5 and r["seen"][-1] == 8, f"{tag}: icons appear one at a time {r['seen']}")
-    r["order"] = await E("()=>AG.shown.join(',')"); ok(r["order"] == "writer,casting,director,cine,sound,editor,producer,proof", f"{tag}: order {r['order']}")
+    # (v136: the planning shows Quill, Nova and Max; then each agent's turn follows the work, Duke and Iris last — fewer steps, in order)
+    ok(r["seen"] == sorted(r["seen"]) and len(r["seen"]) >= 3 and r["seen"][-1] >= 8, f"{tag}: icons appear in order {r['seen']}")   # (all 9 is checked just above; the 60 ms watch may stop before the last one)
+    r["order"] = await E("()=>AG.shown.join(',')"); ok(r["order"] == "writer,casting,director,cine,voice,sound,editor,producer,proof", f"{tag}: order {r['order']}")
     r["notes"] = await E("()=>[AG.note.director,AG.note.producer]"); ok(r["notes"][0] == "decision of director" and r["notes"][1], f"{tag}: decisions shown {r['notes']}")
     r["job"] = await E("()=>{const j=S.jobs.find(x=>x.kind==='video'&&x.meta&&x.meta.agents);return j&&[j.prompt.slice(0,10),j.title,(j.meta.skills||[]).length>0,j.meta.neg]}")
     ok(r["job"] and r["job"][0] == "Cinematic " and r["job"][1] == "A 20 second ad for my coffee shop" and r["job"][2] and r["job"][3] == "blurry, text artifacts", f"{tag}: job uses the agents' plan {r['job']}")
     ok(await wait_for("()=>!AG.busy&&!!AG.summary", 30), f"{tag}: Iris finishes with a summary")
     # Storyboard option
     await E("()=>{go('home');renderAll()}"); await pg.wait_for_timeout(300)
-    await E("()=>document.querySelector('[data-act=agx-sb]').click()"); await pg.wait_for_timeout(200)
+    await E("()=>{document.querySelector('.hfbox [data-act=hf187-set]').click();document.querySelector('#modalRoot [data-act=agx-sb]').click();closeSheet()}"); await pg.wait_for_timeout(200)
     r["sbcost"] = await E("()=>[S.hf.sb,document.querySelector('.hfbox .hfcost')&&document.querySelector('.hfbox .hfcost').textContent.trim()]")
     ok(r["sbcost"][0] is True and r["sbcost"][1], f"{tag}: storyboard on + price {r['sbcost']}")
     await E("()=>{const q=document.querySelector('#hfq');q.value='A girl chases her kite across Riyadh';q.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('.hfsend').click()}")
@@ -128,7 +131,7 @@ async def ui(p, w):
     r["vid"] = await E("()=>{const j=S.jobs.filter(x=>x.kind==='video'&&x.meta&&x.meta.storyboard).pop();return j&&[j.meta.parts,j.meta.partImages.length,j.meta.shots.length,j.dur]}")
     ok(r["vid"] == [4, 4, 4, 20], f"{tag}: video from the storyboard {r['vid']}")
     # Film crew: what the agents learned
-    await E("()=>{AGD.loaded=false;go('crew')}"); ok(await wait_for("()=>document.querySelectorAll('.agcard').length===8", 15), f"{tag}: agents' skills on the Film crew page")
+    await E("()=>{AGD.loaded=false;go('crew')}"); ok(await wait_for("()=>document.querySelectorAll('.agcard').length===9", 15), f"{tag}: agents' skills on the Film crew page")
     r["crew"] = await E("()=>[document.querySelectorAll('.agcard li').length,!!document.querySelector('#agsrc'),!!document.querySelector('[data-act=ag-learn]')]"); ok(r["crew"][0] >= 4 and r["crew"][1] and r["crew"][2], f"{tag}: cards + admin sources {r['crew']}")
     ok(not errs, f"{tag}: page errors {errs}")
     await b.close(); return r

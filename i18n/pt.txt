@@ -95,7 +95,7 @@
 095|A quem pertence o que eu gero?
 096|A si. Os seus vídeos são seus, inclusive para uso comercial.
 097|Que idiomas são suportados?
-098|Legendas e dobragem em 35 idiomas com dialetos regionais — saudita, egípcio, kuwaitiano, tunisino, britânico, australiano, escocês e muitos mais. A própria interface existe em 26 idiomas.
+098|Legendas e dobragem em 35 idiomas com dialetos regionais — saudita, egípcio, kuwaitiano, tunisino, britânico, australiano, escocês e muitos mais. A própria interface existe em 32 idiomas.
 099|Como a História em capítulos se mantém coerente?
 100|Cada capítulo começa no último fotograma do anterior, e a identidade da sua personagem fica fixa em todos os planos.
 101|Pode publicar por mim?
@@ -134,7 +134,7 @@
 134|Duração máxima do vídeo
 135|Resolução
 136|Taxa de fotogramas
-137|Modelos de vídeo
+137|Motores de vídeo
 138|Clonagem de voz
 139|Mais popular
 140|Pro
@@ -162,7 +162,7 @@
 162|E-mail
 163|Prioritário
 164|Prioritário + onboarding
-165|Modelos de imagem
+165|Motores de imagem
 166|Todos os modelos de imagem
 167|Vozes ElevenLabs
 168|Todas · incl. Eleven v3
@@ -174,7 +174,7 @@
 174|+ clonagem de voz profissional
 175|idiomas para legendas, dobragem e voz
 176|A SUA EQUIPA DE FILMAGEM IA
-177|Oito especialistas.
+177|Nove especialistas.
 178|Um só filme.
 179|Cada projeto é tratado por uma equipa de agentes de IA — da primeira linha do guião ao controlo de qualidade final.
 180|Transforma a sua ideia num guião: cenas, diálogos e narração.
@@ -281,7 +281,7 @@
 281|Ainda não há nada. Descreva um plano acima para criar o seu primeiro clipe.
 282|Nova história
 283|Nova edição
-284|Modelo de IA
+284|Motor de IA
 285|Inteligente
 286|o melhor para o seu prompt
 287|Segundos
@@ -311,8 +311,8 @@
 311|Estilo
 312|cinematográfico, cores quentes
 313|Usar esta estrutura
-314|Uma linha por parte — os bots leem cada parte.
-315|Modelo de vídeo
+314|Uma linha por parte — os agentes leem cada parte.
+315|Motor de vídeo
 316|Primeiro e último fotograma
 317|Primeiro fotograma
 318|Carregar
@@ -328,7 +328,7 @@
 328|Não ligado
 329|Offline
 330|Demo
-331|Todos os modelos
+331|Todos os motores
 332|Termos
 333|Privacidade
 334|Falar em vez de escrever
@@ -375,3 +375,5 @@
 375|Remover modelos baixados
 376|Roda no seu dispositivo · grátis
 377|Feito no seu dispositivo — nenhum crédito usado.
+378|Áudio
+379|Todas as ferramentas

@@ -5,11 +5,11 @@
 // Results are mirrored to /media (the 3D viewer, the editor and exports read them from the site itself).
 import { cfg, configured } from "../lib/settings.js";
 import { download } from "../lib/media.js";
+import { toDataUrl } from "../lib/safeurl.js";   // v195: a customer's picture address goes through the public-address guard (own media read from disk)
 
 const j = async (r, name) => { const t = await r.text(); let d; try { d = JSON.parse(t); } catch { d = { raw: t }; } if (!r.ok) { const e = new Error(`${name} ${r.status}: ${d.message || d.error?.message || d.error || d.detail || t.slice(0, 200)}`); e.status = r.status; throw e; } return d; };
 const prompt = (p) => [p.prompt, p.meta?.style && `Style: ${p.meta.style}`].filter(Boolean).join(". ").slice(0, 1000);
 const pic = (p) => { const i = p.inputs || {}; return i.s3dImg || i.s3dCap || i.iRef || i.wRef || null; };
-const toDataUrl = async (u) => { if (!u || u.startsWith("data:")) return u; const r = await fetch(u); if (!r.ok) throw new Error("Couldn't read the picture"); return "data:" + (r.headers.get("content-type") || "image/png").split(";")[0] + ";base64," + Buffer.from(await r.arrayBuffer()).toString("base64"); };
 const mirror = async (u, ext) => { try { return (await download(u, ext)).url; } catch { return u; } };
 
 export const tripo = () => { const c = cfg("tripo"), base = (c.baseUrl || "https://api.tripo3d.ai/v2/openapi").replace(/\/$/, ""), h = { Authorization: "Bearer " + c.apiKey, "Content-Type": "application/json" };

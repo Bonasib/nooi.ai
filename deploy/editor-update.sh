@@ -1,0 +1,100 @@
+#!/bin/bash
+# v221 (v224): install ONLY the editor — nooi Studio at /studio, and the site's "Edit" opening it — on a running nooi.ai.
+# Nothing else changes: no data, media, .env, packages, settings or other pages. Paste into hPanel → VPS → Browser terminal (root):
+#
+#   curl -fsSL https://raw.githubusercontent.com/Bonasib/nooi.ai/claude/festive-brahmagupta-08tfzr/deploy/editor-update.sh | bash
+#
+#   or with the package:   bash editor-update.sh /root/nooi-editor-update.zip
+#   undo it:               bash /opt/nooi/deploy/editor-update.sh --rollback
+#
+# Safety: every file it replaces must still be the version it expects (nooi.ai v216, an earlier editor update, or this one) — if one was
+# changed since, it stops without touching anything (use the full update then). It keeps a backup, checks the code, restarts, checks
+# the home page, the API and /studio/, and puts everything back by itself if one of them fails.
+set -u
+# run from a copy: the update (or a roll-back) replaces this very file
+if [ -f "$0" ] && [ -z "${EDITOR_UPDATE_COPY:-}" ]; then c="$(mktemp)"; cp "$0" "$c"; EDITOR_UPDATE_COPY=1 exec bash "$c" "$@"; fi
+APP="${APP:-/opt/nooi}"; BR="${BRANCH:-claude/festive-brahmagupta-08tfzr}"; REPO="https://github.com/Bonasib/nooi.ai"
+BK="/var/backups/nooi"; ok() { echo "  ✓ $*"; }; die() { echo "  ✗ $*"; exit 1; }
+[ "$(id -u)" = 0 ] || die "run it as root"
+[ -f "$APP/server.js" ] || die "$APP/server.js not found — nooi isn't installed here"
+PORT="$(grep -E '^PORT=' "$APP/.env" 2>/dev/null | tail -1 | cut -d= -f2-)"; PORT="${PORT:-8080}"
+# the files the editor needs (everything else is left as it is)
+FILES="server.js public/index.html lib/studio219.js lib/static124.js lib/projects139.js lib/collab196.js lib/edit148.js deploy/doctor.sh deploy/render.sh deploy/editor-update.sh"
+DIRS="public/studio studio"
+# the same files as nooi.ai v216 has them (sha256) — what this update was made for
+declare -A BASE=(
+  [server.js]=d048ca04c7aa47a1f52550e325660ffe3b61b7f9a0c0af544bb5228ad7d36bc5
+  [public/index.html]=b0c3a1f74d95c8b34ce95af9784c538b51a81ead833f6682d9e6644f3c3718f4
+  [lib/static124.js]=8e86cd04b0c1955340c304d61ccc2833d8c6703c3f38fbfb94a66cdc5c18435f
+  [lib/projects139.js]=4d996d8ad8071144a82f8bb0cecfe6b29a004bedb472b071aec6d0f93b9e1ce8
+  [lib/collab196.js]=b88aa389f4836513002fbbdba29221cd81a69a56d9fce4edc4131feecdcb0bbe
+  [lib/edit148.js]=bfe9f60af35a564c4408bb97bdecf9c8053348c8a910750c8c42133ffd435346
+)
+# the same files as earlier editor updates (v219–v223) left them — fine too
+PREV="0fdc2d7489579b1f61672eb1f341594fa63e7394a59f35d24c1c4a2da2e24f53 d9971e5f8271e9bf7ea1966e8176abdea634525c689a112f10ed755637a955e9 fb99e0cd8c8557af40d0bf09d784bf31c79e40b0867df44eadbc4bf652f8d553 50e90ac6bc3063cceeaf47d43289444b15693432c4e84c2af570a504494100ff 3ecd2da696b9bc7267404cc127c57e0cae046546428c6fd4fe2b36cd44421194 1074ee6c3092b30216f5f3361feee2539c1b3e795c01cdc5a602a99eb7bd4863 b22e8dcf190ac91863aebbf6bdeed34fbd85c88a7e3b609c1c83bd3458089421 8ff23d0c22b1b26950420ba98a70edfb3156fc6c5fda28e7507d7db16409c3b6 70de544f059633461675ef182b03afdad47b6c337182dcafde9df0e55f598cdc 4b3a7931dcf0eb49fcb8db8539fde5565f922d6e38788bb2df9510dd84ccb3eb 48c944a31eeac5c60f5c982c0f607197d77f798fb1642b801c95f76d147e1f9a dc6616cc2824fc94dc3df177219606b754e7d1ab604f3d65fdf46ac7b4607d57 58d940a259102931dd801506d799e0d20f16c38befbdb518800c501e4a0c8f93 2b45a201ceae44959fa8073051647604cf52f6034fa23cee992658560c3c3501 ba2db6c041468e33c590053099e0e2f3af9cee03d3079dcb267a04a0497564dc e5fada3530193042046090c7b15dc4bf03cda3f140dd14bd8b1e6985b91a2f30 6cfc7ef5172c011aabfdbe16106c742d352a76c729e3a4153b263ee9702adaf1 86a53a3a4a36a87b4925d3fd9cb68b887243b287181f349299c9b7401ea1f315 4566f485ab17fb4bd2256c992ebb7cdc1d330fb269f048c84b1a808f76546cc1 1d9ca21e3bbda61b0ecddf99691ac2e11140613f6f6b2fa3c3542c250939f8b3 141c402c17794cef9ce832f135ff87b820295c5fd428c28b67a675c898594259 7df886332901ec036124c6680ccdc65e926bb914fbc94d7c6c875660340018be cfd5c36870ede7b0071b86b2b8b302f172d0bb4eea0e24959c52c162856f2731  14e963c596cb1d5d9d2335a92c108671d178e19f556e518df6fae9aeed4abdc5 3309f45a812c97d22c46bd058037ce7bdfe99c532cd897d9ae1fb12d94342762 15fb1f093a2ca633c32a5925cb642b71589bde645dab70ce170d535a1a44d110 860a50facf5cb13247f685c0d67163ef808992ae6dcb5e4119a9cb60b4238a89 fba056b6943c80261adbd466aa32dcbc3abaf4b9329afe8c97721a7726e0f789 65917f5b89f41208f6658ddeec07bf5b305e78b2bf9f2513b6b1c95389afb993 56126606b30e1cc1f7d6dfdd4b5da2bc7b37cdf75b3e8b05148677eb1b9481ac eb86ab59fbfb093ceb76dbf0108c4b4220423a9e077f290fdced05dcd1537229 723727ed405743dd2c29722b75c0b926bdc8beacb0eb1205fc84a88a7e7682fe c087ffeaf92121398cb1b30ce98aafad2d13d4be4a818e39b991b0fe3a797336 a70ebb1f5f691e5edc8a0fc21136ca823bc3032cb4ae1335c07395ad45d4a9d8 010f82d9f329bbb78199ae2e71e664a1f06de66faa26e7f6e33dd1f0d1ef5388 9ad22b8cebbc4a28e5d54fead1767e649baa509b8c0b854294b6374431bbad17 0b4903812a16421a8c587dd911cc79dd5053fa15ccfa00d9b8610d1aa432b242 5570bf7cdf4b58239de0d2caa3eecfabc48de63ba4652eed0dff371b52610d44 59aee63f25820646d3511de7c9763a4b60d494bcc2e645c739086636b2e5186f 53ef7b7c1de5312695e0b7b1944442a84ef3734369d1502e1e3875011b4cde51 6b9f6cce241bc19ba55beb33599d1d4c340887428d56fd943c6ac65dafd055a9 1e2ff0f6d840bafbc7db3537fa3339ae38bf0fffd2eec243569f637cf7e4467d "
+health() {   # the home page, the API and the editor answer
+  local i; for i in $(seq 1 30); do curl -fsS --max-time 3 "http://127.0.0.1:$PORT/v1/health" >/dev/null 2>&1 && break; sleep 2; done
+  curl -fsS --max-time 5 "http://127.0.0.1:$PORT/v1/health" | grep -q '"ok":true' || return 1
+  curl -fsS --max-time 10 -o /dev/null "http://127.0.0.1:$PORT/" || return 1
+  [ "${1:-}" = "base" ] && return 0
+  curl -fsS --max-time 10 "http://127.0.0.1:$PORT/studio/" | grep -q "nooi Studio Editor" || return 1
+}
+restore() {   # put back a backup made by this script
+  local b="$1"; [ -f "$b" ] || die "backup $b not found"
+  rm -rf "$APP/public/studio" "$APP/studio"; tar -xzf "$b" -C "$APP"
+  for nf in "$APP/.editor-new-files" "$APP/.editor-new-files.done"; do [ -f "$nf" ] && while read -r f; do [ -n "$f" ] && rm -f "$APP/$f"; done < "$nf"; rm -f "$nf"; done
+  chown -R nooi:nooi "$APP" 2>/dev/null; systemctl restart nooi; sleep 4
+}
+
+if [ "${1:-}" = "--rollback" ]; then
+  B="$(ls -1t "$BK"/editor-*.tgz 2>/dev/null | head -1)"; [ -n "$B" ] || die "no editor backup in $BK"
+  echo "▶ putting back $B"; restore "$B"; health base && ok "the site is back as it was before the editor update" || die "the site isn't answering — run: bash $APP/deploy/doctor.sh"; exit 0
+fi
+
+echo "▶ 1/5 the editor package"
+TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+if [ -n "${1:-}" ]; then [ -f "$1" ] || die "$1 not found"; unzip -q "$1" -d "$TMP/u" || die "couldn't open $1"; NEW="$(dirname "$(find "$TMP/u" -path '*/lib/studio219.js' | head -1)")/.."
+else git clone -q --depth 1 -b "$BR" "$REPO" "$TMP/u" || die "couldn't download from GitHub"; NEW="$TMP/u"; fi
+NEW="$(cd "$NEW" && pwd)"; [ -f "$NEW/lib/studio219.js" ] && [ -f "$NEW/public/studio/index.html" ] || die "this isn't the editor package"
+ok "package ready ($(cd "$NEW" && git log -1 --format='%h %cs' 2>/dev/null || echo zip))"
+
+echo "▶ 2/5 is the server the version this update is for?"
+for f in "${!BASE[@]}"; do
+  [ -f "$APP/$f" ] || die "$f is missing on the server — use the full update instead"
+  have="$(sha256sum "$APP/$f" | cut -c1-64)"; new="$(sha256sum "$NEW/$f" | cut -c1-64)"
+  [ "$have" = "${BASE[$f]}" ] || [ "$have" = "$new" ] || [[ "$PREV" == *" $have "* ]] || die "$f on the server isn't nooi.ai v216 or an editor update (it was changed) — nothing was touched. Use the full update instead."
+done
+ok "yes — only the editor's files will change"
+
+echo "▶ 3/5 backup"
+mkdir -p "$BK"; STAMP="$(date +%Y%m%d-%H%M%S)"; B="$BK/editor-$STAMP.tgz"; LIST=""
+for f in $FILES; do [ -e "$APP/$f" ] && LIST="$LIST $f"; done; for d in $DIRS; do [ -e "$APP/$d" ] && LIST="$LIST $d"; done
+(cd "$APP" && tar -czf "$B" $LIST) || die "couldn't write the backup"
+rm -f "$APP/.editor-new-files.done"   # a roll-back undoes the last run only (this backup holds what earlier runs added)
+: > "$TMP/newfiles"; for f in $FILES; do [ -e "$APP/$f" ] || echo "$f" >> "$TMP/newfiles"; done
+ok "$B"
+
+echo "▶ 4/5 install the editor"
+for f in $FILES; do mkdir -p "$APP/$(dirname "$f")"; cp -f "$NEW/$f" "$APP/$f" || { restore "$B"; die "couldn't copy $f — put back as it was"; }; done
+# the folders: a fresh copy next to the old one, then swapped in (plain cp — no rsync needed); stop at the first failure
+for d in $DIRS; do rm -rf "$APP/$d.new"; mkdir -p "$(dirname "$APP/$d")"
+  if ! cp -a "$NEW/$d" "$APP/$d.new"; then rm -rf "$APP/$d.new"; restore "$B"; die "couldn't copy $d — put back as it was"; fi
+  rm -rf "$APP/$d.new/node_modules" "$APP/$d.new"/*/*/node_modules "$APP/$d.new/apps/desktop/src-tauri/binaries" 2>/dev/null
+  rm -rf "$APP/$d"; mv "$APP/$d.new" "$APP/$d"; done
+# what is on the disk now must be what the package holds (else everything goes back)
+for f in $FILES public/studio/index.html; do cmp -s "$NEW/$f" "$APP/$f" || { echo "  ✗ $f didn't arrive"; restore "$B"; die "put back as it was — nothing changed"; }; done
+cp "$TMP/newfiles" "$APP/.editor-new-files"; chmod +x "$APP/deploy/render.sh" "$APP/deploy/editor-update.sh" 2>/dev/null; chown -R nooi:nooi "$APP" 2>/dev/null
+if ! node --check "$APP/server.js" 2>"$TMP/err" || ! node --check "$APP/lib/studio219.js" 2>>"$TMP/err"; then
+  echo "  ✗ the new code doesn't load: $(tail -3 "$TMP/err")"; restore "$B"; die "put back as it was — nothing changed"; fi
+ok "files in place (${FILES// /, }, public/studio/, studio/)"
+
+echo "▶ 5/5 restart and check"
+systemctl restart nooi; sleep 4
+if health; then mv -f "$APP/.editor-new-files" "$APP/.editor-new-files.done" 2>/dev/null
+  ok "the site and the API answer, and the new editor is at /studio/"
+  echo; echo "  Done. Open https://<your site>/studio/ — the site's Edit buttons open it too (?classic=1 keeps the old editor for a while)."
+  echo "  Undo: bash $APP/deploy/editor-update.sh --rollback      Server exports (optional): bash $APP/deploy/render.sh"
+else
+  echo "  ✗ a check failed — putting everything back"; restore "$B"
+  health base && die "put back: the site is as it was before (nothing lost). Send me: bash $APP/deploy/doctor.sh" || die "the site isn't answering — run: bash $APP/deploy/doctor.sh"
+fi

@@ -34,7 +34,7 @@ async def main():
                 await E("()=>document.querySelector('[data-act=hfr-ok]').click()"); await pg.wait_for_timeout(300)
                 img_view = await E("()=>S.view")
                 await E("()=>{go('home');S.hf.tab='video';S.hf.vModel='auto';renderView()}")
-                auto_first = await E("()=>{const b=document.querySelector('.hfmi');b.click();return b.dataset.act==='hfx-nooi'&&/nooi/.test(b.textContent)&&nooiOn()&&!!document.querySelector('.hfbots .botstrip')&&HF_DURS.filter(hfDurOK).includes(30)}")
+                auto_first = await E("async()=>{const b=document.querySelector('.hfmi');const ok=b.classList.contains('eng171')&&b.dataset.act==='hf-model'&&/nooi/.test(b.textContent);b.click();await new Promise(r=>setTimeout(r,200));document.querySelector('.hfmodel[data-v=auto]').click();await new Promise(r=>setTimeout(r,200));return ok&&nooiOn()&&!!document.querySelector('.hfbots .botstrip')&&HF_DURS.filter(hfDurOK).includes(30)}")   # (v171: the nooi Auto chip holds the engines — it opens their list, nooi Auto first)
                 await E("()=>{document.querySelector('#hfq').value='waves at sunset';document.querySelector('.hfsend').click()}")
                 await pg.wait_for_timeout(14000)
                 await E("()=>document.querySelector('[data-act=hfr-ok]').click()"); await pg.wait_for_timeout(300)
@@ -42,17 +42,18 @@ async def main():
                 # the bots keep the model the client picked (never switch back to nooi) and allow 30 s with it
                 await E("()=>{go('home');S.hf.tab='video';S.hf.vModel='auto';S.hf.bots=true;renderView()}")
                 await E("()=>document.querySelector('.hfmi[data-act=hf-model]').click()"); await pg.wait_for_timeout(200); await E("()=>document.querySelector('.hfmodel[data-v=kling30]').click()"); await pg.wait_for_timeout(200)
-                await E("()=>document.querySelector('.hfmi[data-act=hfx-bots]').click()"); await pg.wait_for_timeout(150)
+                await E("()=>{document.querySelector('[data-act=hf187-set]').click();document.querySelector('#modalRoot [data-act=hfx-bots]').click();closeSheet()}"); await pg.wait_for_timeout(150)
                 off = await E("()=>[S.hf.vModel,S.hf.bots,!!document.querySelector('.hfbots'),Math.max(...HF_DURS.filter(hfDurOK))]")
-                await E("()=>document.querySelector('.hfmi[data-act=hfx-bots]').click()"); await pg.wait_for_timeout(150)
+                await E("()=>{document.querySelector('[data-act=hf187-set]').click();document.querySelector('#modalRoot [data-act=hfx-bots]').click();closeSheet()}"); await pg.wait_for_timeout(150)
                 on = await E("()=>[S.hf.vModel,S.hf.bots,!!document.querySelector('.hfbots .botstrip'),Math.max(...HF_DURS.filter(hfDurOK))]")
-                bots_keep = off == ["kling30", False, False, 15] and on == ["kling30", True, True, 30]
+                bots_keep = off == ["kling30", False, False, 30] and on == ["kling30", True, True, 30]   # (v132: any engine goes long — the server's agents plan the parts either way)
                 # audio results: compact player with play/pause, time and sound; the right example and price per audio type
                 await E("()=>{const n=8000,b=new ArrayBuffer(44+n*2),d=new DataView(b),w=(o,s)=>[...s].forEach((c,i)=>d.setUint8(o+i,c.charCodeAt(0)));w(0,'RIFF');d.setUint32(4,36+n*2,true);w(8,'WAVEfmt ');d.setUint32(16,16,true);d.setUint16(20,1,true);d.setUint16(22,1,true);d.setUint32(24,8000,true);d.setUint32(28,16000,true);d.setUint16(32,2,true);d.setUint16(34,16,true);w(36,'data');d.setUint32(40,n*2,true);for(let i=0;i<n;i++)d.setInt16(44+i*2,Math.sin(i/3)*8000,true);S.jobs.push({id:'aud1',kind:'music',status:'complete',prompt:'calm oud',created:Date.now(),resultUrl:URL.createObjectURL(new Blob([b],{type:'audio/wav'}))});S.hf.out=['aud1'];S.hf.tab='audio';S.hf.audio='music';S.hf.prompt='';renderView()}")
                 await pg.wait_for_timeout(600)
                 aud = await E("()=>{const c=document.querySelector('.hfrc.aud');return c?{h:c.querySelector('.hfrm').getBoundingClientRect().height,svg:Math.max(...[...c.querySelectorAll('svg')].map(s=>s.getBoundingClientRect().width)),play:!!c.querySelector('[data-act=hfap]'),mute:!!c.querySelector('[data-act=hfam]'),t:c.querySelector('.hfat .t').textContent,ph:document.querySelector('#hfq').placeholder,cost:+document.querySelector('.hfcost').textContent}:null}")
                 await E("()=>document.querySelector('[data-act=hfam]').click()")
                 muted = await E("()=>document.querySelector('.hfaud audio').muted")
+                mus_ph = await E("()=>HF_PH.audio_music.map(x=>L(x[0],x[1]))")   # (the example is picked at random from the music ones)
                 # avatar: when it is done, offer to use the face in a scene, UGC ad, poster, post or a new line
                 await E("()=>{S.hf.out=[];S.hf.tab='avatar';M.hfRef={url:'/logo.png',remote:'/logo.png',name:'face.png'};renderView();document.querySelector('#hfq').value='hello';document.querySelector('.hfsend').click()}")
                 for _ in range(20):
@@ -71,17 +72,17 @@ async def main():
                 if not refx or plan != [3, True, True, True, True, True]: fails.append(f"{w}: photo x {refx} / studio plan {plan}")
                 await E("()=>{S.hf.out=['aud1'];S.hf.tab='audio';renderView()}"); await pg.wait_for_timeout(300)
                 # v67: send bar above the bots, the plan written by the bots, results grouped by type, select many → folder / project
-                lay = await E("()=>{S.hf.tab='video';renderView();const b=document.querySelector('.hfbox .hfbar'),t=document.querySelector('.hfbox .hfbots');return[!!b&&!!t&&b.getBoundingClientRect().top<t.getBoundingClientRect().top,document.querySelectorAll('.hbl').length>=7,document.querySelectorAll('.hbl .mdl').length===3]}")
+                lay = await E("()=>{S.hf.tab='video';renderView();const b=document.querySelector('.hfbox .hf187row'),t=document.querySelector('.hfbox .hfbots');return[!!b&&!!t&&b.getBoundingClientRect().top<t.getBoundingClientRect().top,document.querySelectorAll('.hbl').length>=7,document.querySelectorAll('.hbl .mdl').length===3]}")
                 await E("()=>{const mk=(id,kind)=>({id,kind,status:'complete',prompt:id,created:Date.now(),progress:1,pal:PALS[0],seed:1,dur:5,aspect:'16:9'});S.jobs.push(mk('gv','video'),mk('gi','image'),mk('gm','music'));S.hf.out=['gv','gi','gm'];S.hf.tab='video';renderView()}")
                 grp = await E("()=>[...document.querySelectorAll('.hfgrp')].map(g=>g.dataset.g)")
                 await E("()=>{document.querySelector('[data-act=hfs-mode]').click();document.querySelector('.hfrc[data-id=gv]').click();document.querySelector('.hfrc[data-id=gi]').click();document.querySelector('[data-act=hfs-folder]').click();document.querySelector('#hffdn').value='F1';document.querySelector('[data-act=hfs-fdnew]').click()}")
                 fd = await E("()=>(S.folders||[]).filter(f=>f.name==='F1').map(f=>f.items.join(','))")
                 if lay != [True, True, True] or grp != ["video","image","audio"] or fd != ["gv,gi"]: fails.append(f"{w}: v67 layout/plan {lay} groups {grp} folder {fd}")
                 await E("()=>{S.hf.out=['aud1'];S.hf.tab='audio';renderView()}"); await pg.wait_for_timeout(300)
-                audio_ok = bool(aud) and aud["h"] < 160 and aud["svg"] <= 48 and aud["play"] and aud["mute"] and aud["t"].endswith("0:01") and "music" in aud["ph"].lower() and aud["cost"] == 15 and muted
+                audio_ok = bool(aud) and aud["h"] < 160 and aud["svg"] <= 48 and aud["play"] and aud["mute"] and aud["t"].endswith("0:01") and aud["ph"] in mus_ph and aud["cost"] == 15 and muted
                 r = {"modelRow": row, "picked": picked, "stayedOnHome": stay, "cards": cards, "statuses": done, "approveImage": img_view, "autoFirst": auto_first, "approveVideo": vid_view, "botsKeepModel": [off, on], "audio": aud, "errors": errs}
                 out[w] = r
-                if not (row and row[0] == "hfx-nooi" and "hf-model" in row and picked == "nanopro"): fails.append(f"{w}: model row")
+                if not (row and row[0] == "hf-model" and "hfx-nooi" not in row and row.count("hf-model") == 1 and picked == "nanopro"): fails.append(f"{w}: model row")   # (v171: one chip — nooi Auto with the engines inside)
                 if stay != "home" or cards != 2: fails.append(f"{w}: results not under the box ({stay}, {cards})")
                 if done != ["complete", "complete"]: fails.append(f"{w}: images did not finish {done}")
                 if img_view != "image" or vid_view != "edit": fails.append(f"{w}: approve went to {img_view}/{vid_view}")

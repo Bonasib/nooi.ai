@@ -92,7 +92,7 @@ async def main():
     mk = subprocess.Popen(["node", D + "/mock.js", str(KPORT)], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     env = {k: v for k, v in os.environ.items() if not k.startswith(("LLM_", "ANTHROPIC_", "NVIDIA_", "ELEVENLABS_", "OPENAI_", "KIE_", "FAL_", "REALTIME_", "DEPTH_"))}
     srv = subprocess.Popen(["node", ROOT + "/server.js"], cwd=D, env=dict(env, PORT=str(PORT), SECRET_KEY="v" * 40, FIREBASE_PROJECT_ID="", PUBLIC_BASE_URL=f"http://localhost:{PORT}", AGENTS_AUTO_LEARN="false",
-        KIE_API_KEY="kk", KIE_BASE_URL=f"http://localhost:{KPORT}", MIRROR_MEDIA="false", FREE_PERIOD="false"), stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        KIE_API_KEY="kk", KIE_BASE_URL=f"http://localhost:{KPORT}", MC_AGAIN_MS="400", MIRROR_MEDIA="false", FREE_PERIOD="false"), stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     try:
         for _ in range(60):
             try: urllib.request.urlopen(f"http://localhost:{PORT}/v1/config", timeout=2); break
@@ -105,16 +105,20 @@ async def main():
         r1 = api("/v1/jobs", mc, token=TOKEN); r2 = api("/v1/jobs", {**mc, "meta": {**mc["meta"], "consent": True}, "inputs": {"mcChar": "/media/char.png"}}, token=TOKEN)
         ok(r1.get("_status") == 400 and "right to use" in r1.get("error", "") and r2.get("_status") == 400 and "movement" in r2.get("error", "") and api("/v1/billing", token=TOKEN)["credits"] == c0, f"Motion Control refused before charging: rights {r1} · movement video {r2}")
         j = api("/v1/jobs", {**mc, "meta": {**mc["meta"], "consent": True}}, token=TOKEN); c1 = api("/v1/billing", token=TOKEN)["credits"]
-        price5 = P["video"]["mc26"]; ok(j.get("cost") == round(price5 * 12 / 5) and c1 == c0 - j.get("cost", 0) and j.get("dur") == 12, f"Motion Control priced by the movement video's length (12 s) {j.get('cost')} vs {price5}/5 s")
+        price5 = P["video"]["mc26"]; ok(j.get("cost") == round(price5 * 12 / 5 * 1.5) and c1 == c0 - j.get("cost", 0) and j.get("dur") == 12, f"Motion Control priced by the movement video's length (12 s), always at 1080p (v104) {j.get('cost')} vs {price5}/5 s")
         jd = wait_job(j.get("id", ""), TOKEN); task = next((t for t in stats()["tasks"] if t.get("model") == "kling-2.6/motion-control"), {})
         inp = task.get("input") or {}
-        ok(jd.get("status") == "done" and inp.get("input_urls") == [f"http://localhost:{PORT}/media/char.png"] and inp.get("video_urls") == [f"http://localhost:{PORT}/media/move.mp4"] and inp.get("character_orientation") == "video", f"Motion Control job: the engine gets both files {jd.get('status')} {inp}")
+        ok(jd.get("status") == "done" and len(inp.get("input_urls") or []) == 1 and inp["input_urls"][0].startswith(f"http://localhost:{PORT}/media/") and inp["input_urls"][0].endswith("-mc.jpg") and inp.get("video_urls") == [f"http://localhost:{PORT}/media/move.mp4"] and inp.get("character_orientation") == "video", f"Motion Control job: the engine gets both files {jd.get('status')} {inp}")
         s = jd.get("sent") or {}; ok(s.get("pictures") == 1 and s.get("videos") == 1 and "localhost" not in json.dumps(s), f"what the AI received (no file addresses) {s}")
         # 1080p costs more; a failed Motion Control job is never moved to another model, and its credits come back
+        nb = len(stats()["tasks"])   # (v95: the files are made ready first, so the engine request can come just after the reply)
         j2 = api("/v1/jobs", {**mc, "dur": 5, "prompt": "FAILME", "meta": {**mc["meta"], "consent": True, "res": "1080p"}}, token=TOKEN)
         ok(j2.get("cost") == round(price5 * 1.5), f"Motion Control 1080p ×1.5 {j2.get('cost')}")
         n0 = len(stats()["tasks"]); jf = wait_job(j2.get("id", ""), TOKEN); time.sleep(1)
-        ok(jf.get("status") == "failed" and len(stats()["tasks"]) == n0 and api("/v1/billing", token=TOKEN)["credits"] == c1, f"Motion Control failure: no other model tried, credits back {jf.get('status')} {len(stats()['tasks'])}/{n0}")
+        # (v102: the same engine is asked once more when it fails on its own side — never another model)
+        mt = [t.get("model") for t in stats()["tasks"][nb:]]
+        # (v113: the engine's "please try again later" is a busy engine — asked twice more, on the same engine)
+        ok(jf.get("status") == "failed" and mt == ["kling-2.6/motion-control"] * 3 and api("/v1/billing", token=TOKEN)["credits"] == c1, f"Motion Control failure: a busy engine asked twice more on the same engine, no other model tried, credits back {jf.get('status')} {mt}")
         # Grok Imagine 1.5 starts from a picture
         g = api("/v1/jobs", {"kind": "video", "model": "grok15", "prompt": "a cat", "dur": 6}, token=TOKEN)
         ok(g.get("_status") == 400 and "picture" in g.get("error", ""), f"Grok Imagine 1.5 needs a picture {g}")
@@ -159,16 +163,16 @@ async def browser_checks(p):
         # the new engines are in the pickers with prices from the server
         r = await pg.evaluate("()=>({v:['kling30t','seedance2mini','gemomni','grok15','happyhorse'].map(k=>MODELS[k]&&MODELS[k].cr),i:['nano2lite','seedream5lite','zimage'].map(k=>IMG_MODELS[k]&&IMG_MODELS[k].cr),mcInPicker:!!MODELS.mc26,p:API.cfg.prices.video.kling30t})")
         ok(all(r["v"]) and all(r["i"]) and r["v"][0] == r["p"] and not r["mcInPicker"], f"{tag}: new engines in the pickers (Motion Control only on its own page) {r}")
-        # Motion Control page: the tab after Cinema Studio, a title, two uploads, the rights box
+        # Motion Control page: the tab after nooi Studio (Cinema Studio is part of it since v93), a title, two uploads, the rights box
         await pg.evaluate("()=>{go('motion');renderAll()}"); await pg.wait_for_timeout(400)
         r = await pg.evaluate("()=>({h1:document.querySelector('#main h1').textContent,tabs:[...document.querySelectorAll('.hubtabs [data-go]')].map(e=>e.dataset.go),slots:document.querySelectorAll('#main input[data-slot=\"mcMove\"],#main input[data-slot=\"mcChar\"]').length,consent:!!document.querySelector('[data-mc83consent]'),over:document.documentElement.scrollWidth>innerWidth})")
-        ok(r["h1"] in ("Motion Control", "التحكم بالحركة") and r["tabs"][:3] == ["video", "cinema", "motion"] and r["slots"] == 2 and r["consent"] and not r["over"], f"{tag}: Motion Control page {r}")
+        ok(r["h1"] in ("Motion Control", "التحكم بالحركة") and r["tabs"][:2] == ["video", "motion"] and "cinema" not in r["tabs"] and r["slots"] == 2 and r["consent"] and not r["over"], f"{tag}: Motion Control page {r}")
         await pg.click('[data-act="mc-make"]'); await pg.wait_for_timeout(300)
         ok(await pg.evaluate("()=>S.jobs.filter(j=>j.meta&&j.meta.motion83).length") == 0, f"{tag}: nothing is made without the files")
         if lang == "en":
             # make one: files from the library (made on the server), rights confirmed
             await pg.evaluate("""()=>{const mk=(kind,u,dur)=>{const j={id:uid(),kind,status:'complete',resultUrl:u,prompt:kind,title:kind,dur,created:Date.now(),remote:'x'+kind};S.jobs.push(j);return j};
-              const v=mk('video','/media/move.mp4',4),i=mk('image','/media/char.png');M.mcMove={type:'video',url:v.resultUrl,remote:v.resultUrl,name:'move',libDur:4};M.mcChar={type:'image',url:i.resultUrl,remote:i.resultUrl,name:'char'};S.mc83.consent=true;renderView()}""")
+              const v=mk('video','/media/move.mp4',4),i=mk('image','/media/char.png');M.mcMove={type:'video',url:v.resultUrl,remote:v.resultUrl,name:'move',libDur:4};M.mcChar={type:'image',url:i.resultUrl,remote:i.resultUrl,name:'char'};S.mc83.consent=true;S.mc83.mode='moves';renderView()}""")
             await pg.wait_for_timeout(300); n0 = len(stats()["tasks"])
             await pg.click('[data-act="mc-make"]'); await pg.wait_for_timeout(5000)
             r = await pg.evaluate("()=>{const j=S.jobs.filter(j=>j.meta&&j.meta.motion83).pop();return j&&{status:j.status,dur:j.dur,model:j.model,remote:!!j.remote}}")
@@ -181,7 +185,7 @@ async def browser_checks(p):
         # Recipes: five ready recipes, steps with prices, a run makes the steps one after another
         await pg.evaluate("()=>{go('recipes');renderAll()}"); await pg.wait_for_timeout(400)
         r = await pg.evaluate("()=>({h1:document.querySelector('#main h1').textContent,cards:document.querySelectorAll('.rc83').length,steps:document.querySelectorAll('.rsteps83 li').length,tabs:[...document.querySelectorAll('.hubtabs [data-go]')].map(e=>e.dataset.go),over:document.documentElement.scrollWidth>innerWidth})")
-        ok(r["h1"] in ("Recipes", "الوصفات") and r["cards"] == 5 and r["steps"] == 3 and r["tabs"] == ["explore", "discover", "recipes"] and not r["over"], f"{tag}: Recipes page {r}")
+        ok(r["h1"] in ("Recipes", "الوصفات") and r["cards"] == 5 and r["steps"] == 3 and r["tabs"] == ["explore", "discover", "community204", "recipes"] and not r["over"], f"{tag}: Recipes page {r}")
         await pg.click('[data-act="rec-run"]'); await pg.wait_for_timeout(300)
         ok(await pg.evaluate("()=>(S.rec83.runs||[]).length") == 0, f"{tag}: a recipe needs the idea first")
         if lang == "en":

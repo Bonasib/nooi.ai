@@ -74,6 +74,10 @@ ok(rc == 0 and open(STG + "/data/db.json").read() == live_db, "refresh: a fresh 
 # promote = the normal update with the previewed package
 open(LOG, "w").close(); rc, out = run("promote")
 ok(rc == 0 and f"nooi-update {STG}.zip" in calls(), f"promote: the same package goes live {rc} {out} {calls()}")
+# v110: promote also removes the preview (left running, it did the live site's work again on the same server)
+ok(not os.path.exists(STG) and not os.path.exists(ETC + "/systemd/system/nooi-stage.service") and "systemctl disable --now nooi-stage" in calls() and calls().index("nooi-update") < calls().index("disable --now nooi-stage") and "preview was removed" in out, f"promote: the preview removed after {out} {calls()}")
+ok(open(APP + "/data/db.json").read() == live_db and os.path.exists(APP + "/media/a.png"), "promote: the live data untouched")
+rc, out = run(PKG); ok(rc == 0, f"start again after promote {out[-300:]}")
 # stop: everything of the preview removed, nothing of the live site
 open(LOG, "w").close(); rc, out = run("stop")
 ok(rc == 0 and not os.path.exists(STG) and not os.path.exists(ETC + "/nginx/sites-available/nooi-stage") and not os.path.lexists(ETC + "/nginx/sites-enabled/nooi-stage") and not os.path.exists(ETC + "/systemd/system/nooi-stage.service"), f"stop: the preview removed {out}")

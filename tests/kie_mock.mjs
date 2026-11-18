@@ -45,6 +45,22 @@ i = kieInput("minimax-h3/image-to-video", vid(5, true)); ok(i.first_frame_url ==
 i = kieInput("hailuo/2-3-image-to-video-pro", vid(10, true)); ok(i.image_url === "https://i" && i.duration === "10", "Hailuo: image_url and duration as text");
 i = kieInput("wan/3-0-video", vid(8, false)); ok(i.duration === 8 && i.aspect_ratio === "9:16" && !i.image_urls, "Wan 3.0 text → video: numeric duration, aspect ratio");
 i = kieInput("nano-banana-pro", { kind: "image", prompt: "logo", aspect: "1:1", inputs: { iRef: "https://ref" }, meta: {} }); ok(i.image_input[0] === "https://ref" && i.aspect_ratio === "1:1", "Nano Banana: reference image goes in image_input");
+// v105 Character Swap on MiniMax H3 (reference-to-video): the video, the new person (+ the product photo), the words that list what stays
+const SW = (dur, prod, keep) => ({ kind: "video", prompt: "", dur, aspect: "9:16", inputs: { mcMove: "https://v/move.mp4", mcChar: "https://p/new.jpg", ...(prod ? { mcProd: "https://p/prod.jpg" } : {}) }, meta: { res: "2K", ...(keep ? { mcKeep: keep } : {}) } });
+i = kieInput("minimax-h3/reference-to-video", SW(3, true, "a red model car, a white perfume bottle"));
+ok(i.reference_video_urls?.join() === "https://v/move.mp4" && i.reference_image_urls?.join() === "https://p/new.jpg,https://p/prod.jpg" && i.aspect_ratio === "adaptive" && i.duration === 4 && i.resolution === "2K" &&
+  /^subject_definitions:\n<Subject 1> is the new person: the face, hair, skin tone, body shape and clothes of the person in <Picture 1>\./.test(i.prompt) && /summary: \[video editing\] The target video is an edited version of <Video 1>\. The person in <Video 1> is replaced by <Subject 1>/.test(i.prompt) &&
+  /\(a red model car, a white perfume bottle\)/.test(i.prompt) && /<Subject 2> is the product in <Video 1>, exactly as shown in <Picture 2>/.test(i.prompt) && /<Video 1>: fully_preserved - everything except the replaced person, frame by frame/.test(i.prompt) && /attribute_transfer/.test(i.prompt),
+  "MiniMax H3 swap (v108: in H3's own layout — <Picture N>, <Video 1>, [video editing], retention_analysis): video + person + product, adaptive shape, 4 s at least, 2K, words that keep the products " + JSON.stringify(i).slice(0, 160));
+i = kieInput("minimax-h3/reference-to-video", SW(20, false, ""));
+ok(i.duration === 15 && i.reference_image_urls.length === 1 && !/Picture 2/.test(i.prompt) && !/products and objects \(/.test(i.prompt) && /logo, label and written text/.test(i.prompt), "MiniMax H3 swap: 15 s at most; no product photo or list → the general keep words");
+// v107: several people — Image 2 is the person to replace (the product moves to Image 3), the words say where they are and keep the others
+i = kieInput("minimax-h3/reference-to-video", { ...SW(13, true, ""), inputs: { ...SW(13, true, "").inputs, mcWho: "https://p/who.jpg" }, meta: { res: "2K", swapWhere: "the man in the blue shirt, second from the left", swapWho: "a man in a blue shirt" } });
+ok(i.reference_image_urls?.join() === "https://p/new.jpg,https://p/who.jpg,https://p/prod.jpg" && /<Subject 2> is the person to replace in <Video 1> — the man in the blue shirt, second from the left — the person shown in <Picture 2>/.test(i.prompt) && /Every other person in <Video 1> stays exactly as they are/.test(i.prompt) && /<Subject 3> is the product in <Video 1>, exactly as shown in <Picture 3>/.test(i.prompt) && /<Subject 2>: attribute_transfer/.test(i.prompt),
+  "MiniMax H3 swap with several people: the person to replace is Image 2, where they are, the others kept, the product is Image 3 " + i.prompt.slice(0, 160));
+queue = [resp(200, { code: 422, msg: "resolution 2K is not supported" }), created("h3")]; { const n0 = seen.length;
+  const rh = await kie("minimax-h3/reference-to-video").submit(SW(6, false, ""));
+  ok(rh.remoteId === "m:h3" && seen.length - n0 === 2 && seen[n0].body.input.resolution === "2K" && seen[n0 + 1].body.input.resolution === undefined && seen[n0 + 1].body.input.reference_video_urls?.length === 1, "MiniMax H3 swap: a refused resolution → sent again at the engine's own default"); }
 i = kieInput("gpt-image-2-image-to-image", { kind: "image", prompt: "x", aspect: "4:5", inputs: { iRef: "https://ref" }, meta: {} }); ok(i.input_urls[0] === "https://ref" && i.resolution && i.aspect_ratio === "4:5", "GPT Image 2 edit: reference in input_urls, resolution set");
 i = kieInput("kling-3.0/video", vid(20, false)); ok(i.mode === "std" && i.multi_shots === false && Array.isArray(i.multi_prompt) && Array.isArray(i.kling_elements) && i.duration === "15" && i.aspect_ratio === "9:16" && i.sound === false, "Kling 3.0: every required field (mode, multi_shots, multi_prompt, kling_elements, duration ≤ 15)");
 i = kieInput("kling-2.6/text-to-video", vid(7, false)); ok(i.sound === false && i.duration === "5" && i.aspect_ratio === "9:16", "Kling 2.6: sound, duration 5|10, aspect required");
@@ -81,10 +97,16 @@ queue = [record({ state: "success", resultJson: JSON.stringify({ data: [{ audio_
 p = await M.poll("m:s1"); ok(p.status === "done" && p.url === "https://cdn/a.mp3", "Suno: result is the track's audio_url, not its cover image");
 
 // ── errors: Kie answers HTTP 200 with its own code ──
-for (const [code, type, retry] of [[401, "auth", false], [402, "quota", false], [422, "input", false], [429, "rate", true], [433, "rate", true], [500, "provider", true]]) {
+for (const [code, type, retry] of [[401, "auth", false], [402, "quota", false], [422, "input", false], [500, "provider", true]]) {
   queue = [resp(200, { code, msg: "error " + code })];
   try { await K.submit({ kind: "video", prompt: "x", dur: 5, inputs: {}, meta: {} }); ok(false, `code ${code} should throw`); }
   catch (e) { const c = classify(e); ok(c.type === type && c.retryable === retry && !String(e.message).includes(KEY), `Kie code ${code} → ${type}${retry ? " (retried)" : ""}, key never in the message`); }
+}
+// v124: "too many" (429, Kie's own 433) on a new task isn't an error — the task waits its turn in the send line and goes through
+for (const code of [429, 433]) {
+  queue = [resp(200, { code, msg: "Too many requests" }), created("tq" + code)]; const n0 = seen.length, t0 = Date.now();
+  const rq = await K.submit({ kind: "video", prompt: "x", dur: 5, inputs: {}, meta: {} });
+  ok(rq.remoteId === "m:tq" + code && seen.length - n0 === 2 && Date.now() - t0 >= 400, `Kie code ${code} on a new task → it waits its turn (${Date.now() - t0} ms) and goes through, not an error`);
 }
 try { await kie("").submit({ kind: "video", prompt: "x", inputs: {}, meta: {} }); ok(false, "empty model should throw"); } catch (e) { ok(e.code === 503, "no model id → clear 503 setup message, nothing sent"); }
 
@@ -103,6 +125,15 @@ rt = adapterFor("video", { kind: "video", model: "auto" }, PROVIDERS); ok(rt.key
 st.saveCfg("providers", "kie", { videoModel: "wan/3-0-video", musicModel: "suno:V5" });
 rt = adapterFor("video", { kind: "video", model: "auto" }, PROVIDERS); ok(rt.key === "kie@wan/3-0-video", "routing: direct video provider not connected → admin's default Kie video model");
 rt = adapterFor("music", { kind: "music" }, PROVIDERS); ok(rt.key === "kie@suno:V5", "routing: music falls back to the default Kie music model");
+// v101: the admin's default model is for "nooi Auto" only — a model with its own engine keeps it (the quick-start card saves
+// kling-3.0/video as the default, and it took over Character Swap, Motion Control, Veo, Wan…)
+st.saveCfg("providers", "kie", { videoModel: "kling-3.0/video", imageModel: "nano-banana-pro", musicModel: "suno:V5" });
+for (const [cap, m, k] of [["video", "mcswap", "bytedance/seedance-2-fast"], ["video", "mc30", "kling-3.0/motion-control"], ["video", "mc26", "kling-2.6/motion-control"], ["video", "veo31", "veo3"], ["video", "wan30", "wan/3-0-video"], ["video", "grok15", "grok-imagine-video-1-5-preview"], ["image", "imagen4", "google/imagen4-ultra"], ["image", "ideogram3", "ideogram/v3-text-to-image"]]) {
+  rt = adapterFor(cap, { kind: cap, model: m }, PROVIDERS); ok(rt.key === "kie@" + k, `routing: ${m} keeps its own engine with an admin default set (${rt.key})`); }
+// v114: Replace the person on Seedance 2.0 by default; the owner's one-tap MiniMax H3 (Admin → Speed) routes it there
+st.S().swapEngine = "h3"; rt = adapterFor("video", { kind: "video", model: "mcswap" }, PROVIDERS); ok(rt.key === "kie@minimax-h3/reference-to-video", `routing: Replace the person on MiniMax H3 when the owner picks it (${rt.key})`); delete st.S().swapEngine;
+rt = adapterFor("video", { kind: "video", model: "auto" }, PROVIDERS); ok(rt.key === "kie@kling-3.0/video", "routing: nooi Auto still uses the admin's default video model");
+rt = adapterFor("image", { kind: "image", model: "auto" }, PROVIDERS); ok(rt.key === "kie@nano-banana-pro", "routing: nooi Auto still uses the admin's default image model");
 ok(adapterByKey("kie@kling-3.0/video", PROVIDERS).name === "Kie AI", "poller rebuilds the Kie adapter from the stored job key");
 
 // ── Midjourney through Kie ──

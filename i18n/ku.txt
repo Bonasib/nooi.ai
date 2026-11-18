@@ -95,7 +95,7 @@
 095|Tiştê ku ez çêdikim yê kê ye?
 096|Yê te ye. Vîdyoyên te yên te ne, ji bo karanîna bazirganî jî.
 097|Kîjan ziman têne piştgirîkirin?
-098|Binnivîs û dublaj bi 35 zimanan û zaravayên herêmî — Siûdî, Misirî, Kuweytî, Tûnisî, Brîtanî, Awistralî, Skotî û gelekên din. Navrû bi xwe bi 26 zimanan heye.
+098|Binnivîs û dublaj bi 35 zimanan û zaravayên herêmî — Siûdî, Misirî, Kuweytî, Tûnisî, Brîtanî, Awistralî, Skotî û gelekên din. Navrû bi xwe bi 32 zimanan heye.
 099|Çîroka Beş bi Beş çawa yekgirtî dimîne?
 100|Her beş ji çarçoveya dawî ya beşa berê dest pê dike, û nasnameya karakterê te di her dîmenê de kilîdkirî dimîne.
 101|Ma dikare li şûna min biweşîne?
@@ -134,7 +134,7 @@
 134|Dirêjahiya herî zêde ya vîdyoyê
 135|Çareserî
 136|Leza çarçoveyê
-137|Modelên vîdyoyê
+137|Motorên vîdyoyê
 138|Klonkirina dengê
 139|Herî populer
 140|Pro
@@ -162,7 +162,7 @@
 162|E-name
 163|Pêşîn
 164|Pêşîn + destpêkirin
-165|Modelên wêneyan
+165|Motorên wêneyan
 166|Hemû modelên wêneyan
 167|Dengên ElevenLabs
 168|Hemû · bi Eleven v3 re
@@ -174,7 +174,7 @@
 174|+ klonkirina dengê ya profesyonel
 175|ziman ji bo binnivîs, dublaj û deng
 176|TÎMA TE YA FÎLMÊ YA AI
-177|Heşt pispor.
+177|Neh pispor.
 178|Yek fîlm.
 179|Her proje ji hêla tîmeke ajanên AI ve tê birêvebirin — ji rêza yekem a senaryoyê heta kontrola kalîteyê ya dawî.
 180|Ramana te dike senaryo: dîmen, diyalog û vegotin.
@@ -281,7 +281,7 @@
 281|Hêj tiştek tune. Ji bo klîpa xwe ya yekem, li jor dîmenekî rave bike.
 282|Çîroka nû
 283|Sererastkirina nû
-284|Modela AI
+284|Motora AI
 285|Jîr
 286|ji bo prompta te ya herî baş
 287|Saniye
@@ -311,8 +311,8 @@
 311|Şêwaz
 312|sînemayî, rengên germ
 313|Vê avahiyê bi kar bîne
-314|Ji bo her beşê rêzek — bot her beşê dixwînin.
-315|Modela vîdyoyê
+314|Ji bo her beşê rêzek — ajan her beşê dixwînin.
+315|Motora vîdyoyê
 316|Çarçoveya yekem û dawî
 317|Çarçoveya yekem
 318|Bar bike
@@ -328,7 +328,7 @@
 328|Girêdayî nîne
 329|Derhêl
 330|Demo
-331|Hemû model
+331|Hemû motor
 332|Merc
 333|Nepenî
 334|Li şûna nivîsandinê biaxive
@@ -375,3 +375,5 @@
 375|Modelên daxistî jê bibe
 376|Li ser cîhaza te dixebite · belaş
 377|Li ser cîhaza te qediya — tu kredî nehat bikaranîn.
+378|Deng
+379|Hemû amûr

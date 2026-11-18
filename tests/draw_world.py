@@ -18,24 +18,21 @@ async def main():
         await pg.evaluate("()=>{S.user={name:'G',method:'google'};renderAll()}");await pg.wait_for_timeout(200)
         r["afterLoginView"]=await pg.evaluate("S.view")
         r["appAdminLink"]=await pg.evaluate("!!document.querySelector('.appfoot [data-act=\"admin-login\"]')")
-        # draw a scene
-        await pg.evaluate("()=>{S.myPlan='studio';S.view='draw';S.drw.mode='draw';S.drw.n=2;renderAll()}");await pg.wait_for_timeout(400)
-        box=await (await pg.query_selector('#drwcv')).bounding_box()
+        # draw a scene — since v91 "Draw a scene" opens the one Sketch page: the drawing, what it is, how many versions, one AI button
+        await pg.evaluate("()=>{S.myPlan='studio';SK.strokes=[];go('draw');renderAll()}");await pg.wait_for_timeout(500)
+        r["drawOpensSketch"]=await pg.evaluate("()=>S.view==='sketch'&&!!document.getElementById('skcv')&&document.querySelectorAll('[data-act=sk91-go]').length===1&&!document.getElementById('drwcv')")
+        await pg.locator('#skcv').scroll_into_view_if_needed();box=await pg.locator('#skcv').bounding_box()
         for k in range(3):
-            await pg.dispatch_event('#drwcv','pointerdown',{"clientX":box["x"]+40+k*60,"clientY":box["y"]+60,"pointerId":1,"bubbles":True})
-            for s in range(8): await pg.evaluate(f"document.dispatchEvent(new PointerEvent('pointermove',{{clientX:{box['x']+40+k*60+s*8},clientY:{box['y']+60+s*10},bubbles:true}}))")
-            await pg.evaluate("document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}))")
-        r["inked"]=await pg.evaluate("!drwEmpty()")
-        await pg.evaluate("()=>{S.drw.scene='قلعة على تلة وقت الغروب';S.drw.style='anime'}")
-        n0=await pg.evaluate("S.jobs.length");await pg.evaluate("drwGenerate()");await pg.wait_for_timeout(400)
-        r["sketchJobs"]=await pg.evaluate(f"S.jobs.slice({n0}).map(j=>j.kind+':'+j.meta.style+':'+j.meta.variant)")
-        r["sketchAsReference"]=await pg.evaluate("!!(M.iRef&&M.iRef.name==='sketch.png')")
+            x0,y0=box["x"]+40+k*60,box["y"]+60
+            await pg.dispatch_event('#skcv','pointerdown',{"clientX":x0,"clientY":y0,"pointerId":1,"pointerType":"touch","isPrimary":True,"bubbles":True})
+            for s in range(8): await pg.dispatch_event('#skcv','pointermove',{"clientX":x0+s*8,"clientY":y0+s*10,"pointerId":1,"pointerType":"touch","isPrimary":True,"bubbles":True})
+            await pg.dispatch_event('#skcv','pointerup',{"clientX":x0+64,"clientY":y0+80,"pointerId":1,"pointerType":"touch","isPrimary":True,"bubbles":True})
+        r["inked"]=await pg.evaluate("SK.strokes.length")
+        await pg.fill("#skwhat91","قلعة على تلة وقت الغروب");await pg.click("[data-act=sk91-n][data-v='4']")
+        n0=await pg.evaluate("S.jobs.length");await pg.click("[data-act=sk91-go]");await pg.wait_for_timeout(1500)
+        r["sketchJobs"]=await pg.evaluate(f"S.jobs.slice({n0}).filter(j=>j.meta&&j.meta.sk91).map(j=>j.kind+':'+j.meta.style+':'+j.meta.variant)")
+        r["sketchPrompt"]=await pg.evaluate(f"(S.jobs.slice({n0}).find(j=>j.meta&&j.meta.sk91)||{{}}).prompt||''")
         await pg.evaluate("window.scrollTo(0,0)");await pg.screenshot(path="/tmp/draw.png")
-        # upload & instruct
-        await pg.evaluate("()=>{S.drw.mode='upload';renderAll()}");await pg.wait_for_timeout(200)
-        await (await pg.query_selector('input[data-drwup]')).set_input_files(str(HERE/'noisy.wav').replace('noisy.wav','sample.png'));await pg.wait_for_timeout(300)
-        await pg.evaluate("()=>{S.drw.instr='اجعلها ليلاً مع أضواء المدينة';S.drw.preset='time';drwEdit()}");await pg.wait_for_timeout(300)
-        r["editJobs"]=await pg.evaluate("S.jobs.filter(j=>j.meta&&j.meta.instruct).map(j=>j.kind+':'+j.meta.preset).slice(-2)")
         # 3D world — every old 3D page (3D worlds, 3D Studio, Physics) opens the one 3D World (tests/v86.py builds, walks and
         # exports worlds with a server — this file:// run only checks the door)
         await pg.evaluate("()=>go('w3ai')");await pg.wait_for_timeout(500)

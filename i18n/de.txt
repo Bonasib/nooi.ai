@@ -95,7 +95,7 @@
 095|Wem gehört, was ich erzeuge?
 096|Dir. Deine Videos gehören dir, auch zur kommerziellen Nutzung.
 097|Welche Sprachen werden unterstützt?
-098|Untertitel und Synchronisation in 35 Sprachen mit regionalen Dialekten — saudisch, ägyptisch, kuwaitisch, tunesisch, britisch, australisch, schottisch und viele mehr. Die Oberfläche selbst gibt es in 26 Sprachen.
+098|Untertitel und Synchronisation in 35 Sprachen mit regionalen Dialekten — saudisch, ägyptisch, kuwaitisch, tunesisch, britisch, australisch, schottisch und viele mehr. Die Oberfläche selbst gibt es in 32 Sprachen.
 099|Wie bleibt die Kapitel-Story stimmig?
 100|Jedes Kapitel beginnt mit dem letzten Bild des vorherigen, und die Identität deiner Figur bleibt in jeder Einstellung fest.
 101|Kann es für mich veröffentlichen?
@@ -134,7 +134,7 @@
 134|Maximale Videolänge
 135|Auflösung
 136|Bildrate
-137|Videomodelle
+137|Video-Engines
 138|Stimmklonen
 139|Am beliebtesten
 140|Pro
@@ -162,7 +162,7 @@
 162|E-Mail
 163|Bevorzugt
 164|Bevorzugt + Onboarding
-165|Bildmodelle
+165|Bild-Engines
 166|Alle Bildmodelle
 167|ElevenLabs-Stimmen
 168|Alle · inkl. Eleven v3
@@ -174,7 +174,7 @@
 174|+ professionelles Stimmklonen
 175|Sprachen für Untertitel, Synchronisation & Stimme
 176|DEINE KI-FILMCREW
-177|Acht Spezialisten.
+177|Neun Spezialisten.
 178|Ein Film.
 179|Jedes Projekt betreut eine Crew aus KI-Agenten — von der ersten Zeile des Drehbuchs bis zur finalen Qualitätskontrolle.
 180|Macht aus deiner Idee ein Drehbuch: Szenen, Dialoge und Erzählung.
@@ -281,7 +281,7 @@
 281|Noch nichts da. Beschreibe oben eine Einstellung für deinen ersten Clip.
 282|Neue Geschichte
 283|Neuer Schnitt
-284|KI-Modell
+284|KI-Engine
 285|Smart
 286|am besten für deinen Prompt
 287|Sekunden
@@ -311,8 +311,8 @@
 311|Stil
 312|filmisch, warme Farben
 313|Diese Struktur verwenden
-314|Eine Zeile pro Teil — die Bots lesen jeden Teil.
-315|Videomodell
+314|Eine Zeile pro Teil — die KI-Agenten lesen jeden Teil.
+315|Video-Engine
 316|Start- & Endbild
 317|Startbild
 318|Hochladen
@@ -328,7 +328,7 @@
 328|Nicht verbunden
 329|Offline
 330|Demo
-331|Alle Modelle
+331|Alle Engines
 332|Bedingungen
 333|Datenschutz
 334|Sprechen statt tippen
@@ -375,3 +375,5 @@
 375|Heruntergeladene Modelle entfernen
 376|Läuft auf deinem Gerät · kostenlos
 377|Auf deinem Gerät erledigt — keine Credits verbraucht.
+378|Audio
+379|Alle Werkzeuge

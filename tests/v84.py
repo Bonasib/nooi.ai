@@ -22,7 +22,7 @@ GO = "(v)=>{document.getElementById('modalRoot').innerHTML='';go(v);renderAll()}
 EDIT = """async(tab)=>{if(!S.jobs.find(j=>j.id==='ed_va')){const now=Date.now(),mk=(id,kind,url,dur)=>({id,kind,status:'complete',prompt:id,title:id,created:now,progress:1,pal:PALS[0],seed:7,dur,aspect:'16:9',resultUrl:url});
   S.jobs.push(mk('ed_va','video','/media/a.webm',4),mk('ed_img','image','/media/img.jpg',0));PJ.fresh('edit');S.cur.edit=null;edxInit();S.ed.sfx=[];
   for(const id of ['ed_va','ed_img'])await edUseJob(S.jobs.find(j=>j.id===id),{stay:true,quiet:true,t:1})}
- document.getElementById('modalRoot').innerHTML='';go('edit');renderAll();await new Promise(r=>setTimeout(r,300));S.ed.sel=S.ed.clips[1].id;S.ed.tab=tab;renderView()}"""
+ document.getElementById('modalRoot').innerHTML='';go('edit');renderAll();await new Promise(r=>setTimeout(r,300));S.ed.sel=S.ed.clips[tab==='clip'?0:1].id;S.ed.tab=tab;renderView()}"""   # (v145: a transition is shown for a clip with a next one)
 # the old buttons of each field (they stay on the page, hidden, so every handler works as before)
 SEL = {"format": '[data-set="draft.aspect"],[data-set="img.aspect"],[data-set="story.aspect"],[data-set="cin.aspect"],[data-set="crew.brief.aspect"],[data-set="rec83.aspect"],[data-set="ss83.aspect"],[data-act="drw-ar"],[data-act="ugc-fmt"]',
   "camera": '[data-set="cin.cam"]', "lens": '[data-set="cin.lens"],[data-set="cin.focal"],[data-set="cin.ap"]',
@@ -30,9 +30,11 @@ SEL = {"format": '[data-set="draft.aspect"],[data-set="img.aspect"],[data-set="s
   "style": '[data-set="draft.style"],[data-set="img.style"],[data-set="story.style"],[data-set="char.art"],[data-set="drw.style"],[data-set="sketch.style"]',
   "look": '[data-set="tools.grade.preset"],[data-act="edx-look"]', "effects": '[data-toggle^="tools.edit.fx."],[data-act="edx-vfx"]',
   "overlay": '[data-act="edv-add"]', "transition": '[data-set="ss83.tr"],[data-set="edclip.trans"]', "textfx": '[data-act="edx-tfx"]'}
-PAGES = [("video", ["style", "format", "move"]), ("image", ["style", "format"]), ("story", ["format", "style", "move"]), ("cinema", ["camera", "lens", "move", "light", "format"]),
-  ("crew", ["format"]), ("draw", ["style", "format"]), ("recipes", ["format"]), ("slideshow", ["format", "move", "transition"]), ("ugcads", ["format"]),
-  ("chars", ["style"]), ("sketch", ["style"]), ("grade", ["look"]), ("edit:color", ["look", "effects"]), ("edit:vfx", ["overlay"]), ("edit:look", ["effects"]), ("edit:clip", ["transition"])]
+# v91: the Sketch page is only the drawing, what it is and one AI button (no style or format pickers; Draw a scene opens it)
+# v93: Cinema Studio is part of nooi Studio — camera, lens, focal length, aperture and light are sections of its one box (checked below)
+PAGES = [("video", ["style", "format", "move"]), ("image", ["style", "format"]), ("story", ["format", "style", "move"]),
+  ("crew", ["format"]), ("recipes", ["format"]), ("slideshow", ["format", "move", "transition"]), ("ugcads", ["format"]),
+  ("chars", ["style"]), ("grade", ["look"]), ("edit:color", ["look", "effects"]), ("edit:vfx", ["overlay"]), ("edit:look", ["effects"]), ("edit:clip", ["transition"])]
 STATE = """(sel)=>{const vis=[...document.querySelectorAll(sel)].filter(b=>b.offsetParent!==null&&!b.closest('#modalRoot'));
   const chips=[...document.querySelectorAll('#main .pk84c')].map(c=>({f:c.dataset.pk84,v:c.querySelector('.pk84v').textContent,pop:c.getAttribute('aria-haspopup'),al:c.getAttribute('aria-label'),row:c.parentElement.className}));
   return {vis:vis.length,chips}}"""
@@ -57,6 +59,12 @@ async def main():
                 else: await pg.evaluate(GO, page)
                 await pg.wait_for_timeout(250)
                 for f in fields:
+                    if page.startswith("edit:"):
+                        # v144: on a computer the editor's add panel shows its tiles (they drag onto the timeline); v151: the whole editor, phone too —
+                        # every field a row of picture tiles (an icon or the clip's own picture, a name, no emoji), no chip anywhere in it
+                        t = await pg.evaluate("""(s)=>{const bs=[...document.querySelectorAll('.ed143 '+s.split(',').join(',.ed143 '))].filter(b=>b.offsetParent!==null);
+                          return {vis:bs.length,chip:!!document.querySelector('.ed143 .pk84c'),bare:bs.filter(b=>!b.querySelector('svg,canvas')||!b.textContent.trim()||/[\u2600-\u27bf]|[\ud83c-\udbff]/.test(b.textContent)).map(b=>b.dataset.v||b.dataset.val)}}""", SEL[f])
+                        ok(t["vis"] >= 2 and not t["chip"] and not t["bare"], f"{lang} {page}: the {f} picture tiles show in the editor {t}"); continue
                     st = await pg.evaluate(STATE, SEL[f]); ch = [c for c in st["chips"] if c["f"] == f]
                     ok(st["vis"] == 0, f"{lang} {page}: the old {f} buttons are still showing ({st['vis']})")
                     ok(len(ch) == 1 and ch[0]["pop"] == "dialog" and ch[0]["v"].strip() and "pk84row" in ch[0]["row"], f"{lang} {page}: one {f} chip in the bar {ch}")
@@ -76,7 +84,7 @@ async def main():
                             ok(g["cols"] == 2 and g["done"] and g["wide"] <= 1, f"ar phone: the lens sheet has two tiles per row and Done in view {g}")
                     await pg.evaluate("()=>{document.getElementById('modalRoot').innerHTML=''}")
                 if mob:
-                    fit = await pg.evaluate("()=>({wide:document.documentElement.scrollWidth-innerWidth,out:[...document.querySelectorAll('#main .pk84c')].filter(c=>{const r=c.getBoundingClientRect();return r.width&&(r.left<-1||r.right>innerWidth+1)}).length})")
+                    fit = await pg.evaluate("()=>({wide:document.documentElement.scrollWidth-innerWidth,out:[...document.querySelectorAll('#main .pk84c')].filter(c=>{if(c.closest('.cz98b .opt93'))return false;const r=c.getBoundingClientRect();return r.width&&(r.left<-1||r.right>innerWidth+1)}).length})")   # (v98: the prompt bar's chip row scrolls sideways; the page itself must not)
                     ok(fit["wide"] <= 1 and not fit["out"], f"ar phone {page}: the chips fit {fit}")
             ok(not nodesc, f"{lang}: tiles without a description {nodesc}")
             vals = {v for v in oneSheet.values()}
@@ -91,25 +99,24 @@ async def main():
             await pg.evaluate(GO, "video"); await pick("format", '[data-val="9:16"]')
             r = await pg.evaluate("()=>({a:S.draft.aspect,open:!!document.querySelector('#modalRoot .pk84s'),chip:document.querySelector('.pk84c[data-pk84=format] .pk84v').textContent})")
             ok(r == {"a": "9:16", "open": False, "chip": "9:16"}, f"video: the format sheet sets the format and closes {r}")
-            await pg.evaluate(GO, "cinema"); await pg.evaluate("()=>document.querySelector('#main .pk84c[data-pk84=lens]').click()"); await pg.wait_for_timeout(200)
-            for v in ('[data-val="anamorphic"]', '[data-val="85"]', '[data-val="1.4"]'): await pg.click("#modalRoot .pk84o" + v); await pg.wait_for_timeout(250)
-            r1 = await pg.evaluate("()=>({lens:S.cin.lens,focal:S.cin.focal,ap:S.cin.ap,open:!!document.querySelector('#modalRoot .pk84s'),on:[...document.querySelectorAll('#modalRoot .pk84o[aria-pressed=true]')].map(b=>b.dataset.val)})")
-            await pg.click('#modalRoot .pk84done [data-act="close-sheet"]'); await pg.wait_for_timeout(250)
-            r2 = await pg.evaluate("()=>({open:!!document.querySelector('#modalRoot .pk84s'),chip:document.querySelector('.pk84c[data-pk84=lens] .pk84v').textContent,p:cinPrompt82()})")
-            ok(r1["lens"] == "anamorphic" and r1["focal"] == 85 and r1["ap"] == "1.4" and r1["open"] and sorted(r1["on"]) == sorted(["anamorphic", "85", "1.4"]), f"cinema: the lens sheet sets lens, focal length and aperture and stays open {r1}")
-            ok(not r2["open"] and r2["chip"] == "Anamorphic · 85 mm · f/1.4" and "anamorphic" in r2["p"] and "85mm" in r2["p"] and "f/1.4" in r2["p"], f"cinema: Done closes it; the chip and the words the engine receives follow {r2}")
+            await pg.evaluate(GO, "cinema"); await pg.wait_for_timeout(200)
+            for sec, v in (("c_lens", "anamorphic"), ("c_focal", "85"), ("c_ap", "1.4")):
+                await pg.click(f'[data-o93="{sec}"]'); await pg.wait_for_timeout(150); await pg.click(f'.box93 [data-set="draft.cine93.{sec[2:]}"][data-val="{v}"]'); await pg.wait_for_timeout(250)
+            r = await pg.evaluate("()=>({view:S.view,c:{...S.draft.cine93},chips:['c_lens','c_focal','c_ap'].map(k=>(document.querySelector('[data-o93='+k+'] .o93v')||{}).textContent),p:cineWords93()})")
+            ok(r["view"] == "video" and r["c"].get("lens") == "anamorphic" and str(r["c"].get("focal")) == "85" and str(r["c"].get("ap")) == "1.4" and r["chips"][0] == "Anamorphic" and "85" in r["chips"][1] and "1.4" in r["chips"][2], f"nooi Studio: the box sets lens, focal length and aperture, each chip shows its choice {r}")
+            ok("anamorphic" in r["p"].lower() and "85mm" in r["p"] and "f/1.4" in r["p"], f"nooi Studio: the words the engine receives follow the lens choices {r['p']}")
             await pg.evaluate(GO, "image"); await pick("style", '[data-val="anime"]')
             ok(await pg.evaluate("()=>S.img.style") == "anime", "image: the style sheet sets the style")
             await pg.evaluate(GO, "slideshow"); await pick("transition", '[data-val="slide"]'); await pick("move", '[data-val="pan"]')
             ok(await pg.evaluate("()=>[S.ss83.tr,S.ss83.motion]") == ["slide", "pan"], "Video from pictures: the transition and motion sheets set them")
-            await pg.evaluate(EDIT, "color"); await pg.evaluate("()=>document.querySelector('#main .pk84c[data-pk84=effects]').click()"); await pg.wait_for_timeout(200)
-            await pg.click('#modalRoot .pk84o[data-v="glow"]'); await pg.wait_for_timeout(300); await pg.click('#modalRoot .pk84o[data-v="rgb"]'); await pg.wait_for_timeout(300)
-            r = await pg.evaluate("()=>{const c=S.ed.clips.find(x=>x.id===S.ed.sel);return {vfx:c&&c.vfx,open:!!document.querySelector('#modalRoot .pk84s'),chip:document.querySelector('.pk84c[data-pk84=effects] .pk84v').textContent}}")
-            ok(r["vfx"] and r["vfx"].get("glow") and r["vfx"].get("rgb") and r["open"] and sorted(r["chip"].split(" · ")) == ["Glow", "RGB split"], f"editor: effects are several at once, the sheet stays open {r}")
-            await pg.evaluate(EDIT, "clip"); await pick("transition", '[data-val="fade"]')
-            ok(await pg.evaluate("()=>S.ed.clips.find(x=>x.id===S.ed.sel).trans") == "fade", "editor: the clip's transition is set from the sheet")
-            await pg.evaluate(EDIT, "vfx"); n0 = await pg.evaluate("()=>JSON.stringify(S.ed).length"); await pick("overlay", '[data-v="rain"]')
-            ok(await pg.evaluate("()=>JSON.stringify(S.ed).length") > n0 and not await pg.evaluate("()=>!!document.querySelector('#modalRoot .pk84s')"), "editor: weather & light adds the effect and closes")
+            # (v144: on a computer the editor's add panel shows these tiles — a tap uses them, a drag puts them on the timeline)
+            await pg.evaluate(EDIT, "color"); await pg.click('.e-assets [data-act="edx-vfx"][data-v="glow"]'); await pg.wait_for_timeout(300); await pg.click('.e-assets [data-act="edx-vfx"][data-v="rgb"]'); await pg.wait_for_timeout(300)
+            r = await pg.evaluate("()=>{const c=S.ed.clips.find(x=>x.id===S.ed.sel);return {vfx:c&&c.vfx,on:[...document.querySelectorAll('.e-assets [data-act=\"edx-vfx\"][aria-pressed=\"true\"]')].map(b=>b.dataset.v).sort()}}")
+            ok(r["vfx"] and r["vfx"].get("glow") and r["vfx"].get("rgb") and r["on"] == ["glow", "rgb"], f"editor: effects are several at once, each tile shows it is on {r}")
+            await pg.evaluate(EDIT, "clip"); await pg.locator('.ed143 [data-set="edclip.trans"][data-val="fade"]').first.click(); await pg.wait_for_timeout(350)   # (v151: a tile in the clip's panel)
+            ok(await pg.evaluate("()=>S.ed.clips.find(x=>x.id===S.ed.sel).trans") == "fade", "editor: the clip's transition is set from its tile")
+            await pg.evaluate(EDIT, "vfx"); n0 = await pg.evaluate("()=>(S.ed.vfx||[]).length"); await pg.click('.e-assets [data-act="edv-add"][data-v="rain"]'); await pg.wait_for_timeout(350)
+            ok(await pg.evaluate("()=>(S.ed.vfx||[]).length") == n0 + 1, "editor: a weather & light tile adds the effect")
             await pg.evaluate(GO, "home"); await pg.evaluate("()=>hfRatioSheet()"); await pg.wait_for_timeout(200)
             h = await pg.evaluate("()=>({tiles:document.querySelectorAll('#modalRoot .pk84o').length,desc:[...document.querySelectorAll('#modalRoot .pk84o small')].filter(s=>s.textContent.trim()).length})")
             await pg.click('#modalRoot .pk84o[data-v="9:16"]'); await pg.wait_for_timeout(250)

@@ -39,7 +39,8 @@ async def main():
         r["longVideo"]=await pg.evaluate("(()=>{const j=S.jobs.filter(x=>x.kind==='video').pop();return {dur:j.dur,parts:j.meta.parts,partSec:j.meta.partSec}})()")
         r["sliderMax"]=await pg.evaluate("(document.querySelector('[data-bind=\"draft.dur\"]')||{}).max")
         # credits sheet
-        await pg.evaluate("()=>{S.credits=3;S.draft.model='kling30';S.draft.dur=10;makeVideo()}");await pg.wait_for_timeout(200)
+        # (the prompt box empties after a video is made — v88 — so it is written again)
+        await pg.evaluate("()=>{S.credits=3;S.draft.model='kling30';S.draft.dur=10;S.draft.prompt='falcon';makeVideo()}");await pg.wait_for_timeout(200)
         r["creditsSheet"]=await pg.evaluate("(document.querySelector('#modalRoot h2')||{}).textContent")
         await pg.evaluate("()=>{$('#modalRoot').innerHTML='';S.credits=5000}")
         # admin connection tests (demo)

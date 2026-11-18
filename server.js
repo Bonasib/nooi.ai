@@ -6,9 +6,12 @@ import path from "path";
 import fs from "fs";
 import { requireUser, firebaseWebConfig } from "./lib/auth.js";
 import { user, save, uid } from "./lib/store.js";
-import { createJob, publicJob } from "./lib/jobs.js";
+import { createJob, publicJob, againParts136, ownMedia136, replaceQuote136, autoTiers272 } from "./lib/jobs.js";
+import { STRONG272, LIGHT272 } from "./lib/auto272.js";
+import { scan136, withWords136, scanCache136 } from "./lib/scan136.js";
+import { transcribeFile, sttReady, locPrice } from "./lib/localize.js";
 import { analyzeSite } from "./lib/site.js";
-import { MEDIA_DIR, publicUrl } from "./lib/media.js";
+import { MEDIA_DIR, publicUrl, localPath, download } from "./lib/media.js";
 import { PROVIDERS } from "./providers/index.js";
 import { kieDefault, kieAuto, KIE_BUILTIN } from "./providers/kie.js";
 import { adapterFor } from "./providers/extra.js";
@@ -17,29 +20,55 @@ function kieRoutes() { const o = {}; if (!configured("kie")) return o; for (cons
 import { llmConfigured, llmJson, llm, llmInfo } from "./providers/anthropic.js";
 import { OAUTH, pkcePair } from "./social/oauth.js";
 import { runPost } from "./lib/scheduler.js";
-import { balance, charge, freeCredits, TEXT_PRICE, startCheckout, finishCheckout, findPayment, provider, providerName, enabledPayments, CATALOG } from "./lib/billing.js";
+import { balance, charge, freeCredits, TEXT_PRICE, startCheckout, finishCheckout, findPayment, findByProviderId, checkRefund189, provider, providerName, enabledPayments, CATALOG } from "./lib/billing.js";
 import { registerAdmin } from "./lib/admin.js";
+import { registerGuard200, stepGate200, secMiddleware200 } from "./lib/guard200.js";
+import { registerProjects139 } from "./lib/projects139.js";   // v139: editor projects kept on the server
+import { registerCollab196 } from "./lib/collab196.js";   // v196: team review — comments on frames, versions, shared projects
+import { registerProxy196 } from "./lib/proxy196.js";
+import { registerExport202, range202 } from "./lib/export202.js";
+import { registerSocial204 } from "./lib/social204.js";   // v204: profiles + permissions, stories, views, Community shelves   // v202: transparent renders (WebM alpha / ProRes 4444) + a part of the timeline   // v196: light proxies of heavy footage for the editor's preview
 import { streamTTS } from "./providers/elevenlabs.js";
 import { testAll } from "./lib/health.js";
 import { spawn } from "child_process";
 import { saveBuffer } from "./lib/media.js";
 import { LIMITS, planOf } from "./lib/plans.js";
-import { refillPlans, priceTable, ENGINE_COST, engineCost, basePrice, CREDIT_FLOOR_USD, priceFactor } from "./lib/billing.js";
-import { S as platform, featureOn, configured, biz } from "./lib/settings.js";
+import { refillPlans, priceTable, ENGINE_COST, engineCost, basePrice, CREDIT_FLOOR_USD, priceFactor, hold, settle, release } from "./lib/billing.js";
+import { S as platform, featureOn, configured, cfg, biz, mmOnly240, mmOnlyEnv240 } from "./lib/settings.js";
 import { modelNames, publicRegistry } from "./lib/models.js";
+import { shotsTable133, probe132, fileOf132 } from "./lib/long132.js";
+import { clean134, quote134, ready134 } from "./lib/sound134.js";
+import { ANGLES134 } from "./lib/extend134.js";
+import { editPlan135, editPrice135, EDIT_MAX135 } from "./lib/edit135.js";
+import { engineFor134 } from "./lib/engine134.js";
 import { createToken, listTokens, revokeToken, userFromToken, updateToken, tokenRules, tokenFor, tokenCtx } from "./lib/tokens.js";
 import { handleMcp } from "./lib/mcp.js";
 import { verify, canSendSignInLinks, signInLink, customTokenForEmail } from "./lib/auth.js";
 import { newCode, checkCode } from "./lib/otp.js";
-import { isStaff, requireAdmin } from "./lib/admin.js";
+import { isStaff, requireAdmin, audit } from "./lib/admin.js";
+import { registerStudio219, proxyRender219, proxyRenderUpgrade219 } from "./lib/studio219.js";
 import { registerShowcase } from "./lib/showcase.js";
+import { registerCast273 } from "./lib/cast273.js";   // v273: the ready cast (30 characters with a face, a sheet and a voice)
 import { registerScenes } from "./lib/scenes.js";
 import { registerLearn } from "./lib/learn.js";
 import { registerVss, vssServer } from "./lib/vss.js";
 import { registerLocalize, locEngines } from "./lib/localize.js";
 import { registerAgents } from "./lib/agents.js";
 import { registerV88 } from "./lib/v88.js";   // v88: prompts in English for the engines, poster frames, deleting results
+import { registerScrub131 } from "./lib/scrub131.js";
+import { registerEdit145 } from "./lib/edit145.js";
+import { registerEdit147 } from "./lib/edit147.js";
+import { registerEdit148 } from "./lib/edit148.js";   // v145: the editor's Reverse (a clip's part backwards, made here, free)   // v131: a light copy of a clip for dragging the editor's playhead
+import { registerEdit149 } from "./lib/edit149.js";   // v149: captions translated on the server, the price of sound for a whole edit
+import { registerCaptions169 } from "./lib/captions169.js";   // v169: the editor's exact captions (every word and when it is said), priced per minute
+import { registerMotion150 } from "./lib/motion150.js";   // v150: motion ads planned by the text AI (or without it) + agent tools
 import { startKeepMedia } from "./lib/v89.js";   // v89: results that still point at an engine's (expiring) link are kept here
+import "./lib/alert138.js";   // v138: an engine out of credits is said at once (Admin, staff line, one email)
+import { CAPS187 } from "./lib/caps187.js";   // v187: each video engine's resolutions and sound; slow motion from the words
+import "./lib/intent.js";   // v96: the page's choices (style, camera move, type, motion, what to avoid, voice-over) reach the engine as words
+import "./lib/words100.js";   // v100: a picture with no words gets plain words for the engine (Kling 3.0 refused "prompt is required")
+import "./lib/voices161.js";   // v161: Kling 4.0 hears each character's own voice (library sample or the customer's clip) — speech and lips in one pass
+import "./lib/isolate144.js";   // v144: the voice of an editor clip alone (its sound cut out here, priced per started minute)
 // a stray error in some background task is logged — it never takes the whole site down (every request in flight would fail
 // with "Failed to fetch" while the service restarts)
 process.on("unhandledRejection", (e) => console.error("unhandled rejection:", (e && (e.stack || e.message)) || e));
@@ -51,18 +80,50 @@ import { registerMotion } from "./lib/motion.js";
 import { registerSketch, rtEngine } from "./lib/sketch.js";
 import { registerWorld } from "./lib/world.js";
 import { registerIngest } from "./lib/ingest.js";
-import { nvReady, nvCfg, nvOn } from "./providers/nvidia.js";
-import { cbSig, findJob, pollOne } from "./lib/jobs.js";
+import { nvReady, nvCfg, nvOn, nvDown176, nvCheck176, nvI2v181 } from "./providers/nvidia.js";
+import { cbSig, findJob, pollOne, speedAdvice, setSwapRes, setSwapEngine, setLipsEngine, setHold154 } from "./lib/jobs.js";
+import { setPace } from "./lib/line124.js";
+import { safetyInfo, setSafety } from "./lib/safety126.js";
+import { labelInfo, setLabels, setAiMark, labelExport } from "./lib/label127.js";
+import { setLookBy } from "./lib/claude129.js";
+import { deleteAccount, noteUpload } from "./lib/account125.js";   // v125: Delete my account   // v124: the engine's send line
+import { fastFiles, warm } from "./lib/static124.js";   // v124: the page compressed once, kept in memory
 import { registerGifts } from "./lib/gifts.js";
 import { registerInvoices } from "./lib/invoices.js";
 import { registerExplore } from "./lib/explore.js";
+import { registerExplore200 } from "./lib/explore200.js";
+import { registerRefer173 } from "./lib/refer173.js";   // v173: invite friends (the member dashboard)
+import { registerLaunch182, launchMode182, gate182 } from "./lib/launch182.js";   // v182: Coming soon — the team only
+import { registerDownload187 } from "./lib/download187.js";
+import { registerMoyasar190, hookSeen190 } from "./lib/moyasar190.js";   // v190: the Moyasar setup steps in Admin → Payments (webhook connected in one tap)
+import { checkHook191 } from "./lib/webhook191.js";   // v191: Stripe, Airwallex, PayPal (and Moyasar) webhook signatures
+import { registerSpace188 } from "./lib/space188.js";   // v188: what fills the disk (Admin), "Free space now", the site's old temporary files cleared
+import { mmOn183, mmState183, mmRegion183, mmAll237 } from "./providers/minimax183.js";
+import { bdOn241 } from "./providers/bytedance241.js";   // v241: Seedance on the owner's own ByteDance key   // v183: MiniMax voices, pictures and music (v185: + videos)
 import { sendEmail, emailConfigured } from "./lib/email.js";
 import { renderEmail } from "./public/email-templates.js";
 import { uiLang, uiDict, uiTranslate, rateOk } from "./lib/uit.js";
+import { noteExport } from "./lib/xstats.js";
 
 const app = express();
-app.use(cors({ origin: process.env.PUBLIC_BASE_URL || true }));
-app.use(express.json({ limit: "12mb" }));
+app.disable("x-powered-by");
+// v195: browser safety headers on every answer — no content-type guessing, the site can't be framed by another site (click-jacking),
+// no <base> tricks or plug-ins, a short referrer to other sites, camera/microphone for this site only, and HTTPS kept (HSTS) once
+// a visit arrives over HTTPS (behind Nginx, trust proxy below). The page's own scripts and styles are inline, so no script policy here.
+const PERMS195 = "camera=(self), microphone=(self), geolocation=()";
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff"); res.setHeader("X-Frame-Options", "SAMEORIGIN"); res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", PERMS195); res.setHeader("Content-Security-Policy", "frame-ancestors 'self'; base-uri 'self'; object-src 'none'");
+  if (req.secure) res.setHeader("Strict-Transport-Security", "max-age=15552000");
+  next();
+});
+app.use(secMiddleware200);   // (v200: 401/403/429/5xx counted per hour for Admin → Security)
+// v220: the studio's desktop (Tauri) and phone (Capacitor) apps run from their own origins and call this site — those origins are
+// allowed too (APP_ORIGINS to change the list). Sign-in stays a bearer token (no cookies), so this opens nothing for other sites.
+const APP_ORIGINS220 = (process.env.APP_ORIGINS || "tauri://localhost,http://tauri.localhost,https://tauri.localhost,https://app.nooi.ai,capacitor://app.nooi.ai").split(",").map((x) => x.trim()).filter(Boolean);
+app.use(cors({ origin: process.env.PUBLIC_BASE_URL ? [process.env.PUBLIC_BASE_URL.replace(/\/$/, ""), ...APP_ORIGINS220] : true, exposedHeaders: ["Location", "Upload-Offset", "Upload-Length", "Upload-Url", "Upload-Id", "Tus-Resumable"] }));
+proxyRender219(app);   // v219 S4: /render-api/* → the studio render service (raw bodies: before the JSON reader)
+app.use(express.json({ limit: "12mb", verify: (req, _res, buf) => { if (req.url.startsWith("/v1/billing/webhook/")) req.rawBody = buf; } }));   // (v191: payment notices keep their exact bytes for the signature check)
 // The browser never sees which AI provider runs the models: every JSON answer says "engine" instead
 // (keys kie/kieModel/kieRoutes → engine/engineModel/engineRoutes, "kie@model" → "engine@model"), and the admin
 // may address the provider as "engine" (/v1/admin/providers/engine, modelCat[id].engineModel).
@@ -76,7 +137,12 @@ app.use((req, res, next) => {
   const j = res.json.bind(res); res.json = (d) => j(engOut(d)); next();
 });
 app.set("trust proxy", 1);   // behind Nginx on the VPS
-app.use("/media", express.static(MEDIA_DIR, { maxAge: "7d" }));
+// v195: a file in /media is a picture, a sound, a video or a model — never a page: anything that a browser could run as a document
+// (html, svg, xml, scripts, styles) is answered as plain text inside a sandbox, so an uploaded file can't become a page on the site's own address
+const DOC195 = /\.(x?html?|shtml|xml|xsl|xslt|svgz?|mathml|js|mjs|cjs|css)$/i, TEXT195 = /\.(x?html?|shtml|xml|xsl|xslt|mathml|js|mjs|cjs|css)$/i;
+app.use("/media", express.static(MEDIA_DIR, { maxAge: "7d", setHeaders: (res, f) => { if (DOC195.test(f)) { res.setHeader("Content-Security-Policy", "default-src 'none'; sandbox"); if (TEXT195.test(f)) res.setHeader("Content-Type", "text/plain; charset=utf-8"); } } }));
+app.use(fastFiles("public")); warm("public", ["index.html"]);
+registerStudio219(app, { requireUser, isStaff });   // v219: nooi Studio Editor at /studio (before the static files: its own caching)
 app.use(express.static(path.resolve("public")));
 // On-device AI: ONNX Runtime's WebAssembly/WebGPU files come from our own server (npm onnxruntime-web), and an
 // optional local model mirror (MODELS_DIR, same layout as Hugging Face: <org>/<model>/resolve/main/…).
@@ -98,24 +164,91 @@ const THREE_R128 = path.resolve("node_modules/three-r128");
 vendor("/vendor/three/build", THREE_R128 + "/build"); vendor("/vendor/three/examples/js", THREE_R128 + "/examples/js");
 // unversioned names for the page's own modules (short cache: they follow the installed version)
 app.get("/vendor/rapier/rapier.mjs", (_, res) => res.redirect(302, VENDOR.rapier + "/rapier.mjs"));
+// v139: the editor's frame-by-frame export decodes and encodes with mediabunny (MPL-2.0, served unmodified)
+VENDOR.mediabunny = "/vendor/mediabunny-" + pkgVer(path.resolve("node_modules/mediabunny"));
+vendor(VENDOR.mediabunny, path.resolve("node_modules/mediabunny/dist/bundles"), { index: false });
+app.get("/vendor/mediabunny.mjs", (_, res) => res.redirect(302, VENDOR.mediabunny + "/mediabunny.min.mjs"));
 app.use("/vendor/ort", express.static(ORT_DIR, { maxAge: "30d", immutable: true, setHeaders: vendorHeaders }));
 if (process.env.MODELS_DIR) app.use("/models", express.static(path.resolve(process.env.MODELS_DIR), { maxAge: "30d" }));
-const wrap = (fn) => (req, res) => fn(req, res).catch((e) => res.status(e.code && e.code >= 400 && e.code < 600 ? e.code : 500).json({ error: e.message }));
+const wrap = (fn) => (req, res) => fn(req, res).catch((e) => res.status(e.code && e.code >= 400 && e.code < 600 ? e.code : 500).json({ error: e.message, ...(e.errorAr ? { errorAr: e.errorAr } : {}) }));   // (v125: and in Arabic when the reason has it)
 
 app.get("/v1/health", (_, res) => res.json({ ok: true }));
+// v134: what voices & sound for a video would cost (shown before anything is made), and what can be made here
+app.post("/v1/sound134/quote", requireUser, wrap(async (req, res) => {
+  const b = req.body || {}, U = user(req.user.uid), base = b.job ? (U.jobs || {})[String(b.job)] : null, pub0 = (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "");
+  const src = base ? base.url : String(b.src || "").replace(pub0, ""), ahead = !src && !b.job && +b.dur > 0;   // (v157: a price ahead, for a video not made yet)
+  if (!ahead && (!src || (!base && !/^\/media\/[A-Za-z0-9._-]+$/.test(src)))) return res.status(400).json({ error: "Pick a finished video first", errorAr: "اختر فيديو مكتملاً أولاً" });
+  const info = ahead ? { dur: Math.min(600, Math.max(1, +b.dur)) } : await probe132(await fileOf132(src)).catch(() => null); if (!info || !info.dur) return res.status(400).json({ error: "The video can't be read", errorAr: "تعذّرت قراءة الفيديو" });
+  if (b.clip) b.clip = String(b.clip).replace(pub0, "");
+  const c = clean134(b, info.dur), q = quote134(c), staff = isStaff(req.user);
+  res.json({ total: staff ? 0 : q.total, parts: q.parts, len: q.len, dur: Math.round(info.dur * 10) / 10, scope: c.scope, t0: c.t0, t1: c.t1, lipsync: c.lipsync, lang: c.lang, missing: ready134(c), cuts: (base && base.cuts134) || [] });
+}));
+app.get("/v1/extend134/angles", (_, res) => res.json(ANGLES134));
+// v135: what an Edit with words costs — the seconds chosen (at least 4), in parts of up to 14 s, each priced like Replace the person
+app.post("/v1/edit135/quote", requireUser, wrap(async (req, res) => {
+  const b = req.body || {}, U = user(req.user.uid), base = b.job ? (U.jobs || {})[String(b.job)] : null, pub0 = (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "");
+  const src = base ? base.url : String(b.src || "").replace(pub0, "");
+  if (!src || (!base && !/^\/media\/[A-Za-z0-9._-]+$/.test(src))) return res.status(400).json({ error: "Pick a finished video first", errorAr: "اختر فيديو مكتملاً أولاً" });
+  const info = await probe132(await fileOf132(src)).catch(() => null); if (!info || !info.dur) return res.status(400).json({ error: "The video can't be read", errorAr: "تعذّرت قراءة الفيديو" });
+  const plan = editPlan135(info.dur, b.from, b.to), ek = engineFor134("video", { model: "seedance20", meta: { edit135: 1 } });
+  res.json({ total: isStaff(req.user) ? 0 : editPrice135(plan, basePrice("video", "mcswap") ?? 30), secs: plan.secs, parts: plan.parts.length, from: plan.from, to: plan.to, dur: Math.round(info.dur * 10) / 10,
+    short: info.dur < 4, long: plan.secs > EDIT_MAX135 + 0.01, ready: !!(ek && /^(kie|bd)@/.test(String(ek))) });
+}));
+// v136: Replace things — what is in a video or a picture (the analysis agents, made once and kept), and, when asked, the words said in it
+// (speech-to-text, priced per minute like a transcript, held then charged — released if it fails)
+app.post("/v1/scan136", requireUser, wrap(async (req, res) => {
+  const b = req.body || {}, lang = String(b.lang || "en").slice(0, 5), o = ownMedia136(req.user, b), file = await fileOf132(o.url), staff = isStaff(req.user);
+  let s = await scan136(file, { lang, prompt: (o.job && (o.job.payload?.prompt || o.job.title)) || "", isImage: o.image });
+  const hearPrice = o.image || !s.dur ? 0 : staff ? 0 : (locPrice().stt || 2) * Math.max(1, Math.ceil(s.dur / 60));
+  if (b.hear && !o.image && !s.heard) {
+    if (!sttReady()) return res.status(501).json({ error: staff ? "Hearing what is said needs speech-to-text connected (Admin → AI providers)." : "Hearing what is said isn't available right now.", errorAr: "سماع ما يُقال غير متاح الآن." });
+    const ref = "hear." + uid(); if (hearPrice) hold(req.user.uid, hearPrice, "Hear what is said · " + String((o.job && o.job.title) || "video").slice(0, 40), ref);
+    try { const r = await transcribeFile(file, lang); s = withWords136({ ...s, sounds: [...(s.sounds || [])] }, r.lines || []); fs.writeFileSync(scanCache136(file, lang), JSON.stringify(s)); if (hearPrice) settle(req.user.uid, ref); }
+    catch (e) { if (hearPrice) release(req.user.uid, ref); throw Object.assign(new Error("The words couldn't be heard — nothing was charged."), { code: 502, errorAr: "تعذّر سماع الكلام — لم يُخصم شيء." }); } }
+  const { err, ...rest } = s;   // (why the agents couldn't look — the owner's to fix — is shown to staff only)
+  res.json({ ...rest, ...(err ? { failed: true, ...(staff ? { why: err } : {}) } : {}), image: o.image, src: o.url, job: o.job ? o.job.id : null, hearPrice, canHear: !o.image && sttReady() });
+}));
+app.post("/v1/replace136/quote", requireUser, wrap(async (req, res) => res.json(await replaceQuote136(req.user, req.body || {}))));
+// v136: a film that came out with a part missing — make the missing parts again (the price is on the card: publicJob partial136.again)
+app.post("/v1/jobs/:id/again136", requireUser, wrap(async (req, res) => res.json(publicJob(againParts136(req.user, req.params.id), isStaff(req.user)))));
 app.get("/v1/config", (_, res) => res.json({
   firebase: firebaseWebConfig(), localAI: { tfUrl: fs.existsSync(TF_DIR + "/transformers.min.js") ? "/vendor/transformers/transformers.min.js" : null, ortBase: fs.existsSync(ORT_DIR) ? "/vendor/ort/" : null, modelsHost: process.env.MODELS_DIR ? "/models/" : null, models: platform().localModels || {} }, emailCode: canSendSignInLinks() && emailConfigured(), kieRoutes: kieRoutes(),
   llm: llmConfigured() ? { on: true } : null,   // (which provider and model: the owner's "Test connection" only — this reply is public)
-  billing: enabledPayments().length > 0, freeCredits: freeCredits(), stage: process.env.NOOI_STAGE === "1", biz: biz(), registry: publicRegistry(), payments: enabledPayments(), modelLogos: platform().modelLogos || {}, worldEngine: !!(process.env.WORLD_API_URL || (platform().providers || {}).world), modelCat: Object.fromEntries(Object.entries(platform().modelCat || {}).map(([k, v]) => [k, { cr: v.cr, verified: !!v.verified, kie: !!v.kieModel }])), features: platform().features, models: platform().models, prices: priceTable(), support: "contact@nooi.ai",
-  providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || !!kieDefault(k) || !!kieAuto(k, { kind: k === "tts" ? "voice" : k }) || (k === "image" && (nvOn("image") || nvOn("edit"))) || (k === "edit" && nvOn("edit")) || (k === "video" && nvOn("video"))])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!rtEngine(), realtimeEngine: rtEngine(), vss: vssServer(), localize: (() => { try { const e = locEngines(); return { nooi: e.nooi, elevenlabs: e.elevenlabs, camb: e.camb, nvidia: e.nvidia, stt: e.stt }; } catch { return null; } })(), gen3d: { tripo: configured("tripo"), meshy: configured("meshy"), skybox: configured("blockade") }, nvidia: nvReady(), nvUse: nvReady() ? nvCfg().use : null, billing: enabledPayments().length > 0 }
+  billing: enabledPayments().length > 0, freeCredits: freeCredits(), stage: process.env.NOOI_STAGE === "1", launch182: launchMode182(), biz: biz(), registry: publicRegistry(), caps187: CAPS187, auto272: (() => { try { return autoTiers272(); } catch { return null; } })(),   /* v272: the two engines nooi Auto uses (strong / light) */
+   shots133: shotsTable133((m) => { const r = adapterFor("video", { kind: "video", model: m }, PROVIDERS); return r && r.key; }), payments: enabledPayments(), modelLogos: platform().modelLogos || {}, worldEngine: !!(process.env.WORLD_API_URL || (platform().providers || {}).world), modelCat: Object.fromEntries(Object.entries(platform().modelCat || {}).map(([k, v]) => [k, { cr: v.cr, verified: !!v.verified, kie: !!v.kieModel }])), features: platform().features, models: platform().models, prices: priceTable(), support: "contact@nooi.ai",
+  providers: { ...Object.fromEntries(Object.entries(PROVIDERS).map(([k, p]) => [k, p.configured || (mmAll237() && ["video", "image", "tts", "music"].includes(k)) || !!kieDefault(k) || !!kieAuto(k, { kind: k === "tts" ? "voice" : k }) || (k === "image" && (nvOn("image") || nvOn("edit"))) || (k === "edit" && nvOn("edit")) || (k === "video" && nvOn("video"))])), kie: configured("kie"), llm: llmConfigured(), auth: !!firebaseWebConfig(), social: Object.values(OAUTH).some((o) => o.configured()), realtime: !!rtEngine(), realtimeEngine: rtEngine(), vss: vssServer(), localize: (() => { try { const e = locEngines(); return { nooi: e.nooi, elevenlabs: e.elevenlabs, camb: e.camb, nvidia: e.nvidia, stt: e.stt }; } catch { return null; } })(), gen3d: { tripo: configured("tripo"), meshy: configured("meshy"), skybox: configured("blockade") }, nvidia: nvReady(), nvUse: nvReady() ? nvCfg().use : null, nvDown: nvReady() ? ((d) => (Object.keys(d).length ? d : null))(Object.fromEntries(["video", "image", "image2", "edit", "3d"].filter((t) => nvDown176(t)).map((t) => [t, true]))) : null, nvI2v: !!nvI2v181(), minimax183: { voice: mmOn183("voice"), image: mmOn183("image"), music: mmOn183("music"), video: mmOn183("video") }, mmOnly240: mmOnly240(), bd241: bdOn241(), billing: enabledPayments().length > 0 }
 }));
 
 // Uploads (start frames, references, exports, music…)
-const upload = multer({ storage: multer.diskStorage({ destination: MEDIA_DIR, filename: (_, f, cb) => cb(null, uid() + (path.extname(f.originalname) || ".bin").toLowerCase()) }), limits: { fileSize: 1024 * 1024 * 1024 } });
-app.post("/v1/uploads", requireUser, upload.single("file"), (req, res) => res.json({ url: publicUrl(req.file.filename) }));
+// v195: an upload keeps its extension only when it is a media/data kind the site works with; anything else (a page, a script, an unknown kind) is stored as .bin
+const UP_EXT195 = new Set(".png .jpg .jpeg .webp .gif .avif .heic .heif .bmp .tif .tiff .svg .mp4 .webm .mov .m4v .mkv .avi .mpg .mpeg .3gp .ogv .mp3 .wav .m4a .aac .ogg .oga .opus .flac .weba .aif .aiff .wma .glb .gltf .obj .fbx .stl .ply .usdz .splat .spz .ksplat .json .srt .vtt .ass .ssa .txt .csv .tsv .md .pdf .zip .cube .3dl .lottie .ttf .otf .woff .woff2 .bin".split(" "));
+const upExt195 = (name) => { const e = path.extname(String(name || "")).toLowerCase(); return UP_EXT195.has(e) ? e : ".bin"; };
+const upload = multer({ storage: multer.diskStorage({ destination: MEDIA_DIR, filename: (_, f, cb) => cb(null, uid() + upExt195(f.originalname)) }), limits: { fileSize: 1024 * 1024 * 1024, files: 1 } });
+// v231: uploads are counted per account (files an hour, bytes a day) so one account can't fill the disk; staff are not limited
+const UP231 = new Map(), UP_FILES231 = +process.env.UPLOAD_FILES_HOUR || 300, UP_BYTES231 = (+process.env.UPLOAD_GB_DAY || 20) * 1024 ** 3;
+const upKeep231 = (uidv) => { const now = Date.now(), r = (UP231.get(uidv) || []).filter((x) => now - x.t < 864e5); UP231.set(uidv, r); return r; };
+const upGate231 = (req, res, next) => { if (isStaff(req.user)) return next(); const r = upKeep231(req.user.uid), hour = r.filter((x) => Date.now() - x.t < 3600e3).length;
+  if (hour >= UP_FILES231) return res.status(429).json({ error: "Too many uploads in the last hour — try again a little later.", errorAr: "رفعت ملفات كثيرة في الساعة الأخيرة — حاول بعد قليل." }); next(); };
+app.post("/v1/uploads", requireUser, upGate231, upload.single("file"), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "No file was sent.", errorAr: "لم يُرسل أي ملف." });
+  if (!isStaff(req.user)) { const r = upKeep231(req.user.uid), bytes = r.reduce((s, x) => s + x.b, 0) + req.file.size;
+    if (bytes > UP_BYTES231) { try { fs.unlinkSync(req.file.path); } catch { /* */ } return res.status(429).json({ error: "You've uploaded a lot today — the daily limit is reached. It resets within 24 hours.", errorAr: "وصلت إلى حد الرفع اليومي — يتجدد خلال 24 ساعة." }); }
+    r.push({ t: Date.now(), b: req.file.size }); }
+  noteUpload(req.user.uid, req.file.filename); res.json({ url: publicUrl(req.file.filename) }); });   // (v125: noted on the account, so Delete my account removes it)
+// v125: Delete my account — the customer, by themselves, with a typed confirmation (lib/account125.js)
+app.post("/v1/me/delete", requireUser, wrap(async (req, res) => { if (req.user.viaToken) throw Object.assign(new Error("An account can only be deleted from the site, not through a connection."), { code: 403, errorAr: "لا يُحذف الحساب إلا من الموقع، لا عبر اتصال." }); res.json({ ok: true, ...(await deleteAccount(req.user.uid, req.body?.confirm)) }); }));
 
 // Generation jobs → provider adapters
 app.post("/v1/jobs", requireUser, wrap(async (req, res) => res.json(publicJob(await createJob(req.user, req.body), isStaff(req.user)))));
+// v95: a result still on the engine's own link is copied here, so the page can read it (the user's own finished job only)
+app.post("/v1/jobs/:id/keep", requireUser, wrap(async (req, res) => {
+  const j = user(req.user.uid).jobs[req.params.id]; if (!j || j.status !== "done" || !j.url) return res.status(404).json({ error: "Not found" });
+  if (/^https?:\/\//.test(j.url) && !localPath(j.url)) { try { j.url = (await download(j.url, null, { tries: 2, timeoutMs: 60000 })).url; save(); } catch (e) { return res.status(502).json({ error: "The result couldn't be copied here: " + e.message }); } }
+  res.json({ url: j.url });
+}));
+// v124: the state of several jobs in one answer — an open page asks once for all its jobs instead of once for each (max 50)
+app.get("/v1/jobs/live", requireUser, (req, res) => { const st = isStaff(req.user), mine = user(req.user.uid).jobs, ids = String(req.query.ids || "").split(",").map((x) => x.trim()).filter(Boolean).slice(0, 50);
+  res.json({ jobs: Object.fromEntries(ids.map((id) => [id, mine[id] ? publicJob(mine[id], st) : null])) }); });
 app.get("/v1/jobs/:id", requireUser, (req, res) => { const j = user(req.user.uid).jobs[req.params.id]; j ? res.json(publicJob(j, isStaff(req.user))) : res.status(404).json({ error: "Not found" }); });
 
 // AI text
@@ -137,6 +270,18 @@ app.post("/v1/ui-t/:lang", wrap(async (req, res) => {
 }));
 
 // the text AI test (which provider and model answer) is for the owner only — customers never see provider names
+// v176: Admin → AI providers → NVIDIA AI → Check NVIDIA engines (an empty request to each engine: nothing is made or spent)
+app.post("/v1/admin/nvidia/check", requireUser, requireAdmin("providers.manage"), wrap(async (req, res) => res.json(await nvCheck176())));
+// v183: MiniMax — what it is used for (voices · pictures · music, each on unless switched off) and the free check of the key
+// v272: nooi Auto's two engines — the owner names them (empty = the first one that is on and connected, from the lists in lib/auto272.js)
+app.get("/v1/admin/auto272", requireUser, requireAdmin("providers.manage"), (req, res) => { const st = platform().auto272 || {}; res.json({ strong: st.strong || "", light: st.light || "", now: autoTiers272(), strongList: STRONG272, lightList: LIGHT272 }); });
+app.put("/v1/admin/auto272", requireUser, requireAdmin("providers.manage"), (req, res) => { const b = req.body || {}, st = (platform().auto272 = platform().auto272 || {}), ok = (v) => typeof v === "string" && /^[a-z0-9]{0,24}$/.test(v);
+  for (const k of ["strong", "light"]) if (k in b) { if (!ok(b[k])) return res.status(400).json({ error: "Unknown model" }); if (b[k]) st[k] = b[k]; else delete st[k]; }
+  save(); res.json({ strong: st.strong || "", light: st.light || "", now: autoTiers272() }); });
+app.get("/v1/admin/minimax183", requireUser, requireAdmin("providers.manage"), (req, res) => { const m = mmState183(); res.json({ keySet: configured("minimax"), region: mmRegion183(), all: mmAll237(), only: mmOnly240(), onlyEnv: mmOnlyEnv240(), engineKey: !!cfg("kie").apiKey, allEnv: /^(1|true|on|yes)$/i.test(String(process.env.MINIMAX_ALL || "")), voice: m.voice !== false, image: m.image !== false, music: m.music !== false, video: m.video !== false, voices: (m.voices || []).length, checked: m.checked || 0, status: (platform().status || {}).minimax || null }); });
+app.put("/v1/admin/minimax183", requireUser, requireAdmin("providers.manage"), (req, res) => { const m = mmState183(), b = req.body || {}; for (const k of ["voice", "image", "music", "video"]) if (typeof b[k] === "boolean") m[k] = b[k]; if (typeof b.all === "boolean") m.all = b.all; if (typeof b.only === "boolean") m.only = b.only; save();
+  audit(req, "MiniMax used for: " + (m.only ? "ONLY MiniMax (the AI engine off) · " : "") + (m.all ? "everything it can make · " : "") + ["voice", "image", "music", "video"].filter((k) => m[k] !== false).join(", ")); res.json({ ok: true, all: mmAll237(), only: mmOnly240(), voice: m.voice !== false, image: m.image !== false, music: m.music !== false, video: m.video !== false }); });
+app.post("/v1/admin/minimax183/check", requireUser, requireAdmin("providers.manage"), wrap(async (req, res) => { const { testProvider } = await import("./lib/health.js"); const st = await testProvider("minimax"); res.json({ ...st, voices: (mmState183().voices || []).length }); }));
 app.get("/v1/llm/test", requireUser, requireAdmin("providers.manage"), wrap(async (req, res) => {
   if (!llmConfigured()) throw Object.assign(new Error("The text AI isn't connected yet — add it in Admin → Connections."), { code: 501 });
   const t0 = Date.now(); const reply = await llm("Reply with exactly: OK", { maxTokens: 20, timeoutMs: 30000 });
@@ -193,21 +338,53 @@ app.get("/v1/billing/return", wrap(async (req, res) => {
   const p = user(owner).payments[ref]; try { await finishCheckout(owner, ref, req.query.id || p.providerId); } catch (e) { console.warn("payment", e.message); }
   const pd = user(owner).payments[ref]; res.redirect("/?paid=" + (pd.status === "paid" ? "1" : "0") + (pd.giftCode ? "&gift=" + encodeURIComponent(pd.giftCode) : "") + (pd.invoice ? "&inv=" + encodeURIComponent(pd.invoice) : "") + (pd.giftCode ? "#wallet" : "#account"));
 }));
+// v190: Moyasar also POSTs the paid invoice to its callback_url (the address above) from its own servers — that only asks for the
+// same check of the payment this server made for the order, so it needs no secret; it answers at once
+app.post("/v1/billing/return", wrap(async (req, res) => {
+  const ref = String(req.query.ref || ""), owner = ref && findPayment(ref); res.json({ received: true }); if (!owner) return;
+  try { await finishCheckout(owner, ref); } catch (e) { console.warn("payment callback", e.message); }
+}));
 app.post("/v1/billing/webhook/:provider", wrap(async (req, res) => {
-  // Never trust the webhook body: we re-fetch the payment from the provider before crediting.
-  const b = req.body || {}; const id = b.id || b.data?.id || b.data?.object?.id; const ref = b.reference?.transaction || b.metadata?.ref || b.data?.metadata?.ref || b.data?.object?.client_reference_id;
-  const owner = ref && findPayment(ref); if (owner) { try { await finishCheckout(owner, ref, id); } catch (e) { console.warn("webhook", e.message); } }
-  res.json({ received: true });
+  // Never trust the webhook body: we re-fetch the payment from the provider before crediting — always the payment this server made
+  // for the order (v189), so a forged or replayed webhook can't pay an order with another payment.
+  const b = req.body || {}, prov = String(req.params.provider || "");
+  // v189/v191: each provider's own signature when the owner saved what it needs (Moyasar's secret token, Stripe's signing secret,
+  // Airwallex's webhook secret, PayPal's webhook ID — lib/webhook191.js); a notice that fails it is refused and shown in Admin
+  const chk = await checkHook191(prov, req);
+  if (!chk.ok) { console.warn("webhook " + prov + ": the signature didn't match"); hookSeen190(prov, false); return res.status(401).json({ error: "Wrong signature" }); }
+  hookSeen190(prov, true, b.type || b.event_type || b.name, chk.checked);
+  const R = b.resource || {}, O = b.data?.object || {};   // (PayPal: resource — the order, or a capture of it; Airwallex/Stripe: data.object)
+  const id = b.id || b.data?.id || O.id; let ref = b.reference?.transaction || b.metadata?.ref || b.data?.metadata?.ref || O.client_reference_id || O.merchant_order_id || O.metadata?.ref || R.custom_id || R.purchase_units?.[0]?.custom_id;
+  let owner = ref && findPayment(ref);
+  if (!owner) { const hit = findByProviderId(b.data?.invoice_id) || findByProviderId(b.data?.id) || findByProviderId(O.id) || findByProviderId(R.supplementary_data?.related_ids?.order_id) || findByProviderId(R.id) || findByProviderId(id); if (hit) [owner, ref] = hit; }   // (Moyasar: the invoice the payment was made on; PayPal: the order a capture belongs to)
+  res.json({ received: true });   // (answered at once — the provider waits for nothing)
+  if (!owner) return;
+  try { await finishCheckout(owner, ref); if (/refund|void/i.test(String(b.type || b.event || b.event_type || b.name || b.data?.status || ""))) await checkRefund189(owner, ref); } catch (e) { console.warn("webhook", e.message); }
 }));
 app.get("/v1/billing/catalog", (_, res) => res.json(CATALOG));
 
-registerAdmin(app, requireUser);
+app.use("/v1/admin", (req, res, next) => (req.method === "GET" || req.method === "HEAD" ? next() : requireUser(req, res, () => stepGate200(req, res, next))));   // (v200: step-up for admin changes)
+registerGuard200(app); registerAdmin(app, requireUser); registerCollab196(app, requireUser); registerProjects139(app, requireUser);   // (v196: team review routes first — a member's GET/PUT of a shared project is answered there, the owner's fall through)
 registerSlideshow(app, requireUser);
 registerPhysics(app, requireUser);
 // admin: engine cost per model → credits charged → margin; costs and margin are editable (prices recompute)
 const PR_NAMES = { ...modelNames(), worldlabs: "3D world · World Labs (Marble)", voice: "Voice", music: "Music", sfx: "Sound effect", bg: "Background removal", finish: "Upscale", lipsync: "Lip-sync avatar", locstt: "Speech-to-text · per min", loctr: "Dubbing translation · per min", loctts: "Natural voices · per min", locel: "ElevenLabs Dubbing · per min", loccamb: "CAMB.AI dubbing · per min", locnv: "NVIDIA Content Localization · per min" };
 const pricingRows = () => Object.entries(ENGINE_COST).flatMap(([g, m]) => Object.keys(m).map((id) => { const cost = engineCost(g, id), credits = basePrice(g, id), rev = credits * CREDIT_FLOOR_USD;
   return { id, group: g, name: PR_NAMES[id] || id, cost: +cost.toFixed(4), credits, override: platform().prices?.[id] != null, margin: cost ? Math.round((rev / cost - 1) * 100) : 0 }; }).sort((a, b) => b.credits - a.credits));   // strongest (most credits) first
+// v109: how busy the server is and where the time of the last jobs went (Admin → Overview → Speed)
+app.get("/v1/admin/speed", requireUser, async (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); try { res.json(await speedAdvice()); } catch (e) { res.status(500).json({ error: e.message }); } });   // (v110: with what slows jobs, in words)
+app.post("/v1/admin/speed/swapres", requireUser, requireAdmin("providers.manage"), (req, res) => { try { res.json({ swapRes: setSwapRes(String(req.body?.res || "").toUpperCase() === "768P" ? "768P" : "2K") }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v112: Replace the person 2K / 768P
+app.post("/v1/admin/speed/swapengine", requireUser, requireAdmin("providers.manage"), (req, res) => { try { res.json({ swapEngine: setSwapEngine(String(req.body?.engine || "").toLowerCase()) }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v114: Seedance 2.0 / MiniMax H3
+app.post("/v1/admin/speed/hold154", requireUser, requireAdmin("providers.manage"), (req, res) => { try { res.json({ hold154: setHold154(req.body?.on !== false) }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v154: the swap holds to the end
+app.post("/v1/admin/speed/pace", requireUser, requireAdmin("providers.manage"), (req, res) => { try { const p = setPace(String(req.body?.engine || "kie"), req.body?.pace); res.json({ pace: p ? p.n + "/" + p.per / 1000 : null }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v124: the engine's limit (after its support raised it)
+app.post("/v1/admin/speed/lipsengine", requireUser, requireAdmin("providers.manage"), (req, res) => { try { res.json({ lipsEngine: setLipsEngine(String(req.body?.engine || "").toLowerCase()) }); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v117: Volcengine / Sync Lipsync 2 Pro
+app.post("/v1/admin/speed/look", requireUser, requireAdmin("providers.manage"), (req, res) => { try { res.json(setLookBy(String(req.body?.by || ""))); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });   // v129: the text AI look — Claude or the site's text AI
+app.get("/v1/admin/safety", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); res.json(safetyInfo()); });   // v126: the content check (every language, pictures)
+app.post("/v1/admin/safety", requireUser, requireAdmin("features.manage"), (req, res) => { try { setSafety(req.body || {}); res.json(safetyInfo()); } catch (e) { res.status(e.code || 500).json({ error: e.message }); } });
+app.get("/v1/admin/labels", requireUser, async (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); res.json(await labelInfo()); });   // v127: content credentials
+app.post("/v1/admin/labels", requireUser, requireAdmin("features.manage"), async (req, res) => { try { res.json(await setLabels(req.body || {})); } catch (e) { res.status(e.code || 500).json({ error: e.message, errorAr: e.errorAr }); } });
+app.get("/v1/me/aimark", requireUser, (req, res) => res.json({ on: user(req.user.uid).aiMark127 === true }));   // v127: the customer's own "Made with AI" mark
+app.post("/v1/me/aimark", requireUser, (req, res) => res.json(setAiMark(req.user.uid, req.body?.on)));
 app.get("/v1/admin/pricing", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" }); res.json({ rows: pricingRows(), factor: priceFactor(), floor: CREDIT_FLOOR_USD }); });
 app.put("/v1/admin/pricing", requireUser, (req, res) => { if (!isStaff(req.user)) return res.status(403).json({ error: "Not allowed" });
   const st = platform(), b = req.body || {}; st.costs = st.costs || {};
@@ -224,9 +401,14 @@ registerAgents(app);
 registerMotion(app);
 registerSketch(app);
 registerWorld(app);
-registerV88(app, requireUser); startKeepMedia();
+registerV88(app, requireUser); startKeepMedia(); registerScrub131(app, requireUser); registerEdit145(app, requireUser); registerProxy196(app, requireUser); registerExport202(app);
+registerEdit147(app, requireUser);
+registerEdit148(app, requireUser); registerEdit149(app, requireUser, isStaff); registerCaptions169(app, requireUser, isStaff); registerMotion150(app, requireUser);
 registerIngest(app);
-registerExplore(app); registerShowcase(app); registerGifts(app); registerInvoices(app);
+registerExplore(app); registerExplore200(app); registerSocial204(app); registerShowcase(app); registerCast273(app); registerGifts(app); registerInvoices(app); registerRefer173(app); registerLaunch182(app, requireUser);
+registerDownload187(app, requireUser);   // v187: the Download menu — MP4, MP3 (when there is sound), a PNG of a frame
+registerMoyasar190(app, requireUser, requireAdmin, audit, wrap);   // v190: GET /v1/admin/pay190/moyasar · POST …/webhook · …/ip · …/mark
+registerSpace188(app, requireUser, isStaff);   // v188: GET /v1/admin/space188 · POST /v1/admin/space188/free
 // Low-latency voice preview (ElevenLabs stream, key never leaves the server)
 app.post("/v1/tts/stream", requireUser, async (req, res) => { try { const { planOf } = await import("./lib/plans.js"); const plan = planOf(user(req.user.uid)); if (!["pro", "studio"].includes(plan)) return res.status(402).json({ error: "ElevenLabs voices start from the Pro plan" }); await streamTTS(res, req.body || {}); } catch (e) { if (!res.headersSent) res.status(502).json({ error: e.message }); } });
 // Export: convert a browser WebM recording to MP4 (H.264/AAC) with ffmpeg
@@ -246,9 +428,21 @@ app.post("/v1/media/transcode", requireUser, express.raw({ type: ["video/webm", 
   const fit = W && H ? `scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1` : "";
   const args = F === "wav" ? ["-y", "-i", inp.file, "-vn", "-c:a", "pcm_s24le", "-ar", "48000", out]
     : F === "gif" ? ["-y", "-i", inp.file, "-vf", `fps=12,scale=${Math.min(W || 540, 720)}:-2:flags=lanczos,split[a][b];[a]palettegen=max_colors=160[p];[b][p]paletteuse=dither=sierra2_4a`, out]
-    : ["-y", "-i", inp.file, ...(fit ? ["-vf", fit] : []), "-r", String(fps), ...PRESET[F][1], out];
-  const p = spawn(process.env.FFMPEG_PATH || "ffmpeg", args);
-  p.on("error", (e) => res.status(500).json({ error: "ffmpeg: " + e.message })); p.on("close", (code) => code === 0 ? res.json({ url: (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "") + "/media/" + outName }) : res.status(500).json({ error: "ffmpeg exited " + code }));
+    : ["-y", "-i", inp.file, ...range202(req.query), ...(fit ? ["-vf", fit] : []), "-r", String(fps), ...PRESET[F][1], out];   // (v202: a=…&b=… exports only that part)
+  // v119: a recording that is already H.264 at the format's exact size (the browser recorded MP4 at full size) is only
+  // re-packed into a proper MP4 — about a second, whatever the server — instead of being made again frame by frame
+  const t0 = Date.now(), probe = spawn(process.env.FFPROBE_PATH || "ffprobe", ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name,width,height:format=duration", "-of", "json", inp.file]); let pj = "";
+  probe.stdout.on("data", (d) => (pj += d)); probe.on("error", () => go(null)); probe.on("close", () => { let v = null; try { v = JSON.parse(pj); } catch {} go(v); });
+  function go(v) {
+    const st = v?.streams?.[0] || {}, secs = +v?.format?.duration || 0, copy = F === "mp4" && st.codec_name === "h264" && (!W || (st.width === W && st.height === H)) && !range202(req.query).length;
+    const a = copy ? ["-y", "-i", inp.file, "-map", "0:v:0", "-map", "0:a:0?", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", out] : args;
+    const p = spawn(process.env.FFMPEG_PATH || "ffmpeg", a);
+    p.on("error", (e) => res.status(500).json({ error: "ffmpeg: " + e.message }));
+    p.on("close", (code) => { if (code === 0) noteExport({ ms: Date.now() - t0, secs: Math.round(secs * 10) / 10, fmt: F, w: W || st.width || 0, h: H || st.height || 0, copy });
+      if (code !== 0) return res.status(500).json({ error: "ffmpeg exited " + code });
+      // v127: an MP4 / MOV export carries content credentials ("edited on nooi.ai, may contain media made with AI")
+      labelExport(out).then((cr) => res.json({ url: (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "") + "/media/" + outName, copy, ms: Date.now() - t0, credentials: cr === "signed" })); });
+  }
 });
 // what a delivered file really is (codec, size, frame rate, duration, audio) — the editor's render check reads it for pro formats
 app.post("/v1/media/probe", requireUser, (req, res) => {
@@ -259,7 +453,7 @@ app.post("/v1/media/probe", requireUser, (req, res) => {
   p.on("close", (code) => { if (code !== 0) return res.status(500).json({ error: "ffprobe exited " + code }); try { const j = JSON.parse(out), v = (j.streams || []).find((x) => x.codec_type === "video"), a = (j.streams || []).find((x) => x.codec_type === "audio"), fr = v && v.r_frame_rate ? v.r_frame_rate.split("/") : null;
     res.json({ duration: +(j.format && j.format.duration) || 0, format: j.format && j.format.format_name, video: v ? { codec: v.codec_name, profile: v.profile || "", width: v.width, height: v.height, pix: v.pix_fmt, fps: fr ? Math.round((+fr[0] / (+fr[1] || 1)) * 100) / 100 : 0 } : null, audio: a ? { codec: a.codec_name, rate: +a.sample_rate, channels: a.channels, bits: a.bits_per_raw_sample || a.bits_per_sample || 0 } : null }); } catch (e) { res.status(500).json({ error: "probe parse" }); } });
 });
-setInterval(() => testAll().catch(() => {}), 15 * 60e3);
+setInterval(() => { if (process.env.NOOI_STAGE !== "1") testAll().catch(() => {}); }, 15 * 60e3);   // (v110: the live site checks; not the preview copy too)
 
 // ---- API tokens (MCP, Blender, Unity)
 app.get("/v1/tokens", requireUser, (req, res) => res.json({ tokens: listTokens(req.user.uid) }));
@@ -269,9 +463,27 @@ app.put("/v1/tokens/:id", requireUser, (req, res) => { if (req.user.viaToken) re
 app.delete("/v1/tokens/:id", requireUser, (req, res) => { revokeToken(req.user.uid, req.params.id); res.json({ ok: true }); });
 
 // ---- Assets & jobs list (library sync, Blender/Unity)
-app.get("/v1/jobs", requireUser, (req, res) => res.json({ jobs: Object.values(user(req.user.uid).jobs).sort((a, b) => b.created - a.created).slice(0, 100).map(publicJob) }));
+app.get("/v1/jobs", requireUser, (req, res) => res.json({ jobs: Object.values(user(req.user.uid).jobs).sort((a, b) => b.created - a.created).slice(0, 100).map((j) => publicJob(j, isStaff(req.user))) }));   // (v175: map(publicJob) passed the index as "staff" — every job after the first showed the engine's details to customers)
 app.get("/v1/assets", requireUser, (req, res) => { const k = req.query.kind; res.json({ assets: Object.values(user(req.user.uid).jobs).filter((j) => j.status === "done" && j.url && (!k || j.kind === k)).sort((a, b) => b.created - a.created).slice(0, 100).map((j) => ({ id: j.id, kind: j.kind, title: j.title, url: j.url })) }); });
-app.post("/v1/assets", requireUser, (req, res) => { const U = user(req.user.uid); const id = uid(); U.jobs[id] = { id, kind: req.body.kind || "3d", status: "done", progress: 1, url: req.body.url, title: req.body.title || "Imported", created: Date.now(), payload: {} }; save(); res.json({ id }); });
+// v231: only a 3D model the person uploaded themselves becomes a library item here (it was any address and any kind — a way to
+// pass another person's file, or an outside address, to the AI tools as one's own finished video)
+app.post("/v1/assets", requireUser, (req, res) => { const U = user(req.user.uid), b = req.body || {}, pub0 = (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "");
+  const url = String(b.url || "").replace(pub0, "").replace(/^https?:\/\/[^/]+(?=\/media\/)/, ""), name = path.basename(url);
+  if ((b.kind || "3d") !== "3d") return res.status(400).json({ error: "Only 3D models can be added here.", errorAr: "يمكن إضافة النماذج ثلاثية الأبعاد فقط هنا." });
+  if (!/^\/media\/[A-Za-z0-9._-]+$/.test(url) || !(U.uploads || []).includes(name) || !fs.existsSync(path.join(MEDIA_DIR, name))) return res.status(400).json({ error: "Only a file you uploaded can be added.", errorAr: "يمكن إضافة ملف رفعته أنت فقط." });
+  const id = uid(); U.jobs[id] = { id, kind: "3d", status: "done", progress: 1, url, title: String(b.title || "Imported").slice(0, 80), created: Date.now(), payload: {} }; save(); res.json({ id }); });
+// v140: a clip you uploaded to the editor becomes one of your videos (or pictures) on the server, so the AI tools — extend, edit with
+// words, replace things, voices & sound, dubbing — can work on it. Only a file you uploaded yourself; the same file gives the same one back.
+app.post("/v1/clips140", requireUser, (req, res) => {
+  const U = user(req.user.uid), b = req.body || {}, pub0 = (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "");
+  const url = String(b.url || "").replace(pub0, "").replace(/^https?:\/\/[^/]+(?=\/media\/)/, ""), name = path.basename(url);
+  if (!/^\/media\/[A-Za-z0-9._-]+$/.test(url) || !(U.uploads || []).includes(name) || !fs.existsSync(path.join(MEDIA_DIR, name)))
+    return res.status(400).json({ error: "Only a clip you uploaded can be used here.", errorAr: "يمكن استخدام مقطع رفعته أنت فقط هنا." });
+  const kind = /\.(png|jpe?g|webp|gif|avif)$/i.test(name) ? "image" : "video";
+  let j = Object.values(U.jobs || {}).find((x) => x.clip140 && x.url === url && x.kind === kind);
+  if (!j) { const id = uid(); j = U.jobs[id] = { id, kind, status: "done", progress: 1, url, title: String(b.title || "My clip").slice(0, 80), created: Date.now(), payload: { prompt: "" }, clip140: true, ...(+b.dur > 0 ? { dur: Math.round(+b.dur * 10) / 10 } : {}) }; save(); }
+  res.json({ id: j.id, kind: j.kind, url: j.url, title: j.title, dur: j.dur || 0 });
+});
 
 // ---- Live AI sketch (realtime engine, credits per rendered frame) → lib/sketch.js
 
@@ -279,6 +491,7 @@ app.post("/v1/assets", requireUser, (req, res) => { const U = user(req.user.uid)
 app.post("/mcp", async (req, res) => {
   const h = req.headers.authorization || ""; const t = h.startsWith("Bearer ") ? h.slice(7) : req.query.token;
   const u = userFromToken(t) || (String(t || "").startsWith("nooi_") ? null : await verify(t)); if (!u) return res.status(401).set("WWW-Authenticate", "Bearer").json({ jsonrpc: "2.0", id: null, error: { code: -32001, message: "Invalid or missing nooi.ai token" } });
+  const g182 = gate182(u, { path: "/mcp" }); if (g182) return res.status(403).json({ jsonrpc: "2.0", id: null, error: { code: -32003, message: g182.error } });   // (v182: Coming soon — the team only)
   const body = req.body; const msgs = Array.isArray(body) ? body : [body];
   const all = () => Promise.all(msgs.map((m) => handleMcp(u.uid, m, u)));   // a connection's charges count toward its daily limit
   const out = (await (u.viaToken ? tokenCtx.run(u, all) : all())).filter(Boolean);
@@ -288,7 +501,7 @@ app.post("/mcp", async (req, res) => {
 app.get("/mcp", (_, res) => res.status(405).set("Allow", "POST").end());
 
 // Posts & scheduling
-app.get("/v1/posts", requireUser, (req, res) => res.json({ posts: Object.values(user(req.user.uid).posts).map((p) => ({ id: p.id, clientId: p.clientId, status: p.status, error: p.error || "", at: p.at, ...(p.status === "awaiting" ? { caption: p.caption, platforms: p.platforms, mediaUrl: p.mediaUrl, via: p.via || "api" } : {}) })) }));
+app.get("/v1/posts", requireUser, (req, res) => res.json({ posts: Object.values(user(req.user.uid).posts || {}).map((p) => ({ id: p.id, clientId: p.clientId, status: p.status, error: p.error || "", at: p.at, ...(p.status === "awaiting" ? { caption: p.caption, platforms: p.platforms, mediaUrl: p.mediaUrl, via: p.via || "api" } : {}) })) }));
 // posts a connection (MCP / API token) scheduled wait for the owner: approve → scheduled, reject → removed. A connection can't approve.
 app.post("/v1/posts/:id/:op(approve|reject)", requireUser, (req, res) => { if (req.user.viaToken) return res.status(403).json({ error: "Only you can approve posts, from the app" }); const U = user(req.user.uid), p = U.posts[req.params.id];
   if (!p || p.status !== "awaiting") return res.status(404).json({ error: "Not waiting for approval" }); if (req.params.op === "reject") delete U.posts[p.id]; else { p.status = "scheduled"; p.approved = Date.now(); if (!p.at) p.at = new Date().toISOString(); } save(); res.json({ ok: true, status: req.params.op === "reject" ? "removed" : "scheduled" }); });
@@ -305,7 +518,7 @@ app.delete("/v1/posts/:id", requireUser, (req, res) => { delete user(req.user.ui
 
 // Connected accounts (OAuth)
 const pending = new Map();
-app.get("/v1/accounts", requireUser, (req, res) => { const a = user(req.user.uid).accounts; res.json({ accounts: Object.fromEntries(Object.keys(a).map((k) => [k, true])) }); });
+app.get("/v1/accounts", requireUser, (req, res) => { const a = user(req.user.uid).accounts || {}; res.json({ accounts: Object.fromEntries(Object.keys(a).map((k) => [k, true])) }); });
 app.get("/v1/oauth/:p/start", requireUser, (req, res) => {
   const key = OAUTH[req.params.p]?.alias || req.params.p, o = OAUTH[key];
   if (!o || !o.configured()) return res.status(501).send("This platform's app keys are not set on the server yet.");
@@ -324,4 +537,8 @@ app.delete("/v1/oauth/:p", requireUser, (req, res) => { delete user(req.user.uid
 
 const port = process.env.PORT || 8080;
 setInterval(refillPlans, 6 * 3600e3); refillPlans();
-app.listen(port, () => console.log(`nooi.ai Studio server → http://localhost:${port}`));
+proxyRenderUpgrade219(app.listen(port, () => console.log(`nooi.ai Studio server → http://localhost:${port}`)));
+// v177: the free NVIDIA check (empty requests — nothing made or spent) 10 minutes after start and every 6 hours, so an engine
+// NVIDIA closed to the key is known before a customer picks it
+if (process.env.NV_AUTOCHECK !== "false") { const nvAuto = () => { if (nvReady()) nvCheck176().catch((e) => console.warn("NVIDIA check:", e.message)); };
+  setTimeout(nvAuto, +process.env.NV_AUTOCHECK_MS || 600e3).unref(); setInterval(nvAuto, 6 * 3600e3).unref(); }

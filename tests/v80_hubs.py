@@ -86,16 +86,18 @@ async def ui(p, w, lang):
     # ---- a few hubs in the menu; each hub page has its tools as tabs
     if not phone:
         r["side"] = await E("()=>[...document.querySelectorAll('#side .nav')].map(b=>b.dataset.go)")
-        ok(r["side"] == ["home", "explore", "image", "video", "chars", "world", "edit", "calendar", "library", "account", "admin"], f"{tag}: the menu is a few hubs {r['side']}")   # v82: Templates + Community under Explore
+        ok(r["side"] == ["home", "explore", "apps", "image", "video", "audio", "chars", "world", "edit", "calendar", "library", "account", "admin"], f"{tag}: the menu is a few hubs {r['side']}")   # v82: Templates + Community under Explore · v90: + All tools, + Audio
         ok(await E("()=>![...document.querySelectorAll('#side .nav .new')].some(x=>x.offsetParent)"), f"{tag}: no NEW tags in the menu")
-    HUB = {"video": ["video", 7], "ugcads": ["video", 7], "crew": ["video", 7], "cinema": ["video", 7], "motion": ["video", 7], "image": ["image", 3], "sketch": ["image", 3], "draw": ["image", 3], "edit": ["edit", 7], "bg": ["edit", 7], "slideshow": ["edit", 7], "calendar": ["calendar", 3], "account": ["account", 5]}   # v82: + Cinema Studio in Video; Connections & APIs moved to the admin hub · v83: + Motion Control (Video), Video from pictures (Edit)
+    # (v264: the tab rows no longer repeat what moved in v262 — Chapter story and Storyboard are modes of nooi Studio; Sketch, Coloring
+    # book, Video intelligence and Hook lab are under More — the open page's own tab stays)
+    HUB = {"video": ["video", 4], "ugcads": ["video", 4], "crew": ["video", 4], "cinema": ["video", 4], "motion": ["video", 4], "image": ["image", 1], "sketch": ["image", 2], "draw": ["image", 2], "edit": ["edit", 3], "bg": ["edit", 3], "slideshow": ["video", 4], "voice": ["audio", 2], "subs": ["audio", 2], "calendar": ["calendar", 2], "account": ["account", 5]}   # v82: + Cinema Studio in Video; Connections & APIs moved to the admin hub · v83: + Motion Control (Video), Video from pictures (Edit) · v90: Voice & audio + Subtitles & dubbing → Audio · v122: Video from pictures → Video
     for v, (hub, n) in HUB.items():
         await E("(v)=>{go(v);renderAll()}", v); await pg.wait_for_timeout(250)
         x = await E("()=>{const t=[...document.querySelectorAll('#main .hubtabs [role=tab]')];return [t.length,t.filter(b=>b.getAttribute('aria-selected')==='true').map(b=>b.dataset.go)]}")
-        sel = {"draw": "sketch", "bg": "fx"}.get(v, v)
+        sel = {"draw": "sketch", "bg": "fx", "crew": "video", "cinema": "video"}.get(v, v)   # v93: Cinema Studio and the agents' film are part of nooi Studio (5 Video tabs)
         ok(x[0] == n and x[1] == [sel], f"{tag}: {v} shows its hub's tabs {x}")
     await E("()=>{go('draw');renderAll()}"); await pg.wait_for_timeout(250)
-    ok(await E("()=>!!document.querySelector('.skmode80 [data-go=\"sketch\"]')&&!!document.querySelector('.skmode80 [data-go=\"draw\"][aria-selected=\"true\"]')"), f"{tag}: Sketch and Draw a scene are one place")
+    ok(await E("()=>S.view==='sketch'&&!document.querySelector('.skmode80')&&!!document.querySelector('#skcv')"), f"{tag}: Sketch and Draw a scene are one page (v91: one drawing, no second mode)")
     await E("()=>document.querySelector('.hubtabs [data-go=\"crew\"]').click()") if await E("()=>!!document.querySelector('.hubtabs [data-go=\"crew\"]')") else None
     await E("()=>{go('crew');renderAll()}"); await pg.wait_for_timeout(250)
     ok(await E("()=>document.querySelector('#main h1').textContent") == ("استوديو nooi" if lang == "ar" else "nooi Studio"), f"{tag}: the agents' page is nooi Studio")
@@ -122,11 +124,12 @@ async def ui(p, w, lang):
     await E("()=>viewMedia80('/media/clip.mp4','video')"); await pg.wait_for_timeout(150)
     # v87: one player of our own (play/pause, time, seek, sound, full screen) instead of the browser's bare controls
     ok(await E("()=>{const w=document.querySelector('.mv80 .vp87'),v=w&&w.querySelector('video');const x=!!v&&['.vpp','.vps','.vpt','.vpm','.vpf'].every(q=>!!w.querySelector(q));document.querySelector('.mv80 .mvx').click();return x}"), f"{tag}: clips open with the full player (play/pause, seek, sound)")
-    # ---- faster Sketch to Life: recognised while drawing (once), 1K picture from a small JPEG, started soon after the pause
+    # ---- fast Sketch to Life (v91): drawing makes no pictures; "Preview with AI" reads the drawing once and sends a 1K picture from a small JPEG at once
     n0 = len(posted)
-    await E("()=>{S.sketch.prompt='';S.sketch.ai='pause';S.sketch.aiCap=250;go('sketch');renderAll()}"); await pg.wait_for_timeout(400)
+    await E("()=>{S.sketch.prompt='';S.sketch.n91=1;go('sketch');renderAll()}"); await pg.wait_for_timeout(400)
     await E("()=>{SK.strokes=[{tool:'pen',color:'#000',size:6,pts:[[.2,.6,.6],[.5,.5,.6],[.8,.6,.6]]}];skRedraw();document.dispatchEvent(new PointerEvent('pointerup'))}")
-    t0 = time.time()
+    await pg.wait_for_timeout(1200); ok(not [x for x in posted[n0:] if x.get("kind") == "image"], f"{tag}: drawing alone makes no pictures")
+    t0 = time.time(); await E("()=>document.querySelector('[data-act=sk91-go]').click()")
     for _ in range(40):
         await pg.wait_for_timeout(100)
         if [x for x in posted[n0:] if x.get("kind") == "image"]: break

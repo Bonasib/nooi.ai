@@ -21,8 +21,13 @@ SETUP = """async()=>{S.langAsked=true;document.getElementById('langsug')?.remove
  PJ.fresh('edit');S.cur.edit=null;edxInit();S.ed.sfx=[];S.ed.format='reels';
  for(const id of ['ed_va','ed_vb','ed_img','ed_mu','ed_vo']){await edUseJob(S.jobs.find(j=>j.id===id),{stay:true,quiet:true,t:1})}
  go('edit');renderAll()}"""
-SCROLL = """(sel)=>{const all=document.querySelectorAll(sel),el=all[all.length-1];if(!el)return null;let e=el.parentElement;while(e&&!(e.scrollHeight>e.clientHeight+5&&/(auto|scroll)/.test(getComputedStyle(e).overflowY)))e=e.parentElement;e=e||document.scrollingElement;
- const st=document.querySelector('.edstage');const top=(st&&getComputedStyle(st).position==='sticky')?st.getBoundingClientRect().bottom+20:120;e.style.scrollBehavior='auto';e.scrollTop+=el.getBoundingClientRect().top-top;return 1}"""
+SCROLL = """(sel)=>{const all=document.querySelectorAll(sel),el=all[all.length-1];if(!el)return null;
+ if(document.documentElement.classList.contains('studio151')){el.scrollIntoView({block:'center',inline:'nearest'});const bar=el.closest('.edbar,.e-bar');if(bar&&bar.scrollWidth>bar.clientWidth){const r=el.getBoundingClientRect(),br=bar.getBoundingClientRect();bar.scrollLeft+=r.left-br.left-(br.width-r.width)/2}return 1}
+ let e=el.parentElement;while(e&&!(e.scrollHeight>e.clientHeight+5&&/(auto|scroll)/.test(getComputedStyle(e).overflowY)))e=e.parentElement;e=e||document.scrollingElement;
+ const st=document.querySelector('.edstage'),tr=document.querySelector('.e-player .transport');let top=(st&&getComputedStyle(st).position==='sticky')?st.getBoundingClientRect().bottom+20:120;if(tr&&getComputedStyle(tr).position==='sticky')top=Math.max(top,tr.getBoundingClientRect().bottom+20);   // (v149: the play row is pinned under the preview on a phone)
+ if(e!==document.scrollingElement&&getComputedStyle(document.getElementById('main')).overflowY==='hidden')top=Math.max(top,e.getBoundingClientRect().top+12);   // (v216: the editor workspace never scrolls the page — aim inside the panel that scrolls)
+ for(let k=0;e&&k<3;k++){e.style.scrollBehavior='auto';e.scrollTop+=el.getBoundingClientRect().top-top;if(Math.abs(el.getBoundingClientRect().top-top)<4)break;let o=e.parentElement;while(o&&!(o.scrollHeight>o.clientHeight+5&&/(auto|scroll)/.test(getComputedStyle(o).overflowY)))o=o.parentElement;e=o||(e!==document.scrollingElement?document.scrollingElement:null)}   // (v149: the timeline scrolls on its own too — then the page)
+ const bar=el.closest('.edbar,.e-bar');if(bar&&bar.scrollWidth>bar.clientWidth){const r=el.getBoundingClientRect(),br=bar.getBoundingClientRect();bar.scrollLeft+=r.left-br.left-(br.width-r.width)/2}return 1}"""   # (v131: the tool row scrolls sideways on a phone; v143: so does the phone's tool bar at the foot)
 RECT = "(s)=>{const a=document.querySelectorAll(s),x=a[a.length-1].getBoundingClientRect();return [x.x,x.y,x.width,x.height]}"
 WRAP = "()=>{const r=document.querySelector('.tlwrap').getBoundingClientRect();return [r.left,r.right]}"
 
@@ -54,14 +59,24 @@ async def run(p, w, mob, fails, out):
         for k in range(1, 9): await pg.mouse.move(x0 + (x1 - x0) * k / 8, y); await pg.wait_for_timeout(20)
         mid = (await snap())["t"]; await pg.mouse.up()
     check("drag on the ruler scrubs", mid > 0.5, mid)
-    await tap(".blk.v"); s = await snap(); check("tap a clip selects it", bool(s["sel"]))
+    if mob:   # (v171: on a phone a tap on a clip does nothing — a long press picks it and opens its settings, where its tools are)
+        await E(SCROLL, ".blk.v"); await pg.wait_for_timeout(250); r = await E(RECT, ".blk.v"); wr = await E(WRAP); cx, cy = min(r[0] + r[2] * 0.5, wr[1] - 25), r[1] + r[3] / 2
+        cdp2 = await ctx.new_cdp_session(pg); await E("()=>{S.ed.sel=null}")
+        await cdp2.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": cx, "y": cy}]}); await pg.wait_for_timeout(650)
+        await cdp2.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []}); await pg.wait_for_timeout(400)
+        s = await snap(); tab = await E("()=>S.ed.tab"); check("long press on a clip picks it and opens its settings", bool(s["sel"]) and tab == "clip", [s["sel"], tab])
+    else:
+        await tap(".blk.v"); s = await snap(); check("tap a clip selects it", bool(s["sel"]))
     await tap("[data-act=ed-play]"); await pg.wait_for_timeout(900); s1 = await snap(); check("play", s1["playing"] and s1["t"] > s["t"], [s["t"], s1["t"]])
     await tap("[data-act=ed-play]"); check("pause", not (await snap())["playing"])
     await E("()=>{ED.t=2;S.ed.sel=S.ed.clips[0].id;renderView()}")
     for act, fn in [("ed-split", lambda a, b: b["n"] == a["n"] + 1), ("ed-dup", lambda a, b: b["n"] == a["n"] + 1), ("ed-move", lambda a, b: b["order"] != a["order"]), ("ed-del", lambda a, b: b["n"] == a["n"] - 1), ("ed-undo", lambda a, b: b["n"] == a["n"] + 1), ("ed-redo", lambda a, b: b["n"] == a["n"] - 1)]:
         a = await snap(); await tap(f"[data-act={act}]:not([disabled])"); b2 = await snap(); check(act, fn(a, b2), [a["n"], b2["n"]])
     await E("()=>{S.ed.sel=S.ed.clips[0].id;S.ed.tab='clip';renderView()}"); await pg.wait_for_timeout(300)
-    res = await E("""()=>{const set=(b,v)=>{const i=document.querySelector('[data-bind="'+b+'"]');if(!i)return 0;i.value=v;i.dispatchEvent(new Event('input',{bubbles:true}));i.dispatchEvent(new Event('change',{bubbles:true}));return 1};const c=S.ed.clips[0];set('edclip.in',1);set('edclip.out',4);set('edclip.vol',50);return [+c.in,+c.out,+c.vol]}""")
+    await E("()=>{edSetPick('clip',S.ed.clips[0].id);renderView();const b=document.querySelector('.e-bar [data-act=\"ps143\"][data-v=\"clip\"]');if(b)b.click()}"); await pg.wait_for_timeout(300)   # (v143: on a phone the clip's Edit tool opens its settings)
+    # (v145: trim in Edit, the clip's volume in Audio, its speed in Speed)
+    res = await E("""async()=>{const set=(b,v)=>{const i=document.querySelector('[data-bind="'+b+'"]');if(!i)return 0;i.value=v;i.dispatchEvent(new Event('input',{bubbles:true}));i.dispatchEvent(new Event('change',{bubbles:true}));return 1};const c=S.ed.clips[0];set('edclip.in',1);set('edclip.out',4);
+      S.ed.tab='audio145';renderView();await new Promise(r=>setTimeout(r,150));set('edclip.vol',50);S.ed.tab='speed145';renderView();await new Promise(r=>setTimeout(r,150));return [+c.in,+c.out,+c.vol]}""")
     check("trim & volume", res == [1, 4, 50], res)
     sp = await E("()=>{const b=[...document.querySelectorAll('[data-set=\"edclip.speed\"]')].find(x=>x.dataset.val==='2');if(!b)return 0;b.click();return +S.ed.clips[0].speed}"); check("speed", sp == 2, sp)
     a = await snap(); await E("()=>{S.ed.tab='text';renderView()}"); await tap("[data-act=ed-addtext]"); b2 = await snap(); check("add text", b2["texts"] == a["texts"] + 1, b2)

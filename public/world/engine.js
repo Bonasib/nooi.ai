@@ -61,6 +61,9 @@ export function disposeTree(o) {
 
 export async function createEngine(opts = {}) {
   const info = detectTier(), tier = { ...TIERS[opts.tier || info.tier] };
+  // (v212) no graphics card at all (software rendering): a smaller picture and a lighter world, so it still runs smoothly —
+  // the realistic parts are made by the cloud AI engines either way, so nothing here ever needs a GPU
+  if (info.soft && !opts.tier) Object.assign(tier, { pr: [0.45, 0.85], terrain: 64, far: 190, inst: 1600, particles: 260, clouds: 4, stars: 300, fps: 24, life: 0.3, tex: 256 });
   let backend = await pickBackend(opts.prefer || ls.get("nooiWorldPrefer") || "auto");
   let T = await three(backend), renderer = null, canvas = null, host = null, ro = null;
   const fns = new Set(), state = { running: false, lost: false, destroyed: false, pr: Math.min(tier.pr[1], window.devicePixelRatio || 1), ema: 1000 / tier.fps, slow: 0, last: 0, t0: 0, sec: 0, frames: 0, fps: 0, capture: [] };

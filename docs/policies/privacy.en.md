@@ -1,6 +1,6 @@
 # Privacy Policy
 
-_nooi.ai · Last updated: 2026-09-26_
+_nooi.ai · Last updated: 2026-10-22_
 
 ## 1. Who we are
 
@@ -20,7 +20,7 @@ Your prompts and content are sent to AI providers only to produce your results, 
 
 ## 5. Sharing
 
-We share data with service providers (hosting, AI models, payments, email, analytics), with social platforms when you ask us to publish, and with authorities when the law requires. We never sell personal data.
+We share data with service providers (hosting, AI models, payments, email), with social platforms when you ask us to publish, and with authorities when the law requires. We never sell personal data.
 
 ## 6. International transfers
 
@@ -28,11 +28,11 @@ Some providers process data outside your country. We use legally approved safegu
 
 ## 7. Retention
 
-We keep data while your account is active. After you close it, we delete or anonymize your data within 90 days, except records we must keep by law, such as invoices.
+We keep data while your account is active. When you delete it (Account & plan → Sign-in & data → Delete my account), your account, creations and files are deleted at once and backup copies within 90 days, except records we must keep by law, such as invoices.
 
 ## 8. Your rights
 
-You can ask to access, correct, delete or export your data, withdraw consent and object to processing. Write to {email}; we reply within 30 days. You may also complain to the data protection authority (in Saudi Arabia, SDAIA).
+You can export your data and delete your account yourself in Account & plan → Sign-in & data. You can also ask to access, correct, delete or export your data, withdraw consent and object to processing. Write to {email}; we reply within 30 days. You may also complain to the data protection authority (in Saudi Arabia, SDAIA).
 
 ## 9. Security
 

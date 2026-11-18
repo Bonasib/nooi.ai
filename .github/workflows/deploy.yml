@@ -1,0 +1,72 @@
+# Puts every update on the working branch live on the nooi.ai VPS: checks the code, packs it like the Hostinger zip
+# (no data/, media/, .env, node_modules) and runs `nooi-update` on the server, which keeps the database, media and .env
+# and rolls back by itself if the new version fails its health check.
+# Needs repository secrets (Settings → Secrets and variables → Actions):
+#   VPS_HOST      the VPS IP address
+#   VPS_PASSWORD  the VPS root password (hPanel → VPS → Settings)  — or VPS_SSH_KEY, a private key the VPS accepts
+#   VPS_USER      optional, default root
+# Until VPS_HOST is set the job only checks the code and says what is missing. Also runs by hand (Actions → Deploy).
+name: Deploy
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/festive-brahmagupta-08tfzr, main]
+    paths-ignore: ['**.md', 'docs/**', 'tests/**', '.claude/**', '.github/workflows/ghidra-mirror.yml']
+permissions:
+  contents: read
+concurrency:
+  group: deploy-nooi
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ${{ secrets.VPS_USER || 'root' }}
+      VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+      SITE: https://nooi.ai
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check the code
+        run: npm run check
+      - name: Pack
+        run: git archive --format=zip --prefix=nooi-server/ -o nooi-server.zip HEAD && ls -lh nooi-server.zip
+      - name: Server secrets present?
+        id: ready
+        run: |
+          if [ -z "$VPS_HOST" ] || { [ -z "$VPS_PASSWORD" ] && [ -z "$VPS_SSH_KEY" ]; }; then
+            echo "::warning::Not deployed: add VPS_HOST and VPS_PASSWORD (or VPS_SSH_KEY) in Settings → Secrets and variables → Actions."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Connect
+        if: steps.ready.outputs.go == 'true'
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          ssh-keyscan -T 15 -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          if [ -n "$VPS_SSH_KEY" ]; then
+            printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+            echo "SSH_OPTS=-i $HOME/.ssh/id_deploy -o BatchMode=yes" >> "$GITHUB_ENV"
+          else
+            sudo apt-get install -y -qq sshpass >/dev/null
+            echo "SSHPASS=$VPS_PASSWORD" >> "$GITHUB_ENV"
+            echo "SSH_WRAP=sshpass -e" >> "$GITHUB_ENV"
+          fi
+      - name: Upload and update
+        if: steps.ready.outputs.go == 'true'
+        run: |
+          SUDO=""; [ "$VPS_USER" = root ] || SUDO="sudo"
+          $SSH_WRAP scp $SSH_OPTS -o ConnectTimeout=20 nooi-server.zip "$VPS_USER@$VPS_HOST:/tmp/nooi-server.zip"
+          $SSH_WRAP ssh $SSH_OPTS -o ConnectTimeout=20 "$VPS_USER@$VPS_HOST" \
+            "$SUDO nooi-update /tmp/nooi-server.zip; s=\$?; rm -f /tmp/nooi-server.zip; exit \$s"
+      - name: Live check
+        if: steps.ready.outputs.go == 'true'
+        run: |
+          for i in 1 2 3 4 5 6; do curl -fsS --max-time 10 "$SITE/v1/health" && exit 0; sleep 5; done
+          echo "::error::$SITE/v1/health did not answer after the update"; exit 1

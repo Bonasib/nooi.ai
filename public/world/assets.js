@@ -34,7 +34,11 @@ export function makeKit(T) {
       box: (w, h, d, c, m, k = "opaque") => add(k, new T.BoxGeometry(w, h, d), c, m),
       cyl: (rt, rb, h, seg, c, m, k = "opaque") => add(k, new T.CylinderGeometry(rt, rb, h, seg, 1), c, m),
       cone: (r, h, seg, c, m, k = "opaque") => add(k, new T.ConeGeometry(r, h, seg, 1), c, m),
-      ico: (r, det, c, m, k = "opaque", jit = 0, rnd = Math.random) => { const geo = new T.IcosahedronGeometry(r, det); if (jit) { const p = geo.attributes.position, key = new Map(); for (let i = 0; i < p.count; i++) { const id = p.getX(i).toFixed(3) + "," + p.getY(i).toFixed(3) + "," + p.getZ(i).toFixed(3); if (!key.has(id)) key.set(id, 1 + (rnd() - 0.5) * jit); const f = key.get(id); p.setXYZ(i, p.getX(i) * f, p.getY(i) * f, p.getZ(i) * f); } geo.computeVertexNormals(); } return add(k, geo, c, m); },
+      ico: (r, det, c, m, k = "opaque", jit = 0, rnd = Math.random, smooth = 0) => { const geo = new T.IcosahedronGeometry(r, det); if (jit) { const p = geo.attributes.position, key = new Map(); for (let i = 0; i < p.count; i++) { const id = p.getX(i).toFixed(3) + "," + p.getY(i).toFixed(3) + "," + p.getZ(i).toFixed(3); if (!key.has(id)) key.set(id, 1 + (rnd() - 0.5) * jit); const f = key.get(id); p.setXYZ(i, p.getX(i) * f, p.getY(i) * f, p.getZ(i) * f); } geo.computeVertexNormals(); }
+        const baked = bake(geo, c, m); if (smooth) { const p = baked.attributes.position, nn = baked.attributes.normal, acc = new Map(), id = (i) => p.getX(i).toFixed(2) + "," + p.getY(i).toFixed(2) + "," + p.getZ(i).toFixed(2);
+          for (let i = 0; i < p.count; i++) { const a = acc.get(id(i)) || [0, 0, 0]; a[0] += nn.getX(i); a[1] += nn.getY(i); a[2] += nn.getZ(i); acc.set(id(i), a); }
+          for (let i = 0; i < p.count; i++) { const a = acc.get(id(i)), l = Math.hypot(a[0], a[1], a[2]) || 1; nn.setXYZ(i, a[0] / l, a[1] / l, a[2] / l); } }   // (v214) soft leaf masses, not crumpled facets
+        g[k].push(baked); return api; },
       sphere: (r, ws, hs, c, m, k = "opaque", phiL = Math.PI * 2, thetaL = Math.PI) => add(k, new T.SphereGeometry(r, ws, hs, 0, phiL, 0, thetaL), c, m),
       torus: (r, t, rs, ts, c, m, k = "opaque", arc = Math.PI * 2) => add(k, new T.TorusGeometry(r, t, rs, ts, arc), c, m),
       lathe: (pts, seg, c, m, k = "opaque") => add(k, new T.LatheGeometry(pts.map(([x, y]) => new T.Vector2(x, y)), seg), c, m),
@@ -54,7 +58,7 @@ const pickc = (rnd, list) => list[Math.floor(rnd() * list.length) % list.length]
 export const PALETTE = {
   leaf: ["#4f8a3b", "#5b9a44", "#447c35", "#679f4b"], pine: ["#2f6b3c", "#2a5e37", "#367443"], palm: ["#5f9440", "#6aa046", "#55873a"], dry: ["#8d8d58", "#9a9460", "#7f8452"],
   trunk: ["#6b4a2f", "#5e4029", "#7a5636"], rock: ["#8b8780", "#7d7a74", "#96918a", "#857f76"], red: ["#9c4a32", "#8a3f2c", "#a85a3c"], wall: ["#ece6da", "#e3dccd", "#f2eee6", "#d9d2c3"],
-  car: ["#d63a32", "#f4f4f0", "#1d1f22", "#2f6fd6", "#8a9097", "#3e7a52", "#c9a54a", "#5a2f80"], cloth: ["#c0392b", "#2980b9", "#27ae60", "#f39c12", "#8e44ad", "#16a085", "#d35400"],
+  car: ["#f4f4f0", "#1d1f22", "#8a9097", "#c7332b", "#2f5f8f", "#2c2f33", "#d9d4c8", "#4a5a6a"], classic: ["#8a3a2e", "#3e6b55", "#c9c0a8", "#355e7e", "#6d6a60", "#b0532e"], cloth: ["#c0392b", "#2980b9", "#27ae60", "#f39c12", "#8e44ad", "#16a085", "#d35400"],
   flower: ["#e74c5b", "#f6c945", "#f4f1ea", "#a66fd6", "#ff8fb4", "#ff9d3a"], coral: ["#ff7f6e", "#ff9fc4", "#ffb347", "#b98cff", "#ff6f91"], mud: ["#c69c6d", "#bf9465", "#cfa776", "#b98c5d"]
 };
 
@@ -70,7 +74,7 @@ export function buildModel(T, K, type, v = 0, opt = {}) {
       m.cyl(0.16, 0.3, h, 7, tr, M(0, h / 2, 0, (rnd() - 0.5) * 0.08, 0, (rnd() - 0.5) * 0.08));
       m.cyl(0.07, 0.12, 1.4, 5, tr, M(0.45, h - 0.2, 0, 0, 0, -0.7)); m.cyl(0.06, 0.11, 1.2, 5, tr, M(-0.4, h - 0.1, 0.2, 0.3, 0, 0.75));
       const leaf = c1 || pickc(rnd, PALETTE.leaf), n = 4 + (v % 2);
-      for (let i = 0; i < n; i++) { const a = (i / n) * 6.28 + rnd(), r = i === 0 ? 0 : 0.9 + rnd() * 0.5, s = i === 0 ? 1.9 : 1.2 + rnd() * 0.5; m.ico(s, det, i % 2 ? leaf : shade(leaf, 0.88), M(Math.cos(a) * r, h + 1.2 + (i === 0 ? 0.5 : rnd() * 0.8), Math.sin(a) * r), "opaque", 0.22, rnd); }
+      for (let i = 0; i < n; i++) { const a = (i / n) * 6.28 + rnd(), r = i === 0 ? 0 : 0.9 + rnd() * 0.5, s = i === 0 ? 1.9 : 1.2 + rnd() * 0.5; m.ico(s, det, i % 2 ? leaf : shade(leaf, 0.88), M(Math.cos(a) * r, h + 1.2 + (i === 0 ? 0.5 : rnd() * 0.8), Math.sin(a) * r), "opaque", 0.22, rnd, 1); }
       return m.done([5, h + 3.6, 5], { ...cyl(0.3, h + 1), trunk: 1 }, { sway: 1 }); }
     case "pine": { const tr = pickc(rnd, PALETTE.trunk), g = c1 || pickc(rnd, PALETTE.pine), snow = opt.snow;
       m.cyl(0.18, 0.28, 2.6, 6, tr, M(0, 1.3, 0)); const tiers = 4 + (v % 2);
@@ -89,11 +93,11 @@ export function buildModel(T, K, type, v = 0, opt = {}) {
       return m.done([4.5, y + 1.2, 4.5], { ...cyl(0.26, y), trunk: 1 }, { sway: 0.9 }); }
     case "ghaf": { const tr = "#6e5236", g = c1 || "#71894a";
       m.cyl(0.22, 0.32, 1.8, 7, tr, M(0, 0.9, 0)); m.cyl(0.1, 0.18, 2, 6, tr, M(0.55, 2.2, 0, 0, 0, -0.55)); m.cyl(0.1, 0.18, 2, 6, tr, M(-0.5, 2.2, 0.2, 0.25, 0, 0.6));
-      for (let i = 0; i < 5; i++) { const a = i * 1.25 + rnd(); m.ico(1.6 + rnd() * 0.6, det, i % 2 ? g : shade(g, 0.9), M(Math.cos(a) * 1.4, 3.6 + rnd() * 0.4, Math.sin(a) * 1.4, 0, 0, 0, 1.25, 0.42, 1.25), "opaque", 0.2, rnd); }
+      for (let i = 0; i < 5; i++) { const a = i * 1.25 + rnd(); m.ico(1.6 + rnd() * 0.6, det, i % 2 ? g : shade(g, 0.9), M(Math.cos(a) * 1.4, 3.6 + rnd() * 0.4, Math.sin(a) * 1.4, 0, 0, 0, 1.25, 0.42, 1.25), "opaque", 0.2, rnd, 1); }
       return m.done([6.4, 4.6, 6.4], { ...cyl(0.32, 3), trunk: 1 }, { sway: 0.5 }); }
-    case "bush": { const g = c1 || pickc(rnd, PALETTE.leaf); for (let i = 0; i < 3; i++) m.ico(0.65 + rnd() * 0.3, det, i % 2 ? g : shade(g, 0.85), M((rnd() - 0.5) * 0.9, 0.55, (rnd() - 0.5) * 0.9), "opaque", 0.25, rnd);
+    case "bush": { const g = c1 || pickc(rnd, PALETTE.leaf); for (let i = 0; i < 3; i++) m.ico(0.65 + rnd() * 0.3, det, i % 2 ? g : shade(g, 0.85), M((rnd() - 0.5) * 0.9, 0.55, (rnd() - 0.5) * 0.9), "opaque", 0.25, rnd, 1);
       return m.done([1.8, 1.2, 1.8], null, { sway: 0.4 }); }
-    case "shrub": { const g = c1 || pickc(rnd, PALETTE.dry); for (let i = 0; i < 3; i++) m.ico(0.35 + rnd() * 0.2, 0, i % 2 ? g : shade(g, 0.8), M((rnd() - 0.5) * 0.6, 0.25, (rnd() - 0.5) * 0.6, 0, 0, 0, 1, 0.7, 1), "opaque", 0.35, rnd);
+    case "shrub": { const g = c1 || pickc(rnd, PALETTE.dry); for (let i = 0; i < 3; i++) m.ico(0.35 + rnd() * 0.2, 0, i % 2 ? g : shade(g, 0.8), M((rnd() - 0.5) * 0.6, 0.25, (rnd() - 0.5) * 0.6, 0, 0, 0, 1, 0.7, 1), "opaque", 0.35, rnd, 1);
       return m.done([1, 0.6, 1], null); }
     case "flowers": { for (let i = 0; i < 7; i++) { const x = (rnd() - 0.5) * 0.9, z = (rnd() - 0.5) * 0.9, h = 0.22 + rnd() * 0.2; m.cyl(0.012, 0.015, h, 3, "#4f8a3b", M(x, h / 2, z)); m.ico(0.06, 0, c1 || pickc(rnd, PALETTE.flower), M(x, h + 0.03, z)); }
       return m.done([1, 0.4, 1], null); }
@@ -112,7 +116,7 @@ export function buildModel(T, K, type, v = 0, opt = {}) {
     case "log": { m.cyl(0.3, 0.3, 4, 8, "#6b4a2f", M(0, 0.3, 0, 0, 0, Math.PI / 2)); m.cyl(0.29, 0.29, 0.02, 8, "#c79a63", M(2.0, 0.3, 0, 0, 0, Math.PI / 2)); m.cyl(0.29, 0.29, 0.02, 8, "#c79a63", M(-2.0, 0.3, 0, 0, 0, Math.PI / 2));
       return m.done([4, 0.6, 0.6], { shape: "cyl", r: 0.3, hy: 2, y: 0.3, rz: Math.PI / 2 }); }
     case "rock": case "boulder": { const big = type === "boulder", r = big ? 1.7 : 0.62, c = c1 || pickc(rnd, PALETTE.rock);
-      m.ico(r, big ? det : 0, c, M(0, r * 0.55, 0, rnd(), rnd(), rnd(), 1.1, 0.75, 1), "opaque", 0.38, rnd); if (big) m.ico(r * 0.55, 0, shade(c, 0.9), M(r * 0.8, r * 0.3, r * 0.2, rnd(), rnd(), 0), "opaque", 0.4, rnd);
+      m.ico(r, big ? det : 0, c, M(0, r * 0.55, 0, rnd(), rnd(), rnd(), 1.1, 0.75, 1), "opaque", 0.38, rnd, 1); if (big) m.ico(r * 0.55, 0, shade(c, 0.9), M(r * 0.8, r * 0.3, r * 0.2, rnd(), rnd(), 0), "opaque", 0.4, rnd, 1);
       return m.done(big ? [4, 2.6, 3.6] : [1.4, 0.95, 1.2], { shape: "ball", r: r * 0.85, y: r * 0.5 }); }
     case "crystal": { const c = c1 || (v % 2 ? "#9b7bff" : "#6fe0f2"); for (let i = 0; i < 5; i++) { const a = i * 1.3, h = 1.2 + rnd() * 1.4; m.cone(0.22, h, 4, c, M(Math.cos(a) * 0.25, h / 2, Math.sin(a) * 0.25, Math.cos(a) * 0.3, 0, Math.sin(a) * 0.3), "glass"); m.cone(0.08, h * 0.6, 4, shade(c, 1.4), M(Math.cos(a) * 0.25, h * 0.35, Math.sin(a) * 0.25, Math.cos(a) * 0.3, 0, Math.sin(a) * 0.3), "glow"); }
       return m.done([1.2, 2.6, 1.2], cyl(0.5, 2.4), { light: { color: c, power: 0.6, y: 1.2 } }); }
@@ -183,6 +187,19 @@ export function buildModel(T, K, type, v = 0, opt = {}) {
       m.box(w, 5, d, red, M(0, 2.5, 0)); m.shape([[-w / 2 - 0.4, 0], [w / 2 + 0.4, 0], [w / 2 - 1.2, 2.2], [0, 3.3], [-w / 2 + 1.2, 2.2]], d + 0.6, "#5c3a2a", M(0, 5, 0));
       m.box(3.4, 3.6, 0.15, "#f4f1ea", M(0, 1.8, d / 2 + 0.05)); m.box(3.0, 3.2, 0.12, shade(red, 0.8), M(0, 1.7, d / 2 + 0.1)); m.box(0.12, 3.2, 0.16, "#f4f1ea", M(0, 1.7, d / 2 + 0.14, 0, 0, 0.75));
       return m.done([w + 0.8, 8.3, d + 0.6], box(w, 6, d), { foundation: 1 }); }
+    case "garage": { const w = 7.2, d = 7.6, h = 3.1, wall = c1 || pickc(rnd, ["#d9d4c8", "#cfc9ba", "#c4beae", "#b8b2a4"]), acc = c2 || "#5a5f66";
+      m.box(w + 0.6, 0.5, d + 0.8, "#9a958c", M(0, -0.15, 0)); m.cyl(0.6, 0.6, 0.03, 12, "#2a2c2e", M(0.5, 0.12, 0.6));
+      for (const sd of [-1, 1]) m.box(0.28, h, d, wall, M(sd * (w / 2 - 0.14), h / 2, 0));
+      m.box(w, h, 0.28, wall, M(0, h / 2, -(d / 2 - 0.14)));
+      m.box(w + 0.7, 0.34, d + 0.7, shade(wall, 0.78), M(0, h + 0.17, 0)); m.box(w + 0.7, 0.42, 0.2, acc, M(0, h + 0.45, d / 2 + 0.25));
+      m.box(w - 0.3, 0.6, 0.3, shade(wall, 0.9), M(0, h - 0.3, d / 2 - 0.2));
+      m.cyl(0.23, 0.23, w - 1.4, 10, "#8f949a", M(0, h - 0.72, d / 2 - 0.5, 0, 0, Math.PI / 2), "shiny");
+      for (const sd of [-1, 1]) m.box(0.14, h - 0.3, 0.14, acc, M(sd * (w / 2 - 0.5), (h - 0.3) / 2, d / 2 - 0.35));
+      m.box(0.08, 1.0, 1.7, "#c8d4dc", M(w / 2 + 0.01, 2.0, 1.4), "win");
+      m.box(2.6, 0.82, 0.7, "#7a5432", M(-1.5, 0.52, -(d / 2 - 0.65))); m.box(2.7, 0.08, 0.78, "#9a9488", M(-1.5, 0.97, -(d / 2 - 0.65)), "shiny");
+      m.box(0.4, 2.3, 1.9, "#878c94", M(w / 2 - 0.6, 1.15, 1.0)); for (let i = 0; i < 3; i++) m.box(0.34, 0.3, 0.42, pickc(rnd, ["#b0532e", "#355e7e", "#c9c0a8"]), M(w / 2 - 0.6, 0.6 + i * 0.75, 0.5 + (i % 2) * 0.7));
+      for (let i = 0; i < 3; i++) m.torus(0.3, 0.12, 6, 12, "#1b1c1e", M(-w / 2 + 1.0, 0.14 + i * 0.24, d / 2 - 1.3, Math.PI / 2, 0, 0));
+      return m.done([w + 0.7, h + 0.6, d + 0.8], { shape: "box", hx: (w + 0.6) / 2, hy: 0.06, hz: (d + 0.8) / 2, y: 0.06 }, { foundation: 1, light: { color: "#ffe9b8", power: 0.45, y: h - 0.5 } }); }
     case "windmill": { const c = c1 || "#e9e2d2"; m.cyl(1.4, 2.6, 10, 8, c, M(0, 5, 0)); m.cone(2.0, 2.4, 8, "#5c3a2a", M(0, 11.2, 0)); m.box(0.9, 1.8, 0.1, "#3e2a18", M(0, 0.9, 2.45));
       return m.done([6, 14, 6], cyl(2.4, 10), { sails: { y: 9.6, z: 2.2, len: 5.6, color: "#d8cfbf" } }); }
     case "dome": { const c = c1 || "#e8e4da"; m.cyl(6, 6.2, 3, 20, c, M(0, 1.5, 0)); m.sphere(6, 20, 10, c2 || "#d8d2c4", M(0, 3, 0), "opaque", Math.PI * 2, Math.PI / 2); m.shape([[-1.2, 0], [1.2, 0], [1.2, 2.2], [0, 3], [-1.2, 2.2]], 0.3, "#3a3a3a", M(0, 0, 6.05));
@@ -230,7 +247,19 @@ export function buildModel(T, K, type, v = 0, opt = {}) {
       m.cyl(0.08, 0.08, 0.24, 6, "#ffd88a", M(0, 0.21, 0), "glow"); m.cone(0.16, 0.14, 4, c, M(0, 0.49, 0, 0, Math.PI / 4, 0), "shiny"); m.torus(0.05, 0.012, 3, 8, c, M(0, 0.6, 0), "shiny");
       return m.done([0.3, 0.65, 0.3], { shape: "box", hx: 0.13, hy: 0.32, hz: 0.13, y: 0.32 }, { light: { color: "#ffcf7a", power: 0.7, y: 0.25, flicker: 1 } }); }
     // ----- vehicles -----
-    case "car": case "suv": { const suv = type === "suv", body = c1 || pickc(rnd, PALETTE.car), L = suv ? 4.9 : 4.5, H = suv ? 1.9 : 1.45, W = suv ? 2.0 : 1.86;
+    case "car": case "suv": { const suv = type === "suv", old = opt.era === "classic" || opt.rust, L = suv ? 4.9 : old ? 4.6 : 4.5, H = suv ? 1.9 : old ? 1.68 : 1.45, W = suv ? 2.0 : old ? 1.8 : 1.86;
+      let body = c1 || pickc(rnd, old ? PALETTE.classic : PALETTE.car); if (opt.rust && !c1) body = shade(body, 0.86);
+      if (old && !suv) {   // (v211) an old classic: long bonnet, upright cabin, fenders, chrome, round lights — rust freckles when asked
+        const F = {}, skin = (f) => F[f] ?? (F[f] = opt.rust && rnd() < 0.16 ? "#6b4226" : opt.rust && rnd() < 0.2 ? shade(body, 0.74) : body);
+        m.shape([[-2.25, 0.45], [2.3, 0.45], [2.3, 0.98], [1.1, 1.04], [0.68, 1.04], [0.42, 1.6], [-1.2, 1.6], [-1.68, 1.02], [-2.25, 0.96]], W - 0.12, skin, M(0, 0, 0, 0, -Math.PI / 2, 0), opt.rust ? "opaque" : "shiny", 0.07);
+        m.shape([[0.52, 1.1], [0.32, 1.52], [-1.08, 1.52], [-1.42, 1.08]], W - 0.06, "#243640", M(0, 0, 0, 0, -Math.PI / 2, 0), "glass");
+        for (const fx of [1.55, -1.5]) for (const sd of [-1, 1]) m.torus(0.5, 0.1, 5, 10, skin, M(sd * (W / 2 - 0.1), 0.44, fx, 0, Math.PI / 2, 0), opt.rust ? "opaque" : "shiny", Math.PI);
+        for (const sd of [-1, 1]) { m.box(0.26, 0.26, 0.1, "#fff3cf", M(sd * 0.56, 0.98, L / 2 - 0.03), "glow"); m.cyl(0.07, 0.07, 0.22, 6, "#c9ced4", M(sd * 0.56, 0.98, L / 2 - 0.12, Math.PI / 2, 0, 0), "shiny"); }
+        for (const e of [1, -1]) m.box(W + 0.14, 0.15, 0.24, opt.rust ? "#8a8f8f" : "#cdd3d8", M(0, 0.44, e * (L / 2 - 0.02)), "shiny");
+        m.box(0.74, 0.34, 0.08, opt.rust ? "#9a9f9f" : "#cdd3d8", M(0, 0.78, L / 2 + 0.02), "shiny");
+        m.cyl(0.33, 0.33, 0.2, 10, "#23262a", M(0, 0.95, -L / 2 - 0.1, Math.PI / 2, 0, 0)); m.cyl(0.18, 0.18, 0.21, 8, "#b8bec4", M(0, 0.95, -L / 2 - 0.1, Math.PI / 2, 0, 0), "shiny");
+        for (const [x, z] of [[1.55, 0.8], [-1.5, 0.8], [1.55, -0.8], [-1.5, -0.8]]) { m.cyl(0.37, 0.37, 0.24, 12, "#23262a", M(z, 0.4, x, 0, 0, Math.PI / 2)); m.cyl(0.26, 0.26, 0.25, 10, "#ddd8c8", M(z, 0.4, x, 0, 0, Math.PI / 2)); m.cyl(0.12, 0.12, 0.26, 8, "#c9ced4", M(z, 0.4, x, 0, 0, Math.PI / 2), "shiny"); }
+        return m.done([W, 1.68, L], { shape: "box", hx: W / 2, hy: 0.75, hz: L / 2, y: 0.8 }, { mass: 1500 }); }
       const prof = suv ? [[-2.45, 0.35], [2.45, 0.35], [2.45, 0.95], [2.15, 1.1], [1.25, 1.15], [0.95, 1.85], [-2.2, 1.9], [-2.45, 1.75]] : [[-2.25, 0.3], [2.25, 0.3], [2.25, 0.75], [1.9, 0.92], [0.85, 1.0], [0.35, 1.45], [-1.15, 1.45], [-1.85, 1.0], [-2.25, 0.92]];
       m.shape(prof, W - 0.08, body, M(0, 0, 0, 0, -Math.PI / 2, 0), "shiny", 0.04);
       const win = suv ? [[1.12, 1.18], [0.88, 1.8], [-2.1, 1.82], [-2.3, 1.2]] : [[0.75, 1.03], [0.32, 1.4], [-1.1, 1.4], [-1.72, 1.02]];
@@ -260,6 +289,41 @@ export function buildModel(T, K, type, v = 0, opt = {}) {
       return m.done([0.64, 0.9, 0.64], cyl(0.31, 0.9)); }
     case "cone": { m.cone(0.2, 0.68, 10, "#ff6a1a", M(0, 0.38, 0)); m.cyl(0.13, 0.155, 0.12, 10, "#f4f4f0", M(0, 0.38, 0)); m.box(0.42, 0.04, 0.42, "#ff6a1a", M(0, 0.02, 0));
       return m.done([0.42, 0.72, 0.42], { shape: "cone", r: 0.2, hy: 0.36, y: 0.36 }); }
+    case "aquarium": {   // (v215) a fish tank at the size the words gave: stand, sand, rocks, plants, driftwood, water, glass, hood light, bubbles
+      const [w, h, d] = opt.dims || [2.4, 1.2, 1.2], sh = h < 1.2 ? 0.75 : 0.4, y0 = sh + 0.06, k = Math.min(w, d);
+      m.box(w + 0.1, sh, d + 0.1, "#24272b", M(0, sh / 2, 0)); m.box(w + 0.12, 0.06, d + 0.12, "#15171a", M(0, sh + 0.03, 0));
+      m.box(w - 0.06, 0.16, d - 0.06, (i) => (i % 3 ? "#d9c49c" : "#cbb48a"), M(0, y0 + 0.08, 0));
+      for (let i = 0; i < Math.round(5 + w * d); i++) { const r = k * (0.05 + rnd() * 0.07); m.ico(r, 1, pickc(rnd, ["#6f6a64", "#7d776f", "#5d5853", "#8a847b"]), M((rnd() - 0.5) * (w - 0.5), y0 + 0.16 + r * 0.4, (rnd() - 0.5) * (d - 0.5), 0, rnd() * 3, 0, 1.3, 0.8, 1), "opaque", 0.3, rnd, 1); }
+      for (let i = 0; i < Math.round(10 + w * d * 3); i++) { const ph = Math.min(h - 0.4, 0.25 + rnd() * h * 0.6), x = (rnd() - 0.5) * (w - 0.3), z = -d / 2 + 0.15 + rnd() * (d * 0.55);
+        m.cone(0.025 + rnd() * 0.035, ph, 5, pickc(rnd, ["#3f8f4a", "#4fa35a", "#2f7a3c", "#6fb04b", "#8c3b3b"]), M(x, y0 + 0.16 + ph / 2, z, (rnd() - 0.5) * 0.25, 0, (rnd() - 0.5) * 0.25)); }
+      m.cyl(0.05 * k + 0.03, 0.03 * k + 0.02, Math.min(w, 1.6) * 0.7, 6, "#6b4a2f", M(w * 0.18, y0 + 0.24, d * 0.08, 0, 0.6, Math.PI / 2 - 0.25));
+      m.box(w - 0.08, h - 0.24, d - 0.08, "#5aaed3", M(0, y0 + (h - 0.24) / 2, 0), "glass");
+      for (const s2 of [-1, 1]) { m.box(w, h, 0.03, "#d6ecf4", M(0, y0 + h / 2 - 0.03, s2 * (d / 2)), "glass"); m.box(0.03, h, d, "#d6ecf4", M(s2 * (w / 2), y0 + h / 2 - 0.03, 0), "glass"); }
+      for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) m.box(0.05, h, 0.05, "#15171a", M(x * (w / 2), y0 + h / 2 - 0.03, z * (d / 2)), "shiny");
+      for (const s2 of [-1, 1]) { m.box(w + 0.06, 0.06, 0.07, "#15171a", M(0, y0 + h, s2 * (d / 2)), "shiny"); m.box(0.07, 0.06, d + 0.06, "#15171a", M(s2 * (w / 2), y0 + h, 0), "shiny"); }
+      m.box(w - 0.1, 0.05, 0.12, "#15171a", M(0, y0 + h + 0.02, -d * 0.18)); m.box(w * 0.9, 0.02, 0.08, "#eaf7ff", M(0, y0 + h - 0.01, -d * 0.18), "glow");   // a light bar across the open top
+      for (let i = 0; i < 9; i++) m.sphere(0.012 + rnd() * 0.012, 6, 4, "#eefaff", M(w / 2 - 0.2 + (rnd() - 0.5) * 0.04, y0 + 0.3 + i * (h - 0.6) / 9, -d / 2 + 0.2), "glass");
+      return m.done([w + 0.12, y0 + h + 0.1, d + 0.12], { shape: "box", hx: w / 2 + 0.06, hy: (y0 + h) / 2, hz: d / 2 + 0.06, y: (y0 + h) / 2 }, { tank: { w, h, d, sh: y0 }, light: { color: "#bfe8ff", power: 0.5, y: y0 + h - 0.1 } }); }
+    case "subject": {   // (v215) the glass stand-in for a thing the free reader can't build (the Realistic look turns it into a real 3D model)
+      m.box(1.2, 1.2, 1.2, "#dde8f2", M(0, 0.9, 0), "glass");
+      for (const [x, y, z, a, b, c] of [[0, 0.3, 0.6, 1.24, 0.03, 0.03], [0, 0.3, -0.6, 1.24, 0.03, 0.03], [0, 1.5, 0.6, 1.24, 0.03, 0.03], [0, 1.5, -0.6, 1.24, 0.03, 0.03], [0.6, 0.3, 0, 0.03, 0.03, 1.24], [-0.6, 0.3, 0, 0.03, 0.03, 1.24], [0.6, 1.5, 0, 0.03, 0.03, 1.24], [-0.6, 1.5, 0, 0.03, 0.03, 1.24], [0.6, 0.9, 0.6, 0.03, 1.24, 0.03], [-0.6, 0.9, 0.6, 0.03, 1.24, 0.03], [0.6, 0.9, -0.6, 0.03, 1.24, 0.03], [-0.6, 0.9, -0.6, 0.03, 1.24, 0.03]]) m.box(a, b, c, "#ffffff", M(x, y, z), "shiny");
+      for (const r of [1.3, 1.8, 2.3]) m.torus(r, 0.012, 3, 48, "#c4ced8", M(0, 0.01, 0, Math.PI / 2, 0, 0));
+      return m.done([1.6, 1.6, 1.6], box(1.24, 1.6, 1.24)); }
+    case "leak": {   // (v213) a small water leak: a damp patch on the ceiling, a line of falling drops, the puddle, the bucket someone put there
+      const h = 2.95;
+      m.cyl(0.4, 0.46, 0.04, 12, "#8d8579", M(0, h, 0)); m.cyl(0.22, 0.26, 0.045, 10, "#7c7466", M(0.08, h - 0.004, 0.05));
+      for (let i = 0; i < 7; i++) m.sphere(0.028, 6, 4, "#bfe4f5", M((rnd() - 0.5) * 0.05, h - 0.3 - i * 0.37, (rnd() - 0.5) * 0.05, 0, 0, 0, 1, 1.9, 1), "glass");
+      m.cyl(0.52, 0.52, 0.016, 16, "#7fb6d6", M(0, 0.012, 0), "glass"); m.cyl(0.3, 0.3, 0.012, 12, "#9ccbe4", M(0.1, 0.02, 0.08), "glass");
+      m.cyl(0.26, 0.2, 0.32, 10, "#8f949a", M(0.5, 0.16, 0.22), "shiny"); m.cyl(0.24, 0.24, 0.02, 10, "#6fa9c9", M(0.5, 0.3, 0.22), "glass");
+      m.torus(0.02, 0.012, 4, 10, "#6a6f75", M(0.5, 0.33, 0.22, 0.5, 0, 0), "shiny");
+      return m.done([1.1, 3, 1.1], { shape: "cyl", r: 0.3, hy: 0.16, y: 0.16 }); }
+    case "toolbox": { const c = c1 || "#c7332b";   // a rolling tool chest: drawers, silver handles, a tray of tools on top
+      m.box(0.72, 0.62, 0.44, c, M(0, 0.48, 0), "shiny"); for (let i = 0; i < 3; i++) { m.box(0.66, 0.145, 0.02, shade(c, 1.12), M(0, 0.28 + i * 0.19, 0.225)); m.box(0.3, 0.03, 0.03, "#c9ced4", M(0, 0.3 + i * 0.19, 0.24), "shiny"); }
+      m.box(0.76, 0.07, 0.48, "#3b3e42", M(0, 0.825, 0)); m.box(0.5, 0.06, 0.3, "#8f949a", M(-0.05, 0.89, 0), "shiny"); m.cyl(0.03, 0.03, 0.26, 6, "#8f949a", M(0.2, 0.9, 0.05, 0, 0, 1.2), "shiny");
+      for (const [x, z] of [[-0.3, 0.17], [0.3, 0.17], [-0.3, -0.17], [0.3, -0.17]]) m.cyl(0.055, 0.055, 0.05, 8, "#1b1c1e", M(x, 0.055, z, Math.PI / 2, 0, 0));
+      return m.done([0.78, 0.92, 0.46], box(0.76, 0.9, 0.46)); }
+    case "tyres": { for (let i = 0; i < 3; i++) { m.torus(0.3, 0.125, 6, 14, i % 2 ? "#232528" : "#1b1c1e", M((rnd() - 0.5) * 0.06, 0.135 + i * 0.25, (rnd() - 0.5) * 0.06, Math.PI / 2, 0, 0)); m.cyl(0.16, 0.16, 0.04, 10, "#8f949a", M(0, 0.135 + i * 0.25, 0, 0, 0, 0), "shiny"); }
+      return m.done([0.85, 0.78, 0.85], cyl(0.42, 0.78), { mass: 25 }); }
     case "chair": { const c = c1 || "#9a6a3c"; m.box(0.46, 0.05, 0.46, c, M(0, 0.46, 0)); m.box(0.46, 0.5, 0.05, c, M(0, 0.72, -0.21)); for (const s of [-1, 1]) for (const t of [-1, 1]) m.box(0.05, 0.46, 0.05, shade(c, 0.85), M(s * 0.2, 0.23, t * 0.2));
       return m.done([0.5, 0.97, 0.5], box(0.46, 0.95, 0.46)); }
     case "table": { const c = c1 || "#9a6a3c"; m.box(1.4, 0.06, 0.9, c, M(0, 0.73, 0)); for (const s of [-1, 1]) for (const t of [-1, 1]) m.box(0.07, 0.7, 0.07, shade(c, 0.85), M(s * 0.62, 0.35, t * 0.38));

@@ -95,7 +95,7 @@
 095|Siapa pemilik apa yang saya hasilkan?
 096|Anda. Video anda milik anda, termasuk untuk kegunaan komersial.
 097|Bahasa apa yang disokong?
-098|Sari kata dan alih suara dalam 35 bahasa dengan dialek serantau — Saudi, Mesir, Kuwait, Tunisia, British, Australia, Scotland dan banyak lagi. Antara muka itu sendiri tersedia dalam 26 bahasa.
+098|Sari kata dan alih suara dalam 35 bahasa dengan dialek serantau — Saudi, Mesir, Kuwait, Tunisia, British, Australia, Scotland dan banyak lagi. Antara muka itu sendiri tersedia dalam 32 bahasa.
 099|Bagaimana Cerita Berbab kekal konsisten?
 100|Setiap bab bermula dari bingkai terakhir bab sebelumnya, dan identiti watak anda dikunci dalam setiap syot.
 101|Bolehkah ia menerbitkan untuk saya?
@@ -134,7 +134,7 @@
 134|Panjang video maksimum
 135|Resolusi
 136|Kadar bingkai
-137|Model video
+137|Enjin video
 138|Pengklonan suara
 139|Paling popular
 140|Pro
@@ -162,7 +162,7 @@
 162|E-mel
 163|Keutamaan
 164|Keutamaan + bimbingan permulaan
-165|Model imej
+165|Enjin imej
 166|Semua model imej
 167|Suara ElevenLabs
 168|Semua · termasuk Eleven v3
@@ -174,7 +174,7 @@
 174|+ pengklonan suara profesional
 175|bahasa untuk sari kata, alih suara & suara
 176|KRU FILEM AI ANDA
-177|Lapan pakar.
+177|Sembilan pakar.
 178|Satu filem.
 179|Setiap projek dikendalikan oleh kru ejen AI — dari baris pertama skrip hingga semakan kualiti terakhir.
 180|Menukar idea anda menjadi skrip: babak, dialog dan naratif.
@@ -281,7 +281,7 @@
 281|Belum ada apa-apa. Terangkan syot di atas untuk menghasilkan klip pertama anda.
 282|Cerita baharu
 283|Suntingan baharu
-284|Model AI
+284|Enjin AI
 285|Pintar
 286|terbaik untuk prompt anda
 287|Saat
@@ -311,8 +311,8 @@
 311|Gaya
 312|sinematik, warna hangat
 313|Guna struktur ini
-314|Satu baris bagi setiap bahagian — bot membaca setiap bahagian.
-315|Model video
+314|Satu baris bagi setiap bahagian — ejen membaca setiap bahagian.
+315|Enjin video
 316|Bingkai pertama & akhir
 317|Bingkai pertama
 318|Muat naik
@@ -328,7 +328,7 @@
 328|Tidak bersambung
 329|Luar talian
 330|Demo
-331|Semua model
+331|Semua enjin
 332|Terma
 333|Privasi
 334|Bercakap dan bukannya menaip
@@ -375,3 +375,5 @@
 375|Buang model yang dimuat turun
 376|Berjalan pada peranti anda · percuma
 377|Siap pada peranti anda — tiada kredit digunakan.
+378|Audio
+379|Semua alat

@@ -95,7 +95,7 @@
 095|À qui appartient ce que je génère ?
 096|À vous. Vos vidéos vous appartiennent, y compris pour un usage commercial.
 097|Quelles langues sont prises en charge ?
-098|Sous-titres et doublage en 35 langues avec dialectes régionaux — saoudien, égyptien, koweïtien, tunisien, britannique, australien, écossais et bien d'autres. L'interface elle-même existe en 26 langues.
+098|Sous-titres et doublage en 35 langues avec dialectes régionaux — saoudien, égyptien, koweïtien, tunisien, britannique, australien, écossais et bien d'autres. L'interface elle-même existe en 32 langues.
 099|Comment l'Histoire en chapitres reste-t-elle cohérente ?
 100|Chaque chapitre commence à la dernière image du précédent, et l'identité de votre personnage est verrouillée dans chaque plan.
 101|Peut-il publier pour moi ?
@@ -134,7 +134,7 @@
 134|Durée vidéo maximale
 135|Résolution
 136|Fréquence d'images
-137|Modèles vidéo
+137|Moteurs vidéo
 138|Clonage de voix
 139|Le plus populaire
 140|Pro
@@ -162,7 +162,7 @@
 162|E-mail
 163|Prioritaire
 164|Prioritaire + accompagnement
-165|Modèles d'image
+165|Moteurs d'image
 166|Tous les modèles d'image
 167|Voix ElevenLabs
 168|Toutes · y compris Eleven v3
@@ -174,7 +174,7 @@
 174|+ clonage de voix professionnel
 175|langues pour sous-titres, doublage et voix
 176|VOTRE ÉQUIPE DE TOURNAGE IA
-177|Huit spécialistes.
+177|Neuf spécialistes.
 178|Un seul film.
 179|Chaque projet est pris en charge par une équipe d'agents IA — de la première ligne du scénario au contrôle qualité final.
 180|Transforme votre idée en scénario : scènes, dialogues et narration.
@@ -281,7 +281,7 @@
 281|Rien pour l'instant. Décrivez un plan ci-dessus pour créer votre premier clip.
 282|Nouvelle histoire
 283|Nouveau montage
-284|Modèle IA
+284|Moteur IA
 285|Intelligent
 286|le meilleur pour votre prompt
 287|Secondes
@@ -311,8 +311,8 @@
 311|Style
 312|cinématique, couleurs chaudes
 313|Utiliser cette structure
-314|Une ligne par partie — les bots lisent chaque partie.
-315|Modèle vidéo
+314|Une ligne par partie — les agents lisent chaque partie.
+315|Moteur vidéo
 316|Première et dernière image
 317|Première image
 318|Importer
@@ -328,7 +328,7 @@
 328|Non connecté
 329|Hors ligne
 330|Démo
-331|Tous les modèles
+331|Tous les moteurs
 332|Conditions
 333|Confidentialité
 334|Parler au lieu d'écrire
@@ -375,3 +375,5 @@
 375|Supprimer les modèles téléchargés
 376|Tourne sur votre appareil · gratuit
 377|Fait sur votre appareil — aucun crédit utilisé.
+378|Audio
+379|Tous les outils

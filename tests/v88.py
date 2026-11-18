@@ -28,7 +28,7 @@ SET = "(l)=>{S.langAsked=true;document.getElementById('langsug')?.remove();S.use
 CREATE = """async()=>{const wait=ms=>new Promise(r=>setTimeout(r,ms)),out={};
   go('image');renderAll();await wait(400);
   out.mics=document.querySelectorAll('.micbtn').length;const ta=document.getElementById('iprompt');out.resize=ta&&getComputedStyle(ta).resize;
-  const gen=document.querySelector('.ipage .igen');out.genPos=gen&&getComputedStyle(gen).position;
+  const gen=document.querySelector('.ipage [data-act="gen-images"]'),bar=gen&&gen.closest('.dock98'),br=bar&&bar.getBoundingClientRect();out.genPos=bar&&br.bottom<=innerHeight+1&&br.top>=0?'static':gen&&getComputedStyle(gen.parentElement).position;   // (v98: the button lives in the prompt bar, docked in view)
   S.img.prompt="Turn this rough hand-drawn sketch into a high-end 3D animated film still. Subject: منزل. Use the sketch only as the layout";renderView();await wait(100);
   out.cleaned=[S.img.prompt,document.getElementById('iprompt').value];
   out.route=[wantsWorld88("اريد عالم ثلاثي الابعاد من هذه الصورة اتجول فيه","agent",1),wantsWorld88("اصنع عالم من هذه الصورة","agent",1),wantsWorld88("ضع المنتج في عالم الفضاء","agent",1),wantsWorld88("a world from this photo","agent",1),wantsWorld88("put my perfume in a world of flowers","agent",1),wantsWorld88("a 3d world I can walk in","image",0),wantsWorld88("a world from this photo","agent",0)];
@@ -44,7 +44,7 @@ CREATE = """async()=>{const wait=ms=>new Promise(r=>setTimeout(r,ms)),out={};
   try{await API.req('/v1/jobs',{json:{kind:'image',prompt:'x',model:'dotimg'}})}catch(e){out.plainError=e.message}window.fetch=of;API.req=oreq;out.netText=NET88();
   delete M.iRef;
   out.nvBadge=nvBadge();out.nvText=/Powered by NVIDIA|مدعوم من NVIDIA/i.test(document.body.innerText);
-  go('motion');renderAll();await wait(300);out.mc=[...document.querySelectorAll('[data-set="mc83.model"]')].map(b=>b.dataset.val+(b.querySelector('img')?'+logo':''));out.mcModel=MC83().model;out.kie=/\\bKie\\b/i.test(document.body.innerText);
+  go('motion');renderAll();await wait(300);out.mc=[...document.querySelectorAll('[data-set="mc83.model"]')].map(b=>b.dataset.val);out.mcModel=mcModel93(Object.assign({},MC83(),{mode:'moves'}));out.mc26=/2\\.6/.test(document.querySelector('#main').innerText);out.kie=/\\bKie\\b/i.test(document.body.innerText);
   S.draft.ugc.name='Rose serum';S.draft.ugc.price='99 SAR';S.draft.ugc.desc='';go('ugcads');renderAll();await wait(300);
   out.ugc={name:!!document.querySelector('[data-bind="draft.ugc.name"]'),price:!!document.querySelector('[data-bind="draft.ugc.price"]'),about:!!document.querySelector('#ugcabout88'),desc:S.draft.ugc.desc,n:S.draft.ugc.name,p:S.draft.ugc.price};
   const sb=document.querySelector('select#ugcmodel ~ .selbtn')||[...document.querySelectorAll('.selbtn')].find(b=>b._sel&&b._sel.id==='ugcmodel');out.engineBtnPic=!!(sb&&sb.querySelector('.sp88 img'));
@@ -61,7 +61,8 @@ PICS = """async()=>{const wait=ms=>new Promise(r=>setTimeout(r,ms)),out={};
   S.draft.charId='';
   S.jobs=S.jobs.filter(j=>!/^jv88/.test(j.id));S.jobs.push({id:'jv88a',kind:'video',status:'complete',resultUrl:'/media/clip.webm',aspect:'9:16',dur:6,title:'Test clip',prompt:'a red car',created:Date.now()-50000});
   S.jobs.push({id:'jv88b',kind:'video',status:'complete',resultUrl:'/media/clip.webm',aspect:'9:16',dur:6,title:'Older clip',prompt:'a blue car',created:Date.now()-90000});
-  S.lastVideo='jv88a';renderAll();await wait(900);const vids=[...document.querySelectorAll('#main video')].filter(v=>/clip\\.webm/.test(v.currentSrc||v.src||v.querySelector('source')?.src||''));out.posters=[vids.filter(v=>/\\/v1\\/poster\\/clip\\.webm/.test(v.getAttribute('poster')||'')).length,vids.length];
+  S.lastVideo='jv88a';renderAll();await wait(900);const vids=[...document.querySelectorAll('#main video')].filter(v=>/clip\\.webm/.test(v.currentSrc||v.src||v.querySelector('source')?.src||'')),cards=[...document.querySelectorAll('#main .gc98[data-v98*="clip.webm"]')];   // (v98: a finished video in the gallery is its poster picture)
+  out.posters=[vids.filter(v=>/\\/v1\\/poster\\/clip\\.webm/.test(v.getAttribute('poster')||'')).length+cards.filter(c=>c.querySelector('img[src*="/v1/poster/clip.webm"]')).length,vids.length+cards.length];
   const pr=await fetch('/v1/poster/clip.webm');out.posterResp=[pr.status,pr.headers.get('content-type'),(await pr.arrayBuffer()).byteLength>1000];
   const del=document.querySelector('.del88[data-id="jv88b"]');out.delBtn=!!del;
   if(del){del.click();await wait(250);const y=document.querySelector('#modalRoot [data-act="del88-yes"]');out.confirm=!!y&&!!document.querySelector('#modalRoot [data-act="close-sheet"]');out.stillThere=S.jobs.some(j=>j.id==='jv88b');y&&y.click();await wait(300)}
@@ -113,7 +114,8 @@ async def page_run(p, W, lang, world):
     ok(c["retryCalls"] == 2, f"{tag}: a dropped connection on a new job is tried again ({c['retryCalls']} calls)")
     ok(c.get("plainError") == c["netText"] and "Failed to fetch" not in (c.get("plainError") or ""), f"{tag}: a plain message instead of \"Failed to fetch\": {c.get('plainError')}")
     ok(c["nvBadge"] == "" and not c["nvText"], f"{tag}: no \"Powered by NVIDIA AI\"")
-    ok(c["mc"] == ["mc30+logo"] and c["mcModel"] == "mc30" and not c["kie"], f"{tag}: Motion Control is 3.0 only, with its logo {c['mc']}")
+    # (since v93 the page has no engine list: "My character does the moves" uses 3.0, "Replace the person" its own engine)
+    ok(c["mc"] == [] and c["mcModel"] == "mc30" and not c["mc26"] and not c["kie"], f"{tag}: Motion Control 2.6 is gone — the moves use 3.0, no engine list {c['mc']} {c['mcModel']}")
     u = c["ugc"]
     ok(not u["name"] and not u["price"] and u["about"] and u["n"] == "" and u["p"] == "" and "Rose serum" in u["desc"], f"{tag}: UGC: name / price / special fields gone, one line about the product (the old name kept in it) {u}")
     ok(c["engineBtnPic"] and c.get("engineSheet") and c["engineSheet"][0] == c["engineSheet"][1] and c["engineSheet"][1] > 3, f"{tag}: the engine list shows each engine's logo {c.get('engineSheet')}")

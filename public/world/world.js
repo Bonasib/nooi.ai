@@ -22,8 +22,28 @@ const ROOMSET = {
   cafe: [["kitchen", [0, -4.3], 0], ["table", [-2.6, 0.6], 0], ["table", [2.6, 0.6], 0], ["table", [0, 3.2], 0], ["chair", [-2.6, -0.2], 0], ["chair", [-2.6, 1.4], Math.PI], ["chair", [2.6, -0.2], 0], ["chair", [2.6, 1.4], Math.PI], ["chair", [0, 2.4], 0], ["chair", [0, 4], Math.PI], ["plant", [4.3, 4.3], 0], ["lantern", [-4.2, 4.2], 0], ["bottle", [-2.6, 0.6], 0]],
   gallery: [["painting", [-2.5, -4.85], 0], ["painting", [2.5, -4.85], 0], ["statue", [0, 0], 0], ["painting", [-4.85, 1], Math.PI / 2], ["painting", [4.85, 1], -Math.PI / 2], ["plant", [4.3, 4.3], 0], ["bench", [0, 2.6], 0], ["vase", [-3.8, 3.8], 0]],
   showroom: [["car", [0, -1], 0.5], ["suv", [-6, 4], 2.3], ["plant", [7.5, -7.5], 0], ["sofa", [6.5, 5.5], -2.3], ["sign", [0, -7.4], 0], ["rug", [6.5, 4.5], 0]],
+  garage: [["desk", [-2.2, -4.4], 0], ["toolbox", [-3.8, -4.3], 0], ["crate", [-4.9, -2.6], 0], ["crate", [-4.9, -1.5], 0], ["crate", [-4.9, -2.05], 0.4], ["barrel", [-4.85, 0.2], 0], ["tyres", [4.4, -4.2], 0], ["tyres", [4.4, -3.0], 0], ["barrel", [4.5, -1.4], 0], ["crate", [4.3, 3.9], 0], ["cone", [3.2, 4.5], 0], ["toolbox", [-4.4, 2.2], Math.PI / 2]],
   classroom: [["desk", [-2.2, -0.5], Math.PI], ["desk", [0, -0.5], Math.PI], ["desk", [2.2, -0.5], Math.PI], ["desk", [-2.2, 2], Math.PI], ["desk", [0, 2], Math.PI], ["desk", [2.2, 2], Math.PI], ["chair", [-2.2, 0.3], 0], ["chair", [0, 0.3], 0], ["chair", [2.2, 0.3], 0], ["chair", [-2.2, 2.8], 0], ["chair", [0, 2.8], 0], ["chair", [2.2, 2.8], 0], ["painting", [0, -4.85], 0], ["shelf", [-5, 3], Math.PI / 2]]
 };
+
+// low plants (grass, flowers, crops…) stay as they are; a photo cut-out is for the plants you look at
+const BB_SKIP = new Set(["grass", "flowers", "crops", "mushroom", "shrub", "fern", "seaweed", "reeds"]);
+// a photo on a white background → the thing alone (the white around it becomes see-through, soft at the edge), cropped to it
+async function keyWhite(url) {
+  const im = await new Promise((ok, bad) => { const i = new Image(); i.crossOrigin = "anonymous"; i.onload = () => ok(i); i.onerror = () => bad(new Error("picture")); i.src = url; });
+  const s = Math.min(1, 768 / Math.max(im.naturalWidth, im.naturalHeight)), w = Math.max(8, Math.round(im.naturalWidth * s)), h = Math.max(8, Math.round(im.naturalHeight * s));
+  const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(im, 0, 0, w, h);
+  let d; try { d = x.getImageData(0, 0, w, h); } catch { return null; }   // a picture from another site that can't be read
+  const p = d.data, bg = new Uint8Array(w * h), st = [], white = (i) => { const r = p[i * 4], g = p[i * 4 + 1], b = p[i * 4 + 2]; return r > 226 && g > 226 && b > 226 && Math.max(r, g, b) - Math.min(r, g, b) < 24; };
+  for (let X = 0; X < w; X++) st.push(X, (h - 1) * w + X); for (let Y = 0; Y < h; Y++) st.push(Y * w, Y * w + w - 1);
+  while (st.length) { const i = st.pop(); if (bg[i] || !white(i)) continue; bg[i] = 1; const X = i % w, Y = (i / w) | 0; if (X > 0) st.push(i - 1); if (X < w - 1) st.push(i + 1); if (Y > 0) st.push(i - w); if (Y < h - 1) st.push(i + w); }
+  let x0 = w, y0 = h, x1 = -1, y1 = -1, n = 0;
+  for (let i = 0; i < w * h; i++) { if (bg[i]) { p[i * 4 + 3] = 0; continue; } n++; const X = i % w, Y = (i / w) | 0;
+    if ((X > 0 && bg[i - 1]) || (X < w - 1 && bg[i + 1]) || (Y > 0 && bg[i - w]) || (Y < h - 1 && bg[i + w])) { const m = Math.min(p[i * 4], p[i * 4 + 1], p[i * 4 + 2]); if (m > 200) p[i * 4 + 3] = Math.round((255 * (255 - m)) / 55); }
+    if (X < x0) x0 = X; if (X > x1) x1 = X; if (Y < y0) y0 = Y; if (Y > y1) y1 = Y; }
+  if (x1 < x0 || n > w * h * 0.97 || n < w * h * 0.02) return null;   // the background wasn't white, or nothing is left
+  x.putImageData(d, 0, 0); const o = document.createElement("canvas"); o.width = x1 - x0 + 1; o.height = y1 - y0 + 1; o.getContext("2d").drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height); return o;
+}
 
 export async function createWorld(engine, planIn, opts = {}) {
   const plan0 = cleanPlan(planIn);
@@ -58,9 +78,9 @@ export async function createWorld(engine, planIn, opts = {}) {
   const okLand = (x, z, type) => { const T0 = TYPES[type]; if (type === "boat" || type === "pier") return true; if (terrain.isWater(x, z)) return false; const sl = terrain.slopeAt(x, z); return sl < (T0.c === "building" ? 0.35 : T0.c === "plant" || T0.c === "nature" ? 0.9 : 0.5); };
   // ---- the things ----
   const statics = new Map(), dynamics = [], lights = [], cloths = [], sails = [], fires = [], avoid = [], info = [], tmpl = new Map();
-  const tpl = (type, v, color, color2, mat) => { const key = type + "|" + v + "|" + (color || "") + "|" + (color2 || ""); if (!tmpl.has(key)) tmpl.set(key, buildModel(T, K, type, v, { rnd: rng(plan.seed + key.length * 131 + v), color, color2, place: plan.place, snow: plan.terrain.ground === "snow" || plan.weather.kind === "snow", low, mat })); return tmpl.get(key); };
+  const tpl = (type, v, color, color2, mat, era, rust, dims) => { const key = type + "|" + v + "|" + (color || "") + "|" + (color2 || "") + "|" + (era || "") + (rust ? "~r" : "") + (dims ? "|" + dims.join("x") : ""); if (!tmpl.has(key)) tmpl.set(key, buildModel(T, K, type, v, { rnd: rng(plan.seed + key.length * 131 + v), color, color2, place: plan.place, snow: plan.terrain.ground === "snow" || plan.weather.kind === "snow", low, mat, era, rust, dims })); return tmpl.get(key); };
   const place = (o, x, z, ry, s, v, idx) => {
-    const md = tpl(o.type, v, o.color, o.color2, o.mat), T0 = TYPES[o.type] || TYPES.box, ss = (o.scale || 1) * s;
+    const md = tpl(o.type, v, o.color, o.color2, o.mat, o.era, o.rust, o.dims), T0 = TYPES[o.type] || TYPES.box, ss = (o.scale || 1) * s;
     let y = terrain.heightAt(x, z);
     if (md.foundation) { y = terrain.flatten(x, z, md.size[0] * ss / 2 + 1, md.size[2] * ss / 2 + 1, 3); }
     if (o.type === "boat" && terrain.water.level > -900 && terrain.isWater(x, z)) y = terrain.water.level - 0.3;
@@ -115,7 +135,7 @@ export async function createWorld(engine, planIn, opts = {}) {
     else if (T0.c === "building" && lots.length) { spots = []; for (let i = 0; i < o.count; i++) { const l = takeLot(o.type, o.scale); if (l) spots.push(l); } }
     else if (T0.c === "building") spots = scatter(o, o.count, 0, 0, Math.min(lim * 0.8, 14 + o.count * 9), o.count > 1 ? "ring" : null);
     else spots = scatter(o, o.count, 0, 0, o.spread || Math.min(lim * 0.85, 10 + o.count * 4));
-    spots.forEach(([x, z], i) => place(o, x, z, o.rot ? (o.rot * Math.PI) / 180 : buildingYaw(x, z, T0), 0.9 + rnd() * 0.2 * (T0.c === "plant" ? 2 : 0.5), (i + idx) % 2, idx));
+    spots.forEach(([x, z], i) => place(o, x, z, o.rot ? (o.rot * Math.PI) / 180 : buildingYaw(x, z, T0), o.dims ? 1 : 0.9 + rnd() * 0.2 * (T0.c === "plant" ? 2 : 0.5), (i + idx) % 2, idx));   // (v215: a size the words gave is kept exactly)
     if (idx === 0 || o.hero) plan._hero = spots[0] || plan._hero;
   });
   function buildingYaw(x, z, T0) { if (T0.c !== "building" && T0.c !== "street" && T0.c !== "vehicle") return rnd() * 6.283; let best = null, bd = 1e9; for (const r of roads) { const d = segDist(x, z, r); if (d < bd) { bd = d; best = r; } } if (best && bd < 40) { const dx = best.to[0] - best.from[0], dz = best.to[1] - best.from[1]; const nx = -dz, nz = dx, s = (best.from[0] - x) * nx + (best.from[1] - z) * nz > 0 ? 1 : -1; return Math.atan2(nx * s, nz * s); } return Math.atan2(-x, -z); }
@@ -146,7 +166,7 @@ export async function createWorld(engine, planIn, opts = {}) {
   }
   // ---- turn the records into instanced meshes (one chunk of the map per mesh, so the camera skips what it can't see) ----
   progress(0.6, "meshes");
-  const m4 = new T.Matrix4(), q = new T.Quaternion(), e = new T.Euler(), sv = new T.Vector3(), pv = new T.Vector3(), chunks = [];
+  const m4 = new T.Matrix4(), q = new T.Quaternion(), e = new T.Euler(), sv = new T.Vector3(), pv = new T.Vector3(), chunks = [], bbs = [];
   for (const [, g] of statics) {
     const list = g.list, md = g.md;
     for (const k in md.parts) {
@@ -224,6 +244,9 @@ export async function createWorld(engine, planIn, opts = {}) {
     for (let i = splashes.length - 1; i >= 0; i--) if (splashes[i].done) splashes.splice(i, 1);
     if (Math.abs(cam.position.x) > S * 2) player.teleport(plan.spawn.at[0], plan.spawn.at[1]);
   });
+  // (v215) fish with no water of their own swim inside the tank that was asked for
+  { const tk = info.find((r) => r.type === "aquarium" && r.md && r.md.tank); if (tk) { const k = tk.md.tank, s = tk.s;
+    for (const l of plan.life) if (l.type === "fish" && !l.box) l.box = { x: tk.x, z: tk.z, hx: Math.max(0.12, (k.w / 2 - 0.22) * s), hz: Math.max(0.1, (k.d / 2 - 0.2) * s), y0: tk.y + (k.sh + 0.32) * s, y1: tk.y + (k.sh + k.h - 0.3) * s }; } }
   const life = buildLife(T, K, mats, plan, terrain, water, tier, rnd, { roads, blocked: (x, z) => { const k = ci(x, z); return k >= 0 && occ[k] === 2; }, avoid });
   scene.add(life.group);
   // the people (real-looking 3D people the page adds as their models arrive: see human.js) and what they can walk to
@@ -273,13 +296,20 @@ export async function createWorld(engine, planIn, opts = {}) {
   }
   // ---- inside: a room with walls, windows, a door, a ceiling light ----
   function buildRoom() {
-    const w = S, h = 3.2, t = 0.2, wallC = plan.terrain.color || (plan.room === "majlis" ? "#efe4cf" : "#eeebe4"), floorC = plan.terrain.color2 || (plan.room === "majlis" ? "#b98a58" : "#c49a6c");
+    const w = S, h = 3.2, t = 0.2, gar = plan.room === "garage", wallC = plan.terrain.color || (plan.room === "majlis" ? "#efe4cf" : gar ? "#d9d7d1" : "#eeebe4"), floorC = plan.terrain.color2 || (plan.room === "majlis" ? "#b98a58" : gar ? "#9b988f" : "#c49a6c");
     const fm = new T.Mesh(new T.BoxGeometry(w, 0.1, w), new T.MeshStandardMaterial({ color: floorC, roughness: 0.7 })); fm.position.y = -0.05; fm.receiveShadow = tier.shadows > 0; root.add(fm);
     const wm = new T.MeshStandardMaterial({ color: wallC, roughness: 0.95 }), ceil = new T.Mesh(new T.BoxGeometry(w, 0.1, w), wm); ceil.position.y = h + 0.05; root.add(ceil);
     for (const [x, z, hx, hz] of [[0, -w / 2, w / 2, t], [0, w / 2, w / 2, t], [-w / 2, 0, t, w / 2], [w / 2, 0, t, w / 2]]) { const m = new T.Mesh(new T.BoxGeometry(hx * 2, h, hz * 2), wm); m.position.set(x, h / 2, z); m.receiveShadow = tier.shadows > 0; root.add(m); roomWalls.push({ x, y: h / 2, z, hx, hy: h / 2, hz }); }
     const add = (type, x, z, ry, o = {}) => place({ type, scale: 1, color: o.color || null, color2: o.color2 || null, dyn: (TYPES[type] || {}).dyn }, x, z, ry, 1, 0, -1);
     const k = w / 12; for (const [type, [x, z], ry] of ROOMSET[plan.room] || ROOMSET.living) { if (!(plan.exclude || []).includes(type)) add(type, x * k, z * k, ry, plan.room === "majlis" && type === "cushions" ? { color: "#8e2f2a", color2: "#d4a63a" } : {}); }
-    for (const x of [-w * 0.28, w * 0.28]) add("window", x, -w / 2 + 0.25, 0); add("window", w / 2 - 0.25, 0, -Math.PI / 2); add("door", -w / 2 + 0.25, w * 0.25, Math.PI / 2);
+    if (gar) {   // (v212) the front wall is the roller door; one side window; a person door; an oil stain on the concrete
+      const dw = Math.min(w * 0.55, 5.4), dm = new T.MeshStandardMaterial({ color: "#9ba0a6", roughness: 0.5, metalness: 0.4 });
+      const dp = new T.Mesh(new T.BoxGeometry(dw, 2.5, 0.12), dm); dp.position.set(0, 1.25, -w / 2 + 0.26); root.add(dp);
+      for (let i = 1; i < 5; i++) { const sl = new T.Mesh(new T.BoxGeometry(dw, 0.045, 0.14), new T.MeshStandardMaterial({ color: "#7e838a" })); sl.position.set(0, i * 0.5, -w / 2 + 0.26); root.add(sl); }
+      const hd = new T.Mesh(new T.CylinderGeometry(0.2, 0.2, dw, 10), dm); hd.rotation.z = Math.PI / 2; hd.position.set(0, 2.72, -w / 2 + 0.34); root.add(hd);
+      const st = new T.Mesh(new T.CircleGeometry(0.55, 14), new T.MeshStandardMaterial({ color: "#36383b", roughness: 0.4 })); st.rotation.x = -Math.PI / 2; st.position.set(0.4, 0.012, 0.6); root.add(st);
+      add("window", w / 2 - 0.25, 0, -Math.PI / 2); add("door", -w / 2 + 0.25, w * 0.25, Math.PI / 2);
+    } else { for (const x of [-w * 0.28, w * 0.28]) add("window", x, -w / 2 + 0.25, 0); add("window", w / 2 - 0.25, 0, -Math.PI / 2); add("door", -w / 2 + 0.25, w * 0.25, Math.PI / 2); }
     const lamp = new T.Mesh(new T.CylinderGeometry(0.55, 0.7, 0.18, 16), new T.MeshBasicMaterial({ color: 0xfff3dc })); lamp.position.set(0, h - 0.12, 0); root.add(lamp);
     lights.push({ color: "#fff1d6", power: 1.3, x: 0, y: h - 0.9, z: 0 }); lights.push({ color: "#ffe2b0", power: 0.8, x: w * 0.3, y: h - 1.0, z: w * 0.3 });
   }
@@ -291,7 +321,25 @@ export async function createWorld(engine, planIn, opts = {}) {
     addPerson(entry, url) { return people.add(entry || {}, url); },
     stats() { return { ...engine.stats(), things: info.length + movers.length, movers: movers.length, life: life.count, people: people.count, physics: !!physics, chunks: chunks.length, place: plan.place }; },
     setTime(h) { plan.time = h; sky.setTime(h); tintWater(); }, setWeather(k) { plan.weather.kind = k; sky.setWeather(k); tintWater(); },
-    async setPanorama(url) { const tex = await new T.TextureLoader().loadAsync(url); sky.setPanorama(tex); plan.pano = url; },
+    // the AI's 360° picture becomes the sky and also lights the world (soft light and reflections from the place itself)
+    async setPanorama(url) { const tex = await new T.TextureLoader().loadAsync(url); sky.setPanorama(tex); plan.pano = url;
+      try { const env = tex.clone(); env.mapping = T.EquirectangularReflectionMapping; env.colorSpace = T.SRGBColorSpace; env.needsUpdate = true; if (scene.environment && scene.environment.dispose) scene.environment.dispose(); scene.environment = env; if ("environmentIntensity" in scene) scene.environmentIntensity = 0.5; } catch (e) { console.warn("nooi 3D: light from the panorama", e); } },
+    // an AI photo of the ground (seamless, seen from above) covers the land; roads, wet edges, rock and snow stay painted on it
+    async setGround(url) { if (!ground || splatWorld) return false; const tex = await new T.TextureLoader().loadAsync(url); tex.colorSpace = T.SRGBColorSpace; tex.wrapS = tex.wrapT = T.RepeatWrapping; const rep = Math.max(4, Math.round(S / 7)); tex.repeat.set(rep, rep); tex.anisotropy = Math.min(8, engine.maxAniso || 8);
+      const fresh = terrain.mesh(roads, { plain: true }); if (!fresh) return false; ground.geometry.dispose(); ground.geometry = fresh.geometry; const old = ground.material; ground.material = fresh.material; ground.material.map = tex; ground.material.flatShading = false; ground.material.needsUpdate = true; if (old.map && old.map !== tex) old.map.dispose(); old.dispose(); plan.groundTex = url; return true; },
+    // the kinds of plants this world has (most first) — the ones a photo cut-out can replace
+    plantTypes() { const m = new Map(); for (const im of chunks) { const t = im.userData.type; if ((TYPES[t] || {}).c !== "plant" || BB_SKIP.has(t)) continue; const s = m.get(t) || new Set(); s.add(im.userData.list); m.set(t, s); }
+      return [...m].map(([t, s]) => [t, [...s].reduce((a, L) => a + L.length, 0)]).sort((a, b) => b[1] - a[1]); },
+    // a photo of the real plant on a white background becomes two crossed cut-outs at every place the built one stood
+    async setBillboard(type, url) { const cv = await keyWhite(url); if (!cv) return 0; const tex = new T.CanvasTexture(cv); tex.colorSpace = T.SRGBColorSpace; tex.anisotropy = 4;
+      const lists = new Set(), hide = []; for (const im of chunks) if (im.userData.type === type) { lists.add(im.userData.list); hide.push(im); } if (!lists.size) { tex.dispose(); return 0; }
+      for (const b of bbs.filter((x) => x.userData.type === type)) { root.remove(b); b.geometry.dispose(); } bbs.splice(0, bbs.length, ...bbs.filter((x) => x.userData.type !== type));
+      const any = [...lists][0][0], h = (any && any.md && any.md.size ? any.md.size[1] : (TYPES[type] || { s: [3, 4, 3] }).s[1]) * 1.04, w = h * (cv.width / cv.height);
+      const g1 = new T.PlaneGeometry(w, h); g1.translate(0, h / 2, 0); const g2 = g1.clone(); g2.rotateY(Math.PI / 2);
+      const mat = new T.MeshStandardMaterial({ map: tex, alphaTest: 0.45, side: T.DoubleSide, roughness: 0.92, metalness: 0 }); let n = 0;
+      for (const L of lists) for (const g of [g1, g2]) { const im = new T.InstancedMesh(g, mat, L.length); L.forEach((r, i) => { m4.compose(pv.set(r.x, r.y, r.z), q.setFromEuler(e.set(0, r.ry, 0)), sv.set(r.s, r.s, r.s)); im.setMatrixAt(i, m4); });
+        im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.castShadow = tier.shadows > 0; im.receiveShadow = tier.shadows > 0; im.userData = { type, list: L, bb: 1 }; root.add(im); bbs.push(im); n += g === g1 ? L.length : 0; }
+      for (const im of hide) im.visible = false; plan.billboards = Object.assign({}, plan.billboards, { [type]: url }); return n; },
     // an AI-made 3D object (a .glb) takes the place of the built one it stands for
     async addModel(url, { i = 0, name = "", at = null } = {}) {
       const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js"); const g = await new GLTFLoader().loadAsync(url), obj = g.scene;
@@ -312,6 +360,8 @@ export async function createWorld(engine, planIn, opts = {}) {
   };
   // AI parts that were made before (a saved world): the 360° sky and the 3D objects
   if (plan.pano) api.setPanorama(plan.pano).catch((e) => console.warn("panorama", e));
+  if (plan.groundTex) api.setGround(plan.groundTex).catch((e) => console.warn("ground", e));
+  for (const [t, u] of Object.entries(plan.billboards || {})) api.setBillboard(t, u).catch((e) => console.warn("cut-out", e));
   for (const m of plan.models || []) api.addModel(m.url, m).catch((e) => console.warn("model", e));
   return api;
 }

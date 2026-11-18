@@ -97,7 +97,7 @@ async def browser_checks(p):
         await pg.wait_for_timeout(500); return ctx, pg
     COLLECT = r"""(v)=>{const vis=e=>{const r=e.getBoundingClientRect();if(r.width<2||r.height<2)return false;const cs=getComputedStyle(e);return cs.visibility!=='hidden'&&cs.display!=='none'&&+cs.opacity>0.05};
       const h1=[...document.querySelectorAll('#main h1')].filter(vis).map(h=>h.textContent.trim());
-      const big=[...document.querySelectorAll('#main svg')].filter(vis).map(s=>{const r=s.getBoundingClientRect();return [Math.round(r.width),Math.round(r.height),(s.parentElement.className.baseVal??s.parentElement.className)+'']}).filter(x=>x[0]>44&&x[1]>44&&!/plane|bot|crew|nmark|logo|brand|hero|stage|thumb|tpl|art|world|face|empty/i.test(x[2]));
+      const big=[...document.querySelectorAll('#main svg')].filter(vis).map(s=>{const r=s.getBoundingClientRect();return [Math.round(r.width),Math.round(r.height),(s.parentElement.className.baseVal??s.parentElement.className)+'']}).filter(x=>x[0]>44&&x[1]>44&&!/plane|bot|crew|nmark|logo|brand|hero|stage|thumb|tpl|art|world|face|empty|^sav$/i.test(x[2]));
       const emoji=[...document.querySelectorAll('#side,#bottomnav,#main')].flatMap(r=>[...r.querySelectorAll('button,a,.tile,.chip,.nav')]).filter(vis).map(e=>e.textContent).filter(t=>/\p{Extended_Pictographic}/u.test(t)||/[\u{1F1E6}-\u{1F1FF}]/u.test(t)).slice(0,3);
       const txt=document.querySelector('#main').innerText;
       return {view:S.view,h1,name:name82(S.view),big,emoji,fake:/Encoding prompt|Denoising|ترميز الوصف/.test(txt)&&!/Enhance|التحسين/.test(name82(S.view)||''),admin:/Admin →|الإدارة ←/.test(txt),
@@ -116,7 +116,7 @@ async def browser_checks(p):
             for v in views:
                 await pg.evaluate("(v)=>{document.getElementById('modalRoot').innerHTML='';go(v);renderAll();scrollTo(0,0)}", v); await pg.wait_for_timeout(450)
                 r = await pg.evaluate(COLLECT, v)
-                ok(len(r["h1"]) == 1 or r["view"] == "home", f"{tag} {v}: one title {r['h1']}")
+                ok(len(r["h1"]) == 1 or r["view"] == "home" or (v == "edit" and not r["h1"]), f"{tag} {v}: one title {r['h1']}")   # (v151: the phone studio's bar shows the project's name instead; v216: so does the computer's workspace — the title stays for screen readers)
                 if r["name"] and r["h1"] and r["view"] != "home": ok(r["h1"][0] == r["name"], f"{tag} {v}: the title is the tool's name ({r['h1'][0]} vs {r['name']})")
                 ok(not r["big"], f"{tag} {v}: no oversized icon {r['big']}")
                 ok(not r["emoji"], f"{tag} {v}: no emoji on buttons {r['emoji']}")
@@ -133,28 +133,30 @@ async def browser_checks(p):
               go('connect');renderAll();const landed=S.view;const nav=[...document.querySelectorAll('[data-go="connect"]')].filter(e=>e.offsetParent).length;
               go('video');renderAll();const tabs=[...document.querySelectorAll('.hubtabs [data-go]')].map(e=>e.dataset.go);[ME.role,ME.perms]=keep;return {bad,landed,nav,tabs}}""", views)
             ok(not r["bad"] and r["landed"] != "connect" and r["nav"] == 0, f"{tag}: customers see no server settings or admin directions {r}")
-            ok("cinema" in r["tabs"] and r["tabs"].index("cinema") == 1, f"{tag}: Cinema Studio is the second tab of Video {r['tabs']}")
+            ok("cinema" not in r["tabs"] and r["tabs"][:2] == ["video", "motion"], f"{tag}: Cinema Studio is part of nooi Studio, the first tab of Video (v93) {r['tabs']}")
             if lang == "ar":
                 r = await pg.evaluate("()=>({title:S.story.title,ch:S.story.chapters.map(c=>c.title),char:S.chars[0]&&S.chars[0].name,board:(S.board.frames[0]||{}).action})")
                 ok(r["title"] == "حارس المنارة الأخير" and r["char"] == "الحارس" and all(not any(ch.isascii() and ch.isalpha() for ch in t) for t in r["ch"]) and r["board"] and not r["board"].isascii(), f"{tag}: the example story is in Arabic {r}")
             await ctx.close()
-    # Cinema Studio: a look fills the choices; the prompt carries them; "Film it" makes one video with the choices
+    # Cinema Studio is part of nooi Studio (v93): its address opens the Video page, whose one box has the camera, lens, focal length,
+    # aperture, light and ready looks; a look fills the choices; the shot carries them; a double tap makes one video
     ctx, pg = await page("en", 1280)
-    await pg.evaluate("()=>{go('cinema');renderAll()}"); await pg.wait_for_timeout(400)
-    r = await pg.evaluate("()=>({tiles:document.querySelectorAll('#main .cin82t').length,looks:document.querySelectorAll('#main [data-act=\"cin-look\"]').length})")
-    ok(r["tiles"] == 6 and r["looks"] == 6, f"cinema: six choices and six ready looks {r}")
-    await pg.click('[data-act="cin-look"][data-v="noir"]'); await pg.wait_for_timeout(200)
-    await pg.click('[data-act="cin-make"]'); await pg.wait_for_timeout(1400)   # (Generate buttons pause 1.2 s after a tap)
-    r = await pg.evaluate("()=>({n:S.jobs.filter(j=>j.meta&&j.meta.cinema).length,c:{...S.cin}})")
-    ok(r["n"] == 0 and r["c"]["light"] == "noir" and r["c"]["cam"] == "vintage", f"cinema: a look fills the choices; nothing is made without a shot {r}")
-    await pg.fill('[data-bind="cin.prompt"]', "A detective walks under a streetlight in the rain"); await pg.wait_for_timeout(150)
+    await pg.evaluate("()=>{go('cinema');renderAll();S.draft.variations=1}"); await pg.wait_for_timeout(400)
+    r = await pg.evaluate("()=>({view:S.view,secs:['c_cam','c_lens','c_focal','c_ap','c_light','look'].filter(k=>document.querySelector('.box93 [data-o93=\"'+k+'\"]')).length})")
+    ok(r["view"] == "video" and r["secs"] == 6, f"cinema: opens nooi Studio with the camera choices and ready looks in its box {r}")
+    await pg.click('[data-o93="look"]'); await pg.wait_for_timeout(150)
+    await pg.click('[data-act="look93"][data-v="noir"]'); await pg.wait_for_timeout(200)
+    r = await pg.evaluate("()=>({n:S.jobs.filter(j=>j.meta&&j.meta.cinema).length,c:{...S.draft.cine93},w:cineWords93()})")
+    ok(r["n"] == 0 and r["c"].get("light") == "noir" and r["c"].get("cam") == "vintage", f"cinema: a look fills the choices; nothing is made without a shot {r}")
+    words = r["w"]
+    await pg.fill('[data-bind="draft.prompt"]', "A detective walks under a streetlight in the rain"); await pg.wait_for_timeout(150)
     before = len(stats()["tasks"])
-    await pg.click('[data-act="cin-make"]'); await pg.click('[data-act="cin-make"]')
+    await pg.click('[data-act="gen-video"]'); await pg.click('[data-act="gen-video"]')
     await pg.wait_for_timeout(4000)
-    r = await pg.evaluate("()=>S.jobs.filter(j=>j.meta&&j.meta.cinema).map(j=>({prompt:j.prompt,aspect:j.aspect,kind:j.kind,status:j.status,meta:j.meta.cinema}))")
+    r = await pg.evaluate("()=>S.jobs.filter(j=>j.meta&&j.meta.cinema).map(j=>({prompt:j.prompt,title:j.title,kind:j.kind,status:j.status,meta:j.meta.cinema}))")
     t = stats()["tasks"][before:]
-    ok(len(r) == 1 and "black-and-white noir" in r[0]["prompt"] and "16mm" in r[0]["prompt"] and r[0]["meta"]["move"] == "tracking" and r[0]["aspect"] == "21:9", f"cinema: one video with the choices (a double tap makes one) {r}")
-    ok(len(t) == 1 and "black-and-white noir" in json.dumps(t[0]), f"cinema: the engine receives the film wording {t}")
+    ok(len(r) == 1 and words and words in r[0]["prompt"] and "noir" in r[0]["prompt"] and r[0]["meta"]["light"] == "noir", f"cinema: one video with the choices (a double tap makes one) {r}")
+    ok(len(t) == 1 and "noir" in json.dumps(t[0]), f"cinema: the engine receives the film wording {t}")
     # the Voice page: one "Clone a voice"; the empty video page: no steps
     await pg.evaluate("()=>{go('voice');renderAll()}"); await pg.wait_for_timeout(300)
     ok(await pg.evaluate("()=>[...document.querySelectorAll('#main [data-act=\"vc-open\"]')].filter(e=>e.offsetParent).length") == 1, "voice: one Clone a voice")

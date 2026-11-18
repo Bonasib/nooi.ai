@@ -1,0 +1,26 @@
+{
+  "name": "@nooi/studio-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "nooi Studio for Android and iOS (Capacitor) — the studio web app in a native shell, saving and sharing through the phone",
+  "scripts": {
+    "build": "pnpm --filter @nooi/studio-web build:mobile",
+    "android": "pnpm build && (test -d android || cap add android) && cap sync android",
+    "ios": "pnpm build && (test -d ios || cap add ios) && cap sync ios",
+    "icons": "capacitor-assets generate --iconBackgroundColor '#0b0c0f' --splashBackgroundColor '#0b0c0f'",
+    "open:android": "cap open android",
+    "open:ios": "cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.6.0",
+    "@capacitor/core": "8.6.0",
+    "@capacitor/filesystem": "8.1.5",
+    "@capacitor/ios": "8.6.0",
+    "@capacitor/share": "8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.6.0",
+    "typescript": "5.9.3"
+  }
+}

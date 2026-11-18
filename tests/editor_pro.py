@@ -5,7 +5,7 @@
 # export: an MP4 at the exact size of the format (1080×1920 for Reels) with sound and the right length.
 import asyncio, json, os, shutil, subprocess, sys, tempfile, time, urllib.request
 from playwright.async_api import async_playwright
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); PORT = 8086
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); PORT = 8661   # (v197: its own port — 8086 is the render-review test's stand-in engine, and a killed run left it listening)
 D = tempfile.mkdtemp(prefix="nooi-edp-"); os.makedirs(D + "/data"); os.makedirs(D + "/media"); os.symlink(ROOT + "/public", D + "/public")
 json.dump({"users": {"local": {"plan": "studio", "credits": 5000, "jobs": {}, "ledger": []}}}, open(D + "/data/db.json", "w"))
 FF = os.environ.get("FFMPEG_PATH", "ffmpeg"); M = D + "/media/"
@@ -73,8 +73,9 @@ async def run(p, w, mob, fails, out):
     await E("()=>{const i=document.querySelector('[data-ib=t1]');i.value='عملاء سعداء';i.dispatchEvent(new Event('input',{bubbles:true}))}")
     await E("()=>{ED.t=S.ed.infos[0].start+2}"); await pg.wait_for_timeout(500)
     inf = await E("()=>[S.ed.infos.length,S.ed.infos[4].t1,(ED.hit||[]).filter(h=>h.k==='info').length]"); check("infographics added, edited and drawn", inf[0] == 5 and inf[1] == "عملاء سعداء" and inf[2] >= 1, inf)
-    await E("()=>{S.ed.caps.on=true;S.ed.caps.words=edxSpread('welcome to our new store',0.2,2.5);API.cfg.llm=true;const o=API.req;API.req=async(p,x)=>p==='/v1/llm/json'?{lines:JSON.parse(x.json.prompt.split('Lines:\\n')[1]).map(l=>'AR:'+l)}:o(p,x);S.ed.tab='words';renderView()}"); await pg.wait_for_timeout(300)
+    await E("()=>{S.ed.caps.on=true;S.ed.caps.words=edxSpread('welcome to our new store',0.2,2.5);API.cfg.llm=true;const o=API.req;API.req=async(p,x)=>p==='/v1/llm/json'?{lines:JSON.parse(x.json.prompt.split('Lines:\\n')[1]).map(l=>'AR:'+l)}:p==='/v1/translate149'?{lines:x.json.lines.map(l=>'AR:'+l)}:o(p,x);self.Translator=undefined;S.localAI=false;S.ed.tab='words';renderView()}"); await pg.wait_for_timeout(300)
     await E("()=>{document.querySelector('#edtrl').value='ar';document.querySelector('[data-act=edai-tr]').click()}"); await pg.wait_for_timeout(800)
+    # (v149: on this device first — the browser's translator, the on-device model; switched off here, so the server's translation answers)
     tr = await E("()=>S.ed.caps.words.map(w=>w.w).join(' ')"); check("AI captions translation", tr.startswith("AR:"), tr)
     await E("()=>{S.ed.tab='audio';renderView()}"); await pg.wait_for_timeout(200); await E("()=>document.querySelector('[data-act=edai-vo]').click()"); await pg.wait_for_timeout(300)
     await E("()=>{document.querySelector('[data-act=edvo-pick][data-v=boy]').click();document.querySelector('#edvot').value='hello';document.querySelector('[data-act=edvo-go]').click()}"); await pg.wait_for_timeout(500)

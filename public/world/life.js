@@ -79,7 +79,7 @@ export function buildLife(T, K, mats, plan, terrain, water, tier, rnd, { roads =
   const want = [];
   // people are never drawn here any more: they are real-looking 3D people (human.js), added by the page as their models arrive
   const HUMAN = new Set(["person", "child", "robe"]);
-  for (const l of plan.life) if (!HUMAN.has(l.type)) want.push({ type: l.type, count: Math.max(1, Math.ceil(l.count * Math.max(0.8, tier.life) - 0.01)), at: l.at, spread: l.spread });   // what was asked for stays (almost) all there
+  for (const l of plan.life) if (!HUMAN.has(l.type)) want.push({ type: l.type, count: Math.max(1, Math.ceil(l.count * Math.max(0.8, tier.life) - 0.01)), at: l.at, spread: l.spread, box: l.box });   // what was asked for stays (almost) all there
   // a little life the place always has (birds in the sky, fish in a lake) unless the plan already asked for it
   const PL = { meadow: [["bird", 5], ["butterfly", 5]], park: [["person", 6], ["dog", 1], ["bird", 5]], forest: [["bird", 6], ["deer", 2]], rainforest: [["bird", 8], ["butterfly", 6]], mountain: [["eagle", 2]], snow: [["bird", 2]],
     desert: [["camel", 3], ["eagle", 1]], oasis: [["camel", 3], ["bird", 4]], beach: [["seagull", 5], ["person", 3]], island: [["seagull", 5]], lake: [["duck", 4], ["bird", 5]], canyon: [["eagle", 2]], city: [["person", 12], ["car", 6], ["bird", 2]],
@@ -97,7 +97,8 @@ export function buildLife(T, K, mats, plan, terrain, water, tier, rnd, { roads =
       for (let i = 0; i < n; i++) {
         const cx = w.at ? w.at[0] : 0, cz = w.at ? w.at[1] : 0, r = w.spread || lim * 0.7;
         let spot = null;
-        if (sp.kind === "swim" || sp.kind === "float") { const W = terrain.water; spot = W.r ? findSpot(W.x, W.z, W.r * 0.9, wet) : findSpot(cx, cz, r, wet, 80); }
+        if (w.box) { const b = w.box; spot = [b.x + (rnd() - 0.5) * 1.6 * b.hx, b.z + (rnd() - 0.5) * 1.6 * b.hz]; }   // (v215) inside the tank
+        else if (sp.kind === "swim" || sp.kind === "float") { const W = terrain.water; spot = W.r ? findSpot(W.x, W.z, W.r * 0.9, wet) : findSpot(cx, cz, r, wet, 80); }
         else if (sp.kind === "fly" || sp.kind === "soar" || sp.kind === "flyby") spot = [cx + (rnd() - 0.5) * r, cz + (rnd() - 0.5) * r];
         else spot = findSpot(cx, cz, r, land) || findSpot(plan.spawn.at[0], plan.spawn.at[1], 30, land);
         if (!spot) continue;
@@ -106,6 +107,7 @@ export function buildLife(T, K, mats, plan, terrain, water, tier, rnd, { roads =
         if (type === "robe") a.tint.headwear = a.tint.shirt === "#151517" ? "#151517" : rnd() < 0.5 ? "#f4f4f0" : "#c8443a";
         if (sp.kind === "fly") a.alt = 12 + rnd() * 20; if (sp.kind === "soar") a.alt = 40 + rnd() * 30; if (sp.kind === "flyby") { a.alt = 160 + rnd() * 60; a.x = -tier.far * 0.8; a.z = (rnd() - 0.5) * 300; a.yaw = Math.PI / 2; }
         if (sp.kind === "flutter") a.alt = 0.6 + rnd() * 1.2;
+        if (w.box) { a.box = w.box; a.by = w.box.y0 + rnd() * Math.max(0, w.box.y1 - w.box.y0); a.rx = w.box.hx * (0.3 + rnd() * 0.65); a.rz = w.box.hz * (0.3 + rnd() * 0.65); }
         agents.push(a);
       }
       if (!agents.length) continue;
@@ -155,6 +157,8 @@ export function buildLife(T, K, mats, plan, terrain, water, tier, rnd, { roads =
           case "flyby": { a.x += sp.speed * dt; a.yaw = Math.PI / 2; a.y = a.alt; if (a.x > tier.far * 0.9) { a.x = -tier.far * 0.9; a.z = (rnd() - 0.5) * 300; } break; }
           case "flutter": { a.phase += dt; a.x += Math.sin(a.phase * 1.3 + i) * dt * 1.2; a.z += Math.cos(a.phase * 0.9 + i * 2) * dt * 1.2; if (Math.hypot(a.x - a.cx, a.z - a.cz) > 8) { a.x += (a.cx - a.x) * dt; a.z += (a.cz - a.z) * dt; } a.yaw = Math.sin(a.phase) * 3; a.y = terrain.heightAt(a.x, a.z) + a.alt + Math.sin(a.phase * 3) * 0.3; a.flap = Math.sin(t * 30 + i); break; }
           case "float": case "swim": {
+            if (a.box) { const b = a.box; a.phase += dt * 0.32 * a.k; const nx = b.x + Math.cos(a.phase) * a.rx, nz = b.z + Math.sin(a.phase) * a.rz; a.yaw = Math.atan2(nx - a.x, nz - a.z); a.x = nx; a.z = nz;
+              a.y = a.by + Math.sin(t * 0.7 + i) * 0.04; a.flap = Math.sin(t * 9 + i); break; }
             a.phase += dt * 0.12 * a.k; const W = terrain.water, cx = W.r ? W.x : a.cx, cz = W.r ? W.z : a.cz, r = W.r ? W.r * 0.6 * (0.4 + (i % 5) / 6) : a.r;
             const nx = cx + Math.cos(a.phase) * r, nz = cz + Math.sin(a.phase) * r; if (wet(nx, nz)) { a.yaw = Math.atan2(nx - a.x, nz - a.z); a.x = nx; a.z = nz; }
             a.y = sp.kind === "float" ? wlvl + Math.sin(t * 2 + i) * 0.02 : Math.max(terrain.heightAt(a.x, a.z) + 0.5, Math.min(wlvl - 0.6, wlvl - 1.2 - (i % 4) * 0.8)); a.flap = Math.sin(t * 8 + i); break; }

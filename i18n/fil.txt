@@ -95,7 +95,7 @@
 095|Kanino ang mga ginagawa ko?
 096|Sa iyo. Iyo ang mga video mo, pati sa komersyal na paggamit.
 097|Anong mga wika ang suportado?
-098|Subtitle at dubbing sa 35 wika na may mga rehiyonal na diyalekto — Saudi, Egyptian, Kuwaiti, Tunisian, British, Australian, Scottish at marami pa. Ang interface mismo ay nasa 26 na wika.
+098|Subtitle at dubbing sa 35 wika na may mga rehiyonal na diyalekto — Saudi, Egyptian, Kuwaiti, Tunisian, British, Australian, Scottish at marami pa. Ang interface mismo ay nasa 32 na wika.
 099|Paano nananatiling pare-pareho ang Kuwentong may Kabanata?
 100|Bawat kabanata ay nagsisimula sa huling frame ng nauna, at naka-lock ang pagkakakilanlan ng iyong karakter sa bawat shot.
 101|Puwede ba itong mag-post para sa akin?
@@ -134,7 +134,7 @@
 134|Pinakamahabang video
 135|Resolution
 136|Frame rate
-137|Mga video model
+137|Mga video engine
 138|Voice cloning
 139|Pinakasikat
 140|Pro
@@ -162,7 +162,7 @@
 162|Email
 163|Priority
 164|Priority + onboarding
-165|Mga image model
+165|Mga picture engine
 166|Lahat ng image model
 167|Mga boses ng ElevenLabs
 168|Lahat · kasama ang Eleven v3
@@ -174,7 +174,7 @@
 174|+ propesyonal na voice cloning
 175|wika para sa subtitle, dubbing at boses
 176|ANG IYONG AI FILM CREW
-177|Walong espesyalista.
+177|Siyam na espesyalista.
 178|Isang pelikula.
 179|Bawat proyekto ay hinahawakan ng isang crew ng mga AI agent — mula sa unang linya ng script hanggang sa huling quality check.
 180|Ginagawang script ang iyong ideya: mga eksena, diyalogo at pagsasalaysay.
@@ -281,7 +281,7 @@
 281|Wala pa. Maglarawan ng shot sa itaas para gawin ang una mong clip.
 282|Bagong kuwento
 283|Bagong edit
-284|AI model
+284|AI engine
 285|Smart
 286|pinakamahusay para sa prompt mo
 287|Segundo
@@ -311,8 +311,8 @@
 311|Istilo
 312|cinematic, maiinit na kulay
 313|Gamitin ang istrukturang ito
-314|Isang linya bawat bahagi — binabasa ng mga bot ang bawat bahagi.
-315|Video model
+314|Isang linya bawat bahagi — binabasa ng mga ahente ang bawat bahagi.
+315|Video engine
 316|Una at huling frame
 317|Unang frame
 318|Mag-upload
@@ -328,7 +328,7 @@
 328|Hindi nakakonekta
 329|Offline
 330|Demo
-331|Lahat ng model
+331|Lahat ng engine
 332|Mga tuntunin
 333|Privacy
 334|Magsalita sa halip na mag-type
@@ -375,3 +375,5 @@
 375|Alisin ang mga na-download na model
 376|Tumatakbo sa device mo · libre
 377|Tapos sa device mo — walang nagamit na credits.
+378|Audio
+379|Lahat ng tool

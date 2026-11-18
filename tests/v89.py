@@ -32,7 +32,8 @@ STARS = """async()=>{const wait=ms=>new Promise(r=>setTimeout(r,ms)),out={};
   S.jobs=S.jobs.filter(j=>!/^j.89/.test(j.id));
   S.jobs.push({id:'jr89',kind:'video',status:'rendering',progress:.42,aspect:'16:9',dur:5,title:'R',prompt:'a boat at dawn',model:'kling',created:Date.now()});
   S.jobs.push({id:'jq89',kind:'video',status:'queued',progress:0,aspect:'9:16',dur:5,title:'Q',prompt:'a train',model:'kling',created:Date.now()-1000});
-  S.lastVideo='jr89';go('video');renderAll();await wait(500);
+  S.lastVideo='jr89';go('video');ST98().lb='video';renderAll();   // (v98: a result opens large from the gallery)
+  await wait(500);
   const sv=document.querySelector('#main .sveil81');out.stage=sv?[sv.innerText.trim(),sv.querySelectorAll('.star79').length,!!document.querySelector('#main .stage .ctl [data-act="toggle-play"]')]:null;
   out.pipe=[...document.querySelectorAll('#pipe>div')].map(d=>d.textContent).join('|');
   out.veils=[...document.querySelectorAll('#main .thumb .veil')].map(v=>[v.innerText.trim(),v.querySelectorAll('.star79').length]);
@@ -40,7 +41,7 @@ STARS = """async()=>{const wait=ms=>new Promise(r=>setTimeout(r,ms)),out={};
   go('home');S.hf.tab='video';S.hf.out=['jr89'];renderAll();await wait(400);const ph=document.querySelector('.hfrph');out.home=ph?[ph.innerText.trim(),!!ph.querySelector('svg.nstars')]:null;
   // the home box's list: every model, each with its logo, a star (not a number) on the strongest
   document.querySelector('[data-act="hf-model"]').click();await wait(400);
-  const rows=[...document.querySelectorAll('#modalRoot .hfmodel')];out.sheet={n:rows.length,want:1+Object.keys(MODELS).filter(k=>k!=='auto').length,noLogo:rows.filter(r=>!r.querySelector('img')).map(r=>r.dataset.v),
+  const rows=[...document.querySelectorAll('#modalRoot .hfmodel')];out.sheet={n:rows.length,want:1+Object.keys(MODELS).filter(k=>k!=='auto'&&k!=='grok15').length,noLogo:rows.filter(r=>!r.querySelector('img')).map(r=>r.dataset.v),
     marks:rows.filter(r=>r.querySelector('.mrk')).map(r=>[r.dataset.v,r.querySelector('.mrk').textContent.trim(),!!r.querySelector('.mrk svg')]),mini:rows.some(r=>r.dataset.v==='seedance2mini'&&r.querySelector('img'))};
   document.querySelector('#modalRoot [data-act="close-sheet"]')?.click();await wait(150);
   S.hf.tab='image';renderAll();await wait(200);document.querySelector('[data-act="hf-model"]').click();await wait(400);
@@ -53,12 +54,12 @@ FAILED = """async()=>{const wait=ms=>new Promise(r=>setTimeout(r,ms)),out={};
   S.jobs.push({id:'jv89a',kind:'video',status:'complete',resultUrl:location.origin+'/media/clip.webm',aspect:'9:16',dur:5,title:'A',prompt:'a red car',model:'kling',created:Date.now()-50000});
   S.jobs.push({id:'jv89b',kind:'video',status:'complete',resultUrl:elsewhere,aspect:'16:9',dur:8,title:'B',prompt:'a blue car',created:Date.now()-60000});
   S.jobs.push({id:'jf89',kind:'video',status:'failed',error:'Failed to fetch',aspect:'16:9',dur:5,title:'Elias walking',prompt:'Elias walking through the house\\nElias = the person in reference picture 1: the exact same face, hair, skin tone and build (the same real person).',model:'seedance2mini',created:Date.now()-2000});
-  S.lastVideo='jf89';go('video');renderAll();await wait(1500);
+  S.lastVideo='jf89';go('video');ST98().lb='video';renderAll();await wait(1500);
   const st=document.querySelector('#main .stage');out.failed={play:!!st.querySelector('.ctl [data-act="toggle-play"]'),cap:(st.querySelector('.cap')||{textContent:''}).textContent.trim(),msg:(document.querySelector('#main .pfail79 .m')||{}).textContent,net:NET88()};
   // the length top left, the × top right (mirrored in Arabic)
-  const th=[...document.querySelectorAll('.strip .thumb')].find(t=>t.querySelector('.del88'));
-  if(th){const r=th.getBoundingClientRect(),t=th.querySelector('.t').getBoundingClientRect(),x=th.querySelector('.del88').getBoundingClientRect();out.corner={t:[Math.round(t.left-r.left),Math.round(r.right-t.right)],x:[Math.round(x.left-r.left),Math.round(r.right-x.right)],rtl:document.dir==='rtl'||document.documentElement.dir==='rtl'}}
-  await wait(800);out.posters=[...document.querySelectorAll('.strip video')].map(v=>[/elsewhere/.test(v.getAttribute('src'))?'elsewhere':'ok',v.getAttribute('poster')||'',v.preload]);
+  const th=[...document.querySelectorAll('.strip .thumb,.gc98 .thumb')].find(t=>t.querySelector('.del88')&&t.querySelector('.t,.dur98'));
+  if(th){const r=th.getBoundingClientRect(),t=th.querySelector('.t,.dur98').getBoundingClientRect(),x=th.querySelector('.del88').getBoundingClientRect();out.corner={t:[Math.round(t.left-r.left),Math.round(r.right-t.right)],x:[Math.round(x.left-r.left),Math.round(r.right-x.right)],rtl:document.dir==='rtl'||document.documentElement.dir==='rtl'}}
+  await wait(800);ST98().lb='';renderAll();await wait(600);out.posters=[...document.querySelectorAll('.strip video')].map(v=>[/elsewhere/.test(v.getAttribute('src'))?'elsewhere':'ok',v.getAttribute('poster')||'',v.preload]).concat([...document.querySelectorAll('.gc98[data-v98] .tk98 .frame')].map(f=>f.tagName==='IMG'?['ok',f.getAttribute('src')||'','img']:[/elsewhere/.test(f.getAttribute('src'))?'elsewhere':'ok',f.getAttribute('poster')||'',f.preload]));   // (v98: the gallery: a poster picture, or the video's own first frame)
   // a job the server doesn't have: stops, says so, no toast
   const nT=document.querySelectorAll('.toast,.toasts>*').length;
   S.jobs.push({id:'jg89',kind:'video',status:'rendering',progress:.2,aspect:'16:9',dur:5,title:'G',prompt:'a train',model:'kling',created:Date.now(),remote:'gone-89'});persist();
@@ -94,7 +95,8 @@ async def page_run(p, W, lang):
     ok(c and (c["t"][1] <= 10 if c["rtl"] else c["t"][0] <= 10) and (c["x"][0] <= 10 if c["rtl"] else c["x"][1] <= 10), f"{tag}: the length is top left, the × top right (mirrored in Arabic) {c}")
     ok(any(x[0] == "ok" and x[1].startswith("/v1/poster/") for x in f["posters"]) and any(x[0] == "elsewhere" for x in f["posters"]) and all(x[1] == "" and x[2] != "none" for x in f["posters"] if x[0] == "elsewhere"), f"{tag}: a poster only when its frame loads; a video without one keeps its own first frame {f['posters']}")
     g = f["gone"]
-    ok(g["status"] == "failed" and g["type"] == "gone" and "no longer" in g["msg"] and g["toasts"] == 0, f"{tag}: a job the server no longer has stops, says so, no toast {g}")
+    ok(g["status"] == "failed" and g["type"] == "gone" and ("no longer" in g["msg"] or "لم تعد في حسابك" in g["msg"]) and g["toasts"] == 0,   # (v124: in the reader's language)
+        f"{tag}: a job the server no longer has stops, says so, no toast {g}")
     ok(not errs, f"{tag}: page errors {errs[:4]}")
     await b.close(); return r
 

@@ -1,0 +1,16 @@
+{
+  "name": "@nooi/studio-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "nooi Studio for Windows, macOS and Linux (Tauri 2) — the studio web app with FFmpeg inside for fast exports on the computer",
+  "scripts": {
+    "ffmpeg": "node scripts/get-ffmpeg.mjs",
+    "dev": "node scripts/get-ffmpeg.mjs && tauri dev",
+    "build": "node scripts/get-ffmpeg.mjs && tauri build",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.12.4"
+  }
+}

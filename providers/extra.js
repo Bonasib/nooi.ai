@@ -4,9 +4,14 @@ import crypto from "crypto";
 import { cfg, configured, S as settingsS } from "../lib/settings.js";
 import { elevenlabs } from "./elevenlabs.js";
 import { nanoBanana, midjourney, gptImage } from "./images2.js";
-import { kie, kieDefault, kieAuto } from "./kie.js";
+import { kie, kieDefault, kieAuto, kieVariant, KIE_BUILTIN, swapEngine } from "./kie.js";
+import { falVideo, FAL_SWAP } from "./fal.js";   // v116: Replace the person on fal.ai when the owner picks it
 import { nvRoute, nvAdapter } from "./nvidia.js";
 import { gen3dRoute, GEN3D } from "./gen3d.js";
+import { fpsAdapter } from "../lib/fps96.js";
+import { slowAdapter163 } from "../lib/slowmo163.js";
+import { mmRoute183, MM_KEYS183, mmVideo185, mmAll237 } from "./minimax183.js";
+import { bdRoute241, bytedance241 } from "./bytedance241.js";   // v241: Seedance on the owner's own ByteDance key (BytePlus ModelArk)   // v183: MiniMax voices, pictures and music with the owner's own key (v185: + videos)
 // Flagship models → provider + API model id set by the admin (Admin → Models)
 const FLAGSHIP = { kling40: "kling", kling30: "kling", seedance25: "seedance", seedance20: "seedance", hailuoh3: "minimax" };
 const makers = () => ({ kling, seedance, minimax });
@@ -18,8 +23,9 @@ const startImg = (p) => p.inputs?.startImage || p.inputs?.vStart || undefined;
 
 export const seedance = (mo) => { const c = cfg("seedance"); const base = (c.baseUrl || "https://ark.ap-southeast.bytepluses.com/api/v3").replace(/\/$/, ""); const h = { Authorization: "Bearer " + c.apiKey, "Content-Type": "application/json" };
   return { name: "Seedance", configured: configured("seedance"),
-    async submit(p) { const content = [{ type: "text", text: `${fullPrompt(p)} --rt ${ratio(p.aspect)} --dur ${p.dur >= 10 ? 10 : 5}` }]; if (startImg(p)) content.push({ type: "image_url", image_url: { url: startImg(p) } });
-      const d = await j(await fetch(base + "/contents/generations/tasks", { method: "POST", headers: h, body: JSON.stringify({ model: mo || c.model || "seedance-1-0-pro-250528", content }) }), "Seedance"); return { remoteId: d.id }; },
+    async submit(p) { const rs = /1080|2k|4k/i.test(p.meta?.res || "") ? "1080p" : /480/.test(p.meta?.res || "") ? "480p" : "720p";   // (v187: the resolution asked for)
+      const content = [{ type: "text", text: `${fullPrompt(p)} --rt ${ratio(p.aspect)} --dur ${p.dur >= 10 ? 10 : 5} --rs ${rs}` }]; if (startImg(p)) content.push({ type: "image_url", image_url: { url: startImg(p) } });
+      const d = await j(await fetch(base + "/contents/generations/tasks", { method: "POST", headers: h, body: JSON.stringify({ model: mo || (/seedance/i.test(c.model || "") ? c.model : "") || "seedance-1-0-pro-250528", content }) }), "Seedance"); return { remoteId: d.id }; },
     async poll(id) { const d = await j(await fetch(base + "/contents/generations/tasks/" + id, { headers: h }), "Seedance"); const s = d.status;
       return s === "succeeded" ? { status: "done", url: d.content?.video_url } : s === "failed" || s === "cancelled" ? { status: "failed", error: d.error?.message || "Seedance failed" } : { status: s === "queued" ? "queued" : "rendering" }; } }; };
 
@@ -28,7 +34,7 @@ function klingToken(ak, sk) { const now = Math.floor(Date.now() / 1000); const h
 export const kling = (mo) => { const c = cfg("kling"); const base = (c.baseUrl || "https://api.klingai.com").replace(/\/$/, ""); const h = () => ({ Authorization: "Bearer " + klingToken(c.accessKey, c.secretKey), "Content-Type": "application/json" });
   return { name: "Kling", configured: !!(c.accessKey && c.secretKey),
     async submit(p) { const img = startImg(p); const type = img ? "image2video" : "text2video";
-      const d = await j(await fetch(`${base}/v1/videos/${type}`, { method: "POST", headers: h(), body: JSON.stringify({ model_name: mo || c.model || "kling-v1", prompt: fullPrompt(p), negative_prompt: p.meta?.neg, duration: p.dur >= 10 ? "10" : "5", aspect_ratio: ratio(p.aspect), ...(img ? { image: img } : {}) }) }), "Kling");
+      const d = await j(await fetch(`${base}/v1/videos/${type}`, { method: "POST", headers: h(), body: JSON.stringify({ model_name: mo || c.model || "kling-v1", prompt: fullPrompt(p), negative_prompt: p.meta?.neg, duration: p.dur >= 10 ? "10" : "5", aspect_ratio: ratio(p.aspect), mode: /1080|2k|4k/i.test(p.meta?.res || "") ? "pro" : "std", ...(img ? { image: img } : {}) }) }), "Kling");   // (v187: pro = 1080p)
       return { remoteId: type + ":" + d.data?.task_id }; },
     async poll(rid) { const [type, id] = rid.split(":"); const d = await j(await fetch(`${base}/v1/videos/${type}/${id}`, { headers: h() }), "Kling"); const s = d.data?.task_status;
       return s === "succeed" ? { status: "done", url: d.data?.task_result?.videos?.[0]?.url } : s === "failed" ? { status: "failed", error: d.data?.task_status_msg || "Kling failed" } : { status: s === "submitted" ? "queued" : "rendering" }; } }; };
@@ -41,28 +47,33 @@ export const dashscope = (what) => { const c = cfg("qwen"); const base = (c.base
       const d = await j(await fetch(url, { method: "POST", headers: h, body: JSON.stringify(body) }), "DashScope"); return { remoteId: d.output?.task_id }; },
     async poll(id) { const d = await j(await fetch(base + "/tasks/" + id, { headers: { Authorization: "Bearer " + c.apiKey } }), "DashScope"); const o = d.output || {}; const s = o.task_status;
       return s === "SUCCEEDED" ? { status: "done", url: o.video_url || o.results?.[0]?.url } : s === "FAILED" || s === "CANCELED" ? { status: "failed", error: o.message || "DashScope failed" } : { status: s === "PENDING" ? "queued" : "rendering" }; } }; };
-// MiniMax Hailuo (video) — ⚠ verify endpoints/model id in the MiniMax docs before launch
-export const minimax = (mo) => { const c = cfg("minimax"); const base = (c.baseUrl || "https://api.minimax.io/v1").replace(/\/$/, ""); const h = { Authorization: "Bearer " + c.apiKey, "Content-Type": "application/json" };
-  return { name: "MiniMax Hailuo", configured: configured("minimax"),
-    async submit(p) { const body = { model: mo || c.model || "MiniMax-Hailuo-02", prompt: fullPrompt(p), duration: p.dur >= 10 ? 10 : 6, resolution: "1080P" }; if (startImg(p)) body.first_frame_image = startImg(p);
-      const d = await j(await fetch(base + "/video_generation", { method: "POST", headers: h, body: JSON.stringify(body) }), "MiniMax"); if (d.base_resp && d.base_resp.status_code) throw new Error("MiniMax: " + d.base_resp.status_msg); return { remoteId: d.task_id }; },
-    async poll(id) { const d = await j(await fetch(base + "/query/video_generation?task_id=" + encodeURIComponent(id), { headers: h }), "MiniMax"); const s = String(d.status || "").toLowerCase();
-      if (s === "success" && d.file_id) { const f = await j(await fetch(base + "/files/retrieve?file_id=" + encodeURIComponent(d.file_id), { headers: h }), "MiniMax"); return { status: "done", url: f.file && f.file.download_url }; }
-      return s === "fail" || s === "failed" ? { status: "failed", error: (d.base_resp && d.base_resp.status_msg) || "MiniMax failed" } : { status: s === "queueing" ? "queued" : "rendering" }; } }; };
+// MiniMax Hailuo (video) — v185: MiniMax's own API as in providers/minimax183.js (the old call here sent the paths without /v1)
+export const minimax = (mo) => mmVideo185(mo);
 // Pick the adapter for a job: video models can be routed to Seedance / Kling / Qwen / MiniMax, or to Kie AI
 export function adapterFor(cap, body, PROVIDERS) {
+  if (cap === "enhance" && body.meta?.tool === "interp") return { key: "fps96", a: fpsAdapter() };   // v96: smooth motion on this server
+  if (cap === "enhance" && body.meta?.tool === "slowmo") return { key: "slow163", a: slowAdapter163() };   // v163: super slow motion on this server
+  // v241: the owner's ByteDance key first for Seedance (a Seedance model picked, editing a video's seconds, or "Auto" while MiniMax
+  // doesn't take every video) — before MiniMax and before the AI engine
+  const bd = bdRoute241(cap, body, { mmAll: mmAll237() }); if (bd) return bd;
+  const mm = mmRoute183(cap, body); if (mm) return mm;   // v183: MiniMax (the owner's switches in Admin; MiniMax Image when picked)
   // NVIDIA AI first when it handles this job (explicit NVIDIA model, or "nooi Auto" with that capability switched on)
   const nt = nvRoute(cap, body); if (nt) return { key: "nv@" + nt, a: nvAdapter(nt) };
+  if (cap === "video" && body.model === "mcswap" && swapEngine() === "fal") return { key: "fal@" + FAL_SWAP, a: falVideo(FAL_SWAP) };   // v116
   // 3D objects on Tripo3D / Meshy, 360° worlds on Blockade Labs Skybox
   const g = gen3dRoute(cap, body); if (g) return g;
   // Any studio model with a Kie model id set in Admin → Models runs on Kie AI
-  const km = body.model && (settingsS().modelCat || {})[body.model]?.kieModel;
+  const km0 = body.model && (settingsS().modelCat || {})[body.model]?.kieModel, km = km0 && kieVariant(km0, cap, body);
   if (km) return { key: "kie@" + km, a: kie(km) };
   let r;
   try { r = directAdapter(cap, body, PROVIDERS); }
   catch (e) { const k = kieAuto(cap, body); if (k) return { key: "kie@" + k, a: kie(k) }; throw e; }  // flagship without its own API id
-  // The model's own provider isn't connected → Kie AI (admin default for the capability first, then the built-in map)
-  if (r && !(r.a && r.a.configured)) { const d = r.key === cap ? kieDefault(cap, body.kind) : null; const k = d || kieAuto(cap, body); if (k) return { key: "kie@" + k, a: kie(k) }; }
+  // The model's own provider isn't connected → Kie AI: a model with its own Kie engine uses it; the admin's default model for the
+  // capability is only for "nooi Auto" and models without one. (v101: the Admin quick-start saves kling-3.0/video as the
+  // default, and it was taking over every such model — Character Swap and Motion Control went to Kling 3.0 text/picture-to-video
+  // with no words: "AI engine 422: prompt is required"; Veo, Wan, Grok, Pixverse… were made by Kling too.)
+  if (r && !(r.a && r.a.configured)) { const own = body.model && body.model !== "auto" && (KIE_BUILTIN[cap === "image" ? "image" : "video"] || {})[body.model];
+    const d = r.key === cap && !own ? kieDefault(cap, body.kind) : null; const k = (d && kieVariant(d, cap, body)) || kieAuto(cap, body); if (k) return { key: "kie@" + k, a: kie(k) }; }
   return r;
 }
 function directAdapter(cap, body, PROVIDERS) {
@@ -79,4 +90,4 @@ function directAdapter(cap, body, PROVIDERS) {
   if (cap === "image" && body.model === "qwen") return { key: "qwen-image", a: dashscope("image") };
   return { key: cap, a: PROVIDERS[cap] };
 }
-export function adapterByKey(key, PROVIDERS) { if (String(key).startsWith("nv@")) return nvAdapter(key.slice(3)); if (GEN3D[key]) return GEN3D[key](); if (String(key).startsWith("kie@")) return kie(key.slice(4)); if (String(key).startsWith("gpt@")) return gptImage(key.slice(4)); if (key === "elevenlabs") return elevenlabs(); if (key === "midjourney") return midjourney(); if (String(key).startsWith("nano@")) return nanoBanana(key.slice(5)); if (String(key).includes("@")) { const [prov, mo] = key.split("@"); return makers()[prov](mo); } return key === "minimax" ? minimax() : key === "seedance" ? seedance() : key === "kling" ? kling() : key === "qwen-video" ? dashscope("video") : key === "qwen-image" ? dashscope("image") : PROVIDERS[key]; }
+export function adapterByKey(key, PROVIDERS) { if (MM_KEYS183[key]) return MM_KEYS183[key](); if (String(key).startsWith("bd@")) return bytedance241(key.slice(3)); if (key === "fps96") return fpsAdapter(); if (key === "slow163") return slowAdapter163(); if (String(key).startsWith("fal@")) return falVideo(key.slice(4)); if (String(key).startsWith("nv@")) return nvAdapter(key.slice(3)); if (GEN3D[key]) return GEN3D[key](); if (String(key).startsWith("kie@")) return kie(key.slice(4)); if (String(key).startsWith("gpt@")) return gptImage(key.slice(4)); if (key === "elevenlabs") return elevenlabs(); if (key === "midjourney") return midjourney(); if (String(key).startsWith("nano@")) return nanoBanana(key.slice(5)); if (String(key).includes("@")) { const [prov, mo] = key.split("@"); return makers()[prov](mo); } return key === "minimax" ? minimax() : key === "seedance" ? seedance() : key === "kling" ? kling() : key === "qwen-video" ? dashscope("video") : key === "qwen-image" ? dashscope("image") : PROVIDERS[key]; }

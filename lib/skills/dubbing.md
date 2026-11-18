@@ -1,5 +1,5 @@
 # Dubbing
-agent: sound
+agent: voice
 tags: voice, subtitles
 
 ## Translate the meaning, fit the time

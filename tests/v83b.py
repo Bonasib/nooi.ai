@@ -142,7 +142,7 @@ async def browser(p):
         await pg.evaluate("""()=>{['/media/p1.png','/media/p2.png','/media/p3.png'].forEach((u,i)=>S.jobs.push({id:'lib'+i,kind:'image',status:'complete',resultUrl:u,prompt:'p'+i,title:'p'+i,created:Date.now()}));go('slideshow');renderAll()}""")
         await pg.wait_for_timeout(400)
         r = await pg.evaluate("()=>({h1:document.querySelector('#main h1').textContent,tabs:[...document.querySelectorAll('.hubtabs [data-go]')].map(e=>e.dataset.go).slice(0,2),lib:document.querySelectorAll('.ss83t').length,over:document.documentElement.scrollWidth>innerWidth})")
-        ok(r["h1"] in ("Video from pictures", "فيديو من الصور") and r["tabs"] == ["edit", "slideshow"] and r["lib"] == 3 and not r["over"], f"{tag}: Video from pictures page {r}")
+        ok(r["h1"] in ("Video from pictures", "فيديو من الصور") and r["tabs"][:2] == ["video", "motion"] and r["lib"] == 3 and not r["over"], f"{tag}: Video from pictures page {r}")
         if lang == "en":
             for i in range(3): await pg.click(f'.ss83t >> nth={i}'); await pg.wait_for_timeout(150)
             await pg.fill('[data-ss83cap="0"]', "مرحباً بكم — Riyadh"); await pg.wait_for_timeout(100)

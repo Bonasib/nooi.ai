@@ -130,7 +130,7 @@ async def page_run(p, W, lang):
         ok(n >= need, f"{tag}: the {k} sheet shows a picture per choice ({n})")
     ok(await E("()=>document.querySelectorAll('#modalRoot .pk86art .mvw86').length>=10"), f"{tag}: camera moves are moving diagrams")
     await E("()=>{document.getElementById('modalRoot').innerHTML='';go('home')}"); await pg.wait_for_timeout(600)
-    r["icons"] = await E("()=>{const i=[...document.querySelectorAll('#main .tool .ico')];return [i.length,i.filter(x=>/gradient/.test(getComputedStyle(x).backgroundImage)).length]}")
+    r["icons"] = await E("()=>{const i=[...document.querySelectorAll('#main .tool .ico')];return [i.length,i.filter(x=>getComputedStyle(x).backgroundColor!=='rgba(0, 0, 0, 0)'&&x.querySelector('svg')).length]}")   # v90: a tinted square in the tool's section colour (tests/v90.py checks the colour)
     ok(r["icons"][0] >= 4 and r["icons"][1] == r["icons"][0], f"{tag}: tool cards have app icons {r['icons']}")
     # old doors
     for v in ("studio3d", "w3ai", "physics"):

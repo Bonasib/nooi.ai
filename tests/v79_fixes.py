@@ -60,14 +60,15 @@ def unit_checks():
     # the avatar's voice: retries the engine's voice, then a second voice model; all busy → one clear message, no other avatar model
     o, e = node(f"""import {{ _lipVoice }} from "{ROOT}/providers/kie.js"; let n = 0, made = [];
       const call = (k) => async (p, opt) => {{ if (p.includes("createTask")) {{ made.push(JSON.parse(opt.body).model); return {{ taskId: "t" + (++n) }}; }} return k(n); }};
-      const t0 = Date.now(), url = await _lipVoice({{ prompt: "Hello there", meta: {{}} }}, call((i) => i < 3 ? {{ state: "fail", failMsg: "Internal Error, Please try again later." }} : {{ state: "success", resultJson: JSON.stringify({{ resultUrls: ["https://cdn/x.mp3"] }}) }}));
+      const t0 = Date.now(), url = await _lipVoice({{ prompt: "Hello there", meta: {{}} }}, call((i) => ({{ state: "success", resultJson: JSON.stringify({{ resultUrls: ["https://cdn/x.mp3"] }}) }})));
       let err = null; made = []; n = 0; try {{ await _lipVoice({{ prompt: "Hi", meta: {{}} }}, call(() => ({{ state: "fail", failMsg: "Internal Error" }}))); }} catch (x) {{ err = x; }}
       console.log(JSON.stringify({{ url, made, msg: err && err.message, noFb: err && err.noFallback, type: err && err.type, ms: Date.now() - t0 }})); process.exit(0)""", U)
     try: v = json.loads(o.splitlines()[-1])
     except Exception: v = {}
-    ok(v.get("url") == "https://cdn/x.mp3", f"avatar voice: the third try gives the voice {v} {e}")
-    ok(v.get("made") == ["elevenlabs/text-to-speech-multilingual-v2", "elevenlabs/text-to-speech-turbo-2-5", "elevenlabs/text-to-speech-multilingual-v2"], f"avatar voice: v2, turbo, then the engine's default voice {v.get('made')}")
-    ok("voice service is busy" in (v.get("msg") or "") and v.get("noFb") is True and v.get("type") == "provider", f"avatar voice: one clear message, no other avatar model {v}")
+    # (v272: no backup voice model or other voice — one engine, the chosen voice; a failure is one clear message)
+    ok(v.get("url") == "https://cdn/x.mp3", f"avatar voice: the voice is made {v} {e}")
+    ok(v.get("made") == ["elevenlabs/text-to-speech-multilingual-v2"], f"avatar voice: asked once, of one voice model (no turbo, no default voice) {v.get('made')}")
+    ok(v.get("noFb") is True and v.get("type") == "provider", f"avatar voice: one clear message, no other avatar model {v}")
     # the world plan is cleaned: known places and kinds only (an unknown thing becomes a labelled box), ≤ 60 entries, counts and
     # positions clamped to the world, colours checked
     o, e = node(f"""import {{ cleanPlan }} from "{ROOT}/public/world/plan.js";
@@ -124,6 +125,13 @@ async def wait_for(E, js, sec=20):
         await asyncio.sleep(.25)
     return False
 
+# (v124: the page asks about all its jobs in one request, /v1/jobs/live?ids=… — the faked jobs answer there too)
+def live_route(prefix):
+    async def live(route):
+        from urllib.parse import urlparse, parse_qs
+        ids = parse_qs(urlparse(route.request.url).query).get("ids", [""])[0].split(",")
+        await route.fulfill(status=200, content_type="application/json", body=json.dumps({"jobs": {i: ({"id": i, "status": "done", "progress": 1, "url": "/media/ai.png"} if i.startswith(prefix) else None) for i in ids if i}}))
+    return live
 async def ui(p, w, lang):
     tag = f"{w}/{lang}"; r = {}
     b = await p.chromium.launch(args=["--use-gl=swiftshader", "--enable-webgl", "--ignore-gpu-blocklist"])
@@ -137,7 +145,7 @@ async def ui(p, w, lang):
         await route.fulfill(status=200, content_type="application/json", body=json.dumps({"id": "rj" + str(len(posted))}))
     async def jstat(route):
         await route.fulfill(status=200, content_type="application/json", body=json.dumps({"id": route.request.url.split("/")[-1], "status": "done", "progress": 1, "url": "/media/ai.png"}))
-    await pg.route("**/v1/jobs", jobs); await pg.route("**/v1/jobs/rj*", jstat)
+    await pg.route("**/v1/jobs", jobs); await pg.route("**/v1/jobs/rj*", jstat); await pg.route("**/v1/jobs/live*", live_route("rj"))
     await pg.goto(f"http://localhost:{PORT}/"); await pg.wait_for_timeout(1500)
     await E(SETUP % lang); await pg.wait_for_timeout(300)
     # free period: no credits needed; prices still shown
@@ -172,24 +180,28 @@ async def ui(p, w, lang):
     await E("()=>document.querySelector('[data-act=\"gen-looks\"]').click()"); await pg.wait_for_timeout(1000)
     lk = [x for x in posted[n0:] if x.get("kind") == "look"]
     ok(len(lk) == 4 and all(x["prompt"].startswith("Portrait of ") and "year-old" in x["prompt"] and len(x["prompt"]) > 120 for x in lk), f"{tag}: looks from the whole character {[x['prompt'][:90] for x in lk]}")
+    # (the states are set while no job check is on its way — an answer still coming would write "done" over them)
+    for _ in range(40):
+        if await E("()=>!poll109&&!hf109"): break
+        await pg.wait_for_timeout(100)
     await E("()=>{const L=S.jobs.filter(j=>j.kind==='look').slice(-4);L[0].status='failed';L[0].error='Engine said no';L[1].status='complete';L[1].resultUrl='/media/ai.png';L[2].status='rendering';L[2].progress=.4;L.forEach(j=>delete j.remote);persist();renderView()}")
     await pg.wait_for_timeout(2200)
     r["looks"] = await E("()=>{const c=S.chars[S.charSel];return [!!c.autoLook79,!(c.looks||[]).includes(c.lookSeed),document.querySelectorAll('.looks .fail79 [data-act=\"job-retry\"]').length,document.querySelectorAll('.looks canvas[data-ref^=\"look:\"]').length,!!document.querySelector('.looks .veil.v80 .star79')]}")
     ok(r["looks"] == [True, True, 1, 0, True], f"{tag}: looks — failed says so with Try again, real look picked, drawn previews hidden, star while rendering {r['looks']}")
-    # the sketch turns into what was drawn: AI vision reads it, the AI picture fills the output panel
+    # the sketch (v91): nothing happens while you draw; "Preview with AI" — AI vision reads the drawing (free), writes what it is in
+    # the box, and the picture is made from what it saw; the drawing itself never changes
     n0 = len(posted)
-    await E("()=>{S.sketch.prompt='';S.sketch.target='vehicle';S.sketch.aiCap=250;go('sketch');renderAll()}"); await pg.wait_for_timeout(500)
-    r["skmode"] = await E("()=>lskMode()"); ok(r["skmode"] == "pause", f"{tag}: the sketch makes real pictures by default {r['skmode']}")
+    await E("()=>{S.sketch.prompt='';S.sketch.n91=1;go('sketch');renderAll()}"); await pg.wait_for_timeout(500)
     await E("()=>{SK.strokes=[{tool:'pen',color:'#000',size:6,pts:[[.2,.6,.6],[.5,.5,.6],[.8,.6,.6]]},{tool:'pen',color:'#000',size:6,pts:[[.3,.8,.6],[.4,.7,.6],[.6,.8,.6]]}];skRedraw()}")
+    await pg.wait_for_timeout(1500); ok(not [x for x in posted[n0:] if x.get("kind") == "image"], f"{tag}: drawing alone makes no pictures (no credits spent)")
+    await E("()=>document.querySelector('[data-act=sk91-go]').click()")
     for _ in range(40):
         await pg.wait_for_timeout(300)
-        if await E("()=>SKAI.state==='done'"): break
+        if [x for x in posted[n0:] if x.get("kind") == "image"]: break
     sk = [x for x in posted[n0:] if x.get("kind") == "image"]
-    r["sketch"] = await E("()=>{const c=$('#skout'),d=c.getContext('2d').getImageData(c.width/2|0,c.height/2|0,1,1).data;return [SKAI.state,c.dataset.ai79,($('#skai79')||{}).textContent,[d[0],d[1],d[2]]]}")
+    r["sketch"] = await E("()=>[S.sketch.prompt,($('#skwhat91')||{}).value,SK.strokes.length,!!document.querySelector('#sk91res .dfig')]")
     ok(len(sk) == 1 and "a red sports car next to a coiled green snake" in sk[0]["prompt"] and "skImg" in (sk[0].get("inputs") or {}), f"{tag}: the picture is made from what the AI saw {[x.get('prompt','')[:60] for x in sk]}")
-    ok(r["sketch"][0] == "done" and r["sketch"][1] == "/media/ai.png" and ("سيارة وثعبان" in r["sketch"][2]) and r["sketch"][3][0] > 180 and r["sketch"][3][1] < 80, f"{tag}: the AI picture fills the output panel {r['sketch']}")
-    await E("()=>{SK.strokes.push({tool:'pen',color:'#000',size:6,pts:[[.1,.1,.6],[.2,.2,.6]]});skRedraw()}"); await pg.wait_for_timeout(500)
-    ok(await E("()=>SKAI.state===''&&!$('#skout').dataset.ai79"), f"{tag}: drawing more goes back to the live preview")
+    ok("سيارة وثعبان" in (r["sketch"][0] or "") and "سيارة وثعبان" in (r["sketch"][1] or "") and r["sketch"][2] == 2 and r["sketch"][3], f"{tag}: what the AI saw is written in the box, the drawing stays, the preview is listed {r['sketch']}")
     # 3D World: the plan from the text AI, built on the device; a real photo of the view is made in the cloud from one view
     n0 = len(posted)
     await E("()=>go('w3ai')"); ok(await wait_for(E, "()=>S.view==='world'&&typeof NW!=='undefined'&&!!NW.E&&(!!NW.W||!!NW.empty87)&&!NW.busy", 40), f"{tag}: the old 3D world page opens the 3D World")
@@ -244,7 +256,7 @@ async def studio(p):
         if route.request.method != "POST": return await route.continue_()
         posted.append(json.loads(route.request.post_data or "{}")); await route.fulfill(status=200, content_type="application/json", body=json.dumps({"id": "rx" + str(len(posted))}))
     async def jstat(route): await route.fulfill(status=200, content_type="application/json", body=json.dumps({"id": route.request.url.split("/")[-1], "status": "done", "progress": 1, "url": "/media/ai.png"}))
-    await pg.route("**/v1/jobs", jobs); await pg.route("**/v1/jobs/rx*", jstat)
+    await pg.route("**/v1/jobs", jobs); await pg.route("**/v1/jobs/rx*", jstat); await pg.route("**/v1/jobs/live*", live_route("rx"))
     await pg.goto(f"http://localhost:{PORT}/"); await pg.wait_for_timeout(1500)
     await E(SETUP % "ar"); await E("()=>go('studio3d')")
     ok(await wait_for(E, "()=>S.view==='world'&&typeof NW!=='undefined'&&!!NW.E&&!!NW.empty87", 40), "3D World on a phone (opens empty)")

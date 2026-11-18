@@ -1,0 +1,9 @@
+{
+  "appId": "ai.nooi.studio",
+  "appName": "nooi Studio",
+  "webDir": "dist",
+  "backgroundColor": "#0b0c0fff",
+  "server": { "hostname": "app.nooi.ai", "androidScheme": "https", "iosScheme": "capacitor" },
+  "android": { "allowMixedContent": false },
+  "ios": { "contentInset": "never" }
+}

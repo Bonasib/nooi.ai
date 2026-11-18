@@ -48,6 +48,7 @@ Most provider & payment keys can also be added from **Admin dashboard → AI pro
 | Backup voice (optional, free) · صوت احتياطي | `bash /opt/nooi/deploy/piper.sh` (English) · `… piper.sh --arabic` (also Arabic — check that voice's licence first) · `… piper.sh --remove` |
 | Backup now · نسخة احتياطية | `nooi-backup` |
 | Restore · استرجاع | `bash /opt/nooi/deploy/restore.sh /var/backups/nooi/<file>.tgz` |
+| Disk full? · القرص ممتلئ؟ | `bash /opt/nooi/deploy/space.sh` (shows) · `bash /opt/nooi/deploy/space.sh --free` (clears what nooi doesn't need) |
 
 ## Hostinger firewall · جدار الحماية في Hostinger
 If hPanel → VPS → **Firewall** is enabled, allow ports **22, 80, 443**.

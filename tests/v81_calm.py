@@ -17,7 +17,7 @@ http.createServer((q,s)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{const u=
  if(u.pathname==='/api/v1/chat/credit')return send(500);
  if(u.pathname==='/api/v1/jobs/createTask'){const j=JSON.parse(b||'{}'),id='t'+(++n);T[id]=j;st.tasks.push(j);return send({taskId:id})}
  if(u.pathname==='/api/v1/jobs/recordInfo'){const j=T[u.searchParams.get('taskId')]||{},i=j.input||{};
-  if(/^elevenlabs\/text-to-speech/.test(j.model)){if(!/^[A-Za-z0-9]{18,}$/.test(i.voice||'')||(/multilingual/.test(j.model)&&i.language_code))return send({state:'fail',failMsg:'Internal Error, Please try again later.'});
+  if(/^elevenlabs\/text-to-(speech|dialogue)/.test(j.model)){if(!/^[A-Za-z0-9]{18,}$/.test(i.voice||((i.dialogue||[])[0]||{}).voice||'')||(/multilingual/.test(j.model)&&i.language_code))return send({state:'fail',failMsg:'Internal Error, Please try again later.'});
    if(process.env.TTS_DOWN==='1')return send({state:'fail',failMsg:'Internal Error, Please try again later.'});
    return send({state:'success',resultJson:JSON.stringify({resultUrls:['http://localhost:'+P+'/out.mp3']})})}
   return send({state:'success',resultJson:JSON.stringify({resultUrls:['http://localhost:'+P+'/out.mp4']})})}
@@ -63,7 +63,7 @@ def unit_checks():
       console.log(JSON.stringify({{ made, user: err && err.userMsg, msg: err && err.message }})); process.exit(0)""")
     try: v = json.loads(o.splitlines()[-1])
     except Exception: v = {}
-    ok(v.get("made") == [["elevenlabs/text-to-speech-multilingual-v2", GEORGE], ["elevenlabs/text-to-speech-turbo-2-5", GEORGE], ["elevenlabs/text-to-speech-multilingual-v2", DEF]], f"avatar voice: own voice ×2 models, then the default voice {v} {e}")
+    ok(v.get("made") == [["elevenlabs/text-to-speech-multilingual-v2", GEORGE]], f"avatar voice: its own voice, one model — no other model or default voice (v272: no backups) {v} {e}")
     ok(v.get("user") == "The avatar's voice couldn't be made right now — nothing was charged. Try again in a minute, or add a voice file." and "Internal Error" in (v.get("msg") or ""), f"avatar voice: a friendly sentence for people, the detail for the admin {v}")
 
 def stage_checks():
@@ -93,7 +93,9 @@ def api_checks():
     j = wait_job(r.get("id", "x")); tasks = stats()["tasks"]
     tts = [t for t in tasks if t["model"].startswith("elevenlabs/")]; av = [t for t in tasks if t["model"].startswith("kling/ai-avatar")]
     ok(j.get("status") == "done", f"avatar: finished {j} {tasks}")
-    ok(tts and tts[0]["input"].get("voice") == GEORGE and tts[0]["input"].get("text") == "Welcome to our store" and "language_code" not in tts[0]["input"], f"avatar: the engine got a voice ID {tts}")
+    # (v165: the acted voice — ElevenLabs v3 as dialogue — comes first; the same voice ID and words)
+    t0 = (tts[0]["input"] if tts else {}); d0 = (t0.get("dialogue") or [{}])[0]
+    ok(tts and (t0.get("voice") or d0.get("voice")) == GEORGE and (t0.get("text") or d0.get("text")) == "Welcome to our store" and "language_code" not in t0, f"avatar: the engine got a voice ID {tts}")
     ok(av and av[-1]["input"].get("audio_url", "").endswith("/out.mp3") and av[-1]["input"].get("image_url") == f"http://localhost:{PORT}/media/face.png", f"avatar: the face speaks the voice {av}")
     out["api"] = {"tasks": [t["model"] for t in tasks]}
 
@@ -147,7 +149,7 @@ async def ui(p, w, lang):
     r["gender"] = (g[-1].get("meta") or {}).get("gender") if g else r["gender"]
     ok(r["gender"] == "male", f"{tag}: a ready avatar's gender goes with the job {r['gender']}")
     # ---- something being made: calm colours + the stars only (v89: no percent, no time), honest steps, no pause button, no long caption
-    await E(JOBS, P); await E("()=>{go('video');renderAll()}"); await pg.wait_for_timeout(900)
+    await E(JOBS, P); await E("()=>{go('video');S.lastVideo='rv1';if(typeof ST98==='function')ST98().lb='video';renderAll()}"); await pg.wait_for_timeout(900)   # (v98: the stage opens over the gallery)
     r["stage"] = await E("""()=>{const s=document.querySelector('.preview-col .stage');const v=s&&s.querySelector('.sveil81'),cap=s&&s.querySelector('.cap');
       const cv=s&&s.querySelector('canvas.frame.live');let blocky=null;if(cv&&cv.width>40){const x=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data,W=cv.width;let jumps=0,n=0;
         for(let y=8;y<cv.height-8;y+=7)for(let i=8;i<W-9;i++){const a=(y*W+i)*4,b=a+4;const d=Math.abs(x[a]-x[b])+Math.abs(x[a+1]-x[b+1])+Math.abs(x[a+2]-x[b+2]);if(d>24)jumps++;n++}blocky=jumps/n}
@@ -171,7 +173,7 @@ async def ui(p, w, lang):
       const genre=[...document.querySelectorAll('[data-set="crew.brief.genre"] svg')].map(s=>/^<circle cx="12" cy="12" r="3"/.test(s.innerHTML.trim()));
       return {old:!!document.querySelector('.newtag'),tags,roles,rows:Object.values(rows).map(a=>Math.max(...a)-Math.min(...a)),out,genre,dashed:cards.some(c=>getComputedStyle(c).borderStyle==='dashed')}}""")
     K = r["crew"]
-    ok(not K["old"] and len(K["tags"]) == 2 and all(K["tags"]), f"{tag}: the New pill sits inside its card {K}")
+    ok(not K["old"] and len(K["tags"]) == 3 and all(K["tags"]), f"{tag}: the New pill sits inside its card {K}")
     ok(all(K["roles"]) and all(x <= 2 for x in K["rows"]) and not K["dashed"], f"{tag}: whole-word roles, equal cards in a row {K}")
     ok(K["out"] == 0 or phone, f"{tag}: the whole crew fits in one row on a computer {K}")
     ok(K["genre"] and not any(K["genre"]), f"{tag}: every genre has its own icon {K['genre']}")

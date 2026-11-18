@@ -1,0 +1,18 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "What the studio page may use: the Save dialog, its own cache folder for exports, and the bundled FFmpeg",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "dialog:allow-save",
+    "fs:allow-mkdir",
+    "fs:allow-write-file",
+    "fs:allow-read-file",
+    "fs:allow-remove",
+    { "identifier": "fs:scope", "allow": [{ "path": "$APPCACHE" }, { "path": "$APPCACHE/**" }] },
+    { "identifier": "shell:allow-spawn", "allow": [{ "name": "binaries/ffmpeg", "sidecar": true, "args": true }] },
+    "shell:allow-kill",
+    "shell:allow-stdin-write"
+  ]
+}

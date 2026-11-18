@@ -1,0 +1,12 @@
+{
+  "name": "nooi Studio Editor",
+  "short_name": "nooi Studio",
+  "description": "Edit video on a timeline — English and Arabic.",
+  "start_url": "/studio/",
+  "scope": "/studio/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b0c0f",
+  "theme_color": "#0b0c0f",
+  "icons": [{ "src": "/studio/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
