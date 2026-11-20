@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /v1/
+Disallow: /mcp
+Disallow: /media/
+
+Sitemap: https://nooi.ai/sitemap.xml

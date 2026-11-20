@@ -3,6 +3,19 @@
 <head>
 <meta charset="utf-8">
 <script type="importmap">{"imports":{"three":"/vendor/three-0.186.1/build/three.module.js","three/webgpu":"/vendor/three-0.186.1/build/three.webgpu.js","three/tsl":"/vendor/three-0.186.1/build/three.tsl.js","three/addons/":"/vendor/three-0.186.1/addons/","@sparkjsdev/spark":"/vendor/spark-2.2.0/spark.module.min.js"}}</script><meta name="theme-color" content="#060706">
+<meta name="description" content="nooi.ai — an AI studio for video, pictures, voices and 3D. Write an idea in any language and nine AI agents turn it into a finished film. استوديو ذكاء اصطناعي للفيديو والصور والأصوات والعوالم ثلاثية الأبعاد.">
+<link rel="canonical" href="https://nooi.ai/">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="192x192" href="/brand/nooi-logo-192.png">
+<link rel="apple-touch-icon" href="/brand/nooi-logo-180.png">
+<link rel="manifest" href="/manifest.json">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="nooi.ai">
+<meta property="og:url" content="https://nooi.ai/">
+<meta property="og:title" content="nooi.ai — Direct your imagination">
+<meta property="og:description" content="An AI studio for video, pictures, voices and 3D — nine AI agents turn your idea into a finished film.">
+<meta property="og:image" content="https://nooi.ai/brand/nooi-logo-1024.png">
+<meta name="twitter:card" content="summary">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>nooi.ai — Direct your imagination</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26479,6 +26492,19 @@ document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.c
 .cdc274.ok{border-color:var(--lime)}.cdc274.run{border-color:var(--cyan,#3cc)}.cdc274.bad{border-color:#e55}.cdc274 small{color:var(--mute)}.cdc274 .btn{padding:2px 6px;min-height:0}
 @media (max-width:640px){.cd274{grid-template-columns:minmax(0,1fr)}}
 `;document.head.appendChild(st)})();
+/* ================= v275: ADMIN PANELS LOAD AFTER SIGN-IN =================
+   Why: a fresh load of the Admin dashboard asks the server for Pricing, nooi Auto and MiniMax before Firebase has
+   restored the session. Those calls get 401 and the panels keep the empty answer (empty prices, "No engine is
+   connected for Auto yet", MiniMax "Not set") until the next full reload. Remember which admin calls got 401 and,
+   once /v1/me says who is signed in, forget those answers so the panels ask again. */
+const ADM275=new Set();
+API.req=(o=>async function(p){try{return await o.apply(this,arguments)}catch(e){if(e&&e.status===401&&String(p).startsWith("/v1/admin/"))ADM275.add(String(p).split("?")[0]);throw e}})(API.req);
+loadMe=(o=>async function(){const r=await o.apply(this,arguments);if(!ME.role||!ADM275.size)return r;const f=new Set(ADM275);ADM275.clear();
+  try{if(f.has("/v1/admin/pricing")&&typeof PR!=="undefined"){PR.rows=null;PR._l=0}
+  if(f.has("/v1/admin/auto272")&&typeof A272!=="undefined"&&!A272.busy)A272.d=null;
+  if(f.has("/v1/admin/minimax183")&&typeof MM183!=="undefined"&&!MM183.busy){MM183.d=null;if(typeof mmLoad183==="function")mmLoad183()}
+  if(f.has("/v1/admin/showcase")&&typeof SC!=="undefined"&&!SC.loadingAdm)SC.admin=null}catch(e){console.warn("v275",e)}
+  if(S.view==="admin")renderView();return r})(loadMe);
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
