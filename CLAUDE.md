@@ -1805,6 +1805,6 @@ The owner sent the target card (two columns; media with play · sound · length;
 
 ## v275 Admin panels load after sign-in · robots / sitemap / manifest · share tags
 - Why: a fresh load of the Admin dashboard asked `/v1/admin/pricing`, `/v1/admin/auto272`, `/v1/admin/minimax183` before Firebase restored the session → 401, and each panel kept the empty answer (empty prices, "No engine is connected for Auto yet", MiniMax "Not set") until a full reload.
-- Block `v275: ADMIN PANELS LOAD AFTER SIGN-IN` (before LOOP + BOOT): an `API.req` wrapper remembers admin GETs that got 401 (`ADM275`); a `loadMe` wrapper, once a role is known, clears those panels' caches (`PR`, `A272`, `MM183`, `SC.admin`) and redraws, so they ask again.
+- Block `v275: ADMIN PANELS LOAD AFTER SIGN-IN` (before LOOP + BOOT): an `API.req` wrapper remembers admin GETs that got 401 (`ADM275`); a `loadMe` wrapper, once a role is known, clears those panels' caches (`PR`, `A272`, `MM183`, `SC.admin`) and redraws, so they ask again. The same wrapper reloads the whole Admin data when the first `admLoad` ran before `API.mode` was "server" (it had filled the dashboard with the demo `S.admin`: demo users, no providers → every AI "Not set").
 - `public/robots.txt` (no /v1/, /mcp, /media/), `public/sitemap.xml`, `public/manifest.json`; the page head has a description, canonical, icons, manifest and Open Graph tags.
 - Test: `tests/v275.py` (port 8475).

@@ -26499,7 +26499,11 @@ document.addEventListener("click",async e=>{const a=e.target.closest&&e.target.c
    once /v1/me says who is signed in, forget those answers so the panels ask again. */
 const ADM275=new Set();
 API.req=(o=>async function(p){try{return await o.apply(this,arguments)}catch(e){if(e&&e.status===401&&String(p).startsWith("/v1/admin/"))ADM275.add(String(p).split("?")[0]);throw e}})(API.req);
-loadMe=(o=>async function(){const r=await o.apply(this,arguments);if(!ME.role||!ADM275.size)return r;const f=new Set(ADM275);ADM275.clear();
+loadMe=(o=>async function(){const r=await o.apply(this,arguments);
+  /* An Admin load that ran before the page knew it was on the server (API.mode not yet "server") filled the dashboard with the
+     built-in demo data (ADM.data = S.admin: demo users, no providers → every provider "Not set"). Load the real data once we know. */
+  try{if(API.mode==="server"&&ME.role&&typeof ADM!=="undefined"&&(ADM.data===S.admin||ADM275.has("/v1/admin/settings")||ADM275.has("/v1/admin/overview"))&&!ADM.loading){ADM.data=null;ADM.at=0;ADM275.delete("/v1/admin/settings");ADM275.delete("/v1/admin/overview");await admLoad();if(S.view==="admin")renderView()}}catch(e){console.warn("v275 adm",e)}
+  if(!ME.role||!ADM275.size)return r;const f=new Set(ADM275);ADM275.clear();
   try{if(f.has("/v1/admin/pricing")&&typeof PR!=="undefined"){PR.rows=null;PR._l=0}
   if(f.has("/v1/admin/auto272")&&typeof A272!=="undefined"&&!A272.busy)A272.d=null;
   if(f.has("/v1/admin/minimax183")&&typeof MM183!=="undefined"&&!MM183.busy){MM183.d=null;if(typeof mmLoad183==="function")mmLoad183()}

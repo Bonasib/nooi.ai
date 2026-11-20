@@ -36,6 +36,8 @@ async def main():
             ok(c["pr"] and c["pr"] > 3, f"Pricing loads again after sign-in {c}")
             ok(c["a"] and c["a"] > 0, f"nooi Auto engines load again after sign-in {c}")
             ok(not c["mm"] and c["set"] == 0, f"MiniMax no longer shows the old error; nothing left to retry {c}")
+            d = await pg.evaluate("async()=>{ADM.data=S.admin;ADM.at=Date.now();await loadMe();await new Promise(r=>setTimeout(r,1500));const p=(A()||{}).providers||{};return {demo:A()===S.admin,n:Object.keys(p).length,users:Array.isArray(A().users)}}")
+            ok(not d["demo"] and d["n"] > 5, f"a dashboard first filled with the demo data loads the real data once signed in {d}")
             ok(not errs, f"no page errors {errs[:3]}")
             await b.close()
     finally: srv.kill()
