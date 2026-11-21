@@ -327,5 +327,5 @@ export function RenderStatus() {
   const heavy = p.tracks.filter((x) => x.kind === "video").flatMap((x) => x.clips).filter((c) => c.type === "media" && (c.effects.length > 0 || !!c.lut)).length + p.transitions.length;
   const layers = p.tracks.filter((x) => x.kind === "video" && x.clips.length).length;
   const k = heavy > 6 || layers > 4 ? "red" : heavy > 0 || layers > 2 ? "amber" : "green";
-  return <span className={"rstat " + k} title={t("rs." + k)} data-testid="render-status"><i />{t("rs." + k)}</span>;
+  return <span className={"rstat " + k} title={t("rs." + k)} data-testid="render-status" aria-label={t("rs." + k)}><i /><span>{t("rs." + k)}</span></span>;
 }

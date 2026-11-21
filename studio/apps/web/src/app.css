@@ -35,7 +35,7 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
 @media (max-width: 1100px) { .fmt small { display: none; } .pname { width: 140px; } .matebtn span, .wsbtn > span { display: none; } }
 
 /* workspace */
-.workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: 72px minmax(240px, 300px) minmax(0, 1fr) minmax(260px, 320px); grid-template-rows: minmax(0, 1fr) minmax(220px, 36%); gap: 8px; padding: 8px; }
+.workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: 72px minmax(240px, 300px) minmax(0, 1fr) minmax(260px, 320px); grid-template-rows: minmax(0, 1fr) minmax(260px, 36%); gap: 8px; padding: 8px; }
 .workspace > .rail { grid-row: 1 / 3; } .workspace > .timeline { grid-column: 2 / 5; }
 /* tablets get the same computer layout: landscape keeps the four columns with narrower side panels; held upright, the same four
    panels are stacked — the preview across the top, library and clip settings side by side, the timeline below */
@@ -669,3 +669,10 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
 :root[data-theme="light"] .sitebar.sitehdr, .light .sitebar.sitehdr { background: rgba(255,255,255,.9); border-bottom-color: #e3e6e3; }
 :root[data-theme="light"] .sitehdr .shround, :root[data-theme="light"] .sitehdr .shbtn, .light .sitehdr .shround, .light .sitehdr .shbtn { color: #1a1d1a; border-color: #d9ddd9; background: #fff; }
 .app:has(> .sitebar.sitehdr) .mate { top: 104px; }
+
+/* nooi: the timeline toolbar on a computer or tablet wraps to a second line instead of hiding its last buttons
+   (zoom, snap, magnetic track, add track) off the end; phones keep the sideways scroll. The playback status
+   keeps only its dot when the bar is narrow — its words stay in the tooltip. */
+.app.full .tlbar { flex-wrap: wrap; row-gap: 4px; overflow-x: visible; container-type: inline-size; }
+.app.full .tlbar > .fadeend { display: none; }
+@container (max-width: 1500px) { .rstat > span { display: none; } .rstat { margin-inline: 4px; } }
