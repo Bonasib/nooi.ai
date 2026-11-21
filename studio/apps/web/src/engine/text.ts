@@ -3,11 +3,11 @@ import type { TextClip } from "@nooi/editor-core";
 
 const AR = /[֐-ࣿיִ-﷿ﹰ-﻿]/;
 const FALLBACK = '"IBM Plex Sans Arabic","Noto Sans Arabic","Geist",system-ui,sans-serif';
-export interface TextLook { opacity: number; dx: number; dy: number; scale: number; blur: number; chars: number }
+export interface TextLook { opacity: number; dx: number; dy: number; scale: number; blur: number; chars: number; rot: number }
 
 // how the in / out animations change the text at `local` seconds
 export function textLook(c: TextClip, local: number): TextLook {
-  const L: TextLook = { opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, chars: Infinity };
+  const L: TextLook = { opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, chars: Infinity, rot: 0 };
   const kin = c.animIn.dur > 0 ? Math.min(1, Math.max(0, local / c.animIn.dur)) : 1;
   const kout = c.animOut.dur > 0 ? Math.min(1, Math.max(0, (c.dur - local) / c.animOut.dur)) : 1;
   const ease = (k: number) => 1 - Math.pow(1 - k, 3);
@@ -23,6 +23,17 @@ export function textLook(c: TextClip, local: number): TextLook {
       case "blur": L.blur = Math.max(L.blur, (1 - e) * 0.02); L.opacity *= e; break;
       case "bounce": { const b = out ? e : 1 - Math.abs(Math.cos(k * Math.PI * 2.5)) * (1 - k); L.dy += (1 - b) * 0.06; L.opacity *= Math.min(1, k * 4); break; }
       case "typewriter": if (!out) L.chars = Math.floor(k * [...c.text].length); else L.opacity *= e; break;
+      // (v278)
+      case "rotateIn": L.rot += (1 - e) * (out ? 25 : -25); L.scale *= 0.7 + 0.3 * e; L.opacity *= e; break;
+      case "dropIn": { const b = 1 - Math.abs(Math.cos(k * Math.PI * 2)) * (1 - k); L.dy += (1 - (out ? e : b)) * -0.25; L.opacity *= Math.min(1, k * 3); break; }
+      case "riseUp": L.dy += (1 - e) * 0.2; L.opacity *= e; L.blur = Math.max(L.blur, (1 - e) * 0.008); break;
+      case "swing": L.rot += Math.sin(k * Math.PI * 3) * (1 - k) * 18; L.opacity *= Math.min(1, k * 3); break;
+      case "elastic": { const el = k === 0 ? 0 : k === 1 ? 1 : Math.pow(2, -10 * k) * Math.sin((k * 10 - 0.75) * (2 * Math.PI / 3)) + 1; L.scale *= out ? 0.4 + 0.6 * e : Math.max(0.01, el); L.opacity *= Math.min(1, k * 4); break; }
+      case "shrink": L.scale *= 1 + (1 - e) * 0.8; L.opacity *= e; break;
+      case "glitchIn": { const f = Math.floor(local * 24); const r = (Math.sin(f * 12.9898) * 43758.5453) % 1; L.dx += (1 - k) * (r - 0.5) * 0.08; L.opacity *= k < 0.6 ? (r > 0 ? 1 : 0.2) : 1; break; }
+      case "wordByWord": if (!out) { const words = c.text.split(/(\s+)/); const n = Math.ceil(k * words.filter((w) => w.trim()).length); let seen = 0, cut = 0; for (const w of words) { if (w.trim()) { if (seen >= n) break; seen++; } cut += [...w].length; } L.chars = k >= 1 ? Infinity : cut; } else L.opacity *= e; break;
+      case "flicker": { const f = Math.floor(local * 20); L.opacity *= k >= 0.9 ? 1 : ((f * 7919) % 5 > 1 ? 1 : 0.15) * Math.max(0.3, k); break; }
+      case "slideR": L.dx += (1 - e) * (out ? 0.15 : -0.15); L.opacity *= e; break;
       default: break;
     }
   };

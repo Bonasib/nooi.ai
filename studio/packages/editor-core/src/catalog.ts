@@ -144,3 +144,127 @@ export function motionKeyframes(id: string, c: Pick<Clip, "dur" | "transform" | 
     default: return {};
   }
 }
+
+// ================= (v278) the library grows: 62 more effects, 47 more transitions, 30 more looks, 32 more text templates
+// (the drawing of each lives in the app's WebGL compositor — on the device, no graphics card on the server)
+const EFFECTS278: [string, string, string, string, number][] = [
+  // distort (the picture bent, mirrored or repeated)
+  ["fisheye", "Fisheye", "عين السمكة", "distort", 0.6], ["bulge", "Bulge", "انتفاخ", "distort", 0.6], ["pinch", "Pinch", "قرص", "distort", 0.6], ["twirl", "Twirl", "دوامة", "distort", 0.5],
+  ["ripple", "Ripple", "تموّج دائري", "distort", 0.5], ["wave", "Wave", "موجة", "distort", 0.5], ["kaleido", "Kaleidoscope", "مشكال", "distort", 1], ["mirrorV", "Mirror down", "مرآة سفلية", "distort", 1],
+  ["quad", "Four copies", "أربع نسخ", "distort", 1], ["split3", "Three strips", "ثلاثة أشرطة", "distort", 1], ["zoomPulse", "Zoom pulse", "نبض التقريب", "distort", 0.6], ["heatHaze", "Heat haze", "سراب حراري", "distort", 0.6],
+  ["underwater", "Underwater", "تحت الماء", "distort", 0.6], ["jitter", "Jitter", "ارتجاف", "distort", 0.5],
+  // blur & light
+  ["tiltShift", "Tilt-shift", "إمالة وإزاحة", "light", 0.7], ["zoomBlur", "Zoom blur", "ضبابية التقريب", "light", 0.5], ["motionBlurH", "Motion blur", "ضبابية الحركة", "light", 0.5], ["spinBlur", "Spin blur", "ضبابية الدوران", "light", 0.5],
+  ["bloom", "Bloom", "إزهار ضوئي", "light", 0.6], ["halation", "Halation", "هالة حمراء", "light", 0.6], ["dreamy", "Dreamy", "حالم", "light", 0.6], ["chromaLens", "Lens fringe", "حواف العدسة", "light", 0.5],
+  ["lensFlare", "Lens flare", "وهج العدسة", "light", 0.7], ["godRays", "Light rays", "أشعة الضوء", "light", 0.6], ["strobe", "Strobe", "وميض متقطع", "light", 0.5], ["flicker", "Flicker", "ارتعاش الضوء", "light", 0.5],
+  // stylize (drawn, painted, printed)
+  ["emboss", "Emboss", "نقش بارز", "stylize", 1], ["edges", "Glowing edges", "حواف متوهجة", "stylize", 1], ["sketch", "Pencil sketch", "رسم بالقلم", "stylize", 1], ["cartoon", "Cartoon", "كرتون", "stylize", 1],
+  ["oil", "Oil paint", "رسم زيتي", "stylize", 1], ["halftone", "Halftone", "نقاط الطباعة", "stylize", 1], ["crosshatch", "Crosshatch", "تظليل متقاطع", "stylize", 1], ["dotMatrix", "LED dots", "نقاط مضيئة", "stylize", 1],
+  ["hexPixel", "Hexagons", "سداسيات", "stylize", 0.6], ["neonEdges", "Neon edges", "حواف نيون", "stylize", 1], ["popArt", "Pop art", "فن البوب", "stylize", 1], ["blockGlitch", "Data glitch", "خلل البيانات", "stylize", 0.6],
+  // colour tricks
+  ["duotone", "Duotone purple", "لونان بنفسجي", "colorfx", 1], ["duotoneB", "Duotone blue", "لونان أزرق", "colorfx", 1], ["thermal", "Thermal", "حراري", "colorfx", 1], ["nightVision", "Night vision", "رؤية ليلية", "colorfx", 1],
+  ["infrared", "Infrared", "أشعة تحت الحمراء", "colorfx", 1], ["xray", "X-ray", "أشعة سينية", "colorfx", 1], ["hueCycle", "Colour cycle", "دوران الألوان", "colorfx", 0.6], ["rainbow", "Rainbow", "قوس قزح", "colorfx", 0.5],
+  ["colorPop", "Colour pop (red)", "إبراز الأحمر", "colorfx", 1], ["bleach", "Bleach bypass", "تبييض سينمائي", "colorfx", 0.7],
+  // retro
+  ["crt", "Old TV", "تلفاز قديم", "retro", 1], ["filmBurn", "Film burn", "احتراق الفيلم", "retro", 0.6], ["scratches", "Scratches", "خدوش", "retro", 0.6], ["grunge", "Grunge", "متّسخ", "retro", 0.6],
+  // particles & weather (drawn over the picture, moving)
+  ["bokeh", "Bokeh lights", "أضواء بوكيه", "particles", 0.6], ["fireflies", "Fireflies", "يراعات", "particles", 0.6], ["confetti", "Confetti", "قصاصات ملونة", "particles", 0.6], ["hearts", "Hearts", "قلوب", "particles", 0.6],
+  ["embers", "Fire sparks", "شرر النار", "particles", 0.6], ["smoke", "Smoke", "دخان", "particles", 0.5], ["lightning", "Lightning", "برق", "particles", 0.7],
+  // frames
+  ["letterbox", "Cinema bars", "أشرطة سينمائية", "frames", 1], ["frameWhite", "Photo frame", "إطار صورة", "frames", 1], ["roundFrame", "Rounded corners", "زوايا مستديرة", "frames", 1],
+];
+for (const [id, en, ar, g, amt] of EFFECTS278) { EFFECTS.push({ id, en, ar, group: g }); EFFECT_AMOUNT[id] = amt; (EFFECT_GROUPS[g] = EFFECT_GROUPS[g] || []).push(id); }
+
+// transitions: id, English, Arabic, group (the drawing: the app's shader, index = position in this list)
+const TRANS278: [string, string, string, string][] = [
+  ["crossZoom", "Cross zoom", "تقريب متداخل", "zoom"], ["whipL", "Whip left", "سوط لليسار", "move"], ["whipR", "Whip right", "سوط لليمين", "move"], ["whipU", "Whip up", "سوط للأعلى", "move"], ["whipD", "Whip down", "سوط للأسفل", "move"],
+  ["dissolve", "Dissolve", "تذويب", "basic"], ["burn", "Burn", "احتراق", "light"], ["leakT", "Light leak", "تسرّب ضوئي", "light"], ["heart", "Heart", "قلب", "shape"], ["star", "Star", "نجمة", "shape"],
+  ["irisSq", "Square iris", "فتحة مربعة", "shape"], ["plus", "Cross", "صليب", "shape"], ["splitV", "Doors open", "فتح الأبواب", "3d"], ["splitH", "Split open", "انفتاح أفقي", "3d"], ["cubeL", "Cube left", "مكعب لليسار", "3d"],
+  ["cubeR", "Cube right", "مكعب لليمين", "3d"], ["flipH", "Flip", "قلب", "3d"], ["flipV", "Flip up", "قلب للأعلى", "3d"], ["rotateIn", "Rotate in", "دوران للداخل", "3d"], ["zoomSpin", "Zoom spin", "تقريب ودوران", "zoom"],
+  ["bounceIn", "Bounce in", "دخول بارتداد", "move"], ["swirl", "Swirl", "دوامة", "stylized"], ["rippleT", "Ripple", "تموّج", "stylized"], ["waveT", "Wave wipe", "مسح موجي", "wipe"], ["squares", "Squares", "مربعات", "pattern"],
+  ["hexT", "Hexagons", "سداسيات", "pattern"], ["dotsT", "Dots", "دوائر", "pattern"], ["linesT", "Lines", "خطوط", "pattern"], ["windL", "Wind", "ريح", "wipe"], ["digital", "Digital", "رقمي", "stylized"],
+  ["dreamyT", "Dreamy", "حالم", "light"], ["colorFlash", "Colour flash", "ومضة ملونة", "light"], ["ink", "Ink", "حبر", "stylized"], ["spiral", "Spiral", "حلزون", "shape"], ["fan", "Fan", "مروحة", "wipe"],
+  ["zigzag", "Zigzag", "متعرج", "wipe"], ["ellipse", "Ellipse", "بيضاوي", "shape"], ["page", "Page", "صفحة", "move"], ["stackUp", "Stack up", "تكديس", "move"], ["zoomThrough", "Zoom through", "اختراق بالتقريب", "zoom"],
+  ["shakeT", "Shake", "اهتزاز", "stylized"], ["lumaInv", "Luma reverse", "إضاءة معكوسة", "basic"], ["softWipeL", "Soft wipe left", "مسح ناعم لليسار", "wipe"], ["softWipeR", "Soft wipe right", "مسح ناعم لليمين", "wipe"], ["bars", "Falling bars", "أشرطة متساقطة", "pattern"],
+  ["blindsV", "Vertical blinds", "ستائر عمودية", "pattern"], ["crossWarp", "Cross warp", "التواء متداخل", "zoom"],
+];
+for (const [id, en, ar, group] of TRANS278) TRANSITIONS.push({ id, en, ar, group });
+export const TRANSITION_GROUPS = ["basic", "wipe", "move", "zoom", "shape", "3d", "pattern", "light", "stylized"];
+
+// looks: colour adjustments in one tap (30 more)
+const LK = (id: string, en: string, ar: string, set: Record<string, number>) => LOOKS.push({ id, en, ar, set });
+LK("cinematic", "Cinematic", "سينمائي داكن", { contrast: 0.22, saturation: -0.08, temperature: 0.05, highlights: -0.2, shadows: -0.1 });
+LK("bleachL", "Bleach", "مبيّض", { saturation: -0.55, contrast: 0.3, exposure: 0.03 });
+LK("kodak", "Warm film", "فيلم دافئ", { temperature: 0.28, tint: 0.05, contrast: 0.1, saturation: 0.08, shadows: 0.1 });
+LK("fuji", "Green film", "فيلم أخضر", { temperature: -0.08, tint: -0.15, contrast: 0.12, saturation: 0.05 });
+LK("polaroid", "Instant photo", "صورة فورية", { contrast: -0.15, temperature: 0.18, shadows: 0.25, saturation: -0.05, exposure: 0.05 });
+LK("vintage", "Vintage", "عتيق", { temperature: 0.35, saturation: -0.35, contrast: -0.1, shadows: 0.2 });
+LK("retro70", "Seventies", "السبعينات", { temperature: 0.45, tint: 0.08, saturation: 0.1, contrast: -0.05 });
+LK("moody", "Moody", "مزاجي", { exposure: -0.12, contrast: 0.2, saturation: -0.25, temperature: -0.1 });
+LK("dramatic", "Dramatic", "درامي", { contrast: 0.4, saturation: -0.15, highlights: -0.25, shadows: -0.2 });
+LK("summer", "Summer", "صيفي", { temperature: 0.25, saturation: 0.3, exposure: 0.06, vibrance: 0.3 });
+LK("winter", "Winter", "شتوي", { temperature: -0.45, saturation: -0.2, exposure: 0.05 });
+LK("autumn", "Autumn", "خريفي", { temperature: 0.4, tint: 0.06, saturation: 0.15, contrast: 0.08 });
+LK("spring", "Spring", "ربيعي", { temperature: 0.05, tint: -0.08, saturation: 0.25, vibrance: 0.3, exposure: 0.05 });
+LK("pastel", "Pastel", "باستيل", { contrast: -0.3, saturation: -0.2, exposure: 0.12, shadows: 0.3 });
+LK("neonL", "Neon night", "ليل نيون", { tint: 0.25, temperature: -0.2, saturation: 0.45, contrast: 0.2 });
+LK("cyberpunk", "Cyberpunk", "سايبربانك", { tint: 0.35, temperature: -0.3, contrast: 0.25, saturation: 0.3 });
+LK("desert", "Desert", "صحراوي", { temperature: 0.5, saturation: 0.05, contrast: 0.12, highlights: -0.1 });
+LK("forest", "Forest", "غابة", { tint: -0.2, saturation: 0.15, contrast: 0.1, temperature: -0.05 });
+LK("ocean", "Ocean", "محيط", { temperature: -0.35, tint: -0.05, saturation: 0.2, contrast: 0.08 });
+LK("sunset", "Sunset", "غروب", { temperature: 0.55, tint: 0.12, saturation: 0.2, exposure: -0.03 });
+LK("bw_high", "Hard black & white", "أبيض وأسود حاد", { saturation: -1, contrast: 0.55 });
+LK("bw_soft", "Soft black & white", "أبيض وأسود ناعم", { saturation: -1, contrast: -0.15, shadows: 0.2 });
+LK("sepiaL", "Old brown", "بني قديم", { saturation: -0.75, temperature: 0.6, contrast: 0.05 });
+LK("chrome", "Chrome", "كروم", { contrast: 0.25, saturation: 0.2, highlights: 0.1, vibrance: 0.2 });
+LK("soft", "Soft", "ناعم", { contrast: -0.2, exposure: 0.06, highlights: -0.15 });
+LK("crisp", "Crisp", "واضح", { contrast: 0.25, vibrance: 0.25, shadows: -0.05 });
+LK("night", "Night", "ليلي", { exposure: -0.3, temperature: -0.4, saturation: -0.3, contrast: 0.15 });
+LK("candle", "Candlelight", "ضوء الشموع", { temperature: 0.7, exposure: -0.1, saturation: 0.1, contrast: 0.1 });
+LK("food", "Food", "طعام", { temperature: 0.15, saturation: 0.25, vibrance: 0.35, contrast: 0.1, exposure: 0.04 });
+LK("portrait", "Portrait", "بورتريه", { temperature: 0.08, saturation: -0.05, contrast: -0.05, highlights: -0.1, shadows: 0.1 });
+
+// text in / out animations (10 more)
+for (const [id, en, ar] of [["rotateIn", "Rotate", "دوران"], ["dropIn", "Drop", "سقوط"], ["riseUp", "Rise", "صعود"], ["swing", "Swing", "تأرجح"], ["elastic", "Elastic", "مطاطي"],
+  ["shrink", "Shrink", "تصغير"], ["glitchIn", "Glitch", "تشويش"], ["wordByWord", "Word by word", "كلمة كلمة"], ["flicker", "Flicker", "وميض"], ["slideR", "Slide from the other side", "انزلاق من الجهة الأخرى"]]) TEXT_ANIMS.push({ id, en, ar });
+
+// text templates (32 more): a style and in / out animations, drawn by the same text engine as the titles
+const TT = (id: string, en: string, ar: string, style: Record<string, unknown>, animIn: string, animOut: string) => TEXT_TEMPLATES.push({ id, en, ar, style, animIn, animOut });
+TT("headline", "Headline", "عنوان رئيسي", { font: "Anton", weight: 400, size: 0.13, color: "#ffffff", shadow: { color: "rgba(0,0,0,0.5)", blur: 0.012, x: 0, y: 0.005 } }, "slideUp", "fade");
+TT("breaking", "Breaking news", "خبر عاجل", { font: "Cairo", weight: 900, size: 0.06, color: "#ffffff", box: { color: "#d0021b", opacity: 1, pad: 0.35, radius: 0.05 } }, "slideL", "slideL");
+TT("subscribe", "Subscribe", "اشترك", { font: "Cairo", weight: 800, size: 0.06, color: "#ffffff", box: { color: "#ff0033", opacity: 1, pad: 0.4, radius: 0.5 } }, "elastic", "shrink");
+TT("price", "Price tag", "سعر", { font: "Archivo Black", weight: 400, size: 0.1, color: "#0f1014", box: { color: "#D9F43B", opacity: 1, pad: 0.3, radius: 0.15 } }, "pop", "fade");
+TT("sale", "Sale", "تخفيضات", { font: "Lilita One", weight: 400, size: 0.14, color: "#ffffff", stroke: { color: "#d0021b", width: 0.008 }, extrude: { color: "#7a0010", depth: 0.08 } }, "bounce", "pop");
+TT("cinemaT", "Movie title", "عنوان فيلم", { font: "Cinzel", weight: 700, size: 0.09, color: "#f3efe6", letterSpacing: 0.3, shadow: { color: "rgba(0,0,0,0.6)", blur: 0.02, x: 0, y: 0 } }, "fade", "fade");
+TT("credits", "Credits", "شارة الختام", { font: "Montserrat", weight: 600, size: 0.04, color: "#ffffff", letterSpacing: 0.2 }, "riseUp", "fade");
+TT("handwrite", "Handwriting", "خط يدوي", { font: "Caveat", weight: 700, size: 0.1, color: "#ffffff" }, "typewriter", "fade");
+TT("signature", "Signature", "توقيع", { font: "Great Vibes", weight: 400, size: 0.11, color: "#ffffff" }, "wordByWord", "fade");
+TT("marker", "Marker", "قلم عريض", { font: "Permanent Marker", weight: 400, size: 0.09, color: "#ffeb3b", shadow: { color: "#000000", blur: 0, x: 0.004, y: 0.004 } }, "dropIn", "fade");
+TT("gameOver", "Game", "لعبة", { font: "Press Start 2P", weight: 400, size: 0.05, color: "#7CFF6B", glow: { color: "#2bff6b", blur: 0.02 } }, "glitchIn", "flicker");
+TT("horrorT", "Horror", "رعب", { font: "Creepster", weight: 400, size: 0.12, color: "#d8141c", glow: { color: "#4a0000", blur: 0.03 } }, "flicker", "fade");
+TT("sciFi", "Sci-fi", "خيال علمي", { font: "Orbitron", weight: 800, size: 0.08, color: "#00f0ff", glow: { color: "#00f0ff", blur: 0.02 }, letterSpacing: 0.15 }, "glitchIn", "fade");
+TT("goldT", "Gold award", "جائزة ذهبية", { font: "Cinzel", weight: 900, size: 0.1, gradient: ["#fff3b0", "#c8901c"], stroke: { color: "#5a3a08", width: 0.002 } }, "zoom", "fade");
+TT("kidsT", "Kids", "أطفال", { font: "Chewy", weight: 400, size: 0.11, color: "#ffffff", stroke: { color: "#ff7a1a", width: 0.006 } }, "elastic", "pop");
+TT("arabicCal", "Arabic calligraphy", "خط عربي", { font: "Aref Ruqaa", weight: 700, size: 0.12, color: "#f6e7c8", shadow: { color: "rgba(0,0,0,0.6)", blur: 0.012, x: 0, y: 0.004 } }, "fade", "fade");
+TT("kufi", "Kufi bold", "كوفي عريض", { font: "Reem Kufi", weight: 700, size: 0.11, color: "#D9F43B" }, "slideUp", "fade");
+TT("naskh", "Naskh", "نسخ", { font: "Amiri", weight: 700, size: 0.09, color: "#ffffff" }, "fade", "fade");
+TT("ramadan", "Ramadan", "رمضان", { font: "El Messiri", weight: 700, size: 0.11, gradient: ["#fff3b0", "#d4a017"], glow: { color: "#ffcf5a", blur: 0.02 } }, "zoom", "fade");
+TT("eid", "Eid", "عيد", { font: "Lalezar", weight: 400, size: 0.13, color: "#ffffff", stroke: { color: "#3a5bd9", width: 0.006 } }, "bounce", "fade");
+TT("question", "Question", "سؤال", { font: "Cairo", weight: 800, size: 0.07, color: "#0f1014", box: { color: "#ffffff", opacity: 1, pad: 0.35, radius: 0.35 } }, "pop", "fade");
+TT("chat", "Chat bubble", "فقاعة محادثة", { font: "Tajawal", weight: 700, size: 0.055, color: "#ffffff", box: { color: "#1f8cff", opacity: 1, pad: 0.4, radius: 0.6 } }, "slideUp", "fade");
+TT("label", "Name label", "اسم المتحدث", { font: "Tajawal", weight: 800, size: 0.05, align: "start", color: "#ffffff", box: { color: "#111111", opacity: 0.85, pad: 0.3, radius: 0.08 } }, "slideL", "slideL");
+TT("location", "Location", "الموقع", { font: "Montserrat", weight: 700, size: 0.045, color: "#ffffff", letterSpacing: 0.2, box: { color: "#000000", opacity: 0.5, pad: 0.3, radius: 0.1 } }, "fade", "fade");
+TT("date", "Date", "التاريخ", { font: "Space Grotesk", weight: 700, size: 0.05, color: "#ffffff", letterSpacing: 0.1 }, "typewriter", "fade");
+TT("hashtag", "Hashtag", "وسم", { font: "Poppins", weight: 800, size: 0.07, color: "#00F0FF", shadow: { color: "rgba(0,0,0,0.5)", blur: 0.01, x: 0, y: 0.004 } }, "rotateIn", "fade");
+TT("countdown", "Countdown", "عد تنازلي", { font: "Bebas Neue", weight: 400, size: 0.2, color: "#ffffff", glow: { color: "#ff3d00", blur: 0.02 } }, "shrink", "pop");
+TT("comicT", "Comic", "كوميكس", { font: "Bangers", weight: 400, size: 0.12, color: "#ffd400", stroke: { color: "#000000", width: 0.006 }, outline2: { color: "#ffffff", width: 0.004 } }, "elastic", "pop");
+TT("retroT", "Retro", "كلاسيكي", { font: "Righteous", weight: 400, size: 0.1, color: "#ff4fa3", extrude: { color: "#5b2a8e", depth: 0.14 } }, "swing", "fade");
+TT("minimal", "Minimal", "بسيط", { font: "Inter", weight: 300, size: 0.06, color: "#ffffff", letterSpacing: 0.3 }, "fade", "fade");
+TT("quoteBig", "Big quote", "اقتباس كبير", { font: "Playfair Display", weight: 700, size: 0.075, color: "#ffffff", italic: true }, "wordByWord", "fade");
+TT("tiktok", "Short-video caption", "تعليق الفيديو القصير", { font: "Montserrat", weight: 900, size: 0.075, color: "#ffffff", stroke: { color: "#000000", width: 0.006 } }, "pop", "fade");
+
+// ================= (v278) phase 3: voices for a clip's sound (drawn by Web Audio nodes in the preview and the export)
+export const VOICES278: Item[] = [
+  ["none", "Natural", "طبيعي"], ["deep", "Deep", "عميق"], ["chipmunk", "Chipmunk", "سنجاب"], ["robot", "Robot", "روبوت"], ["telephone", "Telephone", "هاتف"], ["radio", "Radio", "راديو"],
+  ["echo", "Echo", "صدى"], ["hall", "Big hall", "قاعة كبيرة"], ["underwater", "Underwater", "تحت الماء"], ["monster", "Monster", "وحش"], ["alien", "Alien", "فضائي"], ["megaphone", "Megaphone", "مكبّر صوت"],
+].map(([id, en, ar]) => ({ id, en, ar }));

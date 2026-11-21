@@ -107,3 +107,33 @@ export function trackFrames(frames: Gray[], box: [number, number, number, number
   }
   return out;
 }
+
+// ================= (v278) nesting: clips (on any video tracks) become one clip whose picture is a file made from them; un-nesting puts them back
+import type { Clip as Clip278, MediaClip as MC278, Project as P278, TrackKind as TK278 } from "./schema";
+export function nestRange278(p: P278, ids: string[]): { start: number; end: number } | null {
+  let a = Infinity, b = -Infinity; for (const t of p.tracks) for (const c of t.clips) if (ids.includes(c.id)) { a = Math.min(a, c.start); b = Math.max(b, c.start + c.dur); }
+  return isFinite(a) ? { start: a, end: b } : null;
+}
+/** the project with only the picked clips (for making the nested file); times stay as they are */
+export function nestOnly278(p: P278, ids: string[]): P278 {
+  const q = structuredClone(p); for (const t of q.tracks) t.clips = t.clips.filter((c) => ids.includes(c.id)); q.transitions = q.transitions.filter((x) => ids.includes(x.a) && ids.includes(x.b)); return q;
+}
+/** replace the picked clips by one clip of `asset` (made from them) on the lowest track they used; returns the new clip's id */
+export function nest278(p: P278, ids: string[], asset: string, mk: (o: Partial<MC278>) => MC278): string | null {
+  const r = nestRange278(p, ids); if (!r) return null; const kept: { kind: TK278; clips: Clip278[] }[] = []; let low = -1;
+  p.tracks.forEach((t, i) => { const mine = t.clips.filter((c) => ids.includes(c.id)); if (mine.length) { kept.push({ kind: t.kind, clips: structuredClone(mine) }); if (t.kind === "video") low = i; t.clips = t.clips.filter((c) => !ids.includes(c.id)); } });
+  if (low < 0) low = p.tracks.findIndex((t) => t.kind === "video");
+  p.transitions = p.transitions.filter((x) => !ids.includes(x.a) && !ids.includes(x.b));
+  const c = mk({ asset, start: r.start, dur: r.end - r.start, in: 0, nested: { tracks: kept, start: r.start } });
+  p.tracks[low].clips.push(c); p.tracks[low].clips.sort((x, y) => x.start - y.start); return c.id;
+}
+/** put a nested clip's clips back where they were (moved with the nested clip if it was moved) */
+export function unnest278(p: P278, id: string): string[] {
+  for (const t of p.tracks) { const i = t.clips.findIndex((c) => c.id === id); if (i < 0) continue; const c = t.clips[i] as MC278; if (!c.nested) return [];
+    const d = c.start - c.nested.start, back: string[] = []; t.clips.splice(i, 1);
+    for (const g of c.nested.tracks) { let tr = p.tracks.find((x) => x.kind === g.kind && !x.clips.some((y) => g.clips.some((z) => z.start + d < y.start + y.dur && y.start < z.start + d + z.dur)));
+      if (!tr) { tr = { id: "t" + Math.random().toString(36).slice(2, 9), kind: g.kind, name: (g.kind === "audio" ? "A" : g.kind === "text" ? "T" : "V") + (p.tracks.length + 1), locked: false, muted: false, hidden: false, solo: false, clips: [] }; p.tracks.unshift(tr); }
+      for (const z of g.clips) { z.start += d; tr.clips.push(z); back.push(z.id); } tr.clips.sort((x, y) => x.start - y.start); }
+    return back; }
+  return [];
+}

@@ -1,3 +1,5 @@
+import * as P278 from "./actions278";
+import { exportProject, mixSound } from "./engine/export";
 import "@nooi/ui/src/tokens.css";
 import { NATIVE } from "./site";
 import "./app.css";
@@ -56,4 +58,4 @@ if ("serviceWorker" in navigator && location.protocol === "https:" && !NATIVE &&
 window.addEventListener("beforeunload", (e) => { if (editor.dirty) { autosave(); e.preventDefault(); } });
 // for tests and the agents (the same named commands the AI prompt edit will use)
 initPics(async (id) => { const a = editor.project.assets[id]; return a ? (await urlOf(a)) || null : null; }, () => playerRef.current?.redraw());   // (v247) pictures in motion scenes
-(window as unknown as Record<string, unknown>).__studio = { editor, api, actions: A, ui, core: { addTrack, textClip, addClip }, get player() { return playerRef.current; } };
+(window as unknown as Record<string, unknown>).__studio = { editor, api, actions: A, pro: P278, engine: { exportProject, mixSound }, ui, core: { addTrack, textClip, addClip }, get player() { return playerRef.current; } };

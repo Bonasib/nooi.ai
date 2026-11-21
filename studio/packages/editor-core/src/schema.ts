@@ -21,7 +21,14 @@ export interface ColorAdjust {
   exposure: number; contrast: number; saturation: number; temperature: number; tint: number;   // -1..1 (0 = untouched)
   highlights: number; shadows: number; vibrance: number;
   hsl: Record<HueBand, [number, number, number]>;            // hue shift, saturation, lightness per band (-1..1)
+  // (v278) curves: the output level at 0, ¼, ½, ¾, 1 of the input (master then red, green, blue); colour wheels: lift, gamma, gain (r, g, b, -1..1)
+  curves?: Curves | null;
+  wheels?: Wheels | null;
 }
+export interface Curves { l: number[]; r: number[]; g: number[]; b: number[] }
+export interface Wheels { lift: [number, number, number]; gamma: [number, number, number]; gain: [number, number, number] }
+/** (v278) a clip's sound: three-band EQ (dB), a voice, a compressor that evens the level */
+export interface AudioFx { eq: [number, number, number]; voice: string; comp: boolean }
 export const BLEND_MODES = ["normal", "multiply", "screen", "overlay", "darken", "lighten", "add", "difference", "softLight", "hardLight", "colorDodge", "colorBurn"] as const;
 export type BlendMode = (typeof BLEND_MODES)[number];
 export interface Effect { id: Id; type: string; enabled: boolean; params: Record<string, number | string | boolean> }
@@ -68,6 +75,12 @@ export interface MediaClip extends ClipBase {
   cmask?: ColorMask | null;    // a colour picked and changed alone
   pano?: Pano | null;          // a 360° (equirectangular) video seen through a normal camera
   track?: TrackPath | null;    // a part of the picture followed through the clip (others can follow it; "lock" keeps it still)
+  // (v278) an adjustment layer (no picture of its own: its colour, LUT and effects change everything under it), the clip's sound,
+  // the clips a nested clip was made from (un-nest puts them back), the asset it was steadied from
+  adjust?: boolean;
+  afx?: AudioFx | null;
+  nested?: { tracks: { kind: TrackKind; clips: Clip[] }[]; start: number } | null;
+  steadyOf?: Id | null;
 }
 export interface TrackMatte { mode: "alpha" | "luma"; invert: boolean }
 export interface ColorMask { on: boolean; hue: number; range: number; soft: number; minSat: number; hueShift: number; sat: number; exposure: number; invert: boolean; show: boolean }
@@ -95,7 +108,9 @@ export interface TextClip extends ClipBase { type: "text"; text: string; style: 
 export type Clip = MediaClip | TextClip;
 
 export type TrackKind = "video" | "audio" | "text";
-export interface Track { id: Id; kind: TrackKind; name: string; locked: boolean; muted: boolean; hidden: boolean; solo: boolean; clips: Clip[] }
+export interface Track { id: Id; kind: TrackKind; name: string; locked: boolean; muted: boolean; hidden: boolean; solo: boolean; clips: Clip[];
+  duck?: number | null;   // (v278) how far this track is lowered under the voice tracks (0 = never, 1 = to silence); unset = the project's amount
+}
 export interface Transition { id: Id; track: Id; a: Id; b: Id; type: string; dur: number }
 export interface Marker { id: Id; t: number; name: string; color: string }
 

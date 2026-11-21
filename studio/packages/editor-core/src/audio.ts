@@ -47,3 +47,40 @@ export function duckGain(spans: [number, number][], t: number, amount: number, r
   }
   return g;
 }
+
+// ================= (v278) noise removal for the export: a spectral gate. The noise's level per frequency is measured on the quietest
+// tenth of the clip; each moment's frequencies under it (×1.6) are turned down (never below 15 %), smoothed over time and frequency.
+function fft(re: Float32Array, im: Float32Array, inv: boolean) {
+  const n = re.length;
+  for (let i = 1, j = 0; i < n; i++) { let b = n >> 1; for (; j & b; b >>= 1) j ^= b; j ^= b; if (i < j) { [re[i], re[j]] = [re[j], re[i]]; [im[i], im[j]] = [im[j], im[i]]; } }
+  for (let len = 2; len <= n; len <<= 1) {
+    const a = (2 * Math.PI / len) * (inv ? 1 : -1), wr = Math.cos(a), wi = Math.sin(a);
+    for (let i = 0; i < n; i += len) { let cr = 1, ci = 0;
+      for (let k = 0; k < len / 2; k++) { const u = i + k, v = u + len / 2, tr = re[v] * cr - im[v] * ci, ti = re[v] * ci + im[v] * cr;
+        re[v] = re[u] - tr; im[v] = im[u] - ti; re[u] += tr; im[u] += ti; const nr = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = nr; } }
+  }
+  if (inv) for (let i = 0; i < n; i++) { re[i] /= n; im[i] /= n; }
+}
+export function denoise278(x: Float32Array, N = 1024): Float32Array {
+  const H = N / 2, bins = H + 1, win = new Float32Array(N); for (let i = 0; i < N; i++) win[i] = Math.sqrt(0.5 - 0.5 * Math.cos((2 * Math.PI * i) / N));
+  const frames = Math.max(1, Math.ceil(x.length / H) + 1), mags: Float32Array[] = [], energy: number[] = [];
+  const re = new Float32Array(N), im = new Float32Array(N);
+  for (let f = 0; f < frames; f++) { const s = f * H - H; re.fill(0); im.fill(0); for (let i = 0; i < N; i++) { const j = s + i; re[i] = j >= 0 && j < x.length ? x[j] * win[i] : 0; }
+    fft(re, im, false); const m = new Float32Array(bins); let e = 0; for (let k = 0; k < bins; k++) { m[k] = Math.hypot(re[k], im[k]); e += m[k] * m[k]; } mags.push(m); energy.push(e); }
+  const order = energy.map((e, i) => [e, i]).sort((a, b) => a[0] - b[0]); const quiet = order.slice(0, Math.max(1, Math.round(frames * 0.1))).map((q) => q[1]);
+  const noise = new Float32Array(bins); for (const i of quiet) for (let k = 0; k < bins; k++) noise[k] += mags[i][k] / quiet.length;
+  const out = new Float32Array(x.length); let prev = new Float32Array(bins).fill(1);
+  for (let f = 0; f < frames; f++) {
+    const s = f * H - H; re.fill(0); im.fill(0); for (let i = 0; i < N; i++) { const j = s + i; re[i] = j >= 0 && j < x.length ? x[j] * win[i] : 0; }
+    fft(re, im, false); const g = new Float32Array(bins);
+    for (let k = 0; k < bins; k++) { const m = mags[f][k], t = noise[k] * 1.6; const raw = m <= 1e-9 ? 0.15 : Math.max(0.15, Math.min(1, (m - t) / m + 0.15)); g[k] = Math.max(raw, prev[k] * 0.6); }
+    const gs = new Float32Array(bins); for (let k = 0; k < bins; k++) gs[k] = (g[Math.max(0, k - 1)] + g[k] + g[Math.min(bins - 1, k + 1)]) / 3; prev = gs;
+    for (let k = 0; k < bins; k++) { re[k] *= gs[k]; im[k] *= gs[k]; if (k > 0 && k < H) { re[N - k] *= gs[k]; im[N - k] *= gs[k]; } }
+    fft(re, im, true); for (let i = 0; i < N; i++) { const j = s + i; if (j >= 0 && j < x.length) out[j] += re[i] * win[i]; }
+  }
+  return out;
+}
+/** (v278) how far a track is lowered under the voices: its own amount, else the project's; voice tracks are never lowered */
+export function duckOf(p: { ducking: { amount: number; voiceTracks: string[] } }, tr: { id: string; duck?: number | null }): number {
+  if (p.ducking.voiceTracks.includes(tr.id)) return 0; return tr.duck == null ? p.ducking.amount : Math.max(0, Math.min(1, tr.duck));
+}

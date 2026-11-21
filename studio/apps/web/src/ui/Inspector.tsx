@@ -13,6 +13,7 @@ import { MotionProps } from "../motion/Gallery";
 import { BackdropSection } from "./Backdrop";
 import { RampTiles } from "./Ramps";
 import { ColorMaskSection, MatteRow, MotionBlurRow, PanoRow, TrackRow } from "./Pro";
+import { CurvesEditor, WheelsEditor, Scopes, SoundFx, ProClip } from "./Grade278";
 
 // (v233) the settings in sections, in the order pro editors use: each with its icon and a title; a tap folds or opens it (remembered)
 function Sec({ id, icon, title, children }: { id: string; icon: string; title: string; children: React.ReactNode }) {
@@ -76,6 +77,8 @@ export function Inspector() {
           <Sec id="keys" icon="keyframe" title={t("insp.keyframes")}><KfList c={c} /></Sec>
           {c.type === "media" && editor.project.assets[(c as MediaClip).asset]?.kind !== "audio" && <Sec id="bk" icon="cutout" title={t("bk.sec")}><BackdropSection c={c} /></Sec>}
           {c.type === "media" && editor.project.assets[(c as MediaClip).asset]?.kind === "video" && <Sec id="ex" icon="speed" title={t("ex.sec")}><p className="hint">{t("ex.secHint")}</p><Btn icon="sparkle" onClick={() => ui.set((s) => ({ rail: "stock", panelOpen: true, sub: { ...s.sub, stock: "extend" } }))} testid="ex-open">{t("ex.open")}</Btn></Sec>}
+          {c.type === "media" && (editor.project.assets[(c as MediaClip).asset]?.kind === "video" || (c as MediaClip).nested) && <Sec id="pro278" icon="follow" title={t("pro2.secPro")}><ProClip c={c as MediaClip} /></Sec>}
+          {c.type === "media" && (c as MediaClip).adjust && <p className="hint adj278">{t("pro2.adjustHint")}</p>}
           <Sec id="track277" icon="target" title={t("pro.secTrack")}><TrackRow c={c} /></Sec>
           <Sec id="mblur277" icon="speed" title={t("pro.mblur")}><MotionBlurRow c={c} /></Sec>
           {c.type === "media" && editor.project.assets[(c as MediaClip).asset]?.kind !== "audio" && <Sec id="matte277" icon="layout" title={t("pro.matte")}><MatteRow c={c as MediaClip} /></Sec>}
@@ -97,6 +100,7 @@ export function Inspector() {
           <Slider label={t("insp.fadeIn")} value={c.fadeIn} min={0} max={Math.min(5, c.dur / 2)} step={0.05} unit="s" onChange={(v) => A.live.set("fadeIn", v)} onCommit={A.live.end} />
           <Slider label={t("insp.fadeOut")} value={c.fadeOut} min={0} max={Math.min(5, c.dur / 2)} step={0.05} unit="s" onChange={(v) => A.live.set("fadeOut", v)} onCommit={A.live.end} />
           </Sec>
+          {c.type === "media" && <Sec id="sfx278" icon="mic" title={t("pro2.soundFx")}><SoundFx c={c as MediaClip} /></Sec>}
           <Sec id="clean" icon="denoise" title={t("isec.clean")}>
           <div className="row"><Btn icon={c.muted ? "mute" : "volume"} pressed={c.muted} onClick={() => A.setProp("muted", !c.muted)}>{t("insp.mute")}</Btn>
             {p.assets[c.asset]?.kind === "video" && <Btn icon="detach" onClick={A.detach} testid="detach">{t("insp.detach")}</Btn>}
@@ -106,6 +110,9 @@ export function Inspector() {
         </>}
         {cur === "color" && c.type === "media" && <ColorProps c={c} />}
         {cur === "color" && c.type === "media" && <Sec id="cmask277" icon="eyedrop" title={t("pro.cmask")}><ColorMaskSection c={c as MediaClip} /></Sec>}
+        {cur === "color" && c.type === "media" && <><Sec id="curves278" icon="chart" title={t("pro2.curves")}><CurvesEditor c={c as MediaClip} /></Sec>
+          <Sec id="wheels278" icon="color" title={t("pro2.wheels")}><WheelsEditor c={c as MediaClip} /></Sec>
+          <Sec id="scopes278" icon="chart" title={t("pro2.scopes")}><Scopes /></Sec></>}
         {cur === "text" && c.type === "text" && <TextProps c={c} />}
       </div>
     </section>

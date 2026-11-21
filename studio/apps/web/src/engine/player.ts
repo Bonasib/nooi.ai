@@ -1,6 +1,7 @@
 // The preview: a clock, a pool of media elements that follow it, the sound through Web Audio (volume, fades, keyframes,
 // mute/solo, ducking), and the compositor drawing at the preview's size (a proxy size — smooth on ordinary devices, no GPU needed).
-import { clipEnd, duckGain, duration, findClip, gainAt, layersAt, soundsAt, sourceTime, srcLimit } from "@nooi/editor-core";
+import { clipEnd, duckGain, duckOf, duration, findClip, gainAt, layersAt, soundsAt, sourceTime, srcLimit } from "@nooi/editor-core";
+import { buildFx, fxKey, type FxChain } from "./audiofx";
 import type { Asset, Editor, MediaClip, Project } from "@nooi/editor-core";
 import { Compositor, parseCube } from "./compositor";
 import { drawMoment, type Frame } from "./render";
@@ -11,7 +12,7 @@ export interface ClockState { t: number; playing: boolean; buffering: boolean }
 
 export class Player {
   comp: Compositor; clock: ClockState = { t: 0, playing: false, buffering: false };
-  private els = new Map<string, { el: El; asset: string; node?: MediaElementAudioSourceNode; gain?: GainNode; url?: string; fid?: number; cbAt?: number }>();
+  private els = new Map<string, { el: El; asset: string; node?: MediaElementAudioSourceNode; gain?: GainNode; url?: string; fid?: number; cbAt?: number; fx?: FxChain; fxk?: string }>();
   private imgs = new Map<string, HTMLImageElement>();
   private luts = new Map<string, { tex: WebGLTexture; size: number } | "loading" | "bad">();
   private actx: AudioContext | null = null; private master: GainNode | null = null;
@@ -31,7 +32,10 @@ export class Player {
   get project(): Project { return this.editor.project; }
   // the drawing size: the project's frame scaled to fit `maxW` (the preview is a smaller copy; the export uses the full size)
   /** (v226) the size the preview is shown at (CSS px): the drawing is made at that size × the screen's density (at most ×2), never above 1280 */
-  fitTo(cssW: number, cssH: number) { const dpr = Math.min(2, typeof devicePixelRatio === "number" ? devicePixelRatio : 1), m = Math.max(320, Math.min(1280, Math.round(Math.max(cssW, cssH) * dpr / 16) * 16)); if (m !== this.maxW) { this.maxW = m; this.resize(); } }
+  fitTo(cssW: number, cssH: number) { this.cssW = cssW; this.cssH = cssH; const dpr = Math.min(2, typeof devicePixelRatio === "number" ? devicePixelRatio : 1), m = Math.max(160, Math.min(1280, Math.round(Math.max(cssW, cssH) * dpr * this.quality / 16) * 16)); if (m !== this.maxW) { this.maxW = m; this.resize(); } }
+  /** (v278) the preview's quality: 1 full, ½, ¼ — a smaller drawing keeps heavy edits smooth (the export is always full size) */
+  quality = 1; private cssW = 640; private cssH = 360;
+  setQuality(q: number) { this.quality = Math.max(0.25, Math.min(1, q)); this.fitTo(this.cssW, this.cssH); }
   /** draw again on the next tick (something the picture depends on arrived) */
   redraw() { this.drawnV = -1; }
   resize() { const p = this.project, k = Math.min(1, this.maxW / Math.max(p.width, p.height)); this.comp.resize(Math.round(p.width * k / 2) * 2, Math.round(p.height * k / 2) * 2); this.drawnV = -1; }
@@ -78,7 +82,14 @@ export class Player {
       const el = e.el, src = sourceTime(c, L.local, srcLimit(p, c));
       const audible = !L.track.muted && soundsAt(p, t).some((x) => x.clip.id === c.id);
       let g = audible ? gainAt(c, Math.max(0, Math.min(c.dur, L.local))) : 0;
-      if (ducking && !p.ducking.voiceTracks.includes(L.track.id)) g *= duckGain(ducking, t, p.ducking.amount);
+      if (ducking) { const amt = duckOf(p, L.track); if (amt > 0) g *= duckGain(ducking, t, amt); }
+      // (v278) the clip's sound chain (EQ, voice, compressor, clean-up), rebuilt only when its settings change
+      const fk = fxKey(c.afx, c.denoise);
+      if (e.node && e.gain && this.actx && (e.fxk || "") !== fk) {
+        try { e.node.disconnect(); e.fx?.stop(); e.fx?.output.disconnect(); e.fx = undefined;
+          if (fk) { e.fx = buildFx(this.actx, c.afx, !!c.denoise); e.node.connect(e.fx.input); e.fx.output.connect(e.gain); } else e.node.connect(e.gain); } catch { /* */ }
+        e.fxk = fk;
+      }
       if (e.gain) e.gain.gain.value = Math.max(0, Math.min(4, g * this.volume)); else el.volume = Math.max(0, Math.min(1, g * this.volume));
       if (playing && !c.reverse && c.freeze == null) {
         const rate = Math.max(0.0625, Math.min(16, c.speed));
@@ -97,6 +108,7 @@ export class Player {
   private element(c: MediaClip, a: Asset) {
     let e = this.els.get(c.id);
     if (e && e.asset !== a.id) { e.el.pause(); this.els.delete(c.id); e = undefined; }
+    if (e && e.url && (e as { px?: string }).px !== (a.proxy || "")) { const rec = e; (rec as { px?: string }).px = a.proxy || ""; const tt = rec.el.currentTime; urlOf(a).then((u) => { if (u && u !== rec.url) { rec.el.src = u; rec.url = u; try { rec.el.currentTime = tt; } catch { /* */ } } }); }
     if (!e) {
       const el = (a.kind === "audio" ? new Audio() : document.createElement("video")) as El;
       el.preload = "auto"; el.crossOrigin = "anonymous"; (el as HTMLVideoElement).playsInline = true; el.muted = false;
@@ -104,7 +116,7 @@ export class Player {
       // (v226) count the frames the video really shows, so an unchanged frame is not sent to the GPU again on the next draw
       const vv = el as HTMLVideoElement & { requestVideoFrameCallback?: (cb: () => void) => number };
       if (a.kind !== "audio" && typeof vv.requestVideoFrameCallback === "function") { rec.fid = 0; const cb = () => { rec.fid = (rec.fid || 0) + 1; rec.cbAt = performance.now(); this.drawnT = -1; vv.requestVideoFrameCallback!(cb); }; vv.requestVideoFrameCallback(cb); }
-      urlOf(a).then((u) => { if (u) { el.src = u; rec.url = u; } });
+      (rec as { px?: string }).px = a.proxy || ""; urlOf(a).then((u) => { if (u) { el.src = u; rec.url = u; } });
       if (this.actx && this.master) { try { rec.node = this.actx.createMediaElementSource(el); rec.gain = this.actx.createGain(); rec.node.connect(rec.gain).connect(this.master); } catch { /* the element plays on its own */ } }
       el.addEventListener("seeked", () => { this.settle = performance.now() + 120; this.drawnT = -1; });
       el.addEventListener("loadeddata", () => { this.drawnT = -1; });

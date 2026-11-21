@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { ProButtons } from "./Grade278";
 import { memo, useEffect, useRef, useState } from "react";
 import type { DragEvent, PointerEvent as RPE } from "react";
 import { Btn, Icon, Seg } from "@nooi/ui";
@@ -21,6 +22,10 @@ export function Timeline() {
   const { t } = useTranslation(); const p = useProject(); const zoom = useUI((s) => s.zoom); const tool = useUI((s) => s.tool); const snapOn = useUI((s) => s.snap);
   const scroll = useRef<HTMLDivElement>(null); const [snapAt, setSnapAt] = useState<number | null>(null); const [dropX, setDropX] = useState<number | null>(null);
   const spine = C.spineOf(p); const mag = p.magnetic !== false;
+  // (v278) big projects: only the clips near what is in view are drawn (the selected ones always)
+  const [vw, setVw] = useState<[number, number]>([0, 4000]); const many = p.tracks.reduce((n, x) => n + x.clips.length, 0) > 150;
+  useEffect(() => { const el = scroll.current; if (!el || !many) return; let raf = 0; const f = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => setVw([el.scrollLeft, el.clientWidth])); }; f(); el.addEventListener("scroll", f, { passive: true }); window.addEventListener("resize", f); return () => { el.removeEventListener("scroll", f); window.removeEventListener("resize", f); cancelAnimationFrame(raf); }; }, [many]);
+  const near = (c: C.Clip) => !many || editor.selection.includes(c.id) || (c.start * zoom < vw[0] + vw[1] + 1200 && (c.start + c.dur) * zoom > vw[0] - 1200);
   const dur = C.duration(p), width = Math.max((dur + 30) * zoom, 800);
   const xToT = (clientX: number) => { const r = scroll.current!.getBoundingClientRect(); return Math.max(0, (clientX - r.left + scroll.current!.scrollLeft) / zoom); };
   const laneAt = (clientY: number): string | null => { const el = document.elementsFromPoint(scroll.current!.getBoundingClientRect().left + 4, clientY).find((e) => (e as HTMLElement).dataset?.lane) as HTMLElement | undefined; return el?.dataset.lane || null; };
@@ -120,6 +125,7 @@ export function Timeline() {
         <Btn icon="freeze" label={t("insp.freeze")} onClick={A.freeze} disabled={!editor.selection.length} />
         <Btn icon="detach" label={t("insp.detach")} onClick={A.detach} disabled={!editor.selection.length} />
         <Btn icon="marker" label={t("act.marker")} kbd="M" onClick={A.marker} testid="marker" />
+        <ProButtons />
         <span className="sep" />
         <Seg label={t("tool.label")} value={tool} onChange={(v) => ui.set({ tool: v })} options={tools} />
         <span className="sp" />
@@ -143,7 +149,7 @@ export function Timeline() {
             <Ruler p={p} zoom={zoom} width={width} onDown={scrub} />
             {p.tracks.map((tr) => (
               <div key={tr.id} className={"lane " + tr.kind + (tr.locked ? " locked" : "") + (tr.hidden ? " hidden" : "")} data-lane={tr.id} style={{ height: LANE[tr.kind] }}>
-                {tr.clips.map((c) => <ClipView key={c.id} c={c} p={p} zoom={zoom} sel={editor.selection.includes(c.id)} kind={tr.kind} onDown={startDrag} anchored={mag && !!c.anchor} />)}
+                {tr.clips.filter(near).map((c) => <ClipView key={c.id} c={c} p={p} zoom={zoom} sel={editor.selection.includes(c.id)} kind={tr.kind} onDown={startDrag} anchored={mag && !!c.anchor} />)}
                 {p.transitions.filter((x) => x.track === tr.id).map((x) => { const b = tr.clips.find((c) => c.id === x.b); return b ? <TransBadge key={x.id} id={x.id} at={b.start * zoom} w={x.dur * zoom} type={x.type} /> : null; })}
               </div>
             ))}

@@ -4,7 +4,8 @@ import {
   ALL_FORMATS, AudioBufferSource, BlobSource, BufferTarget, CanvasSink, CanvasSource, Input, MovOutputFormat, Mp3OutputFormat, Mp4OutputFormat, Output,
   QUALITY_HIGH, QUALITY_MEDIUM, QUALITY_LOW, WebMOutputFormat, getFirstEncodableAudioCodec, getFirstEncodableVideoCodec, canEncodeAudio,
 } from "mediabunny";
-import { clipEnd, duckGain, duration, frameSize, gainAt, aspectOf, layersAt, srcLimit, sourceTime } from "@nooi/editor-core";
+import { clipEnd, duckGain, duckOf, denoise278, duration, frameSize, gainAt, aspectOf, layersAt, srcLimit, sourceTime } from "@nooi/editor-core";
+import { buildFx, hasFx } from "./audiofx";
 import type { Asset, ExportSettings, MediaClip, Project } from "@nooi/editor-core";
 import { Compositor, parseCube } from "./compositor";
 import { drawMoment, type Frame } from "./render";
@@ -90,7 +91,9 @@ export async function exportProject(p: Project, o: ExportOpts): Promise<ExportRe
     if (!vcodec) throw Object.assign(new Error("This browser can't encode video here — use the server export."), { code: "NO_ENCODER" });
     const out = new Output({ format, target: new BufferTarget() });
     const q = o.quality === "low" ? QUALITY_LOW : o.quality === "medium" ? QUALITY_MEDIUM : QUALITY_HIGH;
-    const vsrc = new CanvasSource(canvas as HTMLCanvasElement, { codec: vcodec, bitrate: q, keyFrameInterval: 2 });
+    // (v278) the software codecs (VP9/VP8/AV1) in "realtime" mode: several times faster on a device with no video encoder, nearly the same picture
+    const soft = vcodec === "vp9" || vcodec === "vp8" || vcodec === "av1";
+    const vsrc = new CanvasSource(canvas as HTMLCanvasElement, { codec: vcodec, bitrate: q, keyFrameInterval: 2, ...(soft ? { latencyMode: "realtime" as const } : {}) });
     out.addVideoTrack(vsrc, { frameRate: fps });
     let asrc: AudioBufferSource | null = null; const hasSound = p.tracks.some((t) => !t.muted && t.clips.some((c) => c.type === "media" && !c.muted && p.assets[c.asset]?.hasAudio !== false && p.assets[c.asset]?.kind !== "image"));
     if (hasSound) { const acodec = await getFirstEncodableAudioCodec(format.getSupportedAudioCodecs()); if (acodec) { asrc = new AudioBufferSource({ codec: acodec, bitrate: q }); out.addAudioTrack(asrc); } }
@@ -124,13 +127,16 @@ export async function mixSound(p: Project, t0: number, t1: number, signal?: Abor
       const s0 = Math.max(c.start, t0), s1 = Math.min(clipEnd(c), t1); if (s1 <= s0) continue;
       if (!cache.has(a.id)) { const b = await fileOf(a as Asset); cache.set(a.id, b ? await decodeSound(b) : null); }
       let buf = cache.get(a.id); if (!buf) continue;
+      // (v278) the clean-up: a spectral gate on the clip's own sound (the quiet hiss under the voice is taken out)
+      if (c.denoise) { const k = a.id + "|dn"; if (!cache.has(k)) { const r = ctx.createBuffer(buf.numberOfChannels, buf.length, buf.sampleRate); for (let ch = 0; ch < buf.numberOfChannels; ch++) r.copyToChannel(denoise278(buf.getChannelData(ch)) as Float32Array<ArrayBuffer>, ch); cache.set(k, r); } buf = cache.get(k)!; }
       if (c.reverse) { const r = ctx.createBuffer(buf.numberOfChannels, buf.length, buf.sampleRate); for (let ch = 0; ch < buf.numberOfChannels; ch++) { const d = buf.getChannelData(ch), o2 = r.getChannelData(ch); for (let i = 0; i < d.length; i++) o2[i] = d[d.length - 1 - i]; } buf = r; }
       const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = c.speed;
-      const g = ctx.createGain(); src.connect(g).connect(ctx.destination);
+      const g = ctx.createGain();
+      if (hasFx(c.afx, c.denoise)) { const fx = buildFx(ctx, c.afx, !!c.denoise); src.connect(fx.input); fx.output.connect(g).connect(ctx.destination); } else src.connect(g).connect(ctx.destination);
       const local0 = s0 - c.start, srcAt = c.reverse ? buf.duration - sourceTime(c, local0) : sourceTime(c, local0);
       const step = 1 / 50; g.gain.setValueAtTime(0, 0);
       for (let t = s0; t <= s1 + step; t += step) {
-        let v = gainAt(c, Math.min(c.dur, t - c.start)); if (voices.length && !p.ducking.voiceTracks.includes(tr.id)) v *= duckGain(voices, t, p.ducking.amount);
+        let v = gainAt(c, Math.min(c.dur, t - c.start)); if (voices.length) { const amt = duckOf(p, tr); if (amt > 0) v *= duckGain(voices, t, amt); }
         g.gain.linearRampToValueAtTime(Math.max(0, v), Math.max(0, t - t0));
       }
       src.start(s0 - t0, Math.max(0, srcAt), (s1 - s0) * c.speed);
