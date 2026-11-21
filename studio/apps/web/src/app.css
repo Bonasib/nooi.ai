@@ -658,6 +658,7 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
 .sitehdr .shright { flex: none; display: flex; align-items: center; gap: 8px; margin-inline-start: auto; }
 .sitehdr .shround, .sitehdr .shbtn, .sitehdr .shav { flex: none; display: inline-grid; place-items: center; height: 36px; min-width: 36px; border-radius: 10px; border: 1px solid #262b26; background: transparent; color: #e7ebe7; cursor: pointer; text-decoration: none; }
 .sitehdr .shround { border-radius: 999px; background: #131613; }
+@media (max-width: 1279px) { .sitehdr .snav { gap: 0; } .sitehdr .snav a { padding: 0 8px; font-size: 13.5px; } .sitehdr .shlib span { display: none; } }
 .sitehdr .shlib { display: inline-flex; gap: 6px; padding: 0 12px; font: 600 13px/1 var(--f, system-ui); }
 .sitehdr .shcredits { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 999px; background: #e6ff4d; color: #0b0c0e; font: 800 15px/1 var(--f, system-ui); text-decoration: none; box-shadow: 0 0 18px rgba(230,255,77,.25); }
 .sitehdr .shav { border-radius: 50%; border: 0; background: linear-gradient(135deg, #c1ff72, #2dd4a8); color: #0b0c0e; font: 800 14px/1 var(--f, system-ui); }

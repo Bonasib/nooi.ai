@@ -1603,7 +1603,9 @@ table.pnl{min-width:520px}table.pnl td.neg{color:#ff6b5e}table.pnl tr.tot td{fon
 <body>
 <div class="app" id="app">
   <aside class="side" id="side"></aside>
-  <main class="main" id="main"></main>
+  <main class="main" id="main"><div class="boot279" aria-hidden="true"><div class="bth279"><img src="/brand/nooi-mark.svg" alt="" width="36" height="36"><span data-ar="الرئيسية">Home</span><span data-ar="استكشف">Explore</span><span data-ar="صورة">Image</span><span data-ar="فيديو">Video</span><span data-ar="صوت">Audio</span><span data-ar="الشخصيات">Characters</span><span data-ar="ثلاثي الأبعاد">3D</span><span data-ar="تحرير">Edit</span><span data-ar="النشر">Publish</span><span data-ar="كل الأدوات">All tools</span></div><div class="btl279"><i></i><b data-ar="جارٍ فتح nooi…">Opening nooi…</b></div></div>
+<style>.boot279{min-height:100vh;background:#060706;color:#c8cbc2;font:500 14px/1 system-ui,-apple-system,"Segoe UI",sans-serif}.bth279{display:flex;align-items:center;gap:22px;height:64px;padding:0 20px;border-bottom:1px solid #1c1f1a;overflow:hidden;white-space:nowrap}.bth279 img{flex:none;border-radius:9px}.bth279 span{opacity:.7}@media (max-width:767px){.bth279 span{display:none}}.btl279{display:flex;flex-direction:column;align-items:center;gap:14px;padding-top:28vh}.btl279 i{width:30px;height:30px;border-radius:50%;border:3px solid #2a2f25;border-top-color:#D9F43B;animation:b279 .8s linear infinite}.btl279 b{font-weight:500;opacity:.6}@keyframes b279{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.btl279 i{animation:none}}</style>
+<script>try{var l=localStorage.getItem("nooi.lang279")||((navigator.language||"").slice(0,2)==="ar"?"ar":"");if(l==="ar"){document.documentElement.dir="rtl";document.querySelectorAll(".boot279 [data-ar]").forEach(function(x){x.textContent=x.getAttribute("data-ar")})}}catch(e){}</script></main>
 </div>
 <nav class="bottomnav" id="bottomnav"></nav>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -26509,6 +26511,115 @@ loadMe=(o=>async function(){const r=await o.apply(this,arguments);
   if(f.has("/v1/admin/minimax183")&&typeof MM183!=="undefined"&&!MM183.busy){MM183.d=null;if(typeof mmLoad183==="function")mmLoad183()}
   if(f.has("/v1/admin/showcase")&&typeof SC!=="undefined"&&!SC.loadingAdm)SC.admin=null}catch(e){console.warn("v275",e)}
   if(S.view==="admin")renderView();return r})(loadMe);
+/* ================= v279: A CLEAR TOP MENU — every section by name, its tools one hover away =================
+   The owner: "make the top menu clear so one can move between the site's pages". Since v253 the top bar of a signed-in page
+   showed only "You are here" and nine icon buttons; the sections lived in the side menu. Now the top bar is the site's menu
+   (as on Higgsfield): Home · Explore · Image · Video · Audio · Characters · 3D · Edit · Publish · Agents · All tools, each with
+   its icon and name; the open section is lit; pointing at a section (or its arrow, or ↓ on the keyboard) opens a panel with
+   that section's tools — icon, name and one line on what each does. What doesn't fit goes under "More". The side menu stays
+   (folded to icons once, so the page gets the room; unfolding it is remembered as before). */
+const TN279={open:"",tmr:0,k:"nooi.tn279",sig:""};
+if(!ICONS.chev279)ICONS.chev279='<path d="M6 9l6 6 6-6"/>';
+try{if(!localStorage.getItem(TN279.k)&&!(navigator.webdriver&&!window.__tn279)){   /* (the older suites drive the open side menu — they keep it) */localStorage.setItem(TN279.k,"1");SB253.fold=true;localStorage.setItem(SB253.k,"1")}}catch(e){}
+const TNDESC279={home:["Start anything from one box.","ابدأ أي شيء من مربع واحد."],explore:["Templates, the community's best and ideas to reuse.","قوالب وأفضل أعمال المجتمع وأفكار تعيد استخدامها."],
+  image:["Pictures, sketches that come to life, colouring books.","صور ورسومات تنبض بالحياة وكراسات تلوين."],video:["Videos from words or pictures, ads, stories, films.","فيديوهات من الكلمات أو الصور، وإعلانات وقصص وأفلام."],
+  audio:["Voices, dubbing, subtitles, music and sound.","أصوات ودبلجة وترجمة وموسيقى ومؤثرات."],chars:["People who keep the same face in every shot.","شخصيات تحتفظ بالوجه نفسه في كل لقطة."],
+  world:["3D worlds you can walk through.","عوالم ثلاثية الأبعاد تمشي فيها."],edit:["The video editor, effects and finishing.","محرر الفيديو والمؤثرات واللمسات الأخيرة."],
+  calendar:["Plan, schedule and publish to your accounts.","خطّط وجدول وانشر على حساباتك."],auto:["The 9 agents make a whole film for you.","الوكلاء التسعة يصنعون فيلماً كاملاً لك."],more:["Sketches, colouring books, video analysis, hooks.","رسومات وكراسات تلوين وتحليل فيديو وخطافات."],apps:["Every tool on one page.","كل الأدوات في صفحة واحدة."]};
+function tnOn279(v){const f=typeof FEATURE_OF_VIEW!=="undefined"&&FEATURE_OF_VIEW[v];return!!VIEWS[v]&&!(f&&typeof featureOn==="function"&&!featureOn(f))}
+// the sections: [id, icon, English, Arabic, [[view, English, Arabic]…]]
+function tnSecs279(){const out=[["home","home","Home","الرئيسية",[]]],ex=HUBS.find(h=>h[0]==="explore");
+  if(ex){const it=ex[4].filter(t=>tnOn279(t[0])&&t[0]!=="recipes").map(t=>[t[0],t[1],t[2]]);if(it.length)out.push(["explore",ex[1]||"explore",ex[2],ex[3],it])}
+  for(const g of(typeof sbHubs253==="function"?sbHubs253():[])){const it=g[4].map(t=>g[0]==="auto"?[t[0],t[2],t[3]]:[t[0],t[1],t[2]]).filter(t=>tnOn279(t[0]));
+    if(it.length)out.push([g[0],g[1],g[0]==="auto"?"Agents":g[0]==="more"?"Extras":g[2],g[0]==="auto"?"الوكلاء":g[0]==="more"?"إضافات":g[3],it])}
+  if(VIEWS.apps)out.push(["apps","tools","All tools","كل الأدوات",[]]);return out}
+function tnCur279(){const v=ALIAS82[S.view]||S.view;if(v==="home")return"home";if(v==="apps")return"apps";return typeof curHub253==="function"?curHub253():""}
+function tnFirst279(s){if(s[0]==="home"||s[0]==="apps")return s[0];if(s[0]==="explore"&&s[4].some(t=>t[0]==="discover"))return"discover";return s[4][0][0]}
+function tnNav279(){const cur=tnCur279(),secs=tnSecs279();
+  return'<nav class="tn279" aria-label="'+esc(L("Site menu","قائمة الموقع"))+'"><button type="button" class="tnlogo279" data-go="home" aria-label="'+esc(L("nooi.ai — Home","nooi.ai — الرئيسية"))+'" title="'+esc(L("Home","الرئيسية"))+'"><img src="/brand/nooi-mark.svg" alt="" width="34" height="34"></button><div class="tnr279">'+secs.map(s=>{const many=s[4].length>1,here=cur===s[0];
+    return'<div class="tni279" data-tn279sec="'+s[0]+'" data-sec90="'+(SEC90[s[0]]||"brand")+'"><button type="button" class="tnb279" data-go="'+tnFirst279(s)+'"'+(here?' aria-current="page"':"")+">"+ic(s[1])+"<span>"+esc(L(s[2],s[3]))+"</span></button>"+
+      (many?'<button type="button" class="tnc279" data-tn279="'+s[0]+'" aria-haspopup="true" aria-expanded="false" aria-label="'+esc(L("Tools in ","أدوات ")+L(s[2],s[3]))+'">'+ic("chev279")+"</button>":"")+"</div>"}).join("")+
+    '<div class="tni279 more279" hidden><button type="button" class="tnb279 tnm279" data-tn279="__more" aria-haspopup="true" aria-expanded="false">'+ic("menu")+"<span>"+esc(L("More","المزيد"))+"</span>"+ic("chev279")+"</button></div></div></nav>"}
+function tnTool279(t,cur){const d=TOOLDESC[t[0]];return'<button type="button" class="tnt279" data-go="'+t[0]+'"'+(cur===t[0]?' aria-current="page"':"")+'><i class="tnti279">'+ic(typeof tIcon253==="function"?tIcon253(t[0],"spark"):"spark")+"</i><span><b>"+esc(L(t[1],t[2]))+"</b>"+(d?"<small>"+esc(L(d[0],d[1]))+"</small>":"")+"</span></button>"}
+function tnPanelHTML279(id){const secs=tnSecs279(),cur=ALIAS82[S.view]||S.view;
+  if(id==="__more"){const hid=[...document.querySelectorAll("#main>.topm .tni279[hidden][data-tn279sec]")].map(x=>x.dataset.tn279sec);
+    return'<div class="tnph279"><b>'+esc(L("More sections","أقسام أخرى"))+'</b></div><div class="tnpg279">'+secs.filter(s=>hid.includes(s[0])).map(s=>
+      '<button type="button" class="tnt279" data-go="'+tnFirst279(s)+'"><i class="tnti279" data-sec90="'+(SEC90[s[0]]||"brand")+'">'+ic(s[1])+"</i><span><b>"+esc(L(s[2],s[3]))+"</b>"+(TNDESC279[s[0]]?"<small>"+esc(L(TNDESC279[s[0]][0],TNDESC279[s[0]][1]))+"</small>":"")+"</span></button>").join("")+"</div>"}
+  const s=secs.find(x=>x[0]===id);if(!s)return"";const d=TNDESC279[id];
+  return'<div class="tnph279" data-sec90="'+(SEC90[id]||"brand")+'"><i class="tnti279">'+ic(s[1])+"</i><span><b>"+esc(L(s[2],s[3]))+"</b>"+(d?"<small>"+esc(L(d[0],d[1]))+"</small>":"")+'</span></div><div class="tnpg279">'+s[4].map(t=>tnTool279(t,cur)).join("")+"</div>"}
+function tnOpen279(id,trig){clearTimeout(TN279.tmr);let p=document.getElementById("tnp279");if(!id){if(p)p.hidden=true;TN279.open="";document.querySelectorAll('#main>.topm [data-tn279][aria-expanded="true"]').forEach(b=>b.setAttribute("aria-expanded","false"));return}
+  if(!p){p=document.createElement("div");p.id="tnp279";p.className="tnp279";p.setAttribute("role","menu");document.body.appendChild(p);
+    p.addEventListener("pointerenter",()=>clearTimeout(TN279.tmr));p.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse")tnLater279()})}
+  p.innerHTML=tnPanelHTML279(id);p.dataset.sec90=id==="__more"?"brand":(SEC90[id]||"brand");p.hidden=false;TN279.open=id;
+  document.querySelectorAll("#main>.topm [data-tn279]").forEach(b=>b.setAttribute("aria-expanded",String(b.dataset.tn279===id)));
+  const it=trig&&(trig.closest(".tni279")||trig),r=it?it.getBoundingClientRect():{left:20,right:20,bottom:64},w=Math.min(p.offsetWidth||560,innerWidth-16),rtl=document.documentElement.dir==="rtl";
+  let x=rtl?r.right-w:r.left;x=Math.max(8,Math.min(x,innerWidth-w-8));p.style.left=x+"px";p.style.top=Math.round(r.bottom+6)+"px"}
+function tnLater279(){clearTimeout(TN279.tmr);TN279.tmr=setTimeout(()=>tnOpen279(""),220)}
+// what doesn't fit in the bar goes under "More" (the open section always stays in the bar)
+function tnFit279(){const nav=document.querySelector("#main>.topm .tn279");if(!nav||!nav.offsetParent)return;const row=nav.querySelector(".tnr279"),items=[...row.querySelectorAll(".tni279[data-tn279sec]")],more=row.querySelector(".more279");
+  items.forEach(x=>x.hidden=false);more.hidden=true;if(row.scrollWidth<=row.clientWidth+1)return;more.hidden=false;
+  const cur=tnCur279();for(let i=items.length-1;i>=0&&row.scrollWidth>row.clientWidth+1;i--){if(items[i].dataset.tn279sec===cur||items[i].dataset.tn279sec==="home")continue;items[i].hidden=true}
+  const hm=items.find(x=>x.dataset.tn279sec==="home"),lg=nav.querySelector(".tnlogo279");if(hm&&cur!=="home"&&row.scrollWidth>row.clientWidth+1&&lg&&lg.offsetWidth)hm.hidden=true}
+function tn279(){const t=document.querySelector("#main>.topm");if(!t)return;const sig=[S.lang,ALIAS82[S.view]||S.view,typeof isAdmin==="function"&&isAdmin(),Object.keys(VIEWS).length].join("|");
+  let n=t.querySelector(".tn279");if(n&&TN279.sig===sig)return;const moved=TN279.sig.split("|")[1]!==sig.split("|")[1];TN279.sig=sig;const h=tnNav279();
+  if(n)n.outerHTML=h;else{const a=t.querySelector(".crumb253")||t.querySelector(".hnav98")||t.querySelector(".brand");if(a)a.insertAdjacentHTML("afterend",h);else t.insertAdjacentHTML("afterbegin",h)}
+  if(moved||!TN279.open)tnOpen279("");requestAnimationFrame(tnFit279);
+  const nv=t.querySelector(".tn279");if(window.ResizeObserver&&nv&&!nv.__ro){nv.__ro=new ResizeObserver(()=>tnFit279());nv.__ro.observe(nv)}
+  try{localStorage.setItem("nooi.lang279",S.lang==="ar"?"ar":"en")}catch(e){}}
+renderView=(o=>function(){const r=o.apply(this,arguments);try{tn279()}catch(e){console.warn("v279 menu:",e)}return r})(renderView);
+if(typeof renderShell==="function")renderShell=(o=>function(){const r=o.apply(this,arguments);try{tn279()}catch(e){console.warn("v279 menu:",e)}return r})(renderShell);
+document.addEventListener("pointerover",e=>{if(e.pointerType!=="mouse")return;const i=e.target.closest&&e.target.closest("#main>.topm .tni279");if(!i)return;
+  const id=i.dataset.tn279sec||"__more",b=i.querySelector("[data-tn279]");clearTimeout(TN279.tmr);if(!b){if(TN279.open)tnLater279();return}if(TN279.open===id)return;
+  TN279.tmr=setTimeout(()=>tnOpen279(id,i),TN279.open?0:110)});
+document.addEventListener("pointerout",e=>{if(e.pointerType!=="mouse")return;const i=e.target.closest&&e.target.closest("#main>.topm .tni279");if(i&&!(e.relatedTarget&&i.contains(e.relatedTarget)))tnLater279()});
+document.addEventListener("click",e=>{const c=e.target.closest&&e.target.closest("[data-tn279]");if(c){e.preventDefault();e.stopPropagation();const id=c.dataset.tn279;tnOpen279(TN279.open===id?"":id,c);return}
+  if(TN279.open&&!(e.target.closest&&e.target.closest("#tnp279")))tnOpen279("");if(e.target.closest&&e.target.closest("#tnp279 [data-go]"))setTimeout(()=>tnOpen279(""),0)},true);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&TN279.open){const b=document.querySelector('#main>.topm [data-tn279="'+TN279.open+'"]');tnOpen279("");if(b)b.focus();return}
+  const b=e.target.closest&&e.target.closest("#main>.topm .tni279");if(b&&e.key==="ArrowDown"){const c=b.querySelector("[data-tn279]");if(c){e.preventDefault();tnOpen279(c.dataset.tn279,c);const f=document.querySelector("#tnp279 .tnt279");if(f)f.focus()}}
+  const p=e.target.closest&&e.target.closest("#tnp279");if(p&&(e.key==="ArrowDown"||e.key==="ArrowUp")){const all=[...p.querySelectorAll(".tnt279")],i=all.indexOf(document.activeElement);e.preventDefault();(all[(i+(e.key==="ArrowDown"?1:-1)+all.length)%all.length]||all[0]).focus()}});
+addEventListener("scroll",()=>{if(TN279.open)tnOpen279("")},true);addEventListener("resize",()=>{if(TN279.open)tnOpen279("")});
+(()=>{const st=document.createElement("style");st.textContent=`
+.tn279{display:none}
+@media (min-width:768px){
+  body.sb253on #main>.topm .crumb253{display:none!important}
+  #main>.topm .tn279{display:flex;flex:1;min-width:0;align-items:center;height:64px}
+  #main>.topm .hnav98{display:none!important}
+  .tnr279{display:flex;align-items:center;gap:2px;min-width:0;overflow:hidden;flex:1}
+  .tni279{position:relative;display:flex;align-items:center;flex:none;border-radius:12px}
+  .tni279[hidden]{display:none}
+  .tni279:hover{background:var(--panel2)}
+  .tnb279{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 9px;border:0;background:none;color:var(--mute);font:500 14px/1 var(--sans);white-space:nowrap;cursor:pointer;border-radius:12px}
+  .tnb279 svg{width:16px!important;height:16px!important;flex:none;color:var(--hub,currentColor);opacity:.9}
+  .tni279:hover .tnb279,.tnb279:focus-visible{color:var(--text)}
+  .tnc279{display:grid;place-items:center;width:20px;height:38px;margin-inline-start:-6px;border:0;background:none;color:var(--mute);cursor:pointer;border-radius:8px}
+  .tnc279 svg{width:14px!important;height:14px!important;transition:transform .15s}
+  .tnc279[aria-expanded="true"] svg,.tnm279[aria-expanded="true"] svg:last-child{transform:rotate(180deg)}
+  .tnb279[aria-current="page"]{color:var(--text);font-weight:600}
+  .tni279:has(.tnb279[aria-current="page"]){background:color-mix(in srgb,var(--lime) 12%,transparent)}
+  .tni279:has(.tnb279[aria-current="page"])::after{content:"";position:absolute;inset-inline:10px;bottom:-13px;height:2px;border-radius:2px;background:var(--lime)}
+  .tnm279 svg:last-child{width:14px!important;height:14px!important}
+}
+@media (min-width:768px) and (max-width:1279px){.tnb279{padding:0 7px;font-size:13.5px;gap:5px}}
+@media (min-width:768px) and (max-width:1599px){#main>.topm .lib98 span{display:none}}
+body.sb253fold .sbbrand253{display:none!important}
+  .tnlogo279{flex:none;display:grid;place-items:center;width:38px;height:38px;margin-inline-end:8px;padding:0;border:0;background:none;cursor:pointer;border-radius:12px}.tnlogo279 img{width:34px;height:34px;border-radius:9px;display:block}.tnlogo279:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+  body.sb253on:not(.sb253fold) .tnlogo279{display:none}
+.tnp279{position:fixed;z-index:70;width:min(580px,calc(100vw - 16px));max-height:calc(100vh - 90px);overflow:auto;padding:10px;border:1px solid var(--line2,var(--line));border-radius:16px;background:var(--panel,var(--bg));box-shadow:0 24px 60px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.25);animation:tnin279 .14s ease-out}
+.tnp279[hidden]{display:none}
+@keyframes tnin279{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.tnp279{animation:none}}
+.tnph279{display:flex;align-items:center;gap:10px;padding:6px 8px 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.tnph279>span{display:flex;flex-direction:column;gap:3px;min-width:0}.tnph279 b{font:600 16px/1.2 var(--sans)}.tnph279 small{font:400 13px/1.35 var(--sans);color:var(--mute)}
+.tnpg279{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px}
+.tnt279{display:flex;align-items:flex-start;gap:10px;padding:9px 10px;border:1px solid transparent;border-radius:12px;background:none;color:var(--text);text-align:start;cursor:pointer;min-width:0}
+.tnt279:hover,.tnt279:focus-visible{background:var(--panel2);outline:none;border-color:var(--line)}
+.tnt279[aria-current="page"]{border-color:color-mix(in srgb,var(--lime) 40%,transparent);background:color-mix(in srgb,var(--lime) 10%,transparent)}
+.tnt279>span{display:flex;flex-direction:column;gap:3px;min-width:0}.tnt279 b{font:500 14px/1.25 var(--sans)}
+.tnt279 small{font:400 12px/1.35 var(--sans);color:var(--mute);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tnti279{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:8px;background:color-mix(in srgb,var(--hub,var(--lime)) 15%,transparent);color:var(--hub,var(--lime))}
+.tnti279 svg{width:16px!important;height:16px!important}
+`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
