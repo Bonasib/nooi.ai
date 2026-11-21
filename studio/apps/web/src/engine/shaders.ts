@@ -4,6 +4,9 @@ export const VS = `#version 300 es
 in vec2 aPos; out vec2 vUv;
 void main(){ vUv = aPos * 0.5 + 0.5; gl_Position = vec4(aPos, 0.0, 1.0); }`;
 
+export const FS_ACC = `#version 300 es
+precision highp float; in vec2 vUv; uniform sampler2D uTex; uniform float uW; out vec4 o;
+void main(){ o = texture(uTex, vUv) * uW; }`;
 export const FS_COPY = `#version 300 es
 precision highp float; in vec2 vUv; uniform sampler2D uTex; uniform bool uFlipY; out vec4 o;
 void main(){ vec2 uv = uFlipY ? vec2(vUv.x, 1.0 - vUv.y) : vUv; o = texture(uTex, uv); }`;
@@ -35,6 +38,11 @@ uniform vec4 uKey;            // (v234) the colour key: rgb, on
 uniform vec4 uKeyP;           // similarity, softness, spill, screen (1 green, 2 blue, 0 other)
 uniform int uStack;           // (v234) a cut-out: the picture on the top half, its mask (grey) below
 uniform float uTexH;          // the whole source's height (px)
+uniform bool uPremul;         // (v277) the source is a picture of this compositor (colours multiplied by their alpha)
+uniform sampler2D uMatte;     // (v277) track matte: the layer above, drawn alone (frame space, premultiplied)
+uniform vec2 uMatteM;         // mode (0 none, 1 alpha, 2 luma), invert
+uniform vec4 uCm; uniform vec4 uCm2; uniform vec4 uCm3;   // (v277) colour mask: hue range soft on · hue-shift sat exposure invert · show minSat
+uniform vec4 uPano;           // (v277) 360°: yaw pitch roll (radians), fov (radians; 0 = off)
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 float luma(vec3 c){ return dot(c, vec3(0.2126, 0.7152, 0.0722)); }
@@ -44,6 +52,14 @@ vec3 hsv2rgb(vec3 c){ vec3 p = abs(fract(c.xxx + vec3(1., 2./3., 1./3.)) * 6. - 
 // where the output pixel falls in the source (0..1), with the transition's movement
 vec2 place(vec2 uv){
   vec2 px = (uv - 0.5) * uFrame;
+  if (uPano.w > 0.0) {
+    float t = tan(uPano.w * 0.5); vec2 q = vec2((uv.x - 0.5) * 2.0 * t * uFrame.x / uFrame.y, (uv.y - 0.5) * 2.0 * t);
+    vec3 d = normalize(vec3(q, 1.0));
+    float cr = cos(uPano.z), sr = sin(uPano.z); d.xy = mat2(cr, sr, -sr, cr) * d.xy;
+    float cp = cos(uPano.y), sp = sin(uPano.y); d.yz = mat2(cp, -sp, sp, cp) * d.yz;
+    float cy = cos(uPano.x), sy = sin(uPano.x); d.xz = mat2(cy, -sy, sy, cy) * d.xz;
+    return vec2(fract(atan(d.x, d.z) / 6.2831853 + 0.5), clamp(asin(clamp(d.y, -1.0, 1.0)) / 3.1415927 + 0.5, 0.0, 1.0));
+  }
   if (uTrRole >= 0) {
     float k = uTrK; float s = uTrRole == 1 ? 1.0 - k : -k;   // incoming comes in; outgoing goes out
     if (uTr >= 18 && uTr <= 21 && uTrRole == 1) { vec2 d = uTr == 18 ? vec2(1,0) : uTr == 19 ? vec2(-1,0) : uTr == 20 ? vec2(0,-1) : vec2(0,1); px -= d * uFrame * s; }
@@ -194,9 +210,21 @@ vec3 blendOp(vec3 d, vec3 s){
 void main(){
   vec4 dst = texture(uDst, vUv);
   vec2 suv = place(vUv);
-  vec4 src = keyed(sampleSrc(suv));
+  vec4 src = sampleSrc(suv);
+  if (uPremul) src.rgb /= max(src.a, 1e-4);
+  src = keyed(src);
+  vec3 orig = src.rgb;
   src.rgb = grade(src.rgb, vUv);
+  if (uCm.w > 0.5) {
+    vec3 hv = rgb2hsv(clamp(orig, 0.0, 1.0)); float dh = abs(fract(hv.x - uCm.x + 0.5) - 0.5);
+    float m = (1.0 - smoothstep(uCm.y, uCm.y + uCm.z + 1e-3, dh)) * smoothstep(uCm3.y * 0.5, uCm3.y + 0.05, hv.y);
+    if (uCm2.w > 0.5) m = 1.0 - m;
+    vec3 h = rgb2hsv(clamp(src.rgb, 0.0, 1.0)); h.x = fract(h.x + uCm2.x); h.y = clamp(h.y * (1.0 + uCm2.y), 0.0, 1.0);
+    vec3 adj = hsv2rgb(h) * pow(2.0, uCm2.z * 2.0);
+    src.rgb = mix(src.rgb, adj, m); if (uCm3.x > 0.5) src.rgb = vec3(m);
+  }
   float a = src.a * uOpacity * trMask(vUv, src);
+  if (uMatteM.x > 0.5) { vec4 mt = texture(uMatte, vUv); float v = uMatteM.x < 1.5 ? mt.a : clamp(luma(mt.rgb), 0.0, 1.0); if (uMatteM.y > 0.5) v = 1.0 - v; a *= v; }
   if (uTrRole >= 0) {
     float k = uTrK;
     if (uTr == 1 || uTr == 2) { vec3 to = uTr == 1 ? vec3(0.0) : vec3(1.0); float m = uTrRole == 0 ? clamp(k * 2.0, 0.0, 1.0) : clamp((1.0 - k) * 2.0, 0.0, 1.0); src.rgb = mix(src.rgb, to, m); }

@@ -43,7 +43,10 @@ export interface Folder { id: Id; name: string; parent?: Id | null }
 // second for a title), so it stays on the same picture when V1 is trimmed, rippled or moved (spec §8.5 parentAnchorClipId)
 export interface Anchor { clip: Id; at: number }
 export interface ClipBase { id: Id; start: number; dur: number; name?: string; keyframes: Keyframes; transform: Transform; opacity: number; anchor?: Anchor | null;
-  backdrop?: Id | null }        // (v234) a background placed under that clip (a picked new background replaces it)
+  backdrop?: Id | null   // (v277) pro tools — motion blur (a share of one frame's time the shutter stays open, 0 = off) and following a tracked clip
+  mblur?: number;
+  follow?: { clip: Id } | null;
+}        // (v234) a background placed under that clip (a picked new background replaces it)
 export interface MediaClip extends ClipBase {
   type: "media"; asset: Id;
   in: number;                  // source seconds at the clip's first frame (before reverse)
@@ -60,7 +63,18 @@ export interface MediaClip extends ClipBase {
   denoise?: boolean;           // RNNoise on this clip's sound
   link?: Id | null;            // a detached sound remembers its video clip
   light?: [number, number, number] | null;   // (v234) the colour change made to match a new background (temperature, exposure, tint)
+  // (v277) Filmora-16-class tools, all drawn by the WebGL compositor on the device
+  matte?: TrackMatte | null;   // the clip on the track above (at the same moment) is this clip's matte and isn't drawn itself
+  cmask?: ColorMask | null;    // a colour picked and changed alone
+  pano?: Pano | null;          // a 360° (equirectangular) video seen through a normal camera
+  track?: TrackPath | null;    // a part of the picture followed through the clip (others can follow it; "lock" keeps it still)
 }
+export interface TrackMatte { mode: "alpha" | "luma"; invert: boolean }
+export interface ColorMask { on: boolean; hue: number; range: number; soft: number; minSat: number; hueShift: number; sat: number; exposure: number; invert: boolean; show: boolean }
+export interface Pano { on: boolean; yaw: number; pitch: number; roll: number; fov: number; move: boolean; yaw2: number; pitch2: number; fov2: number }   // degrees
+// box: the picked part (source fractions, from the top-left: x, y, w, h); pts: [local second, centre u, centre v] (source fractions)
+export interface TrackPath { box: [number, number, number, number]; pts: [number, number, number][]; lock: number }
+
 export interface TextStyle {
   font: string; size: number; weight: number; italic: boolean;
   color: string; align: "start" | "center" | "end"; lineHeight: number; letterSpacing: number;
