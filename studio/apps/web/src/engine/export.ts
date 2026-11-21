@@ -47,7 +47,7 @@ export async function exportProject(p: Project, o: ExportOpts): Promise<ExportRe
   }
   // ---- frames
   const canvas = typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(w, h) : Object.assign(document.createElement("canvas"), { width: w, height: h });
-  const comp = new Compositor(canvas); comp.resize(w, h);
+  const comp = new Compositor(canvas); comp.resize(w, h); comp.fps = fps; comp.blurN = 10;
   const inputs = new Map<string, Input>(), sinks = new Map<string, CanvasSink>(), cursors = new Map<string, Cursor>(), imgs = new Map<string, ImageBitmap>(), luts = new Map<string, { tex: WebGLTexture; size: number }>();
   const need = new Set<string>(); for (const t of p.tracks) for (const c of t.clips) if (c.type === "media") need.add(c.asset);
   report(0, "media"); await preparePics(p);   // (v247: the pictures in motion scenes, before the first frame)

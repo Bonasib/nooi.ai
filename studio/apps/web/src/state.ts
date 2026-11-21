@@ -20,6 +20,8 @@ export interface UI {
   safe: boolean; safePl: string | null; preview: string | null;      // an effect / transition shown on the preview before it is added
   workspace: Workspace; mate: boolean; hub: boolean; cloudOpen: boolean; fileOpen: boolean; settingsOpen: boolean; reframeOpen: boolean; speedOpen: boolean; historyOpen: boolean;
   rec: "idle" | "count" | "rec"; count: number;   // the voice-over: 3-2-1, then recording
+  pick?: { kind: "track" | "color"; clip: string } | null;   // (v277) the preview waits for a box to follow / a colour to mask
+  tracking?: { clip: string; k: number } | null;
   saveErr: string;   // why the last save to the account did not go through
 }
 function createStore<T extends object>(init: T) {
@@ -34,7 +36,7 @@ export const ui = createStore<UI>({
   rail: "media", sub: {}, tool: "select", zoom: 60, snap: true, scrollX: 0, inspector: "video", exportOpen: false, paletteOpen: false, projectsOpen: false, panelOpen: false,
   theme: saved.theme === "light" ? "light" : "dark", lang: saved.lang === "ar" || (!saved.lang && /^ar/.test(navigator.language)) ? "ar" : "en",
   saved: "saved", folder: null, loop: false, safe: false, safePl: null, preview: null,
-  workspace: "classic", mate: false, hub: false, cloudOpen: false, fileOpen: false, settingsOpen: false, reframeOpen: false, speedOpen: false, historyOpen: false, rec: "idle", count: 0, saveErr: "",
+  workspace: "classic", mate: false, hub: false, cloudOpen: false, fileOpen: false, settingsOpen: false, reframeOpen: false, speedOpen: false, historyOpen: false, rec: "idle", count: 0, saveErr: "", pick: null, tracking: null,
 });
 ui.subscribe(() => { const s = ui.get(); try { localStorage.setItem("nooi-studio-ui", JSON.stringify({ theme: s.theme, lang: s.lang })); } catch { /* private mode */ } });
 export function useUI<K>(pick: (s: UI) => K): K { return useSyncExternalStore(ui.subscribe, () => pick(ui.get())); }

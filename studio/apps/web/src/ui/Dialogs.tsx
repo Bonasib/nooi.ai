@@ -30,6 +30,8 @@ export function ExportDialog() {
   useEffect(() => { let live = true; void api.renderOn().then((x) => live && setSrvOn(x && api.me.signedIn)); return () => { live = false; }; }, []);
   // (v228) nooi Motion graphics are drawn here frame by frame first; the nooi server / this computer's FFmpeg then lays them in
   const moving = p.tracks.some((tr) => !tr.hidden && tr.clips.some((c) => c.type === "text" && !!c.motion)); const placeOf = where;
+  // (v277) motion blur, track mattes, colour masks, 360° and tracking are drawn by this device's compositor
+  const proUsed = p.tracks.some((tr) => tr.clips.some((c) => (c.mblur || 0) > 0 || !!c.follow || (c.type === "media" && (!!c.matte || !!c.cmask?.on || !!c.pano?.on || !!c.track?.lock))));
   const preset = PRESETS.find((x) => x.id === o.preset); const { w, h } = frameSize(aspectOf(p.width, p.height), o.res); const d = duration(p);
   const est = Math.round(((preset?.bitrate || 8e6) * (o.quality === "low" ? 0.4 : o.quality === "medium" ? 0.7 : 1) * (o.res === "4k" ? 3 : o.res === "720p" ? 0.5 : 1) * d) / 8 / 1e6);
   const pick = (id: string) => { const x = PRESETS.find((y) => y.id === id)!; const fs = frameSize(x.aspect, "1080p");
@@ -84,6 +86,8 @@ export function ExportDialog() {
           {(srvOn || TAURI) && <><span className="ns-lbl">{t("exp.where")}</span><Seg label={t("exp.where")} value={placeOf} onChange={(v) => setWhere(v)} options={[...(TAURI ? [{ v: "ffmpeg" as const, label: t("exp.computer") }] : []), { v: "device" as const, label: TAURI ? t("exp.browser") : t("exp.device") }, ...(srvOn ? [{ v: "server" as const, label: t("exp.server") }] : [])]} /></>}
           <p className="hint">{placeOf === "server" ? t("exp.serverHint") : placeOf === "ffmpeg" ? t("exp.ffmpegHint") : t("exp.local")}</p>
           {moving && placeOf !== "device" && <p className="hint motionnote" data-testid="exp-motion">{t("exp.motionFirst")}</p>}
+          {proUsed && placeOf !== "device" && <p className="hint motionnote" data-testid="exp-pro">{t("pro.expDevice")}</p>}
+          <BatchExport o={o} busy={!!prog} />
           {prog && <div className="aibusy" role="status"><span>{t("exp.step." + prog.note)} · {Math.round(prog.k * 100)}%</span><i style={{ width: Math.round(prog.k * 100) + "%" }} /></div>}
           {(() => { const pl = PLATFORMS.find((x) => x.id === o.preset); if (!pl) return null; const iss = checkProject(p, pl, { fps: o.fps }).filter((x) => x.level !== "ok");
             return <div className="expcheck" data-testid="exp-check">{iss.length ? <ul className="chk-list">{iss.map((i, k) => <li key={k} className={"chk-" + i.level} data-testid={"exp-i-" + i.code}><span dir="auto">{t("chk.i." + i.code, { n: i.n, p: lang === "ar" ? pl.nameAr : pl.name, l: pl.lufs })}</span></li>)}</ul>
@@ -150,4 +154,32 @@ export function Projects() {
 export function Toasts() {
   const [s, set] = useState(toasts.get()); useEffect(() => toasts.subscribe(() => set(toasts.get())), []);
   return <div className="toasts" role="status" aria-live="polite">{s.list.map((x) => <div key={x.id} className={"toast " + x.kind}><span>{x.text}</span>{x.action && <button type="button" onClick={x.action.run}>{x.action.label}</button>}</div>)}</div>;
+}
+
+// (v277) batch export: the same edit made for several platforms in one go, one after another, on this device
+function BatchExport({ o, busy }: { o: ExportSettings; busy: boolean }) {
+  const { t } = useTranslation(); const lang = useUI((s) => s.lang); const p = useProject();
+  const [pick, setPick] = useState<string[]>([]); const [run, setRun] = useState<{ i: number; n: number; k: number; name: string } | null>(null); const [done, setDone] = useState<{ name: string; url: string; blob: Blob }[]>([]);
+  const ab = useRef<AbortController | null>(null);
+  const vids = PRESETS.filter((x) => !["mp3", "wav"].includes(x.format));
+  const go = async () => {
+    const list = vids.filter((x) => pick.includes(x.id)); if (!list.length || !duration(p)) return; setDone([]); ab.current = new AbortController(); playerRef.current?.pause();
+    const out: { name: string; url: string; blob: Blob }[] = [];
+    try {
+      for (let i = 0; i < list.length; i++) {
+        const x = list[i]; const fs = frameSize(x.aspect, x.res); setRun({ i, n: list.length, k: 0, name: lang === "ar" ? x.nameAr : x.name });
+        const r = await exportProject(editor.project, { ...o, format: x.format, res: x.res, fps: x.fps, preset: x.id, width: fs.w, height: fs.h, signal: ab.current.signal, onProgress: (k) => setRun({ i, n: list.length, k, name: lang === "ar" ? x.nameAr : x.name }) });
+        const name = r.name.replace(/(\.[a-z0-9]+)$/i, " · " + x.id + "$1"); out.push({ name, url: URL.createObjectURL(r.blob), blob: r.blob }); setDone([...out]);
+      }
+      toast(t("pro.batchDone", { n: out.length }), "ok");
+    } catch (e) { if ((e as Error).name !== "AbortError") toast(String((e as Error).message || e), "warn"); }
+    finally { setRun(null); }
+  };
+  return (<div className="batch277" data-testid="batch">
+    <span className="ns-lbl">{t("pro.batch")}</span>
+    <div className="chips277">{vids.map((x) => <button key={x.id} type="button" className="chip277" aria-pressed={pick.includes(x.id)} onClick={() => setPick(pick.includes(x.id) ? pick.filter((y) => y !== x.id) : [...pick, x.id])} data-testid={"batch-" + x.id}>{lang === "ar" ? x.nameAr : x.name}</button>)}</div>
+    {run && <div className="aibusy" role="status"><span>{t("pro.batchRun", { i: run.i + 1, n: run.n, name: run.name })} · {Math.round(run.k * 100)}%</span><i style={{ width: Math.round(run.k * 100) + "%" }} /></div>}
+    {done.length > 0 && <ul className="batchdone">{done.map((d) => <li key={d.url}>{NATIVE ? <button type="button" className="linkbtn" onClick={() => void saveFile(d.blob, d.name)}>{d.name}</button> : <a href={d.url} download={d.name} data-testid="batch-file">{d.name}</a>} · {(d.blob.size / 1e6).toFixed(1)} MB</li>)}</ul>}
+    <div className="row end">{run ? <Btn icon="close" onClick={() => ab.current?.abort()}>{t("exp.cancel")}</Btn> : <Btn icon="export" disabled={!pick.length || busy} onClick={() => void go()} testid="batch-go">{t("pro.batchGo", { n: pick.length })}</Btn>}</div>
+  </div>);
 }

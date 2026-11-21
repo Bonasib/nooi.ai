@@ -63,6 +63,7 @@ export class Player {
     if (this.clock.playing || changed || now < this.settle || this.override) {
       this.drawnV = this.editor.version; this.drawnT = this.clock.t;
       const shown = this.override ? this.override(p) : p;
+      this.comp.fps = shown.fps || 30; this.comp.blurN = 5;
       try { drawMoment(this.comp, shown, this.clock.t, (c, a, s) => this.frame(c, a, s), (id) => this.lut(id)); } catch (e) { console.warn("draw", e); }
     }
   }

@@ -6,6 +6,7 @@ import { duration, findClip, propAt, LOOKS, color0, effectAmount } from "@nooi/e
 import type { MediaClip, Project } from "@nooi/editor-core";
 import { Player } from "../engine/player";
 import { editor, playerRef, toast, ui, useProject, useUI, autosave } from "../state";
+import { PickOverlay } from "./Pro";
 import * as A from "../actions";
 import { onCode } from "../motion/code";
 
@@ -77,7 +78,7 @@ export function Preview() {
       <div className="stagebox" ref={box} onClick={(e) => { if (e.target === box.current) editor.select([]); }}>
         <div className="stage" style={{ width: size.w, height: size.h }}>
           <canvas ref={ref} style={{ width: size.w, height: size.h }} aria-label={t("preview.canvas")} role="img" data-testid="preview" />
-          {safe && <div className="safe" aria-hidden="true" />}<SafeArea />
+          {safe && <div className="safe" aria-hidden="true" />}<SafeArea /><PickOverlay />
           {on && sel && bx && <div className={"handle" + (held ? " held" : "")} style={{ left: bx.cx * 100 + "%", top: bx.cy * 100 + "%", width: Math.min(300, bx.w * 100) + "%", height: Math.min(300, bx.h * 100) + "%", transform: "translate(-50%, -50%) rotate(" + rot + "deg)" }} onPointerDown={drag("move")} aria-label={t("preview.move")} role="button" tabIndex={-1} data-testid="handle">
             <span className="corner" onPointerDown={drag("scale")} aria-label={t("preview.scale")} role="button" tabIndex={-1} />
           </div>}

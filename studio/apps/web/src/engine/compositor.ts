@@ -1,7 +1,7 @@
 // WebGL2 compositor: draws a moment of the timeline into a canvas, layer by layer (bottom to top), on the user's device.
-import { BLENDS, FS_COPY, FS_LAYER, FX, TRANS, VS } from "./shaders";
+import { BLENDS, FS_ACC, FS_COPY, FS_LAYER, FX, TRANS, VS } from "./shaders";
 import { HUE_BANDS, keyOf, rgbOf, screenOf } from "@nooi/editor-core";
-import type { ColorAdjust, Effect, Transform } from "@nooi/editor-core";
+import type { ColorAdjust, ColorMask, Effect, Transform } from "@nooi/editor-core";
 
 export type Src = TexImageSource;
 export interface LayerDraw {
@@ -12,6 +12,11 @@ export interface LayerDraw {
   dynamic?: boolean;                              // re-upload every frame (video)
   fid?: number;                                   // (v226) the frame it shows: the same frame is not uploaded again
   stacked?: boolean;                              // (v234) a cut-out: the picture on the top half, its mask below (h is the whole frame)
+  // (v277) a texture this compositor made (no upload; GL rows run bottom → top; colours premultiplied), a track matte,
+  // a colour mask and a 360° camera (radians)
+  tex?: WebGLTexture; flipY?: boolean; premul?: boolean;
+  matte?: { tex: WebGLTexture; mode: "alpha" | "luma"; invert: boolean } | null;
+  cmask?: ColorMask | null; pano?: { yaw: number; pitch: number; roll: number; fov: number } | null;
 }
 
 function compile(gl: WebGL2RenderingContext, vs: string, fs: string): WebGLProgram {
@@ -27,24 +32,28 @@ export class Compositor {
   private texs = new Map<string, { tex: WebGLTexture; w: number; h: number; stamp: number; fid?: number }>();
   private U: Record<string, WebGLUniformLocation | null> = {};
   private emptyLut: WebGLTexture; time = 0; lost = false;
+  // (v277) layers drawn alone (motion blur, track matte): a scratch target, a sum, a matte, and a clear picture to draw onto
+  private acc: WebGLProgram; private scr: { fb: WebGLFramebuffer; tex: WebGLTexture }[] = []; private clear1: WebGLTexture;
+  fps = 30; blurN = 6;
 
   constructor(canvas: HTMLCanvasElement | OffscreenCanvas) {
     this.canvas = canvas;
     const gl = canvas.getContext("webgl2", { premultipliedAlpha: false, preserveDrawingBuffer: true, alpha: false, antialias: false }) as WebGL2RenderingContext | null;
     if (!gl) throw new Error("WebGL2 is not available on this device.");
     this.gl = gl;
-    this.layer = compile(gl, VS, FS_LAYER); this.copy = compile(gl, VS, FS_COPY);
+    this.layer = compile(gl, VS, FS_LAYER); this.copy = compile(gl, VS, FS_COPY); this.acc = compile(gl, VS, FS_ACC);
     this.vao = gl.createVertexArray()!; gl.bindVertexArray(this.vao);
     const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
     gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-    for (const n of ["uSrc", "uDst", "uLut", "uFrame", "uSrcSize", "uInv", "uCrop", "uOpacity", "uBlend", "uTime", "uC1", "uC2", "uHsl", "uLutAmt", "uLutSize", "uFx", "uBox", "uTr", "uTrK", "uTrRole", "uSrcFlipY", "uKey", "uKeyP", "uStack", "uTexH"]) this.U[n] = gl.getUniformLocation(this.layer, n);
+    for (const n of ["uSrc", "uDst", "uLut", "uFrame", "uSrcSize", "uInv", "uCrop", "uOpacity", "uBlend", "uTime", "uC1", "uC2", "uHsl", "uLutAmt", "uLutSize", "uFx", "uBox", "uTr", "uTrK", "uTrRole", "uSrcFlipY", "uKey", "uKeyP", "uStack", "uTexH", "uPremul", "uMatte", "uMatteM", "uCm", "uCm2", "uCm3", "uPano"]) this.U[n] = gl.getUniformLocation(this.layer, n);
     this.emptyLut = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_3D, this.emptyLut); gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, 2, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(32));
+    this.clear1 = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D, this.clear1); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4)); this.params();
     if ("addEventListener" in canvas) (canvas as HTMLCanvasElement).addEventListener("webglcontextlost", (e) => { e.preventDefault(); this.lost = true; });
   }
   resize(W: number, H: number) {
     W = Math.max(2, Math.round(W)); H = Math.max(2, Math.round(H)); if (W === this.W && H === this.H && this.fbo.length) return;
     this.W = W; this.H = H; this.canvas.width = W; this.canvas.height = H; const gl = this.gl;
-    for (const f of this.fbo) { gl.deleteFramebuffer(f.fb); gl.deleteTexture(f.tex); }
+    for (const f of [...this.fbo, ...this.scr]) { gl.deleteFramebuffer(f.fb); gl.deleteTexture(f.tex); } this.scr = [];
     this.fbo = [0, 1].map(() => { const tex = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D, tex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, W, H, 0, gl.RGBA, gl.UNSIGNED_BYTE, null); this.params(); const fb = gl.createFramebuffer()!; gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0); return { fb, tex }; });
   }
   private params(filter = this.gl.LINEAR) { const gl = this.gl; gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); }
@@ -67,9 +76,36 @@ export class Compositor {
   forget(key: string) { const t = this.texs.get(key); if (t) { this.gl.deleteTexture(t.tex); this.texs.delete(key); } }
   forgetAll(prefix: string) { for (const k of [...this.texs.keys()]) if (k.startsWith(prefix)) this.forget(k); }
   draw(L: LayerDraw) {
-    const gl = this.gl; if (!this.fbo.length) this.resize(this.W, this.H);
-    const tex = this.texture(L.key, L.src, L.w, L.h, !!L.dynamic, L.fid);
+    if (!this.fbo.length) this.resize(this.W, this.H);
     const from = this.fbo[this.cur], to = this.fbo[1 - this.cur];
+    this.drawTo(L, to.fb, from.tex); this.cur = 1 - this.cur;
+  }
+  /** a scratch picture the size of the frame (0 drawn alone, 1 the sum, 2 the matte) */
+  private scratch(i: number) {
+    const gl = this.gl; while (this.scr.length <= i) { const tex = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D, tex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, this.W, this.H, 0, gl.RGBA, gl.UNSIGNED_BYTE, null); this.params(); const fb = gl.createFramebuffer()!; gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0); this.scr.push({ fb, tex }); }
+    return this.scr[i];
+  }
+  private clearTo(fb: WebGLFramebuffer) { const gl = this.gl; gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.viewport(0, 0, this.W, this.H); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); }
+  /** (v277) a layer drawn alone on a clear picture (premultiplied) — the matte of the layer under it */
+  alone(L: LayerDraw, slot = 2): WebGLTexture { if (!this.fbo.length) this.resize(this.W, this.H); const s = this.scratch(slot); this.clearTo(s.fb); this.drawTo({ ...L, matte: null }, s.fb, this.clear1); return s.tex; }
+  /** (v277) motion blur: the same layer at several moments of the shutter, averaged, then laid on the picture once */
+  blurred(samples: LayerDraw[], final: Omit<LayerDraw, "src" | "w" | "h" | "key" | "transform" | "x" | "y" | "scale" | "rotation">) {
+    if (!this.fbo.length) this.resize(this.W, this.H);
+    const gl = this.gl, one = this.scratch(0), sum = this.scratch(1); this.clearTo(sum.fb);
+    for (const L of samples) {
+      this.clearTo(one.fb); this.drawTo({ ...L, opacity: 1, blend: "normal", matte: null }, one.fb, this.clear1);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, sum.fb); gl.viewport(0, 0, this.W, this.H); gl.useProgram(this.acc); gl.bindVertexArray(this.vao);
+      gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, one.tex); gl.uniform1i(gl.getUniformLocation(this.acc, "uTex"), 0); gl.uniform1f(gl.getUniformLocation(this.acc, "uW"), 1 / samples.length);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); gl.disable(gl.BLEND);
+    }
+    const id: Transform = { x: 0, y: 0, scale: 1, rotation: 0, flipH: false, flipV: false, crop: [0, 0, 0, 0] };
+    this.draw({ ...final, src: null as unknown as Src, w: this.W, h: this.H, key: "", tex: sum.tex, flipY: true, premul: true, transform: id, x: 0, y: 0, scale: 1, rotation: 0, fit: "frame", color: null, effects: [], lut: null, trans: null, cmask: null, pano: null, stacked: false });
+  }
+  private drawTo(L: LayerDraw, toFb: WebGLFramebuffer, dstTex: WebGLTexture) {
+    const gl = this.gl;
+    const tex = L.tex || this.texture(L.key, L.src, L.w, L.h, !!L.dynamic, L.fid);
+    const from = { tex: dstTex }, to = { fb: toFb };
     gl.bindFramebuffer(gl.FRAMEBUFFER, to.fb); gl.viewport(0, 0, this.W, this.H); gl.useProgram(this.layer); gl.bindVertexArray(this.vao);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(this.U.uSrc, 0);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, from.tex); gl.uniform1i(this.U.uDst, 1);
@@ -89,11 +125,18 @@ export class Compositor {
     for (const e of L.effects || []) { const i = FX.indexOf(e.type); if (i >= 0 && e.enabled) { fx[i] = Math.max(0.001, +(e.params.amount ?? 0.5)); if (i >= 22) box = [+(e.params.x ?? 0.35), +(e.params.y ?? 0.35), +(e.params.w ?? 0.3), +(e.params.h ?? 0.3)]; } }
     gl.uniform1fv(this.U.uFx, fx); gl.uniform4f(this.U.uBox, box[0], box[1], box[2], box[3]);
     gl.uniform1i(this.U.uTr, L.trans ? Math.max(0, TRANS.indexOf(L.trans.type)) : 0); gl.uniform1f(this.U.uTrK, L.trans ? L.trans.k : 0); gl.uniform1i(this.U.uTrRole, L.trans ? (L.trans.role === "a" ? 0 : 1) : -1);
-    gl.uniform1i(this.U.uSrcFlipY, 0);
+    gl.uniform1i(this.U.uSrcFlipY, L.flipY ? 1 : 0); gl.uniform1i(this.U.uPremul, L.premul ? 1 : 0);
     const k = L.effects ? keyOf({ effects: L.effects }) : null; const kc = k ? rgbOf(k.color) : [0, 0, 0];
     gl.uniform4f(this.U.uKey, kc[0], kc[1], kc[2], k ? 1 : 0); gl.uniform4f(this.U.uKeyP, k?.sim || 0, k?.soft || 0, k?.spill || 0, k ? screenOf(k.color) : 0);
     gl.uniform1i(this.U.uStack, L.stacked ? 1 : 0); gl.uniform1f(this.U.uTexH, L.h);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); this.cur = 1 - this.cur;
+    gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, L.matte ? L.matte.tex : this.clear1); gl.uniform1i(this.U.uMatte, 3);
+    gl.uniform2f(this.U.uMatteM, L.matte ? (L.matte.mode === "luma" ? 2 : 1) : 0, L.matte?.invert ? 1 : 0);
+    const m = L.cmask && L.cmask.on ? L.cmask : null;
+    gl.uniform4f(this.U.uCm, m ? m.hue : 0, m ? m.range : 0, m ? m.soft : 0, m ? 1 : 0);
+    gl.uniform4f(this.U.uCm2, m ? m.hueShift : 0, m ? m.sat : 0, m ? m.exposure : 0, m?.invert ? 1 : 0);
+    gl.uniform4f(this.U.uCm3, m?.show ? 1 : 0, m ? m.minSat : 0, 0, 0);
+    const pn = L.pano; gl.uniform4f(this.U.uPano, pn ? pn.yaw : 0, pn ? pn.pitch : 0, pn ? pn.roll : 0, pn ? pn.fov : 0);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
   /** show the result on the canvas */
   present() {
@@ -109,7 +152,7 @@ export class Compositor {
     for (const p of [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T, gl.TEXTURE_WRAP_R]) gl.texParameteri(gl.TEXTURE_3D, p, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); return t;
   }
-  dispose() { for (const k of [...this.texs.keys()]) this.forget(k); for (const f of this.fbo) { this.gl.deleteFramebuffer(f.fb); this.gl.deleteTexture(f.tex); } this.fbo = []; }
+  dispose() { for (const k of [...this.texs.keys()]) this.forget(k); for (const f of [...this.fbo, ...this.scr]) { this.gl.deleteFramebuffer(f.fb); this.gl.deleteTexture(f.tex); } this.fbo = []; }
 }
 
 // output pixel (centred) → source pixel (centred, after crop): the inverse of fit · scale · rotate · flip · move
