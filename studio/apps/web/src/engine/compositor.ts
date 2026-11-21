@@ -1,5 +1,5 @@
 // WebGL2 compositor: draws a moment of the timeline into a canvas, layer by layer (bottom to top), on the user's device.
-import { BLENDS, FS_ACC, FS_COPY, FS_LAYER, FX, TRANS, VS } from "./shaders";
+import { BLENDS, FS_ACC, FS_COPY, FS_LAYER, FS_LAYER_LIGHT, FX, NFX, TRANS, VS } from "./shaders";
 import { HUE_BANDS, keyOf, rgbOf, screenOf } from "@nooi/editor-core";
 import type { ColorAdjust, ColorMask, Effect, Transform } from "@nooi/editor-core";
 
@@ -27,10 +27,10 @@ function compile(gl: WebGL2RenderingContext, vs: string, fs: string): WebGLProgr
 
 export class Compositor {
   gl: WebGL2RenderingContext; canvas: HTMLCanvasElement | OffscreenCanvas; W = 2; H = 2;
-  private layer: WebGLProgram; private copy: WebGLProgram; private vao: WebGLVertexArrayObject;
+  private layer: WebGLProgram; private light: WebGLProgram | null = null; private copy: WebGLProgram; private vao: WebGLVertexArrayObject;
   private fbo: { fb: WebGLFramebuffer; tex: WebGLTexture }[] = []; private cur = 0;
   private texs = new Map<string, { tex: WebGLTexture; w: number; h: number; stamp: number; fid?: number }>();
-  private U: Record<string, WebGLUniformLocation | null> = {};
+  private U: Record<string, WebGLUniformLocation | null> = {}; private UF: Record<string, WebGLUniformLocation | null> = {}; private UL: Record<string, WebGLUniformLocation | null> = {};
   private emptyLut: WebGLTexture; time = 0; lost = false;
   // (v277) layers drawn alone (motion blur, track matte): a scratch target, a sum, a matte, and a clear picture to draw onto
   private acc: WebGLProgram; private scr: { fb: WebGLFramebuffer; tex: WebGLTexture }[] = []; private clear1: WebGLTexture;
@@ -41,11 +41,12 @@ export class Compositor {
     const gl = canvas.getContext("webgl2", { premultipliedAlpha: false, preserveDrawingBuffer: true, alpha: false, antialias: false }) as WebGL2RenderingContext | null;
     if (!gl) throw new Error("WebGL2 is not available on this device.");
     this.gl = gl;
-    this.layer = compile(gl, VS, FS_LAYER); this.copy = compile(gl, VS, FS_COPY); this.acc = compile(gl, VS, FS_ACC);
+    this.layer = compile(gl, VS, FS_LAYER); try { this.light = compile(gl, VS, FS_LAYER_LIGHT); } catch { this.light = null; } this.copy = compile(gl, VS, FS_COPY); this.acc = compile(gl, VS, FS_ACC);
     this.vao = gl.createVertexArray()!; gl.bindVertexArray(this.vao);
     const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
     gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-    for (const n of ["uSrc", "uDst", "uLut", "uFrame", "uSrcSize", "uInv", "uCrop", "uOpacity", "uBlend", "uTime", "uC1", "uC2", "uHsl", "uLutAmt", "uLutSize", "uFx", "uBox", "uTr", "uTrK", "uTrRole", "uSrcFlipY", "uKey", "uKeyP", "uStack", "uTexH", "uPremul", "uMatte", "uMatteM", "uCm", "uCm2", "uCm3", "uPano"]) this.U[n] = gl.getUniformLocation(this.layer, n);
+    for (const n of ["uSrc", "uDst", "uLut", "uFrame", "uSrcSize", "uInv", "uCrop", "uOpacity", "uBlend", "uTime", "uC1", "uC2", "uHsl", "uLutAmt", "uLutSize", "uFxV", "uCurve", "uCurveOn", "uFx278", "uWheelOn", "uLift", "uGamma", "uGain", "uBox", "uTr", "uTrK", "uTrRole", "uSrcFlipY", "uKey", "uKeyP", "uStack", "uTexH", "uPremul", "uMatte", "uMatteM", "uCm", "uCm2", "uCm3", "uPano"]) { this.UF[n] = gl.getUniformLocation(this.layer, n); if (this.light) this.UL[n] = gl.getUniformLocation(this.light, n); }
+    this.U = this.UF;
     this.emptyLut = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_3D, this.emptyLut); gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, 2, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(32));
     this.clear1 = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D, this.clear1); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4)); this.params();
     if ("addEventListener" in canvas) (canvas as HTMLCanvasElement).addEventListener("webglcontextlost", (e) => { e.preventDefault(); this.lost = true; });
@@ -61,10 +62,14 @@ export class Compositor {
     const gl = this.gl; const c = parseInt(bg.slice(1), 16) || 0;
     for (const f of this.fbo) { gl.bindFramebuffer(gl.FRAMEBUFFER, f.fb); gl.viewport(0, 0, this.W, this.H); gl.clearColor(((c >> 16) & 255) / 255, ((c >> 8) & 255) / 255, (c & 255) / 255, 1); gl.clear(gl.COLOR_BUFFER_BIT); }
     this.cur = 0;
+    // (v278) big projects: pictures not drawn for a while go back to the system (at most 64 kept on the GPU)
+    if (this.texs.size > 64) { const old = [...this.texs.entries()].sort((a, b) => ((a[1] as { used?: number }).used || 0) - ((b[1] as { used?: number }).used || 0)); for (const [k] of old.slice(0, this.texs.size - 48)) this.forget(k); }
   }
+  private useN = 0;
   texture(key: string, src: Src, w: number, h: number, dynamic: boolean, fid?: number): WebGLTexture {
     const gl = this.gl; let t = this.texs.get(key);
     if (!t) { t = { tex: gl.createTexture()!, w: 0, h: 0, stamp: -1 }; this.texs.set(key, t); }
+    (t as { used?: number }).used = ++this.useN;
     gl.bindTexture(gl.TEXTURE_2D, t.tex);
     const same = dynamic && fid != null && t.fid === fid && t.w === w && t.h === h && t.stamp >= 0;
     if (!same && (dynamic || t.w !== w || t.h !== h || t.stamp < 0)) { t.fid = fid;
@@ -73,6 +78,8 @@ export class Compositor {
     }
     return t.tex;
   }
+  /** (v278) the picture drawn so far (an adjustment layer reads it) */
+  current(): WebGLTexture { if (!this.fbo.length) this.resize(this.W, this.H); return this.fbo[this.cur].tex; }
   forget(key: string) { const t = this.texs.get(key); if (t) { this.gl.deleteTexture(t.tex); this.texs.delete(key); } }
   forgetAll(prefix: string) { for (const k of [...this.texs.keys()]) if (k.startsWith(prefix)) this.forget(k); }
   draw(L: LayerDraw) {
@@ -106,7 +113,11 @@ export class Compositor {
     const gl = this.gl;
     const tex = L.tex || this.texture(L.key, L.src, L.w, L.h, !!L.dynamic, L.fid);
     const from = { tex: dstTex }, to = { fb: toFb };
-    gl.bindFramebuffer(gl.FRAMEBUFFER, to.fb); gl.viewport(0, 0, this.W, this.H); gl.useProgram(this.layer); gl.bindVertexArray(this.vao);
+    // (v278) the light shader unless the layer uses a new effect, a new transition, curves or wheels
+    let full = !this.light || !!L.color?.curves || !!L.color?.wheels || (!!L.trans && TRANS.indexOf(L.trans.type) >= 34);
+    if (!full) for (const e of L.effects || []) if (e.enabled && FX.indexOf(e.type) >= 24) { full = true; break; }
+    this.U = full ? this.UF : this.UL;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, to.fb); gl.viewport(0, 0, this.W, this.H); gl.useProgram(full ? this.layer : this.light!); gl.bindVertexArray(this.vao);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(this.U.uSrc, 0);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, from.tex); gl.uniform1i(this.U.uDst, 1);
     gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_3D, L.lut ? L.lut.tex : this.emptyLut); gl.uniform1i(this.U.uLut, 2);
@@ -121,9 +132,15 @@ export class Compositor {
     gl.uniform4f(this.U.uC2, c?.tint || 0, c?.highlights || 0, c?.shadows || 0, c?.vibrance || 0);
     const hsl = new Float32Array(24); if (c) HUE_BANDS.forEach((b, i) => { const v = c.hsl[b] || [0, 0, 0]; hsl.set(v, i * 3); }); gl.uniform3fv(this.U.uHsl, hsl);
     gl.uniform1f(this.U.uLutAmt, L.lut ? L.lut.amount : 0); gl.uniform1f(this.U.uLutSize, L.lut ? L.lut.size : 2);
-    const fx = new Float32Array(24); let box = [0.35, 0.35, 0.3, 0.3];
-    for (const e of L.effects || []) { const i = FX.indexOf(e.type); if (i >= 0 && e.enabled) { fx[i] = Math.max(0.001, +(e.params.amount ?? 0.5)); if (i >= 22) box = [+(e.params.x ?? 0.35), +(e.params.y ?? 0.35), +(e.params.w ?? 0.3), +(e.params.h ?? 0.3)]; } }
-    gl.uniform1fv(this.U.uFx, fx); gl.uniform4f(this.U.uBox, box[0], box[1], box[2], box[3]);
+    const fx = new Float32Array(NFX); let box = [0.35, 0.35, 0.3, 0.3];
+    for (const e of L.effects || []) { const i = FX.indexOf(e.type); if (i >= 0 && i < NFX && e.enabled) { fx[i] = Math.max(0.001, +(e.params.amount ?? 0.5)); if (i === 22 || i === 23) box = [+(e.params.x ?? 0.35), +(e.params.y ?? 0.35), +(e.params.w ?? 0.3), +(e.params.h ?? 0.3)]; } }
+    gl.uniform4fv(this.U.uFxV, fx); let n78 = 0; for (let i = 24; i < NFX; i++) if (fx[i] > 0) { n78 = 1; break; } gl.uniform1i(this.U.uFx278, n78); gl.uniform4f(this.U.uBox, box[0], box[1], box[2], box[3]);
+    // (v278) curves and colour wheels
+    const cu = c?.curves, wh = c?.wheels; const cv = new Float32Array(20);
+    (["l", "r", "g", "b"] as const).forEach((k, j) => { const pts = cu?.[k]; for (let i = 0; i < 5; i++) cv[j * 5 + i] = pts && pts.length === 5 ? +pts[i] : i / 4; });
+    gl.uniform1fv(this.U.uCurve, cv); gl.uniform1i(this.U.uCurveOn, cu ? 1 : 0);
+    const w3 = (v?: [number, number, number]) => v || [0, 0, 0];
+    gl.uniform1i(this.U.uWheelOn, wh ? 1 : 0); gl.uniform3fv(this.U.uLift, w3(wh?.lift)); gl.uniform3fv(this.U.uGamma, w3(wh?.gamma)); gl.uniform3fv(this.U.uGain, w3(wh?.gain));
     gl.uniform1i(this.U.uTr, L.trans ? Math.max(0, TRANS.indexOf(L.trans.type)) : 0); gl.uniform1f(this.U.uTrK, L.trans ? L.trans.k : 0); gl.uniform1i(this.U.uTrRole, L.trans ? (L.trans.role === "a" ? 0 : 1) : -1);
     gl.uniform1i(this.U.uSrcFlipY, L.flipY ? 1 : 0); gl.uniform1i(this.U.uPremul, L.premul ? 1 : 0);
     const k = L.effects ? keyOf({ effects: L.effects }) : null; const kc = k ? rgbOf(k.color) : [0, 0, 0];

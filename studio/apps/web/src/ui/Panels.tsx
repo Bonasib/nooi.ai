@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { CodeMusic } from "./Music";
 import { useEffect, useRef, useState } from "react";
 import type { DragEvent } from "react";
-import { Btn, Icon } from "@nooi/ui";
+import { Btn, Icon, Slider } from "@nooi/ui";
+import { setTrackDuck } from "../actions278";
 import { EFFECTS, FONTS, LOOKS, TEXT_TEMPLATES, TRANSITIONS, beats, uid } from "@nooi/editor-core";
 import type { Asset } from "@nooi/editor-core";
 import { editor, toast, ui, useProject, useUI, playerRef, autosave } from "../state";
@@ -23,6 +24,7 @@ import { BackdropPanel } from "./Backdrop";
 import { RecastPanel } from "./Recast";
 import { ExtendPanel } from "./Extend";   // v242: Extend with AI
 import { AutoPanel } from "./Auto";
+import { EffectLibrary, TransitionLibrary, LookTiles } from "./Lib278";
 
 export const RAILS: [Rail, string][] = [["media", "media"], ["stock", "stock"], ["auto", "wand"], ["audio", "audio"], ["titles", "text"], ["transitions", "transitions"], ["effects", "effects"], ["stickers", "sticker"], ["templates", "template"]];
 export function RailBar({ mobile, toggle }: { mobile?: boolean; toggle?: boolean }) {
@@ -154,6 +156,8 @@ function AudioPanel() {
       <label className="ns-field"><span>{t("audio.duckAmount")}<b>{Math.round(p.ducking.amount * 100)}%</b></span><input className="ns-range" type="range" min={0.1} max={0.95} step={0.05} value={p.ducking.amount} onChange={(e) => A.run("ducking", (d) => { d.ducking.amount = +e.target.value; })} /></label>
       <span className="hint">{t("audio.voiceTracks")}</span>
       <div className="chips">{p.tracks.filter((x) => x.kind === "audio").map((tr) => <button type="button" key={tr.id} className="chip" aria-pressed={p.ducking.voiceTracks.includes(tr.id)} onClick={() => A.run("ducking", (d) => { const v = d.ducking.voiceTracks; d.ducking.voiceTracks = v.includes(tr.id) ? v.filter((x) => x !== tr.id) : [...v, tr.id]; })}>{tr.name}</button>)}</div>
+      <span className="hint">{t("pro2.duckEach")}</span>
+      {p.tracks.filter((x) => x.kind !== "text" && !p.ducking.voiceTracks.includes(x.id)).map((tr) => <div key={tr.id} className="duck278"><Slider label={tr.name} value={tr.duck ?? p.ducking.amount} min={0} max={0.95} step={0.05} fmt={(v) => Math.round(v * 100) + "%"} onChange={(v) => setTrackDuck(tr.id, v)} testid={"duck-" + tr.name} />{tr.duck != null && <Btn icon="undo" ghost label={t("pro2.duckSame")} onClick={() => setTrackDuck(tr.id, null)} />}</div>)}
     </>}
     <span className="ns-lbl">{t("cm.title")}</span>
     <CodeMusic />
@@ -189,25 +193,10 @@ function EffectsPanel() {
   void hover; void lang;
   return (<>
     <Sub rail="effects" tabs={["effects", "filters", "weather", "erase", "motion"]} />
-    {sub === "filters" ? <ColorPanel /> : <><p className="hint">{t("fx.hint." + sub)}</p>{sub === "motion" ? <MotionTiles /> : <EffectTiles group={sub} />}</>}
+    {sub === "filters" ? <ColorPanel /> : <><p className="hint">{t("fx.hint." + sub)}</p>{sub === "motion" ? <MotionTiles /> : sub === "effects" ? <EffectLibrary /> : <EffectTiles group={sub} />}</>}
   </>);
 }
-function TransitionsPanel() {
-  const { t } = useTranslation(); const lang = useUI((s) => s.lang);
-  const hover = (id: string | null) => ui.set({ preview: id });
-  return (<>
-    <p className="hint">{t("tr.hint")}</p>
-    <div className="ns-grid fxg">
-      {TRANSITIONS.map((x) => (
-        <button key={x.id} type="button" className="ns-tile" onPointerEnter={(e) => { if (e.pointerType !== "touch") hover("tr:" + x.id); }} onPointerLeave={() => hover(null)}
-          onClick={() => { hover(null); A.applyTransition(x.id); }} draggable
-          onDragStart={(e) => e.dataTransfer.setData("application/x-nooi-transition", x.id)} data-testid={"tr-" + x.id}>
-          <span className={"fxsw tr-" + x.id} aria-hidden="true" /><span>{lang === "ar" ? x.ar : x.en}</span>
-        </button>
-      ))}
-    </div>
-  </>);
-}
+function TransitionsPanel() { return <TransitionLibrary />; }
 
 // ---------------- Color: looks, LUTs (.cube)
 function ColorPanel() {
@@ -215,7 +204,7 @@ function ColorPanel() {
   const luts = Object.values(p.assets).filter((a) => a.kind === "lut");
   return (<>
     <p className="hint">{t("color.hint")}</p>
-    <div className="ns-grid">{LOOKS.map((l) => <button key={l.id} type="button" className="ns-tile" onClick={() => A.applyLook(l.id)} onPointerEnter={(e) => { if (e.pointerType !== "touch") ui.set({ preview: "look:" + l.id }); }} onPointerLeave={() => ui.set({ preview: null })} data-testid={"look-" + l.id}><span className={"fxsw look-" + l.id} aria-hidden="true" /><span>{lang === "ar" ? l.ar : l.en}</span></button>)}</div>
+    <LookTiles />
     <span className="ns-lbl">LUT (.cube)</span>
     <div className="addrow"><Btn icon="upload" onClick={() => ref.current?.click()}>{t("color.importLut")}</Btn><input ref={ref} type="file" accept=".cube" hidden onChange={async (e) => { if (e.target.files) { const r = await importFiles(e.target.files); A.addAssets(r.assets); if (r.assets[0]) A.applyLut(r.assets[0].id); } e.target.value = ""; }} /></div>
     {luts.map((l) => <button key={l.id} type="button" className="ns-btn wide" onClick={() => A.applyLut(l.id)}><Icon name="color" size={14} />{l.name}</button>)}

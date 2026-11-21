@@ -24,6 +24,11 @@ export function drawMoment(comp: Compositor, p: Project, t: number, frameFor: Fr
     const opacity = Math.max(0, Math.min(1, propAt(c, "opacity", at)));
     const fo = c.follow ? followOffset(p, c, t + dt, comp.W, comp.H) : [0, 0];
     const base = { transform: c.transform, x: propAt(c, "x", at) + fo[0], y: propAt(c, "y", at) + fo[1], scale: propAt(c, "scale", at), rotation: propAt(c, "rotation", at), trans: L.trans || null };
+    if (c.type === "media" && c.adjust) {   // (v278) an adjustment layer: its colour, LUT and effects on everything under it
+      const lut = c.lut ? lutFor(c.lut.asset) : null;
+      return { src: null as unknown as Src, w: comp.W, h: comp.H, key: "", tex: comp.current(), flipY: true, premul: false, transform: { ...c.transform, crop: [0, 0, 0, 0], flipH: false, flipV: false }, x: 0, y: 0, scale: 1, rotation: 0, trans: L.trans || null,
+        opacity, blend: c.blend, color: c.color, effects: c.effects, lut: lut ? { ...lut, amount: c.lut!.amount } : null, fit: "frame" };
+    }
     if (c.type === "media") {
       const a = p.assets[c.asset]; if (!a || a.kind === "audio") return null;
       const f = frameFor(c, a, sourceTime(c, local0, srcLimit(p, c))); if (!f) return null;
@@ -34,7 +39,7 @@ export function drawMoment(comp: Compositor, p: Project, t: number, frameFor: Fr
     }
     const rr = c.motion ? motionCanvas(c, local0, comp.W, comp.H, p) : textCanvas(c, local0, comp.W, comp.H);
     return { src: rr.cv as unknown as Src, w: comp.W, h: comp.H, key: "txt:" + c.id, dynamic: rr.changed && dt === 0, ...base,
-      x: base.x + rr.look.dx, y: base.y + rr.look.dy, scale: base.scale * rr.look.scale, opacity: opacity * rr.look.opacity, blend: "normal", fit: "frame" };
+      x: base.x + rr.look.dx, y: base.y + rr.look.dy, scale: base.scale * rr.look.scale, rotation: base.rotation + ((rr.look as { rot?: number }).rot || 0), opacity: opacity * rr.look.opacity, blend: "normal", fit: "frame" };
   };
   layers.forEach((L, i) => {
     if (used.has(i)) return;

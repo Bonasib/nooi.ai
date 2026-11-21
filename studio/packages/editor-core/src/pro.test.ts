@@ -40,3 +40,30 @@ describe("lock", () => {
     expect(0 * r.zoom + r.dx).toBeCloseTo(-0.4, 5); expect(r.zoom).toBeGreaterThan(1);
   });
 });
+
+import { denoise278, duckOf } from "./audio";
+import { nest278, unnest278, nestRange278 } from "./pro";
+import { mediaClip } from "./defaults";
+import { TRANSITIONS, EFFECTS, LOOKS, TEXT_TEMPLATES } from "./catalog";
+describe("v278", () => {
+  it("the library is bigger", () => { expect(EFFECTS.length).toBeGreaterThanOrEqual(80); expect(TRANSITIONS.length).toBeGreaterThanOrEqual(80); expect(LOOKS.length).toBeGreaterThanOrEqual(40); expect(TEXT_TEMPLATES.length).toBeGreaterThanOrEqual(40);
+    for (const l of [EFFECTS, TRANSITIONS, LOOKS, TEXT_TEMPLATES]) expect(new Set(l.map((x) => x.id)).size).toBe(l.length); });
+  it("removes steady noise and keeps a tone", () => {
+    const n = 48000, x = new Float32Array(n); let s = 1; const rnd = () => { s = (s * 16807) % 2147483647; return s / 2147483647 - 0.5; };
+    for (let i = 0; i < n; i++) x[i] = rnd() * 0.1 + (i > n / 2 ? 0.4 * Math.sin(i * 0.06) : 0);
+    const y = denoise278(x); const rms = (a: Float32Array, i0: number, i1: number) => Math.sqrt(a.slice(i0, i1).reduce((q, v) => q + v * v, 0) / (i1 - i0));
+    expect(rms(y, 2000, 20000) / rms(x, 2000, 20000)).toBeLessThan(0.35);                       // the noise alone: much quieter
+    expect(rms(y, 30000, 46000) / rms(x, 30000, 46000)).toBeGreaterThan(0.85);                   // the tone: kept
+  });
+  it("ducks per track", () => { const p = { ducking: { amount: 0.6, voiceTracks: ["v"] } }; expect(duckOf(p, { id: "v" })).toBe(0); expect(duckOf(p, { id: "m" })).toBe(0.6); expect(duckOf(p, { id: "m", duck: 0.2 })).toBe(0.2); });
+  it("nests and un-nests", () => {
+    const p = emptyProject(); const v = p.tracks.find((t) => t.kind === "video")!;
+    const A1 = { id: "a1", kind: "video", name: "a", src: "x", duration: 20, createdAt: 0 } as const;
+    v.clips.push(mediaClip(A1, 0, { id: "c1", dur: 2 }), mediaClip(A1, 2, { id: "c2", dur: 3 }), mediaClip(A1, 6, { id: "c3", dur: 1 }));
+    expect(nestRange278(p, ["c1", "c2"])).toEqual({ start: 0, end: 5 });
+    const id = nest278(p, ["c1", "c2"], "n1", (o) => mediaClip({ ...A1, id: o.asset! }, o.start!, o))!;
+    expect(v.clips.map((c) => c.id)).toEqual([id, "c3"]); expect(v.clips[0].dur).toBe(5);
+    v.clips[0].start = 1; const back = unnest278(p, id); expect(back.sort()).toEqual(["c1", "c2"]);
+    expect(p.tracks.flatMap((t) => t.clips).find((c) => c.id === "c2")!.start).toBe(3);
+  });
+});
