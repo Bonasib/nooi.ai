@@ -14,7 +14,7 @@ export const SITE_PAGES: [string, string, string][] = [["home", "Home", "الر�
 const BAR_Q = "(min-width: 768px) and (min-height: 601px)";
 export const siteBarOn = () => typeof matchMedia !== "undefined" && matchMedia(BAR_Q).matches;
 // (v251) the site's sections show in the header only when there is room for all of them beside the account buttons
-const NAV_Q = "(min-width: 1180px)";
+const NAV_Q = "(min-width: 1100px)";   // (v279: from 1100 — compact between 1100 and 1279)
 function useNavRoom() { const [on, setOn] = useState(() => typeof matchMedia !== "undefined" && matchMedia(NAV_Q).matches); useEffect(() => { const m = matchMedia(NAV_Q), f = () => setOn(m.matches); m.addEventListener("change", f); return () => m.removeEventListener("change", f); }, []); return on; }
 export function useSiteBar() { const [on, setOn] = useState(siteBarOn); useEffect(() => { const m = matchMedia(BAR_Q), f = () => setOn(m.matches); m.addEventListener("change", f); return () => m.removeEventListener("change", f); }, []); return on; }
 export const pageHref = (id: string) => (id === "studio" ? at("/studio/") : at("/?view=" + id));   // (v232: home too — "/" alone could reopen the page the site remembered)
