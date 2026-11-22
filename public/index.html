@@ -8190,8 +8190,10 @@ function stuScore(m,cat){const p=Math.min(.99,(STU_Q[m]||.6)+((STU_B[cat]||{})[m
    the shots in between get a lighter model that still fits — the result stays great and costs fewer credits */
 function hfStudio(prompt,dur){dur=+dur||5;const cat=hfCat(prompt),n=dur<=10?1:Math.min(16,Math.ceil(dur/(dur>60?15:10))),per=Math.ceil(dur/n);
   const cands=Object.keys(STU_Q).filter(m=>MODELS[m]&&!(M_ALIAS||{})[m]&&modelAllowed(m)&&engMax(m)>=per&&PRICE_TABLE.video[m]);if(!cands.length)return null;
-  const pick=lam=>cands.map(m=>{const s=stuScore(m,cat);return{m,u:s.q-lam*PRICE_TABLE.video[m]/100}}).sort((a,b)=>b.u-a.u)[0].m;
-  const heroOne=["people","action","product","vfx"].includes(cat),hero=pick(.05),light=pick(.8),shots=[];
+  // (v281) weigh each engine by what THIS shot really costs (vcost of the shot's length, per 5 s) — the 5-second price table made
+  //  an engine that sells 6/10 s shots look cheap, and the "lighter" middle shot cost more than the hero (no saving, a higher total)
+  const c5=m=>vcost(m,per)*5/per,pick=(lam,L)=>(L||cands).map(m=>{const s=stuScore(m,cat);return{m,u:s.q-lam*c5(m)/100}}).sort((a,b)=>b.u-a.u)[0].m;
+  const heroOne=["people","action","product","vfx"].includes(cat),hero=pick(.05),cheaper=cands.filter(m=>vcost(m,per)<vcost(hero,per)),light=cheaper.length?pick(.8,cheaper):hero,shots=[];
   for(let i=0;i<n;i++){const isHero=n===1?heroOne:(i===0||i===n-1);shots.push({m:n===1&&!heroOne?pick(.15):isHero?hero:light,hero:isHero})}
   const total=shots.reduce((s,x)=>s+vcost(x.m,per),0),all=vcost(hero,per)*n;return{cat,n,per,shots,total,all,save:Math.max(0,all-total)}}
 const hfStudioP=()=>{const H=S.hf,q=$("#hfq");return hfStudio((q&&q.value)||H.prompt||"",H.dur)};
@@ -8800,7 +8802,11 @@ async function serverSubmit(o,kind,payload){const snap=(SLOTS_FOR[kind]||[]).map
   try{const inputs={};for(const[s,m]of snap){if(m.file){const u=await API.upload(m.file,m.name||s+".png");inputs[s]=u.url}else if(m.remote)inputs[s]=m.remote}
     if(cap){const b=await(await fetch(cap)).blob();inputs.frame=(await API.upload(b,"frame.jpg")).url}
     const res=await API.req("/v1/jobs",{json:Object.assign({kind,inputs},payload)});o.remote=res.id;o.status="queued";if(res.dur&&+res.dur!==+o.dur){o.durAsked=o.dur;o.dur=+res.dur}if(res.cost>0)o.cost=res.cost;persist()}
-  catch(e){o.status="failed";o.error=String(e.message||e);o.errorAr=e.errorAr||null;statusChanged()}}
+  catch(e){o.status="failed";o.error=String(e.message||e);o.errorAr=e.errorAr||null;
+    // (v281) the server never made this job, so it charged nothing: give back what addJob took on the page at once
+    // (the balance showed the credits gone for up to 30 s under "Your credits were refunded"), then read the real balance
+    if(!o.remote&&+o.cost>0&&!crFree()&&!o.back281){o.back281=1;S.credits=(+S.credits||0)+(+o.cost);persist()}
+    statusChanged();if(typeof syncServer==="function")setTimeout(syncServer,800)}}
 /* run a job with a temporary reference picture, without touching what the user loaded elsewhere */
 function withRef72(slot,file,fn){const keep=M[slot];if(file)M[slot]={type:"image",file,name:(file.name||"ref.png"),url:""};else delete M[slot];try{return fn()}finally{if(keep)M[slot]=keep;else delete M[slot]}}
 const bestImg72=()=>IMG_MODELS.nanopro&&imgOK("nanopro")?"nanopro":IMG_MODELS.nano?"nano":"dotimg";
@@ -13642,8 +13648,8 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
   if(K.live95){toast(L("Live is on — the picture updates by itself about a second after you stop drawing. Each update "+liveCost95()+" cr; it pauses after "+LIVECAP95+".","الوضع المباشر يعمل — تتحدّث الصورة وحدها بعد ثانية تقريباً من توقفك عن الرسم. كل تحديث "+liveCost95()+" رصيد، ويتوقف بعد "+LIVECAP95+"."),{type:"info",ms:5500});liveKick95(400)}
   else clearTimeout(LIVE95.t)},true);
 VIEWS.sketch=(o=>function(){const h=o(),K=S.sketch,on=!!K.live95,busy=on&&skBusy95();
-  const sub=on?(busy?L("Updating the picture…","تُحدَّث الصورة…"):L(LIVE95.n+" of "+LIVECAP95+" updates · "+liveCost95()+" cr each",LIVE95.n+" من "+LIVECAP95+" تحديثات · "+liveCost95()+" رصيد لكل تحديث")):L("Updates the picture by itself when you stop drawing · "+liveCost95()+" cr each","يحدّث الصورة وحده عندما تتوقف عن الرسم · "+liveCost95()+" رصيد لكل تحديث");
-  return h.replace('<button class="btn primary big sk91go"','<div class="live95">'+toggleRow(on,"sk95-live","sketch.live95",L("Live","مباشر"),sub)+"</div>"+'<button class="btn primary big sk91go"')})(VIEWS.sketch);
+  const sub=on?(busy?L("Updating the picture…","تُحدَّث الصورة…"):L(LIVE95.n+" of "+LIVECAP95+" updates · "+liveCost95()+" cr each",LIVE95.n+" من "+LIVECAP95+" تحديثات · "+liveCost95()+" رصيد لكل تحديث")):L("Updates the picture by itself when you stop drawing.","يحدّث الصورة وحده عندما تتوقف عن الرسم.");   // (v281: the price is on the label — it broke across lines here)
+  return h.replace('<button class="btn primary big sk91go"','<div class="live95">'+toggleRow(on,"sk95-live","sketch.live95",L("Live · "+liveCost95()+" cr each","مباشر · "+liveCost95()+" رصيد للتحديث"),sub)+"</div>"+'<button class="btn primary big sk91go"')})(VIEWS.sketch);
 (()=>{const st=document.createElement("style");st.textContent=`.live95{margin-top:12px}.live95 .trow{padding:8px 0}`;document.head.appendChild(st)})();
 
 /* ================= v96: EVERY CHOICE REACHES THE ENGINE =================
@@ -23270,6 +23276,8 @@ html.lt201 .view.ed143 .edstage,html.lt201 .view.ed143 .e-player{background:#e9e
 .agc201d{display:flex;justify-content:center;gap:5px;margin-top:8px}.agc201d i{width:5px;height:5px;border-radius:3px;background:var(--line2);transition:width .25s,background .25s}.agc201d i.on{width:16px;background:var(--lime)}
 .hfbots.agc201on .botstrip,.hfhome:has(.agc201) .hfbots .botstrip{display:none!important}.hfbots.agc201on .hfstplan.bots .hbls,.hfhome:has(.agc201) .hfstplan.bots .hbls{display:none!important}.hfbots.agc201on .hfstplan.bots{padding-top:6px}
 @media (max-width:767px){.agc201c{flex-basis:88%}.agc201n{display:none}}
+/* (v281) on a computer the arrows sit beside the cards, not on the agents' names */
+@media (min-width:768px){.agc201{padding:0 46px}.agc201n.prev{left:2px}.agc201n.next{right:2px}[dir="rtl"] .agc201n.prev{left:auto;right:2px}[dir="rtl"] .agc201n.next{right:auto;left:2px}}
 `;document.head.appendChild(st)})();
 
 /* ================= v202: THE EDITOR TOWARDS AFTER EFFECTS / PREMIERE / DAVINCI — phase 5 =================
@@ -25156,7 +25164,9 @@ window.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('
 .nw215seg .nw-ib{width:auto!important;min-width:40px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;border-radius:8px}.nw215seg .nw-ib.on{background:var(--lime);color:#0b0c0e}
 .nw215l{font-size:13px;font-weight:600}
 .nw215lens{position:absolute;top:12px;inset-inline-start:12px;z-index:6;display:flex;align-items:center;gap:0;border-radius:12px;background:rgba(18,20,24,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff}
-.nw215lens button{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;background:none;border:0;color:inherit;font:600 13px var(--mono,monospace);cursor:pointer}.nw215lens svg{width:16px;height:16px}.nw215lens i{width:1px;height:18px;background:rgba(255,255,255,.3)}
+.nw215lens button{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;background:none;border:0;color:inherit;font:600 13px var(--sans,system-ui);font-variant-numeric:tabular-nums;cursor:pointer}
+/* (v281) the walk buttons and joystick only once there is a world to walk in — on the empty stage they covered "Drag to look around" */
+.nw-stage.nw-empty87 .nw-touch,.nw-stage.nw-empty87 .nw-joy{display:none!important}.nw215lens svg{width:16px;height:16px}.nw215lens i{width:1px;height:18px;background:rgba(255,255,255,.3)}
 .nw215empty{display:none;position:absolute;inset:0;z-index:4;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;padding:0 16px}
 .nw-stage.nw-empty87 .nw215empty{display:flex}.nw-stage.nw-empty87::after{display:none!important}
 .nw215empty h3{margin:0;font-size:clamp(20px,2.6vw,30px);font-weight:600;color:#1d2025}.nw215empty p{margin:6px 0 26px;color:#5d636b;font-size:clamp(13px,1.4vw,16px)}.nw-stage.nw-empty87 .nw-hint{display:none}
