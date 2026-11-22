@@ -64,7 +64,10 @@ jobs:
             echo "SSH_OPTS=-i $HOME/.ssh/id_deploy -o BatchMode=yes" >> "$GITHUB_ENV"
           else
             sudo apt-get install -y -qq sshpass >/dev/null
-            echo "SSHPASS=$VPS_PASSWORD" >> "$GITHUB_ENV"
+            # (a password pasted on a phone often carries an invisible new line or space at its end)
+            P="$(printf '%s' "$VPS_PASSWORD" | tr -d '\r\n' | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')"
+            [ "$P" = "$VPS_PASSWORD" ] || echo "::notice::VPS_PASSWORD had spaces or a new line around it — they were removed"
+            echo "SSHPASS=$P" >> "$GITHUB_ENV"
             echo "SSH_WRAP=sshpass -e" >> "$GITHUB_ENV"
           fi
       - name: Upload and update
