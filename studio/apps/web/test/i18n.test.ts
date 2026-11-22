@@ -13,8 +13,10 @@ describe("translations", () => {
   it("English and Arabic have the same keys", () => { expect([...E].filter((k) => !A.has(k))).toEqual([]); expect([...A].filter((k) => !E.has(k))).toEqual([]); });
   it("every fixed key used in the code exists", () => {
     const used = new Set<string>();
-    for (const f of files(join(__dirname, "../src"))) for (const m of readFileSync(f, "utf8").matchAll(/\b(?:t|i18n\.t|i18nText)\("([a-zA-Z0-9_.]+)"/g)) used.add(m[1]);
+    const prefixes = new Set<string>();   // t("pro2.eq_" + k): a key built from parts, so only its start must exist
+    for (const f of files(join(__dirname, "../src"))) for (const m of readFileSync(f, "utf8").matchAll(/\b(?:t|i18n\.t|i18nText)\("([a-zA-Z0-9_.]+)"(\s*\+)?/g)) (m[2] ? prefixes : used).add(m[1]);
     expect([...used].filter((k) => (k.endsWith(".") ? ![...E].some((x) => x.startsWith(k)) : !E.has(k)))).toEqual([]);   // ("rail." + name: the prefix must exist)
+    expect([...prefixes].filter((k) => ![...E].some((x) => x.startsWith(k)))).toEqual([]);
   });
   it("Arabic strings are Arabic", () => { expect((ar as { rail: { media: string } }).rail.media).toMatch(/[؀-ۿ]/); });
 });
