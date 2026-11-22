@@ -26604,7 +26604,7 @@ addEventListener("scroll",()=>{if(TN279.open)tnOpen279("")},true);addEventListen
   .tnb279{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 9px;border:0;background:none;color:var(--mute);font:500 14px/1 var(--sans);white-space:nowrap;cursor:pointer;border-radius:12px}
   .tnb279 svg{width:16px!important;height:16px!important;flex:none;color:var(--hub,currentColor);opacity:.9}
   .tni279:hover .tnb279,.tnb279:focus-visible{color:var(--text)}
-  .tnc279{display:grid;place-items:center;width:20px;height:38px;margin-inline-start:-6px;border:0;background:none;color:var(--mute);cursor:pointer;border-radius:8px}
+  .tnc279{display:grid;place-items:center;width:20px;height:38px;margin-inline-start:0;border:0;background:none;color:var(--mute);cursor:pointer;border-radius:8px}
   .tnc279 svg{width:14px!important;height:14px!important;transition:transform .15s}
   .tnc279[aria-expanded="true"] svg,.tnm279[aria-expanded="true"] svg:last-child{transform:rotate(180deg)}
   .tnb279[aria-current="page"]{color:var(--text);font-weight:600}
@@ -26613,6 +26613,8 @@ addEventListener("scroll",()=>{if(TN279.open)tnOpen279("")},true);addEventListen
   .tnm279 svg:last-child{width:14px!important;height:14px!important}
 }
 @media (min-width:768px) and (max-width:1279px){.tnb279{padding:0 7px;font-size:13.5px;gap:5px}}
+/* (v281) the section button ends where its arrow starts (they overlapped by 6 px: a tap on the edge opened the list) */
+.tni279:has(.tnc279) .tnb279{padding-inline-end:3px}
 @media (min-width:768px) and (max-width:1599px){#main>.topm .lib98 span{display:none}}
 body.sb253fold .sbbrand253{display:none!important}
   .tnlogo279{flex:none;display:grid;place-items:center;width:38px;height:38px;margin-inline-end:8px;padding:0;border:0;background:none;cursor:pointer;border-radius:12px}.tnlogo279 img{width:34px;height:34px;border-radius:9px;display:block}.tnlogo279:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
