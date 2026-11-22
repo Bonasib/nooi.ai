@@ -1855,3 +1855,8 @@ The owner sent the target card (two columns; media with play · sound · length;
 - A page's tab row (from 768 px) is drawn last from its top-bar section (`hubTabsHTML` wrapper + a final `renderView` wrapper): the same tools as the section's panel, none when the section has one tool — the old hubs put Sketch beside Create image while the bar puts it in Extras, and v264 trimmed some rows to one tab.
 - Studio CSS `.tn282 / .tnp282` (app.css end) mirrors `.tn279 / .tnp279`; the studio's generic `.sitebar a` / `a i` rules are overridden for the menu's links and icons.
 - Tests: `tests/v282.py` (port 8482). Updated: `v232.py`, `v251.py`, `v231.py` (the studio's bar is the site's 12 sections, Edit current, phone menu 13 rows).
+
+## v283 The Library draws a page of results — no freeze on opening the site
+- The owner (computer): "Wait / Close page" when opening the site. Measured: the Library drew every result at once (`S.jobs` keeps growing on the device — 3,000 results = 49,000 elements and 1,500 videos); opening it took seconds and leaving it locked the page for over 100 s. The site reopens on the last page, so a Library left open froze the site at start.
+- `LIB283` (`n` shown, reset to `LIB283_STEP` = 48 when the filter changes); `VIEWS.library` base draws `shown` only, then "Show more · N" (`data-act="lib283-more"`, +48, scroll kept). Other pages already cap their lists.
+- Test: `tests/v283.py` (port 8683; 3,000 results: one page, quick to leave, Show more, filter resets).
