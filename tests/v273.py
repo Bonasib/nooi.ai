@@ -43,10 +43,11 @@ async def page():
         pg.on("pageerror", lambda e: errs.append(str(e)[:200])); posts = []; pg.on("request", lambda rq: rq.method == "POST" and rq.url.endswith("/v1/jobs") and posts.append(rq.post_data))
         await pg.goto(B + "/"); await pg.wait_for_timeout(1500); await pg.evaluate(SIGN); await pg.wait_for_timeout(400)
         await pg.click('#sb253 [data-go="chars"]'); await pg.wait_for_function("document.querySelectorAll('#main .cast273 .cc273').length>0", timeout=20000)
-        out["cards"] = await pg.evaluate("()=>document.querySelectorAll('#main .cast273 .cc273').length")
-        out["imgs"] = await pg.evaluate("async()=>{const im=[...document.querySelectorAll('#main .cast273 .cc273 img')];await new Promise(r=>setTimeout(r,1500));return im.filter(i=>i.complete&&i.naturalWidth>100).length}")
+        out["cards"] = await pg.evaluate("()=>document.querySelectorAll('#main .cast273:not(.gatos280) .cc273').length")
+        out["gatos"] = await pg.evaluate("()=>{const g=document.querySelector('#main .gatos280');return g?{n:g.querySelectorAll('.cc273').length,h:g.querySelector('h2').textContent,first:g===document.querySelector('#main .cast273'),line:(g.querySelector('.cc273 small')||{}).textContent||''}:null}")
+        out["imgs"] = await pg.evaluate("async()=>{const im=[...document.querySelectorAll('#main .cast273:not(.gatos280) .cc273 img')];await new Promise(r=>setTimeout(r,1500));return im.filter(i=>i.complete&&i.naturalWidth>100).length}")
         await pg.screenshot(path=os.environ.get("SHOT", "/dev/null") if os.environ.get("SHOT") else D + "/c.png")
-        await pg.click('#main [data-castf273="kids"]'); await pg.wait_for_timeout(300); out["kids"] = await pg.evaluate("()=>document.querySelectorAll('#main .cast273 .cc273').length")
+        await pg.click('#main [data-castf273="kids"]'); await pg.wait_for_timeout(300); out["kids"] = await pg.evaluate("()=>document.querySelectorAll('#main .cast273:not(.gatos280) .cc273').length")
         await pg.click('#main [data-castf273="all"]'); await pg.wait_for_timeout(300)
         await pg.click('#main .cc273[data-cast273="cast-omar"]'); await pg.wait_for_timeout(500)
         out["sheet"] = await pg.evaluate("()=>{const s=document.querySelector('.cs273');return s?{h:s.querySelector('h2').textContent,big:(s.querySelector('.cbig273')||{}).src||'',meta:s.querySelector('.cmeta273').textContent}:null}")
@@ -79,21 +80,29 @@ try:
     for _ in range(60):
         try: urllib.request.urlopen(B + "/v1/health", timeout=2); break
         except Exception: time.sleep(0.5)
-    cast = api("/v1/cast").get("items") or []
+    allc = api("/v1/cast").get("items") or []
+    gatos = [c for c in allc if c.get("group") == "gatos"]; cast = [c for c in allc if not c.get("group")]
     chk("the server serves the 30 cast members", len(cast) == 30 and len({c["id"] for c in cast}) == 30, len(cast))
+    # v280: The Gatos — ten funny characters, each with a face, a portrait, a voice and a personality line
+    chk("v280: The Gatos are 10, each with a face, a portrait, a real voice and its one-line personality (EN/AR)", len(gatos) == 10 and len({c["id"] for c in allc}) == 40 and all(c.get("face") and "/media/cast273-" in c["face"] and head(c["face"])[0] == 200 and len(c["voice"]["id"]) >= 18 and c["voice"]["gender"] == c["gender"] and len(c["country"]) == 2 and all(c["country"]) and not c["kid"] for c in gatos), [(c["id"], c.get("face")) for c in gatos][:3])
     chk("each has a face, and the 20 sheet characters a sheet, a body and a smile", all(c.get("face") and c.get("thumb") for c in cast) and sum(1 for c in cast if c.get("sheet") and c.get("body") and c.get("smile")) == 20, [c["id"] for c in cast if not c.get("face")])
     bad = [(c["id"], u, head(u)[:2]) for c in cast for u in (c.get("face"), c.get("sheet"), c.get("thumb")) if u and head(u)[0] != 200]
     chk("every picture is served from the media folder (as engines reach them)", not bad and all("/media/cast273-" in c["face"] for c in cast), bad[:4])
     chk("each has a voice of the voice engine (a real voice id), their gender and age", all(len(c["voice"]["id"]) >= 18 and c["voice"]["gender"] == c["gender"] and c["voice"]["age"] == c["band"] for c in cast), [c["voice"] for c in cast][:3])
     chk("children are marked (7)", sum(1 for c in cast if c["kid"]) == 7 and all(c["age"] < 18 for c in cast if c["kid"]), [c["id"] for c in cast if c["kid"]])
     av = api("/v1/avatars").get("items") or []
-    chk("the ready avatars list has the cast, adults first", len([a for a in av if a.get("cast")]) == 30 and not av[0].get("kid") and av[0].get("url"), [a.get("id") for a in av][:3])
+    chk("the ready avatars list has the cast, adults first", len([a for a in av if a.get("cast") and not a.get("group")]) == 30 and not av[0].get("kid") and av[0].get("url"), [a.get("id") for a in av][:3])
+    chk("v280: The Gatos come first in the ready avatars", [a.get("group") for a in av[:10]] == ["gatos"] * 10 and all(a.get("url") and a.get("voice") for a in av[:10]), [a.get("id") for a in av][:11])
     r1 = api("/v1/voice/sample", {"cast": "cast-yui"}); r2 = api("/v1/voice/sample", {"cast": "cast-yui"})
     yui = next(c for c in cast if c["id"] == "cast-yui")
     chk("a cast member says hello in their own language and voice (Yui: Japanese), made once, free", r1.get("url") and r1.get("cost") == 0 and r2.get("url") == r1.get("url") and len(ST["tts"]) == 1 and ST["tts"][0]["voice"] == yui["voice"]["id"] and "です" in ST["tts"][0]["text"], [r1, r2, ST["tts"]])
+    r3 = api("/v1/voice/sample", {"cast": "cast-lulu"})
+    chk("v280: Nana Lulu says her own funny hello in Arabic with her voice", r3.get("url") and r3.get("cost") == 0 and ST["tts"][-1]["voice"] == next(c for c in gatos if c["id"] == "cast-lulu")["voice"]["id"] and "تيتة لولو" in ST["tts"][-1]["text"], [r3, ST["tts"][-1:]])
     chk("an unknown cast id → 404", api("/v1/voice/sample", {"cast": "cast-nobody"}).get("err") == 404)
     out, errs = asyncio.run(page())
     chk("Characters shows the 30 ready characters with their pictures", out.get("cards") == 30 and out.get("imgs", 0) >= 20, [out.get("cards"), out.get("imgs")])
+    g = out.get("gatos") or {}
+    chk("v280: Characters shows The Gatos first, 10 cards, with their personality line", g.get("n") == 10 and g.get("h") == "The Gatos" and g.get("first") and "·" not in g.get("line", "x") and g.get("line"), g)
     chk("the Children filter shows the 7 children", out.get("kids") == 7, out.get("kids"))
     s = out.get("sheet") or {}
     chk("opening Omar shows his sheet, language and voice", "Omar" in s.get("h", "") and "cast273-omar-sheet" in s.get("big", "") and "Arabic" in s.get("meta", "") and "Roger" in s.get("meta", ""), s)
