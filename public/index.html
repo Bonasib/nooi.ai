@@ -26635,6 +26635,29 @@ body.sb253fold .sbbrand253{display:none!important}
 .tnti279 svg{width:16px!important;height:16px!important}
 `;document.head.appendChild(st)})();
 
+/* ================= v282: ONE MENU — the top bar only, the same on every page and in the editor =================
+   The owner: "Explore at the top and Explore in the left menu overlap, and the menu changes between pages (Home shows one list,
+   the editor another, though it's the same thing)". Since v279 a computer showed the sections twice: the top bar (v279) and the
+   side menu (v253), whose open group changed with every page. Now, from 768 px, the top bar is the one menu: the side menu is
+   gone there (a phone keeps it as the Menu drawer), the logo always shows, and a page's own row of tabs comes back (the side
+   menu was its only other copy). Library, Admin and the account stay on the bar's end. The sections, their tools, icons and
+   colours are written to localStorage "nooi.nav282" every time the bar is built, so the editor (/studio/) draws the very same
+   bar and panels instead of its own list ("Studio · New", "Apps", "Plans"). */
+function navSave282(){try{const secs=tnSecs279(),row=document.querySelector("#main>.topm .tn279"),hub=id=>{const e=row&&row.querySelector('[data-tn279sec="'+id+'"]');return e?getComputedStyle(e).getPropertyValue("--hub").trim():""};
+  const tool=t=>{const d=TOOLDESC[t[0]];return{v:t[0],en:t[1],ar:t[2],svg:ic(typeof tIcon253==="function"?tIcon253(t[0],"spark"):"spark"),d:d?[d[0],d[1]]:null}};
+  const out={v:1,t:Date.now(),secs:secs.map(s=>({id:s[0],go:tnFirst279(s),en:s[2],ar:s[3],svg:ic(s[1]),hub:hub(s[0]),d:TNDESC279[s[0]]||null,tools:s[4].map(tool)}))};
+  const j=JSON.stringify(out);if(navSave282.j!==j.replace(/"t":\d+,/,"")){navSave282.j=j.replace(/"t":\d+,/,"");localStorage.setItem("nooi.nav282",j)}}catch(e){}}
+/* (the older suites drive the side menu on a computer — under navigator.webdriver it stays unless window.__tn279 / __tn282 is set, as in v279) */
+const ON282=!(navigator.webdriver&&!window.__tn279&&!window.__tn282);if(ON282)document.documentElement.classList.add("one282");
+tn279=(o=>function(){const r=o.apply(this,arguments);navSave282();return r})(tn279);
+shell253=(o=>function(){const r=o.apply(this,arguments);if(ON282)document.querySelectorAll("#main .hubtabs.dup261").forEach(x=>x.classList.remove("dup261"));return r})(shell253);   /* (the tabs were hidden only because the side menu repeated them) */
+(()=>{const st=document.createElement("style");st.textContent=`
+@media (min-width:768px){
+  html.one282 body.sb253on #sb253,html.one282 body.sb253on #sb253bd{display:none!important}
+  html.one282 body.sb253on .app{padding-inline-start:0!important}
+  html.one282 body.sb253on .tnlogo279{display:grid!important}
+}`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
