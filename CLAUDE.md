@@ -1847,3 +1847,8 @@ The owner sent the target card (two columns; media with play · sound · length;
 - 3D World: `.nw-touch` / `.nw-joy` hidden on the empty stage (they covered "Drag to look around"); the lens chip uses `--sans` (Geist Mono broke Arabic «تلقائي» into separate letters).
 - Home: the agents carousel's arrows sit beside the cards on computers (`.agc201` padding). Top menu: the section button no longer overlaps its arrow by 6 px. Sketch: the Live price is on the switch's label.
 - In this sandbox `tests/v86.py` is unstable on main too (a 15 s navigation wait, physics timing with a software GPU) — re-run before reading a failure as real.
+
+## v282 The Library draws a page of results — no freeze on opening the site
+- The owner (computer): "Wait / Close page" when opening the site. Measured: the Library drew every result at once (`S.jobs` keeps growing on the device — 3,000 results = 49,000 elements and 1,500 videos); opening it took seconds and leaving it locked the page for over 100 s. The site reopens on the last page, so a Library left open froze the site at start.
+- `LIB282` (`n` shown, reset to `LIB282_STEP` = 48 when the filter changes); `VIEWS.library` base draws `shown` only, then "Show more · N" (`data-act="lib282-more"`, +48, scroll kept). Other pages already cap their lists.
+- Test: `tests/v282.py` (port 8682; 3,000 results: one page, quick to leave, Show more, filter resets).

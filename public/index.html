@@ -2392,13 +2392,17 @@ VIEWS.finish=()=>{
   (done.length?'<h2 class="sec">'+L("Finished","المنتهية")+'</h2><div class="cards">'+done.map(jobCard).join("")+"</div>":"")+"</div>";
 };
 
+const LIB282_STEP=48,LIB282={f:null,n:48};
 VIEWS.library=()=>{
   const f=S.libFilter;const groups={video:["video"],image:["image"],chars:["look","sheet"],audio:["voice","music","sfx","lipsync"],post:["edit","bg","mocap","finish","export"]};
   const jobs=S.jobs.slice().reverse().filter(j=>f==="all"||(groups[f]||[]).includes(j.kind));
   const chs=(f==="all"||f==="chapters")?S.story.chapters.filter(c=>c.status==="complete"):[];
+  // (v282: draw a page of results, not all of them — 3,000 results were 49,000 elements and 1,500 videos, and the page froze)
+  if(LIB282.f!==f){LIB282.f=f;LIB282.n=LIB282_STEP}const more=Math.max(0,jobs.length-LIB282.n),shown=jobs.slice(0,LIB282.n);
   return'<div class="view"><div class="spread"><h1>'+L("My library","مكتبتي")+'</h1><button class="btn sm" data-act="export-json">'+ic("download")+L("Export project (JSON)","تصدير المشروع JSON")+'</button></div><p class="lede">'+(jobs.length+chs.length)+" "+L("items","عنصر")+"</p>"+
   chips("libFilter",[["all","All","الكل"],["video","Videos","فيديو"],["image","Images","صور"],["chapters","Chapters","فصول"],["chars","Characters","شخصيات"],["audio","Audio","صوت"],["post","Edits & post","تعديلات"]],f)+
-  '<div class="cards" style="margin-top:16px">'+chs.map(c=>{const i=S.story.chapters.indexOf(c);return'<button class="panel card" data-open-ch="'+i+'">'+thumb("c:"+c.id,{dur:c.dur})+'<div class="ptxt">'+L("Chapter ","الفصل ")+(i+1)+" · "+esc(c.title)+"</div></button>"}).join("")+jobs.map(jobCard).join("")+"</div>"+
+  '<div class="cards" style="margin-top:16px">'+chs.map(c=>{const i=S.story.chapters.indexOf(c);return'<button class="panel card" data-open-ch="'+i+'">'+thumb("c:"+c.id,{dur:c.dur})+'<div class="ptxt">'+L("Chapter ","الفصل ")+(i+1)+" · "+esc(c.title)+"</div></button>"}).join("")+shown.map(jobCard).join("")+"</div>"+
+  (more?'<div class="row lib282" style="justify-content:center;margin-top:16px"><button class="btn" data-act="lib282-more">'+ic("plus")+L("Show more","عرض المزيد")+' <span class="mute small">'+more+"</span></button></div>":"")+
   (!jobs.length&&!chs.length?'<p class="mute">'+L("Nothing here yet.","لا شيء هنا بعد.")+"</p>":"")+"</div>";
 };
 
@@ -2610,6 +2614,7 @@ document.addEventListener("click",async e=>{
   case"sfx":if(addJob({kind:"sfx",prompt:A.n,dur:3,cost:1,secs:2,art:"wave"}))renderAll();break;
   case"run-finish":{const T=S.tools.finish,tool=FINISH.find(f=>f.id===T.tool);const src=S.jobs.find(j=>j.id===T.src);if(!src&&!M.fin){toast(L("Choose a source first.","اختر المصدر أولاً."));break}
     if(addJob({kind:"finish",prompt:L(tool.n[0],tool.n[1])+" · "+(src?(src.title||src.prompt):M.fin.name),cost:tool.cr,secs:8,seed:src?src.seed:undefined,pal:src?src.pal:undefined,aspect:src?src.aspect:"16:9",dur:src?src.dur:5,meta:{tool:tool.id,opt:T.opt[tool.id]}})){toast(L("Sent to the engine queue","أُرسل إلى قائمة المحرك"));renderAll()}break}
+  case"lib282-more":{LIB282.n+=LIB282_STEP;const y=$("#main")&&$("#main").scrollTop;renderView();if(y!=null&&$("#main"))$("#main").scrollTop=y;break}
   case"export-json":{const o=JSON.parse(JSON.stringify(S));delete o.user;saveFile("nooi-project.json",JSON.stringify(o,null,2));break}
   case"signout":S.user=null;persist();renderAll();break;
   case"annual":S.annual=A.v==="1";persist();renderView();break;
