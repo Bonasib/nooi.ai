@@ -2392,17 +2392,17 @@ VIEWS.finish=()=>{
   (done.length?'<h2 class="sec">'+L("Finished","المنتهية")+'</h2><div class="cards">'+done.map(jobCard).join("")+"</div>":"")+"</div>";
 };
 
-const LIB282_STEP=48,LIB282={f:null,n:48};
+const LIB283_STEP=48,LIB283={f:null,n:48};
 VIEWS.library=()=>{
   const f=S.libFilter;const groups={video:["video"],image:["image"],chars:["look","sheet"],audio:["voice","music","sfx","lipsync"],post:["edit","bg","mocap","finish","export"]};
   const jobs=S.jobs.slice().reverse().filter(j=>f==="all"||(groups[f]||[]).includes(j.kind));
   const chs=(f==="all"||f==="chapters")?S.story.chapters.filter(c=>c.status==="complete"):[];
-  // (v282: draw a page of results, not all of them — 3,000 results were 49,000 elements and 1,500 videos, and the page froze)
-  if(LIB282.f!==f){LIB282.f=f;LIB282.n=LIB282_STEP}const more=Math.max(0,jobs.length-LIB282.n),shown=jobs.slice(0,LIB282.n);
+  // (v283: draw a page of results, not all of them — 3,000 results were 49,000 elements and 1,500 videos, and the page froze)
+  if(LIB283.f!==f){LIB283.f=f;LIB283.n=LIB283_STEP}const more=Math.max(0,jobs.length-LIB283.n),shown=jobs.slice(0,LIB283.n);
   return'<div class="view"><div class="spread"><h1>'+L("My library","مكتبتي")+'</h1><button class="btn sm" data-act="export-json">'+ic("download")+L("Export project (JSON)","تصدير المشروع JSON")+'</button></div><p class="lede">'+(jobs.length+chs.length)+" "+L("items","عنصر")+"</p>"+
   chips("libFilter",[["all","All","الكل"],["video","Videos","فيديو"],["image","Images","صور"],["chapters","Chapters","فصول"],["chars","Characters","شخصيات"],["audio","Audio","صوت"],["post","Edits & post","تعديلات"]],f)+
   '<div class="cards" style="margin-top:16px">'+chs.map(c=>{const i=S.story.chapters.indexOf(c);return'<button class="panel card" data-open-ch="'+i+'">'+thumb("c:"+c.id,{dur:c.dur})+'<div class="ptxt">'+L("Chapter ","الفصل ")+(i+1)+" · "+esc(c.title)+"</div></button>"}).join("")+shown.map(jobCard).join("")+"</div>"+
-  (more?'<div class="row lib282" style="justify-content:center;margin-top:16px"><button class="btn" data-act="lib282-more">'+ic("plus")+L("Show more","عرض المزيد")+' <span class="mute small">'+more+"</span></button></div>":"")+
+  (more?'<div class="row lib283" style="justify-content:center;margin-top:16px"><button class="btn" data-act="lib283-more">'+ic("plus")+L("Show more","عرض المزيد")+' <span class="mute small">'+more+"</span></button></div>":"")+
   (!jobs.length&&!chs.length?'<p class="mute">'+L("Nothing here yet.","لا شيء هنا بعد.")+"</p>":"")+"</div>";
 };
 
@@ -2614,7 +2614,7 @@ document.addEventListener("click",async e=>{
   case"sfx":if(addJob({kind:"sfx",prompt:A.n,dur:3,cost:1,secs:2,art:"wave"}))renderAll();break;
   case"run-finish":{const T=S.tools.finish,tool=FINISH.find(f=>f.id===T.tool);const src=S.jobs.find(j=>j.id===T.src);if(!src&&!M.fin){toast(L("Choose a source first.","اختر المصدر أولاً."));break}
     if(addJob({kind:"finish",prompt:L(tool.n[0],tool.n[1])+" · "+(src?(src.title||src.prompt):M.fin.name),cost:tool.cr,secs:8,seed:src?src.seed:undefined,pal:src?src.pal:undefined,aspect:src?src.aspect:"16:9",dur:src?src.dur:5,meta:{tool:tool.id,opt:T.opt[tool.id]}})){toast(L("Sent to the engine queue","أُرسل إلى قائمة المحرك"));renderAll()}break}
-  case"lib282-more":{LIB282.n+=LIB282_STEP;const y=$("#main")&&$("#main").scrollTop;renderView();if(y!=null&&$("#main"))$("#main").scrollTop=y;break}
+  case"lib283-more":{LIB283.n+=LIB283_STEP;const y=$("#main")&&$("#main").scrollTop;renderView();if(y!=null&&$("#main"))$("#main").scrollTop=y;break}
   case"export-json":{const o=JSON.parse(JSON.stringify(S));delete o.user;saveFile("nooi-project.json",JSON.stringify(o,null,2));break}
   case"signout":S.user=null;persist();renderAll();break;
   case"annual":S.annual=A.v==="1";persist();renderView();break;
@@ -26639,6 +26639,39 @@ body.sb253fold .sbbrand253{display:none!important}
 .tnti279{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:8px;background:color-mix(in srgb,var(--hub,var(--lime)) 15%,transparent);color:var(--hub,var(--lime))}
 .tnti279 svg{width:16px!important;height:16px!important}
 `;document.head.appendChild(st)})();
+
+/* ================= v282: ONE MENU — the top bar only, the same on every page and in the editor =================
+   The owner: "Explore at the top and Explore in the left menu overlap, and the menu changes between pages (Home shows one list,
+   the editor another, though it's the same thing)". Since v279 a computer showed the sections twice: the top bar (v279) and the
+   side menu (v253), whose open group changed with every page. Now, from 768 px, the top bar is the one menu: the side menu is
+   gone there (a phone keeps it as the Menu drawer), the logo always shows, and a page's own row of tabs comes back (the side
+   menu was its only other copy). Library, Admin and the account stay on the bar's end. The sections, their tools, icons and
+   colours are written to localStorage "nooi.nav282" every time the bar is built, so the editor (/studio/) draws the very same
+   bar and panels instead of its own list ("Studio · New", "Apps", "Plans"). */
+function navSave282(){try{const secs=tnSecs279(),row=document.querySelector("#main>.topm .tn279"),hub=id=>{const e=row&&row.querySelector('[data-tn279sec="'+id+'"]');return e?getComputedStyle(e).getPropertyValue("--hub").trim():""};
+  const tool=t=>{const d=TOOLDESC[t[0]];return{v:t[0],en:t[1],ar:t[2],svg:ic(typeof tIcon253==="function"?tIcon253(t[0],"spark"):"spark"),d:d?[d[0],d[1]]:null}};
+  const out={v:1,t:Date.now(),secs:secs.map(s=>({id:s[0],go:tnFirst279(s),en:s[2],ar:s[3],svg:ic(s[1]),hub:hub(s[0]),d:TNDESC279[s[0]]||null,tools:s[4].map(tool)}))};
+  const j=JSON.stringify(out);if(navSave282.j!==j.replace(/"t":\d+,/,"")){navSave282.j=j.replace(/"t":\d+,/,"");localStorage.setItem("nooi.nav282",j)}}catch(e){}}
+/* (the older suites drive the side menu on a computer — under navigator.webdriver it stays unless window.__tn279 / __tn282 is set, as in v279) */
+const ON282=!(navigator.webdriver&&!window.__tn279&&!window.__tn282);if(ON282)document.documentElement.classList.add("one282");
+tn279=(o=>function(){const r=o.apply(this,arguments);navSave282();return r})(tn279);
+shell253=(o=>function(){const r=o.apply(this,arguments);if(ON282)document.querySelectorAll("#main .hubtabs.dup261").forEach(x=>x.classList.remove("dup261"));return r})(shell253);   /* (the tabs were hidden only because the side menu repeated them) */
+/* a page's tab row lists the same tools as its section in the top bar (the old hubs put Sketch with Image while the bar
+   puts it in Extras, and left Image with one lone tab); a section with one tool has no tab row */
+hubTabsHTML=(o=>function(v){if(!ON282||!matchMedia("(min-width:768px)").matches)return o(v);let secs;try{secs=tnSecs279()}catch(e){return o(v)}
+  const w=ALIAS82[v]||v,has=s=>s[4].some(t=>t[0]===w),cs=typeof tnCur279==="function"?tnCur279():"",sec=secs.find(s=>s[0]===cs&&has(s))||secs.find(has);
+  if(!sec)return o(v);if(sec[4].length<2)return"";
+  return'<nav class="hubtabs" role="tablist" aria-label="'+esc(L(sec[2],sec[3]))+'">'+sec[4].map(t=>'<button role="tab" data-go="'+t[0]+'" aria-selected="'+(t[0]===w)+'">'+esc(L(t[1],t[2]))+"</button>").join("")+"</nav>"})(hubTabsHTML);
+/* the tab row is drawn last, from the section (earlier wrappers trimmed it to one tab on some pages: Sketch, Agents) */
+renderView=(o=>function(){const r=o.apply(this,arguments);try{if(ON282&&matchMedia("(min-width:768px)").matches&&(ALIAS82[S.view]||S.view)!=="edit"){
+  const v=document.querySelector("#main>.view")||document.querySelector("#main .view");if(v){const h=hubTabsHTML(S.view),old=[...document.querySelectorAll("#main .hubtabs")];
+    if(old.length){if(h)old[0].outerHTML=h;else old[0].remove();old.slice(1).forEach(x=>x.remove())}else if(h)v.insertAdjacentHTML("afterbegin",h)}}}catch(e){console.warn("v282 tabs:",e)}return r})(renderView);
+(()=>{const st=document.createElement("style");st.textContent=`
+@media (min-width:768px){
+  html.one282 body.sb253on #sb253,html.one282 body.sb253on #sb253bd{display:none!important}
+  html.one282 body.sb253on .app{padding-inline-start:0!important}
+  html.one282 body.sb253on .tnlogo279{display:grid!important}
+}`;document.head.appendChild(st)})();
 
 /* ================= LOOP + BOOT ================= */
 let playing=true;

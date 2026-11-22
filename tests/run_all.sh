@@ -271,4 +271,5 @@ echo "▶ v272: no backup engines; the customer's model is the model; Auto picks
 echo "▶ v273: the ready cast — 30 characters with a face, a sheet and their own voice"; python3 tests/v273.py
 echo "▶ v274: the cast at work — a 15-second talking example video for each ready character (Admin confirm; Seedance 2.0 or MiniMax H3 with their own voice; shown in the window and Explore)"; python3 tests/v274.py
 echo "▶ v279: a clear top menu (sections by name, tools in a panel, More) · a first picture before the script · the page sent minified"; python3 tests/v279.py
-echo "▶ v282: the Library draws a page of results (no freeze with thousands)"; python3 tests/v282.py
+echo "▶ v282: one menu — the top bar only on computers, the same sections and panels in the editor"; python3 tests/v282.py
+echo "▶ v283: the Library draws a page of results (no freeze with thousands)"; python3 tests/v283.py
