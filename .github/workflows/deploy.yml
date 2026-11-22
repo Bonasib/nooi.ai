@@ -60,7 +60,14 @@ jobs:
             echo "::error::Can't reach SSH on the server (port 22): $(tail -2 /tmp/keyscan.err | tr '\n' ' ') — check VPS_HOST and that SSH is open"; exit 1
           fi
           if [ -n "$VPS_SSH_KEY" ]; then
-            printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+            # (a key copied from a phone's browser terminal comes back as one line, or with spaces/terminal wrapping:
+            #  take the base64 between the BEGIN/END lines, drop everything else, and wrap it at 70 as ssh-keygen writes it)
+            K="$(printf '%s' "$VPS_SSH_KEY" | tr -d '\r')"
+            KIND="$(printf '%s' "$K" | grep -oE 'BEGIN [A-Z ]*PRIVATE KEY' | head -1 | sed 's/^BEGIN //')"
+            [ -n "$KIND" ] || { echo "::error::VPS_SSH_KEY has no '-----BEGIN … PRIVATE KEY-----' line — copy the whole key"; exit 1; }
+            BODY="$(printf '%s' "$K" | tr '\n' ' ' | sed -E "s/.*-----BEGIN $KIND-----//; s/-----END $KIND-----.*//" | tr -cd 'A-Za-z0-9+/=')"
+            { echo "-----BEGIN $KIND-----"; printf '%s' "$BODY" | fold -w 70; echo; echo "-----END $KIND-----"; } > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+            ssh-keygen -y -f ~/.ssh/id_deploy > /dev/null 2>/tmp/key.err || { echo "::error::VPS_SSH_KEY can't be read even after cleaning ($(head -1 /tmp/key.err)) — part of it is missing; copy it again"; exit 1; }
             echo "SSH_OPTS=-i $HOME/.ssh/id_deploy -o BatchMode=yes" >> "$GITHUB_ENV"
           else
             sudo apt-get install -y -qq sshpass >/dev/null
