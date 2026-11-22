@@ -61,7 +61,9 @@ try {
   const lv = await api("/v1/jobs/live?ids=" + ids[0] + ",nosuchjob");
   ok(lv.status === 200 && lv.d.jobs[ids[0]]?.status === "done" && lv.d.jobs.nosuchjob === null, "one request answers for several jobs; one it doesn't know is null");
   // 3) the page, compressed, with an ETag
-  const raw = fs.statSync(ROOT + "/public/index.html").size; await wait(9000);   // (brotli at its best takes a few seconds once)
+  // (since v279 the page is sent minified: compare with what the server really sends)
+  const { minifyPage } = await import(url.pathToFileURL(ROOT + "/lib/static124.js").href);
+  const raw = minifyPage(fs.readFileSync(ROOT + "/public/index.html")).length; await wait(9000);   // (brotli at its best takes a few seconds once)
   // (raw bytes: Node's fetch would unpack them by itself)
   const get = (p, h) => new Promise((ok2, no) => http.get({ host: "localhost", port: NPORT, path: p, headers: h }, (r) => { const c = []; r.on("data", (x) => c.push(x)); r.on("end", () => ok2({ status: r.statusCode, h: r.headers, body: Buffer.concat(c) })); }).on("error", no));
   const br = await get("/", { "accept-encoding": "br, gzip" }), brBody = br.body, gz = await get("/index.html", { "accept-encoding": "gzip" }), gzBody = gz.body;

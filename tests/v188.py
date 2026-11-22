@@ -81,9 +81,9 @@ import http from 'http'; import fs from 'fs'; import path from 'path';
 let hits = 0; const srv = http.createServer((q, s) => {{ hits++; s.setHeader('content-type', 'video/mp4'); s.end(Buffer.alloc(200000)); }}).listen(0);
 await new Promise((r) => srv.on('listening', r));
 const real = fs.writeFileSync; fs.writeFileSync = function (f, ...a) {{ if (String(f).includes('/media/')) {{ real.call(fs, f, Buffer.alloc(10)); const e = new Error('ENOSPC: no space left on device, write'); e.code = 'ENOSPC'; throw e; }} return real.call(fs, f, ...a); }};
-const {{ download, MEDIA_DIR }} = await import('{ROOT}/lib/media.js');
+const {{ download, MEDIA_DIR }} = await import('{ROOT}/lib/media.js'); fs.mkdirSync(MEDIA_DIR, {{ recursive: true }}); const before = fs.readdirSync(MEDIA_DIR).length;   // (step 1 put files of its own in this folder)
 let err = null; try {{ await download('http://localhost:' + srv.address().port + '/v.mp4'); }} catch (e) {{ err = e; }}
-console.log(JSON.stringify({{ hits, diskFull: !!(err && err.diskFull), msg: err && err.message, files: fs.readdirSync(MEDIA_DIR).length }})); srv.close(); process.exit(0);
+console.log(JSON.stringify({{ hits, diskFull: !!(err && err.diskFull), msg: err && err.message, files: fs.readdirSync(MEDIA_DIR).length - before }})); srv.close(); process.exit(0);
 """
     js = subprocess.run(["node", "--input-type=module", "-e", script], cwd=D, capture_output=True, text=True, timeout=120)
     try: r = json.loads(js.stdout.strip().splitlines()[-1])
