@@ -26651,6 +26651,16 @@ function navSave282(){try{const secs=tnSecs279(),row=document.querySelector("#ma
 const ON282=!(navigator.webdriver&&!window.__tn279&&!window.__tn282);if(ON282)document.documentElement.classList.add("one282");
 tn279=(o=>function(){const r=o.apply(this,arguments);navSave282();return r})(tn279);
 shell253=(o=>function(){const r=o.apply(this,arguments);if(ON282)document.querySelectorAll("#main .hubtabs.dup261").forEach(x=>x.classList.remove("dup261"));return r})(shell253);   /* (the tabs were hidden only because the side menu repeated them) */
+/* a page's tab row lists the same tools as its section in the top bar (the old hubs put Sketch with Image while the bar
+   puts it in Extras, and left Image with one lone tab); a section with one tool has no tab row */
+hubTabsHTML=(o=>function(v){if(!ON282||!matchMedia("(min-width:768px)").matches)return o(v);let secs;try{secs=tnSecs279()}catch(e){return o(v)}
+  const w=ALIAS82[v]||v,has=s=>s[4].some(t=>t[0]===w),cs=typeof tnCur279==="function"?tnCur279():"",sec=secs.find(s=>s[0]===cs&&has(s))||secs.find(has);
+  if(!sec)return o(v);if(sec[4].length<2)return"";
+  return'<nav class="hubtabs" role="tablist" aria-label="'+esc(L(sec[2],sec[3]))+'">'+sec[4].map(t=>'<button role="tab" data-go="'+t[0]+'" aria-selected="'+(t[0]===w)+'">'+esc(L(t[1],t[2]))+"</button>").join("")+"</nav>"})(hubTabsHTML);
+/* the tab row is drawn last, from the section (earlier wrappers trimmed it to one tab on some pages: Sketch, Agents) */
+renderView=(o=>function(){const r=o.apply(this,arguments);try{if(ON282&&matchMedia("(min-width:768px)").matches&&(ALIAS82[S.view]||S.view)!=="edit"){
+  const v=document.querySelector("#main>.view")||document.querySelector("#main .view");if(v){const h=hubTabsHTML(S.view),old=[...document.querySelectorAll("#main .hubtabs")];
+    if(old.length){if(h)old[0].outerHTML=h;else old[0].remove();old.slice(1).forEach(x=>x.remove())}else if(h)v.insertAdjacentHTML("afterbegin",h)}}}catch(e){console.warn("v282 tabs:",e)}return r})(renderView);
 (()=>{const st=document.createElement("style");st.textContent=`
 @media (min-width:768px){
   html.one282 body.sb253on #sb253,html.one282 body.sb253on #sb253bd{display:none!important}
