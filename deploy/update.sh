@@ -22,8 +22,9 @@ FREE_MB="$(df -Pm "$APP" | awk 'NR==2{print $4}')"; [ "${FREE_MB:-0}" -lt 2048 ]
 PREV="${PREV:-${APP}-prev}"; rm -rf "$PREV"; rsync -a --exclude data --exclude media --exclude node_modules "$APP"/ "$PREV"/
 rsync -a --delete --exclude data --exclude media --exclude .env --exclude node_modules "$NEW"/ "$APP"/
 chown -R nooi:nooi "$APP"; sudo -u nooi -H bash -c "cd $APP && npm install --omit=dev --no-audit --no-fund"
-systemctl restart nooi; sleep 4
-if curl -fsS --max-time 10 "http://127.0.0.1:$PORT/v1/health" >/dev/null; then echo "✅ Updated"; else
+systemctl restart nooi
+up=""; for i in $(seq 1 45); do sleep 2; curl -fsS --max-time 5 "http://127.0.0.1:$PORT/v1/health" >/dev/null 2>&1 && { up=1; break; }; done   # up to 90 s
+if [ -n "$up" ]; then echo "✅ Updated"; else
   echo "⚠ New version failed — rolling back"; rsync -a --delete --exclude data --exclude media --exclude .env --exclude node_modules "$PREV"/ "$APP"/
   sudo -u nooi -H bash -c "cd $APP && npm install --omit=dev --no-audit --no-fund"; systemctl restart nooi; exit 1; fi
 rm -rf "$TMP"
