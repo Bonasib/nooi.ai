@@ -49,7 +49,13 @@ jobs:
         if: steps.ready.outputs.go == 'true'
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          ssh-keyscan -T 15 -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          # VPS_HOST may be pasted as hPanel's "ssh root@IP" line, with spaces or a new line: keep only the address
+          H="$(printf '%s' "$VPS_HOST" | tr -d '\r\n' | sed -E 's/^[[:space:]]*(ssh[[:space:]]+)?([^@[:space:]]+@)?//; s/[[:space:]].*$//')"
+          [ -n "$H" ] || { echo "::error::VPS_HOST is empty after cleaning — set it to the server's IP address"; exit 1; }
+          echo "HOST=$H" >> "$GITHUB_ENV"   # (a job-level env: wins over GITHUB_ENV, so a new name)
+          if ! ssh-keyscan -T 15 -H "$H" >> ~/.ssh/known_hosts 2>/tmp/keyscan.err || [ ! -s ~/.ssh/known_hosts ]; then
+            echo "::error::Can't reach SSH on the server (port 22): $(tail -2 /tmp/keyscan.err | tr '\n' ' ') — check VPS_HOST and that SSH is open"; exit 1
+          fi
           if [ -n "$VPS_SSH_KEY" ]; then
             printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
             echo "SSH_OPTS=-i $HOME/.ssh/id_deploy -o BatchMode=yes" >> "$GITHUB_ENV"
@@ -62,8 +68,8 @@ jobs:
         if: steps.ready.outputs.go == 'true'
         run: |
           SUDO=""; [ "$VPS_USER" = root ] || SUDO="sudo"
-          $SSH_WRAP scp $SSH_OPTS -o ConnectTimeout=20 nooi-server.zip "$VPS_USER@$VPS_HOST:/tmp/nooi-server.zip"
-          $SSH_WRAP ssh $SSH_OPTS -o ConnectTimeout=20 "$VPS_USER@$VPS_HOST" \
+          $SSH_WRAP scp $SSH_OPTS -o ConnectTimeout=20 nooi-server.zip "$VPS_USER@$HOST:/tmp/nooi-server.zip"
+          $SSH_WRAP ssh $SSH_OPTS -o ConnectTimeout=20 "$VPS_USER@$HOST" \
             "$SUDO nooi-update /tmp/nooi-server.zip; s=\$?; rm -f /tmp/nooi-server.zip; exit \$s"
       - name: Live check
         if: steps.ready.outputs.go == 'true'
