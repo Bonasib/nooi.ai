@@ -50,8 +50,11 @@ jobs:
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           # VPS_HOST may be pasted as hPanel's "ssh root@IP" line, with spaces or a new line: keep only the address
-          H="$(printf '%s' "$VPS_HOST" | tr -d '\r\n' | sed -E 's/^[[:space:]]*(ssh[[:space:]]+)?([^@[:space:]]+@)?//; s/[[:space:]].*$//')"
-          [ -n "$H" ] || { echo "::error::VPS_HOST is empty after cleaning — set it to the server's IP address"; exit 1; }
+          H="$(printf '%s' "$VPS_HOST" | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -1 || true)"
+          [ -n "$H" ] || H="$(printf '%s' "$VPS_HOST" | grep -oiE '[a-z0-9-]+(\.[a-z0-9-]+)+' | grep -viE '^ssh$' | head -1 || true)"
+          if [ -z "$H" ]; then   # say what the value looks like, never the value
+            V="$VPS_HOST"; echo "::error::VPS_HOST has no IP address or host name in it (length ${#V}; digits $(printf '%s' "$V" | tr -cd '0-9' | wc -c), dots $(printf '%s' "$V" | tr -cd '.' | wc -c), letters $(printf '%s' "$V" | tr -cd 'A-Za-z' | wc -c)) — set it to 179.198.221.200"; exit 1
+          fi
           echo "HOST=$H" >> "$GITHUB_ENV"   # (a job-level env: wins over GITHUB_ENV, so a new name)
           if ! ssh-keyscan -T 15 -H "$H" >> ~/.ssh/known_hosts 2>/tmp/keyscan.err || [ ! -s ~/.ssh/known_hosts ]; then
             echo "::error::Can't reach SSH on the server (port 22): $(tail -2 /tmp/keyscan.err | tr '\n' ' ') — check VPS_HOST and that SSH is open"; exit 1
