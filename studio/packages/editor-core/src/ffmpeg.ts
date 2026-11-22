@@ -81,11 +81,14 @@ export function compile(R: RenderInput): Compiled {
         const key = keyOf(m), cut = a.alpha === "stacked" && a.kind === "video", own = a.kind === "image" && colour.length > 0;
         if (cut || key || own) {
           const mk = "k" + k;
-          fv.push(`[${src}:v]${[...time, ...(own ? ["format=rgba"] : [])].join(",") || "null"},split[${mk}a][${mk}b]`);
+          // (v280) the picture is placed (scaled) once, before the split: two scale filters on the branches gave ffmpeg 6 two
+          // differently-timed inputs to alphamerge, and the whole render failed ("Error reinitializing filters")
+          const pre = cut ? [] : geom, g2 = cut ? geom : [];
+          fv.push(`[${src}:v]${[...time, ...pre, ...(own ? ["format=rgba"] : [])].join(",") || "null"},split[${mk}a][${mk}b]`);
           const spill = key && key.spill > 0 && screenOf(key.color) ? [`despill=type=${screenOf(key.color) === 1 ? "green" : "blue"}:mix=0.5:${screenOf(key.color) === 1 ? "green" : "blue"}=${n(-key.spill)}`] : [];
-          fv.push(`[${mk}a]${[...(cut ? ["crop=iw:ih/2:0:0"] : []), ...geom, ...spill, ...colour, "format=rgba"].join(",")}[${mk}c]`);
+          fv.push(`[${mk}a]${[...(cut ? ["crop=iw:ih/2:0:0"] : []), ...g2, ...spill, ...colour, "format=rgba"].join(",")}[${mk}c]`);
           const mask = cut ?   // (a cut-out uses its own mask; a key on top of it is drawn by the editor's own export)
-            ["crop=iw:ih/2:0:ih/2", ...geom, "format=gray"] : key ? [...geom, "format=yuva444p", `chromakey=0x${key.color.slice(1).toUpperCase()}:${n(key.sim)}:${n(key.soft)}`, "alphaextract"] : [...geom, "alphaextract"];
+            ["crop=iw:ih/2:0:ih/2", ...g2, "format=gray"] : key ? ["format=yuva444p", `chromakey=0x${key.color.slice(1).toUpperCase()}:${n(key.sim)}:${n(key.soft)}`, "alphaextract"] : ["alphaextract"];
           fv.push(`[${mk}b]${mask.join(",")}[${mk}m]`, `[${mk}c][${mk}m]alphamerge[${mk}]`); from = `[${mk}]`;
         } else chain.push(...time, ...geom, ...colour, "format=rgba");
         const fi = trIn ? trIn.dur / 2 : m.fadeIn, fo = trOut ? trOut.dur / 2 : m.fadeOut;
