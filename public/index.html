@@ -26690,9 +26690,9 @@ const PIC284=(()=>{const P="cine284/",ln=n=>P+"lens-"+n+".webp",g=n=>P+"g_"+n+".
     focal:{8:{ln:ln("fisheye"),ph:g("fisheye"),nick:["Bubble Trouble","فقاعة مرحة"]},14:{ln:ln("f14"),ph:g("f14"),nick:["Wide Awake","واسعة جداً"]},24:{ln:ln("f24"),nick:["Street Smart","عين الشارع"]},
       35:{ln:ln("f35"),ph:g("f35"),nick:["Storyteller","الراوية"]},50:{ln:ln("f50"),ph:g("f50"),nick:["Human Eye","عين الإنسان"]},85:{ln:ln("f85"),ph:g("f85"),nick:["Portrait Crush","بورتريه ساحر"]},
       135:{ln:ln("f135"),ph:g("f135"),nick:["Far & Fancy","بعيدة وأنيقة"]}},
-    lens:{spherical:{ln:ln("f50"),ph:g("f50"),nick:["Classic glass","زجاج كلاسيكي"]},anamorphic:{ln:ln("anamorphic"),ph:g("anamorphic"),nick:["Cinema Stretch","تمدّد سينمائي"]},
+    lens:{spherical:{ln:ln("pana"),ph:g("f50"),nick:["Classic glass","زجاج كلاسيكي"]},anamorphic:{ln:ln("arri"),ph:g("anamorphic"),nick:["Cinema Stretch","تمدّد سينمائي"]},
       macro:{ln:ln("macro"),ph:g("macro"),nick:["Tiny Giant","العملاق الصغير"]},fisheye:{ln:ln("fisheye"),ph:g("fisheye"),nick:["Bubble Trouble","فقاعة مرحة"]},
-      vintage:{ph:g("vintage"),nick:["Vintage Glass","زجاج عتيق"]},warmprime:{ln:ln("f85"),ph:g("vintage")},clinical:{ln:ln("f35"),ph:g("f35")},swirl:{ln:ln("f50"),ph:g("vintage")}},
+      vintage:{ln:ln("cooke"),ph:g("vintage"),nick:["Vintage Glass","زجاج عتيق"]},warmprime:{ln:ln("canon"),ph:g("vintage")},clinical:{ln:ln("zeiss"),ph:g("f35")},swirl:{ln:ln("f50"),ph:g("vintage")}},
     era:{d1920:{ph:e("d1920"),nick:["Old-School Cool","أناقة قديمة"]},d1950:{ph:e("d1950"),nick:["Golden Ticket","التذكرة الذهبية"]},d1970:{ph:e("d1970"),nick:["Groove Mode","مزاج الغروف"]},
       d1980:{ph:e("d1980"),nick:["Neon Fever","حمّى النيون"]},d1990:{ph:e("d1990"),nick:["Rewind Club","نادي الذكريات"]},d2000:{ph:e("d2000"),nick:["Y2K Spark","شرارة الألفية"]},
       today:{ph:e("today"),nick:["Right Here","هنا والآن"]},nearfuture:{ph:e("nearfuture"),nick:["Tomorrow-ish","الغد تقريباً"]},farfuture:{ph:e("farfuture"),nick:["Far Out","بعيد جداً"]}},
@@ -26818,6 +26818,43 @@ addJob=(o=>function(j){try{if(j&&j.kind==="video"&&j.meta&&j.meta.camera&&j.meta
 .o93i .cl284{width:120%;height:auto}.o93i .cp284{width:100%;height:100%;object-fit:cover}
 @media (prefers-reduced-motion:reduce){.c284,.ln284,.nd284,.kn284{transition:none!important}}`;document.head.appendChild(st)})();
 
+/* ================= v285: THE CREW STAGE ON HOME — our nine plush agents grouped on a glowing hill, a lime doorway and floating
+   orbs (the owner's reference: the soft "toy" scene; our own agents, shapes and colours). A tap on an agent brings its card into view. */
+function stage285(){const B=(typeof BOTS!=="undefined"?BOTS:[]);if(!B.length)return"";
+  const ag=B.map((b,i)=>'<button type="button" class="ag285" data-act="st285" data-i="'+i+'" style="--i:'+i+';--c:'+b.c[0]+'" aria-label="'+esc(L(b.name[0],b.name[1])+" · "+L(b.role[0],b.role[1]))+'" title="'+esc(L(b.name[0],b.name[1])+" · "+L(b.role[0],b.role[1]))+'"><img src="'+crewImg242(b.id)+'" alt="" width="128" height="128" draggable="false" decoding="async"></button>').join("");
+  return'<div class="st285" role="group" aria-label="'+esc(L("Your nine AI agents","وكلاؤك التسعة"))+'"><i class="door285"></i><i class="orb285 o1"></i><i class="orb285 o2"></i><i class="orb285 o3"></i><i class="orb285 o4"></i><div class="row285" dir="ltr">'+ag+'</div></div>'}
+VIEWS.home=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=="string"||h.includes('class="st285"'))return h;const k=h.indexOf('<div class="hfhero">');if(k<0)return h;const e=h.indexOf("</h1>",k);if(e<0)return h;return h.slice(0,e+5)+stage285()+h.slice(e+5)})(VIEWS.home);
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('[data-act="st285"]');if(!a)return;e.stopImmediatePropagation();const i=+a.dataset.i;a.classList.remove("hop285");void a.offsetWidth;a.classList.add("hop285");
+  if(typeof agcGo201==="function"&&document.getElementById("agc201s")){AGC201.touched=Date.now();agcGo201(i);document.getElementById("agc201s").scrollIntoView({block:"nearest",behavior:"smooth"})}},true);
+(()=>{const st=document.createElement("style");st.id="v285";st.textContent=`
+.st285{position:relative;width:min(100%,880px);height:260px;margin:6px auto 18px;border-radius:24px;overflow:hidden;isolation:isolate;
+  background:radial-gradient(80% 90% at 72% 30%,#1b2140 0%,#0d0f1c 55%,#07080d 100%)}
+html[data-theme="light"] .st285,html.lt201 .st285{background:radial-gradient(80% 90% at 72% 30%,#2a3157 0%,#141729 60%,#0a0b14 100%)}
+.door285{position:absolute;right:6%;top:12%;width:110px;height:210px;border-radius:60px 60px 0 0;background:linear-gradient(180deg,#fbffe6 0%,#ecff9a 45%,#D9F43B 100%);
+  box-shadow:0 0 40px 10px rgba(217,244,59,.45),0 0 120px 40px rgba(167,232,58,.25);opacity:.95}
+.orb285{position:absolute;border-radius:50%;filter:blur(.3px);animation:orb285 7s ease-in-out infinite}
+.orb285.o1{width:46px;height:46px;left:58%;top:14%;background:radial-gradient(circle at 35% 30%,#c7d7ff,#5a6dff 70%);box-shadow:0 0 24px rgba(90,109,255,.6)}
+.orb285.o2{width:22px;height:22px;left:60%;top:46%;background:radial-gradient(circle at 35% 30%,#fff,#ff9ad9 70%);box-shadow:0 0 14px rgba(255,120,200,.6);animation-delay:-2s}
+.orb285.o3{width:34px;height:34px;right:4%;top:36%;background:radial-gradient(circle at 35% 30%,#f4ffd0,#9CD245 70%);box-shadow:0 0 20px rgba(156,210,69,.6);animation-delay:-4s}
+.orb285.o4{width:14px;height:14px;left:12%;top:20%;background:radial-gradient(circle at 35% 30%,#fff,#7ee8ff 70%);box-shadow:0 0 12px rgba(126,232,255,.6);animation-delay:-1s}
+@keyframes orb285{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.st285::after{content:"";position:absolute;left:-25%;right:-25%;bottom:-150px;height:210px;border-radius:50%;background:linear-gradient(180deg,#191d33,#0b0c14);
+  box-shadow:0 -2px 0 rgba(217,244,59,.55),0 -10px 40px rgba(217,244,59,.18),0 -2px 18px rgba(167,120,255,.25);z-index:2}
+.row285{position:absolute;left:46%;bottom:36px;transform:translateX(-50%);display:flex;align-items:flex-end;z-index:1}
+.ag285{position:relative;width:124px;height:124px;margin:0 -22px;padding:0;border:0;background:none;cursor:pointer;
+  transform:translateY(calc(var(--d,0px)));animation:bob285 4.6s ease-in-out infinite;animation-delay:calc(var(--i) * -.55s);transition:transform .2s}
+.ag285:nth-child(odd){--d:6px}.ag285:nth-child(3n){--d:-4px}
+.ag285 img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 8px 10px rgba(0,0,0,.45));transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
+.ag285:hover img,.ag285:focus-visible img{transform:translateY(-12px) scale(1.08)}
+.ag285:focus-visible{outline:2px solid #D9F43B;outline-offset:2px;border-radius:50%}
+.ag285.hop285 img{animation:hop285 .5s cubic-bezier(.3,1.6,.5,1)}
+@keyframes bob285{0%,100%{translate:0 0}50%{translate:0 -5px}}
+@keyframes hop285{0%{transform:translateY(0)}40%{transform:translateY(-26px) scale(1.1,.95)}100%{transform:translateY(0)}}
+@media (max-width:767px){.st285{height:170px;border-radius:18px;margin:2px auto 12px}.st285::after{left:-60%;right:-60%;bottom:-176px}.ag285{width:50px;height:50px;margin:0 -8px}.row285{bottom:26px}.door285{width:64px;height:120px;right:6%;top:10%}.orb285.o1{width:30px;height:30px}}
+@media (max-width:380px){.ag285{width:44px;height:44px;margin:0 -7px}}
+@media (prefers-reduced-motion:reduce){.ag285,.orb285,.ag285.hop285 img{animation:none}}
+.agc201bot{width:112px;height:112px}.agc201bot img.crew242{width:104px;height:104px}
+`;document.head.appendChild(st)})();
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
