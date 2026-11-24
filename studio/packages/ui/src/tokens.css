@@ -1,12 +1,12 @@
 /* nooi Studio — design tokens: "Nooi Obsidian" (the owner's master spec §2.1): canvas #0F1014, panels #181A20, tracks #14161B with
-   #252830 lines, Electric Cyan #00F0FF accent, the Nooi Intelligence gradient for AI, crimson playhead, render-cache line colours;
+   #252830 lines, the site's lime #D9F43B accent (v285; was Electric Cyan), the Nooi Intelligence gradient for AI, crimson playhead, render-cache line colours;
    Inter for the interface, JetBrains Mono for timecode and values (Arabic: IBM Plex Sans Arabic). Corners 8/12/16.
-   (The variable names --lime / --on-lime are kept so every part follows the accent; their value is the cyan now.) */
+   (The variable names --lime / --on-lime are kept so every part follows the accent; their value is the site's lime again (v285).) */
 :root, :root[data-theme="dark"] {
   --bg: #0F1014; --panel: #181A20; --panel2: #1F2229; --panel3: #2A2E37; --line: #252830; --line2: #333742; --track: #14161B;
   --text: #F3F4F6; --mute: #9CA3AF; --dim: #6B7280; --off: #4B5563;
-  --lime: #00F0FF; --lime-ink: #00F0FF; --on-lime: #0F1014; --accent: #00F0FF;
-  --ai: linear-gradient(135deg, #00F0FF 0%, #7B61FF 50%, #FF3D9A 100%);
+  --lime: #D9F43B; --lime-ink: #DDF54A; --on-lime: #0b0d08; --accent: #D9F43B;
+  --ai: linear-gradient(135deg, #6EC046 0%, #A7E83A 45%, #EEFF7A 100%);
   --playhead: #FF3B30; --cache-red: #FF453A; --cache-amber: #FFD60A; --cache-green: #30D158;
   --red: #FF453A; --amber: #FFD60A; --teal: #30D158; --blue: #4dc3ff; --violet: #7B61FF; --pink: #FF3D9A;
   --v-track: #2f4fd0; --a-track: #157a62; --t-track: #8a5fd6;
@@ -18,7 +18,7 @@
 }
 :root[data-theme="light"] {
   --bg: #f3f4f0; --panel: #ffffff; --panel2: #f1f3ee; --panel3: #e6e9e1; --line: #dcdfd7; --line2: #cbd0c4;
-  --text: #141713; --mute: #5d645b; --dim: #8a9187; --lime: #00B8C9; --lime-ink: #0E7C8A; --on-lime: #ffffff; --accent: #00B8C9; --track: #eef0f3; --off: #9aa1ab;
+  --text: #141713; --mute: #5d645b; --dim: #8a9187; --lime: #C9EC2A; --lime-ink: #3E7B22; --on-lime: #0b0d08; --accent: #C9EC2A; --track: #eef0f3; --off: #9aa1ab;
   --shadow: 0 12px 32px rgba(20, 30, 10, 0.14);
   color-scheme: light;
 }

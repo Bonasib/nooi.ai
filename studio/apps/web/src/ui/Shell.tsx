@@ -16,7 +16,7 @@ import { isZip, makePack, openPack } from "../media/pack";
 import { saveFile } from "../engine/native";
 import { NATIVE, at } from "../site";
 import { Modal } from "./Dialogs";
-import { understand } from "../mate";
+import { understand, askAI285 } from "../mate";
 import type { Card } from "../mate";
 
 const tr = (k: string, o?: Record<string, unknown>) => i18n.t(k, o) as string;
@@ -166,12 +166,21 @@ export function CloudButton() {
 }
 
 // ---------------- Nooi Mate: say what you want, then tap to do it
-const EXAMPLES = ["mate.ex1", "mate.ex2", "mate.ex3", "mate.ex4"];
+const EXAMPLES = ["mate.ex1", "mate.ex2", "mate.ex3", "mate.ex4", "mate.ex5"];
 export function MateDrawer() {
   const { t } = useTranslation(); const open = useUI((s) => s.mate); const [q, setQ] = useState(""); const [cards, setCards] = useState<Card[] | null>(null); const [done, setDone] = useState<Record<number, boolean>>({}); const [busy, setBusy] = useState(-1);
-  if (!open) return null;
-  const ask = (s = q) => { setQ(s); setCards(understand(s, t)); setDone({}); };
+  const [thinking, setThinking] = useState(false); const [byAI, setByAI] = useState(false);
+  // v285: a floating agents button on every layout (phone, tablet, computer) — the client types what they want and the agents do it
+  if (!open) return <button type="button" className="agfab285" onClick={() => ui.set({ mate: true })} aria-label={t("mate.title")} title={t("mate.title")} data-testid="mate-fab"><Icon name="sparkle" size={20} /></button>;
+  const ask = async (s = q) => {
+    setQ(s); setDone({}); setByAI(false); const local = understand(s, t); setCards(local);
+    if (local.length || !s.trim()) return;
+    setThinking(true);
+    try { const ai = await askAI285(s, t, (path, o) => api.req(path, o)); if (ai.length) { setCards(ai); setByAI(true); } } catch { /* no text AI or signed out: the local answer stands */ }
+    setThinking(false);
+  };
   const apply = async (c: Card, i: number) => { setBusy(i); try { await c.run(); setDone((d) => ({ ...d, [i]: true })); toast(t("mate.applied"), "ok"); } catch { toast(t("mate.failed"), "warn"); } setBusy(-1); };
+  const applyAll = async () => { if (!cards) return; for (let i = 0; i < cards.length; i++) if (!done[i]) { setBusy(i); try { await cards[i].run(); setDone((d) => ({ ...d, [i]: true })); } catch { toast(t("mate.failed"), "warn"); break; } } setBusy(-1); toast(t("mate.applied"), "ok"); };
   return (
     <aside className="mate" role="complementary" aria-label={t("mate.title")} data-testid="mate">
       <div className="mhead"><span className="aibadge" aria-hidden="true"><Icon name="sparkle" size={14} /></span><h2 className="ns-h2">{t("mate.title")}</h2><span className="sp" /><Btn icon="close" ghost label={t("insp.close")} onClick={() => ui.set({ mate: false })} testid="mate-close" /></div>
@@ -183,12 +192,14 @@ export function MateDrawer() {
           <Btn icon="sparkle" primary onClick={() => ask()} disabled={!q.trim()} testid="mate-go">{t("mate.go")}</Btn>
         </form>
         {cards == null && <div className="chips">{EXAMPLES.map((k) => <button key={k} type="button" className="chip" onClick={() => ask(t(k))}>{t(k)}</button>)}</div>}
-        {cards != null && !cards.length && <p className="hint" data-testid="mate-none">{t("mate.none")}</p>}
+        {thinking && <p className="hint busy" data-testid="mate-thinking">{t("mate.asking")}</p>}
+        {cards != null && !cards.length && !thinking && <p className="hint" data-testid="mate-none">{t("mate.none")}</p>}
+        {cards != null && cards.length > 1 && <Btn icon="play" primary disabled={busy >= 0 || cards.every((_c, i) => done[i])} onClick={applyAll} testid="mate-all">{t("mate.doAll")}</Btn>}
         {cards?.map((c, i) => <div key={i} className={"mcard" + (done[i] ? " done" : "")} data-testid={"mate-card-" + i}>
           <span>{c.title}</span>
           <Btn icon={done[i] ? "check" : "play"} primary={!done[i]} disabled={done[i] || busy >= 0} onClick={() => apply(c, i)} testid={"mate-apply-" + i}>{done[i] ? t("mate.done") : busy === i ? t("mate.working") : t("mate.apply")}</Btn>
         </div>)}
-        <p className="hint small">{t("mate.local")}</p>
+        <p className="hint small">{byAI ? t("mate.ai") : t("mate.local")}</p>
         <Btn icon="ai" onClick={() => ui.set({ mate: false, hub: true })}>{t("hub.title")}</Btn>
       </div>
     </aside>

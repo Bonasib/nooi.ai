@@ -40,7 +40,7 @@ try:
             r = pg.evaluate("()=>[cine93().focal,(document.querySelector('.o93[data-o93=\"c_focal\"] .o93i img')||{}).src||'']")
             ok(str(r[0]) == "85" and r[1].endswith("lens-f85.webp"), pre + f"picked 85 mm; the chip shows its lens {r}")
             pg.evaluate("()=>{ST93().open='c_lens';renderView()}"); pg.wait_for_timeout(600)
-            ok(pg.evaluate("!!document.querySelector('#sec93-c_lens .ph284[data-val=\"anamorphic\"] .ln284[src$=\"lens-anamorphic.webp\"]')"), pre + "anamorphic card with its lens")
+            ok(pg.evaluate("!!document.querySelector('#sec93-c_lens .ph284[data-val=\"anamorphic\"] .ln284[src$=\"lens-arri.webp\"]')"), pre + "anamorphic card with its lens")
             pg.evaluate("()=>{ST93().open='era254';renderView()}"); pg.wait_for_timeout(600)
             r = pg.evaluate("()=>{const d=document.querySelector('#sec93-era254 .dial284');return d&&{st:d.querySelectorAll('.st284').length,dir:d.querySelector('.dsc284').getAttribute('dir'),cards:document.querySelectorAll('#sec93-era254 .ph284').length}}")
             ok(r and r["st"] >= 14 and r["dir"] == "ltr" and r["cards"] >= 9, pre + f"the era dial: stations, left-to-right scale, era cards {r}")

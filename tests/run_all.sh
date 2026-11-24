@@ -274,3 +274,4 @@ echo "▶ v279: a clear top menu (sections by name, tools in a panel, More) · a
 echo "▶ v282: one menu — the top bar only on computers, the same sections and panels in the editor"; python3 tests/v282.py
 echo "▶ v283: the Library draws a page of results (no freeze with thousands)"; python3 tests/v283.py
 echo "▶ v284: the owner's pictures in the pickers — lens cards, the era radio dial, camera-move pictures, new moves and intensity"; python3 tests/v284.py
+echo "▶ v285: brand-free lenses, the crew stage on Home, the editor in lime, the editor's agents box"; python3 tests/v285.py
