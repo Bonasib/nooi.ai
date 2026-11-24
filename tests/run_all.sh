@@ -273,3 +273,4 @@ echo "▶ v274: the cast at work — a 15-second talking example video for each 
 echo "▶ v279: a clear top menu (sections by name, tools in a panel, More) · a first picture before the script · the page sent minified"; python3 tests/v279.py
 echo "▶ v282: one menu — the top bar only on computers, the same sections and panels in the editor"; python3 tests/v282.py
 echo "▶ v283: the Library draws a page of results (no freeze with thousands)"; python3 tests/v283.py
+echo "▶ v284: the owner's pictures in the pickers — lens cards, the era radio dial, camera-move pictures, new moves and intensity"; python3 tests/v284.py

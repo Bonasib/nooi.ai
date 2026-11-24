@@ -26673,6 +26673,151 @@ renderView=(o=>function(){const r=o.apply(this,arguments);try{if(ON282&&matchMed
   html.one282 body.sb253on .tnlogo279{display:grid!important}
 }`;document.head.appendChild(st)})();
 
+/* ================= v284: LENS LAB · TIME MACHINE · CAMERA CHOREOGRAPHY — the owner's pictures in the pickers =================
+   The owner sent seven boards (Lens Lab, Through the glass, Time machine, Camera choreography, Cinematic motion, Build your
+   shot, Pocket studio) and asked for their pictures in the site: the lenses cut out with no background, the eras as a radio
+   dial with a needle, every picture in place, everything consistent.
+   · public/cine284/: lens-*.webp (9 lenses, transparent), g_*.webp (what each lens sees), e_*.webp (9 eras), m_*.webp (18 moves)
+   · deco284 puts them on every lens / focal length / era / camera-move choice — the box's tiles and the picker sheets alike —
+     as cards: the picture, the lens on it, a nickname and the technical name in a pill (the board's look)
+   · the Era section starts with a radio dial: a scale of stations, a needle that slides (tap or drag), a knob, the era's picture
+   · new camera moves from the boards (truck, whip pan, dream drift, hero rise, world spinner, speed ramp, micro shake) with
+     their words on the server, and the move's Intensity (gentle … bold) in the move sheet → meta.camI284
+   · new era: the 2000s; the chosen lens / focal length / era shows its picture in its chip
+   The brand lenses of board 09 (ARRI, Canon, Panavision, ZEISS, Cooke) are not used: their names are trademarks. */
+const PIC284=(()=>{const P="cine284/",ln=n=>P+"lens-"+n+".webp",g=n=>P+"g_"+n+".webp",m=n=>P+"m_"+n+".webp",e=n=>P+"e_"+n+".webp";
+  return{
+    focal:{8:{ln:ln("fisheye"),ph:g("fisheye"),nick:["Bubble Trouble","فقاعة مرحة"]},14:{ln:ln("f14"),ph:g("f14"),nick:["Wide Awake","واسعة جداً"]},24:{ln:ln("f24"),nick:["Street Smart","عين الشارع"]},
+      35:{ln:ln("f35"),ph:g("f35"),nick:["Storyteller","الراوية"]},50:{ln:ln("f50"),ph:g("f50"),nick:["Human Eye","عين الإنسان"]},85:{ln:ln("f85"),ph:g("f85"),nick:["Portrait Crush","بورتريه ساحر"]},
+      135:{ln:ln("f135"),ph:g("f135"),nick:["Far & Fancy","بعيدة وأنيقة"]}},
+    lens:{spherical:{ln:ln("f50"),ph:g("f50"),nick:["Classic glass","زجاج كلاسيكي"]},anamorphic:{ln:ln("anamorphic"),ph:g("anamorphic"),nick:["Cinema Stretch","تمدّد سينمائي"]},
+      macro:{ln:ln("macro"),ph:g("macro"),nick:["Tiny Giant","العملاق الصغير"]},fisheye:{ln:ln("fisheye"),ph:g("fisheye"),nick:["Bubble Trouble","فقاعة مرحة"]},
+      vintage:{ph:g("vintage"),nick:["Vintage Glass","زجاج عتيق"]},warmprime:{ln:ln("f85"),ph:g("vintage")},clinical:{ln:ln("f35"),ph:g("f35")},swirl:{ln:ln("f50"),ph:g("vintage")}},
+    era:{d1920:{ph:e("d1920"),nick:["Old-School Cool","أناقة قديمة"]},d1950:{ph:e("d1950"),nick:["Golden Ticket","التذكرة الذهبية"]},d1970:{ph:e("d1970"),nick:["Groove Mode","مزاج الغروف"]},
+      d1980:{ph:e("d1980"),nick:["Neon Fever","حمّى النيون"]},d1990:{ph:e("d1990"),nick:["Rewind Club","نادي الذكريات"]},d2000:{ph:e("d2000"),nick:["Y2K Spark","شرارة الألفية"]},
+      today:{ph:e("today"),nick:["Right Here","هنا والآن"]},nearfuture:{ph:e("nearfuture"),nick:["Tomorrow-ish","الغد تقريباً"]},farfuture:{ph:e("farfuture"),nick:["Far Out","بعيد جداً"]}},
+    move:{dollyin:{ph:m("dollyin"),nick:["Come Closer","تعال أقرب"]},dollyout:{ph:m("dollyout"),nick:["Give Me Space","امنحني مساحة"]},truck:{ph:m("truck"),nick:["Side Quest","مهمة جانبية"]},
+      pan:{ph:m("pan"),nick:["Look Around","تلفّت حولك"]},tilt:{ph:m("tilt"),nick:["Heads Up","ارفع رأسك"]},orbit:{ph:m("orbit"),nick:["Main Character","الشخصية الرئيسية"]},
+      crane:{ph:m("crane"),nick:["Sky's the Limit","السماء حدودك"]},tracking:{ph:m("tracking"),nick:["Follow Me","اتبعني"]},static:{ph:m("static"),nick:["Hold Your Breath","احبس أنفاسك"]},
+      dollyzoom:{ph:m("dollyzoom"),nick:["Vertigo Vibes","دوار سينمائي"]},whip:{ph:m("whip"),nick:["Whip It","خاطفة"]},float:{ph:m("float"),nick:["Dream Drift","انجراف حالم"]},
+      handheld:{ph:m("handheld"),nick:["Human Touch","لمسة بشرية"]},lowpush:{ph:m("lowpush"),nick:["Hero Rise","صعود البطل"]},spin:{ph:m("spin"),nick:["World Spinner","دوّامة العالم"]},
+      ramp:{ph:m("ramp"),nick:["Fast Lane","المسار السريع"]},shake:{ph:m("shake"),nick:["Tiny Tremble","رجفة خفيفة"]},bullet:{ph:m("bullet"),nick:["Freeze, Please","تجمّد من فضلك"]}}};
+})();
+// the boards' new camera moves (the server has their words in lib/intent.js CAMERA)
+[["truck","Truck left / right","تحريك جانبي","Glides sideways next to the subject — a calm reveal.","تنزلق جانبياً بجوار الشخص — كشف هادئ."],
+ ["whip","Whip pan","تحريك خاطف","A fast whip with motion blur — energy between moments.","التفاتة سريعة بضبابية الحركة — طاقة بين اللحظات."],
+ ["float","Dream drift","انجراف حالم","Floats slowly like in a dream — soft and poetic.","تطفو ببطء كأنها في حلم — ناعمة وشاعرية."],
+ ["lowpush","Hero rise","صعود البطل","Low angle pushing in — the subject looks powerful.","زاوية منخفضة تتقدّم — يبدو الشخص قوياً."],
+ ["spin","World spinner","دوّامة العالم","A sweeping 360° circle with the horizon turning behind.","دائرة كاملة 360° والأفق يدور خلفه."],
+ ["ramp","Speed ramp","تسارع وتباطؤ","Real time, then slow motion at the key moment, then back.","سرعة عادية ثم بطء عند اللحظة المهمة ثم عودة."],
+ ["shake","Micro shake","اهتزاز خفيف","A tiny tremble — tension and life.","رجفة صغيرة — توتر وحياة."]].forEach(([k,en,ar,de,da])=>{if(!CAMS.some(x=>x[0]===k))CAMS.push([k,en,ar]);if(typeof PKV84==="object"&&PKV84.move&&!PKV84.move[k])PKV84.move[k]=["","",de,da]});
+// the 2000s, between the 1990s and today
+if(!CIN82.era.some(x=>x[0]==="d2000")){const i=CIN82.era.findIndex(x=>x[0]==="today");CIN82.era.splice(i<0?CIN82.era.length:i,0,["d2000","2000s","الألفينات","set in the 2000s: Y2K fashion, flip phones, glossy chrome and bright early-digital color",T254("00s")])}
+// each new move has its own line icon too (the chip rows and the Story page's move list need one)
+Object.entries({truck:'<path d="M3 17h18"/><rect x="8" y="8" width="8" height="6" rx="1"/><path d="M4 11h3M17 11h3M5 9l-2 2 2 2M19 9l2 2-2 2"/>',whip:'<path d="M3 8h9M3 12h13M3 16h9"/><path d="M15 7l5 5-5 5"/>',
+  float:'<path d="M3 15c3-5 6-5 9 0s6 5 9 0"/><path d="M12 4v4M10 6h4" opacity=".6"/>',lowpush:'<path d="M4 20l8-14 8 14"/><path d="M12 20V10M9 13l3-3 3 3"/>',
+  spin:'<ellipse cx="12" cy="13" rx="9" ry="4.5"/><path d="M18 8l3 2-3.5 1.5"/><circle cx="12" cy="9" r="2"/>',ramp:'<path d="M3 18c6 0 6-12 18-12"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/>',
+  shake:'<path d="M3 12h3l2-5 3 10 3-8 2 3h5"/>'}).forEach(([k,v])=>{if(!OI[k])OI[k]=v});
+sel=(o=>function(path,opts,cur,oo){if(/(^|\.)camera$/.test(path)&&opts.length>16&&opts.length<=40){const keys=opts.map(v=>Array.isArray(v)?v[0]:v);if(keys.every(k=>k!==""&&hasGlyph(path,k)))return chips(path,opts,cur,{})}return o.apply(this,arguments)})(sel);
+const F284=b=>{const f=String(b.dataset.set||"").split(".").pop();return f==="camera"?"move":f};
+const SEL284='[data-set$=".lens"],[data-set$=".focal"],[data-set$=".era"],[data-set$=".camera"],[data-set$=".move"]';
+const pic284=p=>'<span class="ph284i">'+(p.ph?'<img class="bg284" src="'+p.ph+'" alt="" loading="lazy" decoding="async">':"")+(p.ln?'<img class="ln284" src="'+p.ln+'" alt="" loading="lazy" decoding="async">':"")+"</span>";
+function deco284(b){if(b.classList.contains("c284"))return;const f=F284(b),T=PIC284[f];if(!T)return;   // (a class, not a data-*: the picker sheet copies data-* from the hidden tiles)
+  const v=b.dataset.val!=null?b.dataset.val:b.dataset.v;const p=v==null||v===""?null:T[nk84(v)];
+  b.classList.add("c284");const box=b.parentElement;if(box)box.classList.add("g284");
+  if(!p){b.classList.add("np284");return}
+  b.classList.add("ph284");if(p.ph)b.classList.add("hp284");if(p.ln)b.classList.add("hl284");
+  const slot=b.querySelector(".gl,.pk84oi,.pk86art");if(slot)slot.outerHTML=pic284(p);else b.insertAdjacentHTML("afterbegin",pic284(p));
+  if(p.nick){const t=b.querySelector(".lb")||b.querySelector("b");if(t){t.classList.add("mm284");t.insertAdjacentHTML("beforebegin",'<i class="nk284">'+esc(L(p.nick[0],p.nick[1]))+"</i>")}}}
+// ---- the era radio dial
+const EST284={ancient:["Ancient","قديم"],medieval:["Medieval","وسطى"],golden:["Golden age","ذهبي"],heritage:["Heritage","تراث"],victorian:["1800s","1800"],d1920:["20s","20s"],d1950:["50s","50s"],d1970:["70s","70s"],
+  d1980:["80s","80s"],d1990:["90s","90s"],d2000:["00s","00s"],today:["Now","الآن"],nearfuture:["Near","قريب"],farfuture:["Far","بعيد"]};
+function dial284(box){if(box.dataset.d284)return;const bs=[...box.querySelectorAll(":scope>[data-set$='.era']")];if(bs.length<4)return;box.dataset.d284="1";
+  const st=bs.filter(b=>b.dataset.val),n=st.length,on=st.findIndex(b=>b.getAttribute("aria-pressed")==="true"),x=i=>4+92*i/Math.max(1,n-1);
+  const cur=on>=0?st[on].dataset.val:"",p=(PIC284.era[nk84(cur)]||{}),row=cur?CIN82.era.find(z=>z[0]===cur):null;
+  const cap=cur?(p.nick?L(p.nick[0],p.nick[1])+" · ":"")+L(row[1],row[2]):L("Auto — the engine decides","تلقائي — يقرّر المحرّك");
+  const h='<div class="dial284" data-sec="'+esc(box.querySelector("[data-set$='.era']").dataset.set)+'"><div class="dw284"'+(p.ph?' style="--bg284:url('+p.ph+')"':"")+'><div class="dsc284" dir="ltr" role="radiogroup" aria-label="'+esc(L("Era","الحقبة"))+'">'+
+    st.map((b,i)=>{const s=EST284[b.dataset.val]||[b.textContent.trim(),b.textContent.trim()];return'<button type="button" class="st284" data-v="'+esc(b.dataset.val)+'" role="radio" aria-checked="'+(i===on)+'" style="--x:'+x(i)+'%" title="'+esc(b.textContent.trim())+'">'+esc(L(s[0],s[1]))+"</button>"}).join("")+
+    '<i class="nd284'+(on>=0?"":" off284")+'" style="--x:'+(on>=0?x(on):1.5)+'%"></i></div><span class="kn284" style="--r:'+(on>=0?on*(300/Math.max(1,n-1))-150:-170)+'deg" aria-hidden="true"></span><b class="dca284">'+esc(cap)+'</b>'+
+    (cur?'<button type="button" class="dau284" data-v="">'+esc(L("Auto","تلقائي"))+"</button>":"")+"</div></div>";
+  box.insertAdjacentHTML("beforebegin",h)}
+const tune284=(d,v)=>{const box=d.nextElementSibling;const t=box&&[...box.querySelectorAll("[data-set$='.era']")].find(b=>(b.dataset.val||"")===v);if(t)t.click()};
+document.addEventListener("click",e=>{const s=e.target.closest&&e.target.closest(".dial284 .st284,.dial284 .dau284");if(!s)return;e.preventDefault();
+  const d=s.closest(".dial284"),nd=d.querySelector(".nd284");if(nd&&s.style.getPropertyValue("--x"))nd.style.setProperty("--x",s.style.getPropertyValue("--x"));setTimeout(()=>tune284(d,s.dataset.v),160)});
+// drag the needle along the scale: it follows the finger and snaps to the nearest station on release
+document.addEventListener("pointerdown",e=>{const sc=e.target.closest&&e.target.closest(".dsc284");if(!sc||e.target.closest(".st284"))return;const nd=sc.querySelector(".nd284"),r=sc.getBoundingClientRect();
+  const at=ev=>Math.max(0,Math.min(100,(ev.clientX-r.left)/r.width*100));nd.classList.add("drag284");nd.style.setProperty("--x",at(e)+"%");try{sc.setPointerCapture(e.pointerId)}catch(_){}
+  const mv=ev=>nd.style.setProperty("--x",at(ev)+"%"),up=ev=>{sc.removeEventListener("pointermove",mv);sc.removeEventListener("pointerup",up);sc.removeEventListener("pointercancel",up);nd.classList.remove("drag284");
+    const X=at(ev);let best=null,bd=1e9;sc.querySelectorAll(".st284").forEach(b=>{const d=Math.abs(parseFloat(b.style.getPropertyValue("--x"))-X);if(d<bd){bd=d;best=b}});if(best)best.click()};
+  sc.addEventListener("pointermove",mv);sc.addEventListener("pointerup",up);sc.addEventListener("pointercancel",up)});
+// ---- the chips show what is chosen as a picture
+function chips284(){const c=typeof cine93==="function"?cine93():{};
+  const P={c_lens:c.lens&&PIC284.lens[nk84(c.lens)],c_focal:+c.focal&&PIC284.focal[nk84(c.focal)],era254:c.era&&PIC284.era[nk84(c.era)]};
+  document.querySelectorAll(".o93[data-o93] .o93i").forEach(i=>{const k=i.parentElement.dataset.o93,p=P[k];if(!(k in P))return;const want=p?(p.ln||p.ph):"";
+    if((i.dataset.p284||"")===want)return;if(!i.dataset.svg284)i.dataset.svg284=i.innerHTML;i.dataset.p284=want;
+    i.innerHTML=want?'<img src="'+want+'" alt="" class="'+(p.ln?"cl284":"cp284")+'">':i.dataset.svg284;i.classList.toggle("ci284",!!want)})}
+let RQ284=0;const run284=()=>{RQ284=0;document.querySelectorAll(SEL284).forEach(b=>{if(b.matches("button,[role=button],.tile,.chip,.pk84o"))deco284(b)});
+  document.querySelectorAll(".g284").forEach(box=>{if(box.querySelector(":scope>[data-set$='.era']"))dial284(box)});chips284()};
+new MutationObserver(()=>{if(!RQ284)RQ284=requestAnimationFrame(run284)}).observe(document.documentElement,{childList:true,subtree:true});
+// ---- the move's intensity, in the camera-move sheet, sent with the video
+pk84sheet=(o=>function(key,refresh){o(key,refresh);if(!/^move(\||$)/.test(String(key)))return;const sh=document.querySelector("#modalRoot .pk84s");if(!sh||sh.querySelector(".in284"))return;
+  const v=S.draft.camI284==null?60:+S.draft.camI284,g=sh.querySelector(".pk84g:last-of-type")||sh.querySelector(".pk84g");if(!g)return;
+  g.insertAdjacentHTML("afterend",'<div class="in284">'+slider("draft.camI284",L("Intensity","الشدّة"),v,0,100,5,"%")+'<p class="small mute">'+esc(L("How strong the camera move is — from a gentle hint to a bold move.","قوّة حركة الكاميرا — من لمسة خفيفة إلى حركة جريئة."))+"</p></div>")})(pk84sheet);
+addJob=(o=>function(j){try{if(j&&j.kind==="video"&&j.meta&&j.meta.camera&&j.meta.camera!=="static"&&S.draft&&S.draft.camI284!=null&&j.meta.camI284==null)j.meta.camI284=Math.max(0,Math.min(100,+S.draft.camI284||0))}catch(_){}return o.apply(this,arguments)})(addJob);
+(()=>{const st=document.createElement("style");st.id="v284";st.textContent=`
+.g284:has(>.ph284){display:grid!important;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px;align-items:stretch}
+.g284:has(>.ph284)>.c284{width:auto!important;max-width:none!important;min-width:0!important;height:auto!important;margin:0!important}
+.c284{position:relative;overflow:hidden;border-radius:var(--r-m,12px)!important;padding:0!important;display:flex!important;flex-direction:column;justify-content:flex-end;align-items:flex-start!important;text-align:start;
+  aspect-ratio:4/3;background:radial-gradient(120% 90% at 20% 10%,#1c2a22,#0b0f0d 70%)!important;color:#fff!important;border:1px solid rgba(255,255,255,.08)!important;isolation:isolate;
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.c284.np284{align-items:center!important;justify-content:center;gap:6px;text-align:center}
+.c284.np284 .gl,.c284.np284 .pk84oi{color:#cfe8d6}
+.c284:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(0,0,0,.35)}
+.c284[aria-pressed=true],.c284[aria-checked=true]{border-color:var(--lime,#D9F43B)!important;box-shadow:0 0 0 1px var(--lime,#D9F43B),0 8px 26px color-mix(in srgb,var(--lime,#D9F43B) 30%,transparent)}
+.ph284i{position:absolute;inset:0;z-index:-1;display:block}
+.bg284{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(1.05)}
+.hp284 .ph284i::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 35%,rgba(0,0,0,.78))}
+.ln284{position:absolute;inset-inline-end:4%;bottom:6%;width:62%;height:auto;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6));z-index:1;transition:transform .25s ease}
+.hp284 .ln284{width:40%;bottom:5%}
+.hl284:not(.hp284) .ln284{top:6%;bottom:auto;inset-inline:0;margin:auto;width:72%}
+.c284:hover .ln284{transform:rotate(-4deg) scale(1.04)}
+.c284 .nk284{font-style:normal;font-weight:650;font-size:13px;line-height:1.2;padding:0 10px;position:relative;z-index:2;text-shadow:0 1px 6px rgba(0,0,0,.6);max-width:62%}
+.hl284:not(.hp284) .nk284{max-width:100%}
+.c284 .mm284{display:inline-block;margin:4px 10px 9px;padding:2px 8px;border-radius:999px;border:1px solid color-mix(in srgb,var(--lime,#D9F43B) 70%,transparent);color:var(--lime,#D9F43B)!important;
+  background:rgba(0,0,0,.45);font-size:11px!important;line-height:1.35;position:relative;z-index:2;white-space:normal;font-weight:600}
+.c284.ph284:not(:has(.nk284)) .mm284{margin-top:auto}
+.pk84o.c284>small{display:none}
+.pk84o.c284>b{font-size:11px}
+.pk84o.c284 .pk84ok{position:absolute;top:6px;inset-inline-end:6px;z-index:3}
+.c284 .pk84ok{background:var(--lime,#D9F43B);color:#0b0d08;border-radius:50%}
+/* the radio dial */
+.dial284{margin:0 0 12px}
+.dw284{position:relative;border-radius:var(--r-l,16px);overflow:hidden;padding:44px 14px 46px;background:#0b0f0d;isolation:isolate;border:1px solid rgba(255,255,255,.08)}
+.dw284::before{content:"";position:absolute;inset:0;z-index:-2;background:var(--bg284,none) center/cover no-repeat,radial-gradient(120% 120% at 50% 0%,#1d2a22,#070908);filter:saturate(.9) brightness(.55);transition:background .35s}
+.dw284::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.15) 40%,rgba(0,0,0,.65))}
+.dsc284{position:relative;height:56px;border-radius:10px;background:linear-gradient(180deg,rgba(255,240,200,.16),rgba(255,240,200,.05));border:1px solid rgba(255,240,200,.25);
+  box-shadow:inset 0 0 18px rgba(255,200,120,.18);touch-action:none;cursor:ew-resize}
+.dsc284::before{content:"";position:absolute;inset:auto 3% 8px;height:12px;background:repeating-linear-gradient(90deg,rgba(255,240,200,.55) 0 1px,transparent 1px 8px);
+  -webkit-mask:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);mask:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
+.st284{position:absolute;top:6px;left:var(--x);transform:translateX(-50%);background:none;border:0;padding:2px 3px;color:rgba(255,240,210,.72);font:600 11px/1.2 var(--mono,ui-monospace),monospace;cursor:pointer;white-space:nowrap}
+.st284[aria-checked=true]{color:#ffd9a8;text-shadow:0 0 8px rgba(255,170,80,.9)}
+.st284:nth-child(even){top:22px}
+.nd284{position:absolute;top:-6px;bottom:-6px;left:var(--x);width:3px;margin-left:-1.5px;border-radius:2px;background:linear-gradient(#ff5a3c,#ff2a10);box-shadow:0 0 10px #ff3a1c,0 0 2px #fff;
+  transition:left .45s cubic-bezier(.3,1.4,.4,1);pointer-events:none}
+.nd284.drag284{transition:none;opacity:1}
+.nd284.off284{opacity:.35}
+.kn284{position:absolute;top:8px;inset-inline-end:12px;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#3a4840,#0c110e);border:1px solid rgba(255,255,255,.25);
+  box-shadow:0 2px 8px rgba(0,0,0,.6);transform:rotate(var(--r));transition:transform .45s cubic-bezier(.3,1.4,.4,1)}
+.kn284::after{content:"";position:absolute;left:50%;top:3px;width:2px;height:9px;margin-left:-1px;border-radius:1px;background:var(--lime,#D9F43B)}
+.dca284{position:absolute;inset-inline-start:14px;bottom:12px;font-size:14px;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.8)}
+.dau284{position:absolute;inset-inline-end:12px;bottom:10px;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.4);color:#fff;border-radius:999px;padding:3px 10px;font-size:12px;cursor:pointer}
+.dw284 .st284{font-size:10.5px}
+@media(max-width:520px){.st284{font-size:9.5px!important;padding:2px 1px}.g284:has(>.ph284){grid-template-columns:repeat(2,minmax(0,1fr))}}
+.in284{margin:14px 2px 4px}.in284 p{margin:4px 0 0}
+.o93i.ci284{width:22px;height:22px;border-radius:6px;overflow:hidden;display:inline-grid;place-items:center;background:#0b0f0d}
+.o93i .cl284{width:120%;height:auto}.o93i .cp284{width:100%;height:100%;object-fit:cover}
+@media (prefers-reduced-motion:reduce){.c284,.ln284,.nd284,.kn284{transition:none!important}}`;document.head.appendChild(st)})();
+
 /* ================= LOOP + BOOT ================= */
 let playing=true;
 function loop(ts){
